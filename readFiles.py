@@ -155,10 +155,16 @@ def loadLCP(filename):
 			offset = saveImage(16,21,True,fileContent,offset,'./BODY/%s_%d.png' % (name,index))
 			index += 1
 
-#print(decompressFile('./DATA/LETTER.TXT'))
-#print(decompressFile('./DATA/WORDPZ.TXT'))
-#print(decompressFile('./DATA/WORDS'))
-#print(textFile('./DATA/NAMES'))
+if False:
+	print('=' * 40)
+	print(decompressFile('./DATA/LETTER.TXT'))
+	print('=' * 40)
+	print(decompressFile('./DATA/WORDPZ.TXT'))
+	print('=' * 40)
+	print(decompressFile('./DATA/WORDS'))
+	print('=' * 40)
+	print(textFile('./DATA/NAMES'))
+
 loadScreens()
 loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
 loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
