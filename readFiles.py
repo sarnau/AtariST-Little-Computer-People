@@ -1,6 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import struct
 import binascii
 import math
+from PIL import Image, ImageDraw
+
+COLORS = []
+for color in '0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split(' '):
+	COLORS.append((int(color[1],16) * 32,int(color[2],16) * 32,int(color[3],16) * 32))
 
 def textFile(filename):
 	with open(filename, mode='r') as file:
@@ -90,28 +98,34 @@ def loadScreens():
 	with open('TITLE.PI1', mode='wb') as file:
 		file.write(binascii.unhexlify(resolution+palette+ret))
 
-def loadSpritesOrObjects(filename):
+def loadSpritesOrObjects(filename,destpath):
 	name = filename.split('/')[-1]
 	with open(filename, mode='rb') as file:
 		fileContent = file.read()
 		offset = 0
 		index = 0
-		resolution = '0000'
-		palette = ''.join('0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split())
 		while offset < len(fileContent):
 			height,width = struct.unpack('>HH', fileContent[offset:offset+4])
+			img = Image.new('RGB', (width,height), color = 'white')
+			draw = ImageDraw.Draw(img)
 			words = math.ceil(width/16)
 			#print('%4x : %dx%d (%d)' % (offset,width,height,words))
 			offset += 4
-			image = bytearray(32000)
 			for line in range(0,height):
 				for word in range(0,words):
-					for byte in range(0,2*4):
-						image[160*line+word*8+byte] = fileContent[offset]
-						offset += 1
-			with open('%s_%d.PI1' % (name,index), mode='wb') as file:
-				file.write(binascii.unhexlify(resolution+palette))# + fileContent[offset:offset + height * words * 8])
-				file.write(image)
+					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
+					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
+					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
+					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
+					offset += 8
+					for pixel in range(16):
+						c0 = (p0 >> (15-pixel)) & 1
+						c1 = (p1 >> (15-pixel)) & 1
+						c2 = (p2 >> (15-pixel)) & 1
+						c3 = (p3 >> (15-pixel)) & 1
+						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
+						draw.point([pixel + word * 16, line], COLORS[col])
+			img.save(destpath + '%s_%d.png' % (name,index))
 			index += 1
 
 def loadCards():
@@ -119,20 +133,26 @@ def loadCards():
 		fileContent = file.read()
 		offset = 0
 		index = 0
-		resolution = '0000'
-		palette = ''.join('0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split())
 		height = 24
 		words = 1
 		while offset < len(fileContent):
-			image = bytearray(32000)
+			img = Image.new('RGB', (words * 16,height), color = 'white')
+			draw = ImageDraw.Draw(img)
 			for line in range(0,height):
 				for word in range(0,words):
-					for byte in range(0,2*4):
-						image[160*line+word*8+byte] = fileContent[offset]
-						offset += 1
-			with open('CARDS_%d.PI1' % (index), mode='wb') as file:
-				file.write(binascii.unhexlify(resolution+palette))# + fileContent[offset:offset + height * words * 8])
-				file.write(image)
+					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
+					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
+					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
+					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
+					offset += 8
+					for pixel in range(16):
+						c0 = (p0 >> (15-pixel)) & 1
+						c1 = (p1 >> (15-pixel)) & 1
+						c2 = (p2 >> (15-pixel)) & 1
+						c3 = (p3 >> (15-pixel)) & 1
+						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
+						draw.point([pixel + word * 16, line], COLORS[col])
+			img.save('./CARDS/CARDS_%d.png' % (index))
 			index += 1
 
 def loadLCP(filename):
@@ -142,20 +162,26 @@ def loadLCP(filename):
 		count,size = struct.unpack('>HH', fileContent[:4])
 		offset = 4
 		index = 0
-		resolution = '0000'
-		palette = ''.join('0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split())
 		height = 21
 		words = 1
 		while offset < len(fileContent):
-			image = bytearray(32000)
+			img = Image.new('RGB', (words * 16,height), color = 'white')
+			draw = ImageDraw.Draw(img)
 			for line in range(0,height):
 				for word in range(0,words):
-					for byte in range(0,2*4):
-						image[160*line+word*8+byte] = fileContent[offset]
-						offset += 1
-			with open('%s_%d.PI1' % (name,index), mode='wb') as file:
-				file.write(binascii.unhexlify(resolution+palette))# + fileContent[offset:offset + height * words * 8])
-				file.write(image)
+					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
+					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
+					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
+					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
+					offset += 8
+					for pixel in range(16):
+						c0 = (p0 >> (15-pixel)) & 1
+						c1 = (p1 >> (15-pixel)) & 1
+						c2 = (p2 >> (15-pixel)) & 1
+						c3 = (p3 >> (15-pixel)) & 1
+						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
+						draw.point([pixel + word * 16, line], COLORS[col])
+			img.save('./BODY/%s_%d.png' % (name,index))
 			index += 1
 
 #print(decryptTextFile('./DATA/LETTER.TXT'))
@@ -163,7 +189,7 @@ def loadLCP(filename):
 #print(decryptTextFile('./DATA/WORDS'))
 #print(textFile('./DATA/NAMES'))
 #loadScreens()
-#loadSpritesOrObjects('./DATA/OBJECTS')
-#loadSpritesOrObjects('./DATA/SPRITES')
+#loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/')
+#loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/')
 #loadCards()
-#loadLCP('./DATA/BODY.LCP')
+loadLCP('./DATA/BODY.LCP')
