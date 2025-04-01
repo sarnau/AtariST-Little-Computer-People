@@ -98,7 +98,37 @@ def loadScreens():
 	with open('TITLE.PI1', mode='wb') as file:
 		file.write(binascii.unhexlify(resolution+palette+ret))
 
-def loadSpritesOrObjects(filename,destpath):
+def saveImage(width,height,transp,fileContent,offset,filename):
+	img = Image.new('RGBA', (width,height), color = 'white')
+	draw = ImageDraw.Draw(img)
+	words = math.ceil(width/16)
+	#print('%4x : %dx%d (%d)' % (offset,width,height,words))
+	for line in range(0,height):
+		for word in range(0,words):
+			p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
+			p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
+			p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
+			p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
+			offset += 8
+			for pixel in range(16):
+				c0 = (p0 >> (15-pixel)) & 1
+				c1 = (p1 >> (15-pixel)) & 1
+				c2 = (p2 >> (15-pixel)) & 1
+				c3 = (p3 >> (15-pixel)) & 1
+				col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
+				color = COLORS[col]
+				if transp:
+					if c0 | c1 | c2 | c3:
+						transparent = 255
+					else:
+						transparent = 0
+				else:
+					transparent = 255
+				draw.point([pixel + word * 16, line], (color[0],color[1],color[2],transparent))
+	img.save(filename)
+	return offset
+
+def loadSpritesOrObjects(filename,destpath,transp):
 	name = filename.split('/')[-1]
 	with open(filename, mode='rb') as file:
 		fileContent = file.read()
@@ -106,26 +136,8 @@ def loadSpritesOrObjects(filename,destpath):
 		index = 0
 		while offset < len(fileContent):
 			height,width = struct.unpack('>HH', fileContent[offset:offset+4])
-			img = Image.new('RGB', (width,height), color = 'white')
-			draw = ImageDraw.Draw(img)
-			words = math.ceil(width/16)
-			#print('%4x : %dx%d (%d)' % (offset,width,height,words))
 			offset += 4
-			for line in range(0,height):
-				for word in range(0,words):
-					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
-					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
-					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
-					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
-					offset += 8
-					for pixel in range(16):
-						c0 = (p0 >> (15-pixel)) & 1
-						c1 = (p1 >> (15-pixel)) & 1
-						c2 = (p2 >> (15-pixel)) & 1
-						c3 = (p3 >> (15-pixel)) & 1
-						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
-						draw.point([pixel + word * 16, line], COLORS[col])
-			img.save(destpath + '%s_%d.png' % (name,index))
+			offset = saveImage(width,height,transp,fileContent,offset,destpath + '%s_%d.png' % (name,index))
 			index += 1
 
 def loadCards():
@@ -133,26 +145,8 @@ def loadCards():
 		fileContent = file.read()
 		offset = 0
 		index = 0
-		height = 24
-		words = 1
 		while offset < len(fileContent):
-			img = Image.new('RGB', (words * 16,height), color = 'white')
-			draw = ImageDraw.Draw(img)
-			for line in range(0,height):
-				for word in range(0,words):
-					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
-					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
-					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
-					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
-					offset += 8
-					for pixel in range(16):
-						c0 = (p0 >> (15-pixel)) & 1
-						c1 = (p1 >> (15-pixel)) & 1
-						c2 = (p2 >> (15-pixel)) & 1
-						c3 = (p3 >> (15-pixel)) & 1
-						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
-						draw.point([pixel + word * 16, line], COLORS[col])
-			img.save('./CARDS/CARDS_%d.png' % (index))
+			offset = saveImage(16,24,False,fileContent,offset,'./CARDS/CARDS_%d.png' % (index))
 			index += 1
 
 def loadLCP(filename):
@@ -162,26 +156,8 @@ def loadLCP(filename):
 		count,size = struct.unpack('>HH', fileContent[:4])
 		offset = 4
 		index = 0
-		height = 21
-		words = 1
 		while offset < len(fileContent):
-			img = Image.new('RGB', (words * 16,height), color = 'white')
-			draw = ImageDraw.Draw(img)
-			for line in range(0,height):
-				for word in range(0,words):
-					p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
-					p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
-					p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
-					p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
-					offset += 8
-					for pixel in range(16):
-						c0 = (p0 >> (15-pixel)) & 1
-						c1 = (p1 >> (15-pixel)) & 1
-						c2 = (p2 >> (15-pixel)) & 1
-						c3 = (p3 >> (15-pixel)) & 1
-						col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
-						draw.point([pixel + word * 16, line], COLORS[col])
-			img.save('./BODY/%s_%d.png' % (name,index))
+			offset = saveImage(16,21,True,fileContent,offset,'./BODY/%s_%d.png' % (name,index))
 			index += 1
 
 #print(decompressFile('./DATA/LETTER.TXT'))
@@ -189,7 +165,7 @@ def loadLCP(filename):
 #print(decompressFile('./DATA/WORDS'))
 #print(textFile('./DATA/NAMES'))
 #loadScreens()
-#loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/')
-#loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/')
-#loadCards()
+loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
+loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
+loadCards()
 loadLCP('./DATA/BODY.LCP')
