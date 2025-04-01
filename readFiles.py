@@ -14,7 +14,7 @@ def textFile(filename):
 	with open(filename, mode='r') as file:
 		return file.read()
 
-def decryptTextFile(filename):
+def decompressFile(filename):
 	with open(filename, mode='rb') as file:
 		fileContent = file.read()
 		fileSize, = struct.unpack('>H', fileContent[0:2])
@@ -50,7 +50,7 @@ def decryptTextFile(filename):
 			count += 1
 		return output
 
-def decryptImageFile(filename):
+def decompressImageFile(filename):
 	with open(filename, mode='rb') as file:
 		fileContent = file.read()
 		fileSize, = struct.unpack('>H', fileContent[0:2])
@@ -90,11 +90,11 @@ def loadScreens():
 	resolution = '0000'
 	palette = ''.join('0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split())
 
-	ret = decryptImageFile('./DATA/HOUSE.SCN')
+	ret = decompressImageFile('./DATA/HOUSE.SCN')
 	with open('HOUSE.PI1', mode='wb') as file:
 		file.write(binascii.unhexlify(resolution+palette+ret))
 
-	ret = decryptImageFile('./DATA/TITLE.SCN')
+	ret = decompressImageFile('./DATA/TITLE.SCN')
 	with open('TITLE.PI1', mode='wb') as file:
 		file.write(binascii.unhexlify(resolution+palette+ret))
 
@@ -184,9 +184,9 @@ def loadLCP(filename):
 			img.save('./BODY/%s_%d.png' % (name,index))
 			index += 1
 
-#print(decryptTextFile('./DATA/LETTER.TXT'))
-#print(decryptTextFile('./DATA/WORDPZ.TXT'))
-#print(decryptTextFile('./DATA/WORDS'))
+#print(decompressFile('./DATA/LETTER.TXT'))
+#print(decompressFile('./DATA/WORDPZ.TXT'))
+#print(decompressFile('./DATA/WORDS'))
 #print(textFile('./DATA/NAMES'))
 #loadScreens()
 #loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/')
