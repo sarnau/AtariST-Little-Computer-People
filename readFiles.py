@@ -86,18 +86,6 @@ def decompressImageFile(filename):
 			count += 2
 		return output
 
-def loadScreens():
-	resolution = '0000'
-	palette = ''.join('0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0007 0777 0410'.split())
-
-	ret = decompressImageFile('./DATA/HOUSE.SCN')
-	with open('HOUSE.PI1', mode='wb') as file:
-		file.write(binascii.unhexlify(resolution+palette+ret))
-
-	ret = decompressImageFile('./DATA/TITLE.SCN')
-	with open('TITLE.PI1', mode='wb') as file:
-		file.write(binascii.unhexlify(resolution+palette+ret))
-
 def saveImage(width,height,transp,fileContent,offset,filename):
 	img = Image.new('RGBA', (width,height), color = 'white')
 	draw = ImageDraw.Draw(img)
@@ -115,7 +103,7 @@ def saveImage(width,height,transp,fileContent,offset,filename):
 				c1 = (p1 >> (15-pixel)) & 1
 				c2 = (p2 >> (15-pixel)) & 1
 				c3 = (p3 >> (15-pixel)) & 1
-				col = (c0 << 3) + (c1 << 2) + (c2 << 1) + (c3 << 0)
+				col = (c0 << 0) + (c1 << 1) + (c2 << 2) + (c3 << 3)
 				color = COLORS[col]
 				if transp:
 					if c0 | c1 | c2 | c3:
@@ -127,6 +115,13 @@ def saveImage(width,height,transp,fileContent,offset,filename):
 				draw.point([pixel + word * 16, line], (color[0],color[1],color[2],transparent))
 	img.save(filename)
 	return offset
+
+def loadScreens():
+	ret = decompressImageFile('./DATA/HOUSE.SCN')
+	saveImage(320,200,False,binascii.unhexlify(ret),0,'HOUSE.PNG')
+
+	ret = decompressImageFile('./DATA/TITLE.SCN')
+	saveImage(320,200,False,binascii.unhexlify(ret),0,'TITLE.PNG')
 
 def loadSpritesOrObjects(filename,destpath,transp):
 	name = filename.split('/')[-1]
@@ -164,7 +159,7 @@ def loadLCP(filename):
 #print(decompressFile('./DATA/WORDPZ.TXT'))
 #print(decompressFile('./DATA/WORDS'))
 #print(textFile('./DATA/NAMES'))
-#loadScreens()
+loadScreens()
 loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
 loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
 loadCards()
