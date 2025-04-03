@@ -11,80 +11,77 @@ for color in '0000 0442 0265 0754 0310 0040 0754 0760 0247 0631 0700 0333 0555 0
 	COLORS.append((int(color[1],16) * 32,int(color[2],16) * 32,int(color[3],16) * 32))
 
 def textFile(filename):
-	with open(filename, mode='r') as file:
-		return file.read()
+	return open(filename, mode='r').read()
 
 def decompressFile(filename):
-	with open(filename, mode='rb') as file:
-		fileContent = file.read()
-		fileSize, = struct.unpack('>H', fileContent[0:2])
-		header = fileContent[2:17]
-		#print('%x [%s]' % (fileSize,header))
-		data = fileContent[17:]
-		offset = 0
-		flag = True
-		count = 0
-		output = ''
-		while offset < fileSize - 17:
-			if flag:
-				nibble = (data[offset] >> 4) & 0xF
-				flag = False
-			else:
-				nibble = data[offset] & 0xF
-				offset += 1
-				flag = True
-			if nibble != 0xF:
-				output += chr(header[nibble])
-			else:
-				c = 0
-				for i in range(0,2):
-					c <<= 4
-					if flag:
-						c |= (data[offset] >> 4) & 0xF
-						flag = False
-					else:
-						c |= data[offset] & 0xF
-						offset += 1
-						flag = True
-				output += chr(c)
-			count += 1
-		return output
+	fileContent = open(filename, mode='rb').read()
+	fileSize, = struct.unpack('>H', fileContent[0:2])
+	header = fileContent[2:17]
+	#print('%x [%s]' % (fileSize,header))
+	data = fileContent[17:]
+	offset = 0
+	flag = True
+	count = 0
+	output = ''
+	while offset < fileSize - 17:
+		if flag:
+			nibble = (data[offset] >> 4) & 0xF
+			flag = False
+		else:
+			nibble = data[offset] & 0xF
+			offset += 1
+			flag = True
+		if nibble != 0xF:
+			output += chr(header[nibble])
+		else:
+			c = 0
+			for i in range(0,2):
+				c <<= 4
+				if flag:
+					c |= (data[offset] >> 4) & 0xF
+					flag = False
+				else:
+					c |= data[offset] & 0xF
+					offset += 1
+					flag = True
+			output += chr(c)
+		count += 1
+	return output
 
 def decompressImageFile(filename):
-	with open(filename, mode='rb') as file:
-		fileContent = file.read()
-		fileSize, = struct.unpack('>H', fileContent[0:2])
-		header = struct.unpack('>15H', fileContent[2:2+15*2])
-		#print('%x [%s]' % (fileSize,header))
-		data = fileContent[32:]
-		offset = 0
-		flag = True
-		count = 0
-		output = ''
-		while offset < fileSize - 32:
-			if flag:
-				nibble = (data[offset] >> 4) & 0xF
-				flag = False
-			else:
-				nibble = data[offset] & 0xF
-				offset += 1
-				flag = True
-			if nibble != 0xF:
-				output += '%04.4x' % header[nibble]
-			else:
-				c = 0
-				for i in range(0,4):
-					c <<= 4
-					if flag:
-						c |= (data[offset] >> 4) & 0xF
-						flag = False
-					else:
-						c |= data[offset] & 0xF
-						offset += 1
-						flag = True
-				output += '%04.4x' % c
-			count += 2
-		return output
+	fileContent = open(filename, mode='rb').read()
+	fileSize, = struct.unpack('>H', fileContent[0:2])
+	header = struct.unpack('>15H', fileContent[2:2+15*2])
+	#print('%x [%s]' % (fileSize,header))
+	data = fileContent[32:]
+	offset = 0
+	flag = True
+	count = 0
+	output = ''
+	while offset < fileSize - 32:
+		if flag:
+			nibble = (data[offset] >> 4) & 0xF
+			flag = False
+		else:
+			nibble = data[offset] & 0xF
+			offset += 1
+			flag = True
+		if nibble != 0xF:
+			output += '%04.4x' % header[nibble]
+		else:
+			c = 0
+			for i in range(0,4):
+				c <<= 4
+				if flag:
+					c |= (data[offset] >> 4) & 0xF
+					flag = False
+				else:
+					c |= data[offset] & 0xF
+					offset += 1
+					flag = True
+			output += '%04.4x' % c
+		count += 2
+	return output
 
 def saveImage(width,height,transp,fileContent,offset,filename):
 	img = Image.new('RGBA', (width,height), color = 'white')
@@ -120,35 +117,32 @@ def loadScreens():
 
 def loadSpritesOrObjects(filename,destpath,transp):
 	name = filename.split('/')[-1]
-	with open(filename, mode='rb') as file:
-		fileContent = file.read()
-		offset = 0
-		index = 0
-		while offset < len(fileContent):
-			height,width = struct.unpack('>HH', fileContent[offset:offset+4])
-			offset += 4
-			offset = saveImage(width,height,transp,fileContent,offset,destpath + '%s_%d.png' % (name,index))
-			index += 1
+	fileContent = open(filename, mode='rb').read()
+	offset = 0
+	index = 0
+	while offset < len(fileContent):
+		height,width = struct.unpack('>HH', fileContent[offset:offset+4])
+		offset += 4
+		offset = saveImage(width,height,transp,fileContent,offset,destpath + '%s_%d.png' % (name,index))
+		index += 1
 
 def loadCards():
-	with open('./DATA/CARDS', mode='rb') as file:
-		fileContent = file.read()
-		offset = 0
-		index = 0
-		while offset < len(fileContent):
-			offset = saveImage(16,24,False,fileContent,offset,'./CARDS/CARDS_%d.png' % (index))
-			index += 1
+	fileContent = open('./DATA/CARDS', mode='rb').read()
+	offset = 0
+	index = 0
+	while offset < len(fileContent):
+		offset = saveImage(16,24,False,fileContent,offset,'./CARDS/CARDS_%d.png' % (index))
+		index += 1
 
 def loadLCP(filename):
 	name = filename.split('/')[-1].split('.')[0]
-	with open(filename, mode='rb') as file:
-		fileContent = file.read()
-		count,size = struct.unpack('>HH', fileContent[:4])
-		offset = 4
-		index = 0
-		while offset < len(fileContent):
-			offset = saveImage(16,21,True,fileContent,offset,'./BODY/%s_%d.png' % (name,index))
-			index += 1
+	fileContent = open(filename, mode='rb').read()
+	count,size = struct.unpack('>HH', fileContent[:4])
+	offset = 4
+	index = 0
+	while offset < len(fileContent):
+		offset = saveImage(16,21,True,fileContent,offset,'./BODY/%s_%d.png' % (name,index))
+		index += 1
 
 if False:
 	print('=' * 40)
