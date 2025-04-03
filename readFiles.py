@@ -90,29 +90,24 @@ def saveImage(width,height,transp,fileContent,offset,filename):
 	img = Image.new('RGBA', (width,height), color = 'white')
 	draw = ImageDraw.Draw(img)
 	words = math.ceil(width/16)
-	#print('%4x : %dx%d (%d)' % (offset,width,height,words))
 	for line in range(0,height):
 		for word in range(0,words):
-			p0 = (fileContent[offset+0] << 8) + fileContent[offset+1]
-			p1 = (fileContent[offset+2] << 8) + fileContent[offset+3]
-			p2 = (fileContent[offset+4] << 8) + fileContent[offset+5]
-			p3 = (fileContent[offset+6] << 8) + fileContent[offset+7]
+			planes = struct.unpack('>4H', fileContent[offset:offset+8])
 			offset += 8
 			for pixel in range(16):
-				c0 = (p0 >> (15-pixel)) & 1
-				c1 = (p1 >> (15-pixel)) & 1
-				c2 = (p2 >> (15-pixel)) & 1
-				c3 = (p3 >> (15-pixel)) & 1
+				c0 = (planes[0] >> (15-pixel)) & 1
+				c1 = (planes[1] >> (15-pixel)) & 1
+				c2 = (planes[2] >> (15-pixel)) & 1
+				c3 = (planes[3] >> (15-pixel)) & 1
 				col = (c0 << 0) + (c1 << 1) + (c2 << 2) + (c3 << 3)
-				color = COLORS[col]
 				if transp:
-					if c0 | c1 | c2 | c3:
+					if col:
 						transparent = 255
 					else:
 						transparent = 0
 				else:
 					transparent = 255
-				draw.point([pixel + word * 16, line], (color[0],color[1],color[2],transparent))
+				draw.point([pixel + word * 16, line], (COLORS[col][0],COLORS[col][1],COLORS[col][2],transparent))
 	img.save(filename)
 	return offset
 
@@ -165,8 +160,9 @@ if False:
 	print('=' * 40)
 	print(textFile('./DATA/NAMES'))
 
-loadScreens()
-loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
-loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
-loadCards()
+#loadScreens()
+#loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
+#loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
+#loadCards()
 loadLCP('./DATA/BODY.LCP')
+#loadLCP('./DATA/PE2.LCP')
