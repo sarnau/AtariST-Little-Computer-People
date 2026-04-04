@@ -1,295 +1,411 @@
-# Architecture — Little Computer People (LCP.PRG)
+# Little Computer People — Atari ST Reverse Engineering
+
+**LCP.PRG** is the main executable for *Little Computer People* on the Atari ST, a life-simulation game originally developed by Activision (Rich Gold, David Crane) and released in 1985. The player observes and interacts with a virtual character — the "Little Computer Person" — who lives inside a three-story house displayed on screen.
+
+This document describes the complete architecture as recovered through reverse engineering of the Atari ST binary using Ghidra with MCP integration.
+
+## Game Overview
+
+Little Computer People is one of the earliest "virtual pet" or life-simulation games, predating The Sims by over a decade. A procedurally generated character moves into a furnished house and autonomously goes about daily life — eating, sleeping, showering, exercising, playing piano, writing letters, and more. The player can interact by typing natural-language commands, ringing the doorbell (Ctrl+A), ordering deliveries, and playing card and word games.
+
+Each copy of the game generates a unique character with randomized appearance, name, personality, and daily schedule. The character's state persists across sessions via a 128-byte save file (`hyber`), creating a sense of a living, persistent digital companion.
+
+## Technical Specifications
+
+| Property | Value |
+|---|---|
+| Platform | Atari ST/STe |
+| CPU | Motorola 68000, 32-bit big-endian |
+| Resolution | 320×200, 16 colors (ST low) |
+| Binary format | GEMDOS PRG executable |
+| Compiler | Alcyon C (Digital Research CP/M-68K toolchain) |
+| Integer size | 16-bit (`int` = `short` in Ghidra) |
+| Code size | ~104 KB TEXT segment (0x10000–0x296DB) |
+| Total functions | 395 identified and named (100% coverage) |
+| Functions with plate comments | 395 (100%) |
+| Total symbols | ~3,500 labeled |
+| Custom enums | 20+ (sprite_id, ACTION_ID, PLAYER_STATE, etc.) |
+| Custom structs | 6+ (LCP, PSG_ENVELOPE, MFDB, FILE_IMG_DATA, etc.) |
+| Save file | `hyber`, 128 bytes (LCP struct) |
+
+### Memory Layout
+
+| Segment | Address Range | Size | Contents |
+|---|---|---|---|
+| LOWMEM_VARS | 0x000400–0x0005FF | 512 B | Atari ST system variables (_hz_200, _vbclock, conterm) |
+| TEXT | 0x010000–0x0296DB | 104 KB | Executable code (395 functions) |
+| DATA | 0x0296DC–0x02C6BF | 12 KB | Initialized data (ROM tables, strings, animation frames) |
+| BSS | 0x02C6C0–0x05A2F9 | 183 KB | Uninitialized data (screen buffers, sprite arrays, game state) |
+| IO | 0xFFFF0000–0xFFFFFDFF | — | Hardware registers (YM2149 PSG, DMA, MFP, ACIA) |
+
+### Function Categories
+
+| Category | Prefix | Count | Description |
+|---|---|---|---|
+| Action handlers | `action_`/`event_` | 54 | Player behavior sequences and triggered events |
+| CRT/library | `_` prefix | 33 | Alcyon C runtime (matched to original source) |
+| Poker | `poker_` | 30 | Full 5-card draw poker with AI |
+| MIDI sequencer | `midi_seq_`/`midi_` | 24 | Custom MIDI-like song engine |
+| Sprite system | `sprite`/`spritedata` | 19 | Overlay sprite pipeline and rendering |
+| LCP character | `lcp_` | 18 | Movement, pathfinding, animation, needs |
+| Copy protection | `copyprot_` | 13 | Floppy disk verification |
+| VDI/AES bindings | `v_`/`vs_`/`vdi_` | 9 | GEM graphics calls |
+| Screen rendering | `screen_` | 8 | Double-buffered compositor |
+| PSG sound | `psg_` | 4 | YM2149 envelope processor |
+| Dog AI | `dog_` | 3 | Dog movement, eating, animation |
+
+## The LCP Character
+
+Each character is defined by a 128-byte `LCP` struct that is saved to and loaded from the `hyber` file. Key attributes:
+
+### Appearance
+- **Clothing color**: 16 outfit combinations (e.g., `OUTFIT_BLUE_GREEN`, `OUTFIT_RED_PINK`) mapped to palette entries 1–2
+- **Skin color**: 8 options including realistic and fantasy tones, mapped to palette entry 6
+- **Character sprite set**: 5 visual variants (PE2–PE6.LCP files)
+- **Character name**: Randomly selected from a pool of 266 names
 
-This document describes the internal architecture of the Atari ST version of Little Computer People, based on reverse engineering of the `LCP.PRG` binary using Ghidra.
+### Personality & Schedule
+- **Personality type** (0–3): Affects behavior weighting
+- **Activity level** (0–7): Controls action table selection via `activity_schedule_table[3][8]`
+- **Daily schedule**: Configurable wake hour (6–8am), bedtime (10pm–midnight), lunch (11am–1pm), dinner (5–7pm)
+- **Initiative threshold** (20–80): Lower = more proactive about autonomous actions
 
-## Memory Layout
-
-The program is organized into five memory segments:
-
-| Segment       | Address Range            | Size      | Purpose                                  |
-|---------------|--------------------------|-----------|------------------------------------------|
-| `LOWMEM_VARS` | `0x000400` – `0x0005FF`  | 512 B     | Atari ST low-memory system variables      |
-| `TEXT`         | `0x010000` – `0x0296DB`  | ~105 KB   | Executable code                           |
-| `DATA`        | `0x0296DC` – `0x02C6BF`  | ~12 KB    | Initialized data (strings, tables, constants) |
-| `BSS`         | `0x02C6C0` – `0x05A2F9`  | ~186 KB   | Uninitialized data (buffers, state)       |
-| `IO`          | `0xFFFF0000` – `0xFFFFFDFF` | ~64 KB  | Hardware I/O register space               |
-
-## High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    main()                           │
-│  Init sound, VDI/AES, screen, load assets, state    │
-└──────────────────────┬──────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│              endless_game_loop()                    │
-│  ┌───────────────────────────────────────────────┐  │
-│  │  game_tick_and_animate(0)                     │  │
-│  │    ├── screen_render_8hz()                    │  │
-│  │    ├── game_simulate_one_second()             │  │
-│  │    ├── player_pathfind_one_step()             │  │
-│  │    ├── dog_move_and_animate()                 │  │
-│  │    ├── deal_with_keycode()                    │  │
-│  │    └── player/dog sprite updates              │  │
-│  ├───────────────────────────────────────────────┤  │
-│  │  check_for_any_action_triggers()              │  │
-│  │    ├── Process event queue (doorbell, etc.)   │  │
-│  │    ├── Check immediate needs (bathroom, etc.) │  │
-│  │    ├── Check scheduled actions (meals, sleep) │  │
-│  │    ├── Process user command queue             │  │
-│  │    └── Random AI action selection             │  │
-│  └───────────────────────────────────────────────┘  │
-│              ↻ loops forever                        │
-└─────────────────────────────────────────────────────┘
-```
+### Needs System
+
+Three basic needs drive urgent behavior:
+- **Thirst**: Timer decrements each game-minute; at 0, `thirst_level` increments (0→1→2→3→sick)
+- **Hunger**: Same mechanic with separate timer; triggers eating or sickness
+- **Bathroom**: Timer-based; sets `bathroom_need` flag, prioritized in the AI decision engine
+
+### Mood & Health
+- **Happiness**: Cycles between `MOOD_HAPPY` (0), `MOOD_CONTENT` (1), and `MOOD_SAD` (2) over configurable hourly durations
+- **Sickness**: 5 levels (`SICKNESS_HEALTHY` through `SICKNESS_CRITICAL`); triggered when thirst or hunger reaches level 3+; worsens every 60 game-minutes if untreated, recovers every 5 minutes once fed and watered; forces `MOOD_SAD` at level 2+; changes skin palette to green
 
-## Subsystem Breakdown
+## AI Decision Engine
 
-### 1. Initialization (`main` — `0x15546`)
+The central AI function `check_for_any_action_triggers` evaluates conditions in strict priority order:
 
-The `main` function performs a strict initialization sequence:
+1. **Event queue** — doorbell, food/book/record delivery, phone call
+2. **Alarm** — Ctrl+A pressed → `ACTION_WAKE_FROM_ALARM`
+3. **Bathroom need** → `ACTION_USE_TOILET`
+4. **Thirst** (randomized by sickness) → `ACTION_DRINK`
+5. **Hunger** (randomized by sickness) → `ACTION_KITCHEN_CABINET`
+6. **Scheduled meals** → `ACTION_EAT_MEAL` at configured lunch/dinner hours
+7. **Sleep schedule** → `ACTION_WAKE_UP_MORNING` / `ACTION_GO_TO_BED_NIGHT`
+8. **Player commands** — typed word-based command queue with priority escalation
+9. **Random activity** — selected from personality-weighted action tables
 
-1. **Sound system** — `sound_init_timer()` configures Timer B for MIDI playback
-2. **GEM setup** — `aes_vdi_jnit()` initializes the AES/VDI graphics subsystem
-3. **System config** — enters Supervisor mode to modify `conterm` (keyboard repeat settings)
-4. **Working directory** — sets the current path to `data/`
-5. **Screen** — `vdi_init()` + `setup_screen_buffer()` allocates front/back screen buffers
-6. **Bit table** — `init_build_bit_revert_table()` builds a lookup table for horizontal sprite flipping
-7. **Music** — `count_songs()` scans for `*.sng` files on disk
-8. **Save file** — `player_load()` attempts to load an existing game from `hyber`
-9. **Title screen** — `show_title_screen_enter_name_and_date()` displays the intro and collects the player's name and date/time
-10. **House scene** — loads and decompresses `house.scn` into screen memory
-11. **Character data** — loads `body.lcp` and character-specific `pex.lcp` sprite files
-12. **Objects and sprites** — loads 56 object graphics and 50 sprite frames with auto-generated masks
-13. **Sound effects** — `soundeffects_load()` loads `sounds.lcp`
-14. **Initial state** — sets door/furniture positions, food cabinet, dog bowl, clothing palette
-15. **Copy protection** — `PROT_CHECK()` performs floppy disk verification
-16. **Game loop** — enters `endless_game_loop()` (never returns)
+### Action Tables
 
-### 2. Game Loop (`endless_game_loop` — `0x15C76`)
+Three action tables provide different activity mixes:
 
-The core loop alternates between two functions in a tight infinite cycle:
+| Table | Bias | Example Actions |
+|---|---|---|
+| `action_table_active` | Energetic | Computer, dance, exercise, write letter |
+| `action_table_moderate` | Balanced | Read newspaper, play game, brush teeth |
+| `action_table_relaxed` | Low-key | Sit on couch, yawn, wander, sleep |
 
-**`game_tick_and_animate(0)`** handles the real-time simulation tick: rendering sprites at ~8 Hz, advancing the game clock, processing pathfinding, animating the character and dog, and polling keyboard input.
+The `activity_schedule_table[3][8]` selects which table to use based on time-of-day and the character's `activity_level`. Weekend override: Sunday forces relaxed activities, Saturday forces moderate.
 
-**`check_for_any_action_triggers()`** is the AI decision engine that selects what the resident does next (see section 4 below).
+### 45 Action Handlers
 
-If the copy protection check failed, the loop instead calls `action_sleep(-1)` forever, softly disabling the game.
+The action dispatcher `do_action` switches on `ACTION_ID` (0–44) to invoke the appropriate handler. Each action is a self-contained sequence of walking to a position, playing animations, and updating state. Key actions include:
 
-### 3. Simulation Engine (`game_simulate_one_second` — `0x233DA`)
+| Action | Description |
+|---|---|
+| `ACTION_PLAY_COMPUTER` | Walk to desk, sit, type with random clicking sounds |
+| `ACTION_WRITE_LETTER` | Get paper, sit at desk, procedurally generate letter text |
+| `ACTION_PLAY_PIANO` | Walk to piano, play music from .org files |
+| `ACTION_DANCE` | Put on record, dance to music with left/right steps |
+| `ACTION_LIGHT_FIREPLACE` | Get logs from outside, carry to fireplace, light fire |
+| `ACTION_TAKE_SHOWER` | Enter bathroom, shower animation with 5 poses |
+| `ACTION_FEED_DOG` | Get food from fridge, carry to bowl, fill it |
+| `ACTION_PLAY_A_GAME` | Select from 5 mini-games, play at kitchen table |
 
-Called every 8 animation frames (approximately once per game-second), this function manages all time-dependent state:
+## Player Interaction
 
-**Need timers** — Thirst and hunger each have a countdown timer. When a timer reaches zero, the corresponding need level increments (up to 3). If the level exceeds 3, the resident becomes sick via `player_become_sick()`.
+### Typed Commands
 
-**Sickness** — Sick characters have a sickness level that changes over time based on a direction value (+1 getting worse, -1 recovering). While sick, happiness is locked at level 2 (unhappy) and the character's palette shifts to show visible illness.
+The player types natural-language phrases that are parsed against a 161-word vocabulary (`WORD_ID` enum). A word-to-action mapping table (`enteredword_to_action`) converts recognized word bitmask patterns into game actions with priority offsets.
 
-**Bathroom** — A dedicated timer counts down to trigger a bathroom need flag.
+### Keyboard Shortcuts
 
-**Happiness** — A mood cycle oscillates the resident's happiness between 0 (happy) and 2 (unhappy) with configurable durations per level. Sickness overrides this to force unhappiness.
+| Key | Action | Effect |
+|---|---|---|
+| Ctrl+A | Alarm clock | Wakes the character, rings alarm sound |
+| Ctrl+B | Book delivery | Doorbell + book (SPRITE_BOOK) at front door |
+| Ctrl+C | Phone call | Random phone rings, character answers |
+| Ctrl+D | Dog food | Dog food delivery via `delivery_is_for_dog` flag |
+| Ctrl+F | Food delivery | Food package (SPRITE_FOOD_PACKAGE) to kitchen cabinet |
+| Ctrl+R | Record delivery | New vinyl record (SPRITE_VINYL_CARRY) delivery |
+| Ctrl+W | Water delivery | Refills water supply |
+| Ctrl+P | Pet the dog | 7-frame hand animation (SPRITE_PET_HAND_1–7) |
 
-**Random events** — Phone calls have a 2% chance per game-second of occurring between 8 AM and 10 PM.
+## Mini-Games
 
-**Clock** — Seconds advance into minutes, minutes into hours, hours into days (with midnight triggering `daily_reset_action_flags()`), and days into months/years using a proper calendar with `days_in_month()`.
+Five card and word games are available, played at the kitchen table:
+- **Anagrams** — Unscramble a word within 9 guesses; F1 reveals a letter clue
+- **War** — Classic high-card game
+- **Poker** — 5-card draw with betting, raising, and AI bluffing (30 functions, `poker_*` prefix)
+- **Blackjack** — Casino rules with full hand evaluation
+- **Word Puzzles** — Crossword-style puzzles from external template files
 
-### 4. AI Decision Engine (`check_for_any_action_triggers` — `0x15CE2`)
+## House Layout
 
-This is the central behavior-selection system. It evaluates conditions in strict priority order:
+The three-story house has 48 navigable positions (`HOUSE_POS` enum) organized by floor:
 
-| Priority | Condition                        | Action triggered              |
-|----------|----------------------------------|-------------------------------|
-| 1        | Event queue not empty            | Process event (doorbell, delivery, phone) |
-| 2        | Ctrl+A alarm pressed             | `ACTION_WAKE_FROM_ALARM`      |
-| 3        | Bathroom need flag set           | `ACTION_USE_TOILET`           |
-| 4        | Thirst level > 0 (with random)  | `ACTION_DRINK`                |
-| 5        | Hunger level > 0 (with random)  | `ACTION_KITCHEN_CABINET`      |
-| 6        | Lunch hour reached               | `ACTION_EAT_MEAL`            |
-| 7        | Dinner hour reached              | `ACTION_EAT_MEAL`            |
-| 8        | Wake hour reached                | `ACTION_WAKE_UP_MORNING`     |
-| 9        | Bedtime hour reached             | `ACTION_GO_TO_BED_NIGHT`     |
-| 10       | User command in queue (high-pri) | Execute typed command         |
-| 11       | None of the above                | Random personality-based action |
+**Top Floor** (Living Room / Study) — Positions 0–15: Armchair, game table, record shelf, fireplace with log area, study door, filing cabinet, desk with lamp
 
-Thirst and hunger checks include a randomization factor influenced by sickness — when sick, the character is more likely to address needs immediately (the random threshold drops to 0%).
+**Middle Floor** (Bedroom / Bathroom) — Positions 16–31: Bed, dresser, bedroom closet, couch, bathroom sink, toilet, shower, computer desk, piano
 
-User-typed commands enter a priority queue with escalation. Low-priority commands may be deferred if needs are urgent, while high-priority commands (≥ 8) are executed immediately.
+**Bottom Floor** (Kitchen / Entrance) — Positions 32–47: Kitchen sink, stove, fridge, food cabinet, kitchen table, dog bowl, front door
+
+The character navigates between positions using `lcp_pathfind_one_step`, which handles flat walking (8-frame cycle), stair climbing/descending (4-frame cycles), and waypoint-based routing. Floor baseline Y coordinates: top=77, mid=140, bottom=202.
 
-### 5. Action System (`do_action` — `0x16038`)
+### Static Object Positions (from main() initialization)
 
-Each action is implemented as a dedicated function (approximately 80 action functions). Actions are triggered by the AI engine through the `trigger_action` global variable. The `do_action()` dispatcher calls the appropriate function. Actions typically:
+| Object | Position |
+|---|---|
+| Cabinet | (46, 140) |
+| Front door | (294, 151) |
+| Dresser | (97, 115) |
+| Closet | (75, 87) |
+| Study door | (178, 23) |
+| Toilet door | (187, 87) |
+| Filing cabinet | (258, 47) |
+| Dog bowl | (8, 190) |
+| Fridge | (24, 153) |
 
-1. Walk the character to a specific location via `player_walk_to_destination()`
-2. Play an animation sequence by cycling sprite frames
-3. Update game state (need levels, object positions, door states)
-4. Play associated sound effects
-5. Optionally modify the screen (draw/erase objects, update UI elements)
+## Graphics System
 
-Key action categories and representative functions:
+### Double-Buffered Sprite Rendering
 
-**Daily routine** — `action_wake_up_morning`, `action_go_to_bed_night`, `action_get_dressed`, `action_brush_teeth`, `action_take_shower`, `action_use_toilet`, `action_eat_meal`, `action_drink`
+The game runs at ~8 Hz with a double-buffered rendering pipeline in `screen_render_8hz`:
 
-**Entertainment** — `action_play_piano`, `action_listen_song`, `action_play_with_record`, `action_toggle_tv`, `action_play_computer`, `action_read_newspaper`, `action_dance`, `action_play_a_game`, `action_sit_and_exercise`
+1. **Background copy**: `blkcopy32` copies the static house scene from the offscreen buffer (32-byte aligned block copy, with three modes depending on `text_scroll_timer` for partial updates)
+2. **Dog animation**: `dog_move_and_animate` advances the dog's position, handles stair navigation, and triggers eating behavior when near a full food bowl
+3. **Sprite compositing**: Iterates over all 8 hardware sprite slots; for each with a non-NULL image pointer, calls `sprite_draw` to composite using masked blitting
+4. **Page flip**: `XBIOS Vsync + Setscreen` swaps the display to the newly composited buffer
+5. **Sound effects**: Plays any queued sound effects via `soundeffect_irq_play`
 
-**Housekeeping** — `action_tidy_house`, `action_clean_up`, `action_light_fireplace`, `action_write_letter`
+### Sprite Pipeline Architecture
 
-**Interaction** — `action_hello`, `action_nod_head`, `action_pet_dog`, `action_call_dog`, `action_feed_dog`, `action_peek_around`
+The sprite system uses a three-level pipeline with a pending/active double buffer:
 
-**Furniture** — `action_open_close_front_door`, `action_open_close_fridge`, `action_open_close_dresser`, `action_open_close_cabinet`, `action_open_close_bedroom_closet`, `action_open_close_upstairs_closet`, `action_open_close_filing_cabinet`, `action_close_toilet_door`
+**Definition level** (60 sprites, loaded from `sprites` file at startup):
+- `sprite_def_image[60]` / `sprite_def_mask[60]` — pointers to image/mask bitmap data
+- `sprite_def_width[60]` / `sprite_def_height[60]` — pixel dimensions
 
-**Events** — `event_answer_phone`, `event_receive_food_delivery`, `event_receive_dog_food`, `event_receive_book_delivery`, `event_receive_record_delivery`, `action_check_front_door`
+**Pending buffer** (8 hardware slots, staged by game logic):
+- `sprite_pending_image[8]` / `sprite_pending_mask[8]` — image/mask to render next frame
+- `sprite_pending_x[8]` / `sprite_pending_y[8]` — screen coordinates
+- `sprite_pending_width[8]` / `sprite_pending_height[8]` — dimensions
+- `sprite_pending_flag[8]` — set to YES when slot has new data ready
 
-### 6. Command Parser (`check_entered_command` — `0x26F9A`)
+**Active buffer** (8 hardware slots, consumed by renderer):
+- `sprite_active_image[8]` / `sprite_active_mask[8]` — current frame's data
+- `sprite_active_x[8]` / `sprite_active_y[8]` — current screen position
+- `sprite_active_width[8]` / `sprite_active_height[8]` — current dimensions
 
-When the player presses Enter (Ctrl+M), the typed text is processed through a keyword-matching system. The parser:
+Each frame in `screen_render_8hz`, slots with `sprite_pending_flag == YES` are committed from pending to active, then rendered via `sprite_draw`.
 
-1. Converts input to uppercase via `strupper()`
-2. Validates input with `check_valid_word_input()`
-3. Matches against keyword tables using `parse_command_to_action()`
+Note: `spritedata_select` bypasses the pending buffer and writes directly to the active arrays for immediate display.
 
-The keyword vocabulary is stored in the DATA segment as a series of word groups. Each group maps one or more synonyms to a specific action. Examples from the string data:
+### Sprite Slot Assignment
 
-- "PLAY", "PERFORM", "PLAYING" → play-related actions
-- "FIRE", "FIREPLACE", "LIGHT", "IGNITE", "BUILD" → light fireplace
-- "PIANO", "ORGAN", "IVORIES" → play piano
-- "DANCE", "MOON" → dance action
-- "TEETH", "BRUSH", "FLOSS", "HYGIENE" → brush teeth
-- "DRINK", "IMBIBE", "WATER", "LIQUID", "GLASS" → drink water
-- "COMPUTER", "ATARI", "PROGRAM" → use computer
+60 logical sprites are multiplexed onto 8 hardware rendering slots via `sprite_update_slots`:
+- Slots 3–4: Reserved for LCP body (3) and head (4) sprites
+- Slots 1–2: Behind-LCP layer (`sprite_layer_flags[n] == SPRITE_BEHIND_LCP`)
+- Slots 5–6: In-front-of-LCP layer (`sprite_layer_flags[n] == SPRITE_IN_FRONT`)
+- Slots 0, 7: Dog sprite (behind or in front based on Y-depth comparison with LCP)
 
-### 7. Graphics System
+`sprite_slot_map[60]` stores the hardware slot assigned to each logical sprite. `sprite_layer_flags[60]` stores the visibility/layer state (`SPRITE_LAYER` enum: SPRITE_HIDDEN, SPRITE_BEHIND_LCP, SPRITE_IN_FRONT).
 
-#### Screen Management
+### Sprite Compositing
 
-The game uses a double-buffered rendering approach with GEM VDI:
+Each sprite slot is rendered via two VDI `vro_cpyfm` raster operations using MFDB structures (`sprite_mfdb_image[8]`, `sprite_mfdb_mask[8]`):
+1. `NOTS_AND_D`: AND the inverted mask with the destination (punches a transparent hole)
+2. `S_XOR_D`: XOR the sprite image onto the cleared area (paints sprite pixels)
 
-- `screen_set_draw_to_backbuffer()` / `screen_set_draw_to_frontbuffer()` toggle the active drawing target
-- `copy_screen()` copies between buffers
-- `screen_render_8hz()` handles the ~8 Hz display refresh cycle
-- `vdi_copy_rect()` and `vro_cpyfm()` perform blit operations using VDI's MFDB (Memory Form Definition Block) structures
+This is the classic Atari ST masked blit technique. The mask is auto-generated at load time by `spritedata_generate_mask_from_color`: any pixel where all 4 bitplanes are 0 (color index 0 = transparent) produces a 0 mask bit.
 
-#### Sprites
+### sprite_id Enum (56 values)
 
-Sprites are loaded as raw planar bitmap data (Atari ST format: 4 interleaved bit-planes per 16-pixel word). Each sprite goes through `sprite_create_with_mask()` which auto-generates transparency masks. The sprite system supports:
+The `sprite_id` enum maps logical sprite indices to their purpose, identified by tracing all action functions:
 
-- Horizontal flipping via `sprite_flip_horizontal()` (using the precomputed bit-reversal table)
-- Masked drawing via `screen_draw_sprite_with_mask()`
-- Separate head and body sprite composition for the character (`player_build_head_sprites`, `player_build_body_sprites`)
-- Carried-object overlay sprites (`sprite_activate_carried_object_left/right`)
+| ID | Name | Usage |
+|---|---|---|
+| 3 | SPRITE_GLASS | Carried to water tap (action_drink) |
+| 4 | SPRITE_GAME_BOX | Carried to table (action_play_a_game) |
+| 7 | SPRITE_VINYL_RECORD | Shown at record shelf during browsing |
+| 8 | SPRITE_TYPEWRITER | Shown at desk during letter writing |
+| 9 | SPRITE_FOOD_PACKAGE | Carried from fridge / food delivery |
+| 12 | SPRITE_TABLE_SETTING | Placed on table during eating/games |
+| 13–15 | SPRITE_DOOR_ANIM_1–3 | Door overlay animation (3 openness stages, used for toilet door and bedroom closet) |
+| 16–18 | SPRITE_CLOSET_LCP_INSIDE / AJAR / WIDE_OPEN | Closet dress-change sequence |
+| 19–20 | SPRITE_PET_DOG_1–2 | Petting dog hand approach |
+| 21 | SPRITE_DOG_SIT | Dog sitting/idle at front door |
+| 22 | SPRITE_FIREWOOD | Carried from front door to fireplace |
+| 23 | SPRITE_COOKING_POT | Carried from cabinet to stove |
+| 24–26 | SPRITE_DOOR_STUDY_1 / AJAR / WIDE_OPEN | Study door overlay frames |
+| 27–32 | SPRITE_PET_HAND_1–6 | Petting hand animation sequence |
+| 33 | SPRITE_DOG_LAY_DOWN | Dog idle/resting pose |
+| 34–41 | SPRITE_DOG_WALK_RIGHT_1–8 | Dog walk cycle (from `dog_walk_anim_frames[8]`) |
+| 42–44 | SPRITE_DOG_EATING_1–3 | Dog eating animation |
+| 45–47 | SPRITE_READING_1–3 | Book reading animation |
+| 48 | SPRITE_SUITCASE | Carried during move-in cutscene |
+| 49 | SPRITE_BOOK | Carried from front door (book delivery) |
+| 50 | SPRITE_VINYL_CARRY | Carried from front door (record delivery) |
+| 51 | SPRITE_PET_HAND_7 | Petting animation final frame |
+| 52 | SPRITE_DESK_LAMP | Desk area overlay during writing |
+| 51–54 | SPRITE_TYPING_1–4 | Typing animation frames |
 
-#### Objects
+### Door Overlay Technique
 
-56 static object images are loaded from the `objects` file. Each object has width, height, and bitmap data stored in `FILE_IMG_DATA` structures (6-byte header: width, height, then pixel data). Objects are drawn via `screen_draw_object()` for furniture, doors, food bowls, etc.
+Sprites 13–15 (SPRITE_DOOR_ANIM_1–3) are door overlay sprites at three stages of openness, rendered IN FRONT of the LCP sprite to create the illusion of walking behind/through a door. When the LCP walks toward a door, the door sprite (fully open) is placed in the SPRITE_IN_FRONT layer so the character appears to walk behind it. As the door closes, progressively narrower door sprites are swapped in. This technique is used for both the toilet door (187,87) and the bedroom closet (75,87).
 
-### 8. Pathfinding System
+### LCP Character Sprites
 
-The character navigates a multi-floor house using a waypoint-based pathfinding system:
+The character is assembled from separate body and head sprite sheets:
+- **Body** (`body.lcp`): 91 animation states (`PLAYER_STATE` enum) — walk cycle, stairs, sitting, showering, dancing, etc.
+- **Head** (`pex.lcp`): Expression frames selected by `head_sprite_frame` and `happiness` level, with random head movements controlled by `HEAD_ANIM_MODE`
 
-- `house_get_position_xy()` maps logical positions (room/spot IDs) to pixel coordinates
-- `player_calc_floor_waypoint()` determines the next waypoint on a path
-- `get_floor_number_from_y()` identifies which floor a Y-coordinate falls on
-- `player_pathfind_one_step()` advances the character one step along the calculated path each tick
-- `dog_calc_walk_path()` / `dog_move_and_animate()` handle independent dog pathfinding
+Both are 2-word-wide source sprites expanded to 4-word-wide compositing buffers by `lcp_flip_sprite_horizontal`, with bit-reversal via `revert_table[256]` for horizontal mirroring.
 
-The house consists of multiple floors connected by stairs. The character must navigate horizontally within a floor and vertically between floors to reach target positions.
+### Dog Sprite System
 
-### 9. Sound System
+The dog uses a separate rendering path via `spritedata_update_dog`:
+- Uses hardware slots 0 and 7 (behind and in front of LCP based on Y-depth comparison)
+- Walk animation: 8-frame cycle from `dog_walk_anim_frames[8]` (SPRITE_DOG_WALK_RIGHT_1–8)
+- Eating animation: 3-frame cycle from `dog_sprite_eating_anim_tab[3]` (SPRITE_DOG_EATING_1–3)
+- Horizontal flip: bit-reversal into `dog_flip_image_buffer` / `dog_flip_mask_buffer` (32×15 pixel scratch buffers)
 
-#### Music Engine (`0x1012A` – `0x12284`)
+### Color Palette
 
-The music engine is Timer B interrupt-driven and supports both PSG (YM2149) and MIDI output:
+16-color Atari ST palette using `ST_COLOR` format (0x0RGB, 3 bits per channel):
+- `main_colorpalette[16]`: Active hardware palette
+- `clothing_color_primary/secondary[16]`: 16 outfit color combinations mapped to palette entries 1–2
+- `skin_color_palette[8]`: 8 skin tones
+- Palette entry 6: `ST_PEACH` (healthy) or `ST_SICK_GREEN` (sick)
+
+### HOUSE.SCN Decompression
 
-- `sound_init_timer()` / `sound_exit_timer()` — set up and tear down Timer B interrupts
-- `sound_play_song()` — loads and starts a song from `*.sng` files
-- `sound_parse_song_header_events()` — parses the custom song format header
-- `sound_parse_channel_config()` / `sound_parse_volume_config()` — configure per-channel instrument and volume settings
-- `sound_process_next_midi_event()` — processes the next event in the song data stream
-- `sound_midi_playback_loop()` — main playback state machine in the Timer B callback
-- `sound_midi_note_to_psg_freq()` — converts MIDI note numbers to PSG frequency register values
-- `sound_MIDI_send_note_on()` / `sound_send_MIDI_event()` — output to the MIDI port
-- `sound_set_psg_channel_volume()` — directly writes to YM2149 registers via `sound_register_write()`
+The house background is stored as `HOUSE.SCN`, a compressed 320×200 4-bitplane image using a nibble-based RLE scheme with a 15-entry common-word lookup table. The decompression algorithm (`decompress_scn`) processes nibbles from the compressed stream: values 0x1–0xF index into a preloaded common-word table, while 0x0 signals a literal word follows. Run-length encoding uses a repeat-count nibble for consecutive identical words.
+
+## Sound System
+
+### MIDI Sequencer Engine
+
+A custom MIDI-like sequencer (`midi_seq_*` functions, 24 total) plays `.sng` song files with dual output:
+
+**External MIDI** (`midi_output_enabled`): Standard MIDI messages via the Atari ST ACIA at 0xFFFC04, supporting program changes, channel remapping, and octave transposition.
+
+**Internal PSG** (`psg_output_enabled`): YM2149 sound chip with 3 channels, software ADSR envelope processing via the `PSG_ENVELOPE` struct (14 bytes per channel, 3 channels = `psg_envelope[3]`).
 
-#### Sound Effects (`0x1D9EA` – `0x1DE36`)
+### PSG_ENVELOPE Struct (14 bytes)
+
+| Offset | Field | Description |
+|---|---|---|
+| 0 | phase | Current envelope phase (ENV_PHASE: IDLE→ATTACK→DECAY→SUSTAIN→RELEASE→FADEOUT) |
+| 1 | attack_start_vol | Initial volume at note-on |
+| 2 | attack_duration | Ticks to reach attack target |
+| 3 | attack_target_vol | Peak volume after attack |
+| 4 | decay_duration | Ticks from peak to sustain |
+| 5 | decay_target_vol | Volume at end of decay |
+| 6 | sustain_duration | Ticks to hold sustain |
+| 7 | sustain_target_vol | Volume during sustain |
+| 8 | release_duration | Ticks to fade to silence |
+| 9 | max_volume | Clamp ceiling for output |
+| 10 | phase_timer | Countdown within current phase |
+| 11 | current_volume | Current output volume (0–15) |
+| 12 | ramp_direction | +1 or -1 for volume interpolation |
 
-- `soundeffects_load()` — loads sample data from `sounds.lcp`
-- `soundeffect_select()` — selects a sound effect by index
-- `soundeffect_irq_play()` — plays the selected effect using interrupt-driven sample output
+Envelope processing (`psg_process_envelopes`, called at 50 Hz) uses Bresenham-style integer interpolation for smooth volume ramping.
 
-Common effects include `play_soundeffect_tv_click`, `play_soundeffect_speech`, `play_soundeffect_head_nod`, `play_soundeffect_greeting`, `play_doorbell_sound`, and `select_random_click_sound` (typewriter).
+### Timing
 
-### 10. Mini-Game Subsystem
+Interrupt-driven via MFP Timer A at 200 Hz (`midi_seq_tick_handler`). The sequencer state machine (`MIDI_SEQ_PHASE` enum: WAIT_NOTE_EXPIRE, PARSE_NEXT_EVENT, SONG_ENDING) manages event parsing and note expiration.
 
-Each of the five mini-games is self-contained with its own game loop, graphics, and input handling. They are launched from a common menu (`action_play_a_game`).
+### .SNG File Format
 
-**Shared infrastructure:**
-- `minigame_setup_screen()` — prepares the mini-game display area
-- `minigame_wait_for_key_with_events()` — waits for a keypress while continuing the background simulation (the resident still animates during games)
-- `play_erase_rect()` / `draw_bar_color()` — mini-game drawing primitives
-- `init_vdi_and_screen()` / `exit_vdi_and_screen()` — save/restore the main game screen when entering/leaving games
+| Section | Content |
+|---|---|
+| Header (10 bytes) | File identifier (skipped) |
+| Channel map (30 bytes) | MIDI channel/program mappings |
+| PSG envelopes (360 bytes) | ADSR parameters for 3 PSG channels |
+| Header commands | Tempo, volume, scale table setup (parsed by `midi_seq_parse_header` via `midi_header_cmd_values/handlers` jump table) |
+| Event stream | Compact 3-byte note format + control events |
 
-**Poker** (`poker_main` — `0x18D10`) has the most complex implementation with ~30 dedicated functions covering: deck shuffling, dealing, betting rounds with AI bluffing decisions, hand evaluation and ranking, card drawing with discard management, and full showdown logic.
+### Sound Effects
 
-**Anagram** (`anagram_main` — `0x181AE`) loads a dictionary of 150 words, scrambles a random selection, and tracks up to 9 guesses with an optional clue system that progressively unscrambles letters.
+Separate from the music engine, a sound effect system (`soundeffect_*`) plays ambient sounds via the Atari ST's XBIOS DoSound interface: footsteps (carpet, wood, stairs), doorbell, door open/close, water running, toilet flush, phone ring, typewriter clicks, speech, snoring, alarm clock, and more. 26 effects defined in the `SOUND_EFFECT_ID` enum.
 
-**Word Puzzles** (`word_puzzle_main` — `0x176F8`) loads template definitions from `wordpz.txt` and presents crossword-style fill-in puzzles.
+## Copy Protection
 
-### 11. Persistence (`player_save` / `player_load`)
+The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 functions). Key characteristics:
 
-The game state is serialized to and from the `hyber` file. The save data includes the `resident` structure containing: physical traits (sprite ID, clothing/skin colors), personality parameters (happiness direction, durations), need states (hunger, thirst, bathroom timers and levels), sickness state, scheduled hours (wake, lunch, dinner, bedtime), door/furniture states (packed into bitfields), and food supply level.
+- **Self-modifying code**: XOR encryption with key 0x1567 (`copyprot_decrypt_code_block` / `copyprot_reencrypt_code_block`)
+- **Direct hardware access**: WD1772 FDC via DMA controller at 0xFF8604
+- **Raw track reading**: Reads MFM track data and searches for non-standard sector format
+- **Gap byte validation**: Checks gap byte counts in two ranges (< 16 and >= 80); both must be found
+- **Failure mode**: Sets `copyprot_check_return = 0` → character enters infinite `action_sleep(-1)` loop (permanently sleeps, never performs autonomous actions)
 
-### 12. Copy Protection (`PROT_CHECK` — `0x122C0`)
+## Data Files
 
-The protection system directly accesses the WD1772 Floppy Disk Controller hardware registers at `0xFF8604`/`0xFF8606`. It:
+| File | Purpose |
+|---|---|
+| `house.scn` | Compressed house background scene (320×200, nibble-based RLE) |
+| `title.scn` | Title screen scene (same compression) |
+| `body.lcp` | Body sprite sheet (91 states × 21 scanlines × 2 word-groups) |
+| `PE*.lcp` | Head sprite sheets (per-character expressions + happiness variants) |
+| `objects` | 56 static object graphics with FILE_IMG_DATA headers (height, width, pixel data) |
+| `sprites` | 50 overlay sprite definitions (mapped to 56 sprite_id slots via `spritedata_index_table[50]`) |
+| `sounds.lcp` | Sound effect data (26 DoSound sequences) |
+| `cards` | Card game graphics (52 cards + backs) |
+| `words` | Anagram dictionary (150 words) |
+| `wordpz.txt` | Word puzzle templates |
+| `names` | Character name pool (266 × 10 bytes) |
+| `letter.txt` | Letter writing templates (4 categories × happiness variants) |
+| `hyber` | Save file (128-byte LCP struct) |
+| `*.sng` | Music song files (custom MIDI format with channel mapping + PSG envelope data) |
+| `*.org` | Organ music files for piano/record playback |
 
-1. Selects drive A via `PROT_SELECT_DRIVE()`
-2. Seeks to a specific track
-3. Reads raw track data via `PROT_FDC_READ_TRACK()`
-4. Decrypts verification data with `PROT_DECRYPT()` using an XOR-based scheme
-5. Compares decrypted values against expected constants (`PROT_DATA_WORD_A` through `PROT_DATA_WORD_D`)
+## Reverse Engineering Status
 
-The result is stored in `copyprot_check_return` and checked in `endless_game_loop()`.
+### Completed
+- All 395 functions identified, named, and documented with plate comments (100% coverage)
+- All auto-generated function names resolved (0 `FUN_*` remaining)
+- 128-byte LCP save file struct fully mapped (49 fields)
+- 20+ custom enums applied (sprite_id, ACTION_ID, PLAYER_STATE, HOUSE_POS, WORD_ID, HEAD_ANIM_MODE, ST_COLOR, CLOTHING_COLOR_ID, SKIN_COLOR_ID, SICKNESS_LEVEL, HAPPINESS_LEVEL, NEED_LEVEL, MOOD_DIRECTION, PERSONALITY_TYPE, DOOR_STATE_FLAGS, DOG_BOWL_STATUS, MIDI_SEQ_PHASE, ENV_PHASE, SPRITE_LAYER, VDI_COPY_MODE, ST_RESOLUTION, VDI_FILL_STYLE, VDI_COLOR, SOUND_EFFECT_ID, CARD_TYPE)
+- 6+ custom structs defined (LCP, PSG_ENVELOPE, MFDB, FILE_IMG_DATA, CCB, _iobuf/FILE, fcbtab)
+- Alcyon C runtime library fully identified (~33 functions matched to original CP/M-68K source)
+- Complete sound engine documented (24 MIDI sequencer + 4 PSG envelope + SFX functions)
+- Complete sprite rendering pipeline documented with three-level architecture and corrected width/height naming
+- sprite_id enum fully traced (56 values mapped to actual game usage via action function analysis)
+- AI decision engine and action system fully analyzed (54 action/event handlers)
+- Copy protection fully analyzed (13 functions, self-modifying XOR encryption, WD1772 FDC access)
+- HOUSE.SCN decompressed and rendered with annotated object positions
+- Dog AI and animation system fully documented (movement, stair navigation, eating, petting)
+- Poker AI fully documented (30 functions with hand evaluation, bluffing, and draw strategy)
+- Global variable naming conventions unified: `midi_*` for MIDI sequencer, `psg_*` for YM2149 PSG, `soundeffect_*` for DoSound effects, `sprite_def_*`/`sprite_pending_*`/`sprite_active_*` for the three-level sprite pipeline
 
-### 13. Runtime Library
+### Known Remaining Issues
+- ~2,210 unnamed global labels (mostly auto-generated `DAT_`, `LAB_`, `BYTE_` prefixes for intermediate data values, padding, and array elements that don't require meaningful names)
+- 1 remaining `extraout_D0` decompiler artifact: `copyprot_fdc_read_status` — direct WD1772 FDC hardware register read via DMA port at 0xFF8604; D0 is set by memory-mapped I/O that Ghidra cannot model
+- Some local variables in complex functions still have auto-generated names
 
-The binary includes a statically linked C runtime (from the CP/M-68K compiler toolchain by Digital Research). This covers standard library functions: `sprintf`, `strlen`, `strcpy`, `strcat`, `strcmpi`, `toupper`, `alloc`, `strtol`, printf formatting, file I/O wrappers (`read`, `write`, `runtime_fseek`), and process management (`exit`, `runtime_init`). The runtime initializes via `runtime_init()` which configures the heap, parses the command line, and sets up file descriptor tables before calling `main()`.
+### Tools Used
+- **Ghidra 11** with MCP (Model Context Protocol) integration for interactive analysis
+- **Alcyon C compiler source code** (from Digital Research CP/M-68K, uploaded as reference) for runtime library identification
+- Original game running in **Hatari** emulator for behavioral verification
 
-## Data Structures
+## Running the Game
 
-Key custom types defined in the Ghidra analysis:
+1. Use an Atari ST emulator (Hatari, Steem) configured for **ST low resolution** (320×200, 16 colors)
+2. Place `LCP.PRG` and all data files in a `data/` subdirectory on a virtual floppy or hard disk image
+3. Launch `LCP.PRG` from the GEM desktop
+4. The game will display an error alert if not in low resolution mode
 
-| Type              | Size    | Purpose                                                |
-|-------------------|---------|--------------------------------------------------------|
-| `MFDB`            | 20 B    | GEM Memory Form Definition Block (bitmap descriptor)    |
-| `AESPB`           | 24 B    | GEM AES Parameter Block                                 |
-| `FILE_IMG_DATA`   | 6 B+    | Image file header (width, height, then planar data)     |
-| `CARD_TYPE`       | 2 B     | Card value for poker/blackjack/war                      |
-| `MIDI_Note_Struct`| varies  | MIDI event data for the music engine                    |
-| `DTA`             | 44 B    | GEMDOS Disk Transfer Address (file search)              |
-| `action_id`       | 2 B     | Enumeration of all possible character actions            |
-| `color_enum`      | 2 B     | VDI color index enumeration                             |
-| `keycode_enum`    | 2 B     | Keyboard scancode/ASCII mapping                         |
-| `BIOS_FUNCTION`   | 2 B     | BIOS trap function numbers                              |
-| `GEMDOS_FUNCTION` | 2 B     | GEMDOS trap function numbers                            |
+## License
 
-## Function Organization by Address
-
-The code is laid out roughly by subsystem in the TEXT segment:
-
-| Address Range              | Subsystem                           | ~Count |
-|----------------------------|-------------------------------------|--------|
-| `0x1006E` – `0x100C4`     | Runtime / startup                   | 5      |
-| `0x100FA` – `0x1011A`     | OS trap wrappers (XBIOS, BIOS, GEMDOS) | 3  |
-| `0x1012A` – `0x12284`     | Sound / music engine                | 35     |
-| `0x122C0` – `0x125F4`     | Copy protection                     | 18     |
-| `0x1400C` – `0x15BDC`     | Sprites, pathfinding, file loading, main | 15 |
-| `0x15C76` – `0x163CC`     | Game loop, AI engine, events        | 10     |
-| `0x163CC` – `0x176F8`     | VDI wrappers, screen, UI, input     | 30     |
-| `0x176F8` – `0x186E0`     | Mini-games: word puzzle, anagram    | 20     |
-| `0x186E0` – `0x1D9EA`     | Mini-games: poker, blackjack, war   | 45     |
-| `0x1D9EA` – `0x1E338`     | Sound effects, mouse, game-table    | 10     |
-| `0x1E338` – `0x247A0`     | Action functions (80+)              | 80     |
-| `0x247A0` – `0x26D5A`     | Save/load, sprite update, rendering | 15     |
-| `0x26D5A` – `0x27310`     | Text scrolling, printing, command parser | 12 |
-| `0x27310` – `0x27968`     | VDI/AES bindings                    | 20     |
-| `0x27968` – `0x2969A`     | C runtime library                   | 60     |
+This is a reverse engineering documentation project. The original game is © 1985 Activision. All analysis is for educational and preservation purposes.
