@@ -390,9 +390,19 @@ The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 function
 - Global variable naming conventions unified: `midi_*` for MIDI sequencer, `psg_*` for YM2149 PSG, `soundeffect_*` for DoSound effects, `sprite_def_*`/`sprite_pending_*`/`sprite_active_*` for the three-level sprite pipeline
 
 ### Known Remaining Issues
-- ~2,210 unnamed global labels (mostly auto-generated `DAT_`, `LAB_`, `BYTE_` prefixes for intermediate data values, padding, and array elements that don't require meaningful names)
+- 0 unnamed globals — all `DAT_`, `LAB_`, `BYTE_`, `SHORT_`, `ARRAY_`, `PTR_` prefixes resolved
+- 0 dual labels — all duplicate label conflicts resolved
+- 0 stale `sound_*` globals — all renamed to `midi_*`/`psg_*`/`soundeffect_*`
+- 0 outdated plate comments — all references to old variable names updated
 - 1 remaining `extraout_D0` decompiler artifact: `copyprot_fdc_read_status` — direct WD1772 FDC hardware register read via DMA port at 0xFF8604; D0 is set by memory-mapped I/O that Ghidra cannot model
-- Some local variables in complex functions still have auto-generated names
+- 77 functions still have auto-generated local variable names (`uVar1`–`uVar17`), all compiler-generated temporaries:
+  - MIDI sequencer (14 functions): register-level byte/word manipulations for MIDI protocol parsing and PSG register writes
+  - Copy protection (1): `in_D0`, `in_D1`, `in_A0`, `in_A1` hardware register inputs
+  - VDI/graphics wrappers (~20): rectangle coordinate parameters passed through to `vro_cpyfm`/`vsl_*` calls
+  - Sprite system (~7): MFDB setup and sprite slot calculations
+  - Poker display (~12): card coordinate calculations for rendering
+  - Game logic with VDI calls (~15): functions mixing game logic with VDI coordinate pass-throughs
+  - Mini-game helpers (~4) and utility functions (~4): `string_input`, `ldivs`, etc.
 
 ### Tools Used
 - **Ghidra 11** with MCP (Model Context Protocol) integration for interactive analysis
