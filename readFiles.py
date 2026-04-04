@@ -120,10 +120,11 @@ def loadSpritesOrObjects(filename,destpath,transp):
 	fileContent = open(filename, mode='rb').read()
 	offset = 0
 	index = 0
+	spritedata_index_table = [ 0x0C,0x0D,0x0E,0x0F,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1A,0x1B,0x1C,0x1D,0x1E,0x1F,0x20,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x29,0x2A,0x2B,0x2C,0x09,0x2D,0x2E,0x2F,0x30,0x31,0x03,0x04,0x32,0x07,0x06,0x33,0x34,0x35,0x36,0x08,0x37 ]
 	while offset < len(fileContent):
 		height,width = struct.unpack('>HH', fileContent[offset:offset+4])
 		offset += 4
-		offset = saveImage(width,height,transp,fileContent,offset,destpath + '%s_%d.png' % (name,index))
+		offset = saveImage(width,height,transp,fileContent,offset,destpath + '%s_%d.png' % (name,spritedata_index_table[index]))
 		index += 1
 
 def loadCards():
@@ -158,5 +159,5 @@ if False:
 #loadSpritesOrObjects('./DATA/OBJECTS','./OBJECTS/', False)
 #loadSpritesOrObjects('./DATA/SPRITES','./SPRITES/', True)
 #loadCards()
-loadLCP('./DATA/BODY.LCP')
+#loadLCP('./DATA/BODY.LCP')
 #loadLCP('./DATA/PE2.LCP')
