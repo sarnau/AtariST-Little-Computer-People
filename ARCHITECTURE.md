@@ -376,7 +376,7 @@ The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 function
 - All 395 functions identified, named, and documented with plate comments (100% coverage)
 - All auto-generated function names resolved (0 `FUN_*` remaining)
 - 128-byte LCP save file struct fully mapped (49 fields)
-- 20+ custom enums applied (sprite_id, ACTION_ID, PLAYER_STATE, HOUSE_POS, WORD_ID, HEAD_ANIM_MODE, ST_COLOR, CLOTHING_COLOR_ID, SKIN_COLOR_ID, SICKNESS_LEVEL, HAPPINESS_LEVEL, NEED_LEVEL, MOOD_DIRECTION, PERSONALITY_TYPE, DOOR_STATE_FLAGS, DOG_BOWL_STATUS, MIDI_SEQ_PHASE, ENV_PHASE, SPRITE_LAYER, VDI_COPY_MODE, ST_RESOLUTION, VDI_FILL_STYLE, VDI_COLOR, SOUND_EFFECT_ID, CARD_TYPE)
+- 20+ custom enums applied (sprite_id, ACTION_ID, PLAYER_STATE, HOUSE_POS, WORD_ID, HEAD_ANIM_MODE, ST_COLOR, CLOTHING_COLOR_ID, SKIN_COLOR_ID, SICKNESS_LEVEL, HAPPINESS_LEVEL, NEED_LEVEL, MOOD_DIRECTION, PERSONALITY_TYPE, DOOR_STATE_FLAGS, DOG_BOWL_STATUS, MIDI_SEQ_PHASE, ENV_PHASE, SPRITE_LAYER, VDI_COPY_MODE, ST_RESOLUTION, VDI_FILL_STYLE, VDI_COLOR, SOUND_EFFECT_ID, CARD_TYPE, FACING_DIR)
 - 6+ custom structs defined (LCP, PSG_ENVELOPE, MFDB, FILE_IMG_DATA, CCB, _iobuf/FILE, fcbtab)
 - Alcyon C runtime library fully identified (~33 functions matched to original CP/M-68K source)
 - Complete sound engine documented (24 MIDI sequencer + 4 PSG envelope + SFX functions)
@@ -386,7 +386,11 @@ The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 function
 - Copy protection fully analyzed (13 functions, self-modifying XOR encryption, WD1772 FDC access)
 - HOUSE.SCN decompressed and rendered with annotated object positions
 - Dog AI and animation system fully documented (movement, stair navigation, eating, petting)
-- Poker AI fully documented (30 functions with hand evaluation, bluffing, and draw strategy)
+- Card games fully documented: the "poker" mini-game system actually implements three games:
+  - **5-card draw poker** (`poker_main`): hand evaluation, computer AI with bluffing, draw strategy
+  - **Blackjack/21** (`poker_blackjack_main`): hit/stand, pair splitting, natural blackjack detection
+  - **War** (`poker_war_main`): 52-card deck split, higher-card-wins, war-on-tie mechanic
+  - 18 misnamed poker functions corrected; 8 CARD_TYPE_ globals renamed (split hand, draw piles, war cards, card counters)
 - Global variable naming conventions unified: `midi_*` for MIDI sequencer, `psg_*` for YM2149 PSG, `soundeffect_*` for DoSound effects, `sprite_def_*`/`sprite_pending_*`/`sprite_active_*` for the three-level sprite pipeline
 
 ### Known Remaining Issues
