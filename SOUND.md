@@ -38,7 +38,7 @@ over volume shaping.
 
 | File | Format | Purpose |
 |---|---|---|
-| `sounds.lcp` | DoSound sequences | 26 sound effects (footsteps, doors, bells, etc.) |
+| `sounds.lcp` | DoSound sequences | 23 sound effects (footsteps, doors, bells, etc.) |
 | `*.sng` | Custom MIDI + PSG envelope | Background music songs |
 | `*.org` | Same format as .sng | Organ/piano music for record player and piano actions |
 
@@ -287,46 +287,67 @@ and music are mutually exclusive — they share the PSG hardware.
 
 ### Data Source: `sounds.lcp`
 
-The file contains 26 DoSound command sequences, loaded into `midi_note_length_params[]`
-at startup. Each effect is a variable-length byte array in the Atari ST DoSound
+The file is 1,156 bytes and contains 23 DoSound command sequences terminated
+by a 2-byte `0x0000` sentinel, loaded into `midi_note_length_params[]` at
+startup. Each effect is a variable-length byte array in the Atari ST DoSound
 format: a sequence of register-write commands that the OS executes at 50 Hz.
 
-Each entry has a 2-byte size prefix followed by the DoSound command bytes and a
-4-byte duration suffix.
+Each entry consists of a 2-byte big-endian size word followed by that many
+bytes of content. The content contains the DoSound command bytes (ending with
+an `0xFF` terminator), optional padding zeros, and a 4-byte duration suffix
+(two big-endian shorts). The game zeroes out the duration bytes after
+extracting them, since the DoSound interpreter would try to execute them
+as register writes.
 
-### Sound Effect IDs (SOUND_EFFECT_ID enum, 26 values)
+The 23 effects fall into three complexity tiers based on DoSound data size:
 
-| ID | Name | Usage |
-|---|---|---|
-| 0 | `SFX_FOOTSTEP_CARPET` | Walking on carpeted floors |
-| 1 | `SFX_FOOTSTEP_WOOD` | Walking on wooden floors |
-| 2 | `SFX_FOOTSTEP_STAIRS` | Walking on stairs |
-| 3 | `SFX_DOOR_OPEN` | Opening doors |
-| 4 | `SFX_DOOR_CLOSE` | Closing doors |
-| 5 | `SFX_DOORBELL` | Front doorbell ring |
-| 6 | `SFX_DOORBELL_ECHO` | Doorbell follow-up echo |
-| 7 | `SFX_WATER_TAP` | Turning on water (kitchen/bathroom) |
-| 8 | `SFX_WATER_RUNNING` | Water running continuously |
-| 9 | `SFX_TOILET_FLUSH` | Toilet flushing |
-| 10 | `SFX_TOILET_REFILL` | Toilet tank refilling |
-| 11 | `SFX_TYPEWRITER_KEY` | Typewriter key press |
-| 12 | `SFX_TYPEWRITER_RETURN` | Typewriter carriage return |
-| 13 | `SFX_PHONE_RING` | Phone ringing |
-| 14 | `SFX_PHONE_PICKUP` | Picking up phone receiver |
-| 15 | `SFX_SPEECH_MURMUR` | LCP speaking/mumbling |
-| 16 | `SFX_SNORING` | Sleeping sound |
-| 17 | `SFX_ALARM_CLOCK` | Alarm clock ringing |
-| 18 | `SFX_TV_STATIC` | TV static noise |
-| 19 | `SFX_FIRE_CRACKLE` | Fireplace crackling |
-| 20 | `SFX_FOOD_CRUNCH` | Eating sounds |
-| 21 | `SFX_EXERCISE_GRUNT` | Exercise/effort sounds |
-| 22 | `SFX_APPLAUSE` | Applause (after performance) |
-| 23 | `SFX_BOOK_PAGE_TURN` | Turning book pages |
-| 24 | `SFX_DRINK_SIP` | Drinking water |
-| 25 | `SFX_YAWN` | Yawning (when tired) |
+- **Simple (34 bytes, 13 effects)**: All 14 YM2149 registers set once + `0xFF`.
+  Single-shot sounds that decay via hardware envelope. Used for footsteps,
+  doors, typewriter, phone, food crunch, applause.
+- **Looping (52 bytes, 5 effects)**: Base registers + 3 pitch-sweep stages
+  using DoSound's `0x80+reg` loop-target mechanism. Used for doorbell echo,
+  water tap, toilet flush, snoring.
+- **Complex (60–148 bytes, 5 effects)**: Multi-stage sequences with many
+  sweep steps. Water running (148 bytes, 15 pitch steps), alarm clock
+  (148 bytes, cycles through all 3 channels), fire crackle variant (60 bytes,
+  4 sweep stages).
 
-Note: The exact enum values and their mappings are reconstructed from usage
-context in action functions and the `SOUND_EFFECT_ID` enum in Ghidra.
+### Sound Effect IDs (SOUND_EFFECT_ID enum, 23 values)
+
+| ID | Name | Size | Usage |
+|---|---|---|---|
+| 0 | `SFX_FOOTSTEP_STAIRS` | 34 | Walking on stairs |
+| 1 | `SFX_FOOTSTEP_CARPET` | 34 | Walking on carpet |
+| 2 | `SFX_FOOTSTEP_WOOD` | 34 | Walking on wood floors |
+| 3 | `SFX_FOOTSTEP_3` | 34 | Footstep variant (not referenced in code) |
+| 4 | `SFX_FOOTSTEP_4` | 34 | Footstep variant (not referenced in code) |
+| 5 | `SFX_FOOTSTEP_5` | 34 | Footstep variant (not referenced in code) |
+| 6 | `SFX_TV_CLICK` | 52 | TV on/off click |
+| 7 | `SFX_SPEECH` | 52 | LCP speaking/mumbling |
+| 8 | `SFX_HEAD_NOD` | 148 | LCP head nod acknowledgment |
+| 9 | `SFX_GREETING` | 52 | LCP greeting/wave |
+| 10 | `SFX_CLICK` | 34 | Random UI click |
+| 11 | `SFX_TYPEWRITER_KEY` | 34 | Typewriter key press |
+| 12 | `SFX_DOORBELL` | 34 | Front doorbell ring |
+| 13 | `SFX_DOORBELL_ECHO` | 34 | Doorbell follow-up echo (chained from 12) |
+| 14 | `SFX_DOOR_OPEN` | 34 | Opening doors, cabinets, fridge, closets |
+| 15 | `SFX_DOOR_CLOSE` | 34 | Closing doors, cabinets, closets |
+| 16 | `SFX_TOILET_FLUSH` | 52 | Toilet flushing |
+| 17 | `SFX_TOILET_REFILL` | 148 | Toilet tank refilling (chained from 16) |
+| 18 | `SFX_WATER_RUNNING` | 34 | Water running (drinking, washing hands) |
+| 19 | `SFX_WATER_TAP` | 60 | Water tap on |
+| 20 | `SFX_ALARM_CLOCK` | 34 | Alarm clock ringing |
+| 21 | `SFX_PHONE_RING` | 34 | Phone ringing |
+| 22 | `SFX_SNORING` | 34 | Snoring (sleeping) |
+
+IDs 3–5 (`SFX_FOOTSTEP_3/4/5`) have valid DoSound data in SOUNDS.LCP but
+are never referenced by any `soundeffect_select()` call in the game code.
+They may be unused variants or reserved for future use.
+
+The three active footstep effects (IDs 0–2) are identical except for the
+noise period register (R06): stairs=17, carpet=1, wood=7. The same `\_`
+decay envelope shape creates distinct surface textures through noise
+frequency alone.
 
 ### Priority System
 
@@ -386,58 +407,142 @@ actions, no ambient SFX are heard.
 
 ## File Formats
 
-### .SNG / .ORG Song File Format
+### .SNG / .ORG Song File Format ("The Music Studio" by Activision)
 
-Both file types share the same internal format. `.sng` is used for background
-music, `.org` for organ/piano music the LCP plays on the record player or piano.
+Both file types share the same internal format, created by **The Music Studio**
+(Activision, 1986) for the Atari ST. The original music was composed by
+**Ed Bogas** (Activision staff composer). The `.sng` extension is used for
+background music songs, while `.org` is used for organ/piano pieces that the
+LCP plays on the record player or piano.
+
+The file signature is `0xCD "Mstudio" 0xCD`, format version `0x02`.
 
 ```
-Offset    Size    Content
-0x0000    10      File header (0xCD + 'Mstudio' + 0xCD + 0x02, skipped by loader)
-0x000A    15*10   Instrument names in ASCII
-0x00A0    124     Instrument envelope data (PSG ADSR params)
-0x011C    90      Channel/program mapping (30 entries x 3 bytes)
-0x0176    ...     Header configuration events (tempo, scale, volume)
-0x01E0    30      Title of the song in ASCII
-0x01FE+   ...     MIDI event stream (compact bytecode, up to 20,000 bytes)
+Offset  Size  Content
+------  ----  --------------------------------------------------
+0x000     1   Sentinel: 0xCD
+0x001     7   ASCII signature: "Mstudio"
+0x008     1   Sentinel: 0xCD
+0x009     1   Format version: 0x02
+
+0x00A   150   Instrument names block 1 (15 x 10 bytes, null-padded ASCII)
+              Active instrument set used for PSG synthesis.
+              Names like: Blocks, Harmonica, Guitar, Flute, Clarinet,
+              Baritone, Hihat, Snare, B.Fiddle, Sax, Piano, Bass, Vibes, Bells
+
+0x0A0   120   Instrument envelope parameters (15 x 8 bytes)
+              Per-instrument PSG envelope shape definitions.
+              Byte 0: mixer/config flags (high nibble: tone/noise enable bits)
+              Bytes 1-7: ADSR-like parameters loaded into PSG_ENVELOPE
+              when a program change selects this instrument.
+
+0x118   150   Instrument names block 2 (15 x 10 bytes)
+              Alternate instrument bank. May be identical to block 1
+              (Ed Bogas originals) or contain a different set
+              (classical pieces use different instruments like Accordian,
+              Soprano, Congas, Trumphet).
+
+0x1AE    30   Channel/program map (15 x 2 bytes)
+              Parsed by midi_seq_parse_channel_map() at
+              midi_data_base_ptr - 90.
+              Each 2-byte entry configures instrument-to-channel routing.
+              Value 0x01 = default/identity mapping.
+
+0x1CC    20   Extended data (usually zeros)
+              Some files contain 4 x 4-byte section repeat markers.
+
+0x1E0    32   Song name (null-terminated ASCII, padded to 32 bytes)
+
+0x200     8   Pre-stream area
+              Usually: FF FF 00 00 00 00 00 00
+              (FF FF serves as skip-padding target for midi_seq_skip_padding)
+
+0x208     -   midi_data_base_ptr target (= buffer + 0x1FE in game engine)
+              Header configuration commands followed by note event stream.
 ```
 
-The loader reads the file into a single buffer, then sets `midi_data_base_ptr`
-to buffer + 0x1FE (the start of the MIDI event stream). The channel map and
-envelope data are accessed at negative offsets from this pointer:
-- `midi_data_base_ptr - 90`: channel/program mapping (30 bytes)
-- `midi_data_base_ptr - 450`: envelope ADSR parameters (360 bytes)
+The game's `song_play()` function skips the 10-byte file header, reads up to
+20,000 bytes into a heap buffer, then sets `midi_data_base_ptr = buffer + 0x1FE`
+(file offset 0x208). The channel map and envelope data are accessed at
+negative offsets: `midi_data_base_ptr - 90` for the channel map (file 0x1AE),
+and earlier offsets for envelope parameters.
 
-### Header Configuration Events
+### Header Configuration Commands
 
-The header section (between channel map and MIDI stream) contains
-configuration commands parsed by `midi_seq_parse_header()`:
+Parsed by `midi_seq_parse_header()` starting at `midi_data_base_ptr`.
+The parser uses the mask `(byte & 0x9F) < 0x20` to distinguish note events
+(3-byte groups, skipped) from configuration commands (dispatched via jump table).
+The header ends when a 0x00 byte is encountered after the initial skip.
 
-| Command | Bytes | Purpose |
+| Command | Size | Purpose |
 |---|---|---|
-| 0x80 | 2 | Set MIDI channel count |
-| 0x81 | 4 | Set tempo (`midi_tempo`, `midi_ticks_per_beat`) |
-| 0x83 | 2 | Set default volume/velocity |
-| 0x84 | 2 | Build scale/transpose table |
-| 0xC0 | 3 | Program change event (channel assignment) |
-| 0xFF | 1 | End of header |
-| 0x00 | 1 | Padding/skip |
+| 0x80 NN | 2 | Set MIDI channel count |
+| 0x81 NN | 2 | Set tempo: `midi_ticks_per_beat = 2400 / NN` |
+| 0x83 NN | 2 | Set default volume/velocity |
+| 0x84 NN | 2 | Set scale (1=chromatic passthrough) |
+| 0x85 | 1+ | Loop start marker |
+| 0xC0 CC PP | 3 | Program change (channel, program) |
+| 0x00 | 1 | End of header (return) |
+| 0xFF | 1 | End marker (return) |
 | 0x01-0x7F | 3 | Note events in header (skipped) |
+
+Typical header: `CHANNELS=1, TEMPO=128, SCALE=1` (all songs use SCALE=1).
+Tempo values range from 78 (Bossa Nova, slowest) to 171 (Five Four, fastest).
+
+### Note Event Encoding (3 bytes)
+
+```
+Byte 0 (voice/instrument):
+  Bits 0-3: instrument index (0-14, into instrument block 1)
+  Bits 4-7: voice channel / modifier flags
+    0x0N = primary voice
+    0x1N = secondary voice
+    0x2N = third voice
+    0x4N = accent / note-on emphasis
+    0x8N = special modifier
+
+Byte 1 (duration + flags):
+  Bits 0-4: duration index (into midi_note_duration_table[], 0-25)
+  Bit 5:    accent flag (force max velocity 0x7F)
+  Bits 6-7: transpose mode (0=use scale table, 1-3=raw/bypass)
+
+Byte 2 (pitch):
+  Bits 0-6: MIDI note number (0-127)
+  Bit 7:    unused
+```
+
+Between note events: 0x00 = time advance/rest, 0x82 = bar marker, 0xFF = end of song.
 
 ### sounds.lcp File Format
 
-Contains 26 sound effect entries stored sequentially. Each entry:
+Contains 23 sound effect entries stored sequentially, terminated by a 2-byte
+`0x0000` sentinel. Total file size: 1,156 bytes. Each entry:
 
 ```
 Offset  Size    Content
-0       2       Size of DoSound command data (in bytes)
-2       N       DoSound command bytes (Atari ST XBIOS format)
-N+2     4       Default duration (2 shorts: high/low, in 200 Hz ticks)
+0       2       Entry size S (big-endian short, byte count of content below)
+2       S       Content: DoSound commands + 0xFF + padding + 4-byte duration
 ```
+
+Within the S-byte content region:
+- **DoSound commands**: pairs of (register_number, value) for YM2149 registers
+  0–13, with special loop-control codes (`0x80+reg`, `0x81`, `0x82`)
+- **`0xFF`**: end-of-sequence terminator
+- **Padding**: zero bytes (0–1 byte, for alignment)
+- **Duration**: last 4 bytes — two big-endian shorts (hi, lo) combined as
+  `(hi << 16) | lo`, then divided by 25 to yield 200 Hz tick count
+
+The game copies the entire S-byte content into `soundeffect_DoSound_Buffer`,
+extracts the 4-byte duration from the end, then zeroes those 4 bytes so the
+DoSound interpreter (XBIOS `Dosound`) won't try to execute them as commands.
 
 The DoSound command format is the Atari ST native format: pairs of
 (register_number, value) bytes written to the YM2149 at 50 Hz by the OS
-interrupt handler, with special control codes for delays and loops.
+interrupt handler. Special control codes create pitch sweeps:
+- `0x80+N, val`: write `val` to register N and mark this as the loop target
+- `0x81, count`: set internal counter to `count`
+- `0x82, step`: subtract `step` from counter; if counter > 0, jump back
+  to the last `0x80+N` command (creating a timed loop)
 
 ---
 
@@ -539,3 +644,30 @@ walk cycle), controlled by `footstep_trigger_flag`.
 | `soundeffect_playing_flag` | BOOL16 | True when a DoSound effect is active |
 | `soundeffect_remaining_ticks` | long | Frames remaining for current effect |
 | `_soundeffect_priority_table[]` | short[] | Priority value per effect ID |
+
+---
+
+## Song Catalog
+
+The game ships with 16 songs: 10 original compositions by **Ed Bogas** (`.sng`),
+and 6 classical/traditional arrangements (`.org`). The `.sng` files play as
+background music; the `.org` files play when the LCP uses the record player or piano.
+
+| File | Tempo | Events | Voices | Range | Title |
+|---|---|---|---|---|---|
+| AISLEDAN.SNG | 150 | 818 | 5 | C2–D6 | Aisle Dance by Ed Bogas |
+| BALLAD.SNG | 141 | 536 | 10 | C-1–C6 | Ballad by Ed Bogas |
+| BEBOP.SNG | 138 | 723 | 7 | C3–E6 | Bebop by Ed Bogas |
+| BOOGIE.SNG | 160 | 544 | 3 | F2–F6 | Boogie by Ed Bogas |
+| BOSSA.SNG | 78 | 624 | 4 | A2–D6 | Bossa Nova by Ed Bogas |
+| CALYPSO.SNG | 133 | 602 | 5 | G2–C6 | Calypso by Ed Bogas |
+| CANON.SNG | 160 | 676 | 4 | D2–E6 | Pachelbel's Canon in D |
+| COUNTRY2.SNG | 130 | 750 | 8 | C-1–D6 | Country Too by Ed Bogas |
+| FIVEFOUR.SNG | 171 | 671 | 8 | C-1–D6 | Five Four by Ed Bogas |
+| MYSTERY.SNG | 104 | 387 | 5 | C-1–D6 | Mystery by Ed Bogas |
+| TANGO.SNG | 133 | 842 | 6 | C2–F6 | Tango by Ed Bogas |
+| FOLKSONG.ORG | 100 | 550 | 3 | C-1–C6 | Folk Song by Ed Bogas |
+| MAPLE.ORG | 109 | 3,715 | 2 | C2–C7 | Maple Leaf Rag by Scott Joplin |
+| PRELUDE.ORG | 120 | 601 | 2 | B2–C6 | Prelude |
+| REQUIEM.ORG | 128 | 1,227 | 1 | D2–C6 | Kyrie eleison – Mozart's Requiem |
+| STARSPAN.ORG | 133 | 396 | 8 | C2–E6 | Star-Spangled Banner / F.S. Key |
