@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lcp-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["preview_server.py"],
+      "port": 8111
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ghidra__get_version",
+      "mcp__ghidra__export_system_knowledge",
+      "Bash(grep -l \"lcp\\\\.\" *.md)",
+      "Bash(grep -o \"STATE_[A-Z_]*\" /Users/sarnau/GitHub/AtariST-Little-Computer-People/*.md)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/ai.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/simulation.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/enums.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/actions.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/ai.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/simulation.py'\\).read\\(\\)\\); print\\('All files parse OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/actions.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/enums.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python3)",
+      "Bash(xxd /Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/HYBER)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/dog.py'\\).read\\(\\)\\); print\\('dog.py: OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/actions.py'\\).read\\(\\)\\); print\\('actions.py: OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/constants.py'\\).read\\(\\)\\); print\\('constants.py: OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/state.py'\\).read\\(\\)\\); print\\('state.py: OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/actions.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/dog.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/enums.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/constants.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/state.py'\\).read\\(\\)\\); print\\('All files OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/sound.py'\\).read\\(\\)\\); print\\('sound.py: OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('lcp/main.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/dog.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/actions.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/sound.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/constants.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/state.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/enums.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/games/poker.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/games/wordpuzzle.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/games/war.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/games/blackjack.py'\\).read\\(\\)\\); ast.parse\\(open\\('lcp/games/anagrams.py'\\).read\\(\\)\\); print\\('All files OK'\\)\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(wc -l lcp/*.py lcp/games/*.py)",
+      "Bash(python3 -c \"import ast; [ast.parse\\(open\\(f\\).read\\(\\)\\) for f in ['lcp/main.py','lcp/state.py','lcp/enums.py','lcp/structs.py','lcp/constants.py','lcp/simulation.py','lcp/ai.py','lcp/actions.py','lcp/movement.py','lcp/dog.py','lcp/sprites.py','lcp/render.py','lcp/sound.py','lcp/nlp.py','lcp/assets.py','lcp/games/poker.py','lcp/games/blackjack.py','lcp/games/war.py','lcp/games/anagrams.py','lcp/games/wordpuzzle.py']]; print\\('All OK'\\)\")",
+      "Bash(python3 -c \"from lcp.state import GameState; from lcp.assets import load_all_assets; from pathlib import Path; gs=GameState\\(\\); load_all_assets\\(gs, Path\\('DATA'\\)\\); print\\('Assets loaded OK'\\)\")",
+      "Bash(grep -n \"def spritedata_select_carried_object_left\\\\|def spritedata_select_carried_object_right\\\\|def sprite_update_slots\\\\|def screen_scroll_text_down\\\\|def lcp_update_palette_colors\\\\|def _play_sfx_audio\\\\|def sprite_update_body\" lcp/*.py lcp/games/*.py)"
+    ]
+  }
+}
