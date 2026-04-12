@@ -18,7 +18,7 @@ The ARCHITECTURE.md count of "45" includes compound routines and event handlers.
 import random
 from .enums import (
     ACTION_ID, PLAYER_STATE, FACING_DIR, SPRITE_LAYER, SPRITE_ID,
-    SICKNESS_LEVEL, NEED_LEVEL, SOUND_EFFECT_ID,
+    SICKNESS_LEVEL, NEED_LEVEL, SOUND_EFFECT_ID, DOG_BOWL_STATUS,
 )
 from .state import GameState
 from .constants import house_get_position_xy, HOUSE_POS
@@ -212,8 +212,7 @@ def action_sleep(gs: GameState, value: int) -> None:
 
     if value == -1:
         # Walk to centre of current floor
-        from .movement import get_floor_number_from_y
-        from .constants import FLOOR_CENTER_Y
+        from .movement import get_floor_number_from_y, FLOOR_CENTER_Y
         floor = get_floor_number_from_y(gs.lcp_y)
         gs.walk_target_x = gs.lcp_x
         gs.walk_target_y = FLOOR_CENTER_Y[floor - 1]

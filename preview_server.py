@@ -56,13 +56,19 @@ def _init_game():
 
 
 def _game_loop():
-    """Run the game simulation in background."""
+    """Run the game simulation in background.
+
+    Timing: screen_render_8hz_headless() sleeps to maintain ~8 Hz when
+    gs._realtime is True, matching the original Atari ST hardware timer.
+    1 game-second = 8 render frames × 125ms = 1 real second.
+    """
     global _running
     from lcp.simulation import game_simulate_one_second
     from lcp.ai import check_for_any_action_triggers
     from lcp.render import screen_render_8hz_headless
     from lcp.sprites import sprite_update_body, sprite_lcp_head_animate, sprite_lcp_head_update
 
+    gs._realtime = True  # Enable 8 Hz rate limiting in headless renderer
     _running = True
     frame = 0
     while _running:
@@ -78,7 +84,6 @@ def _game_loop():
             frame += 1
         except Exception as e:
             print(f"Game loop error: {e}")
-        time.sleep(0.125)  # ~8 Hz
 
 
 # ---------------------------------------------------------------------------
@@ -108,21 +113,74 @@ def render_frame() -> Image.Image:
 
     lcp_x, lcp_y = gs.lcp_x, gs.lcp_y
 
-    # Draw LCP body sprite if available
+    # Draw LCP body sprite (slot 3) using computed frame index
+    from lcp.constants import BODY_SPRITE_FRAME_TABLE, CARRY_BODY_FRAME_TABLE, BODY_Y_OFFSET_PER_STATE
+    from lcp.constants import HEAD_X_OFFSET_PER_STATE, HEAD_HEIGHT_PER_STATE, HAPPINESS_HEAD_FRAME_OFFSET
+
     lcp_drawn = False
-    if hasattr(gs, '_body_frames') and gs._body_frames:
+    body_frames = getattr(gs, '_body_frames', None)
+    if body_frames:
         state = gs.lcp_state
-        if 0 <= state < len(gs._body_frames):
-            body = gs._body_frames[state]
-            bx = lcp_x - body.width // 2
-            by = lcp_y - body.height
-            if gs.lcp_facing_direction == FACING_DIR.FACING_LEFT:
-                body = body.transpose(Image.FLIP_LEFT_RIGHT)
-            if body.mode == 'RGBA':
-                img.paste(body, (int(bx), int(by)), body)
+        if state < 0 or state >= len(BODY_SPRITE_FRAME_TABLE):
+            state = 0
+        frame_idx = BODY_SPRITE_FRAME_TABLE[state]
+        if gs.lcp_carrying_object_flag and state < len(CARRY_BODY_FRAME_TABLE):
+            frame_idx = CARRY_BODY_FRAME_TABLE[state]
+
+        if 0 <= frame_idx < len(body_frames):
+            body = body_frames[frame_idx]
+            # Position: X = lcp_x - 4 (right) or -14 (left); Y = lcp_y + offset - 21
+            if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
+                bx = lcp_x - 4
             else:
-                img.paste(body, (int(bx), int(by)))
-            lcp_drawn = True
+                bx = lcp_x - 14
+                body = body.transpose(Image.FLIP_LEFT_RIGHT)
+            y_off = BODY_Y_OFFSET_PER_STATE[state] if state < len(BODY_Y_OFFSET_PER_STATE) else 0
+            by = lcp_y + y_off - 21
+            try:
+                if body.mode == 'RGBA':
+                    img.paste(body, (int(bx), int(by)), body)
+                else:
+                    img.paste(body, (int(bx), int(by)))
+                lcp_drawn = True
+            except Exception:
+                pass
+
+    # Draw LCP head sprite (slot 4)
+    head_frames_dict = getattr(gs, '_head_frames', {})
+    char_variant = gs.lcp.character_sprite_id
+    head_frames = head_frames_dict.get(char_variant, None)
+    if head_frames and lcp_drawn:
+        happiness = gs.lcp.happiness
+        if happiness < 0 or happiness >= len(HAPPINESS_HEAD_FRAME_OFFSET):
+            happiness = 0
+        head_idx = HAPPINESS_HEAD_FRAME_OFFSET[happiness] + (gs.head_sprite_frame & 0x7F)
+        if 0 <= head_idx < len(head_frames):
+            head = head_frames[head_idx]
+            # Position head relative to body
+            state = gs.lcp_state
+            if state < 0 or state >= len(HEAD_X_OFFSET_PER_STATE):
+                state = 0
+            x_off = HEAD_X_OFFSET_PER_STATE[state]
+            y_off = BODY_Y_OFFSET_PER_STATE[state] if state < len(BODY_Y_OFFSET_PER_STATE) else 0
+            h_height = HEAD_HEIGHT_PER_STATE[state] if state < len(HEAD_HEIGHT_PER_STATE) else 21
+            mirror = getattr(gs, 'head_sprite_mirror_flag', 0)
+            if mirror:
+                hx = lcp_x + x_off - 14
+                head = head.transpose(Image.FLIP_LEFT_RIGHT)
+            else:
+                hx = lcp_x + x_off - 4
+            hy = lcp_y + y_off - (h_height + 21)
+            # Carry on stairs adjustment
+            if gs.lcp_carrying_object_flag and 12 < state < 17:
+                hy += 1
+            try:
+                if head.mode == 'RGBA':
+                    img.paste(head, (int(hx), int(hy)), head)
+                else:
+                    img.paste(head, (int(hx), int(hy)))
+            except Exception:
+                pass
 
     if not lcp_drawn:
         # Fallback: draw a colored rectangle for the LCP
@@ -131,7 +189,6 @@ def render_frame() -> Image.Image:
             [lcp_x - 4, lcp_y - 20, lcp_x + 4, lcp_y],
             fill=color, outline=(255, 255, 255)
         )
-        # Head
         draw.ellipse(
             [lcp_x - 3, lcp_y - 26, lcp_x + 3, lcp_y - 20],
             fill=(220, 180, 140), outline=(180, 140, 100)

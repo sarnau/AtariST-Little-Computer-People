@@ -181,11 +181,22 @@ def _screen_render_8hz(gs: GameState) -> None:
     """
     Call either the Pygame renderer or the headless fallback.
     addr: screen_render_8hz() call sites
-    """
-    from .render import screen_render_8hz_headless
 
-    # Dog AI + rendering is handled inside screen_render_8hz / headless variant
-    screen_render_8hz_headless(gs)
+    Timing (faithful to original Atari ST):
+      The original screen_render_8hz() checks the 200 Hz system timer
+      and returns immediately if < 125ms since last frame.  The caller
+      (game_tick_and_animate) busy-waits until the counter increments.
+      In Python:
+        - Pygame renderer: render_frame() sleeps until frame is due,
+          then renders and increments counter.  No busy-wait needed.
+        - Headless + _realtime: sleeps to maintain 8 Hz.
+        - Headless (default): no sleep — runs at full speed (for tests).
+    """
+    if hasattr(gs, '_renderer') and gs._renderer is not None and gs._renderer.initialized:
+        gs._renderer.render_frame(gs)
+    else:
+        from .render import screen_render_8hz_headless
+        screen_render_8hz_headless(gs)
 
 
 def _process_keyboard(gs: GameState) -> None:

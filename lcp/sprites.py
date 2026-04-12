@@ -199,6 +199,18 @@ def spritedata_set_position(gs: GameState, slot: int, x: int, y: int) -> None:
 # addr: game_tick_and_animate() carry branch
 # ---------------------------------------------------------------------------
 
+def spritedata_select_carried_object_left(gs: GameState, sprite_id: int) -> None:
+    """
+    Select a sprite as carried object (held in left hand).
+    Sets carry flag and object, makes the sprite visible.
+    addr: spritedata_select_carried_object_left()
+    """
+    from .enums import SPRITE_LAYER
+    gs.lcp_carrying_object_flag = 1
+    gs.lcp_carried_object = sprite_id
+    gs.sprite_layer_flags[sprite_id] = SPRITE_LAYER.SPRITE_IN_FRONT
+
+
 def update_carried_object_sprite(gs: GameState) -> None:
     """
     Position the carried-object sprite relative to the LCP.

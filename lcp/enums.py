@@ -446,6 +446,11 @@ class HEAD_ANIM_MODE(IntEnum):
     HEAD_ANIM_FIXED    = 2   # alias
     HEAD_ANIM_SHOWER   = 3   # shower head animation (Ghidra: HEAD_ANIM_SHOWER)
     HEAD_ANIM_SPECIAL  = 3   # alias
+    # Bitmask constants for head_anim_mode field interpretation:
+    HEAD_ANIM_HORIZONTAL_AMPLITUDE = 0x07  # bits 0–2: horizontal range amplitude
+    HEAD_ANIM_HORIZONTAL_RANGE     = 0x08  # bit 3: horizontal direction constraint
+    HEAD_ANIM_VERTICAL_RANGE       = 0xE0  # bits 5–7: vertical tilt range
+    HEAD_ANIM_VERTICAL_OVERRIDE    = 0x80  # bit 7: force specific vertical tilt
 
 
 # ---------------------------------------------------------------------------

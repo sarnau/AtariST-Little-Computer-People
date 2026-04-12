@@ -69,6 +69,17 @@ class Renderer:
     Pygame-backed renderer.
     Call init() once, then render_frame(gs) each game tick.
     addr: screen_render_8hz() — Python Pygame equivalent
+
+    Timing model (faithful to original Atari ST hardware):
+      The original screen_render_8hz() checks the 200 Hz system timer
+      (_hz_200) for at least 25 ticks (125ms) since the last frame.
+      If not enough time has passed, it returns immediately WITHOUT
+      incrementing animation_tick_counter.  The caller (game_tick_and_animate)
+      busy-waits in a loop until the counter changes.
+
+      In Python, render_frame() sleeps until the next frame is due,
+      then renders and increments the counter.  This avoids busy-waiting
+      and matches the original's effective timing: exactly ~8 Hz.
     """
 
     def __init__(self, scale: int = 3) -> None:
@@ -95,29 +106,34 @@ class Renderer:
         """Store the house background for compositing."""
         self._background = bg_surface
 
-    def _rate_gate(self) -> bool:
-        """Return True if enough time has passed for a new frame (~8 Hz)."""
+    def _wait_for_frame(self) -> None:
+        """
+        Sleep until the next 8 Hz frame boundary.
+        Replaces the original's busy-wait on _hz_200 hardware timer.
+        addr: screen_render_8hz() — rate gate: (24 < (save_hz200 - last_hz200))
+        """
         now = time.monotonic()
-        if now - self._last_frame_time >= FRAME_INTERVAL_S:
-            self._last_frame_time = now
-            return True
-        return False
+        remaining = FRAME_INTERVAL_S - (now - self._last_frame_time)
+        if remaining > 0.001:
+            time.sleep(remaining)
+        self._last_frame_time = time.monotonic()
 
     def render_frame(self, gs: GameState) -> bool:
         """
-        Composite and display one frame.
-        Returns True if a frame was rendered, False if rate-limited.
+        Wait for the next frame boundary, then composite and display.
+        Always returns True (a frame was rendered).
         addr: screen_render_8hz()
 
         Order matches original:
-          1. Dog AI (move, idle countdown, eating, wandering)
-          2. Sound effect tick-down
-          3. Background copy (3 modes)
-          4. Pending→active sprite flush
-          5. Sprite compositing
-          6. Page flip
-          7. Sound effect playback
-          8. Frame counter++
+          1. Wait for 125ms since last frame (rate gate)
+          2. Dog AI (move, idle countdown, eating, wandering)
+          3. Sound effect tick-down
+          4. Background copy (3 modes)
+          5. Pending→active sprite flush
+          6. Sprite compositing
+          7. Page flip
+          8. Sound effect playback
+          9. Frame counter++
         """
         if not self.initialized or not _PYGAME_AVAILABLE:
             # Headless mode — just advance the counter
@@ -125,8 +141,8 @@ class Renderer:
             gs.animation_tick_counter += 1
             return True
 
-        if not self._rate_gate():
-            return False
+        # 1. Wait for next frame boundary (~8 Hz, matching original hardware)
+        self._wait_for_frame()
 
         # 1. Dog AI + sound tick-down (pre-render logic)
         _run_per_frame_logic(gs)
@@ -152,7 +168,11 @@ class Renderer:
                                       SCREEN_H - TEXT_AREA_BOTTOM_Y))
                 gs.text_scroll_timer -= 1
 
-        # 4–5. Pending→active flush + sprite compositing
+        # 4–5. Sprite flush + compositing (matches original C exactly)
+        # Original: pending_x = active_x (save draw pos for next erase),
+        #           active_image = pending_image (promote new sprite data)
+        # Position is written directly to sprite_active_x/y by game logic
+        # (sprite_update_body, sprite_lcp_head_update, etc.)
         for slot in range(8):
             if gs.sprite_pending_flag[slot]:
                 gs.sprite_pending_flag[slot] = 0
@@ -255,8 +275,8 @@ def _draw_sprite(surf: 'pygame.Surface', gs: GameState, slot: int) -> None:
 
     # img can be either a PIL Image (from assets.py) or a pygame.Surface
     if _PYGAME_AVAILABLE:
-        x = gs.sprite_pending_x[slot]
-        y = gs.sprite_pending_y[slot]
+        x = gs.sprite_active_x[slot]
+        y = gs.sprite_active_y[slot]
 
         if hasattr(img, 'mode'):
             # PIL Image — convert to pygame Surface
@@ -280,16 +300,36 @@ def _draw_sprite(surf: 'pygame.Surface', gs: GameState, slot: int) -> None:
 # addr: screen_render_8hz() — rate and counter only
 # ---------------------------------------------------------------------------
 
+# Module-level state for headless rate limiting
+_last_headless_frame_time = 0.0
+
+
 def screen_render_8hz_headless(gs: GameState) -> None:
     """
     Headless equivalent of screen_render_8hz — runs per-frame logic,
     commits pending sprites to active, and advances the counter.
     addr: screen_render_8hz() loop body (no display output)
+
+    Timing:
+      When gs._realtime is True (set by game frontends), sleeps to
+      maintain ~8 Hz, matching the original Atari ST hardware timer.
+      When False (default, used by tests), runs at full speed.
     """
+    global _last_headless_frame_time
+
+    # Rate-limit to ~8 Hz when running in real-time mode
+    if getattr(gs, '_realtime', False):
+        now = time.monotonic()
+        remaining = FRAME_INTERVAL_S - (now - _last_headless_frame_time)
+        if remaining > 0.001:
+            time.sleep(remaining)
+        _last_headless_frame_time = time.monotonic()
+
     # Dog AI + sound tick-down
     _run_per_frame_logic(gs)
 
-    # Flush pending → active for any flagged slots
+    # Sprite flush (matches original C: active_x → pending_x for erase,
+    # pending_image → active_image for new data)
     for slot in range(8):
         if gs.sprite_pending_flag[slot]:
             gs.sprite_pending_flag[slot] = 0
@@ -324,8 +364,15 @@ def fill_top_rect_with_background(gs: GameState, width_chars: int = 0x1b) -> Non
 
 def screen_scroll_text_down(gs: GameState) -> None:
     """
-    Scroll the text area down by one line.
+    Scroll the text area down by one character line (8 pixels).
+    Sets text_scroll_timer to indicate the text area has content.
     addr: screen_scroll_text_down()
-    No-op in headless mode.
+
+    The actual pixel scrolling is handled by the renderer during render_frame().
+    The text_scroll_timer > 0 mode already handles the split-copy (text area
+    from front buffer, game area from back buffer).  Setting
+    screen_scroll_down_count = 1 gives one frame of keyboard input blocking
+    while the scroll happens.
     """
-    pass
+    gs.text_scroll_timer = max(gs.text_scroll_timer, 1)
+    gs.screen_scroll_down_count = 1
