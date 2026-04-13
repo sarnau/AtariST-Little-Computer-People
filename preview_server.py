@@ -371,10 +371,34 @@ def render_frame() -> Image.Image:
                 fill=(255, 255, 0), outline=(255, 0, 0)
             )
 
+    # Draw doors / furniture objects based on open/close state
+    # Each entry: (state_attr, x, y, closed_obj, open1_obj, open2_obj_or_None)
+    obj_imgs = getattr(gs, '_object_images', {})
+    door_defs = [
+        ('lcp_front_door_open',    294, 151, 36, 37, 38),   # Front door
+        ('lcp_study_door_open',    178,  23, 46, 47, 48),   # Study door
+        ('lcp_toilet_door_open',   187,  87, 25, 26, 27),   # Toilet door
+        ('lcp_closet_door_open',    75,  87, 28, 29, 30),   # Closet
+        ('lcp_fridge_open',         24, 153, 16, 17, 18),   # Fridge
+        ('lcp_filing_cabinet_open', 258, 47,  0,  1, None), # Filing cabinet (2 states only)
+        ('lcp_dresser_open',        97, 115, 10, 11, 12),   # Dresser
+        ('lcp_cabinet_open',        46, 140, 19, 20, 21),   # Kitchen cabinet
+    ]
+    for attr, dx, dy, closed_id, open1_id, open2_id in door_defs:
+        state_val = getattr(gs, attr, 0)
+        if state_val == 0:
+            obj_id = closed_id
+        elif state_val == 1:
+            obj_id = open1_id
+        else:
+            obj_id = open2_id if open2_id is not None else open1_id
+        door_img = obj_imgs.get(obj_id)
+        if door_img:
+            img.paste(door_img, (dx, dy))
+
     # Draw fire / fireplace object
     # addr: object_draw(_object_fire_animation[...], 257, 170)
     # _object_fire_animation = [32, 33, 34, 35], object_id_fire_off = 31
-    obj_imgs = getattr(gs, '_object_images', {})
     if gs.fire_active_flag:
         fire_obj_ids = [32, 33, 34, 35]
         fire_obj_id = fire_obj_ids[gs.fire_animation_frame % 4]

@@ -314,6 +314,19 @@ class GameState:
     doorbell_count: int        = 0
     clock_animation_frame: int = 0
 
+    # Door / furniture open-close state
+    # addr: lcp_front_door_open, lcp_study_door_open, lcp_toilet_door_open,
+    #       lcp_closet_door_open, lcp_filing_cabinet_open, lcp_dresser_open,
+    #       lcp_fridge_open, lcp_cabinet_open
+    lcp_front_door_open: int    = 0   # 0=closed, 1=opening, 2=open
+    lcp_study_door_open: int    = 0
+    lcp_toilet_door_open: int   = 0
+    lcp_closet_door_open: int   = 0
+    lcp_filing_cabinet_open: int = 0
+    lcp_dresser_open: int       = 0
+    lcp_fridge_open: int        = 0
+    lcp_cabinet_open: int       = 0
+
     # Petting animation state
     # addr: petting_dog_active, petting_anim_frame, petting_last_sprite_slot
     petting_dog_active: int    = 0
