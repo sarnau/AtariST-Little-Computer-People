@@ -256,9 +256,64 @@ def render_frame() -> Image.Image:
     else:
         img = Image.new('RGB', (320, 200), (40, 60, 40))
 
-    # Draw LCP position indicator
     from PIL import ImageDraw
     draw = ImageDraw.Draw(img)
+
+    # Draw background objects (doors, fire, clock, bowl, alarm) BEFORE sprites
+    obj_imgs = getattr(gs, '_object_images', {})
+
+    # Doors / furniture
+    door_defs = [
+        ('lcp_front_door_open',    294, 151, 36, 37, 38),   # Front door
+        ('lcp_study_door_open',    178,  23, 46, 47, 48),   # Study door
+        ('lcp_toilet_door_open',   187,  87, 25, 26, 27),   # Toilet door
+        ('lcp_closet_door_open',    75,  87, 28, 29, 30),   # Closet
+        ('lcp_fridge_open',         24, 153, 16, 17, 18),   # Fridge
+        ('lcp_filing_cabinet_open', 258, 47,  0,  1, None), # Filing cabinet
+        ('lcp_dresser_open',        97, 115, 10, 11, 12),   # Dresser
+        ('lcp_cabinet_open',        46, 140, 19, 20, 21),   # Kitchen cabinet
+    ]
+    for attr, dx, dy, closed_id, open1_id, open2_id in door_defs:
+        state_val = getattr(gs, attr, 0)
+        if state_val == 0:
+            obj_id = closed_id
+        elif state_val == 1:
+            obj_id = open1_id
+        else:
+            obj_id = open2_id if open2_id is not None else open1_id
+        door_img = obj_imgs.get(obj_id)
+        if door_img:
+            img.paste(door_img, (dx, dy))
+
+    # Fire animation
+    if gs.fire_active_flag:
+        fire_obj_id = [32, 33, 34, 35][gs.fire_animation_frame % 4]
+        fire_img = obj_imgs.get(fire_obj_id)
+        if fire_img:
+            img.paste(fire_img, (257, 170))
+    else:
+        fire_off_img = obj_imgs.get(31)
+        if fire_off_img:
+            img.paste(fire_off_img, (257, 170))
+
+    # Clock pendulum
+    clock_obj_ids = [13, 14, 13, 15]
+    clock_img = obj_imgs.get(clock_obj_ids[(gs.sub_animation_frame_counter >> 2) & 3])
+    if clock_img:
+        img.paste(clock_img, (271, 92))
+
+    # Dog bowl
+    bowl_img = obj_imgs.get([51, 50, 49][min(gs.dog_bowl_status, 2)])
+    if bowl_img:
+        img.paste(bowl_img, (8, 190))
+
+    # Alarm
+    if gs.ctrl_a_alarm_pressed_flag:
+        alarm_img = obj_imgs.get(3 + (gs.sub_animation_frame_counter & 1))
+        if alarm_img:
+            img.paste(alarm_img, (53, 102))
+
+    # Draw LCP sprite
 
     lcp_x, lcp_y = gs.lcp_x, gs.lcp_y
 
@@ -370,75 +425,6 @@ def render_frame() -> Image.Image:
                 [dog_x - 4, dog_y - 4, dog_x + 4, dog_y + 4],
                 fill=(255, 255, 0), outline=(255, 0, 0)
             )
-
-    # Draw doors / furniture objects based on open/close state
-    # Each entry: (state_attr, x, y, closed_obj, open1_obj, open2_obj_or_None)
-    obj_imgs = getattr(gs, '_object_images', {})
-    door_defs = [
-        ('lcp_front_door_open',    294, 151, 36, 37, 38),   # Front door
-        ('lcp_study_door_open',    178,  23, 46, 47, 48),   # Study door
-        ('lcp_toilet_door_open',   187,  87, 25, 26, 27),   # Toilet door
-        ('lcp_closet_door_open',    75,  87, 28, 29, 30),   # Closet
-        ('lcp_fridge_open',         24, 153, 16, 17, 18),   # Fridge
-        ('lcp_filing_cabinet_open', 258, 47,  0,  1, None), # Filing cabinet (2 states only)
-        ('lcp_dresser_open',        97, 115, 10, 11, 12),   # Dresser
-        ('lcp_cabinet_open',        46, 140, 19, 20, 21),   # Kitchen cabinet
-    ]
-    for attr, dx, dy, closed_id, open1_id, open2_id in door_defs:
-        state_val = getattr(gs, attr, 0)
-        if state_val == 0:
-            obj_id = closed_id
-        elif state_val == 1:
-            obj_id = open1_id
-        else:
-            obj_id = open2_id if open2_id is not None else open1_id
-        door_img = obj_imgs.get(obj_id)
-        if door_img:
-            img.paste(door_img, (dx, dy))
-
-    # Draw fire / fireplace object
-    # addr: object_draw(_object_fire_animation[...], 257, 170)
-    # _object_fire_animation = [32, 33, 34, 35], object_id_fire_off = 31
-    if gs.fire_active_flag:
-        fire_obj_ids = [32, 33, 34, 35]
-        fire_obj_id = fire_obj_ids[gs.fire_animation_frame % 4]
-        fire_img = obj_imgs.get(fire_obj_id)
-        if fire_img:
-            img.paste(fire_img, (257, 170))
-        else:
-            fire_colors = [(255, 100, 0), (255, 180, 0), (255, 60, 0), (255, 200, 50)]
-            draw.rectangle([257, 170, 280, 186], fill=fire_colors[gs.fire_animation_frame % 4])
-    else:
-        fire_off_img = obj_imgs.get(31)
-        if fire_off_img:
-            img.paste(fire_off_img, (257, 170))
-
-    # Draw clock pendulum animation
-    # addr: object_draw(_object_clock_animation[...], 271, 92)
-    # _object_clock_animation = [13, 14, 13, 15]
-    clock_obj_ids = [13, 14, 13, 15]
-    clock_frame = (gs.sub_animation_frame_counter >> 2) & 3
-    clock_img = obj_imgs.get(clock_obj_ids[clock_frame])
-    if clock_img:
-        img.paste(clock_img, (271, 92))
-
-    # Draw dog bowl object
-    # addr: object_draw(_object_dog_eating_animation[...], 8, 190)
-    # _object_dog_eating_animation = [51, 50, 49] (full=0→51, half=1→50, empty=2→49)
-    dog_bowl_obj_ids = [51, 50, 49]
-    bowl_idx = min(gs.dog_bowl_status, 2)
-    bowl_img = obj_imgs.get(dog_bowl_obj_ids[bowl_idx])
-    if bowl_img:
-        img.paste(bowl_img, (8, 190))
-
-    # Draw alarm animation
-    # addr: object_draw(_object_alarm_animation[...], 53, 102)
-    # _object_alarm_animation = [3, 4]
-    if gs.ctrl_a_alarm_pressed_flag:
-        alarm_frame = gs.sub_animation_frame_counter & 1
-        alarm_img = obj_imgs.get(3 + alarm_frame)
-        if alarm_img:
-            img.paste(alarm_img, (53, 102))
 
     return img
 

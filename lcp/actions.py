@@ -109,18 +109,59 @@ def show_lcp_sprites(gs: GameState) -> None:
 
 def _action_open_close_front_door(gs: GameState, close: int) -> None:
     """
-    Open (close=0) or close (close=1) the front door with sound effect.
+    Open (close=0) or close (close=1) the front door with sound and animation.
     addr: action_open_close_front_door()
     """
     if close == 0:
+        if gs.lcp_front_door_open:
+            return
+        _face_right(gs)
+        _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)   # bend and reach
+        _tick(gs, 2)
+        gs.lcp_front_door_open = 1  # opening
         _soundfx(gs, SOUND_EFFECT_ID.SFX_DOOR_OPEN)
-        _tick(gs, 6)
-        # Set door bit in door_states_and_flags
-        gs.lcp.door_states_and_flags |= 1  # bit 0 = front door open
+        _tick(gs, 2)
+        gs.lcp_front_door_open = 2  # fully open
+        _tick(gs, 2)
     else:
+        if not gs.lcp_front_door_open:
+            return
+        gs.lcp_front_door_open = 1  # closing
+        _tick(gs, 2)
+        gs.lcp_front_door_open = 0  # closed
         _soundfx(gs, SOUND_EFFECT_ID.SFX_DOOR_CLOSE)
-        _tick(gs, 6)
-        gs.lcp.door_states_and_flags &= ~1  # bit 0 = front door closed
+        _tick(gs, 2)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _tick(gs, 0)
+
+
+def _action_open_close_cabinet(gs: GameState, close: int) -> None:
+    """
+    Open (close=0) or close (close=1) the kitchen cabinet.
+    addr: action_open_close_cabinet()
+    """
+    if close == 0:
+        if gs.lcp_cabinet_open:
+            return
+        gs.lcp_cabinet_open = 1
+        _set_state(gs, PLAYER_STATE.STATE_CLEAN_2)   # reach into cabinet
+        _tick(gs, 3)
+        _soundfx(gs, SOUND_EFFECT_ID.SFX_DOOR_OPEN)
+        _tick(gs, 2)
+        gs.lcp_cabinet_open = 2
+        _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+        _tick(gs, 2)
+    else:
+        if not gs.lcp_cabinet_open:
+            return
+        _set_state(gs, PLAYER_STATE.STATE_CLEAN_2)   # reach into cabinet
+        _tick(gs, 3)
+        gs.lcp_cabinet_open = 1
+        _tick(gs, 2)
+        gs.lcp_cabinet_open = 0
+        _soundfx(gs, SOUND_EFFECT_ID.SFX_DOOR_CLOSE)
+        _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+        _tick(gs, 2)
 
 
 # ---------------------------------------------------------------------------
@@ -1121,3 +1162,197 @@ def action_feed_dog(gs: GameState, value: int) -> None:
     sprite_update_slots(gs)
     gs.lcp_carrying_object_flag = 0
     gs.action_interruptible_flag = 0
+
+
+# ---------------------------------------------------------------------------
+# Event handlers (triggered by Ctrl key combos via put_event_to_list)
+# These are dispatched by execute_event() in ai.py, NOT by do_action().
+# addr: event_receive_* functions
+# ---------------------------------------------------------------------------
+
+def _walk_to_front_door(gs: GameState) -> None:
+    """Walk to front door. addr: walk_to_front_door()"""
+    _walk(gs, HOUSE_POS.POS_BTM_FRONT_DOOR)
+
+
+def _open_door_pick_up_item(gs: GameState) -> None:
+    """Common doorbell sequence: open door, bend down, pick up item."""
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _head(gs, 12)  # HEAD_ANIM_HORIZONTAL_RANGE
+    _action_open_close_front_door(gs, 0)
+    _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)   # bend down
+    _tick(gs, 1)
+    _set_state(gs, PLAYER_STATE.STATE_PICK_UP_OBJECT)    # reach forward
+    _tick(gs, 2)
+    _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)   # bend down
+    _tick(gs, 1)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _tick(gs, 0)
+    # Random chance to close door
+    if _random(0, 100) > gs.lcp.initiative_threshold:
+        _action_open_close_front_door(gs, 1)
+
+
+def event_receive_food_delivery(gs: GameState) -> None:
+    """
+    Ctrl+F: Walk to front door, pick up groceries, carry to kitchen cabinet.
+    addr: event_receive_food_delivery()
+    """
+    from .sprites import sprite_update_slots
+    from .movement import spritedata_select_carried_object_left
+
+    gs.action_interruptible_flag = 1
+    _walk_to_front_door(gs)
+    _open_door_pick_up_item(gs)
+
+    if not gs.delivery_is_for_dog:
+        spritedata_select_carried_object_left(gs, SPRITE_ID.SPRITE_FOOD_PACKAGE)
+        _walk(gs, HOUSE_POS.POS_BTM_CABINET)
+        gs.sprite_layer_flags[9] = SPRITE_LAYER.SPRITE_HIDDEN
+        sprite_update_slots(gs)
+        gs.lcp_carrying_object_flag = 0
+        _face_right(gs)
+        _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+        _head(gs, 12)
+        _action_open_close_cabinet(gs, 0)
+        # Stock cabinet (up to 4 food items)
+        food_count = (gs.lcp.door_states_and_flags >> 9) & 7
+        while food_count + 1 < 5:
+            food_count += 1
+            gs.lcp.door_states_and_flags = (
+                (food_count * 0x200) | (gs.lcp.door_states_and_flags & ~0xE00)
+            )
+            _set_state(gs, PLAYER_STATE.STATE_CLEAN_2)   # reach into cabinet
+            _tick(gs, 3)
+            _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+            _tick(gs, 1)
+        if _random(0, 100) > gs.lcp.initiative_threshold:
+            _action_open_close_cabinet(gs, 1)
+        gs.action_interruptible_flag = 0
+    else:
+        spritedata_select_carried_object_left(gs, SPRITE_ID.SPRITE_FOOD_PACKAGE)
+        if gs.dog_bowl_status == DOG_BOWL_STATUS.BOWL_EMPTY:
+            action_feed_dog(gs, 1)
+        else:
+            action_get_snack_from_fridge(gs)
+            gs.sprite_layer_flags[9] = SPRITE_LAYER.SPRITE_HIDDEN
+            sprite_update_slots(gs)
+            gs.lcp_carrying_object_flag = 0
+
+
+def event_receive_dog_food(gs: GameState) -> None:
+    """
+    Ctrl+D: Dog food delivery. Sets delivery_is_for_dog, then does food delivery.
+    addr: event_receive_dog_food()
+    """
+    gs.delivery_is_for_dog = 1
+    event_receive_food_delivery(gs)
+    gs.delivery_is_for_dog = 0
+
+
+def event_receive_book_delivery(gs: GameState) -> None:
+    """
+    Ctrl+B: Walk to front door, pick up book, carry to bookshelf.
+    addr: event_receive_book_delivery()
+    """
+    from .sprites import sprite_update_slots
+    from .movement import spritedata_select_carried_object_left
+
+    gs.action_interruptible_flag = 1
+    _walk_to_front_door(gs)
+    _open_door_pick_up_item(gs)
+    spritedata_select_carried_object_left(gs, SPRITE_ID.SPRITE_BOOK)
+    _walk(gs, HOUSE_POS.POS_MID_BATHROOM_ENTRANCE)
+    gs.sprite_layer_flags[0x31] = SPRITE_LAYER.SPRITE_HIDDEN
+    sprite_update_slots(gs)
+    gs.lcp_carrying_object_flag = 0
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _head(gs, 12)
+    _set_state(gs, PLAYER_STATE.STATE_CLEAN_2)   # reach into cabinet
+    _tick(gs, 3)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _tick(gs, 2)
+    gs.action_interruptible_flag = 0
+
+
+def event_receive_record_delivery(gs: GameState) -> None:
+    """
+    Ctrl+R: Walk to front door, pick up record, carry to record player shelf.
+    addr: event_receive_record_delivery()
+    """
+    from .sprites import sprite_update_slots
+    from .movement import spritedata_select_carried_object_left
+
+    gs.action_interruptible_flag = 1
+    _walk_to_front_door(gs)
+    _open_door_pick_up_item(gs)
+    spritedata_select_carried_object_left(gs, SPRITE_ID.SPRITE_VINYL_CARRY)
+    _walk(gs, HOUSE_POS.POS_TOP_DANCE_FLOOR)
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    gs.sprite_layer_flags[0x32] = SPRITE_LAYER.SPRITE_HIDDEN
+    sprite_update_slots(gs)
+    gs.lcp_carrying_object_flag = 0
+    _head(gs, 12)
+    _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)   # bend down
+    _tick(gs, 1)
+    _set_state(gs, PLAYER_STATE.STATE_PICK_UP_OBJECT)    # reach forward
+    _tick(gs, 2)
+    _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)   # bend down
+    _tick(gs, 1)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _tick(gs, 0)
+    gs.lcp_food_count = getattr(gs, 'lcp_food_count', 0) + 1
+    gs.action_interruptible_flag = 0
+
+
+def event_answer_phone(gs: GameState) -> None:
+    """
+    Phone call event: walk to phone, pick up, talk, hang up.
+    addr: event_answer_phone()
+    """
+    gs.action_interruptible_flag = 1
+    action_call_dog(gs)
+    gs.action_interruptible_flag = 0
+    gs.head_anim_mode = 0  # HEAD_ANIM_DISABLED
+    _head(gs, 8)
+    gs.lcp_y += 6
+    _set_state(gs, PLAYER_STATE.STATE_PHONE_ANSWER)
+    _tick(gs, 1)
+    gs.phone_answered_flag = 1
+    gs.phone_call_active_flag = 0
+    gs.phone_hangup_flag = 1
+    _tick(gs, 0)
+    _set_state(gs, PLAYER_STATE.STATE_PHONE_TALK)
+    _tick(gs, 1)
+    # Talk for 40-50 ticks with random head animations
+    talk_count = _random(0x28, 0x32)
+    for _ in range(talk_count):
+        r = _random(0, 2)
+        if r == 0:
+            gs.head_sprite_frame = 5
+        elif r == 1:
+            gs.head_sprite_frame = 6
+        else:
+            gs.head_sprite_frame = getattr(gs, '_phone_head_frame', 0)
+        wait = _random(1, 2)
+        _tick(gs, wait)
+    gs.phone_hangup_flag = 1
+    _set_state(gs, PLAYER_STATE.STATE_PHONE_ANSWER)
+    _tick(gs, 1)
+    gs.lcp_y -= 6
+    _set_state(gs, PLAYER_STATE.STATE_EXERCISE_CROUCH)
+    _tick(gs, 1)
+    # Wait for petting to finish
+    while gs.petting_dog_active:
+        _tick(gs, 0)
+    gs.dog_pettable_flag = 0
+    gs.lcp_y -= 2
+    gs.head_anim_target = 8
+    gs.head_anim_current = 8
+    _set_state(gs, PLAYER_STATE.STATE_STAND_SIDE_VIEW)
+    _wait_head(gs)
+    _tick(gs, 0)
+    gs.phone_answered_flag = 0

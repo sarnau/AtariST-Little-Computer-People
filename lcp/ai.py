@@ -65,12 +65,32 @@ def get_event_from_list(gs: GameState) -> int:
 def execute_event(gs: GameState, event: int) -> None:
     """
     Execute a triggered event (doorbell, delivery, phone call, etc.).
+    Has its own switch — does NOT go through do_action().
     addr: execute_event()
     """
-    from .actions import do_action
+    from .actions import (
+        action_get_in_out_of_bed, action_get_dressed,
+        event_receive_record_delivery, event_receive_food_delivery,
+        event_answer_phone, event_receive_dog_food,
+        event_receive_book_delivery,
+    )
     gs.in_execute_event_routine_flag = 1
-    gs.trigger_action = event
-    do_action(gs)
+    if gs.lcp.is_sleeping:
+        action_get_in_out_of_bed(gs)
+    if event == ACTION_ID.ACTION_EVENT_RECORD_DELIVERY:
+        event_receive_record_delivery(gs)
+    elif event == ACTION_ID.ACTION_EVENT_FOOD_DELIVERY:
+        food_count = (gs.lcp.door_states_and_flags >> 9) & 7
+        if food_count != 4:
+            event_receive_food_delivery(gs)
+    elif event == ACTION_ID.ACTION_EVENT_PHONE_CALL:
+        event_answer_phone(gs)
+    elif event == ACTION_ID.ACTION_EVENT_DOG_FOOD:
+        event_receive_dog_food(gs)
+    elif event == ACTION_ID.ACTION_EVENT_BOOK_DELIVERY:
+        event_receive_book_delivery(gs)
+    elif event == ACTION_ID.ACTION_GET_DRESSED:
+        action_get_dressed(gs)
     gs.in_execute_event_routine_flag = 0
 
 
