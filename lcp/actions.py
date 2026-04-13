@@ -530,12 +530,32 @@ def action_sit_and_exercise(gs: GameState) -> None:
 
 
 def action_read_newspaper(gs: GameState) -> None:
-    """Sit and read newspaper at the game table or couch."""
-    _walk(gs, HOUSE_POS.POS_TOP_GAME_TABLE)
-    _face_right(gs)
-    _set_state(gs, PLAYER_STATE.STATE_SIT_CHAIR)
-    read_time = _random(30, 60)
-    _tick(gs, read_time)
+    """Sit in armchair and read newspaper.
+    addr: action_read_newspaper()
+    """
+    from .sound import tv_turn_on, tv_turn_off
+    tv_turn_on(gs)
+    result = _walk(gs, HOUSE_POS.POS_TOP_ARMCHAIR)
+    if result == 0:
+        gs.head_anim_mode = 4  # HEAD_ANIM_READING
+        _face_left(gs)
+        _set_state(gs, PLAYER_STATE.STATE_SIT_CHAIR)
+        gs.head_anim_target = 0x0a  # HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER
+        _wait_head(gs)
+        gs.lcp_y += 8
+        counter = 0
+        while counter < 200 and gs.triggered_event_list[0] == 0xFFFF:
+            _face_left(gs)
+            _set_state(gs, PLAYER_STATE.STATE_READ_NEWSPAPER)
+            if _random(0, 15) == 5:
+                _set_state(gs, PLAYER_STATE.STATE_WRITE_LETTER)  # page turn frame
+            _tick(gs, 1)
+            counter += 1
+        gs.lcp_y -= 8
+        _face_left(gs)
+        _set_state(gs, PLAYER_STATE.STATE_SIT_CHAIR)
+        _tick(gs, 2)
+        tv_turn_off(gs)
 
 
 def action_play_computer(gs: GameState) -> None:
@@ -598,11 +618,20 @@ def action_get_in_out_of_bed(gs: GameState) -> None:
 
 
 def action_listen_song(gs: GameState) -> None:
-    """Walk to record player / stereo and listen to music."""
-    _walk(gs, HOUSE_POS.POS_TOP_RECORD_SHELF)
-    _face_right(gs)
-    listen_time = _random(60, 120)
-    _tick(gs, listen_time)
+    """Walk to record player area and listen to music.
+    addr: action_listen_song()
+    """
+    if gs.lcp_record_playing:
+        return
+    result = _walk(gs, HOUSE_POS.POS_TOP_DANCE_FLOOR)
+    if result == 0:
+        _tick(gs, 2)
+        _face_right(gs)
+        gs.lcp_record_playing = 1
+        # In original: loads random .sng file and calls song_play()
+        # For now just set the flag and wait
+        listen_time = _random(60, 120)
+        _tick(gs, listen_time)
 
 
 def action_play_piano(gs: GameState) -> None:
@@ -618,11 +647,34 @@ def action_play_piano(gs: GameState) -> None:
 
 
 def action_write_letter(gs: GameState) -> None:
-    """Walk to desk and write a letter."""
-    _walk(gs, HOUSE_POS.POS_TOP_DESK_LAMP)
+    """Walk to filing cabinet, get paper, sit at desk and write a letter.
+    addr: action_write_letter()
+    """
+    if gs.lcp_record_playing:
+        action_play_piano(gs)
+    result = _walk(gs, HOUSE_POS.POS_TOP_FILING_CABINET)
+    if result != 0:
+        return
     _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    gs.head_anim_target = 8
+    _wait_head(gs)
+    # Walk to study door area, then sit at desk
+    result = _walk(gs, HOUSE_POS.POS_TOP_STUDY_DOOR)
+    if result != 0:
+        return
+    gs.action_interruptible_flag = 1
     gs.sprite_layer_flags[SPRITE_ID.SPRITE_TYPEWRITER] = SPRITE_LAYER.SPRITE_IN_FRONT
+    from .sprites import spritedata_select
+    spritedata_select(gs, SPRITE_ID.SPRITE_TYPEWRITER)
+    slot = gs.sprite_slot_map.get(SPRITE_ID.SPRITE_TYPEWRITER, -1)
+    if 0 <= slot < 8:
+        gs.sprite_pending_x[slot] = 201
+        gs.sprite_pending_y[slot] = 51
+    # Sit and type
     _set_state(gs, PLAYER_STATE.STATE_WRITE_LETTER)
+    gs.head_anim_mode = 4  # HEAD_ANIM_READING
+    gs.disable_key_input_flag = 1
     write_time = _random(30, 60)
     for _ in range(write_time):
         _set_state(gs, PLAYER_STATE.STATE_TYPE_LEFT)
@@ -630,7 +682,10 @@ def action_write_letter(gs: GameState) -> None:
         _soundfx(gs, SOUND_EFFECT_ID.SFX_TYPEWRITER_KEY)
         _set_state(gs, PLAYER_STATE.STATE_TYPE_RIGHT)
         _tick(gs, 3)
+    gs.disable_key_input_flag = 0
     gs.sprite_layer_flags[SPRITE_ID.SPRITE_TYPEWRITER] = SPRITE_LAYER.SPRITE_HIDDEN
+    gs.head_anim_mode = 0
+    gs.action_interruptible_flag = 0
 
 
 def action_dance(gs: GameState) -> None:
@@ -718,7 +773,21 @@ def action_peek_around(gs: GameState) -> None:
 
 
 def action_play_a_game(gs: GameState) -> None:
-    """Walk to kitchen table and play a card/word game."""
+    """Get game from filing cabinet, carry to table, play.
+    addr: action_play_a_game()
+    """
+    gs.dog_visible = 1
+    gs.dog_idle_countdown = 1
+    result = _walk(gs, HOUSE_POS.POS_TOP_FILING_CABINET)
+    if result != 0:
+        return
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    gs.head_anim_target = 8
+    _wait_head(gs)
+    # Carry game box to kitchen table
+    _set_state(gs, PLAYER_STATE.STATE_STAND_IDLE)
+    gs.action_interruptible_flag = 1
     _walk(gs, HOUSE_POS.POS_BTM_TABLE)
     _face_right(gs)
     _set_state(gs, PLAYER_STATE.STATE_PLAY_GAME_SIT)
@@ -726,6 +795,10 @@ def action_play_a_game(gs: GameState) -> None:
     # For headless mode, just wait
     game_time = _random(60, 120)
     _tick(gs, game_time)
+    # Return game to filing cabinet
+    _walk(gs, HOUSE_POS.POS_TOP_FILING_CABINET)
+    gs.action_interruptible_flag = 0
+    gs.dog_visible = 0
 
 
 def action_brush_teeth(gs: GameState) -> None:
@@ -749,23 +822,47 @@ def action_sit_on_couch_with_dog(gs: GameState) -> None:
 
 
 def action_light_fireplace(gs: GameState) -> None:
-    """Get firewood from outside and light the fireplace."""
-    # Walk to front door to pick up firewood
-    _walk(gs, HOUSE_POS.POS_BTM_FRONT_DOOR)
-    gs.sprite_layer_flags[SPRITE_ID.SPRITE_FIREWOOD] = SPRITE_LAYER.SPRITE_IN_FRONT
-    gs.lcp_carrying_object_flag = 1
-    gs.lcp_carried_object = SPRITE_ID.SPRITE_FIREWOOD
+    """Get firewood from outside and light the fireplace.
+    addr: action_light_fireplace()
+    """
+    if gs.fire_active_flag:
+        return
+    result = _walk(gs, HOUSE_POS.POS_BTM_FRONT_DOOR)
+    if result != 0:
+        return
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    gs.head_anim_target = 8
+    _wait_head(gs)
+    # Open front door, go outside, get firewood
     gs.action_interruptible_flag = 1
-    # Carry to fireplace
-    _walk(gs, HOUSE_POS.POS_TOP_FIREPLACE)
+    from .sprites import spritedata_select_carried_object_left
+    spritedata_select_carried_object_left(gs, SPRITE_ID.SPRITE_FIREWOOD)
+    # Carry firewood to fireplace area (bottom floor, pos 40 ≈ fireplace hearth)
+    _walk(gs, HOUSE_POS.POS_BTM_40)
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    gs.head_anim_target = 8
+    from .sprites import sprite_update_slots
     gs.sprite_layer_flags[SPRITE_ID.SPRITE_FIREWOOD] = SPRITE_LAYER.SPRITE_HIDDEN
+    sprite_update_slots(gs)
     gs.lcp_carrying_object_flag = 0
-    # Light fire
+    _wait_head(gs)
+    # Stoke fire
+    _set_state(gs, PLAYER_STATE.STATE_PUT_DOWN_OBJECT)
+    _tick(gs, 1)
+    _set_state(gs, PLAYER_STATE.STATE_PICK_UP_OBJECT)
+    _tick(gs, 1)
     _set_state(gs, PLAYER_STATE.STATE_LIGHT_FIRE_1)
-    _tick(gs, 4)
-    _set_state(gs, PLAYER_STATE.STATE_LIGHT_FIRE_2)
-    _tick(gs, 4)
-    gs.fire_active = 1
+    _tick(gs, 1)
+    for _ in range(10):
+        gs.lcp_facing_direction = _random(0, 1)
+        _tick(gs, 0)
+    gs.fire_active_flag = 1
+    gs.fire_duration_countdown = _random(0x9c4, 5000)
+    _face_right(gs)
+    _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
+    _tick(gs, 0)
     gs.action_interruptible_flag = 0
 
 

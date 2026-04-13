@@ -184,7 +184,8 @@ class HOUSE_POS(IntEnum):
     POS_TOP_6           = 6
     POS_TOP_STUDY_DOOR  = 7
     POS_TOP_8           = 8
-    POS_TOP_FILING_CAB  = 9
+    POS_TOP_FILING_CAB      = 9
+    POS_TOP_FILING_CABINET  = 9   # Ghidra alias
     POS_TOP_DESK_LAMP   = 10
     POS_TOP_11          = 11
     POS_TOP_RECORD_SHELF= 12
@@ -219,17 +220,18 @@ class HOUSE_POS(IntEnum):
     POS_BTM_WATER_TAP      = 34   # Ghidra alias (near stove/sink)
     POS_BTM_FRIDGE         = 35
     POS_BTM_CABINET        = 36
+    POS_BTM_KITCHEN_CABINET = 36  # Ghidra alias
     POS_BTM_TABLE       = 37
     POS_BTM_DOG_BOWL    = 38
-    POS_BTM_FRONT_DOOR  = 39
+    POS_BTM_39          = 39
     POS_BTM_40          = 40
     POS_BTM_41          = 41
     POS_BTM_42          = 42
     POS_BTM_43          = 43
     POS_BTM_44          = 44
     POS_BTM_45          = 45
-    POS_BTM_46          = 46
-    POS_BTM_47          = 47
+    POS_BTM_FRONT_DOOR  = 46   # Ghidra: POS_BTM_FRONT_DOOR (X=294, front door at right edge)
+    POS_BTM_SCREEN_EDGE = 47   # Ghidra: POS_BTM_SCREEN_EDGE (out-of-bounds fallback)
 
 
 # ---------------------------------------------------------------------------

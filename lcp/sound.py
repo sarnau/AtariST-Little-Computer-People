@@ -413,3 +413,13 @@ def stop_song(gs: GameState) -> None:
         gs.psg_envelope[ch].phase = ENV_PHASE.ENV_IDLE
         gs.psg_envelope[ch].current_volume = 0
         _psg_write_register(gs, ch, 0)
+
+
+def tv_turn_on(gs: GameState) -> None:
+    """Turn on the TV. addr: tv_turn_on()"""
+    gs.lcp_tv_on = 1
+
+
+def tv_turn_off(gs: GameState) -> None:
+    """Turn off the TV. addr: tv_turn_off()"""
+    gs.lcp_tv_on = 0

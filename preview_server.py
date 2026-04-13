@@ -28,6 +28,154 @@ from lcp.constants import house_get_position_xy, FLOOR_BASELINE_Y
 DATA_DIR = Path(__file__).parent / 'DATA'
 PORT = 8111
 
+# Friendly display names for PLAYER_STATE (shown in HUD)
+PLAYER_STATE_DISPLAY = {
+    PLAYER_STATE.STATE_WALK_FRAME_0: 'Walk 0',
+    PLAYER_STATE.STATE_WALK_FRAME_1: 'Walk 1',
+    PLAYER_STATE.STATE_WALK_FRAME_2: 'Walk 2',
+    PLAYER_STATE.STATE_WALK_FRAME_3: 'Walk 3',
+    PLAYER_STATE.STATE_WALK_FRAME_4: 'Walk 4',
+    PLAYER_STATE.STATE_WALK_FRAME_5: 'Walk 5',
+    PLAYER_STATE.STATE_WALK_FRAME_6: 'Walk 6',
+    PLAYER_STATE.STATE_WALK_FRAME_7: 'Walk 7',
+    PLAYER_STATE.STATE_STAND_IDLE: 'Stand Idle',
+    PLAYER_STATE.STATE_STAIR_UP_0: 'Stair Up 0',
+    PLAYER_STATE.STATE_STAIR_UP_1: 'Stair Up 1',
+    PLAYER_STATE.STATE_STAIR_UP_2: 'Stair Up 2',
+    PLAYER_STATE.STATE_STAIR_UP_3: 'Stair Up 3',
+    PLAYER_STATE.STATE_STAIR_TOP_0: 'Stair Top 0',
+    PLAYER_STATE.STATE_STAIR_TOP_1: 'Stair Top 1',
+    PLAYER_STATE.STATE_STAIR_TOP_2: 'Stair Top 2',
+    PLAYER_STATE.STATE_STAIR_TOP_3: 'Stair Top 3',
+    PLAYER_STATE.STATE_STAIR_DOWN_0: 'Stair Down 0',
+    PLAYER_STATE.STATE_STAIR_DOWN_1: 'Stair Down 1',
+    PLAYER_STATE.STATE_STAIR_DOWN_2: 'Stair Down 2',
+    PLAYER_STATE.STATE_STAIR_DOWN_3: 'Stair Down 3',
+    PLAYER_STATE.STATE_STAIR_BTM_0: 'Stair Btm 0',
+    PLAYER_STATE.STATE_STAIR_BTM_1: 'Stair Btm 1',
+    PLAYER_STATE.STATE_STAIR_BTM_2: 'Stair Btm 2',
+    PLAYER_STATE.STATE_STAIR_BTM_3: 'Stair Btm 3',
+    PLAYER_STATE.STATE_STAND_FACING_SCREEN: 'Facing Screen',
+    PLAYER_STATE.STATE_STAND_SIDE_VIEW: 'Side View',
+    PLAYER_STATE.STATE_SIT_CHAIR: 'Sit Chair',
+    PLAYER_STATE.STATE_SIT_COUCH: 'Sit Couch',
+    PLAYER_STATE.STATE_SIT_DESK: 'Sit Desk',
+    PLAYER_STATE.STATE_TYPE_LEFT: 'Type Left',
+    PLAYER_STATE.STATE_TYPE_RIGHT: 'Type Right',
+    PLAYER_STATE.STATE_EAT_BITE: 'Eat',
+    PLAYER_STATE.STATE_DRINK_GLASS: 'Drink',
+    PLAYER_STATE.STATE_EXERCISE_ARMS_UP: 'Exercise Up',
+    PLAYER_STATE.STATE_EXERCISE_CROUCH: 'Exercise Crouch',
+    PLAYER_STATE.STATE_SLEEP_IN_BED: 'Sleep In Bed',
+    PLAYER_STATE.STATE_SLEEP_LYING: 'Sleep Lying',
+    PLAYER_STATE.STATE_SHOWER_1: 'Shower 1',
+    PLAYER_STATE.STATE_SHOWER_2: 'Shower 2',
+    PLAYER_STATE.STATE_SHOWER_3: 'Shower 3',
+    PLAYER_STATE.STATE_SHOWER_4: 'Shower 4',
+    PLAYER_STATE.STATE_SHOWER_5: 'Shower 5',
+    PLAYER_STATE.STATE_BRUSH_TEETH: 'Brush Teeth',
+    PLAYER_STATE.STATE_WASH_HANDS: 'Wash Hands',
+    PLAYER_STATE.STATE_USE_TOILET: 'Use Toilet',
+    PLAYER_STATE.STATE_PLAY_PIANO_1: 'Piano 1',
+    PLAYER_STATE.STATE_PLAY_PIANO_2: 'Piano 2',
+    PLAYER_STATE.STATE_DANCE_LEFT: 'Dance Left',
+    PLAYER_STATE.STATE_DANCE_RIGHT: 'Dance Right',
+    PLAYER_STATE.STATE_READ_NEWSPAPER: 'Read Paper',
+    PLAYER_STATE.STATE_WRITE_LETTER: 'Write Letter',
+    PLAYER_STATE.STATE_SIT_EXERCISE_1: 'Sit Exercise 1',
+    PLAYER_STATE.STATE_SIT_EXERCISE_2: 'Sit Exercise 2',
+    PLAYER_STATE.STATE_YAWN: 'Yawn',
+    PLAYER_STATE.STATE_STRETCH: 'Stretch',
+    PLAYER_STATE.STATE_WANDER_LOOK: 'Wander Look',
+    PLAYER_STATE.STATE_PLAY_COMPUTER: 'Play Computer',
+    PLAYER_STATE.STATE_PEEK_AROUND: 'Peek Around',
+    PLAYER_STATE.STATE_NOD_HEAD: 'Nod Head',
+    PLAYER_STATE.STATE_HELLO: 'Hello',
+    PLAYER_STATE.STATE_GET_IN_BED: 'Get In Bed',
+    PLAYER_STATE.STATE_GET_OUT_BED: 'Get Out Bed',
+    PLAYER_STATE.STATE_OPEN_CLOSET: 'Open Closet',
+    PLAYER_STATE.STATE_CLOSE_CLOSET: 'Close Closet',
+    PLAYER_STATE.STATE_CARRY_OBJECT: 'Carry Object',
+    PLAYER_STATE.STATE_PUT_DOWN_OBJECT: 'Put Down',
+    PLAYER_STATE.STATE_PICK_UP_OBJECT: 'Pick Up',
+    PLAYER_STATE.STATE_FEED_DOG: 'Feed Dog',
+    PLAYER_STATE.STATE_PET_DOG_1: 'Pet Dog 1',
+    PLAYER_STATE.STATE_PET_DOG_2: 'Pet Dog 2',
+    PLAYER_STATE.STATE_SIT_ON_COUCH_DOG: 'Sit w/ Dog',
+    PLAYER_STATE.STATE_LIGHT_FIRE_1: 'Light Fire 1',
+    PLAYER_STATE.STATE_LIGHT_FIRE_2: 'Light Fire 2',
+    PLAYER_STATE.STATE_PHONE_ANSWER: 'Phone Answer',
+    PLAYER_STATE.STATE_PHONE_TALK: 'Phone Talk',
+    PLAYER_STATE.STATE_PHONE_HANG_UP: 'Phone Hang Up',
+    PLAYER_STATE.STATE_PLAY_RECORD_1: 'Play Record 1',
+    PLAYER_STATE.STATE_PLAY_RECORD_2: 'Play Record 2',
+    PLAYER_STATE.STATE_WATCH_TV: 'Watch TV',
+    PLAYER_STATE.STATE_PLAY_GAME_SIT: 'Play Game',
+    PLAYER_STATE.STATE_PACE_1: 'Pace 1',
+    PLAYER_STATE.STATE_PACE_2: 'Pace 2',
+    PLAYER_STATE.STATE_WAKE_FROM_ALARM: 'Wake Alarm',
+    PLAYER_STATE.STATE_STRETCH_WAKE: 'Stretch Wake',
+    PLAYER_STATE.STATE_SNIFF: 'Sniff',
+    PLAYER_STATE.STATE_DRESSED_STAND: 'Dressed',
+    PLAYER_STATE.STATE_TIDY_1: 'Tidy 1',
+    PLAYER_STATE.STATE_TIDY_2: 'Tidy 2',
+    PLAYER_STATE.STATE_CLEAN_1: 'Clean 1',
+    PLAYER_STATE.STATE_CLEAN_2: 'Clean 2',
+}
+
+# Friendly display names for HOUSE_POS (shown in HUD)
+# Format: "floor: label" where floor is 3=top, 2=mid, 1=btm
+HOUSE_POS_DISPLAY = {
+    HOUSE_POS.POS_TOP_0: '3: Left Edge',
+    HOUSE_POS.POS_TOP_ARMCHAIR: '3: Armchair',
+    HOUSE_POS.POS_TOP_GAME_TABLE: '3: Game Table',
+    HOUSE_POS.POS_TOP_DANCE_FLOOR: '3: Dance Floor',
+    HOUSE_POS.POS_TOP_FIREPLACE: '3: Fireplace',
+    HOUSE_POS.POS_TOP_LOG_AREA: '3: Log Area',
+    HOUSE_POS.POS_TOP_6: '3: Hallway',
+    HOUSE_POS.POS_TOP_STUDY_DOOR: '3: Study Door',
+    HOUSE_POS.POS_TOP_8: '3: Study 8',
+    HOUSE_POS.POS_TOP_FILING_CAB: '3: Filing Cabinet',
+    HOUSE_POS.POS_TOP_DESK_LAMP: '3: Desk Lamp',
+    HOUSE_POS.POS_TOP_11: '3: Study 11',
+    HOUSE_POS.POS_TOP_RECORD_SHELF: '3: Record Shelf',
+    HOUSE_POS.POS_TOP_13: '3: Living 13',
+    HOUSE_POS.POS_TOP_14: '3: Study 14',
+    HOUSE_POS.POS_TOP_15: '3: Right Edge',
+    HOUSE_POS.POS_MID_0: '2: Left Edge',
+    HOUSE_POS.POS_MID_BED: '2: Bed',
+    HOUSE_POS.POS_MID_DRESSER: '2: Dresser',
+    HOUSE_POS.POS_MID_CLOSET: '2: Closet',
+    HOUSE_POS.POS_MID_COUCH: '2: Couch',
+    HOUSE_POS.POS_MID_SINK: '2: Bathroom Sink',
+    HOUSE_POS.POS_MID_TOILET: '2: Toilet',
+    HOUSE_POS.POS_MID_SHOWER: '2: Shower Door',
+    HOUSE_POS.POS_MID_24: '2: Pos 24',
+    HOUSE_POS.POS_MID_PIANO: '2: Piano',
+    HOUSE_POS.POS_MID_SHOWER_INSIDE: '2: Shower Inside',
+    HOUSE_POS.POS_MID_27: '2: Pos 27',
+    HOUSE_POS.POS_MID_28: '2: Pos 28',
+    HOUSE_POS.POS_MID_COMPUTER: '2: Computer',
+    HOUSE_POS.POS_MID_30: '2: Right Edge',
+    HOUSE_POS.POS_MID_31: '2: Stairwell',
+    HOUSE_POS.POS_BTM_0: '1: Left Edge',
+    HOUSE_POS.POS_BTM_SINK: '1: Kitchen Sink',
+    HOUSE_POS.POS_BTM_STOVE: '1: Stove',
+    HOUSE_POS.POS_BTM_FRIDGE: '1: Fridge',
+    HOUSE_POS.POS_BTM_CABINET: '1: Cabinet',
+    HOUSE_POS.POS_BTM_TABLE: '1: Table',
+    HOUSE_POS.POS_BTM_DOG_BOWL: '1: Dog Bowl',
+    HOUSE_POS.POS_BTM_39: '1: Pos 39',
+    HOUSE_POS.POS_BTM_40: '1: Fireplace',
+    HOUSE_POS.POS_BTM_41: '1: Pos 41',
+    HOUSE_POS.POS_BTM_42: '1: Pos 42',
+    HOUSE_POS.POS_BTM_43: '1: Pos 43',
+    HOUSE_POS.POS_BTM_44: '1: Pos 44',
+    HOUSE_POS.POS_BTM_45: '1: Pos 45',
+    HOUSE_POS.POS_BTM_FRONT_DOOR: '1: Front Door',
+    HOUSE_POS.POS_BTM_SCREEN_EDGE: '1: Right Edge',
+}
+
 # Global game state
 gs = GameState()
 gs.copyprot_check_return = 1
@@ -242,20 +390,23 @@ def _nearest_house_pos(tx: int, ty: int) -> str:
     if tx == 0 and ty == 0:
         return ''
     best_dist = 999999
-    best_name = ''
+    best_member = None
     for member in HOUSE_POS:
         x, y = house_get_position_xy(member.value)
         d = abs(x - tx) + abs(y - ty)
         if d < best_dist:
             best_dist = d
-            best_name = member.name
-    return best_name if best_dist < 20 else f'({tx},{ty})'
+            best_member = member
+    if best_dist < 20 and best_member is not None:
+        return HOUSE_POS_DISPLAY.get(best_member, best_member.name)
+    return f'({tx},{ty})'
 
 
 def get_state_json() -> dict:
     """Return game state as JSON-serializable dict."""
     try:
-        lcp_state_name = PLAYER_STATE(gs.lcp_state).name
+        ps = PLAYER_STATE(gs.lcp_state)
+        lcp_state_name = PLAYER_STATE_DISPLAY.get(ps, ps.name)
     except ValueError:
         lcp_state_name = str(gs.lcp_state)
     try:

@@ -215,7 +215,7 @@ DOG_DESTINATION_POSITION_TABLE = [
     HOUSE_POS.POS_BTM_0,           # 32 — triggers dog_near_food_bowl
     HOUSE_POS.POS_BTM_SINK,        # 33
     HOUSE_POS.POS_BTM_41,          # 41
-    HOUSE_POS.POS_BTM_47,          # 47
+    HOUSE_POS.POS_BTM_SCREEN_EDGE, # 47
 ]
 
 # addr: dog_dest_y_offset_table[9] at DATA+0x2216 (Ghidra 0x2b8f2)
