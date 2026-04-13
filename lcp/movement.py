@@ -74,36 +74,53 @@ def get_floor_number_from_y(y: int) -> int:
 def lcp_calc_floor_waypoint(gs: GameState) -> None:
     """
     Compute the next waypoint for the LCP.
-    If the destination is on a different floor, route through the staircase.
+    If the destination is on a different floor, route through the staircase
+    waypoints.  Mirrors dog_calc_walk_path() logic exactly.
     addr: lcp_calc_floor_waypoint()
     """
+    from .constants import DOG_STAIR_TOP_Y_THRESHOLD, DOG_STAIR_BOTTOM_Y_THRESHOLD
+
+    target_floor = get_floor_number_from_y(gs.walk_target_y)
     current_floor = get_floor_number_from_y(gs.lcp_y)
-    target_floor  = get_floor_number_from_y(gs.walk_target_y)
 
     if current_floor == target_floor:
-        # Same floor — go directly to destination
+        gs.lcp_on_stairs_flag = 0
         gs.walk_waypoint_x = gs.walk_target_x
         gs.walk_waypoint_y = gs.walk_target_y
     else:
-        # Different floor — route through nearest stair entry on current floor
-        gs.lcp_on_stairs_flag = 1
-        if current_floor == 1:
-            # Bottom → stair base at Y=161
-            gs.walk_waypoint_x = STAIR_X
-            gs.walk_waypoint_y = STAIR_LOWER
-        elif current_floor == 2:
-            if target_floor == 3:
-                # Middle → stair top entry at Y=100
-                gs.walk_waypoint_x = STAIR_X
-                gs.walk_waypoint_y = STAIR_UPPER
+        # Use current floor's staircase waypoint
+        floor_from_y = get_floor_number_from_y(gs.lcp_y)
+        stair_index = (floor_from_y - 1) * 2
+        gs.walk_waypoint_x = STAIRCASE_WAYPOINT_COORDS[stair_index]
+        gs.walk_waypoint_y = STAIRCASE_WAYPOINT_COORDS[stair_index + 1]
+
+        # Floor 2 going down: override with stair threshold coords
+        if floor_from_y == 2:
+            dest_floor = get_floor_number_from_y(gs.walk_target_y)
+            if dest_floor < floor_from_y:
+                gs.walk_waypoint_x = DOG_STAIR_TOP_Y_THRESHOLD  # 124
+                gs.walk_waypoint_y = DOG_STAIR_BOTTOM_Y_THRESHOLD  # 137
+
+        gs.lcp_on_stairs_flag = 0
+
+        # If already at waypoint, transition to stairs and set next waypoint
+        if gs.lcp_x == gs.walk_waypoint_x and gs.lcp_y == gs.walk_waypoint_y:
+            gs.lcp_on_stairs_flag = 1
+
+            if gs.walk_target_y < gs.lcp_y:
+                # Going up: next floor's waypoint
+                gs.walk_waypoint_x = STAIRCASE_WAYPOINT_COORDS[stair_index + 2]
+                gs.walk_waypoint_y = STAIRCASE_WAYPOINT_COORDS[stair_index + 3]
             else:
-                # Middle → stair bottom at Y=161
-                gs.walk_waypoint_x = STAIR_X
-                gs.walk_waypoint_y = STAIR_LOWER
-        else:
-            # Top → stair entry at Y=100
-            gs.walk_waypoint_x = STAIR_X
-            gs.walk_waypoint_y = STAIR_UPPER
+                # Going down: previous floor's waypoint
+                gs.walk_waypoint_x = STAIRCASE_WAYPOINT_COORDS[stair_index - 2]
+                gs.walk_waypoint_y = STAIRCASE_WAYPOINT_COORDS[stair_index - 1]
+
+            # Floor 1 entering stairs: override with stair thresholds
+            floor_at = get_floor_number_from_y(gs.lcp_y)
+            if floor_at == 1:
+                gs.walk_waypoint_x = DOG_STAIR_TOP_Y_THRESHOLD  # 124
+                gs.walk_waypoint_y = DOG_STAIR_BOTTOM_Y_THRESHOLD  # 137
 
 
 # ---------------------------------------------------------------------------
@@ -529,9 +546,7 @@ def lcp_walk_to_destination(gs: GameState) -> int:
     Returns 0 on success, -1 if interrupted.
     addr: lcp_walk_to_destination()
     """
-    from .enums import HEAD_ANIM_MODE
-    gs.head_anim_mode = HEAD_ANIM_MODE.HEAD_ANIM_WALKING
-    gs.head_anim_mode = 0   # last_walk_sound_id = 0
+    gs.head_anim_mode = 0   # all random (immediately reset; walk sound tracking)
 
     while True:
         if gs.walk_target_x == 0 and gs.walk_target_y == 0:

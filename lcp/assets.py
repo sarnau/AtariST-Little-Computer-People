@@ -219,23 +219,71 @@ def load_screen(path: Path) -> Image.Image:
 # Body / head sprite sheet loader (.LCP files)
 # ---------------------------------------------------------------------------
 
-def load_lcp_sprite_sheet(path: Path) -> list[Image.Image]:
+def load_lcp_sprite_sheet(path: Path,
+                          palette_indices: tuple[int, ...] = (0, 1, 2, 3),
+                          ) -> list[Image.Image]:
     """
     Load a .LCP sprite sheet (BODY.LCP, PE2.LCP … PE6.LCP).
-    Each frame is 16×21 pixels, 4-bitplane, transparent colour 0.
-    Returns a list of PIL Images, one per animation frame.
-    addr: loadLCP() in readFiles.py
+
+    The file stores 32×21 pixel sprites in 2-bitplane interleaved format:
+      4 words per row = 2 chunks of 2 words (bitplane 0, bitplane 1)
+      Chunk 0: left 16 pixels   (words 0, 1)
+      Chunk 1: right 16 pixels  (words 2, 3)
+
+    sprite_lcp_flip() remaps the 2 source bitplanes into different
+    destination bitplane positions to select different palette ranges:
+      Body  (flipVertical=1): dest bitplanes 0,1 → palette entries 0,1,2,3
+      Head  (flipVertical=0): dest bitplanes 1,2 → palette entries 0,2,4,6
+
+    The ``palette_indices`` parameter maps the 4 possible 2-bit colour
+    values (0–3) to Atari ST palette indices.
+
+    Returns a list of 32×21 PIL RGBA Images, one per animation frame.
+    addr: loadLCP() in readFiles.py, sprite_lcp_flip()
     """
     raw = path.read_bytes()
     _count, _size = struct.unpack('>HH', raw[:4])
     frames: list[Image.Image] = []
     offset = 4
-    while offset < len(raw):
-        img = decode_st_bitmap(16, 21, raw, offset=offset, transparent=True)
+    # Each frame: 21 rows × 4 words × 2 bytes = 168 bytes
+    FRAME_BYTES = 21 * 4 * 2
+    while offset + FRAME_BYTES <= len(raw):
+        img = _decode_lcp_frame(raw, offset, palette_indices)
         frames.append(img)
-        words_per_row = math.ceil(16 / 16)  # = 1 word per row
-        offset += 21 * words_per_row * 4 * 2  # height × words × 4 planes × 2 bytes
+        offset += FRAME_BYTES
     return frames
+
+
+def _decode_lcp_frame(data: bytes, offset: int,
+                      palette_indices: tuple[int, ...],
+                      ) -> Image.Image:
+    """
+    Decode one 32×21 LCP sprite frame (2-bitplane, 2 chunks per row).
+    addr: sprite_lcp_flip() source format
+    """
+    img = Image.new('RGBA', (32, 21), (0, 0, 0, 0))
+    for row in range(21):
+        w0, w1, w2, w3 = struct.unpack_from('>4H', data, offset)
+        offset += 8
+        # Left 16 pixels (chunk 0: bitplane 0 = w0, bitplane 1 = w1)
+        for px in range(16):
+            bp0 = (w0 >> (15 - px)) & 1
+            bp1 = (w1 >> (15 - px)) & 1
+            col_idx = bp0 | (bp1 << 1)
+            if col_idx != 0:
+                pal = palette_indices[col_idx]
+                r, g, b = ATARI_PALETTE_RGB[pal]
+                img.putpixel((px, row), (r, g, b, 255))
+        # Right 16 pixels (chunk 1: bitplane 0 = w2, bitplane 1 = w3)
+        for px in range(16):
+            bp0 = (w2 >> (15 - px)) & 1
+            bp1 = (w3 >> (15 - px)) & 1
+            col_idx = bp0 | (bp1 << 1)
+            if col_idx != 0:
+                pal = palette_indices[col_idx]
+                r, g, b = ATARI_PALETTE_RGB[pal]
+                img.putpixel((px + 16, row), (r, g, b, 255))
+    return img
 
 
 # ---------------------------------------------------------------------------
@@ -376,16 +424,20 @@ def load_all_assets(gs: GameState, data_dir: Optional[Path] = None) -> None:
         gs._sounds = load_sounds(sounds_path)
 
     # -- Body sprite sheet (active character variant) -----------------------
+    # Body: sprite_lcp_flip(flipVertical=1) → dest bitplanes 0,1 → palette 0,1,2,3
     body_path = data_dir / 'BODY.LCP'
     if body_path.exists():
-        gs._body_frames = load_lcp_sprite_sheet(body_path)
+        gs._body_frames = load_lcp_sprite_sheet(body_path,
+                                                 palette_indices=(0, 1, 2, 3))
 
     # -- Head sprite sheets (PE2–PE6, one per character variant) -------------
+    # Head: sprite_lcp_flip(flipVertical=0) → dest bitplanes 1,2 → palette 0,2,4,6
     gs._head_frames: dict[int, list[Image.Image]] = {}
     for variant in range(2, 7):
         pe_path = data_dir / f'PE{variant}.LCP'
         if pe_path.exists():
-            gs._head_frames[variant] = load_lcp_sprite_sheet(pe_path)
+            gs._head_frames[variant] = load_lcp_sprite_sheet(
+                pe_path, palette_indices=(0, 2, 4, 6))
 
     # -- Playing cards -------------------------------------------------------
     cards_path = data_dir / 'CARDS'

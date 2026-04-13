@@ -54,6 +54,17 @@ class GameState:
     date_month: int         = 0    # 0–11
     date_year: int          = 0
 
+    def init_clock_from_system(self) -> None:
+        """Set the in-game clock and calendar to the current system time."""
+        from datetime import datetime
+        now = datetime.now()
+        self.time_hours = now.hour
+        self.time_minutes = now.minute
+        self.game_seconds_counter = now.second
+        self.date_day = now.day - 1      # game uses 0–30
+        self.date_month = now.month - 1  # game uses 0–11
+        self.date_year = now.year - 1987 # game epoch is 1987
+
     # -----------------------------------------------------------------------
     # LCP character position and movement
     # addr: lcp_x, lcp_y, walk_target_x, walk_target_y,
@@ -88,7 +99,7 @@ class GameState:
     head_sprite_frame: int         = 0
     head_anim_current: int         = 0
     head_anim_target: int          = 0
-    head_anim_mode: int            = HEAD_ANIM_MODE.HEAD_ANIM_NORMAL
+    head_anim_mode: int            = HEAD_ANIM_MODE.HEAD_ANIM_ALL_RANDOM
     head_anim_delay_countdown: int = 0
     head_sprite_mirror_flag: int   = 0   # 0=normal, 1=mirror head horizontally
 

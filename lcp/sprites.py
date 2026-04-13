@@ -270,6 +270,7 @@ def sprite_update_body(gs: GameState) -> None:
     gs._body_facing = gs.lcp_facing_direction
 
     # Position the body sprite in slot 3
+    # Sprites are 32px-wide (matching original Atari ST sprite buffers).
     if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
         gs.sprite_active_x[3] = gs.lcp_x - 4
     else:
@@ -338,33 +339,40 @@ def sprite_lcp_head_animate(gs: GameState) -> None:
             state = 0
 
         if rval & 0x10:
-            # Vertical movement
-            movement_mask = gs.head_anim_mode & HEAD_ANIM_MODE.HEAD_ANIM_VERTICAL_RANGE
-            if movement_mask == 0xFF & HEAD_ANIM_MODE.HEAD_ANIM_VERTICAL_RANGE:
-                movement_mask = random.randint(0, 255) & 0xE0
-                if movement_mask == 0xE0:
-                    movement_mask = 0x40
-            if (gs.head_anim_mode & 0xE1) < 0x81:
+            # Vertical movement — pick new vertical tilt target
+            # Bits 5-6 (0x60) select vertical tilt; bit 7 (0x80) forces override
+            movement_mask = gs.head_anim_mode & 0x60  # HEAD_ANIM_VERT_SELECT_MASK
+            if movement_mask == 0:
+                # No vertical specified — pick random
+                movement_mask = random.randint(0, 255) & 0x60
+                if movement_mask == 0:
+                    movement_mask = 0x40  # fallback if still zero
+            if (gs.head_anim_mode & 0xE0) <= 0x80:
+                # Random vertical from selection
                 rv = random.randint(0, 255)
                 movement_mask = (((movement_mask >> 5) - 1) & 1) + ((rv & 4) >> 2)
             else:
+                # Forced vertical override (bits 5-7 > 0x80)
                 movement_mask = 7 - (gs.head_anim_mode >> 5)
             gs.head_anim_target = (movement_mask << 3) | (gs.head_anim_target & 7)
         else:
-            # Horizontal movement
-            anim_mode = gs.head_anim_mode & HEAD_ANIM_MODE.HEAD_ANIM_HORIZONTAL_AMPLITUDE
-            if anim_mode == 0x1F & HEAD_ANIM_MODE.HEAD_ANIM_HORIZONTAL_AMPLITUDE:
-                anim_mode = (random.randint(0, 255) & 0x07) | 1
+            # Horizontal movement — pick new horizontal angle target
+            # Bits 0-1 (0x03) = amplitude; bits 2-3 (0x0C) = direction
+            anim_mode = gs.head_anim_mode & 0x03  # HEAD_ANIM_HORIZ_AMP_MASK
+            if anim_mode == 0:
+                # No amplitude specified — pick random
+                anim_mode = (random.randint(0, 255) & 0x03) | 1
             else:
-                anim_mode = gs.head_anim_mode & 0x07
+                anim_mode = gs.head_anim_mode & 0x03
 
             random_seed = anim_mode - 1
-            horiz_range = gs.head_anim_mode & HEAD_ANIM_MODE.HEAD_ANIM_HORIZONTAL_RANGE
-            if horiz_range == 0xFF & HEAD_ANIM_MODE.HEAD_ANIM_HORIZONTAL_RANGE:
+            horiz_range = gs.head_anim_mode & 0x0C  # HEAD_ANIM_HORIZ_DIR_MASK
+            if horiz_range == 0:
+                # No direction constraint — random
                 rv = random.randint(0, 255)
                 if rv & 8:
                     random_seed = -random_seed
-            elif horiz_range > 7:
+            elif horiz_range >= 8:
                 random_seed = -random_seed
 
             random_seed = (random_seed + HEAD_DEFAULT_ANGLE_PER_STATE[state]) & 7
@@ -475,6 +483,7 @@ def sprite_lcp_head_update(gs: GameState) -> None:
     gs._head_mirror = gs.head_sprite_mirror_flag
 
     # Position the head in slot 4
+    # Sprites are 32px-wide (matching original Atari ST sprite buffers).
     x_offset = HEAD_X_OFFSET_PER_STATE[state] if state < len(HEAD_X_OFFSET_PER_STATE) else 0
     if gs.head_sprite_mirror_flag == 0:
         gs.sprite_active_x[4] = gs.lcp_x + x_offset - 4

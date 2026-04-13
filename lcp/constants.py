@@ -23,7 +23,7 @@ from .enums import ACTION_ID, HOUSE_POS, SPRITE_ID, SOUND_EFFECT_ID
 #   Floor 1 (bottom): Y = 202  (positions 32–47)
 # ---------------------------------------------------------------------------
 
-FLOOR_BASELINE_Y = [202, 140, 77]   # index 0=bottom, 1=middle, 2=top
+FLOOR_BASELINE_Y = [77, 140, 202]   # index 0=top, 1=middle, 2=bottom
 
 # X coordinates (half-pixels — double to get screen X)
 # 48 entries, one per HOUSE_POS
@@ -65,7 +65,7 @@ def house_get_position_xy(pos: int) -> tuple[int, int]:
     """
     x = ROOM_POSITION_X_TABLE[pos] << 1
     floor_index = pos >> 4       # floor = position // 16
-    y_base = FLOOR_BASELINE_Y[floor_index] if floor_index < 3 else FLOOR_BASELINE_Y[0]
+    y_base = FLOOR_BASELINE_Y[floor_index] if floor_index < 3 else FLOOR_BASELINE_Y[2]
     y = y_base - ROOM_POSITION_HEIGHT_TABLE[pos + 1]
     return x, y
 
@@ -211,7 +211,7 @@ DOG_DESTINATION_POSITION_TABLE = [
     HOUSE_POS.POS_TOP_LOG_AREA,    # 5
     HOUSE_POS.POS_TOP_11,          # 11
     HOUSE_POS.POS_MID_CLOSET,      # 19
-    HOUSE_POS.POS_MID_29,          # 29
+    HOUSE_POS.POS_MID_COMPUTER,    # 29
     HOUSE_POS.POS_BTM_0,           # 32 — triggers dog_near_food_bowl
     HOUSE_POS.POS_BTM_SINK,        # 33
     HOUSE_POS.POS_BTM_41,          # 41

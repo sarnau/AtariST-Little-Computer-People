@@ -277,6 +277,7 @@ def endless_game_loop(gs: GameState) -> None:
             action_sleep(gs, -1)
 
     gs.game_speed_counter = 5
+    gs.init_clock_from_system()
 
     while True:
         game_tick_and_animate(gs, 0)

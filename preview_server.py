@@ -53,6 +53,7 @@ def _init_game():
     gs.dog_x = 8
     gs.dog_y = 190
     gs.game_speed_counter = 5
+    gs.init_clock_from_system()
 
 
 def _game_loop():
@@ -130,6 +131,7 @@ def render_frame() -> Image.Image:
         if 0 <= frame_idx < len(body_frames):
             body = body_frames[frame_idx]
             # Position: X = lcp_x - 4 (right) or -14 (left); Y = lcp_y + offset - 21
+            # Sprites are 32px wide (matching original Atari ST buffers).
             if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
                 bx = lcp_x - 4
             else:
@@ -235,13 +237,37 @@ def render_frame() -> Image.Image:
     return img
 
 
+def _nearest_house_pos(tx: int, ty: int) -> str:
+    """Find the HOUSE_POS name closest to the given coordinates."""
+    if tx == 0 and ty == 0:
+        return ''
+    best_dist = 999999
+    best_name = ''
+    for member in HOUSE_POS:
+        x, y = house_get_position_xy(member.value)
+        d = abs(x - tx) + abs(y - ty)
+        if d < best_dist:
+            best_dist = d
+            best_name = member.name
+    return best_name if best_dist < 20 else f'({tx},{ty})'
+
+
 def get_state_json() -> dict:
     """Return game state as JSON-serializable dict."""
+    try:
+        lcp_state_name = PLAYER_STATE(gs.lcp_state).name
+    except ValueError:
+        lcp_state_name = str(gs.lcp_state)
+    try:
+        dog_sprite_name = SPRITE_ID(gs.dog_sprite_id).name
+    except ValueError:
+        dog_sprite_name = str(gs.dog_sprite_id)
     return {
         'lcp': {
             'x': gs.lcp_x,
             'y': gs.lcp_y,
             'state': gs.lcp_state,
+            'state_name': lcp_state_name,
             'facing': gs.lcp_facing_direction,
             'name': gs.lcp.name_str,
             'sleeping': gs.lcp.is_sleeping,
@@ -249,13 +275,26 @@ def get_state_json() -> dict:
             'hunger': int(gs.lcp.hunger_level),
             'thirst': int(gs.lcp.thirst_level),
             'sickness': int(gs.lcp.sickness_level),
+            'target_x': gs.walk_target_x,
+            'target_y': gs.walk_target_y,
+            'target_name': _nearest_house_pos(gs.walk_target_x, gs.walk_target_y),
+            'waypoint_x': gs.walk_waypoint_x,
+            'waypoint_y': gs.walk_waypoint_y,
+            'on_stairs': gs.lcp_on_stairs_flag,
         },
         'dog': {
             'x': gs.dog_x,
             'y': gs.dog_y,
+            'sprite_name': dog_sprite_name,
             'eating': gs.dog_eating_active,
             'idle_countdown': gs.dog_idle_countdown,
             'bowl_status': gs.dog_bowl_status,
+            'target_x': gs.dog_target_x,
+            'target_y': gs.dog_target_y,
+            'target_name': _nearest_house_pos(gs.dog_target_x, gs.dog_target_y),
+            'waypoint_x': gs.dog_waypoint_x,
+            'waypoint_y': gs.dog_waypoint_y,
+            'on_stairs': gs.dog_on_stairs_flag,
         },
         'world': {
             'date_day': gs.date_day,
@@ -366,6 +405,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="hud-row"><span class="hud-label">Name:</span><span class="hud-value" id="hud-name">--</span></div>
     <div class="hud-row"><span class="hud-label">Position:</span><span class="hud-value" id="hud-pos">--</span></div>
     <div class="hud-row"><span class="hud-label">State:</span><span class="hud-value" id="hud-state">--</span></div>
+    <div class="hud-row"><span class="hud-label">Target:</span><span class="hud-value" id="hud-target">--</span></div>
     <div class="hud-row"><span class="hud-label">Happiness:</span><span class="hud-value" id="hud-happy">--</span></div>
   </div>
   <div class="hud-panel">
@@ -380,6 +420,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="hud-row"><span class="hud-label">Date:</span><span class="hud-value" id="hud-date">--</span></div>
     <div class="hud-row"><span class="hud-label">Time:</span><span class="hud-value" id="hud-time">--</span></div>
     <div class="hud-row"><span class="hud-label">Dog:</span><span class="hud-value" id="hud-dog">--</span></div>
+    <div class="hud-row"><span class="hud-label">Dog Target:</span><span class="hud-value" id="hud-dog-target">--</span></div>
     <div class="hud-row"><span class="hud-label">Tick:</span><span class="hud-value" id="hud-tick">--</span></div>
   </div>
 </div>
@@ -415,7 +456,14 @@ function updateHud(state) {
   const d = state.dog;
   document.getElementById('hud-name').textContent = l.name || '--';
   document.getElementById('hud-pos').textContent = `${l.x}, ${l.y}`;
-  document.getElementById('hud-state').textContent = l.state;
+  document.getElementById('hud-state').textContent = l.state_name;
+  if (l.target_x || l.target_y) {
+    let t = l.target_name || `(${l.target_x},${l.target_y})`;
+    if (l.on_stairs) t += ' [stairs]';
+    document.getElementById('hud-target').textContent = t;
+  } else {
+    document.getElementById('hud-target').textContent = 'idle';
+  }
   document.getElementById('hud-happy').textContent = HAPPY_NAMES[l.happiness] || l.happiness;
   document.getElementById('hud-hunger').textContent = NEED_NAMES[l.hunger] || l.hunger;
   document.getElementById('hud-thirst').textContent = NEED_NAMES[l.thirst] || l.thirst;
@@ -426,7 +474,14 @@ function updateHud(state) {
   document.getElementById('hud-time').textContent =
     `${String(w.game_hour).padStart(2,'0')}:${String(w.game_minute).padStart(2,'0')}`;
   document.getElementById('hud-dog').textContent =
-    `(${d.x},${d.y}) Bowl:${BOWL_NAMES[d.bowl_status]||d.bowl_status}`;
+    `(${d.x},${d.y}) ${d.sprite_name} Bowl:${BOWL_NAMES[d.bowl_status]||d.bowl_status}`;
+  if (d.target_x || d.target_y) {
+    let t = d.target_name || `(${d.target_x},${d.target_y})`;
+    if (d.on_stairs) t += ' [stairs]';
+    document.getElementById('hud-dog-target').textContent = t;
+  } else {
+    document.getElementById('hud-dog-target').textContent = 'idle';
+  }
   document.getElementById('hud-tick').textContent = w.tick;
 }
 

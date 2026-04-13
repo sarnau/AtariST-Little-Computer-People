@@ -178,7 +178,7 @@ class HOUSE_POS(IntEnum):
     POS_TOP_0           = 0
     POS_TOP_ARMCHAIR    = 1
     POS_TOP_GAME_TABLE  = 2
-    POS_TOP_3           = 3
+    POS_TOP_DANCE_FLOOR = 3   # Ghidra: POS_TOP_DANCE_FLOOR
     POS_TOP_FIREPLACE   = 4
     POS_TOP_LOG_AREA    = 5
     POS_TOP_6           = 6
@@ -203,12 +203,12 @@ class HOUSE_POS(IntEnum):
     POS_MID_TOILET_DOOR    = 22   # Ghidra alias
     POS_MID_SHOWER         = 23
     POS_MID_SHOWER_DOOR    = 23   # Ghidra alias
-    POS_MID_COMPUTER       = 24
+    POS_MID_24             = 24
     POS_MID_PIANO          = 25
     POS_MID_SHOWER_INSIDE  = 26   # Ghidra: POS_MID_SHOWER_INSIDE
     POS_MID_27             = 27
     POS_MID_28             = 28
-    POS_MID_29             = 29
+    POS_MID_COMPUTER       = 29   # Ghidra: POS_MID_COMPUTER_DESK
     POS_MID_30             = 30
     POS_MID_31             = 31
     # Floor 1 — Kitchen / Entrance (bottom floor)
@@ -440,17 +440,14 @@ class DOG_BOWL_STATUS(IntEnum):
 # addr: head_anim_mode, sprite_lcp_head_update()
 # ---------------------------------------------------------------------------
 class HEAD_ANIM_MODE(IntEnum):
-    HEAD_ANIM_NORMAL   = 0
-    HEAD_ANIM_WALKING  = 1   # natural head bob while walking
-    HEAD_ANIM_DISABLED = 2   # head position frozen (Ghidra: HEAD_ANIM_DISABLED)
-    HEAD_ANIM_FIXED    = 2   # alias
-    HEAD_ANIM_SHOWER   = 3   # shower head animation (Ghidra: HEAD_ANIM_SHOWER)
-    HEAD_ANIM_SPECIAL  = 3   # alias
-    # Bitmask constants for head_anim_mode field interpretation:
-    HEAD_ANIM_HORIZONTAL_AMPLITUDE = 0x07  # bits 0–2: horizontal range amplitude
-    HEAD_ANIM_HORIZONTAL_RANGE     = 0x08  # bit 3: horizontal direction constraint
-    HEAD_ANIM_VERTICAL_RANGE       = 0xE0  # bits 5–7: vertical tilt range
-    HEAD_ANIM_VERTICAL_OVERRIDE    = 0x80  # bit 7: force specific vertical tilt
+    HEAD_ANIM_ALL_RANDOM = 0     # all random movement (no constraints)
+    # Bitmask constants for head_anim_mode bitfield:
+    HEAD_ANIM_HORIZ_AMP_MASK   = 0x03  # bits 0–1: horizontal amplitude (0=random, 1-3=fixed)
+    HEAD_ANIM_HORIZ_DIR_MASK   = 0x0C  # bits 2–3: horizontal direction (0=random, ≥8=negate)
+    HEAD_ANIM_VERT_SELECT_MASK = 0x60  # bits 5–6: vertical tilt selection (0=random)
+    HEAD_ANIM_VERT_OVERRIDE    = 0x80  # bit 7: force specific vertical tilt
+    HEAD_ANIM_VERT_RANGE_MASK  = 0xE0  # bits 5–7: full vertical range (with override)
+    # Sign bit (bit 15): negative value = animation frozen/disabled
 
 
 # ---------------------------------------------------------------------------

@@ -271,8 +271,7 @@ def action_drink(gs: GameState) -> None:
         _face_right(gs)
         _tick(gs, 0)
         _update_water_level_bar(gs, -3)
-        from .enums import HEAD_ANIM_MODE
-        gs.head_anim_mode = HEAD_ANIM_MODE.HEAD_ANIM_FIXED
+        gs.head_anim_mode = 2  # small range (amplitude 1)
         _set_state(gs, PLAYER_STATE.STATE_DRINK_GLASS)
         _tick(gs, 0x10)
         _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
@@ -443,8 +442,7 @@ def action_take_shower(gs: GameState) -> None:
     gs.lcp_x -= 8
     gs.lcp_y -= 0x17   # -23
     _head(gs, 8)
-    from .enums import HEAD_ANIM_MODE
-    gs.head_anim_mode = HEAD_ANIM_MODE.HEAD_ANIM_SHOWER
+    gs.head_anim_mode = 3  # wider range (amplitude 2) for shower
 
     shower_count = _random(0x14, 0x19)   # 20–25 cycles
     for _ in range(shower_count):
@@ -475,7 +473,7 @@ def action_take_shower(gs: GameState) -> None:
     gs.lcp_y += 0x1d   # +29 (asymmetric with -23 — intentional per Ghidra)
     _tick(gs, 2)
     _walk(gs, HOUSE_POS.POS_MID_SHOWER_DOOR)
-    gs.head_anim_mode = HEAD_ANIM_MODE.HEAD_ANIM_FIXED
+    gs.head_anim_mode = 2  # small range (amplitude 1)
     gs.action_interruptible_flag = 0
 
 
@@ -502,8 +500,7 @@ def action_get_dressed(gs: GameState) -> None:
     elif h == 5:
         gs.head_anim_target = 14
 
-    from .enums import HEAD_ANIM_MODE
-    gs.head_anim_mode = HEAD_ANIM_MODE.HEAD_ANIM_FIXED
+    gs.head_anim_mode = 2  # small range (amplitude 1)
     _wait_head(gs)
 
     # 4 dressing cycles: alternate between normal and outfit-change head frames
@@ -637,14 +634,36 @@ def action_write_letter(gs: GameState) -> None:
 
 
 def action_dance(gs: GameState) -> None:
-    """Put on record and dance."""
-    _walk(gs, HOUSE_POS.POS_TOP_RECORD_SHELF)
-    dance_time = _random(40, 80)
-    for _ in range(dance_time):
-        _set_state(gs, PLAYER_STATE.STATE_DANCE_LEFT)
-        _tick(gs, 4)
-        _set_state(gs, PLAYER_STATE.STATE_DANCE_RIGHT)
-        _tick(gs, 4)
+    """Put on record and dance.
+    addr: action_dance()
+    """
+    if not gs.lcp_record_playing:
+        gs.action_interruptible_flag = 1
+        action_listen_song(gs)
+    gs.action_interruptible_flag = 0
+    from .constants import house_get_position_xy
+    x, y = house_get_position_xy(HOUSE_POS.POS_TOP_DANCE_FLOOR)
+    gs.walk_target_x = x
+    gs.walk_target_y = y + 8
+    from .movement import lcp_walk_to_destination
+    result = lcp_walk_to_destination(gs)
+    if result == 0:
+        _face_right(gs)
+        _set_state(gs, PLAYER_STATE.STATE_STAND_IDLE)
+        gs.head_anim_target = 8
+        _wait_head(gs)
+        counter = 0
+        while getattr(gs, 'midi_is_playing', False):
+            counter += 1
+            if counter & 1:
+                _set_state(gs, PLAYER_STATE.STATE_DANCE_RIGHT)
+            else:
+                _set_state(gs, PLAYER_STATE.STATE_DANCE_LEFT)
+            if gs.triggered_event_list[0] != 0xFFFF:
+                break
+            _tick(gs, 2)
+        _set_state(gs, PLAYER_STATE.STATE_STAND_IDLE)
+        _tick(gs, 0)
 
 
 def action_yawn_and_stretch(gs: GameState) -> None:
