@@ -319,6 +319,7 @@ class GameState:
     petting_dog_active: int    = 0
     petting_anim_frame: int    = 0
     petting_last_sprite_slot: int = 0
+    dog_pettable_flag: int     = 0   # addr: dog_pettable_flag
 
     # Screen scroll state
     # addr: screen_scroll_down_count

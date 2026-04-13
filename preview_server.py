@@ -758,20 +758,54 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 
 
 def _handle_command(cmd: str):
-    """Handle a player command from the web UI."""
-    cmd_map = {
-        'water':    'ctrl_w_water_flag',
-        'food':     'ctrl_f_food_flag',
-        'dog_food': 'ctrl_d_dogfood_flag',
-        'pet':      'ctrl_p_pet_flag',
-        'alarm':    'ctrl_a_alarm_pressed_flag',
-        'call':     'ctrl_c_phone_flag',
-        'record':   'ctrl_r_record_flag',
-        'book':     'ctrl_b_book_flag',
-    }
-    flag = cmd_map.get(cmd)
-    if flag and hasattr(gs, flag):
-        setattr(gs, flag, 1)
+    """Handle a player command from the web UI.
+    addr: deal_with_keycode() — processes Ctrl key combos
+    """
+    from lcp.simulation import put_event_to_list
+    from lcp.sound import soundeffect_select
+    from lcp.enums import SOUND_EFFECT_ID
+
+    if cmd == 'alarm':
+        # Ctrl+A: toggle alarm clock
+        gs.ctrl_a_alarm_pressed_flag = 1 if not gs.ctrl_a_alarm_pressed_flag else 0
+
+    elif cmd == 'book':
+        # Ctrl+B: book delivery (doorbell + event)
+        soundeffect_select(gs, SOUND_EFFECT_ID.SFX_DOORBELL, 6)
+        put_event_to_list(gs, ACTION_ID.ACTION_EVENT_BOOK_DELIVERY)
+
+    elif cmd == 'call':
+        # Ctrl+C: phone call
+        if not gs.phone_answered_flag:
+            gs.phone_call_active_flag = 1
+            put_event_to_list(gs, ACTION_ID.ACTION_EVENT_PHONE_CALL)
+
+    elif cmd == 'dog_food':
+        # Ctrl+D: dog food delivery (doorbell + event)
+        soundeffect_select(gs, SOUND_EFFECT_ID.SFX_DOORBELL, 6)
+        put_event_to_list(gs, ACTION_ID.ACTION_EVENT_DOG_FOOD)
+
+    elif cmd == 'food':
+        # Ctrl+F: food delivery (doorbell + event)
+        soundeffect_select(gs, SOUND_EFFECT_ID.SFX_DOORBELL, 6)
+        put_event_to_list(gs, ACTION_ID.ACTION_EVENT_FOOD_DELIVERY)
+
+    elif cmd == 'pet':
+        # Ctrl+P: pet the dog
+        if gs.dog_pettable_flag and not gs.petting_dog_active:
+            gs.petting_anim_frame = 0
+            gs.petting_dog_active = 1
+
+    elif cmd == 'record':
+        # Ctrl+R: record delivery (doorbell + event)
+        soundeffect_select(gs, SOUND_EFFECT_ID.SFX_DOORBELL, 6)
+        put_event_to_list(gs, ACTION_ID.ACTION_EVENT_RECORD_DELIVERY)
+
+    elif cmd == 'water':
+        # Ctrl+W: add water
+        if getattr(gs, 'lcp_water_level', 0) < 10:
+            gs.lcp_water_level = getattr(gs, 'lcp_water_level', 0) + 1
+            soundeffect_select(gs, SOUND_EFFECT_ID.SFX_WATER_TAP, -1)
 
 
 # ---------------------------------------------------------------------------

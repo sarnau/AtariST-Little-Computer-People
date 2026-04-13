@@ -56,6 +56,10 @@ class ACTION_ID(IntEnum):
     ACTION_GO_TO_BED_NIGHT       = 39
     # Event IDs (used in triggered_event_list, not in do_action switch)
     ACTION_EVENT_PHONE_CALL      = 40
+    ACTION_EVENT_BOOK_DELIVERY   = 41
+    ACTION_EVENT_FOOD_DELIVERY   = 42
+    ACTION_EVENT_DOG_FOOD        = 43
+    ACTION_EVENT_RECORD_DELIVERY = 44
     # Sentinel — no action pending
     ACTION_NONE                  = 0xFFFF
 
