@@ -511,11 +511,26 @@ def get_state_json() -> dict:
             'date_year': gs.date_year,
             'game_hour': gs.time_hours,
             'game_minute': gs.time_minutes,
-            'fire_active': gs.fire_active_flag,
-            'tv_on': getattr(gs, 'tv_on', 0),
             'action': gs.last_action,
             'tick': gs.animation_tick_counter,
             'speed': gs.speed_factor,
+        },
+        'objects': {
+            'tv': gs.tv_on,
+            'record_player': gs.record_player_on,
+            'fire': gs.fire_active_flag,
+            'alarm': gs.ctrl_a_alarm_pressed_flag,
+            'phone_ringing': gs.phone_ringing,
+            'phone_answered': gs.phone_answered_flag,
+            'dog_bowl': gs.dog_bowl_status,
+            'front_door': gs.lcp_front_door_open,
+            'study_door': gs.lcp_study_door_open,
+            'toilet_door': gs.lcp_toilet_door_open,
+            'closet': gs.lcp_closet_door_open,
+            'fridge': gs.lcp_fridge_open,
+            'filing_cabinet': gs.lcp_filing_cabinet_open,
+            'dresser': gs.lcp_dresser_open,
+            'kitchen_cabinet': gs.lcp_cabinet_open,
         },
     }
 
@@ -633,6 +648,23 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="hud-row"><span class="hud-label">Dog Target:</span><span class="hud-value" id="hud-dog-target">--</span></div>
     <div class="hud-row"><span class="hud-label">Tick:</span><span class="hud-value" id="hud-tick">--</span></div>
   </div>
+  <div class="hud-panel">
+    <h2>Objects</h2>
+    <div class="hud-row"><span class="hud-label">TV:</span><span class="hud-value" id="hud-tv">--</span></div>
+    <div class="hud-row"><span class="hud-label">Record Player:</span><span class="hud-value" id="hud-record">--</span></div>
+    <div class="hud-row"><span class="hud-label">Fireplace:</span><span class="hud-value" id="hud-fire">--</span></div>
+    <div class="hud-row"><span class="hud-label">Alarm:</span><span class="hud-value" id="hud-alarm">--</span></div>
+    <div class="hud-row"><span class="hud-label">Phone:</span><span class="hud-value" id="hud-phone">--</span></div>
+    <div class="hud-row"><span class="hud-label">Dog Bowl:</span><span class="hud-value" id="hud-bowl">--</span></div>
+    <div class="hud-row"><span class="hud-label">Front Door:</span><span class="hud-value" id="hud-frontdoor">--</span></div>
+    <div class="hud-row"><span class="hud-label">Study Door:</span><span class="hud-value" id="hud-studydoor">--</span></div>
+    <div class="hud-row"><span class="hud-label">Toilet Door:</span><span class="hud-value" id="hud-toiletdoor">--</span></div>
+    <div class="hud-row"><span class="hud-label">Closet:</span><span class="hud-value" id="hud-closet">--</span></div>
+    <div class="hud-row"><span class="hud-label">Fridge:</span><span class="hud-value" id="hud-fridge">--</span></div>
+    <div class="hud-row"><span class="hud-label">Filing Cabinet:</span><span class="hud-value" id="hud-filing">--</span></div>
+    <div class="hud-row"><span class="hud-label">Dresser:</span><span class="hud-value" id="hud-dresser">--</span></div>
+    <div class="hud-row"><span class="hud-label">Kitchen Cabinet:</span><span class="hud-value" id="hud-cabinet">--</span></div>
+  </div>
 </div>
 <div id="controls">
   <button onclick="sendCmd('water')">Water (Ctrl+W)</button>
@@ -702,6 +734,26 @@ function updateHud(state) {
     document.getElementById('hud-dog-target').textContent = 'idle';
   }
   document.getElementById('hud-tick').textContent = w.tick;
+
+  // Objects panel
+  const o = state.objects;
+  const ON_OFF = v => v ? 'On' : 'Off';
+  const DOOR_STATE = v => ['Closed', 'Opening', 'Open'][v] || v;
+  document.getElementById('hud-tv').textContent = ON_OFF(o.tv);
+  document.getElementById('hud-record').textContent = ON_OFF(o.record_player);
+  document.getElementById('hud-fire').textContent = ON_OFF(o.fire);
+  document.getElementById('hud-alarm').textContent = ON_OFF(o.alarm);
+  document.getElementById('hud-phone').textContent =
+    o.phone_answered ? 'Answered' : o.phone_ringing ? 'Ringing' : 'Idle';
+  document.getElementById('hud-bowl').textContent = BOWL_NAMES[o.dog_bowl] || o.dog_bowl;
+  document.getElementById('hud-frontdoor').textContent = DOOR_STATE(o.front_door);
+  document.getElementById('hud-studydoor').textContent = DOOR_STATE(o.study_door);
+  document.getElementById('hud-toiletdoor').textContent = DOOR_STATE(o.toilet_door);
+  document.getElementById('hud-closet').textContent = DOOR_STATE(o.closet);
+  document.getElementById('hud-fridge').textContent = DOOR_STATE(o.fridge);
+  document.getElementById('hud-filing').textContent = DOOR_STATE(o.filing_cabinet);
+  document.getElementById('hud-dresser').textContent = DOOR_STATE(o.dresser);
+  document.getElementById('hud-cabinet').textContent = DOOR_STATE(o.kitchen_cabinet);
 }
 
 function poll() {
