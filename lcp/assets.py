@@ -186,6 +186,34 @@ def load_sprite_file(path: Path, transparent: bool = True
     return result
 
 
+def load_objects_file(path: Path) -> dict[int, Image.Image]:
+    """
+    Load the OBJECTS binary file.
+    Objects are background tiles (doors, fire, food bowls, etc.) drawn
+    directly into the screen buffer via object_draw().
+    Returns a dict mapping sequential object_id → PIL Image (RGB, no transparency).
+    addr: load_objects()
+    """
+    raw = path.read_bytes()
+    offset = 0
+    obj_id = 0
+    result: dict[int, Image.Image] = {}
+    while offset + FILE_IMG_DATA._PACK_SIZE <= len(raw):
+        hdr = FILE_IMG_DATA.from_bytes(raw[offset:])
+        if hdr.width == 0 or hdr.height == 0:
+            break
+        offset += FILE_IMG_DATA._PACK_SIZE
+        byte_size = hdr.byte_size
+        if offset + byte_size > len(raw):
+            break
+        pixel_data = raw[offset:offset + byte_size]
+        img = decode_st_bitmap(hdr.width, hdr.height, pixel_data, transparent=False)
+        result[obj_id] = img
+        offset += byte_size
+        obj_id += 1
+    return result
+
+
 def _build_sprite_mask(pixel_data: bytes, width: int, height: int) -> bytes:
     """
     Generate a 1-bit-per-pixel mask from 4-bitplane sprite data.
@@ -405,7 +433,8 @@ def load_all_assets(gs: GameState, data_dir: Optional[Path] = None) -> None:
 
     # -- Object definitions (no transparency) --------------------------------
     objects_path = data_dir / 'OBJECTS'
-    # Objects are rendered into the background, not via sprite pipeline
+    if objects_path.exists():
+        gs._object_images = load_objects_file(objects_path)
 
     # -- Save file -----------------------------------------------------------
     hyber_path = data_dir / 'HYBER'

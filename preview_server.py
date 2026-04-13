@@ -371,16 +371,50 @@ def render_frame() -> Image.Image:
                 fill=(255, 255, 0), outline=(255, 0, 0)
             )
 
-    # Draw dog bowl
-    bowl_colors = {0: (100, 100, 100), 1: (160, 120, 60), 2: (200, 150, 80)}
-    bowl_color = bowl_colors.get(gs.dog_bowl_status, (100, 100, 100))
-    draw.rectangle([5, 190, 14, 195], fill=bowl_color, outline=(80, 80, 80))
-
-    # Draw fire if active
+    # Draw fire / fireplace object
+    # addr: object_draw(_object_fire_animation[...], 257, 170)
+    # _object_fire_animation = [32, 33, 34, 35], object_id_fire_off = 31
+    obj_imgs = getattr(gs, '_object_images', {})
     if gs.fire_active_flag:
-        fire_colors = [(255, 100, 0), (255, 180, 0), (255, 60, 0), (255, 200, 50)]
-        fc = fire_colors[gs.fire_animation_frame % 4]
-        draw.rectangle([257, 162, 275, 175], fill=fc)
+        fire_obj_ids = [32, 33, 34, 35]
+        fire_obj_id = fire_obj_ids[gs.fire_animation_frame % 4]
+        fire_img = obj_imgs.get(fire_obj_id)
+        if fire_img:
+            img.paste(fire_img, (257, 170))
+        else:
+            fire_colors = [(255, 100, 0), (255, 180, 0), (255, 60, 0), (255, 200, 50)]
+            draw.rectangle([257, 170, 280, 186], fill=fire_colors[gs.fire_animation_frame % 4])
+    else:
+        fire_off_img = obj_imgs.get(31)
+        if fire_off_img:
+            img.paste(fire_off_img, (257, 170))
+
+    # Draw clock pendulum animation
+    # addr: object_draw(_object_clock_animation[...], 271, 92)
+    # _object_clock_animation = [13, 14, 13, 15]
+    clock_obj_ids = [13, 14, 13, 15]
+    clock_frame = (gs.sub_animation_frame_counter >> 2) & 3
+    clock_img = obj_imgs.get(clock_obj_ids[clock_frame])
+    if clock_img:
+        img.paste(clock_img, (271, 92))
+
+    # Draw dog bowl object
+    # addr: object_draw(_object_dog_eating_animation[...], 8, 190)
+    # _object_dog_eating_animation = [51, 50, 49] (full=0→51, half=1→50, empty=2→49)
+    dog_bowl_obj_ids = [51, 50, 49]
+    bowl_idx = min(gs.dog_bowl_status, 2)
+    bowl_img = obj_imgs.get(dog_bowl_obj_ids[bowl_idx])
+    if bowl_img:
+        img.paste(bowl_img, (8, 190))
+
+    # Draw alarm animation
+    # addr: object_draw(_object_alarm_animation[...], 53, 102)
+    # _object_alarm_animation = [3, 4]
+    if gs.ctrl_a_alarm_pressed_flag:
+        alarm_frame = gs.sub_animation_frame_counter & 1
+        alarm_img = obj_imgs.get(3 + alarm_frame)
+        if alarm_img:
+            img.paste(alarm_img, (53, 102))
 
     return img
 
