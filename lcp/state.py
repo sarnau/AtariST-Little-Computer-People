@@ -391,6 +391,12 @@ class GameState:
     current_game_type: int  = -1   # -1 = none
     card_deck: List[int]    = field(default_factory=lambda: list(range(52)))
 
+    # -----------------------------------------------------------------------
+    # Speed factor (Python-only, not from original game)
+    # 1.0 = real-time, 2.0 = double speed, 0.5 = half speed, etc.
+    # -----------------------------------------------------------------------
+    speed_factor: float = 1.0
+
     def reset_daily_flags(self) -> None:
         """Reset flags that are cleared at midnight. Called by game_simulate_one_second."""
         self.lunch_meal_triggered_today   = 0

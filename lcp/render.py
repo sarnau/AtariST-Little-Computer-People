@@ -317,13 +317,21 @@ def screen_render_8hz_headless(gs: GameState) -> None:
     """
     global _last_headless_frame_time
 
-    # Rate-limit to ~8 Hz when running in real-time mode
+    # Rate-limit to ~8 Hz (scaled by speed_factor) when running in real-time mode
     if getattr(gs, '_realtime', False):
-        now = time.monotonic()
-        remaining = FRAME_INTERVAL_S - (now - _last_headless_frame_time)
-        if remaining > 0.001:
-            time.sleep(remaining)
-        _last_headless_frame_time = time.monotonic()
+        speed = getattr(gs, 'speed_factor', 1.0)
+        if speed == 0:
+            # Paused — sleep briefly and return without advancing game state
+            while getattr(gs, 'speed_factor', 1.0) == 0:
+                time.sleep(0.05)
+            _last_headless_frame_time = time.monotonic()
+        else:
+            interval = FRAME_INTERVAL_S / speed
+            now = time.monotonic()
+            remaining = interval - (now - _last_headless_frame_time)
+            if remaining > 0.001:
+                time.sleep(remaining)
+            _last_headless_frame_time = time.monotonic()
 
     # Dog AI + sound tick-down
     _run_per_frame_logic(gs)

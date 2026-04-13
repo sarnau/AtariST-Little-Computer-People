@@ -515,6 +515,7 @@ def get_state_json() -> dict:
             'tv_on': getattr(gs, 'tv_on', 0),
             'action': gs.last_action,
             'tick': gs.animation_tick_counter,
+            'speed': gs.speed_factor,
         },
     }
 
@@ -642,6 +643,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
   <button onclick="sendCmd('call')">Call (Ctrl+C)</button>
   <button onclick="sendCmd('record')">Record (Ctrl+R)</button>
   <button onclick="sendCmd('book')">Book (Ctrl+B)</button>
+  <div style="margin-top:8px; border-top:1px solid #2a4a6c; padding-top:6px;">
+    <span class="hud-label">Speed:</span>
+    <button id="spd-0" onclick="setSpeed(0)">Pause</button>
+    <button id="spd-0.5" onclick="setSpeed(0.5)">0.5x</button>
+    <button id="spd-1" onclick="setSpeed(1)" class="active">1x</button>
+    <button id="spd-2" onclick="setSpeed(2)">2x</button>
+    <button id="spd-5" onclick="setSpeed(5)">5x</button>
+    <button id="spd-10" onclick="setSpeed(10)">10x</button>
+  </div>
 </div>
 <div id="status">Connecting...</div>
 
@@ -701,8 +711,10 @@ function poll() {
       if (data.error) { document.getElementById('status').textContent = 'Server: ' + data.error; return; }
       if (data.image) frameImg.src = 'data:image/png;base64,' + data.image;
       if (data.state) { updateHud(data.state);
+        const spd = data.state.world.speed;
+        const spdTxt = spd === 0 ? 'Paused' : spd + 'x';
         document.getElementById('status').textContent =
-          `Frame ${data.state.world.tick} | ${new Date().toLocaleTimeString()}`; }
+          `Frame ${data.state.world.tick} | ${spdTxt} | ${new Date().toLocaleTimeString()}`; }
     })
     .catch(e => {
       document.getElementById('status').textContent = 'Error: ' + e;
@@ -717,8 +729,24 @@ function sendCmd(cmd) {
   });
 }
 
+let currentSpeed = 1;
+let pollTimer = null;
+
+function setSpeed(factor) {
+  currentSpeed = factor;
+  sendCmd('speed:' + factor);
+  // Highlight active speed button
+  document.querySelectorAll('[id^="spd-"]').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('spd-' + factor);
+  if (btn) btn.classList.add('active');
+  // Adjust poll rate to match game speed (cap at 60ms minimum)
+  if (pollTimer) clearInterval(pollTimer);
+  const interval = Math.max(60, Math.round(250 / factor));
+  pollTimer = setInterval(poll, interval);
+}
+
 // Poll at ~4 fps
-setInterval(poll, 250);
+pollTimer = setInterval(poll, 250);
 poll();
 </script>
 </body>
@@ -788,6 +816,13 @@ def _handle_command(cmd: str):
     from lcp.simulation import put_event_to_list
     from lcp.sound import soundeffect_select
     from lcp.enums import SOUND_EFFECT_ID
+
+    if cmd.startswith('speed:'):
+        try:
+            gs.speed_factor = max(0.0, min(20.0, float(cmd.split(':')[1])))
+        except ValueError:
+            pass
+        return
 
     if cmd == 'alarm':
         # Ctrl+A: toggle alarm clock
