@@ -754,7 +754,7 @@ class TestActionPlayPiano:
     @patch(TICK_MOCK)
     def test_walks_to_piano(self, mock_tick, mock_walk, gs):
         action_play_piano(gs)
-        expected_x, expected_y = house_get_position_xy(HOUSE_POS.POS_MID_PIANO)
+        expected_x, expected_y = house_get_position_xy(HOUSE_POS.POS_TOP_DANCE_FLOOR)
         assert gs.walk_target_x == expected_x
         assert gs.walk_target_y == expected_y
 

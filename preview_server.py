@@ -150,9 +150,9 @@ HOUSE_POS_DISPLAY = {
     HOUSE_POS.POS_MID_SINK: '2: Bathroom Sink',
     HOUSE_POS.POS_MID_TOILET: '2: Toilet',
     HOUSE_POS.POS_MID_SHOWER: '2: Shower Door',
-    HOUSE_POS.POS_MID_24: '2: Pos 24',
-    HOUSE_POS.POS_MID_PIANO: '2: Piano',
+    HOUSE_POS.POS_MID_SHOWER_EXIT: '2: Shower Exit',
     HOUSE_POS.POS_MID_SHOWER_INSIDE: '2: Shower Inside',
+    HOUSE_POS.POS_MID_26: '2: Pos 26',
     HOUSE_POS.POS_MID_27: '2: Pos 27',
     HOUSE_POS.POS_MID_28: '2: Pos 28',
     HOUSE_POS.POS_MID_COMPUTER: '2: Computer',
@@ -232,7 +232,9 @@ def _game_loop():
                 check_for_any_action_triggers(gs)
             frame += 1
         except Exception as e:
+            import traceback
             print(f"Game loop error: {e}")
+            traceback.print_exc()
 
 
 # ---------------------------------------------------------------------------
@@ -921,6 +923,7 @@ def main():
     _game_thread.start()
 
     print(f"Preview server running at http://localhost:{PORT}")
+    HTTPServer.allow_reuse_address = True
     server = HTTPServer(('0.0.0.0', PORT), PreviewHandler)
     try:
         server.serve_forever()

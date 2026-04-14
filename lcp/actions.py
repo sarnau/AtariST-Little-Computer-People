@@ -513,8 +513,8 @@ def action_take_shower(gs: GameState) -> None:
     _set_state(gs, PLAYER_STATE.STATE_STAND_FACING_SCREEN)
     gs.lcp_y += 0x1d   # +29 (asymmetric with -23 — intentional per Ghidra)
     _tick(gs, 2)
-    _walk(gs, HOUSE_POS.POS_MID_SHOWER_DOOR)
-    gs.head_anim_mode = 2  # small range (amplitude 1)
+    _walk(gs, HOUSE_POS.POS_MID_SHOWER_EXIT)   # position 24, not shower door
+    gs.head_anim_mode = 0  # HEAD_ANIM_DISABLED
     gs.action_interruptible_flag = 0
 
 
@@ -676,8 +676,8 @@ def action_listen_song(gs: GameState) -> None:
 
 
 def action_play_piano(gs: GameState) -> None:
-    """Walk to piano and play."""
-    _walk(gs, HOUSE_POS.POS_MID_PIANO)
+    """Walk to record player area (top floor). addr: action_play_piano()"""
+    _walk(gs, HOUSE_POS.POS_TOP_DANCE_FLOOR)
     _face_right(gs)
     play_time = _random(60, 120)
     for _ in range(play_time):

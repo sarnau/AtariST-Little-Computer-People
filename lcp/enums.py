@@ -208,9 +208,9 @@ class HOUSE_POS(IntEnum):
     POS_MID_TOILET_DOOR    = 22   # Ghidra alias
     POS_MID_SHOWER         = 23
     POS_MID_SHOWER_DOOR    = 23   # Ghidra alias
-    POS_MID_24             = 24
-    POS_MID_PIANO          = 25
-    POS_MID_SHOWER_INSIDE  = 26   # Ghidra: POS_MID_SHOWER_INSIDE
+    POS_MID_SHOWER_EXIT    = 24   # walk-out position after shower
+    POS_MID_SHOWER_INSIDE  = 25   # verified from binary: position 25
+    POS_MID_26             = 26
     POS_MID_27             = 27
     POS_MID_28             = 28
     POS_MID_COMPUTER       = 29   # Ghidra: POS_MID_COMPUTER_DESK
