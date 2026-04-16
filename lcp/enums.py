@@ -180,19 +180,21 @@ class PLAYER_STATE(IntEnum):
 class HOUSE_POS(IntEnum):
     # Floor 3 — Living Room / Study (top floor)
     POS_TOP_0           = 0
-    POS_TOP_ARMCHAIR    = 1
-    POS_TOP_GAME_TABLE  = 2
+    POS_TOP_ARMCHAIR    = 2   # Ghidra: POS_TOP_ARMCHAIR (verified: disasm passes #0x2 to house_get_position_xy in action_read_newspaper @ 0x22d8e)
+    POS_TOP_1           = 1   # waypoint (formerly misnamed POS_TOP_ARMCHAIR)
     POS_TOP_DANCE_FLOOR = 3   # Ghidra: POS_TOP_DANCE_FLOOR
     POS_TOP_FIREPLACE   = 4
     POS_TOP_LOG_AREA    = 5
     POS_TOP_6           = 6
     POS_TOP_STUDY_DOOR  = 7
     POS_TOP_8           = 8
-    POS_TOP_FILING_CAB      = 9
-    POS_TOP_FILING_CABINET  = 9   # Ghidra alias
-    POS_TOP_DESK_LAMP   = 10
+    POS_TOP_9           = 9
+    POS_TOP_DESK_CHAIR  = 10  # Ghidra: POS_TOP_DESK_CHAIR (verified: disasm passes #0xa to house_get_position_xy in action_write_letter)
+    POS_TOP_DESK_LAMP   = 10  # legacy alias — same slot
     POS_TOP_11          = 11
-    POS_TOP_RECORD_SHELF= 12
+    POS_TOP_FILING_CAB      = 12  # Ghidra: POS_TOP_FILING_CABINET (verified: disasm passes #0xc to house_get_position_xy in action_write_letter @ 0x23cf2)
+    POS_TOP_FILING_CABINET  = 12  # Ghidra alias
+    POS_TOP_RECORD_SHELF    = 12  # TODO verify separately — previously at 12, kept as alias until proven distinct
     POS_TOP_13          = 13
     POS_TOP_14          = 14
     POS_TOP_15          = 15
@@ -231,6 +233,7 @@ class HOUSE_POS(IntEnum):
     POS_BTM_40          = 40
     POS_BTM_41          = 41
     POS_BTM_42          = 42
+    POS_BTM_DOG_FOOD    = 43  # Ghidra: POS_BTM_DOG_FOOD — also phone area
     POS_BTM_43          = 43
     POS_BTM_44          = 44
     POS_BTM_45          = 45

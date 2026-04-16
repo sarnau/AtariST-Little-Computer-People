@@ -251,7 +251,7 @@ class TestActionReadNewspaper:
     @patch(TICK_MOCK)
     def test_walks_to_game_table(self, mock_tick, mock_walk, gs):
         action_read_newspaper(gs)
-        expected_x, expected_y = house_get_position_xy(HOUSE_POS.POS_TOP_GAME_TABLE)
+        expected_x, expected_y = house_get_position_xy(HOUSE_POS.POS_TOP_ARMCHAIR)
         assert gs.walk_target_x == expected_x
         assert gs.walk_target_y == expected_y
 

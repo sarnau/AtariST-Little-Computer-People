@@ -51,9 +51,13 @@ def _walk_xy(gs: GameState, x: int, y: int) -> int:
 
 def _face_right(gs: GameState) -> None:
     gs.lcp_facing_direction = FACING_DIR.FACING_RIGHT
+    # Keep head mirror synced with body facing, so static poses (sit/read)
+    # don't end up with a right-facing head on a left-flipped body.
+    gs.head_sprite_mirror_flag = 0
 
 def _face_left(gs: GameState) -> None:
     gs.lcp_facing_direction = FACING_DIR.FACING_LEFT
+    gs.head_sprite_mirror_flag = 1
 
 def _set_state(gs: GameState, state: int) -> None:
     gs.lcp_state = state
@@ -1037,14 +1041,19 @@ def action_toggle_tv(gs: GameState) -> None:
 
 
 def action_call_dog(gs: GameState) -> None:
-    """Call the dog."""
-    _face_right(gs)
-    _set_state(gs, PLAYER_STATE.STATE_HELLO)
-    _soundfx(gs, SOUND_EFFECT_ID.SFX_GREETING)
-    _tick(gs, 4)
-    # Signal dog to come to LCP position
-    gs.dog_target_x = gs.lcp_x
-    gs.dog_target_y = gs.lcp_y
+    """Walk to couch/phone area (position 43), crouch and attract dog.
+    addr: action_call_dog()
+    Ghidra: walks to POS_BTM_DOG_FOOD first, then crouches and sets
+    dog_pettable_flag so the dog comes over."""
+    result = _walk(gs, HOUSE_POS.POS_BTM_DOG_FOOD)
+    if result == 0:
+        _set_state(gs, PLAYER_STATE.STATE_STAND_SIDE_VIEW)
+        _face_right(gs)
+        gs.head_anim_target = 8
+        _wait_head(gs)
+        _set_state(gs, PLAYER_STATE.STATE_EXERCISE_CROUCH)
+        _tick(gs, 5)
+        gs.dog_pettable_flag = 1
 
 
 def action_wake_from_alarm(gs: GameState) -> None:

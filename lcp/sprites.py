@@ -269,8 +269,11 @@ def sprite_update_body(gs: GameState) -> None:
     gs._body_frame_index = frame_idx
     gs._body_facing = gs.lcp_facing_direction
 
-    # Position the body sprite in slot 3
+    # Position the body sprite in slot 3.
     # Sprites are 32px-wide (matching original Atari ST sprite buffers).
+    # Right-facing: content in left half of 32-wide buffer, pasted at lcp_x-4.
+    # Left-facing: sprite_flip_horizontal moves content into right half, pasted
+    # at lcp_x-14 so the mirrored content ends up at the same screen position.
     if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
         gs.sprite_active_x[3] = gs.lcp_x - 4
     else:

@@ -127,18 +127,18 @@ PLAYER_STATE_DISPLAY = {
 # Format: "floor: label" where floor is 3=top, 2=mid, 1=btm
 HOUSE_POS_DISPLAY = {
     HOUSE_POS.POS_TOP_0: '3: Left Edge',
+    HOUSE_POS.POS_TOP_1: '3: (waypoint)',
     HOUSE_POS.POS_TOP_ARMCHAIR: '3: Armchair',
-    HOUSE_POS.POS_TOP_GAME_TABLE: '3: Game Table',
     HOUSE_POS.POS_TOP_DANCE_FLOOR: '3: Dance Floor',
     HOUSE_POS.POS_TOP_FIREPLACE: '3: Fireplace',
     HOUSE_POS.POS_TOP_LOG_AREA: '3: Log Area',
     HOUSE_POS.POS_TOP_6: '3: Hallway',
     HOUSE_POS.POS_TOP_STUDY_DOOR: '3: Study Door',
     HOUSE_POS.POS_TOP_8: '3: Study 8',
-    HOUSE_POS.POS_TOP_FILING_CAB: '3: Filing Cabinet',
-    HOUSE_POS.POS_TOP_DESK_LAMP: '3: Desk Lamp',
+    HOUSE_POS.POS_TOP_9: '3: Study 9',
+    HOUSE_POS.POS_TOP_DESK_CHAIR: '3: Desk Chair',
     HOUSE_POS.POS_TOP_11: '3: Study 11',
-    HOUSE_POS.POS_TOP_RECORD_SHELF: '3: Record Shelf',
+    HOUSE_POS.POS_TOP_FILING_CAB: '3: Filing Cabinet / Record Shelf',
     HOUSE_POS.POS_TOP_13: '3: Living 13',
     HOUSE_POS.POS_TOP_14: '3: Study 14',
     HOUSE_POS.POS_TOP_15: '3: Right Edge',
@@ -337,6 +337,10 @@ def render_frame() -> Image.Image:
             body = body_frames[frame_idx]
             # Position: X = lcp_x - 4 (right) or -14 (left); Y = lcp_y + offset - 21
             # Sprites are 32px wide (matching original Atari ST buffers).
+            # Body sprite origin — LCP PNG is 32×21, matching the original
+            # Atari ST 32-wide sprite buffer. Unflipped content lives in the
+            # left half; FLIP_LEFT_RIGHT mirrors it into the right half, the
+            # same as sprite_flip_horizontal(..., 2) on the 68k side.
             if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
                 bx = lcp_x - 4
             else:
@@ -411,9 +415,12 @@ def render_frame() -> Image.Image:
     if dog_x > 0 or dog_y > 0:
         if dog_sid in sprite_images:
             dog_img = sprite_images[dog_sid].copy()
+            # Per Ghidra spritedata_update_dog: sprite_pending_x[0] = dog_x
+            # (top-left of the sprite buffer). FLIP_LEFT_RIGHT mirrors within
+            # the buffer width, matching sprite_flip_horizontal(..., 2).
             if dog_flip:
                 dog_img = dog_img.transpose(Image.FLIP_LEFT_RIGHT)
-            dx = dog_x - dog_img.width // 2
+            dx = dog_x
             dy = dog_y - 17
             try:
                 img.paste(dog_img, (int(dx), int(dy)), dog_img)
@@ -427,6 +434,40 @@ def render_frame() -> Image.Image:
                 [dog_x - 4, dog_y - 4, dog_x + 4, dog_y + 4],
                 fill=(255, 255, 0), outline=(255, 0, 0)
             )
+
+    # Debug: overlay all 48 HOUSE_POS target positions with labels.
+    # Toggle via the "Show Positions" button (sends 'toggle_positions').
+    # Each position is drawn as a character-sized body ghost (10 wide x 22 tall)
+    # above the feet-anchor, so you can see where Norton would actually appear
+    # when he walks there — not just the foot point (which looks "below floor").
+    if getattr(gs, '_show_positions_overlay', False):
+        # Floor-tinted markers so it's easy to see which floor a pos belongs to.
+        # Floor colors: top=cyan, mid=magenta, bottom=yellow.
+        FLOOR_COLORS = [(80, 220, 255), (255, 120, 220), (255, 220, 80)]
+        selected = getattr(gs, '_selected_pos', -1)
+        for pos in range(48):
+            px, py = house_get_position_xy(pos)
+            floor = pos >> 4
+            col = FLOOR_COLORS[floor]
+            # Body ghost: outline of where Norton would stand (feet at py,
+            # head ~22px above). Matches the render_frame body geometry
+            # (bx = lcp_x - 4 or lcp_x - 14 for flip, body ~22px tall).
+            # Draw a translucent-ish outline (just corners for clarity).
+            body_top = py - 21
+            draw.rectangle([px - 5, body_top, px + 5, py], outline=col)
+            # Feet crosshair at the actual walk anchor
+            draw.line([px - 3, py, px + 3, py], fill=col)
+            draw.line([px, py - 1, px, py + 1], fill=col)
+            # Label: index + coords, above the ghost body
+            label = str(pos)
+            lx, ly = px + 6, body_top - 8
+            for ox, oy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                draw.text((lx + ox, ly + oy), label, fill=(0, 0, 0))
+            draw.text((lx, ly), label, fill=col)
+            # If this pos is the currently "selected" test target, ring it.
+            if pos == selected:
+                draw.rectangle([px - 6, body_top - 1, px + 6, py + 1],
+                               outline=(255, 255, 255))
 
     return img
 
@@ -672,6 +713,20 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <button id="spd-5" onclick="setSpeed(5)">5x</button>
     <button id="spd-10" onclick="setSpeed(10)">10x</button>
   </div>
+  <div style="flex-basis:100%; margin-top:8px; border-top:1px solid #2a4a6c; padding-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <span class="hud-label">Debug action:</span>
+    <button onclick="sendCmd('debug_action:action_read_newspaper')">Read Newspaper</button>
+    <button onclick="sendCmd('debug_action:action_sit_and_exercise')">Sit &amp; Exercise</button>
+    <button onclick="sendCmd('debug_action:action_play_piano')">Play Piano</button>
+    <button onclick="sendCmd('debug_action:action_take_shower')">Take Shower</button>
+  </div>
+  <div style="flex-basis:100%; margin-top:8px; border-top:1px solid #2a4a6c; padding-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <span class="hud-label">Positions:</span>
+    <button id="btn-positions" onclick="togglePositions()">Show Positions</button>
+    <span class="hud-label" style="margin-left:10px;">Walk to:</span>
+    <select id="pos-select" style="background:#16213e; color:#e0e0e0; border:1px solid #2a4a6c; padding:4px; font-family:inherit; font-size:12px; min-width:260px;"></select>
+    <button onclick="walkToPos()">Walk</button>
+  </div>
 </div>
 <div id="status">Connecting...</div>
 
@@ -785,6 +840,60 @@ function setSpeed(factor) {
   pollTimer = setInterval(poll, interval);
 }
 
+let positionsVisible = false;
+function togglePositions() {
+  positionsVisible = !positionsVisible;
+  sendCmd('toggle_positions');
+  const btn = document.getElementById('btn-positions');
+  if (btn) btn.classList.toggle('active', positionsVisible);
+}
+
+function walkToPos() {
+  const sel = document.getElementById('pos-select');
+  if (!sel || !sel.value) return;
+  sendCmd('walk_to_pos:' + sel.value);
+}
+
+// Populate the position dropdown once on load.
+fetch('/api/positions').then(r => r.json()).then(list => {
+  const sel = document.getElementById('pos-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  list.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.i;
+    opt.textContent = `${String(p.i).padStart(2,'0')}  [${p.floor}]  (${p.x},${p.y})`;
+    sel.appendChild(opt);
+  });
+}).catch(() => {});
+
+// Click on the canvas to highlight the nearest HOUSE_POS index.
+// Useful for re-deriving enum names: click a piece of furniture and
+// the nearest pos index appears in the status bar.
+let _cachedPositions = null;
+fetch('/api/positions').then(r => r.json()).then(list => { _cachedPositions = list; });
+
+canvas.addEventListener('click', (ev) => {
+  if (!_cachedPositions) return;
+  const rect = canvas.getBoundingClientRect();
+  // Canvas is displayed at 640x400 but underlying image is 320x200.
+  const gx = Math.round((ev.clientX - rect.left) * 320 / rect.width);
+  const gy = Math.round((ev.clientY - rect.top)  * 200 / rect.height);
+  let best = null, bestDist = Infinity;
+  for (const p of _cachedPositions) {
+    const dx = p.x - gx, dy = p.y - gy;
+    const d = dx*dx + dy*dy;
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  if (best) {
+    document.getElementById('status').textContent =
+      `click (${gx},${gy}) → nearest pos ${best.i} [${best.floor}] at (${best.x},${best.y}), dist=${Math.sqrt(bestDist).toFixed(1)}px`;
+    // Auto-select it in the dropdown so you can press Walk next.
+    const sel = document.getElementById('pos-select');
+    if (sel) sel.value = best.i;
+  }
+});
+
 // Poll at ~4 fps
 pollTimer = setInterval(poll, 250);
 poll();
@@ -819,6 +928,22 @@ class PreviewHandler(SimpleHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+        elif self.path == '/api/positions':
+            # Returns the 48 HOUSE_POS entries with index and (x, y).
+            # We intentionally DON'T include English labels here — many of them
+            # are educated guesses that still need to be verified by walking to
+            # each slot and observing where Norton lands. Using them in the
+            # dropdown would bias the very re-derivation we're doing.
+            entries = []
+            for i in range(48):
+                x, y = house_get_position_xy(i)
+                floor = ['top', 'mid', 'btm'][i >> 4]
+                entries.append({'i': i, 'floor': floor, 'x': x, 'y': y})
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(entries).encode('utf-8'))
 
         elif self.path == '/api/state':
             state = get_state_json()
@@ -899,6 +1024,59 @@ def _handle_command(cmd: str):
         # Ctrl+R: record delivery (doorbell + event)
         soundeffect_select(gs, SOUND_EFFECT_ID.SFX_DOORBELL, 6)
         put_event_to_list(gs, ACTION_ID.ACTION_EVENT_RECORD_DELIVERY)
+
+    elif cmd.startswith('debug_action:'):
+        # Debug: run a specific action by name in a background thread so the game loop
+        # continues ticking. Example: 'debug_action:action_read_newspaper'
+        # Guarded against re-entry (e.g. if AI is already running an action) since
+        # many actions apply a lcp_y delta that would stack.
+        if getattr(gs, '_debug_action_running', False):
+            print('[debug_action] ignored, another action is running')
+            return
+        action_name = cmd.split(':', 1)[1].strip()
+        from lcp import actions as _actions
+        fn = getattr(_actions, action_name, None)
+        if callable(fn):
+            def _run_action(_fn=fn):
+                gs._debug_action_running = True
+                try: _fn(gs)
+                except Exception as e: print(f'[debug_action] {action_name} error: {e}')
+                finally: gs._debug_action_running = False
+            threading.Thread(target=_run_action, daemon=True).start()
+        else:
+            print(f'[debug_action] unknown action: {action_name}')
+
+    elif cmd == 'toggle_positions':
+        # Toggle the HOUSE_POS target overlay (all 48 positions, labelled).
+        gs._show_positions_overlay = not getattr(gs, '_show_positions_overlay', False)
+
+    elif cmd.startswith('walk_to_pos:'):
+        # Walk Norton to an arbitrary HOUSE_POS index (0..47) so we can verify
+        # the coordinates match the furniture. Runs in a thread so the game
+        # loop keeps ticking. Only one at a time (reuses the debug_action guard).
+        try:
+            pos = int(cmd.split(':', 1)[1])
+        except (ValueError, IndexError):
+            return
+        if not (0 <= pos < 48):
+            return
+        if getattr(gs, '_debug_action_running', False):
+            print('[walk_to_pos] ignored, another action is running')
+            return
+        gs._selected_pos = pos
+        from lcp.movement import lcp_walk_to_destination
+        def _run_walk(_pos=pos):
+            gs._debug_action_running = True
+            try:
+                tx, ty = house_get_position_xy(_pos)
+                gs.walk_target_x = tx
+                gs.walk_target_y = ty
+                lcp_walk_to_destination(gs)
+            except Exception as e:
+                print(f'[walk_to_pos {pos}] error: {e}')
+            finally:
+                gs._debug_action_running = False
+        threading.Thread(target=_run_walk, daemon=True).start()
 
     elif cmd == 'water':
         # Ctrl+W: add water
