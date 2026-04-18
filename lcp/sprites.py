@@ -211,10 +211,55 @@ def spritedata_select_carried_object_left(gs: GameState, sprite_id: int) -> None
     gs.sprite_layer_flags[sprite_id] = SPRITE_LAYER.SPRITE_IN_FRONT
 
 
+# Carried-object Y-handler dispatch table.
+# Ghidra game_tick_and_animate (0x256a6..0x258e4) walks carried_object_id_table
+# (10 entries, matched by lcp_carried_object) and calls a per-object function
+# pointer. Disassembly of all 9 non-default handlers (0x257c6..0x258b0) shows
+# they all execute the identical sequence:
+#     D0 = lcp_y
+#     D0 += -0x14           ; Y = lcp_y - 20
+#     sprite_pending_y[sprite_slot_map[ID]] = D0
+# so the "per-object" dispatch is effectively a lookup-and-set with the same
+# Y for every handled sprite. The 10th entry is a no-op default (unlisted
+# sprites don't get their Y re-positioned each frame).
+#
+# Handler entries (sprite_id → Y offset from lcp_y):
+#   SPRITE_GLASS        (3)  → -20
+#   SPRITE_GAME_BOX     (4)  → -20
+#   SPRITE_FOOD_PACKAGE (9)  → -20
+#   SPRITE_FIREWOOD     (22) → -20
+#   SPRITE_COOKING_POT  (23) → -20
+#   SPRITE_SUITCASE     (48) → -20
+#   SPRITE_BOOK         (49) → -20
+#   SPRITE_VINYL_CARRY  (50) → -20
+#   SPRITE_55           (55) → -20
+CARRY_OBJECT_Y_HANDLERS = {
+    3:  -20,  # SPRITE_GLASS
+    4:  -20,  # SPRITE_GAME_BOX
+    9:  -20,  # SPRITE_FOOD_PACKAGE
+    22: -20,  # SPRITE_FIREWOOD
+    23: -20,  # SPRITE_COOKING_POT
+    48: -20,  # SPRITE_SUITCASE
+    49: -20,  # SPRITE_BOOK
+    50: -20,  # SPRITE_VINYL_CARRY
+    55: -20,  # SPRITE_55
+}
+
+
 def update_carried_object_sprite(gs: GameState) -> None:
     """
     Position the carried-object sprite relative to the LCP.
-    addr: game_tick_and_animate() carry branch — lcp_carrying_object_flag == YES
+    Ports the carry branch of game_tick_and_animate (0x256a6..0x258e4).
+
+    X:
+      facing RIGHT → lcp_x + 10
+      facing LEFT  → (lcp_x - sprite_active_width) + 16, clamped to 0
+    Y: per-object handler via CARRY_OBJECT_Y_HANDLERS table. All currently
+       listed carried sprites position Y at lcp_y - 20 (just below the body
+       top at lcp_y - 21, landing at torso level). Unlisted sprites fall
+       through the default (no-op), matching the original dispatch table.
+
+    addr: game_tick_and_animate() carry branch
     """
     from .enums import FACING_DIR
     obj = gs.lcp_carried_object
@@ -222,6 +267,7 @@ def update_carried_object_sprite(gs: GameState) -> None:
     if slot < 0 or slot >= 8:
         return
 
+    # X positioning (common to all carried objects)
     if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
         gs.sprite_pending_x[slot] = gs.lcp_x + 10
     else:
@@ -229,6 +275,12 @@ def update_carried_object_sprite(gs: GameState) -> None:
         gs.sprite_pending_x[slot] = (gs.lcp_x - width) + 16
         if gs.sprite_pending_x[slot] < 0:
             gs.sprite_pending_x[slot] = 0
+
+    # Y positioning via per-object handler dispatch. Objects not in the
+    # table use the default (no Y update — matches Ghidra no-op default).
+    y_offset = CARRY_OBJECT_Y_HANDLERS.get(obj)
+    if y_offset is not None:
+        gs.sprite_pending_y[slot] = gs.lcp_y + y_offset
 
 
 # ---------------------------------------------------------------------------

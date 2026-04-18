@@ -405,6 +405,36 @@ def render_frame() -> Image.Image:
             fill=(220, 180, 140), outline=(180, 140, 100)
         )
 
+    # Draw the carried object (if any). Ports the carry branch of
+    # game_tick_and_animate (0x256a6..0x258e4):
+    #   X: facing RIGHT → lcp_x + 10
+    #      facing LEFT  → (lcp_x - width) + 16, clamped to 0
+    #   Y: per-object handler from CARRY_OBJECT_Y_HANDLERS (all currently
+    #      listed sprites use lcp_y - 20, matching disassembled
+    #      `add.w #-0x14, D0` at 0x257c6..0x258b0).
+    if getattr(gs, 'lcp_carrying_object_flag', 0):
+        from lcp.sprites import CARRY_OBJECT_Y_HANDLERS
+        carried_id = getattr(gs, 'lcp_carried_object', -1)
+        sprite_images = getattr(gs, '_sprite_images', {})
+        y_offset = CARRY_OBJECT_Y_HANDLERS.get(carried_id)
+        if carried_id in sprite_images and y_offset is not None:
+            obj_img = sprite_images[carried_id]
+            ow = obj_img.width
+            if gs.lcp_facing_direction == FACING_DIR.FACING_RIGHT:
+                ox = lcp_x + 10
+            else:
+                ox = (lcp_x - ow) + 16
+                if ox < 0:
+                    ox = 0
+            oy = lcp_y + y_offset
+            try:
+                if obj_img.mode == 'RGBA':
+                    img.paste(obj_img, (int(ox), int(oy)), obj_img)
+                else:
+                    img.paste(obj_img, (int(ox), int(oy)))
+            except Exception:
+                pass
+
     # Draw dog — always draw a marker + sprite if available
     dog_x, dog_y = gs.dog_x, gs.dog_y
     dog_sid = gs.dog_sprite_id
