@@ -17,60 +17,95 @@
  * Text is fed one character at a time through letter_type_character_
  * animated(), which drives the desk-typing sprite pipeline (four
  * SPRITE_TYPING_1..4 width brackets) and picks a random typewriter
- * click SFX per character.  letter_type_string_animated() word-wraps
+ * click SFX per character.  lt_tysa() word-wraps
  * at 40 columns (0x27 threshold) and inserts a carriage return when
  * a word would overflow.
  *
  * The letter template pointers (letter_line_ptr[], letter_greeting_
  * table[]) live in globals.c initialised to NULL.  file_load_letter_
  * template() -- still stubbed -- would populate them from letter.txt
- * on the ST disk.  Until that lands, letter_type_string_animated()
+ * on the ST disk.  Until that lands, lt_tysa()
  * detects the NULL pointer and returns immediately, so the outer
  * animation still runs but no text is typed.
  *
- * addr: action_write_letter(), letter_type_string_animated(),
- *       letter_type_character_animated()
+ * addr: a_writl(), lt_tysa(),
+ *       lt_tyca()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    date_day;
+extern short    date_month;
+extern short    date_year;
+extern PLAYER   lcp;                            /* the resident LCP */
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hamod;
+extern BOOL16   action_interruptible_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short    lcp_record_playing;
+extern short    disable_key_input_flag;
+extern short    text_scroll_timer;
+extern short    g_srsdc;
+extern short    g_cdibp;
+extern char *   letter_txt_content;
+extern char *   letter_line_ptr[];
+extern char *   letter_greeting_table[];
+extern char *   month_name_table[];
+extern short    g_ltcwt[];
+extern char     g_ltscb[];
+extern void     house_get_position_xy();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_selaf[];
+extern short    g_seslm[];
+extern short    randomRange();                  /* random.c */
 #include <osbind.h>
 #include <stdio.h>              /* sprintf */
 
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     spritedata_select();
-extern void     sprite_update_slots();
-extern void     soundeffect_select();
+extern void     sp_sprs();
+extern void     sp_upds();
+extern void     sf_sele();
 extern void     hide_lcp_sprites();
 extern void     show_lcp_sprites();
-extern void     action_open_close_filing_cabinet();
-extern void     action_walk_to_and_turn();
+extern void     a_opcfc();
+extern void     a_watat();
 extern void     fill_top_rect_with_background();
 extern void     file_load_letter_template();
 extern void     print_char();
-extern void     letter_select_typewriter_sound();
+extern void     lt_sets();
 extern void     select_random_click_sound();
 extern void     error_not_enough_memory();
 extern char     input_string[];
 
-/* Forward-declare the two helpers + action_play_piano so calls before
+/* Forward-declare the two helpers + a_playp so calls before
    the definitions still resolve under -Werror. */
-extern void     letter_type_character_animated();
-extern short    letter_type_string_animated();
-extern void     action_play_piano();
+extern void     lt_tyca();
+extern short    lt_tysa();
+extern void     a_playp();
 
-/* letter_type_character_animated: emit one character.  On CR (< space),
+/* lt_tyca: emit one character.  On CR (< space),
    scrolls the text pane down; otherwise plays a random click and blits
    the char via print_char, then swaps in the appropriate width sprite
-   from letter_char_width_table[] based on current buffer position.
+   from g_ltcwt[] based on current buffer position.
 
-   addr: letter_type_character_animated() */
+   addr: lt_tyca() */
 
 void
-letter_type_character_animated(ch)
+lt_tyca(ch)
 short   ch;
 {
         short   pick;
@@ -90,14 +125,14 @@ short   ch;
                 lcp_state = STATE_WRITE_AT_DESK;
                 game_tick_and_animate(0);
 
-                screen_scroll_down_count = 4;
-                command_input_buffer_pos = 0;
+                g_srsdc = 4;
+                g_cdibp = 0;
 
-                sprite_layer_flags[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-                sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-                sprite_layer_flags[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-                sprite_layer_flags[SPRITE_TYPING_4] = SPRITE_HIDDEN;
-                sprite_update_slots();
+                g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+                sp_upds();
 
                 /* Pick the width-bracket sprite for the (now-empty)
                    buffer position.  Buckets: 0..9, 10..19, 20..29, 30+.
@@ -105,15 +140,15 @@ short   ch;
                    here, so i always resolves to 0 (< 10); preserved
                    verbatim as it may be a placeholder for future logic. */
                 i = 3;
-                if (command_input_buffer_pos < 10)      i = 0;
-                else if (command_input_buffer_pos < 20) i = 1;
-                else if (command_input_buffer_pos < 30) i = 2;
+                if (g_cdibp < 10)      i = 0;
+                else if (g_cdibp < 20) i = 1;
+                else if (g_cdibp < 30) i = 2;
 
-                sprite_layer_flags[letter_char_width_table[i]] = SPRITE_IN_FRONT;
-                spritedata_select(letter_char_width_table[i]);
-                sprite_pending_x[sprite_slot_map[letter_char_width_table[i]]] = 211;
-                sprite_pending_y[sprite_slot_map[letter_char_width_table[i]]] =  44;
-                letter_select_typewriter_sound();
+                g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
+                sp_sprs(g_ltcwt[i]);
+                g_sepex[g_seslm[g_ltcwt[i]]] = 211;
+                g_sepey[g_seslm[g_ltcwt[i]]] =  44;
+                lt_sets();
                 game_tick_and_animate(6);
                 return;
         }
@@ -139,24 +174,24 @@ short   ch;
         lcp_state = STATE_WRITE_AT_DESK;
         select_random_click_sound();
         game_tick_and_animate(0);
-        print_char(ch, command_input_buffer_pos << 3, 23, COLOR_black);
-        command_input_buffer_pos = command_input_buffer_pos + 1;
+        print_char(ch, g_cdibp << 3, 23, COLOR_black);
+        g_cdibp = g_cdibp + 1;
 
-        sprite_layer_flags[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_4] = SPRITE_HIDDEN;
-        sprite_update_slots();
+        g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+        sp_upds();
 
         i = 3;
-        if (command_input_buffer_pos < 10)      i = 0;
-        else if (command_input_buffer_pos < 20) i = 1;
-        else if (command_input_buffer_pos < 30) i = 2;
+        if (g_cdibp < 10)      i = 0;
+        else if (g_cdibp < 20) i = 1;
+        else if (g_cdibp < 30) i = 2;
 
-        sprite_layer_flags[letter_char_width_table[i]] = SPRITE_IN_FRONT;
-        spritedata_select(letter_char_width_table[i]);
-        sprite_pending_x[sprite_slot_map[letter_char_width_table[i]]] = 211;
-        sprite_pending_y[sprite_slot_map[letter_char_width_table[i]]] =  44;
+        g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
+        sp_sprs(g_ltcwt[i]);
+        g_sepex[g_seslm[g_ltcwt[i]]] = 211;
+        g_sepey[g_seslm[g_ltcwt[i]]] =  44;
 
         /* 1/21 chance of a short pause between keystrokes. */
         pick = randomRange(0, 20);
@@ -166,17 +201,17 @@ short   ch;
         }
 }
 
-/* letter_type_string_animated: word-wrapped string typer.
+/* lt_tysa: word-wrapped string typer.
    `val` argument: leading-space indent count (negative means "always
    indent"; positive means "only indent if the previous line ended
    mid-line").  Returns the last character emitted so the caller can
    check if it was a space (used to decide whether to insert a break
    before the next chunk).
 
-   addr: letter_type_string_animated() */
+   addr: lt_tysa() */
 
 short
-letter_type_string_animated(str, val)
+lt_tysa(str, val)
 char *  str;
 short   val;
 {
@@ -191,11 +226,11 @@ short   val;
                 return 0;
 
         /* Emit leading spaces. */
-        if (val < 0 || command_input_buffer_pos > 0) {
+        if (val < 0 || g_cdibp > 0) {
                 if (val < 0)
                         val = -val;
                 for (i = 0; i < val; i = i + 1)
-                        letter_type_character_animated(' ');
+                        lt_tyca(' ');
         }
 
         word_wrap_needed = NO;
@@ -205,17 +240,17 @@ short   val;
                    started a line). */
                 while (*str == ' ') {
                         str = str + 1;
-                        if (command_input_buffer_pos > 0)
-                                letter_type_character_animated(' ');
+                        if (g_cdibp > 0)
+                                lt_tyca(' ');
                 }
 
-                /* Collect one word into letter_scratch_buffer. */
+                /* Collect one word into g_ltscb. */
                 i = 0;
                 for (;;) {
                         line_remaining = (short) *str;
                         if (line_remaining < 0x21)      /* < '!' */
                                 break;
-                        letter_scratch_buffer[i] = *str;
+                        g_ltscb[i] = *str;
                         i = i + 1;
                         str = str + 1;
                 }
@@ -227,18 +262,18 @@ short   val;
 
                 /* Word-wrap: if this word would overflow the 40-col
                    line, insert a CR first. */
-                if ((short) (i + command_input_buffer_pos) > 0x27)
-                        letter_type_character_animated('\r');
+                if ((short) (i + g_cdibp) > 0x27)
+                        lt_tyca('\r');
 
                 for (word_length = 0; word_length < i; word_length = word_length + 1) {
-                        line_remaining = (short) letter_scratch_buffer[word_length];
-                        letter_type_character_animated(line_remaining);
+                        line_remaining = (short) g_ltscb[word_length];
+                        lt_tyca(line_remaining);
                 }
         }
         return line_remaining;
 }
 
-/* action_write_letter: outer flow -- walk, allocate letter buffer,
+/* a_writl: outer flow -- walk, allocate letter buffer,
    assemble letter body from shuffled template sections, free buffer,
    walk out.
 
@@ -255,10 +290,10 @@ short   val;
            template_index += randomRange(0, 1) * 48 + 36
        type 3 lines from that subsection at offsets +0..3, +4..7, +8..11
 
-   addr: action_write_letter() */
+   addr: a_writl() */
 
 void
-action_write_letter()
+a_writl()
 {
         short   result;
         short   section_order[4];
@@ -276,34 +311,34 @@ action_write_letter()
         short   full_year;
 
         if (lcp_record_playing != NO)
-                action_play_piano();
+                a_playp();
 
         house_get_position_xy(POS_TOP_FILING_CABINET,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
-        action_walk_to_and_turn();
+        a_watat();
         walk_result = randomRange(0, 100);
         if (lcp.initiative_threshold < walk_result)
-                action_open_close_filing_cabinet();
+                a_opcfc();
 
         house_get_position_xy(POS_TOP_STUDY_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         house_get_position_xy(POS_TOP_STUDY_DOOR,
-                              &walk_target_x, &walk_target_y);
-        walk_target_x = walk_target_x - 10;
-        walk_target_y = walk_target_y +  3;
+                              &g_wtx, &g_wty);
+        g_wtx = g_wtx - 10;
+        g_wty = g_wty +  3;
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
@@ -311,24 +346,24 @@ action_write_letter()
         action_interruptible_flag = YES;
 
         /* Drop the typewriter + typing sprites. */
-        sprite_layer_flags[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_TYPEWRITER);
-        sprite_pending_x[sprite_slot_map[SPRITE_TYPEWRITER]] = 201;
-        sprite_pending_y[sprite_slot_map[SPRITE_TYPEWRITER]] =  51;
-        sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_TYPING_2);
-        sprite_pending_x[sprite_slot_map[SPRITE_TYPING_2]] = 211;
-        sprite_pending_y[sprite_slot_map[SPRITE_TYPING_2]] =  44;
+        g_selaf[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_TYPEWRITER);
+        g_sepex[g_seslm[SPRITE_TYPEWRITER]] = 201;
+        g_sepey[g_seslm[SPRITE_TYPEWRITER]] =  51;
+        g_selaf[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_TYPING_2);
+        g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
+        g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
 
         house_get_position_xy(POS_TOP_DESK_CHAIR,
-                              &walk_target_x, &walk_target_y);
-        walk_target_y = walk_target_y -  4;
-        walk_target_x = walk_target_x - 14;
+                              &g_wtx, &g_wty);
+        g_wty = g_wty -  4;
+        g_wtx = g_wtx - 14;
         lcp_walk_to_destination();
 
         lcp_state              = STATE_STAND_SIDE_VIEW;
         lcp_facing_direction   = FACING_RIGHT;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         lcp_x = lcp_x + 5;
@@ -336,14 +371,14 @@ action_write_letter()
         lcp_state = STATE_WRITE_AT_DESK;
         game_tick_and_animate(1);
 
-        sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_TYPING_1] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_TYPING_1);
-        sprite_pending_x[sprite_slot_map[SPRITE_TYPING_1]] = 211;
-        sprite_pending_y[sprite_slot_map[SPRITE_TYPING_1]] =  44;
+        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_TYPING_1] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_TYPING_1);
+        g_sepex[g_seslm[SPRITE_TYPING_1]] = 211;
+        g_sepey[g_seslm[SPRITE_TYPING_1]] =  44;
 
-        head_anim_mode         = HEAD_ANIM_READING;
+        g_hamod         = HEAD_ANIM_READING;
         disable_key_input_flag = YES;
         fill_top_rect_with_background(0x1b);
 
@@ -361,13 +396,13 @@ action_write_letter()
         sprintf(input_string, "%s %d, %4d",
                 month_name_table[date_month],
                 date_day + 1, full_year);
-        command_input_buffer_pos = 0;
-        letter_type_string_animated(input_string, -12);
-        letter_type_character_animated('\r');
+        g_cdibp = 0;
+        lt_tysa(input_string, -12);
+        lt_tyca('\r');
 
         sprintf(input_string, "Dear %s,", lcp.owner_name);
-        letter_type_string_animated(input_string, 0);
-        letter_type_character_animated('\r');
+        lt_tysa(input_string, 0);
+        lt_tyca('\r');
 
         /* --- Shuffle the 4 section indices via 16 random swaps. --- */
         for (i = 0; i < 4; i = i + 1)
@@ -406,74 +441,74 @@ action_write_letter()
                 else
                         line_spacing =  2;
                 walk_result = randomRange(0, 3);
-                cursor_y = letter_type_string_animated(
+                cursor_y = lt_tysa(
                         letter_line_ptr[template_index + walk_result],
                         line_spacing);
                 char_test = (cursor_y != '-');
 
                 /* Middle line */
                 walk_result = randomRange(0, 3);
-                cursor_y = letter_type_string_animated(
+                cursor_y = lt_tysa(
                         letter_line_ptr[template_index + walk_result + 4],
                         char_test);
                 char_test = (cursor_y != '-');
 
                 /* Ending line */
                 walk_result = randomRange(0, 3);
-                letter_type_string_animated(
+                lt_tysa(
                         letter_line_ptr[template_index + walk_result + 8],
                         char_test);
         }
 
         /* --- Sign-off. --- */
-        letter_type_character_animated('\r');
+        lt_tyca('\r');
         line_spacing = -8;
         walk_result = randomRange(0, 3);
-        letter_type_string_animated(
+        lt_tysa(
                 letter_greeting_table[walk_result], line_spacing);
-        letter_type_character_animated('\r');
+        lt_tyca('\r');
 
         sprintf(input_string, "%s", lcp.character_name);
-        letter_type_string_animated(input_string, -10);
+        lt_tysa(input_string, -10);
         game_tick_and_animate(60);
 
         /* --- Cleanup: free buffer, hide typing sprites, walk out. --- */
         text_scroll_timer        = 0;
-        command_input_buffer_pos = 0;
+        g_cdibp = 0;
         disable_key_input_flag   = NO;
         _gemdos(GEMDOS_Mfree, (long) letter_txt_content, 0L, 0L);
 
-        sprite_layer_flags[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_4] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_TYPING_2);
-        sprite_pending_x[sprite_slot_map[SPRITE_TYPING_2]] = 211;
-        sprite_pending_y[sprite_slot_map[SPRITE_TYPING_2]] =  44;
+        g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_TYPING_2);
+        g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
+        g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
         game_tick_and_animate(4);
 
         lcp_state      = STATE_STAND_SIDE_VIEW;
-        head_anim_mode = HEAD_ANIM_DISABLED;
+        g_hamod = HEAD_ANIM_DISABLED;
         lcp_y = lcp_y - 6;
         game_tick_and_animate(0);
         action_interruptible_flag = YES;
 
         house_get_position_xy(POS_TOP_STUDY_DOOR,
-                              &walk_target_x, &walk_target_y);
-        walk_target_x = walk_target_x - 10;
-        walk_target_y = walk_target_y +  3;
+                              &g_wtx, &g_wty);
+        g_wtx = g_wtx - 10;
+        g_wty = g_wty +  3;
         lcp_walk_to_destination();
         house_get_position_xy(POS_TOP_STUDY_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 
-        sprite_layer_flags[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_1]   = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_2]   = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_3]   = SPRITE_HIDDEN;
-        sprite_layer_flags[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
-        sprite_update_slots();
+        g_selaf[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_1]   = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_2]   = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_3]   = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
+        sp_upds();
         action_interruptible_flag = NO;
 }

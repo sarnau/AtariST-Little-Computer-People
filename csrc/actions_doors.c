@@ -6,38 +6,63 @@
  * correct HOUSE_POS -- callers walk first, then call these to play the
  * animation + toggle the runtime flag + emit the SFX.
  *
- * addr: action_close_toilet_door(), action_close_closet_door(),
- *       action_open_close_fridge(), action_open_close_filing_cabinet(),
- *       action_open_close_dresser(), action_walk_to_and_turn()
+ * addr: a_clotd(), a_clocd(),
+ *       a_opecf(), a_opcfc(),
+ *       a_opecd(), a_watat()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    g_hatas;
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short    lcp_closet_door_open;
+extern short    lcp_dresser_open;
+extern short    lcp_toilet_door_open;
+extern short    lcp_filing_cabinet_open;
+extern short    g_obidt;
+extern short    g_obi09;
+extern short    g_obi15;
+extern short    g_obi16;
+extern short    g_obi17;
+extern short    g_obidc;
+extern short    g_obi03;
+extern short    g_obifc;
+extern short    g_obi13;
+extern short    g_obi14;
+extern short    g_obi11;
+extern short    g_obido;
+extern short    g_obi12;
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    randomRange();                  /* random.c */
 extern short    randomRange();
-extern void     soundeffect_select();
+extern void     sf_sele();
 extern void     object_draw();
 
-/* action_close_toilet_door: 2-frame close animation.
-   addr: action_close_toilet_door() */
+/* a_clotd: 2-frame close animation.
+   addr: a_clotd() */
 
 void
-action_close_toilet_door()
+a_clotd()
 {
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_BEND_AND_REACH;
         game_tick_and_animate(2);
-        object_draw(object_id_door_toilet_open_1, 187, 87);
+        object_draw(g_obi09, 187, 87);
         game_tick_and_animate(2);
-        object_draw(object_id_door_toilet_closed, 187, 87);
-        soundeffect_select(SFX_DOOR_CLOSE, 6L);
+        object_draw(g_obidt, 187, 87);
+        sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_toilet_door_open = NO;
 
@@ -46,24 +71,24 @@ action_close_toilet_door()
         game_tick_and_animate(0);
 }
 
-/* action_close_closet_door: 2-frame close animation.
-   addr: action_close_closet_door() */
+/* a_clocd: 2-frame close animation.
+   addr: a_clocd() */
 
 void
-action_close_closet_door()
+a_clocd()
 {
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_BEND_AND_REACH;
         game_tick_and_animate(2);
-        object_draw(object_id_door_closet_open_1, 75, 87);
+        object_draw(g_obi03, 75, 87);
         game_tick_and_animate(2);
-        object_draw(object_id_door_closet_closed, 75, 87);
-        soundeffect_select(SFX_DOOR_CLOSE, 6L);
+        object_draw(g_obidc, 75, 87);
+        sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_closet_door_open = NO;
 
@@ -72,27 +97,27 @@ action_close_closet_door()
         game_tick_and_animate(0);
 }
 
-/* action_open_close_fridge: open, look inside, close.  Both SFX are
+/* a_opecf: open, look inside, close.  Both SFX are
    SFX_DOOR_OPEN in the original -- preserved verbatim; whether the
    1985 source meant SFX_DOOR_CLOSE at the tail is a judgement call.
-   addr: action_open_close_fridge() */
+   addr: a_opecf() */
 
 void
-action_open_close_fridge()
+a_opecf()
 {
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_REACH_INTO_CABINET;
-        object_draw(object_id_fridge_closed, 24, 153);
+        object_draw(g_obi15, 24, 153);
         game_tick_and_animate(1);
-        object_draw(object_id_fridge_open_1, 24, 153);
-        soundeffect_select(SFX_DOOR_OPEN, 6L);
+        object_draw(g_obi16, 24, 153);
+        sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
-        object_draw(object_id_fridge_open_2, 24, 153);
+        object_draw(g_obi17, 24, 153);
         game_tick_and_animate(1);
 
         lcp_facing_direction = FACING_RIGHT;
@@ -107,42 +132,42 @@ action_open_close_fridge()
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(8);
 
-        object_draw(object_id_fridge_open_1, 24, 153);
+        object_draw(g_obi16, 24, 153);
         game_tick_and_animate(1);
-        object_draw(object_id_fridge_closed, 24, 153);
-        soundeffect_select(SFX_DOOR_OPEN, 6L);   /* verbatim */
+        object_draw(g_obi15, 24, 153);
+        sf_sele(SFX_DOOR_OPEN, 6L);   /* verbatim */
         game_tick_and_animate(1);
 }
 
-/* action_open_close_filing_cabinet: sequential open animation used by
+/* a_opcfc: sequential open animation used by
    the write-letter and tidy-house flows.  Note that the original always
    ends with lcp_filing_cabinet_open = NO -- there's no "open" branch
    here; the cabinet is toggled elsewhere by walk_to_and_turn().
-   addr: action_open_close_filing_cabinet() */
+   addr: a_opcfc() */
 
 void
-action_open_close_filing_cabinet()
+a_opcfc()
 {
         lcp_state = STATE_BEND_DOWN;         game_tick_and_animate(1);
         lcp_state = STATE_REACH_FORWARD;     game_tick_and_animate(2);
         lcp_state = STATE_PICK_UP_FROM_FLOOR;game_tick_and_animate(2);
         lcp_state = STATE_REACH_FORWARD;
-        object_draw(object_id_filing_cabinet_open_1, 258, 47);
+        object_draw(g_obi13, 258, 47);
         game_tick_and_animate(1);
         lcp_state = STATE_BEND_DOWN;
-        object_draw(object_id_filing_cabinet_closed, 258, 47);
+        object_draw(g_obifc, 258, 47);
         game_tick_and_animate(1);
         lcp_filing_cabinet_open = NO;
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(0);
 }
 
-/* action_open_close_dresser: dual-mode open (value=0) / close (value=1)
+/* a_opecd: dual-mode open (value=0) / close (value=1)
    drawer with 2-frame sprite animation.
-   addr: action_open_close_dresser() */
+   addr: a_opecd() */
 
 void
-action_open_close_dresser(open_close_status)
+a_opecd(open_close_status)
 short   open_close_status;
 {
         if (open_close_status == 0) {
@@ -151,9 +176,9 @@ short   open_close_status;
                 lcp_dresser_open = YES;
                 lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
                 lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-                object_draw(object_id_dresser_open_1, 97, 115);
+                object_draw(g_obido, 97, 115);
                 game_tick_and_animate(2);
-                object_draw(object_id_dresser_open_2, 97, 115);
+                object_draw(g_obi12, 97, 115);
                 game_tick_and_animate(2);
         } else {
                 if (lcp_dresser_open == NO)
@@ -161,22 +186,22 @@ short   open_close_status;
                 lcp_dresser_open = NO;
                 lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
                 lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-                object_draw(object_id_dresser_open_1, 97, 115);
+                object_draw(g_obido, 97, 115);
                 game_tick_and_animate(2);
-                object_draw(object_id_dresser_closed, 97, 115);
+                object_draw(g_obi11, 97, 115);
                 game_tick_and_animate(2);
         }
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(0);
 }
 
-/* action_walk_to_and_turn: filing-cabinet interaction helper -- opens
+/* a_watat: filing-cabinet interaction helper -- opens
    the cabinet if closed, or reaches into it if already open, then
    nervously shifts facing direction 10 times.
-   addr: action_walk_to_and_turn() */
+   addr: a_watat() */
 
 void
-action_walk_to_and_turn()
+a_watat()
 {
         short   i;
 
@@ -186,10 +211,10 @@ action_walk_to_and_turn()
         if (lcp_filing_cabinet_open == NO) {
                 lcp_filing_cabinet_open = YES;
                 lcp_state = STATE_REACH_FORWARD;
-                object_draw(object_id_filing_cabinet_open_1, 258, 47);
+                object_draw(g_obi13, 258, 47);
                 game_tick_and_animate(2);
                 lcp_state = STATE_PICK_UP_FROM_FLOOR;
-                object_draw(object_id_filing_cabinet_open_2, 258, 47);
+                object_draw(g_obi14, 258, 47);
                 game_tick_and_animate(2);
         } else {
                 lcp_state = STATE_REACH_FORWARD;

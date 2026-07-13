@@ -4,22 +4,22 @@
  * game_tick_and_animate(counter) is the workhorse of endless_game_loop.
  * Two entry paths:
  *
- *   lcp_carrying_object_flag == NO:
+ *   g_lcyof == NO:
  *       Loop (counter + 1) frames.  Each frame:
  *         wait for the next 8 Hz render tick
  *         advance sub_animation_frame_counter
  *         draw the wall-clock pendulum
  *         call game_simulate_one_second
  *         advance dog-bowl / fire / alarm / phone / TV animations
- *         update sprite_update_body / sprite_lcp_head_update
+ *         update sp_updb / sp_lchu
  *         poll keyboard, dispatch shortcut keys
- *         screen_render_8hz
+ *         sc_ren8
  *
- *   lcp_carrying_object_flag != NO:
+ *   g_lcyof != NO:
  *       Position the carried-object sprite:
  *           x = lcp_x + 10                       (facing right)
- *           x = lcp_x - sprite_active_width + 16 (facing left, clamped)
- *       Then dispatch a per-object handler that sets sprite_pending_y
+ *           x = lcp_x - g_seacw + 16 (facing left, clamped)
+ *       Then dispatch a per-object handler that sets g_sepey
  *       (all currently listed handlers set y = lcp_y - 20).
  *
  * addr: game_tick_and_animate()
@@ -28,29 +28,43 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
-extern void     sprite_update_body();
-extern void     sprite_lcp_head_animate();
-extern void     sprite_lcp_head_update();
-extern void     screen_render_8hz();
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    animation_tick_counter;
+extern short    lcp_x;
+extern short    lcp_y;
+extern void     game_tick_and_animate();
+extern short    lcp_facing_direction;
+extern short    g_lcyof;
+extern short    g_lcieo;
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_seacw[];
+extern short    g_seslm[];
+extern short    sub_animation_frame_counter;
+extern void     sp_updb();
+extern void     sp_lcha();
+extern void     sp_lchu();
+extern void     sc_ren8();
 extern void     clock_redraw_hands();
 extern void     object_draw();
 extern void     game_simulate_one_second();
-extern void     soundeffect_select();
-extern void     soundeffects_off();
-extern void     spritedata_select();
-extern void     sprite_update_slots();
+extern void     sf_sele();
+extern void     sf_so();
+extern void     sp_sprs();
+extern void     sp_upds();
 extern void     record_player_animate_needle();
-extern void     tv_draw_static_noise();
+extern void     td_nois();
 extern void     fill_top_rect_with_background();
-extern void     screen_scroll_text_down();
+extern void     sc_sctd();
 extern short    get_pressed_key();
 extern void     deal_with_keycode();
 
 /* Carried-object per-frame Y offset (Ghidra dispatch table at
    0x257c6..0x258b0).  Every listed sprite uses -20; the default (no
-   entry) leaves sprite_pending_y untouched. */
+   entry) leaves g_sepey untouched. */
 static short
 carry_y_offset(id)
 short   id;
@@ -83,26 +97,26 @@ short   counter;
         short   slot;
         short   y_off;
 
-        if (lcp_carrying_object_flag != NO) {
-                slot = sprite_slot_map[lcp_carried_object];
+        if (g_lcyof != NO) {
+                slot = g_seslm[g_lcieo];
                 if (lcp_facing_direction == FACING_RIGHT) {
-                        sprite_pending_x[slot] = lcp_x + 10;
+                        g_sepex[slot] = lcp_x + 10;
                 } else {
-                        sprite_pending_x[slot] =
-                                (lcp_x - sprite_active_width[slot]) + 16;
-                        if (sprite_pending_x[slot] < 0)
-                                sprite_pending_x[slot] = 0;
+                        g_sepex[slot] =
+                                (lcp_x - g_seacw[slot]) + 16;
+                        if (g_sepex[slot] < 0)
+                                g_sepex[slot] = 0;
                 }
-                y_off = carry_y_offset(lcp_carried_object);
+                y_off = carry_y_offset(g_lcieo);
                 if (y_off != 0x7fff)
-                        sprite_pending_y[slot] = lcp_y + y_off;
+                        g_sepey[slot] = lcp_y + y_off;
                 return;
         }
 
         count = animation_tick_counter;
         for (index = 0; index < counter + 1; index = index + 1) {
                 while (count == animation_tick_counter)
-                        screen_render_8hz();
+                        sc_ren8();
                 count = animation_tick_counter;
 
                 sub_animation_frame_counter =
@@ -112,10 +126,10 @@ short   counter;
                 game_simulate_one_second();
                 clock_redraw_hands();
 
-                sprite_update_body();
-                sprite_lcp_head_animate();
-                sprite_lcp_head_update();
+                sp_updb();
+                sp_lcha();
+                sp_lchu();
 
-                screen_render_8hz();
+                sc_ren8();
         }
 }

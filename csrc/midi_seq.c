@@ -10,8 +10,8 @@
  *   2. Deferred (stubs): the per-event MIDI parser + PSG channel
  *      output driver (envelope stepping, note-on/off state, program
  *      change dispatch, tempo-derived tick divider).  These live
- *      behind midi_seq_parse_channel_map, midi_seq_build_scale_table,
- *      midi_seq_send_program_change, and the interrupt-service loop
+ *      behind mq_pacm, mq_bust,
+ *      mq_sepc, and the interrupt-service loop
  *      that fires from the ST's 200 Hz timer.
  *
  *   3. XBIOS/BIOS:  Midiws (send raw MIDI bytes) and Giaccess (PSG
@@ -34,38 +34,81 @@
  *                                         defaults, each 8 bytes
  *   body + 0x1A4..0x1FD    90-byte channel + program-change map
  *                          (15 logical channels x 2 bytes each; parsed
- *                          by midi_seq_parse_channel_map at p - 90)
+ *                          by mq_pacm at p - 90)
  *   body + 0x1FE           MIDI event stream (this is midi_data_base_ptr)
  *
- * addr: midi_seq_init_song(), midi_seq_parse_header(),
- *       midi_seq_reset_programs(), midi_seq_skip_padding(),
- *       midi_seq_set_position(), midi_seq_start_playback()
+ * addr: mq_inis(), mq_parh(),
+ *       mq_resp(), mq_skip(),
+ *       mq_setp(), mq_stap()
  */
 
 #include "types.h"
+#include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern BOOL16   midi_is_playing;
+extern short    g_mspha;
+extern unsigned char *  midi_data_base_ptr;
+extern unsigned char *  midi_seq_position;
+extern long             g_msmap;
+extern long             midi_envelope_data_base;
+extern short            midi_velocity;
+extern short            midi_default_velocity;
+extern short            psg_current_volume;
+extern short            psg_default_volume;
+extern short            g_mnevi;
+extern short            g_mnevc;
+extern short            g_mtspb;
+extern short            midi_tempo;
+extern short            aes_int_out[];
+extern long             g_mtcou;
+extern short            midi_direct_write_mode;
+extern short            g_mtdiv;
+extern short            g_mtpre;
+extern short            midi_event_duration;
+extern short            midi_next_event_tick;
+extern short            midi_last_processed_tick;
+extern BOOL16           g_msmsa;
+extern unsigned char    midi_channel_map[];
+extern short            g_mcpro[];
+extern short            midi_program_map[];
+extern unsigned char    midi_scale_transpose_table[];
+extern unsigned char    midi_scale_mask_table[];
+extern BOOL16           midi_output_enabled;
+extern unsigned char    midi_event[];
+extern BOOL16           psg_output_enabled;
+extern BOOL16           psg_notes_active;
+extern unsigned char    psg_channel_notes[];
+extern PSG_ENVELOPE     psg_envelope[];
+extern unsigned short   psg_freq_table[];
+extern short            envelope_val;                   /* transpose base */
+extern char             g_mnlol;
+extern char             g_mnhil;
+extern short            g_mccha;
 #include <osbind.h>
 
 extern void             midi_out_write_byte();
 extern void             psg_copy_envelope_params();
 extern void             psg_write_register();
 extern void             psg_set_mixer();
-extern short            midi_seq_dispatch_event();
+extern short            mq_dise();
 
 /* Forward decls for the file's own functions -- our K&R style would
    normally rely on default-int declarations, but Clang under -Werror
    complains about the mixed short/long signatures below. */
-extern void             midi_seq_parse_header();
-extern void             midi_seq_parse_channel_map();
-extern void             midi_seq_reset_programs();
-extern void             midi_seq_send_program_change();
-extern void             midi_seq_build_scale_table();
-extern unsigned char *  midi_seq_skip_padding();
-extern void             midi_seq_set_position();
-extern void             midi_seq_start_playback();
+extern void             mq_parh();
+extern void             mq_pacm();
+extern void             mq_resp();
+extern void             mq_sepc();
+extern void             mq_bust();
+extern unsigned char *  mq_skip();
+extern void             mq_setp();
+extern void             mq_stap();
 
-/* Header-command handlers.  midi_seq_parse_header dispatches to these
+/* Header-command handlers.  mq_parh dispatches to these
    by matching the command byte against 0x80/0x81/0x83/0x84/0xC0/0xFF.
    The 1985 code used a jump table for the dispatch (which Ghidra
    couldn't recover); we use a plain switch, which the compiler
@@ -78,42 +121,42 @@ extern void             midi_seq_start_playback();
    3-byte-per-command stride. */
 
 static unsigned char *
-midi_header_handle_channel_count(p)
+mh_chac(p)
 unsigned char * p;
 {
         (void) p;
         return p + 3;
 }
 static unsigned char *
-midi_header_handle_tempo(p)
+mh_temp(p)
 unsigned char * p;
 {
         midi_tempo          = p[1];
-        midi_ticks_per_beat = p[2];
+        g_mtspb = p[2];
         return p + 3;
 }
 static unsigned char *
-midi_header_handle_volume(p)
+mh_volu(p)
 unsigned char * p;
 {
         midi_default_velocity = p[1];
         return p + 3;
 }
 static unsigned char *
-midi_header_handle_scale_table(p)
+mh_scat(p)
 unsigned char * p;
 {
-        midi_seq_build_scale_table();
+        mq_bust();
         return p + 3;
 }
 static unsigned char *
-midi_header_handle_program_change(p)
+mh_proc(p)
 unsigned char * p;
 {
         return p + 3;
 }
 
-/* midi_seq_init_song: song-lifecycle entry point.  When called with a
+/* mq_inis: song-lifecycle entry point.  When called with a
    song already playing, signals the current one to stop (the audio
    driver picks up the SEQ_PHASE_SONG_ENDING transition on its next
    interrupt) and returns without starting the new song -- the caller
@@ -125,7 +168,7 @@ unsigned char * p;
         the MIDI event stream (which puts the 90-byte channel-map
         block + 360-byte envelope-parameter block behind it).
      2. Parse the song header configuration (tempo, channel count,
-        etc.) via midi_seq_parse_header.
+        etc.) via mq_parh.
      3. Reset all 16 MIDI program assignments so the current song
         starts each channel with the right instrument voice.
      4. Skip any leading 0x00/0xFF padding in the event stream.
@@ -133,31 +176,31 @@ unsigned char * p;
         driver's interrupt loop.
      6. Reset timing counters and kick the sequencer.
 
-   addr: midi_seq_init_song() */
+   addr: mq_inis() */
 
 void
-midi_seq_init_song(param_1, maxPosition)
+mq_inis(param_1, maxPosition)
 unsigned char * param_1;
 long            maxPosition;
 {
         unsigned char * current_position;
 
         if (midi_is_playing != NO) {
-                midi_seq_phase = SEQ_PHASE_SONG_ENDING;
+                g_mspha = SEQ_PHASE_SONG_ENDING;
                 return;
         }
 
         midi_data_base_ptr = param_1 + 0x1fe;
-        midi_seq_parse_header(midi_data_base_ptr);
-        midi_seq_reset_programs();
-        current_position = midi_seq_skip_padding(midi_data_base_ptr,
+        mq_parh(midi_data_base_ptr);
+        mq_resp();
+        current_position = mq_skip(midi_data_base_ptr,
                                                  maxPosition);
-        midi_seq_set_position(current_position, maxPosition);
-        midi_seq_start_playback();
+        mq_setp(current_position, maxPosition);
+        mq_stap();
         midi_is_playing = YES;
 }
 
-/* midi_seq_parse_header: walk the song configuration commands.  The
+/* mq_parh: walk the song configuration commands.  The
    header runs from midi_data_base_ptr until the first 0xFF byte;
    commands come in three flavours: config commands (0x80/0x81/0x83/
    0x84) that update sequencer state, program-change events (0xC0),
@@ -167,13 +210,13 @@ long            maxPosition;
    Also parses the 90-byte channel/program-map block that precedes the
    header events.
 
-   addr: midi_seq_parse_header() */
+   addr: mq_parh() */
 
 void
-midi_seq_parse_header(p)
+mq_parh(p)
 unsigned char * p;
 {
-        midi_seq_parse_channel_map(p - 90);
+        mq_pacm(p - 90);
 
         /* Skip a leading zero byte (used in .sng files where the
            channel-map block is padded to an even boundary). */
@@ -195,19 +238,19 @@ unsigned char * p;
                 /* Config-command dispatch. */
                 switch (*p) {
                 case MIDI_HDR_SET_CHANNEL_COUNT:
-                        p = midi_header_handle_channel_count(p);
+                        p = mh_chac(p);
                         break;
                 case MIDI_HDR_SET_TEMPO:
-                        p = midi_header_handle_tempo(p);
+                        p = mh_temp(p);
                         break;
                 case MIDI_HDR_SET_VOLUME:
-                        p = midi_header_handle_volume(p);
+                        p = mh_volu(p);
                         break;
                 case MIDI_HDR_BUILD_SCALE_TABLE:
-                        p = midi_header_handle_scale_table(p);
+                        p = mh_scat(p);
                         break;
                 case MIDI_HDR_PROGRAM_CHANGE:
-                        p = midi_header_handle_program_change(p);
+                        p = mh_proc(p);
                         break;
                 case MIDI_HDR_END:
                         return;
@@ -218,7 +261,7 @@ unsigned char * p;
         }
 }
 
-/* midi_seq_reset_programs: pre-flight the 16 MIDI channels.  For each
+/* mq_resp: pre-flight the 16 MIDI channels.  For each
    physical channel 0..15, finds the first logical channel in the map
    that references it, marks its current program as unset (-1), and
    dispatches a Program Change message to select the configured
@@ -229,10 +272,10 @@ unsigned char * p;
    past 15 and terminate the inner iteration after finding the first
    match.  Preserved as an explicit `break`.
 
-   addr: midi_seq_reset_programs() */
+   addr: mq_resp() */
 
 void
-midi_seq_reset_programs()
+mq_resp()
 {
         short   channel;
         short   ch_index;
@@ -241,24 +284,24 @@ midi_seq_reset_programs()
                 for (ch_index = 1; ch_index < 16;
                      ch_index = ch_index + 1) {
                         if ((midi_channel_map[ch_index] & 0xf) == channel) {
-                                midi_current_program[ch_index] = -1;
-                                midi_seq_send_program_change(ch_index);
+                                g_mcpro[ch_index] = -1;
+                                mq_sepc(ch_index);
                                 break;
                         }
                 }
         }
 }
 
-/* midi_seq_skip_padding: advance past leading 0x00 and the
+/* mq_skip: advance past leading 0x00 and the
    0x00-followed-by-0xFF pair used to mark "empty song start".  If
    neither prefix matches, walk forward until the first 0x00 -- this
    corner covers the "song already trimmed" path where the caller has
    already snipped the padding.
 
-   addr: midi_seq_skip_padding() */
+   addr: mq_skip() */
 
 unsigned char *
-midi_seq_skip_padding(ptr, position)
+mq_skip(ptr, position)
 unsigned char * ptr;
 long            position;
 {
@@ -280,7 +323,7 @@ long            position;
         return ptr;
 }
 
-/* midi_seq_set_position: stash the read cursor + end-of-song marker,
+/* mq_setp: stash the read cursor + end-of-song marker,
    initialise the per-song audio-driver state (envelope base, velocity,
    PSG volume, event queue depth), and publish the tick-per-beat to
    the interrupt handler via aes_int_out[7].
@@ -289,25 +332,25 @@ long            position;
    base, matching the ADSR parameter block layout described at the top
    of this file.
 
-   addr: midi_seq_set_position() */
+   addr: mq_setp() */
 
 void
-midi_seq_set_position(currentPosition, maxPosition)
+mq_setp(currentPosition, maxPosition)
 unsigned char * currentPosition;
 long            maxPosition;
 {
         midi_seq_position     = currentPosition;
-        midi_seq_max_position = (maxPosition == 0) ? -1 : maxPosition;
+        g_msmap = (maxPosition == 0) ? -1 : maxPosition;
 
         midi_envelope_data_base = (long) (midi_data_base_ptr - 0x168);
         midi_velocity           = midi_default_velocity;
         psg_current_volume      = psg_default_volume;
-        midi_note_event_index   = 0;
-        midi_note_event_count   = 9;
-        aes_int_out[7]          = midi_ticks_per_beat;
+        g_mnevi   = 0;
+        g_mnevc   = 9;
+        aes_int_out[7]          = g_mtspb;
 }
 
-/* midi_seq_start_playback: initialise timer counters + arm the
+/* mq_stap: initialise timer counters + arm the
    sequencer.  All 4 tick counters (divider, prescaler, event
    duration, next-event tick, last-processed tick) are seeded to 100,
    which gives the audio driver 100 200Hz ticks (~ 500 ms) of grace
@@ -318,23 +361,23 @@ long            maxPosition;
    XBIOS Midiws" path (as opposed to the direct-write ACIA register
    path used by a few speed-critical hot loops).
 
-   addr: midi_seq_start_playback() */
+   addr: mq_stap() */
 
 void
-midi_seq_start_playback()
+mq_stap()
 {
-        midi_tick_counter       = 0;
+        g_mtcou       = 0;
         midi_direct_write_mode  = 0;
-        midi_tick_divider       = 100;
-        midi_tick_prescaler     = 100;
+        g_mtdiv       = 100;
+        g_mtpre     = 100;
         midi_event_duration     = 100;
         midi_next_event_tick    = 100;
         midi_last_processed_tick= 100;
-        midi_sequencer_active   = YES;
-        midi_seq_phase          = SEQ_PHASE_PARSE_NEXT_EVENT;
+        g_msmsa   = YES;
+        g_mspha          = SEQ_PHASE_PARSE_NEXT_EVENT;
 }
 
-/* midi_seq_parse_channel_map: unpack the 30-byte channel/program map
+/* mq_pacm: unpack the 30-byte channel/program map
    block sitting 90 bytes before midi_data_base_ptr.  The block is
    laid out as:
      bytes  0..14  MIDI channel assignment for logical channels 1..15
@@ -343,10 +386,10 @@ midi_seq_start_playback()
    a "no-op" sentinel); we decrement on load.  Logical channel 0 is
    reserved for game SFX and is not touched here.
 
-   addr: midi_seq_parse_channel_map() */
+   addr: mq_pacm() */
 
 void
-midi_seq_parse_channel_map(p)
+mq_pacm(p)
 unsigned char * p;
 {
         short   i;
@@ -357,7 +400,7 @@ unsigned char * p;
         }
 }
 
-/* midi_seq_build_scale_table: (re)build the 132-note transpose LUT.
+/* mq_bust: (re)build the 132-note transpose LUT.
    Starts identity, then blanks (0xFF = skip) the 5 chromatic non-
    diatonic notes in the octave.  If the scale parameter is anything
    other than 1 (chromatic), applies a 7-bit chord mask from
@@ -370,10 +413,10 @@ unsigned char * p;
    leading tone), bit 6 controls the root, matching how the 1985 code
    walks the octave from the top down.
 
-   addr: midi_seq_build_scale_table() */
+   addr: mq_bust() */
 
 void
-midi_seq_build_scale_table(value)
+mq_bust(value)
 short   value;
 {
         short           i;
@@ -419,7 +462,7 @@ short   value;
         }
 }
 
-/* midi_seq_send_program_change: dispatch a Program Change (MIDI status
+/* mq_sepc: dispatch a Program Change (MIDI status
    byte 0xCn) for logical channel `index`.  Only fires if the logical
    channel's currently-cached program differs from the newly-mapped
    one AND MIDI output is enabled.  Note that current-program is keyed
@@ -431,27 +474,27 @@ short   value;
    (which the audio driver later routes through XBIOS Midiws or direct
    ACIA writes).
 
-   addr: midi_seq_send_program_change() */
+   addr: mq_sepc() */
 
 void
-midi_seq_send_program_change(index)
+mq_sepc(index)
 short   index;
 {
         short   physical;
 
         physical = midi_channel_map[index] & 0xf;
-        if (midi_current_program[physical] == midi_program_map[index])
+        if (g_mcpro[physical] == midi_program_map[index])
                 return;
         if (midi_output_enabled == NO)
                 return;
 
         midi_event[0] = (midi_channel_map[index] & 0xf) | 0xc0;
         midi_event[1] = (unsigned char) midi_program_map[index];
-        midi_current_program[physical] = midi_program_map[index];
-        midi_seq_dispatch_event(midi_event, (short) 2, (short) 0);
+        g_mcpro[physical] = midi_program_map[index];
+        mq_dise(midi_event, (short) 2, (short) 0);
 }
 
-/* ---- midi_seq_dispatch_event ---------------------------------------- */
+/* ---- mq_dise ---------------------------------------- */
 
 /* Send one MIDI event to both the external MIDI OUT port (via XBIOS
    Midiws) and the internal YM2149 PSG (which the game uses as its
@@ -476,8 +519,8 @@ short   index;
        1. Try to allocate a silent PSG channel (linear search).
        2. If all 3 are busy: voice-steal the one furthest along in its
           envelope (highest phase number - closest to release).
-       3. Guard against notes outside [midi_note_lo_limit,
-          midi_note_hi_limit].
+       3. Guard against notes outside [g_mnlol,
+          g_mnhil].
        4. memcpy 8 bytes of ADSR envelope parameters from the .SNG
           block at midi_envelope_data_base + (channel-1)*8 into the
           chosen channel's envelope struct.
@@ -495,10 +538,10 @@ short   index;
    the PSG path can't handle (falls through to MIDI OUT only), or 0
    on a Note-Off miss (note wasn't playing on any channel).
 
-   addr: midi_seq_dispatch_event() */
+   addr: mq_dise() */
 
 short
-midi_seq_dispatch_event(midiEventPtr, midiEventSize, midiChannel)
+mq_dise(midiEventPtr, midiEventSize, midiChannel)
 unsigned char * midiEventPtr;
 short           midiEventSize;
 short           midiChannel;
@@ -580,8 +623,8 @@ short           midiChannel;
         }
 
         /* Range guard. */
-        if ((char) *note_ptr < midi_note_lo_limit ||
-            (char) *note_ptr > midi_note_hi_limit)
+        if ((char) *note_ptr < g_mnlol ||
+            (char) *note_ptr > g_mnhil)
                 return 1;
 
         envelope_phase = ENV_ATTACK;
@@ -589,7 +632,7 @@ short           midiChannel;
         /* Copy 8 bytes of ADSR params from the .SNG envelope block. */
         psg_copy_envelope_params(
                 (unsigned char *) (midi_envelope_data_base +
-                        (long) (midi_current_channel - 1) * 8),
+                        (long) (g_mccha - 1) * 8),
                 (unsigned char *) &psg_envelope[chosen].attack_start_vol,
                 8);
 

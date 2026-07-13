@@ -24,12 +24,49 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
-extern void     spritedata_select_carried_object_left();
-extern void     spritedata_select_carried_object_right();
-extern void     sprite_update_slots();
-extern void     soundeffect_select();
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   intro_sequence_active;
+extern short    triggered_event_list[];
+extern BOOL16   in_execute_event_routine_flag;
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hamod;
+extern BOOL16   action_interruptible_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern void     game_tick_and_animate();
+extern short    g_wyx;
+extern short    g_wyy;
+extern short    lcp_on_stairs_flag;
+extern BOOL16   footstep_trigger_flag;
+extern short    g_hastl;
+extern short    stair_top_y_threshold;
+extern short    stair_bottom_y_threshold;
+extern short    get_floor_number_from_y();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_lcyof;
+extern short    g_lcieo;
+extern short    dog_x;
+extern short    dog_y;
+extern short    g_dtx;
+extern short    g_dty;
+extern short    g_dyx;
+extern short    g_dyy;
+extern short    dog_on_stairs_flag;
+extern short    g_selaf[];
+extern short    floor_bottom_y_coords[];
+extern short    floor_center_y_coords[];
+extern short    staircase_waypoint_coords[];
+extern void     sp_ssco();
+extern void     sp_ss02();
+extern void     sp_upds();
+extern void     sf_sele();
 extern void     lcp_calc_floor_waypoint();
 extern void     lcp_pathfind_one_step();
 extern void     lcp_play_footstep_sound();
@@ -42,28 +79,28 @@ extern void     lcp_play_footstep_sound();
 short
 lcp_walk_to_destination()
 {
-        head_anim_mode       = HEAD_ANIM_WALKING;
-        head_anim_state_last = 0;
+        g_hamod       = HEAD_ANIM_WALKING;
+        g_hastl = 0;
 
         do {
-                if (walk_target_x == 0 && walk_target_y == 0)
+                if (g_wtx == 0 && g_wty == 0)
                         return 0;
                 lcp_pathfind_one_step();
         } while (in_execute_event_routine_flag != NO ||
                  triggered_event_list[0] == ACTION_NONE ||
-                 lcp_carrying_object_flag != NO ||
+                 g_lcyof != NO ||
                  intro_sequence_active != NO ||
                  lcp_on_stairs_flag != NO ||
                  action_interruptible_flag != NO);
 
-        walk_target_y = 0;
-        walk_target_x = 0;
+        g_wty = 0;
+        g_wtx = 0;
         return -1;
 }
 
 /* lcp_calc_floor_waypoint: pick the next waypoint given the current
    resident position and the destination.  Same-floor destinations
-   route straight to walk_target_x/y; cross-floor destinations route
+   route straight to g_wtx/y; cross-floor destinations route
    through the appropriate entry of staircase_waypoint_coords[] first.
    The middle-floor case has an extra pair-of-flights landing branch
    (stair_top_y_threshold / _bottom_y_threshold) that the top and
@@ -79,46 +116,46 @@ lcp_calc_floor_waypoint()
         short   dest_floor;
         short   stair_index;
 
-        target_floor  = get_floor_number_from_y(walk_target_y);
+        target_floor  = get_floor_number_from_y(g_wty);
         current_floor = get_floor_number_from_y(lcp_y);
 
         if (current_floor == target_floor) {
                 lcp_on_stairs_flag = NO;
-                walk_waypoint_x = walk_target_x;
-                walk_waypoint_y = walk_target_y;
+                g_wyx = g_wtx;
+                g_wyy = g_wty;
                 return;
         }
 
         target_floor    = get_floor_number_from_y(lcp_y);
         stair_index     = (target_floor - 1) + (target_floor - 1);
         current_floor   = stair_index;
-        walk_waypoint_x = staircase_waypoint_coords[stair_index];
-        walk_waypoint_y = staircase_waypoint_coords[current_floor + 1];
+        g_wyx = staircase_waypoint_coords[stair_index];
+        g_wyy = staircase_waypoint_coords[current_floor + 1];
 
         target_floor = get_floor_number_from_y(lcp_y);
         if (target_floor == 2) {
-                target_floor = get_floor_number_from_y(walk_target_y);
+                target_floor = get_floor_number_from_y(g_wty);
                 dest_floor   = get_floor_number_from_y(lcp_y);
                 if (target_floor < dest_floor) {
-                        walk_waypoint_x = stair_top_y_threshold;
-                        walk_waypoint_y = stair_bottom_y_threshold;
+                        g_wyx = stair_top_y_threshold;
+                        g_wyy = stair_bottom_y_threshold;
                 }
         }
 
         lcp_on_stairs_flag = NO;
-        if (lcp_x == walk_waypoint_x && lcp_y == walk_waypoint_y) {
+        if (lcp_x == g_wyx && lcp_y == g_wyy) {
                 lcp_on_stairs_flag = YES;
-                if (walk_target_y < lcp_y) {
-                        walk_waypoint_x = staircase_waypoint_coords[current_floor + 2];
-                        walk_waypoint_y = staircase_waypoint_coords[current_floor + 3];
+                if (g_wty < lcp_y) {
+                        g_wyx = staircase_waypoint_coords[current_floor + 2];
+                        g_wyy = staircase_waypoint_coords[current_floor + 3];
                 } else {
-                        walk_waypoint_y = staircase_waypoint_coords[current_floor - 1];
-                        walk_waypoint_x = staircase_waypoint_coords[current_floor - 2];
+                        g_wyy = staircase_waypoint_coords[current_floor - 1];
+                        g_wyx = staircase_waypoint_coords[current_floor - 2];
                 }
                 target_floor = get_floor_number_from_y(lcp_y);
                 if (target_floor == 1) {
-                        walk_waypoint_x = stair_top_y_threshold;
-                        walk_waypoint_y = stair_bottom_y_threshold;
+                        g_wyx = stair_top_y_threshold;
+                        g_wyy = stair_bottom_y_threshold;
                 }
         }
 }
@@ -137,49 +174,49 @@ dog_calc_walk_path()
         short   dest_floor;
         short   stair_index;
 
-        target_floor  = get_floor_number_from_y(dog_target_y);
+        target_floor  = get_floor_number_from_y(g_dty);
         current_floor = get_floor_number_from_y(dog_y);
 
         if (current_floor == target_floor) {
                 dog_on_stairs_flag = NO;
-                dog_waypoint_x = dog_target_x;
-                dog_waypoint_y = dog_target_y;
+                g_dyx = g_dtx;
+                g_dyy = g_dty;
                 return;
         }
 
         target_floor    = get_floor_number_from_y(dog_y);
         stair_index     = (target_floor - 1) + (target_floor - 1);
         current_floor   = stair_index;
-        dog_waypoint_x  = staircase_waypoint_coords[stair_index];
-        dog_waypoint_y  = staircase_waypoint_coords[current_floor + 1];
+        g_dyx  = staircase_waypoint_coords[stair_index];
+        g_dyy  = staircase_waypoint_coords[current_floor + 1];
 
         target_floor = get_floor_number_from_y(dog_y);
         if (target_floor == 2) {
-                target_floor = get_floor_number_from_y(dog_target_y);
+                target_floor = get_floor_number_from_y(g_dty);
                 dest_floor   = get_floor_number_from_y(dog_y);
                 if (target_floor < dest_floor) {
-                        dog_waypoint_x = stair_top_y_threshold - 3;
-                        dog_waypoint_y = stair_bottom_y_threshold;
+                        g_dyx = stair_top_y_threshold - 3;
+                        g_dyy = stair_bottom_y_threshold;
                 }
         }
 
         dog_on_stairs_flag = NO;
-        if (dog_x == dog_waypoint_x && dog_y == dog_waypoint_y) {
+        if (dog_x == g_dyx && dog_y == g_dyy) {
                 target_floor = get_floor_number_from_y(dog_y);
                 if (target_floor == 3)
                         dog_x = dog_x - 8;
                 dog_on_stairs_flag = YES;
-                if (dog_target_y < dog_y) {
-                        dog_waypoint_x = staircase_waypoint_coords[current_floor + 2];
-                        dog_waypoint_y = staircase_waypoint_coords[current_floor + 3];
+                if (g_dty < dog_y) {
+                        g_dyx = staircase_waypoint_coords[current_floor + 2];
+                        g_dyy = staircase_waypoint_coords[current_floor + 3];
                 } else {
-                        dog_waypoint_y = staircase_waypoint_coords[current_floor - 1];
-                        dog_waypoint_x = staircase_waypoint_coords[current_floor - 2];
+                        g_dyy = staircase_waypoint_coords[current_floor - 1];
+                        g_dyx = staircase_waypoint_coords[current_floor - 2];
                 }
                 target_floor = get_floor_number_from_y(dog_y);
                 if (target_floor == 1) {
-                        dog_waypoint_x = stair_top_y_threshold;
-                        dog_waypoint_y = stair_bottom_y_threshold;
+                        g_dyx = stair_top_y_threshold;
+                        g_dyy = stair_bottom_y_threshold;
                 }
         }
 }
@@ -198,21 +235,21 @@ lcp_play_footstep_sound()
                 return;
 
         if (lcp_on_stairs_flag != NO) {
-                soundeffect_select(SFX_FOOTSTEP_STAIRS, 2L);
+                sf_sele(SFX_FOOTSTEP_STAIRS, 2L);
                 return;
         }
 
         floor = get_floor_number_from_y(lcp_y);
         if (floor == 1) {
                 if (lcp_x < 166)
-                        soundeffect_select(SFX_FOOTSTEP_CARPET, 2L);
+                        sf_sele(SFX_FOOTSTEP_CARPET, 2L);
                 else
-                        soundeffect_select(SFX_FOOTSTEP_WOOD, 2L);
+                        sf_sele(SFX_FOOTSTEP_WOOD, 2L);
         } else if (floor == 2) {
                 if (lcp_x > 146 && lcp_x < 234)
-                        soundeffect_select(SFX_FOOTSTEP_CARPET, 2L);
+                        sf_sele(SFX_FOOTSTEP_CARPET, 2L);
         } else if (floor == 3 && lcp_x > 136) {
-                soundeffect_select(SFX_FOOTSTEP_WOOD, 2L);
+                sf_sele(SFX_FOOTSTEP_WOOD, 2L);
         }
 }
 
@@ -245,9 +282,9 @@ static void
 set_head_target(target)
 short   target;
 {
-        if (head_anim_state_last != target) {
-                head_anim_target_state = target;
-                head_anim_state_last   = target;
+        if (g_hastl != target) {
+                g_hatas = target;
+                g_hastl   = target;
         }
 }
 
@@ -270,15 +307,15 @@ lcp_pathfind_one_step()
 
         footstep_trigger_flag = NO;
 
-        if (walk_target_x == 0 && walk_target_y == 0)
+        if (g_wtx == 0 && g_wty == 0)
                 return;
 
-        if (walk_waypoint_x == 0 && walk_waypoint_y == 0)
+        if (g_wyx == 0 && g_wyy == 0)
                 lcp_calc_floor_waypoint();
 
         /* Exit stair mode when we've reached the target floor. */
         if (lcp_on_stairs_flag != NO) {
-                floor_num = get_floor_number_from_y(walk_waypoint_y);
+                floor_num = get_floor_number_from_y(g_wyy);
                 if (lcp_y <= floor_bottom_y_coords[floor_num - 1]) {
                         if (floor_num == 3)
                                 lcp_on_stairs_flag = NO;
@@ -288,10 +325,10 @@ lcp_pathfind_one_step()
         }
 
         /* Waypoint reached? */
-        if (lcp_x == walk_waypoint_x && lcp_y == walk_waypoint_y) {
-                if (lcp_x == walk_target_x && lcp_y == walk_target_y) {
-                        walk_target_x = 0;
-                        walk_target_y = 0;
+        if (lcp_x == g_wyx && lcp_y == g_wyy) {
+                if (lcp_x == g_wtx && lcp_y == g_wty) {
+                        g_wtx = 0;
+                        g_wty = 0;
                         lcp_state     = STATE_STAND_IDLE;
                         game_tick_and_animate(0);
                         return;
@@ -301,15 +338,15 @@ lcp_pathfind_one_step()
 
         /* ---- Flat walking (not on stairs) --------------------------- */
         if (lcp_on_stairs_flag == NO) {
-                if (lcp_carrying_object_flag != NO)
-                        spritedata_select_carried_object_left(lcp_carried_object);
+                if (g_lcyof != NO)
+                        sp_ssco(g_lcieo);
 
-                if (lcp_x < walk_waypoint_x) {
+                if (lcp_x < g_wyx) {
                         lcp_facing_direction = FACING_RIGHT;
                         walk_cycle_state();
                         lcp_x = lcp_x + 1;
                         set_head_target(10);
-                } else if (walk_waypoint_x < lcp_x) {
+                } else if (g_wyx < lcp_x) {
                         lcp_facing_direction = FACING_LEFT;
                         walk_cycle_state();
                         lcp_x = lcp_x - 1;
@@ -322,13 +359,13 @@ lcp_pathfind_one_step()
                                 lcp_state = STATE_WALK_FRAME_0;
                 }
 
-                x_distance = (lcp_x < walk_waypoint_x)
-                             ? (walk_waypoint_x - lcp_x)
-                             : (lcp_x - walk_waypoint_x);
+                x_distance = (lcp_x < g_wyx)
+                             ? (g_wyx - lcp_x)
+                             : (lcp_x - g_wyx);
                 if (x_distance < 8) {
-                        if (lcp_y < walk_waypoint_y)
+                        if (lcp_y < g_wyy)
                                 lcp_y = lcp_y + 1;
-                        else if (walk_waypoint_y < lcp_y)
+                        else if (g_wyy < lcp_y)
                                 lcp_y = lcp_y - 1;
                 } else {
                         floor_num = get_floor_number_from_y(lcp_y);
@@ -346,19 +383,19 @@ lcp_pathfind_one_step()
 
         /* ---- Stair traversal --------------------------------------- */
         if (lcp_on_stairs_flag != NO) {
-                if (walk_waypoint_y < lcp_y) {
+                if (g_wyy < lcp_y) {
                         /* Ascending */
                         if (lcp_y == 161) {
-                                if (lcp_carrying_object_flag != NO)
-                                        spritedata_select_carried_object_left(lcp_carried_object);
+                                if (g_lcyof != NO)
+                                        sp_ssco(g_lcieo);
                                 lcp_state = STATE_STAIR_CLIMB_FRAME_0;
                                 lcp_facing_direction = FACING_LEFT;
                                 lcp_x = lcp_x - 6;
                                 lcp_y = lcp_y - 2;
                                 set_head_target(HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER);
                         } else if (lcp_y == 100) {
-                                if (lcp_carrying_object_flag != NO)
-                                        spritedata_select_carried_object_left(lcp_carried_object);
+                                if (g_lcyof != NO)
+                                        sp_ssco(g_lcieo);
                                 lcp_state = STATE_STAIR_CLIMB_FRAME_0;
                                 lcp_facing_direction = FACING_RIGHT;
                                 lcp_x = lcp_x + 3;
@@ -368,14 +405,14 @@ lcp_pathfind_one_step()
                                    (lcp_y < 101 || lcp_y > 139)) {
                                 if (lcp_y < 100) {
                                         /* Upper flight of stairs, going up-right */
-                                        if (lcp_carrying_object_flag != NO)
-                                                spritedata_select_carried_object_left(lcp_carried_object);
+                                        if (g_lcyof != NO)
+                                                sp_ssco(g_lcieo);
                                         lcp_facing_direction = FACING_RIGHT;
                                         lcp_y = lcp_y - 1;
                                         next_x = lcp_x;
                                         if (lcp_state != STATE_STAIR_CLIMB_FRAME_3_STEP) {
                                                 next_x = lcp_x + 1;
-                                                if (next_x != walk_waypoint_x)
+                                                if (next_x != g_wyx)
                                                         next_x = lcp_x + 2;
                                         }
                                         lcp_x = next_x;
@@ -385,14 +422,14 @@ lcp_pathfind_one_step()
                                         set_head_target(10);
                                 } else if (lcp_y < 161) {
                                         /* Lower flight, going up-left */
-                                        if (lcp_carrying_object_flag != NO)
-                                                spritedata_select_carried_object_left(lcp_carried_object);
+                                        if (g_lcyof != NO)
+                                                sp_ssco(g_lcieo);
                                         lcp_facing_direction = FACING_LEFT;
                                         lcp_y = lcp_y - 1;
                                         next_x = lcp_x;
                                         if (lcp_state != STATE_STAIR_CLIMB_FRAME_3_STEP) {
                                                 next_x = lcp_x - 1;
-                                                if (next_x != walk_waypoint_x)
+                                                if (next_x != g_wyx)
                                                         next_x = lcp_x - 2;
                                         }
                                         lcp_x = next_x;
@@ -403,9 +440,9 @@ lcp_pathfind_one_step()
                                 }
                         } else {
                                 /* Top-of-stair frame (state 13..16). */
-                                if (lcp_carrying_object_flag != NO) {
-                                        sprite_layer_flags[lcp_carried_object] = SPRITE_BEHIND_LCP;
-                                        sprite_update_slots();
+                                if (g_lcyof != NO) {
+                                        g_selaf[g_lcieo] = SPRITE_BEHIND_LCP;
+                                        sp_upds();
                                 }
                                 if (lcp_state < 13 || lcp_state > 16) {
                                         lcp_state = STATE_STAIR_TOP_FRAME_0;
@@ -424,10 +461,10 @@ lcp_pathfind_one_step()
                                 }
                                 set_head_target(HEAD_ANIM_HORIZONTAL_RANGE);
                         }
-                } else if (lcp_y < walk_waypoint_y) {
+                } else if (lcp_y < g_wyy) {
                         /* Descending */
-                        if (lcp_carrying_object_flag != NO)
-                                spritedata_select_carried_object_left(lcp_carried_object);
+                        if (g_lcyof != NO)
+                                sp_ssco(g_lcieo);
 
                         if (lcp_y == 161) {
                                 lcp_state = STATE_STAIR_BTM_FRAME_0;
@@ -435,28 +472,28 @@ lcp_pathfind_one_step()
                                 lcp_y = 165;
                                 lcp_x = lcp_x + 6;
                                 set_head_target(8);
-                                if (lcp_carrying_object_flag != NO)
-                                        spritedata_select_carried_object_right(lcp_carried_object);
+                                if (g_lcyof != NO)
+                                        sp_ss02(g_lcieo);
                         } else if (lcp_y == 100) {
                                 lcp_state = STATE_STAIR_BTM_FRAME_0;
                                 lcp_facing_direction = FACING_RIGHT;
                                 lcp_y = 102;
                                 lcp_x = lcp_x - 2;
                                 set_head_target(8);
-                                if (lcp_carrying_object_flag != NO)
-                                        spritedata_select_carried_object_right(lcp_carried_object);
+                                if (g_lcyof != NO)
+                                        sp_ss02(g_lcieo);
                         } else if (lcp_y < 162 &&
                                    (lcp_y < 101 || lcp_y > 131)) {
                                 if (lcp_y < 100) {
                                         /* Upper flight, going down-left */
-                                        if (lcp_carrying_object_flag != NO)
-                                                spritedata_select_carried_object_right(lcp_carried_object);
+                                        if (g_lcyof != NO)
+                                                sp_ss02(g_lcieo);
                                         lcp_facing_direction = FACING_LEFT;
                                         lcp_y = lcp_y + 1;
                                         next_x = lcp_x;
                                         if (lcp_state != STATE_STAIR_DESCEND_FRAME_3_STEP) {
                                                 next_x = lcp_x - 1;
-                                                if (next_x != walk_waypoint_x)
+                                                if (next_x != g_wyx)
                                                         next_x = lcp_x - 2;
                                         }
                                         lcp_x = next_x;
@@ -472,14 +509,14 @@ lcp_pathfind_one_step()
                                                 footstep_trigger_flag = YES;
                                 } else if (lcp_y < 161) {
                                         /* Lower flight, going down-right */
-                                        if (lcp_carrying_object_flag != NO)
-                                                spritedata_select_carried_object_right(lcp_carried_object);
+                                        if (g_lcyof != NO)
+                                                sp_ss02(g_lcieo);
                                         lcp_facing_direction = FACING_RIGHT;
                                         lcp_y = lcp_y + 1;
                                         next_x = lcp_x;
                                         if (lcp_state != STATE_STAIR_DESCEND_FRAME_3_STEP) {
                                                 next_x = lcp_x + 1;
-                                                if (next_x != walk_waypoint_x)
+                                                if (next_x != g_wyx)
                                                         next_x = lcp_x + 2;
                                         }
                                         lcp_x = next_x;
@@ -496,8 +533,8 @@ lcp_pathfind_one_step()
                                 }
                         } else {
                                 /* Bottom-of-stair frame (state 21..24). */
-                                if (lcp_carrying_object_flag != NO)
-                                        spritedata_select_carried_object_right(lcp_carried_object);
+                                if (g_lcyof != NO)
+                                        sp_ss02(g_lcieo);
                                 if (lcp_state < 21 || lcp_state > 24) {
                                         lcp_state = STATE_STAIR_BTM_FRAME_0;
                                         lcp_x = lcp_x + 2;

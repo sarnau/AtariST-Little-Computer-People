@@ -21,7 +21,7 @@
 
 /* K&R style default argument promotions mangle short/long arg passing
    on 64-bit hosts (a `short` promoted to `int` won't fill a `long`
-   parameter slot).  Force a proper ANSI prototype so file_read's
+   parameter slot).  Force a proper ANSI prototype so fr_read's
    `_gemdos(GEMDOS_Fread, handle, count, buf)` call passes arguments in
    the correct sizes.  On the ST side, TRAP #1 handles the ABI directly. */
 long host_gemdos_trap(short fn, long a, long b, long c);

@@ -48,7 +48,7 @@ extern long     host_gemdos_trap(short fn, long a, long b, long c);
 
 /* XBIOS Giaccess (function 28): read/write YM2149 PSG register.
    On the host the PSG doesn't exist -- return 0 so audio-reactive
-   code (action_play_with_record's amp polling) sees silence. */
+   code (a_plawr's amp polling) sees silence. */
 #define Giaccess(data, reg)     (0L)
 
 /* Palette/screen XBIOS traps.  Host stubs are no-ops (palette /

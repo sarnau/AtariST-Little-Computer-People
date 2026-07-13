@@ -5,18 +5,49 @@
  * when hungry, and comes when called.  Movement runs at 8 Hz driven by
  * dog_move_and_animate() from the frame loop; sprite state is pushed
  * out to hardware slots 0 or 7 (behind/in-front of LCP by Y depth) via
- * spritedata_update_dog().
+ * sp_spud().
  *
- * addr: dog_move_and_animate(), spritedata_update_dog()
+ * addr: dog_move_and_animate(), sp_spud()
  */
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    lcp_y;
+extern short    get_floor_number_from_y();
+extern short    lcp_state;
+extern short    dog_x;
+extern short    dog_y;
+extern short    g_dtx;
+extern short    g_dty;
+extern short    g_dyx;
+extern short    g_dyy;
+extern short    g_dwanc;
+extern short    g_dsid;
+extern short    dog_on_stairs_flag;
+extern short    dog_initialized;
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short *  sprite_active_image[];
+extern short *  sprite_active_mask[];
+extern short    g_seach[];
+extern short    g_seacw[];
+extern short    g_sedeh[];
+extern short    g_sedew[];
+extern short    g_dwanf[];
+extern short *  dog_sprite_pointers[];
+extern short *  dog_mask_pointers[];
+extern short    g_dfimb[];
+extern short    g_dfmab[];
+extern short    floor_bottom_y_coords[];
+extern short    floor_center_y_coords[];
+extern short    staircase_waypoint_coords[];
 extern void     dog_calc_walk_path();
-extern void     sprite_flip_horizontal();
-extern void     spritedata_update_dog();
+extern void     sp_flih();
+extern void     sp_spud();
 
 /* dog_move_and_animate: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
@@ -37,11 +68,11 @@ dog_move_and_animate()
         short   x_distance;
         short   next_x;
 
-        dog_walk_anim_cycle = dog_walk_anim_cycle + 1;
-        if (dog_walk_anim_cycle > 7)
-                dog_walk_anim_cycle = 0;
+        g_dwanc = g_dwanc + 1;
+        if (g_dwanc > 7)
+                g_dwanc = 0;
 
-        if (dog_target_x == 0 && dog_target_y == 0)
+        if (g_dtx == 0 && g_dty == 0)
                 return;
 
         if (lcp_y < (short) (dog_y + 5))
@@ -52,12 +83,12 @@ dog_move_and_animate()
             lcp_state == STATE_READ_PAPER_TURN_PAGE)
                 depth_layer = 1;
 
-        if (dog_waypoint_x == 0 && dog_waypoint_y == 0)
+        if (g_dyx == 0 && g_dyy == 0)
                 dog_calc_walk_path();
 
         /* Exit stair-mode when reaching a floor boundary. */
         if (dog_on_stairs_flag != NO) {
-                floor_num = get_floor_number_from_y(dog_waypoint_y);
+                floor_num = get_floor_number_from_y(g_dyy);
                 if (dog_y <= floor_bottom_y_coords[floor_num - 1]) {
                         if (floor_num == 3)
                                 dog_on_stairs_flag = NO;
@@ -67,38 +98,38 @@ dog_move_and_animate()
         }
 
         /* Waypoint reached? */
-        if (dog_x == dog_waypoint_x && dog_y == dog_waypoint_y) {
-                if (dog_x == dog_target_x && dog_y == dog_target_y) {
-                        dog_target_x = 0;
-                        dog_target_y = 0;
-                        dog_waypoint_x = 0;
-                        dog_waypoint_y = 0;
-                        dog_sprite_id = SPRITE_DOG_LAY_DOWN;
-                        spritedata_update_dog(SPRITE_DOG_LAY_DOWN,
+        if (dog_x == g_dyx && dog_y == g_dyy) {
+                if (dog_x == g_dtx && dog_y == g_dty) {
+                        g_dtx = 0;
+                        g_dty = 0;
+                        g_dyx = 0;
+                        g_dyy = 0;
+                        g_dsid = SPRITE_DOG_LAY_DOWN;
+                        sp_spud(SPRITE_DOG_LAY_DOWN,
                                               depth_layer, NO);
                         return;
                 }
                 dog_calc_walk_path();
         }
 
-        dog_sprite_id = dog_walk_anim_frames[dog_walk_anim_cycle];
+        g_dsid = g_dwanf[g_dwanc];
         h_flip = NO;
 
         if (dog_on_stairs_flag == NO) {
-                if (dog_x < dog_waypoint_x) {
+                if (dog_x < g_dyx) {
                         h_flip = NO;
                         dog_x = dog_x + 1;
-                } else if (dog_waypoint_x < dog_x) {
+                } else if (g_dyx < dog_x) {
                         h_flip = YES;
                         dog_x = dog_x - 1;
                 }
-                x_distance = (dog_x < dog_waypoint_x)
-                             ? (dog_waypoint_x - dog_x)
-                             : (dog_x - dog_waypoint_x);
+                x_distance = (dog_x < g_dyx)
+                             ? (g_dyx - dog_x)
+                             : (dog_x - g_dyx);
                 if (x_distance < 8) {
-                        if (dog_y < dog_waypoint_y)
+                        if (dog_y < g_dyy)
                                 dog_y = dog_y + 1;
-                        else if (dog_waypoint_y < dog_y)
+                        else if (g_dyy < dog_y)
                                 dog_y = dog_y - 1;
                 } else {
                         floor_num = get_floor_number_from_y(dog_y);
@@ -116,8 +147,8 @@ dog_move_and_animate()
                 /* Stair traversal: fixed X/Y patches at 0x62, 0x64,
                    0x9f, 0xa1 anchor the sprite to the stair-edge tiles.
                    Between anchors we drift by one pixel per frame in
-                   the direction dog_waypoint_y indicates. */
-                if (dog_waypoint_y < dog_y) {
+                   the direction g_dyy indicates. */
+                if (g_dyy < dog_y) {
                         /* Going up */
                         if (dog_y == 0xa1) {
                                 h_flip = YES;
@@ -132,17 +163,17 @@ dog_move_and_animate()
                                 if (dog_y < 100) {
                                         h_flip = NO;
                                         dog_y = dog_y - 1;
-                                        if (dog_sprite_id != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
                                                 next_x = dog_x + 1;
-                                                if (next_x != dog_waypoint_x)
+                                                if (next_x != g_dyx)
                                                         next_x = dog_x + 2;
                                         }
                                 } else if (dog_y < 0xa1) {
                                         h_flip = YES;
                                         dog_y = dog_y - 1;
-                                        if (dog_sprite_id != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
                                                 next_x = dog_x - 1;
-                                                if (next_x != dog_waypoint_x)
+                                                if (next_x != g_dyx)
                                                         next_x = dog_x - 2;
                                         }
                                 }
@@ -150,7 +181,7 @@ dog_move_and_animate()
                                 h_flip = NO;
                                 dog_y = dog_y - 2;
                         }
-                } else if (dog_y < dog_waypoint_y) {
+                } else if (dog_y < g_dyy) {
                         /* Going down */
                         if (dog_y == 0xa1) {
                                 h_flip = NO;
@@ -165,17 +196,17 @@ dog_move_and_animate()
                                 if (dog_y < 100) {
                                         h_flip = YES;
                                         dog_y = dog_y + 1;
-                                        if (dog_sprite_id != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
                                                 next_x = dog_x - 1;
-                                                if (next_x != dog_waypoint_x)
+                                                if (next_x != g_dyx)
                                                         next_x = dog_x - 2;
                                         }
                                 } else if (dog_y < 161) {
                                         h_flip = NO;
                                         dog_y = dog_y + 1;
-                                        if (dog_sprite_id != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
                                                 next_x = dog_x + 1;
-                                                if (next_x != dog_waypoint_x)
+                                                if (next_x != g_dyx)
                                                         next_x = dog_x + 2;
                                         }
                                 }
@@ -187,18 +218,18 @@ dog_move_and_animate()
         }
 
         dog_x = next_x;
-        spritedata_update_dog(dog_sprite_id, depth_layer, h_flip);
+        sp_spud(g_dsid, depth_layer, h_flip);
 }
 
-/* spritedata_update_dog: push the dog frame into hardware slots 0
+/* sp_spud: push the dog frame into hardware slots 0
    (behind) or 7 (in-front) depending on layerPosition; mirror horizontally
-   via sprite_flip_horizontal if needed.  dog_initialized suppresses the
+   via sp_flih if needed.  dog_initialized suppresses the
    push while the dog hasn't been placed in the world yet.
 
-   addr: spritedata_update_dog() */
+   addr: sp_spud() */
 
 void
-spritedata_update_dog(sprite_id, layer_position, flip_horizontal)
+sp_spud(sprite_id, layer_position, flip_horizontal)
 short   sprite_id;
 short   layer_position;
 BOOL16  flip_horizontal;
@@ -210,22 +241,22 @@ BOOL16  flip_horizontal;
                 return;
 
         if (flip_horizontal != NO) {
-                sprite_flip_horizontal(dog_sprite_pointers[sprite_id],
-                                       (unsigned short *) dog_flip_image_buffer,
+                sp_flih(dog_sprite_pointers[sprite_id],
+                                       (unsigned short *) g_dfimb,
                                        15, 2);
-                sprite_flip_horizontal(dog_mask_pointers[sprite_id],
-                                       (unsigned short *) dog_flip_mask_buffer,
+                sp_flih(dog_mask_pointers[sprite_id],
+                                       (unsigned short *) g_dfmab,
                                        15, 2);
         }
 
-        sprite_active_height[0] = sprite_def_height[0x21];
-        sprite_active_height[7] = sprite_def_height[0x21];
-        sprite_active_width[0]  = sprite_def_width[0x21];
-        sprite_active_width[7]  = sprite_def_width[0x21];
-        sprite_pending_x[0] = dog_x;
-        sprite_pending_x[7] = dog_x;
-        sprite_pending_y[0] = dog_y - 17;
-        sprite_pending_y[7] = dog_y - 17;
+        g_seach[0] = g_sedeh[0x21];
+        g_seach[7] = g_sedeh[0x21];
+        g_seacw[0]  = g_sedew[0x21];
+        g_seacw[7]  = g_sedew[0x21];
+        g_sepex[0] = dog_x;
+        g_sepex[7] = dog_x;
+        g_sepey[0] = dog_y - 17;
+        g_sepey[7] = dog_y - 17;
 
         if (flip_horizontal == NO) {
                 sprite_active_mask[0] = dog_mask_pointers[sprite_id];
@@ -235,11 +266,11 @@ BOOL16  flip_horizontal;
                 else
                         sprite_active_image[0] = dog_sprite_pointers[sprite_id];
         } else {
-                sprite_active_mask[0] = dog_flip_mask_buffer;
-                sprite_active_mask[7] = dog_flip_mask_buffer;
+                sprite_active_mask[0] = g_dfmab;
+                sprite_active_mask[7] = g_dfmab;
                 if (layer_position == 1)
-                        sprite_active_image[7] = dog_flip_image_buffer;
+                        sprite_active_image[7] = g_dfimb;
                 else
-                        sprite_active_image[0] = dog_flip_image_buffer;
+                        sprite_active_image[0] = g_dfimb;
         }
 }

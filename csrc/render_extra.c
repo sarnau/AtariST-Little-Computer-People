@@ -7,36 +7,54 @@
  * v_gtext) fall through to host stubs in osbind.h / stubs.c when
  * building without the ST hardware.
  *
- * addr: palette_apply_clothing_colors(), palette_apply_skin_colors(),
- *       lcp_update_palette_colors(), tv_draw_static_line(),
- *       tv_draw_static_noise(), screen_scroll_text_down(),
+ * addr: pa_cloc(), pa_skic(),
+ *       lcp_update_palette_colors(), td_line(),
+ *       td_nois(), sc_sctd(),
  *       print_char()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   midi_is_playing;
+extern BOOL16   record_browsing_active;
+extern short    vdihandle;
+extern short    _vdi_color_table[];
+extern void *   dest_screenbase_ptr;
+extern short    main_colorpalette[];
+extern short    g_clcop[];
+extern short    g_clcos[];
+extern short    skin_color_palette[];
+extern short    g_ltlic;
+extern short    g_ltpac;
+extern unsigned short   _record_led_mask_table[];
+extern short    randomRange();                  /* random.c */
+extern void     lcp_update_palette_colors();    /* render.c  */
 #include <osbind.h>
 
 extern short    randomRange();
 extern void     draw_line();
 extern void     blkcopy32();
-extern void     screen_fill_row_white();
+extern void     sc_firw();
 extern void     vst_color();
 extern void     vswr_mode();
 extern void     v_gtext();
 extern void     _draw_pixel();
 extern void     print_char();
 
-/* palette_apply_clothing_colors: pick a random or player-configured
+/* pa_cloc: pick a random or player-configured
    CLOTHING_COLOR_ID (0..15) and load its primary/secondary colours
    into palette slots 1 and 2, then Setpalette.  If the random pick
    overshoots the 16-entry table, falls back to lcp.clothing_color.
-   addr: palette_apply_clothing_colors() */
+   addr: pa_cloc() */
 
 void
-palette_apply_clothing_colors()
+pa_cloc()
 {
         short   index;
 
@@ -44,16 +62,16 @@ palette_apply_clothing_colors()
         if (index > 0xf)
                 index = lcp.clothing_color;
 
-        main_colorpalette[1] = clothing_color_primary[index];
-        main_colorpalette[2] = clothing_color_secondary[index];
+        main_colorpalette[1] = g_clcop[index];
+        main_colorpalette[2] = g_clcos[index];
         _xbios(XBIOS_Setpalette, (long) main_colorpalette, 0L, 0L);
 }
 
-/* palette_apply_skin_colors: same shape, 8-entry skin table.
-   addr: palette_apply_skin_colors() */
+/* pa_skic: same shape, 8-entry skin table.
+   addr: pa_skic() */
 
 void
-palette_apply_skin_colors()
+pa_skic()
 {
         short   index;
 
@@ -82,14 +100,14 @@ lcp_update_palette_colors()
         _xbios(XBIOS_Setpalette, (long) main_colorpalette, 0L, 0L);
 }
 
-/* tv_draw_static_line: draw the 5-line rabbit-ear antenna on top of
+/* td_line: draw the 5-line rabbit-ear antenna on top of
    the TV.  Lines diagonal-up-right from (44..48, 51..49) to (44..48,
    57..55).  Color is passed by the caller (COLOR_white when off,
    random color when on for static effect).
-   addr: tv_draw_static_line() */
+   addr: td_line() */
 
 void
-tv_draw_static_line(color)
+td_line(color)
 short   color;
 {
         short   i;
@@ -100,28 +118,28 @@ short   color;
                           color);
 }
 
-/* tv_draw_static_noise: random-colour antenna each frame while the TV
+/* td_nois: random-colour antenna each frame while the TV
    is on.  Called from the frame loop; the mask (& COLOR_dk_brown = 0xf)
    keeps the picked colour within the 16-entry palette.
-   addr: tv_draw_static_noise() */
+   addr: td_nois() */
 
 void
-tv_draw_static_noise()
+td_nois()
 {
         long    rnd;
 
         rnd = Random();
-        tv_draw_static_line((short) rnd & COLOR_dk_brown);
+        td_line((short) rnd & COLOR_dk_brown);
 }
 
-/* screen_scroll_text_down: 1-row block scroll on the top text strip
+/* sc_sctd: 1-row block scroll on the top text strip
    (used by the letter typewriter when a line wraps).  Copies 13 rows
    of 40 words each downward using the blitter, then blanks the top
    two rows (24 and 25) to white.
-   addr: screen_scroll_text_down() */
+   addr: sc_sctd() */
 
 void
-screen_scroll_text_down()
+sc_sctd()
 {
         short   row;
         char *  dest_ptr;
@@ -134,8 +152,8 @@ screen_scroll_text_down()
                 blkcopy32(src_ptr, dest_ptr, 10);
                 dest_ptr = dest_ptr + 320;
         }
-        screen_fill_row_white(dest_screenbase_ptr, 24);
-        screen_fill_row_white(dest_screenbase_ptr, 25);
+        sc_firw(dest_screenbase_ptr, 24);
+        sc_firw(dest_screenbase_ptr, 25);
 }
 
 /* print_char: render one character via VDI.  Sets the log-base to the
@@ -173,8 +191,8 @@ short   color;
    x=70..83 at y=42, one pixel per frame, wrapping at 0.  If music is
    playing and we're not currently browsing records, roll a random VU
    meter LED (0..6) at y=47 and toggle its lit/unlit state (red if the
-   new mask overlaps the accumulated `letter_paragraph_count`, else
-   black).  The `letter_line_count` / `letter_paragraph_count` variable
+   new mask overlaps the accumulated `g_ltpac`, else
+   black).  The `g_ltlic` / `g_ltpac` variable
    names are 1985 shared-storage reuse -- they double as record-player
    state when no letter is being written.
    addr: record_player_animate_needle() */
@@ -185,12 +203,12 @@ record_player_animate_needle()
         unsigned short  rnd;
         short           col;
 
-        if (letter_line_count >= 0)
-                _draw_pixel(letter_line_count + 70, 42, COLOR_white);
-        letter_line_count = letter_line_count - 2;
-        if (letter_line_count < 0)
-                letter_line_count = 13;
-        _draw_pixel(letter_line_count + 70, 42, COLOR_black);
+        if (g_ltlic >= 0)
+                _draw_pixel(g_ltlic + 70, 42, COLOR_white);
+        g_ltlic = g_ltlic - 2;
+        if (g_ltlic < 0)
+                g_ltlic = 13;
+        _draw_pixel(g_ltlic + 70, 42, COLOR_black);
 
         if (midi_is_playing == NO || record_browsing_active != NO)
                 return;
@@ -198,10 +216,10 @@ record_player_animate_needle()
         rnd = (unsigned short) Random();
         rnd = rnd & 7;
         if (rnd < 7) {
-                letter_paragraph_count = _record_led_mask_table[rnd] ^
-                                         letter_paragraph_count;
+                g_ltpac = _record_led_mask_table[rnd] ^
+                                         g_ltpac;
                 if ((_record_led_mask_table[rnd] &
-                     letter_paragraph_count) == 0)
+                     g_ltpac) == 0)
                         col = COLOR_black;
                 else
                         col = COLOR_red;

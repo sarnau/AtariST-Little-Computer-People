@@ -7,14 +7,23 @@
  * vswr_mode, vsf_color, vsf_interior, vsf_style) are extern stubs in
  * stubs.c that map to the real trap #2 dispatch under Alcyon.
  *
- * addr: draw_line(), screen_set_draw_to_backbuffer(),
- *       screen_set_draw_to_frontbuffer(), screen_fill_row_white(),
+ * addr: draw_line(), sc_sdtb(),
+ *       sc_sdtf(), sc_firw(),
  *       blkcopy32()
  */
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    vdihandle;
+extern short    _vdi_color_table[];
+extern void *   dest_screenbase_ptr;
+extern void *   screen_logbase;
+extern void *   save_logbase;
+extern void *   screen_ptr;
 #include <osbind.h>
 
 extern void     vsl_color();
@@ -23,8 +32,8 @@ extern void     vswr_mode();
 extern void     vsf_interior();
 extern void     vsf_style();
 extern void     vsf_color();
-extern void     screen_set_draw_to_backbuffer();
-extern void     screen_set_draw_to_frontbuffer();
+extern void     sc_sdtb();
+extern void     sc_sdtf();
 
 /* draw_line: Bresenham-ish line via VDI v_pline in backbuffer, then
    restore frontbuffer draw target.  The 2-point polyline maps directly
@@ -41,24 +50,24 @@ short   color;
 {
         short   pts[4];
 
-        screen_set_draw_to_backbuffer();
+        sc_sdtb();
         vsl_color(vdihandle, _vdi_color_table[color]);
         pts[0] = x1;
         pts[1] = y1;
         pts[2] = x2;
         pts[3] = y2;
         v_pline(vdihandle, 2, pts);
-        screen_set_draw_to_frontbuffer();
+        sc_sdtf();
 }
 
-/* screen_set_draw_to_backbuffer: XBIOS Logbase() saves the current
+/* sc_sdtb: XBIOS Logbase() saves the current
    log-base pointer; Setscreen redirects VDI output to screen_ptr (the
    off-screen buffer).  Also resets the VDI fill mode to solid black so
    subsequent fill calls have a well-known state.
-   addr: screen_set_draw_to_backbuffer() */
+   addr: sc_sdtb() */
 
 void
-screen_set_draw_to_backbuffer()
+sc_sdtb()
 {
         screen_logbase = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
         _xbios(XBIOS_Setscreen, (long) screen_ptr, -1L, -1L);
@@ -68,25 +77,25 @@ screen_set_draw_to_backbuffer()
         vsf_color(vdihandle, COLOR_black);
 }
 
-/* screen_set_draw_to_frontbuffer: restore the log-base pointer stashed
+/* sc_sdtf: restore the log-base pointer stashed
    by the backbuffer switch.
-   addr: screen_set_draw_to_frontbuffer() */
+   addr: sc_sdtf() */
 
 void
-screen_set_draw_to_frontbuffer()
+sc_sdtf()
 {
         _xbios(XBIOS_Setscreen, (long) screen_logbase, -1L, -1L);
 }
 
-/* screen_fill_row_white: paint one row (160 bytes = 80 words = 20
+/* sc_firw: paint one row (160 bytes = 80 words = 20
    quads-of-4) with the low-res-mode 3-bitplane 0xFFF pattern.  Row is
    offset by `row * 160` bytes from `scrptr`.  Each 4-word write plants
    1 blank bit-plane (0x0000) + 3 solid planes (0xFFFF), which combines
    into palette entry 0xF (white in the LCP palette).
-   addr: screen_fill_row_white() */
+   addr: sc_firw() */
 
 void
-screen_fill_row_white(scrptr, row)
+sc_firw(scrptr, row)
 unsigned short *        scrptr;
 short                   row;
 {
@@ -103,15 +112,15 @@ short                   row;
         }
 }
 
-/* screen_fill_row_striped: same row-stride shape as _white, but plants
+/* sc_firs: same row-stride shape as _white, but plants
    two blank planes (0x0000) followed by two solid planes (0xFFFF)
    instead of one + three.  In the LCP 4-bitplane low-res palette this
    produces the light-cyan house-background stripe used for the top
    status strip between menu screens.
-   addr: screen_fill_row_striped() */
+   addr: sc_firs() */
 
 void
-screen_fill_row_striped(scrptr, row)
+sc_firs(scrptr, row)
 unsigned short *        scrptr;
 short                   row;
 {
@@ -128,14 +137,14 @@ short                   row;
         }
 }
 
-/* screen_fill_row_black: paint one row (80 words = 160 bytes) with
+/* sc_firb: paint one row (80 words = 160 bytes) with
    zeros.  All 4 bitplanes off -> palette index 0 -> black in the LCP
    palette.  Used by fill_top_rect_with_background as the separator
    line between the text pane and the game area.
-   addr: screen_fill_row_black() */
+   addr: sc_firb() */
 
 void
-screen_fill_row_black(scraddr, row)
+sc_firb(scraddr, row)
 unsigned short *        scraddr;
 short                   row;
 {
@@ -150,7 +159,7 @@ short                   row;
 }
 
 /* init_vdi_and_screen: mini-game VDI setup.  Same shape as
-   screen_set_draw_to_backbuffer -- stash the current log-base, point
+   sc_sdtb -- stash the current log-base, point
    VDI output at the off-screen dest buffer, reset fill mode -- but
    uses a separate save_logbase slot (since the mini-game may nest its
    own set_draw_to_backbuffer calls without clobbering ours) and sets
@@ -198,14 +207,14 @@ short   color;
 {
         short   pts[4];
 
-        screen_set_draw_to_backbuffer();
+        sc_sdtb();
         vsl_color(vdihandle, _vdi_color_table[color]);
         pts[0] = x;
         pts[1] = y;
         pts[2] = x;
         pts[3] = y;
         v_pline(vdihandle, 2, pts);
-        screen_set_draw_to_frontbuffer();
+        sc_sdtf();
 }
 
 /* blkcopy32: unrolled 32-byte block copy.  Copies count*32 bytes from

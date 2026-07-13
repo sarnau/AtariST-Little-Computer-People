@@ -3,8 +3,8 @@
  *
  * The clock face lives at (278, 85) on the top status strip.  Each
  * hand is a single straight line from the centre to a point on a
- * radius-14 circle.  The 6-entry clock_minute_position and 24-entry
- * clock_hour_position tables split X (first half) from Y (second
+ * radius-14 circle.  The 6-entry g_cmmip and 24-entry
+ * g_chhop tables split X (first half) from Y (second
  * half) so the same table indexes both a horizontal and vertical
  * offset for a given time step.
  *
@@ -13,8 +13,12 @@
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    g_cmmip[];
+extern short    g_chhop[];
 extern void     draw_line();
 
 /* clock_draw_hands: paint the minute + hour hands in `color`.
@@ -37,11 +41,11 @@ short   color;
         h = hour % 12;
 
         draw_line(278, 85,
-                  278 + clock_minute_position[m],
-                   85 - clock_minute_position[m + 3],
+                  278 + g_cmmip[m],
+                   85 - g_cmmip[m + 3],
                   color);
         draw_line(278, 85,
-                  278 + clock_hour_position[h],
-                   85 - clock_hour_position[h + 3],
+                  278 + g_chhop[h],
+                   85 - g_chhop[h + 3],
                   color);
 }

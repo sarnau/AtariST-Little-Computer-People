@@ -1,45 +1,60 @@
 /*
  * tv_animate.c -- TV screen contents (bouncing line, pattern lines).
  *
- * When action_play_computer triggers the rare "clear the screen and
- * pretend to be watching TV" gesture, tv_show_screen_clear blanks the
+ * When a_playc triggers the rare "clear the screen and
+ * pretend to be watching TV" gesture, tv_scrc blanks the
  * 15x7-pixel TV rectangle at (293, 99)..(308, 106) with a filled
  * black bar, then picks (via 1 bit of XBIOS Random) between two
  * "programs":
  *
- *   tv_show_bouncing_line -- 64..319 tick loop, single-pixel line
+ *   tv_boul -- 64..319 tick loop, single-pixel line
  *     bouncing around inside the rectangle with a random colour each
  *     step.  Wall-collision reverses dx/dy.
- *   tv_show_pattern_lines -- 4 sets of 8 pre-computed lines from
+ *   tv_patl -- 4 sets of 8 pre-computed lines from
  *     tv_pattern_0/1/2/3_x/y_coords[], each drawn in a specific
- *     colour from tv_pattern_color_indices[].
+ *     colour from g_tpcoi[].
  *
- * addr: tv_show_screen_clear(), tv_show_bouncing_line(),
- *       tv_show_pattern_lines()
+ * addr: tv_scrc(), tv_boul(),
+ *       tv_patl()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern void     game_tick_and_animate();
+extern short    vdihandle;
+extern short    _vdi_color_table[];
+extern short    g_tp0xc[];
+extern short    g_tp0yc[];
+extern short    g_tp1xc[];
+extern short    g_tp1yc[];
+extern short    g_tp2xc[];
+extern short    g_tp2yc[];
+extern short    g_tp3xc[];
+extern short    g_tp3yc[];
+extern short    g_tpcoi[];
 #include <osbind.h>
 
-extern void     screen_set_draw_to_backbuffer();
-extern void     screen_set_draw_to_frontbuffer();
+extern void     sc_sdtb();
+extern void     sc_sdtf();
 extern void     vsl_color();
 extern void     v_pline();
 extern void     v_bar();
 
-/* tv_show_screen_clear: blank the TV area with a filled rectangle,
+/* tv_scrc: blank the TV area with a filled rectangle,
    then dispatch to one of the two programs via a coin flip on
    XBIOS Random.
-   addr: tv_show_screen_clear() */
+   addr: tv_scrc() */
 
-extern void     tv_show_bouncing_line();
-extern void     tv_show_pattern_lines();
+extern void     tv_boul();
+extern void     tv_patl();
 
 void
-tv_show_screen_clear()
+tv_scrc()
 {
         RECT16          rect;
         unsigned short  rnd;
@@ -47,26 +62,26 @@ tv_show_screen_clear()
         rect.x1 = 293; rect.y1 =  99;
         rect.x2 = 308; rect.y2 = 106;
 
-        screen_set_draw_to_backbuffer();
+        sc_sdtb();
         v_bar(vdihandle, &rect.x1);
-        screen_set_draw_to_frontbuffer();
+        sc_sdtf();
         game_tick_and_animate(1);
 
         rnd = (unsigned short) Random();
         if ((rnd & 1) == 0)
-                tv_show_bouncing_line();
+                tv_boul();
         else
-                tv_show_pattern_lines();
+                tv_patl();
 }
 
-/* tv_show_bouncing_line: `(rnd & 0xff) | 0x40` iterations (64..319) of
+/* tv_boul: `(rnd & 0xff) | 0x40` iterations (64..319) of
    one-pixel step + reverse-on-wall, each step drawn in a random colour
    from `(rnd & 0xf) | 1` (never picks 0=black so the pixels are always
    visible).
-   addr: tv_show_bouncing_line() */
+   addr: tv_boul() */
 
 void
-tv_show_bouncing_line()
+tv_boul()
 {
         unsigned short  rnd;
         unsigned short  rcolor;
@@ -94,9 +109,9 @@ tv_show_bouncing_line()
                 pos[0] = line_pos[1];
                 pos[1] = line_pos[0];
 
-                screen_set_draw_to_backbuffer();
+                sc_sdtb();
                 v_pline(vdihandle, 2, pos);
-                screen_set_draw_to_frontbuffer();
+                sc_sdtf();
                 game_tick_and_animate(0);
 
                 if (pos[0] == 308) dy = -1;
@@ -106,14 +121,14 @@ tv_show_bouncing_line()
         }
 }
 
-/* tv_show_pattern_lines: 4 canned pattern sets, each drawing 1..8 line
+/* tv_patl: 4 canned pattern sets, each drawing 1..8 line
    segments (count determined by `Random() & 7`) in a per-pattern
    colour.  Coordinate tables live in globals.c; the values are
    plausible stand-ins pending a Ghidra data-segment dump.
-   addr: tv_show_pattern_lines() */
+   addr: tv_patl() */
 
 void
-tv_show_pattern_lines()
+tv_patl()
 {
         unsigned short  rnd;
         short           point[2];
@@ -126,32 +141,32 @@ tv_show_pattern_lines()
                 rnd = (unsigned short) Random();
                 switch (pattern) {
                 case 0:
-                        xs = tv_pattern_0_x_coords;
-                        ys = tv_pattern_0_y_coords;
+                        xs = g_tp0xc;
+                        ys = g_tp0yc;
                         break;
                 case 1:
-                        xs = tv_pattern_1_x_coords;
-                        ys = tv_pattern_1_y_coords;
+                        xs = g_tp1xc;
+                        ys = g_tp1yc;
                         break;
                 case 2:
-                        xs = tv_pattern_2_x_coords;
-                        ys = tv_pattern_2_y_coords;
+                        xs = g_tp2xc;
+                        ys = g_tp2yc;
                         break;
                 default:
-                        xs = tv_pattern_3_x_coords;
-                        ys = tv_pattern_3_y_coords;
+                        xs = g_tp3xc;
+                        ys = g_tp3yc;
                         break;
                 }
 
                 for (i = 0; i <= (short) (rnd & 7); i = i + 1) {
                         point[0] = xs[i];
                         point[1] = ys[i];
-                        screen_set_draw_to_backbuffer();
+                        sc_sdtb();
                         vsl_color(vdihandle,
                                   _vdi_color_table[
-                                    tv_pattern_color_indices[pattern]]);
+                                    g_tpcoi[pattern]]);
                         v_pline(vdihandle, 2, point);
-                        screen_set_draw_to_frontbuffer();
+                        sc_sdtf();
                         game_tick_and_animate(1);
                 }
         }

@@ -5,7 +5,7 @@
  *   1. Skips whitespace + punctuation on tokenisation.
  *   2. Uppercases lowercase input via lcp_toupper.
  *   3. Returns WORD_NONE for words not in the (empty) vocabulary and
- *      bumps _action_priority accordingly.
+ *      bumps g_aprio accordingly.
  *   4. Falls through to ACTION_NONE when the action table has only a
  *      sentinel row.
  *
@@ -26,7 +26,7 @@ extern short    check_entered_command();
 extern short    check_valid_word_input();
 extern char *   command_upperstr();
 extern short    lcp_toupper();
-extern short    _action_priority;
+extern short    g_aprio;
 extern unsigned char _entered_word_bytes[];
 
 static int
@@ -82,8 +82,8 @@ main(void)
         p_fails = (result < 0);
         printf("check_entered_cmd : %s  (returned %d, negative = no match)\n",
                p_fails ? "FAIL" : "OK", result);
-        printf("  _action_priority after full parse = %d\n",
-               _action_priority);
+        printf("  g_aprio after full parse = %d\n",
+               g_aprio);
 
         /* Verify a random unknown-word bump still works. */
         {

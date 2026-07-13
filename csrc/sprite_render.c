@@ -1,7 +1,7 @@
 /*
  * sprite_render.c -- masked-blit sprite renderer.
  *
- * sprite_draw is called from screen_render_8hz for each of the 8 hardware
+ * sp_draw is called from sc_ren8 for each of the 8 hardware
  * sprite slots.  It uses the standard Atari ST two-pass masked blit:
  *
  *   Pass 1  vdi_copy_rect(NOTS_AND_D, mask, screen)
@@ -14,28 +14,40 @@
  *     XOR the sprite image onto the cleared area.  Since we just wrote
  *     zeros there, XOR effectively becomes a copy.
  *
- * sprite_init_MFDB is a tiny helper that fills in the sprite's MFDB
+ * sp_iniM is a tiny helper that fills in the sprite's MFDB
  * descriptor from raw address + width/height so the VDI wrappers
  * can consume it.
  *
- * addr: sprite_draw(), sprite_init_MFDB()
+ * addr: sp_draw(), sp_iniM()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    vdihandle;
+extern MFDB     g_srmfd;
+extern MFDB     g_semfi[];
+extern MFDB     g_semfm[];
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short *  sprite_active_image[];
+extern short *  sprite_active_mask[];
+extern short    g_seach[];
+extern short    g_seacw[];
 extern void     vdi_copy_rect();
 
-/* sprite_init_MFDB: populate an MFDB with the ST low-res format
+/* sp_iniM: populate an MFDB with the ST low-res format
    defaults (device-specific, 4 bitplanes).  The first parameter is
    ignored -- the 1985 code had it as `nplanes` but hardcoded to 4
    inside; preserved for signature fidelity.
-   addr: sprite_init_MFDB() */
+   addr: sp_iniM() */
 
 void
-sprite_init_MFDB(unused, mfdb, addr, width, height)
+sp_iniM(unused, mfdb, addr, width, height)
 long    unused;
 MFDB *  mfdb;
 void *  addr;
@@ -51,11 +63,11 @@ short   height;
         mfdb->fd_nplanes = 4;
 }
 
-/* sprite_draw: composite a single sprite slot onto screen_mfdb.
-   addr: sprite_draw() */
+/* sp_draw: composite a single sprite slot onto g_srmfd.
+   addr: sp_draw() */
 
 void
-sprite_draw(index)
+sp_draw(index)
 short   index;
 {
         short   x1;
@@ -63,23 +75,23 @@ short   index;
         short   w;
         short   h;
 
-        x1 = sprite_pending_x[index];
-        y1 = sprite_pending_y[index];
-        w  = sprite_active_width[index];
-        h  = sprite_active_height[index];
+        x1 = g_sepex[index];
+        y1 = g_sepey[index];
+        w  = g_seacw[index];
+        h  = g_seach[index];
 
-        sprite_init_MFDB(0L, &sprite_mfdb_image[index],
+        sp_iniM(0L, &g_semfi[index],
                          sprite_active_image[index], w, h);
-        sprite_init_MFDB(0L, &sprite_mfdb_mask[index],
+        sp_iniM(0L, &g_semfm[index],
                          sprite_active_mask[index],  w, h);
 
         vdi_copy_rect(vdihandle, NOTS_AND_D,
-                      &sprite_mfdb_mask[index], &screen_mfdb,
+                      &g_semfm[index], &g_srmfd,
                       0, 0, w - 1, h - 1,
                       x1, y1, x1 + w - 1, y1 + h - 1);
 
         vdi_copy_rect(vdihandle, S_XOR_D,
-                      &sprite_mfdb_image[index], &screen_mfdb,
+                      &g_semfi[index], &g_srmfd,
                       0, 0, w - 1, h - 1,
                       x1, y1, x1 + w - 1, y1 + h - 1);
 }

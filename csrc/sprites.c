@@ -15,8 +15,8 @@
  * All positioning is anchored to the resident's feet (lcp_x, lcp_y);
  * per-frame Y offsets come from body_y_offset_per_state[].
  *
- * addr: sprite_update_body(), sprite_lcp_head_update(),
- *       spritedata_select_carried_object_left/right(),
+ * addr: sp_updb(), sp_lchu(),
+ *       sp_ssco/right(),
  *       update_carried_object_sprite() (carry branch of
  *       game_tick_and_animate)
  */
@@ -24,104 +24,157 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hacur;
+extern short    g_hsfra;
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short *  saved_body_sprite_ptr;
+extern short *  saved_head_sprite_ptr;
+extern short    g_hsbuf[];
+extern short    g_hsmas[];
+extern short    g_hsmif;
+extern short *  pex_lcp_file;                   /* source head sheet */
+extern short *  head_shape_data;                /* source head masks */
+extern short    happiness_head_frame_offset[];
+extern short    head_x_offset_per_state[];
+extern short    head_height_per_state[];
+extern unsigned short   revert_table[];
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_lcyof;
+extern short    g_lcieo;
+extern short    g_lssh;
+extern short    debug_hide_lcp_offscreen;
+extern short    g_sepef[];
+extern short *  sprite_pending_image[];
+extern short *  sprite_pending_mask[];
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_sepeh[];
+extern short    g_sepew[];
+extern short *  sprite_active_image[];
+extern short *  sprite_active_mask[];
+extern short    g_seacx[];
+extern short    g_seacy[];
+extern short    g_seach[];
+extern short    g_seacw[];
+extern short *  sprite_def_image[];
+extern short *  sprite_def_mask[];
+extern short    g_sedeh[];
+extern short    g_sedew[];
+extern short    g_selaf[];
+extern short    g_seslm[];
+extern short    body_sprite_frame_table[];
+extern short    carry_body_frame_table[];
+extern short    body_y_offset_per_state[];
+extern short *  body_lcp_file;
+extern short *  body_shape_data;
+extern short    g_lsimg[];
+extern short    g_lsmas[];
 /* Forward-decls -- Alcyon skips these silently; modern clang under
    -Werror -std=c89 does not. */
-extern void     sprite_lcp_head_animate();
-extern void     sprite_lcp_flip();
-extern void     sprite_update_slots();
+extern void     sp_lcha();
+extern void     sp_lcpf();
+extern void     sp_upds();
 
-/* sprite_update_body: select the body pose for the current lcp_state and
+/* sp_updb: select the body pose for the current lcp_state and
    drop it into slot 3.  When carrying an object during a walking state
    (< 25), uses the alternate arms-up frames from carry_body_frame_table.
    Positioning: X = lcp_x - 4 (right) or lcp_x - 14 (left);
    Y = lcp_y + body_y_offset[state] - 21.
 
-   addr: sprite_update_body() */
+   addr: sp_updb() */
 
 void
-sprite_update_body()
+sp_updb()
 {
         short   frame;
 
         /* Wait out any double-buffer race on slot 3. */
-        while (sprite_pending_flag[3] == YES)
+        while (g_sepef[3] == YES)
                 ;
 
         frame = body_sprite_frame_table[lcp_state];
-        if (lcp_carrying_object_flag != NO && lcp_state < 25)
+        if (g_lcyof != NO && lcp_state < 25)
                 frame = carry_body_frame_table[lcp_state];
 
-        sprite_lcp_flip((short *) (body_lcp_file + frame),
+        sp_lcpf((short *) (body_lcp_file + frame),
                         (short *) (body_shape_data + frame),
-                        (short *) lcp_sprite_img,
-                        (short *) lcp_sprite_mask,
+                        (short *) g_lsimg,
+                        (short *) g_lsmas,
                         2, 21, lcp_facing_direction, 1);
 
         if (lcp_facing_direction == FACING_RIGHT)
-                sprite_active_x[3] = lcp_x - 4;
+                g_seacx[3] = lcp_x - 4;
         else
-                sprite_active_x[3] = lcp_x - 14;
+                g_seacx[3] = lcp_x - 14;
 
-        sprite_active_y[3] = lcp_y + body_y_offset_per_state[lcp_state] - 21;
+        g_seacy[3] = lcp_y + body_y_offset_per_state[lcp_state] - 21;
         if (debug_hide_lcp_offscreen != NO)
-                sprite_active_y[3] = 300;
+                g_seacy[3] = 300;
 
-        sprite_pending_height[3] = 21;
-        sprite_pending_width[3]  = 32;
-        sprite_pending_image[3]  = lcp_sprite_img;
-        sprite_pending_mask[3]   = lcp_sprite_mask;
+        g_sepeh[3] = 21;
+        g_sepew[3]  = 32;
+        sprite_pending_image[3]  = g_lsimg;
+        sprite_pending_mask[3]   = g_lsmas;
 
-        if (lcp_sprites_hidden != NO)
+        if (g_lssh != NO)
                 sprite_pending_image[3] = NULL;
 
-        sprite_pending_flag[3] = YES;
+        g_sepef[3] = YES;
 }
 
-/* spritedata_select_carried_object_left: activate a sprite as a carried
+/* sp_ssco: activate a sprite as a carried
    object in the behind-LCP layer.  Called from action code when the
    resident picks something up.  The per-frame X/Y update happens in
    update_carried_object_sprite() below.
 
-   addr: spritedata_select_carried_object_left() */
+   addr: sp_ssco() */
 
 void
-spritedata_select_carried_object_left(sprite_index)
+sp_ssco(sprite_index)
 short   sprite_index;
 {
         short   slot;
 
-        sprite_layer_flags[sprite_index] = SPRITE_BEHIND_LCP;
-        sprite_update_slots();
-        slot = sprite_slot_map[sprite_index];
+        g_selaf[sprite_index] = SPRITE_BEHIND_LCP;
+        sp_upds();
+        slot = g_seslm[sprite_index];
         sprite_active_image[slot]  = sprite_def_image[sprite_index];
         sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        sprite_active_height[slot] = sprite_def_height[sprite_index];
-        sprite_active_width[slot]  = sprite_def_width[sprite_index];
-        lcp_carrying_object_flag = YES;
-        lcp_carried_object       = sprite_index;
+        g_seach[slot] = g_sedeh[sprite_index];
+        g_seacw[slot]  = g_sedew[sprite_index];
+        g_lcyof = YES;
+        g_lcieo       = sprite_index;
 }
 
-/* spritedata_select: the "generic" sprite activator used by save.c and
+/* sp_sprs: the "generic" sprite activator used by save.c and
    the pet/petting animations.  Recomputes the 8-slot layout then copies
    the definition's image / mask / dimensions into the active-slot
    arrays.  Bypasses the pending double-buffer.
 
-   addr: spritedata_select() */
+   addr: sp_sprs() */
 
 void
-spritedata_select(sprite_index)
+sp_sprs(sprite_index)
 short   sprite_index;
 {
         short   slot;
 
-        sprite_update_slots();
-        slot = sprite_slot_map[sprite_index];
+        sp_upds();
+        slot = g_seslm[sprite_index];
         sprite_active_image[slot]  = sprite_def_image[sprite_index];
         sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        sprite_active_height[slot] = sprite_def_height[sprite_index];
-        sprite_active_width[slot]  = sprite_def_width[sprite_index];
+        g_seach[slot] = g_sedeh[sprite_index];
+        g_seacw[slot]  = g_sedew[sprite_index];
 }
 
 /* lcp_wait_head_reach_target: spin ticking the animation loop until the
@@ -131,7 +184,7 @@ short   sprite_index;
 void
 lcp_wait_head_reach_target()
 {
-        while (head_anim_current != head_anim_target_state)
+        while (g_hacur != g_hatas)
                 game_tick_and_animate(0);
 }
 
@@ -148,7 +201,7 @@ hide_lcp_sprites()
         saved_head_sprite_ptr  = sprite_active_image[4];
         sprite_active_image[3] = NULL;
         sprite_active_image[4] = NULL;
-        lcp_sprites_hidden     = YES;
+        g_lssh     = YES;
 }
 
 /* show_lcp_sprites: restore the pointers hide_lcp_sprites() stashed.
@@ -159,45 +212,45 @@ show_lcp_sprites()
 {
         sprite_active_image[3] = saved_body_sprite_ptr;
         sprite_active_image[4] = saved_head_sprite_ptr;
-        lcp_sprites_hidden     = NO;
+        g_lssh     = NO;
 }
 
-/* spritedata_select_carried_object_right: as above, but places the
+/* sp_ss02: as above, but places the
    carried sprite in the in-front-of-LCP layer.
-   addr: spritedata_select_carried_object_right() */
+   addr: sp_ss02() */
 
 void
-spritedata_select_carried_object_right(sprite_index)
+sp_ss02(sprite_index)
 short   sprite_index;
 {
         short   slot;
 
-        sprite_layer_flags[sprite_index] = SPRITE_IN_FRONT;
-        sprite_update_slots();
-        slot = sprite_slot_map[sprite_index];
+        g_selaf[sprite_index] = SPRITE_IN_FRONT;
+        sp_upds();
+        slot = g_seslm[sprite_index];
         sprite_active_image[slot]  = sprite_def_image[sprite_index];
         sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        sprite_active_height[slot] = sprite_def_height[sprite_index];
-        sprite_active_width[slot]  = sprite_def_width[sprite_index];
-        lcp_carrying_object_flag = YES;
-        lcp_carried_object       = sprite_index;
+        g_seach[slot] = g_sedeh[sprite_index];
+        g_seacw[slot]  = g_sedew[sprite_index];
+        g_lcyof = YES;
+        g_lcieo       = sprite_index;
 }
 
 /* ---- Sprite compositing pipeline -------------------------------------- */
 
-/* sprite_lcp_flip: expand a 2-word (32-pixel)-wide LCP source frame into
+/* sp_lcpf: expand a 2-word (32-pixel)-wide LCP source frame into
    a 4-word (64-pixel)-wide destination row, with optional horizontal
    mirror.  flipVertical selects whether the sprite content sits in the
    left half of the destination row (padding on the right) or the right
    half (padding on the left), so a right-facing frame's 32 pixels land
    at the same screen X as a left-facing one after body_sprite_frame_
-   table selection.  Called from sprite_update_body and
-   sprite_lcp_head_update.
+   table selection.  Called from sp_updb and
+   sp_lchu.
 
-   addr: sprite_lcp_flip() */
+   addr: sp_lcpf() */
 
 void
-sprite_lcp_flip(srcImg, srcMask, destImg, destMask,
+sp_lcpf(srcImg, srcMask, destImg, destMask,
                 width, height, flipHorizontal, flipVertical)
 short * srcImg;
 short * srcMask;
@@ -280,13 +333,13 @@ short   flipVertical;
         }
 }
 
-/* sprite_flip_horizontal: mirror a general sprite in place.  Unlike
-   sprite_lcp_flip this preserves the source width (no row expansion);
+/* sp_flih: mirror a general sprite in place.  Unlike
+   sp_lcpf this preserves the source width (no row expansion);
    the caller supplies pre-sized destination buffers.
-   addr: sprite_flip_horizontal() */
+   addr: sp_flih() */
 
 void
-sprite_flip_horizontal(source, dest, pixelHeight, wordsWidth)
+sp_flih(source, dest, pixelHeight, wordsWidth)
 unsigned short *        source;
 unsigned short *        dest;
 short                   pixelHeight;
@@ -314,7 +367,7 @@ short                   wordsWidth;
         }
 }
 
-/* sprite_update_slots: allocate the 60 logical sprites onto 8 hardware
+/* sp_upds: allocate the 60 logical sprites onto 8 hardware
    slots by layer.  Slot 3 is body, slot 4 is head (both reserved).
    Layer -1 (SPRITE_BEHIND_LCP) uses slots 1..2, layer +1 (SPRITE_IN_FRONT)
    uses slots 5..6, layer 0 (SPRITE_HIDDEN) maps to slot 9 (off-screen).
@@ -322,101 +375,101 @@ short                   wordsWidth;
    compete for the same slot, the older one is bumped to the alternate
    slot and its render state (image, mask, pending X/Y) is copied along.
 
-   addr: sprite_update_slots() */
+   addr: sp_upds() */
 
 void
-sprite_update_slots()
+sp_upds()
 {
         short   spriteID;
         short   sVar1;
         short   index;
         short   i;
 
-        if (sprite_layer_flags[0] == SPRITE_HIDDEN)
-                sprite_active_image[sprite_slot_map[0]] = NULL;
-        if (sprite_layer_flags[1] == SPRITE_HIDDEN)
-                sprite_active_image[sprite_slot_map[0]] = NULL;
+        if (g_selaf[0] == SPRITE_HIDDEN)
+                sprite_active_image[g_seslm[0]] = NULL;
+        if (g_selaf[1] == SPRITE_HIDDEN)
+                sprite_active_image[g_seslm[0]] = NULL;
 
         for (spriteID = 3; spriteID < 60; spriteID = spriteID + 1) {
-                if (sprite_layer_flags[spriteID] == SPRITE_HIDDEN) {
-                        sprite_slot_map[spriteID] = 9;
+                if (g_selaf[spriteID] == SPRITE_HIDDEN) {
+                        g_seslm[spriteID] = 9;
                         continue;
                 }
 
-                if (sprite_layer_flags[spriteID] == SPRITE_IN_FRONT) {
-                        i = sprite_slot_map[spriteID];
-                        sprite_slot_map[spriteID] = 6;
+                if (g_selaf[spriteID] == SPRITE_IN_FRONT) {
+                        i = g_seslm[spriteID];
+                        g_seslm[spriteID] = 6;
 
                         for (index = 3; index < spriteID;
                              index = index + 1) {
-                                if (sprite_slot_map[index] == 6) {
-                                        sprite_slot_map[spriteID] = 5;
+                                if (g_seslm[index] == 6) {
+                                        g_seslm[spriteID] = 5;
                                         break;
                                 }
                         }
 
                         for (index = spriteID + 1; index < 60;
                              index = index + 1) {
-                                if (sprite_slot_map[index] ==
-                                    sprite_slot_map[spriteID]) {
-                                        sprite_slot_map[index] = 5;
-                                        sprite_pending_x[5]     = sprite_pending_x[6];
-                                        sprite_pending_y[5]     = sprite_pending_y[6];
+                                if (g_seslm[index] ==
+                                    g_seslm[spriteID]) {
+                                        g_seslm[index] = 5;
+                                        g_sepex[5]     = g_sepex[6];
+                                        g_sepey[5]     = g_sepey[6];
                                         sprite_active_image[5]  = sprite_active_image[6];
                                         sprite_active_mask[5]   = sprite_active_mask[6];
-                                        sprite_active_height[5] = sprite_active_height[6];
-                                        sprite_active_width[5]  = sprite_active_width[6];
+                                        g_seach[5] = g_seach[6];
+                                        g_seacw[5]  = g_seacw[6];
                                 }
                         }
 
                         if (i < 8) {
-                                sVar1 = sprite_slot_map[spriteID];
-                                sprite_pending_x[sVar1]     = sprite_pending_x[i];
-                                sprite_pending_y[sVar1]     = sprite_pending_y[i];
+                                sVar1 = g_seslm[spriteID];
+                                g_sepex[sVar1]     = g_sepex[i];
+                                g_sepey[sVar1]     = g_sepey[i];
                                 sprite_active_image[sVar1]  = sprite_active_image[i];
                                 sprite_active_mask[sVar1]   = sprite_active_mask[i];
-                                sprite_active_height[sVar1] = sprite_active_height[i];
-                                sprite_active_width[sVar1]  = sprite_active_width[i];
+                                g_seach[sVar1] = g_seach[i];
+                                g_seacw[sVar1]  = g_seacw[i];
                                 if (sVar1 != i)
                                         sprite_active_image[i] = NULL;
                         }
                         continue;
                 }
 
-                if (sprite_layer_flags[spriteID] == SPRITE_BEHIND_LCP) {
-                        i = sprite_slot_map[spriteID];
-                        sprite_slot_map[spriteID] = 2;
+                if (g_selaf[spriteID] == SPRITE_BEHIND_LCP) {
+                        i = g_seslm[spriteID];
+                        g_seslm[spriteID] = 2;
 
                         for (index = 3; index < spriteID;
                              index = index + 1) {
-                                if (sprite_slot_map[index] == 2) {
-                                        sprite_slot_map[spriteID] = 1;
+                                if (g_seslm[index] == 2) {
+                                        g_seslm[spriteID] = 1;
                                         break;
                                 }
                         }
 
                         for (index = spriteID + 1; index < 60;
                              index = index + 1) {
-                                if (sprite_slot_map[index] ==
-                                    sprite_slot_map[spriteID]) {
-                                        sprite_slot_map[index] = 1;
-                                        sprite_pending_x[1]     = sprite_pending_x[2];
-                                        sprite_pending_y[1]     = sprite_pending_y[2];
+                                if (g_seslm[index] ==
+                                    g_seslm[spriteID]) {
+                                        g_seslm[index] = 1;
+                                        g_sepex[1]     = g_sepex[2];
+                                        g_sepey[1]     = g_sepey[2];
                                         sprite_active_image[1]  = sprite_active_image[2];
                                         sprite_active_mask[1]   = sprite_active_mask[2];
-                                        sprite_active_height[1] = sprite_active_height[2];
-                                        sprite_active_width[1]  = sprite_active_width[2];
+                                        g_seach[1] = g_seach[2];
+                                        g_seacw[1]  = g_seacw[2];
                                 }
                         }
 
                         if (i < 8) {
-                                sVar1 = sprite_slot_map[spriteID];
-                                sprite_pending_x[sVar1]     = sprite_pending_x[i];
-                                sprite_pending_y[sVar1]     = sprite_pending_y[i];
+                                sVar1 = g_seslm[spriteID];
+                                g_sepex[sVar1]     = g_sepex[i];
+                                g_sepey[sVar1]     = g_sepey[i];
                                 sprite_active_image[sVar1]  = sprite_active_image[i];
                                 sprite_active_mask[sVar1]   = sprite_active_mask[i];
-                                sprite_active_height[sVar1] = sprite_active_height[i];
-                                sprite_active_width[sVar1]  = sprite_active_width[i];
+                                g_seach[sVar1] = g_seach[i];
+                                g_seacw[sVar1]  = g_seacw[i];
                                 if (sVar1 != i)
                                         sprite_active_image[i] = NULL;
                         }
@@ -427,7 +480,7 @@ sprite_update_slots()
            a logical sprite (prevents ghosting). */
         for (spriteID = 1; spriteID < 7; spriteID = spriteID + 1) {
                 for (index = 0;
-                     index < 60 && sprite_slot_map[index] != spriteID;
+                     index < 60 && g_seslm[index] != spriteID;
                      index = index + 1)
                         ;
                 if (index == 60)
@@ -437,53 +490,53 @@ sprite_update_slots()
 
 /* ---- LCP head sprite (slot 4) ----------------------------------------- */
 
-/* sprite_lcp_head_update: pick the current head frame from PEx.LCP based
-   on happiness + head_sprite_frame, expand into the double-buffer via
-   sprite_lcp_flip, and drop it into slot 4.  Positioning tracks the body:
+/* sp_lchu: pick the current head frame from PEx.LCP based
+   on happiness + g_hsfra, expand into the double-buffer via
+   sp_lcpf, and drop it into slot 4.  Positioning tracks the body:
      X = lcp_x + head_x_offset[state] + (-4 or -14)
      Y = lcp_y + body_y_offset[state] - head_height[state] - 21
    Special case: while carrying an object on stairs (states 13..16), the
    head is lowered 1 px to sync with the carry animation bob.
 
-   addr: sprite_lcp_head_update() */
+   addr: sp_lchu() */
 
 void
-sprite_lcp_head_update()
+sp_lchu()
 {
         short   headIndex;
 
-        while (sprite_pending_flag[4] == YES)
+        while (g_sepef[4] == YES)
                 ;
 
         headIndex = happiness_head_frame_offset[lcp.happiness] +
-                    (head_sprite_frame & 0x7f);
+                    (g_hsfra & 0x7f);
 
-        sprite_lcp_flip((short *) (pex_lcp_file  + headIndex),
+        sp_lcpf((short *) (pex_lcp_file  + headIndex),
                         (short *) (head_shape_data + headIndex),
-                        head_sprite_buffer, head_sprite_mask,
-                        2, 21, head_sprite_mirror_flag, 0);
+                        g_hsbuf, g_hsmas,
+                        2, 21, g_hsmif, 0);
 
-        if (head_sprite_mirror_flag == NO)
-                sprite_active_x[4] = lcp_x + head_x_offset_per_state[lcp_state] - 4;
+        if (g_hsmif == NO)
+                g_seacx[4] = lcp_x + head_x_offset_per_state[lcp_state] - 4;
         else
-                sprite_active_x[4] = lcp_x + head_x_offset_per_state[lcp_state] - 14;
+                g_seacx[4] = lcp_x + head_x_offset_per_state[lcp_state] - 14;
 
-        sprite_active_y[4] = (lcp_y + body_y_offset_per_state[lcp_state]) -
+        g_seacy[4] = (lcp_y + body_y_offset_per_state[lcp_state]) -
                              (head_height_per_state[lcp_state] + 21);
         if (debug_hide_lcp_offscreen != NO)
-                sprite_active_y[4] = 300;
+                g_seacy[4] = 300;
 
-        if (lcp_carrying_object_flag != NO &&
+        if (g_lcyof != NO &&
             lcp_state > 12 && lcp_state < 17)
-                sprite_active_y[4] = sprite_active_y[4] + 1;
+                g_seacy[4] = g_seacy[4] + 1;
 
-        sprite_pending_height[4] = 21;
-        sprite_pending_width[4]  = 32;
-        sprite_pending_image[4]  = head_sprite_buffer;
-        sprite_pending_mask[4]   = head_sprite_mask;
+        g_sepeh[4] = 21;
+        g_sepew[4]  = 32;
+        sprite_pending_image[4]  = g_hsbuf;
+        sprite_pending_mask[4]   = g_hsmas;
 
-        if (lcp_sprites_hidden != NO)
+        if (g_lssh != NO)
                 sprite_pending_image[4] = NULL;
 
-        sprite_pending_flag[4] = YES;
+        g_sepef[4] = YES;
 }

@@ -45,19 +45,19 @@ short   game_speed_counter              = 5;
 BOOL16  ctrl_a_alarm_pressed_flag       = NO;
 short   lcp_water_level                 = 7;
 
-short   _action_list_size               = 0;
-short   _action_queue[10];
-short   _action_priority_queue[10];
+short   g_aliss               = 0;
+short   g_aqueu[10];
+short   g_apriq[10];
 
-short   head_anim_target_state          = 0;
-short   head_anim_current               = 0;
-short   head_anim_mode                  = 0;
-short   head_sprite_frame               = 0;
-long    soundeffect_remaining_ticks     = 0;
+short   g_hatas          = 0;
+short   g_hacur               = 0;
+short   g_hamod                  = 0;
+short   g_hsfra               = 0;
+long    g_sfret     = 0;
 BOOL16  action_interruptible_flag       = NO;
 BOOL16  dog_pettable_flag               = NO;
-short   walk_target_x                   = 0;
-short   walk_target_y                   = 0;
+short   g_wtx                   = 0;
+short   g_wty                   = 0;
 short   PLAYER_STATE_ARRAY[4];
 
 short   lcp_front_door_open             = 0;
@@ -75,29 +75,29 @@ short   lcp_tv_on                       = 0;
 /* Object-ID slots -- populated at load time in the real game from the
    OBJECTS file; nonzero defaults let render.c blit *something* even
    before the file is loaded. */
-short   object_id_door_study_closed     = 46;
-short   object_id_door_study_open_1     = 47;
-short   object_id_door_study_open_2     = 48;
-short   object_id_door_front_closed     = 36;
-short   object_id_door_front_open_1     = 37;
-short   object_id_door_front_open_2     = 38;
-short   object_id_cabinet_closed        = 19;
-short   object_id_cabinet_open_1        = 20;
-short   object_id_cabinet_open_2        = 21;
-short   object_id_phone_call            = 40;
-short   object_id_door_toilet_closed    = 25;
-short   object_id_door_toilet_open_1    = 26;
-short   object_id_door_toilet_open_2    = 27;
-short   object_id_stove_off             = 22;
-short   object_id_stove_animation[3]    = { 23, 24, 25 };
-short   object_id_fridge_closed         = 16;
-short   object_id_fridge_open_1         = 17;
-short   object_id_fridge_open_2         = 18;
+short   g_obids     = 46;
+short   g_obi07     = 47;
+short   g_obi08     = 48;
+short   g_obidf     = 36;
+short   g_obi05     = 37;
+short   g_obi06     = 38;
+short   g_obicc        = 19;
+short   g_obico        = 20;
+short   g_obi02        = 21;
+short   g_obipc            = 40;
+short   g_obidt    = 25;
+short   g_obi09    = 26;
+short   g_obi10    = 27;
+short   g_obiso             = 22;
+short   g_obisa[3]    = { 23, 24, 25 };
+short   g_obi15         = 16;
+short   g_obi16         = 17;
+short   g_obi17         = 18;
 
 BOOL16  midi_is_playing                 = NO;
 short   dog_food_bowl_change            = 0;
-short   soundeffect_playing_flag        = NO;
-short   soundeffect_playing_id          = 0;
+short   g_sfplf        = NO;
+short   g_sfpli          = 0;
 
 BOOL16  record_browsing_active          = NO;
 char *  midi_song_buffer                = (char *) 0;
@@ -107,15 +107,15 @@ short   fire_duration_countdown         = 0;
 BOOL16  fire_extinguish_flag            = NO;
 short   disable_key_input_flag          = NO;
 short   text_scroll_timer               = 0;
-short   screen_scroll_down_count        = 0;
-short   command_input_buffer_pos        = 0;
+short   g_srsdc        = 0;
+short   g_cdibp        = 0;
 
 /* Letter subsystem storage.  letter_line_ptr[] and _greeting_table are
    populated at runtime from letter.txt (see file_load_letter_template);
-   NULL entries make letter_type_string_animated a safe no-op on the
+   NULL entries make lt_tysa a safe no-op on the
    host build until the template loader is ported.  360 slots covers
    the 4 sections × 96 pointers (section 3 uses 72) shape referenced by
-   action_write_letter. */
+   a_writl. */
 char *  letter_txt_content              = (char *) 0;
 char *  letter_line_ptr[512]            = { (char *) 0 };
 char *  letter_greeting_table[8]        = { (char *) 0 };
@@ -124,31 +124,31 @@ char *  month_name_table[12] = {
         "May",     "June",     "July",      "August",
         "September","October", "November",  "December"
 };
-/* letter_char_width_table[4]: sprite IDs used to hide previously-typed
+/* g_ltcwt[4]: sprite IDs used to hide previously-typed
    characters as the buffer position advances (SPRITE_TYPING_1..4). */
-short   letter_char_width_table[4]      = {
+short   g_ltcwt[4]      = {
         SPRITE_TYPING_1, SPRITE_TYPING_2,
         SPRITE_TYPING_3, SPRITE_TYPING_4
 };
-char    letter_scratch_buffer[64];
+char    g_ltscb[64];
 char    input_string[256];
 /* compression_tokens[15]: the 15 most common byte values in the
-   compressed stream.  Populated at load-time by file_read_compressed
+   compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
 unsigned char   compression_tokens[15];
 
-short   object_id_door_closet_closed    = 28;
-short   object_id_door_closet_open_1    = 29;
-short   object_id_door_closet_open_2    = 30;
-short   object_id_fireplace_off         = 31;
-short   object_id_fireplace_animation[4] = { 32, 33, 34, 35 };
-short   object_id_filing_cabinet_closed = 0;
-short   object_id_filing_cabinet_open_1 = 1;
-short   object_id_filing_cabinet_open_2 = 2;
-short   object_id_dresser_closed        = 10;
-short   object_id_dresser_open_1        = 11;
-short   object_id_dresser_open_2        = 12;
-short   object_id_blue_green            = 44;
+short   g_obidc    = 28;
+short   g_obi03    = 29;
+short   g_obi04    = 30;
+short   g_obifo         = 31;
+short   g_obifa[4] = { 32, 33, 34, 35 };
+short   g_obifc = 0;
+short   g_obi13 = 1;
+short   g_obi14 = 2;
+short   g_obi11        = 10;
+short   g_obido        = 11;
+short   g_obi12        = 12;
+short   g_obibg            = 44;
 
 short * saved_body_sprite_ptr           = (short *) 0;
 short * saved_head_sprite_ptr           = (short *) 0;
@@ -187,7 +187,7 @@ short   main_colorpalette[16]           = {
         0x774, 0x747, 0x477, 0x555
 };
 
-/* clothing_color_primary/secondary[16]: light + dark palette pairs
+/* g_clcop/secondary[16]: light + dark palette pairs
    for each CLOTHING_COLOR_ID (0..15).  ST 12-bit RGB (0RGB).  The
    secondary is typically the primary shifted 1-2 levels darker to
    provide clothing shading contrast.
@@ -197,7 +197,7 @@ short   main_colorpalette[16]           = {
    11=teal, 12=pink, 13=lime, 14=sky-blue, 15=grey.  Values derived
    from observed 1985 game screenshots; exact bytes pending a Ghidra
    data-segment dump. */
-short   clothing_color_primary[16] = {
+short   g_clcop[16] = {
         0x700,  /*  0 red      */  0x070,  /*  1 green    */
         0x007,  /*  2 blue     */  0x770,  /*  3 yellow   */
         0x707,  /*  4 magenta  */  0x077,  /*  5 cyan     */
@@ -207,7 +207,7 @@ short   clothing_color_primary[16] = {
         0x744,  /* 12 pink     */  0x574,  /* 13 lime     */
         0x577,  /* 14 sky      */  0x555   /* 15 grey     */
 };
-short   clothing_color_secondary[16] = {
+short   g_clcos[16] = {
         0x400,  0x040,  0x004,  0x440,
         0x404,  0x044,  0x300,  0x030,
         0x003,  0x430,  0x303,  0x033,
@@ -220,7 +220,7 @@ short   clothing_color_secondary[16] = {
    plausible range of resident complexions; exact values pending a
    Ghidra data-segment dump.  Applied to palette slot 6 via
    lcp_update_palette_colors and swapped in during the closet-change
-   sequence in action_open_close_bedroom_closet. */
+   sequence in a_opcbc. */
 short   skin_color_palette[8] = {
         0x765,  /* 0 pale peach   */
         0x743,  /* 1 fair         */
@@ -232,53 +232,53 @@ short   skin_color_palette[8] = {
         0x321   /* 7 deep umber   */
 };
 
-BOOL16  midi_song_loop_flag             = NO;
+BOOL16  g_molof             = NO;
 BOOL16  midi_var_r                      = NO;
-short   midi_seq_phase                  = 0;
+short   g_mspha                  = 0;
 unsigned char * midi_data_base_ptr      = (unsigned char *) 0;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
 unsigned char * midi_seq_position       = (unsigned char *) 0;
-long            midi_seq_max_position   = -1;
+long            g_msmap   = -1;
 long            midi_envelope_data_base = 0;
 short           midi_velocity           = 100;
 short           midi_default_velocity   = 100;
 short           psg_current_volume      = 15;
 short           psg_default_volume      = 15;
-short           midi_note_event_index   = 0;
-short           midi_note_event_count   = 9;
-short           midi_ticks_per_beat     = 24;
+short           g_mnevi   = 0;
+short           g_mnevc   = 9;
+short           g_mtspb     = 24;
 short           midi_tempo              = 500000;
 /* aes_int_out: shared AES/VDI parameter return array (16 shorts wide),
    used here at index 7 to communicate the current tick-per-beat back
    to the interrupt handler. */
 short           aes_int_out[16];
 
-long            midi_tick_counter       = 0;
+long            g_mtcou       = 0;
 short           midi_direct_write_mode  = 0;
-short           midi_tick_divider       = 100;
-short           midi_tick_prescaler     = 100;
+short           g_mtdiv       = 100;
+short           g_mtpre     = 100;
 short           midi_event_duration     = 100;
 short           midi_next_event_tick    = 100;
 short           midi_last_processed_tick= 100;
-BOOL16          midi_sequencer_active   = NO;
+BOOL16          g_msmsa   = NO;
 
 /* Per-logical-channel maps.  Populated from the 90-byte channel-map
-   block that precedes the header events; midi_seq_reset_programs
+   block that precedes the header events; mq_resp
    iterates over them at song start. */
 unsigned char   midi_channel_map[16];
-short           midi_current_program[16];
+short           g_mcpro[16];
 short           midi_program_map[16];
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
-   0..131 (C-1..G9).  Populated by midi_seq_build_scale_table at song
+   0..131 (C-1..G9).  Populated by mq_bust at song
    start; each note maps to either itself (identity) or a shifted note
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
 unsigned char   midi_scale_transpose_table[132];
 
 /* Chord mask lookup: 7-bit mask per scale-value 0..15 selecting which
    of the 7 diatonic scale degrees are present.  Bit order (per
-   midi_seq_build_scale_table): bit 6 = root, bit 5 = 2nd, bit 4 = 3rd,
+   mq_bust): bit 6 = root, bit 5 = 2nd, bit 4 = 3rd,
    bit 3 = 4th, bit 2 = 5th, bit 1 = 6th, bit 0 = 7th.
 
    Value 1 (chromatic) leaves the identity table untouched.  Values
@@ -311,14 +311,14 @@ unsigned char   midi_scale_mask_table[16] = {
 BOOL16          midi_output_enabled     = YES;
 unsigned char   midi_event[4];
 
-/* midi_song_max_position: the "maxPosition" argument passed to
-   midi_seq_init_song at song start.  0 means "no explicit end-of-song
+/* g_momap: the "maxPosition" argument passed to
+   mq_inis at song start.  0 means "no explicit end-of-song
    offset -- let the sequencer walk the event stream to its natural
-   terminator" (in which case midi_seq_set_position stores -1 into
-   midi_seq_max_position).  A .SNG file may carry a real byte offset
+   terminator" (in which case mq_setp stores -1 into
+   g_msmap).  A .SNG file may carry a real byte offset
    here to trigger clean loop-back or fade-out at a specific point.
    Renamed from Ghidra's placeholder gSongMaxPosition_0. */
-long            midi_song_max_position  = 0;
+long            g_momap  = 0;
 
 /* ---- PSG channel state ---------------------------------------------- */
 BOOL16          psg_output_enabled              = YES;
@@ -332,38 +332,38 @@ PSG_ENVELOPE    psg_envelope[3];
    clutter globals.c. */
 
 short           envelope_val            = 5;    /* octave-5 baseline */
-char            midi_note_lo_limit      = 0x17; /* A#0 */
-char           midi_note_hi_limit       = 0x7f; /* MIDI max         */
-short           midi_current_channel    = 1;
+char            g_mnlol      = 0x17; /* A#0 */
+char           g_mnhil       = 0x7f; /* MIDI max         */
+short           g_mccha    = 1;
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-short           soundeffect_current_priority    = 0;
-short           soundeffect_default_duration_hi = 0;
-short           soundeffect_default_duration_lo = 0;
-long            soundeffect_Hz200               = 0;
+short           g_sfcup    = 0;
+short           g_sfddh = 0;
+short           g_sfddl = 0;
+long            g_sfHz2               = 0;
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from the SOUNDS.LCP file.
    32 slots covers the current SFX_* enum range. */
 unsigned char * midi_note_length_params[32];
 /* Working buffer for the currently-playing Dosound sequence, copied
-   from midi_note_length_params[soundeffect_current] each time a new
+   from midi_note_length_params[g_sfcur] each time a new
    effect starts. */
-char            soundeffect_DoSound_Buffer[256];
+char            g_sfDoB[256];
 
 void *  screen_logbase                  = (void *) 0;
 void *  save_logbase                    = (void *) 0;
 void *  screen_ptr                      = (void *) 0;
 short * dest_scr_buffer                 = (short *) 0;
 
-short   clock_minute                    = 0;
-short   clock_hour                      = 0;
+short   g_cmmin                    = 0;
+short   g_chhou                      = 0;
 
-BOOL16  soundeffect_active_flag         = NO;
-short   soundeffect_current             = 0;
-short   soundeffect_duration            = 0;
-short   soundeffect_dosound_status      = 0;
-short   soundeffect_dosound_control     = 0;
+BOOL16  g_sfacf         = NO;
+short   g_sfcur             = 0;
+short   g_sfdur            = 0;
+short   g_sfdos      = 0;
+short   g_sfdoc     = 0;
 /* _soundeffect_priority_table[32]: per-SFX priority.  Higher priority
    preempts lower.  Ghidra data segment; values chosen so the game's
    observed behaviour (phone ring beats footstep) survives. */
@@ -381,33 +381,33 @@ unsigned char   sprites_files[14000];
 /* Per-record MFDB tables + dimensions.  Sized to comfortably cover
    the 50 or so records in each file (spritedata_index_table in the
    Python reader tops out at index 0x37). */
-MFDB    object_tab_mfdb_table[64];
-MFDB    sprite_tab_mfdb_table[64];
+MFDB    g_obtmt[64];
+MFDB    g_setmt[64];
 
-void *  object_tab_mfdb                 = object_tab_mfdb_table;
-short   object_tab_width[64];
-short   object_tab_height[64];
-short   sprite_tab_width[64];
-short   sprite_tab_height[64];
+void *  object_tab_mfdb                 = g_obtmt;
+short   g_obtaw[64];
+short   g_obtah[64];
+short   g_setaw[64];
+short   g_setah[64];
 /* MFDB_screen_ptr now defined below with the rest of the frame-timing
    MFDB descriptors. */
 
-short   letter_line_count               = 0;
-short   letter_paragraph_count          = 0;
+short   g_ltlic               = 0;
+short   g_ltpac          = 0;
 /* _record_led_mask_table[7]: bit-mask toggles for the 7 VU-meter LEDs. */
 unsigned short  _record_led_mask_table[7] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
 };
 
-/* clock_minute_position / clock_hour_position tables.
+/* g_cmmip / g_chhop tables.
    6 entries each: first 3 are X offsets, last 3 are Y offsets, indexed
    by minute/5 (0..5) and hour%12 (0..11).  Values approximate a
    trigonometric mapping around a 15-pixel-radius circle centred at
    the clock face (278, 85), matching the observed clock geometry. */
-short   clock_minute_position[6] = {
+short   g_cmmip[6] = {
          0,  14,  14,   0, -14, -14
 };
-short   clock_hour_position[24] = {
+short   g_chhop[24] = {
         /* X offsets, 12 entries */
          0,   5,   9,  11,   9,   5,   0,  -5,  -9, -11,  -9,  -5,
         /* Y offsets, 12 entries */
@@ -415,36 +415,36 @@ short   clock_hour_position[24] = {
 };
 
 BOOL16  game_input_mode_flag            = NO;
-char    command_input_buffer[64];
+char    g_cdinb[64];
 BOOL16  food_delivery_available         = NO;
-short   petting_anim_frame              = 0;
+short   g_ptanf              = 0;
 
 short   last_hz200                      = 0;
 long    last_vbclock                    = 0;
 void *  save_physbase                   = (void *) 0x28000L;    /* ST default */
 
-/* screen_mfdb / MFDB_screen_ptr: the compositing target and the current
+/* g_srmfd / MFDB_screen_ptr: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
-MFDB    screen_mfdb                     = { 0 };
+MFDB    g_srmfd                     = { 0 };
 MFDB    MFDB_screen_ptr                 = { 0 };
 MFDB *  current_screen_mfdb             = (MFDB *) 0;
 
 /* 200 Hz clock hi/lo halves.  The ST reads this atomically via a
    supervisor-mode long read at 0x4BA; we split the halves here so a
    short-sized access still compiles cleanly on the host. */
-short   _hz_200_hi                      = 0;
-short   _hz_200_lo                      = 0;
+short   g_hzhi                      = 0;
+short   g_hzlo                      = 0;
 long    _vbclock                        = 0;
 
 BOOL16  dog_visible                     = NO;
 short   dog_idle_countdown              = 0;
 BOOL16  dog_near_food_bowl              = NO;
-BOOL16  dog_eating_active               = NO;
-short   dog_eating_countdown            = 0;
+BOOL16  g_deact               = NO;
+short   g_decou            = 0;
 short   dog_last_target_index           = 0;
-short   dog_sprite_eating_anim_tab[3]   = { 42, 43, 44 };
+short   g_dseat[3]   = { 42, 43, 44 };
 /* 9 wander destinations for the dog, plus X/Y micro-offsets. */
-short   dog_destination_position_table[9] = {
+short   g_ddipt[9] = {
         POS_BTM_DOG_BOWL, POS_BTM_STAIR_LANDING, POS_BTM_FRONT_DOOR,
         POS_BTM_TABLE_LEFT, POS_BTM_TABLE_RIGHT, POS_BTM_FRIDGE,
         POS_MID_COUCH, POS_MID_BED, POS_TOP_ARMCHAIR
@@ -453,46 +453,46 @@ short   dog_destination_position_table[9] = {
    finishes wandering: aligns the sprite's foot to the visual anchor
    for each of the 9 wander destinations above.  Small (-5..+5 px)
    corrections; exact values pending a Ghidra data-segment dump. */
-short   dog_dest_x_offset_table[9]      = { 0, -2,  0,  2, -2,  0,  0,  4, -3 };
-short   dog_dest_y_offset_table[9]      = { 0,  0, -1,  0,  0,  0,  1,  0,  0 };
+short   g_ddxot[9]      = { 0, -2,  0,  2, -2,  0,  0,  4, -3 };
+short   g_ddyot[9]      = { 0,  0, -1,  0,  0,  0,  1,  0,  0 };
 
 char *  _command_input_ptr              = (char *) 0;
-short   _action_priority                = 5;
+short   g_aprio                = 5;
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
-MFDB    sprite_mfdb_image[8]            = { { 0 } };
-MFDB    sprite_mfdb_mask[8]             = { { 0 } };
+MFDB    g_semfi[8]            = { { 0 } };
+MFDB    g_semfm[8]             = { { 0 } };
 
 /* TV pattern-lines animation: 4 sets of 8-point polyline coordinate
-   pairs, each drawn in the colour picked from tv_pattern_color_indices.
+   pairs, each drawn in the colour picked from g_tpcoi.
    Values are stand-ins covering the 15x7-pixel TV rectangle at
    (293, 99)..(308, 106) -- Ghidra data-segment dump would give the
    exact 1985 layout. */
-short   tv_pattern_0_x_coords[8] = {
+short   g_tp0xc[8] = {
         293, 308, 293, 308, 293, 308, 293, 308
 };
-short   tv_pattern_0_y_coords[8] = {
+short   g_tp0yc[8] = {
          99,  99, 100, 100, 101, 101, 102, 102
 };
-short   tv_pattern_1_x_coords[8] = {
+short   g_tp1xc[8] = {
         293, 308, 293, 308, 293, 308, 293, 308
 };
-short   tv_pattern_1_y_coords[8] = {
+short   g_tp1yc[8] = {
         103, 103, 104, 104, 105, 105, 106, 106
 };
-short   tv_pattern_2_x_coords[8] = {
+short   g_tp2xc[8] = {
         293, 293, 296, 296, 300, 300, 304, 304
 };
-short   tv_pattern_2_y_coords[8] = {
+short   g_tp2yc[8] = {
          99, 106,  99, 106,  99, 106,  99, 106
 };
-short   tv_pattern_3_x_coords[8] = {
+short   g_tp3xc[8] = {
         297, 297, 301, 301, 305, 305, 308, 308
 };
-short   tv_pattern_3_y_coords[8] = {
+short   g_tp3yc[8] = {
          99, 106,  99, 106,  99, 106,  99, 106
 };
-short   tv_pattern_color_indices[4]     = { 2, 3, 4, 5 };
+short   g_tpcoi[4]     = { 2, 3, 4, 5 };
 
 /* ---- NLP parser tables ------------------------------------------------
    Wired in from the reference implementation in lcp/LCP.py, which was
@@ -514,14 +514,14 @@ char *          word_puzzle_data_buffer         = (char *) 0;
 short *         cards_data                      = (short *) 0;
 
 short           word_puzzle_current_index       = 0;
-short           anagram_clue_count              = 0;
-short           anagram_guess_number            = 1;
-short           anagram_all_clues_used          = 0;
+short           g_agclc              = 0;
+short           g_aggun            = 1;
+short           g_agacu          = 0;
 short           _anagram_clue_used_this_round   = 0;
-short           anagram_word_length             = 0;
-char            anagram_input_buffer[12];
-char            anagram_original_word[12];
-char            anagram_scrambled_word[12];
+short           g_agwol             = 0;
+char            g_aginb[12];
+char            g_agorw[12];
+char            g_agscw[12];
 char *          anagram_wrong_guess_messages[3] = {
         "Nope, try again!",
         "Not quite...",
@@ -530,15 +530,15 @@ char *          anagram_wrong_guess_messages[3] = {
 
 short           _poker_round_count              = 0;
 BOOL16          poker_quit_flag                 = NO;
-short           poker_computer_money            = 400;
-short           poker_player_money              = 400;
-short           poker_pot_amount                = 0;
-short           poker_computer_bet              = 0;
-short           poker_player_bet                = 0;
+short           g_pcmon            = 400;
+short           g_ppmon              = 400;
+short           g_ppppa                = 0;
+short           g_pcbet              = 0;
+short           g_ppbet                = 0;
 short           poker_game_phase                = 0;
 short           poker_draw_discard_flags[52];
-short           poker_computer_draw_pile[26];
-short           poker_player_draw_pile[26];
+short           g_pcdrp[26];
+short           g_ppdrp[26];
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share cards_data as their bitmap backing. */
@@ -547,4 +547,4 @@ MFDB            MFDB_dest_screenbase_cards      = { 0 };
 
 BOOL16  delivery_is_for_dog             = NO;
 BOOL16  phone_hangup_flag               = NO;
-BOOL16  petting_dog_active              = NO;
+BOOL16  g_ptdoa              = NO;

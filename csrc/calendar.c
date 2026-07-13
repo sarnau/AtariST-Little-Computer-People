@@ -8,8 +8,17 @@
  */
 
 #include "types.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    date_year;
+extern BOOL16   lunch_meal_triggered_today;
+extern BOOL16   dinner_meal_triggered_today;
+extern BOOL16   morning_wakeup_triggered_today;
+extern BOOL16   bedtime_triggered_today;
+extern void     daily_reset_action_flags();     /* ai.c      */
+extern short    days_in_month();                /* calendar.c*/
 /* Days per calendar month.  Index 0 = January.  February is patched at
    runtime by days_in_month() with the leap-year branch. */
 short days_per_month[12] = {

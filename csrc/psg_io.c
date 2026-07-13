@@ -12,6 +12,7 @@
  */
 
 #include "types.h"
+#include "structs.h"
 #include "st_io.h"
 
 #ifdef HOST
@@ -27,7 +28,7 @@ volatile unsigned char  host_giwrite_scratch    = 0;
 /* midi_out_write_byte: poll the ACIA status register for
    TDRE (Transmit Data Register Empty, bit 1), then write one byte
    to the data register.  Used by the "direct write" path of
-   midi_seq_dispatch_event when the sequencer is in speed-critical
+   mq_dise when the sequencer is in speed-critical
    mode (bypassing the XBIOS Midiws trap).
 
    On the host the TDRE bit is preseeded to 1 (see host_midictl_scratch

@@ -25,8 +25,21 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern short    g_aprio;
+extern unsigned char    _entered_word_bytes[];
+extern char             _user_input_buffer[];
+extern short            _happiness_to_priority[];
+extern char *           valid_word_table[];
+extern short            word__entered_to_position[];
+extern short            _enteredword_to_bit[];
+extern unsigned char    _bitmask_1_2_4_8_10_20_40_80_0[];
+extern WORD_TO_ACTION   _enteredword_to_action[];
+extern short    randomRange();                  /* random.c */
 extern short    randomRange();
 
 /* lcp_toupper: single-char ASCII uppercase.  Returns the char unchanged
@@ -126,7 +139,7 @@ char *  str;
 
         /* Seed the priority from happiness + a small random nudge. */
         rnd = randomRange(0, 3);
-        _action_priority = _happiness_to_priority[lcp.happiness] + rnd;
+        g_aprio = _happiness_to_priority[lcp.happiness] + rnd;
 
         /* Tokenize and mask-accumulate. */
         while ((str = command_upperstr(str, _user_input_buffer)) !=
@@ -134,7 +147,7 @@ char *  str;
                 entered_word = check_valid_word_input(_user_input_buffer);
                 if (entered_word == WORD_NONE) {
                         /* Unrecognised word -- +4 priority penalty. */
-                        _action_priority = _action_priority + 4;
+                        g_aprio = g_aprio + 4;
                 } else if (entered_word > 0) {
                         short   pos = word__entered_to_position[entered_word];
                         short   bit = _enteredword_to_bit[entered_word];
@@ -156,7 +169,7 @@ char *  str;
                                 break;
                 }
                 if (i >= 10) {
-                        _action_priority = _action_priority +
+                        g_aprio = g_aprio +
                                 _enteredword_to_action[action_index].priority_offset;
                         return (short) (char)
                                 _enteredword_to_action[action_index].action;

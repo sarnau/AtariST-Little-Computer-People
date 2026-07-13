@@ -5,32 +5,53 @@
  * through them for a short duration, return to STATE_STAND_SIDE_VIEW.
  * No walking, no world state mutation, no sound (except toggle_tv).
  *
- * addr: action_wander_idly(), action_peek_around(),
- *       action_pace_nervously(), action_toggle_tv(), action_sleep()
+ * addr: a_wandi(), a_peeka(),
+ *       a_pacen(), a_toggt(), a_sleep()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    triggered_event_list[];
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hacur;
+extern short    g_hamod;
+extern short    g_hsfra;
+extern short    g_wtx;
+extern short    g_wty;
+extern short    PLAYER_STATE_ARRAY[];
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short    lcp_tv_on;
+extern short    lcp_on_stairs_flag;
+extern short    get_floor_number_from_y();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    floor_center_y_coords[];
+extern short    randomRange();                  /* random.c */
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     soundeffect_select();
-extern void     tv_turn_on();
-extern void     tv_turn_off();
+extern void     sf_sele();
+extern void     tt_on();
+extern void     tt_off();
 
-/* action_wander_idly: two-state shrug idle.
-   addr: action_wander_idly() */
+/* a_wandi: two-state shrug idle.
+   addr: a_wandi() */
 
 void
-action_wander_idly()
+a_wandi()
 {
         PLAYER_STATE_ARRAY[0]  = STATE_IDLE_SHRUG_START;
         PLAYER_STATE_ARRAY[1]  = STATE_IDLE_SHRUG_HOLD;
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(2);
@@ -39,35 +60,35 @@ action_wander_idly()
         lcp_state = STATE_STAND_SIDE_VIEW; game_tick_and_animate(0);
 }
 
-/* action_peek_around: 6-tick look-away with head frame 2.
-   addr: action_peek_around() */
+/* a_peeka: 6-tick look-away with head frame 2.
+   addr: a_peeka() */
 
 void
-action_peek_around()
+a_peeka()
 {
         short   saved_frame;
 
-        head_anim_target_state = 8;
-        head_anim_mode         = HEAD_ANIM_DISABLED;
+        g_hatas = 8;
+        g_hamod         = HEAD_ANIM_DISABLED;
         lcp_wait_head_reach_target();
 
-        saved_frame            = head_sprite_frame;
-        head_anim_target_state = HEAD_ANIM_DISABLED;
-        head_anim_current      = HEAD_ANIM_DISABLED;
-        head_sprite_frame      = 2;
+        saved_frame            = g_hsfra;
+        g_hatas = HEAD_ANIM_DISABLED;
+        g_hacur      = HEAD_ANIM_DISABLED;
+        g_hsfra      = 2;
         game_tick_and_animate(6);
 
-        head_anim_target_state = 8;
-        head_anim_current      = 8;
-        head_sprite_frame      = saved_frame;
+        g_hatas = 8;
+        g_hacur      = 8;
+        g_hsfra      = saved_frame;
         game_tick_and_animate(0);
 }
 
-/* action_pace_nervously: 15-frame side-shift alternation.
-   addr: action_pace_nervously() */
+/* a_pacen: 15-frame side-shift alternation.
+   addr: a_pacen() */
 
 void
-action_pace_nervously()
+a_pacen()
 {
         short   i;
 
@@ -75,7 +96,7 @@ action_pace_nervously()
         PLAYER_STATE_ARRAY[1]  = STATE_PACE_SHIFT_RIGHT;
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         for (i = 0; i < 15; i = i + 1) {
@@ -86,26 +107,26 @@ action_pace_nervously()
         game_tick_and_animate(0);
 }
 
-/* action_toggle_tv: flip the TV state.  Both tv_turn_on and tv_turn_off
+/* a_toggt: flip the TV state.  Both tt_on and tt_off
    handle their own SFX_TV_CLICK.
-   addr: action_toggle_tv() */
+   addr: a_toggt() */
 
 void
-action_toggle_tv()
+a_toggt()
 {
         if (lcp_tv_on == NO)
-                tv_turn_on();
+                tt_on();
         else
-                tv_turn_off();
+                tt_off();
 }
 
-/* action_sleep: lie in bed, snore, optionally forever (value == -1 is
+/* a_sleep: lie in bed, snore, optionally forever (value == -1 is
    the copy-protection punishment path).  On value == -1 the resident
    first walks to the current floor's center Y before lying down.
-   addr: action_sleep() */
+   addr: a_sleep() */
 
 void
-action_sleep(value)
+a_sleep(value)
 short   value;
 {
         short   duration;
@@ -119,14 +140,14 @@ short   value;
                 return;
 
         if (value == -1) {
-                walk_target_x = lcp_x;
+                g_wtx = lcp_x;
                 floor = get_floor_number_from_y(lcp_y);
-                walk_target_y = floor_center_y_coords[floor - 1];
+                g_wty = floor_center_y_coords[floor - 1];
                 if (lcp_walk_to_destination() != 0)
                         return;
                 lcp_facing_direction   = FACING_RIGHT;
                 lcp_state              = STATE_STAND_SIDE_VIEW;
-                head_anim_target_state = 8;
+                g_hatas = 8;
                 lcp_wait_head_reach_target();
         }
 
@@ -139,7 +160,7 @@ short   value;
                triggered_event_list[0] == ACTION_NONE) {
                 lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(1);
                 lcp_state = PLAYER_STATE_ARRAY[1]; game_tick_and_animate(0);
-                soundeffect_select(SFX_SNORING, 3L);
+                sf_sele(SFX_SNORING, 3L);
                 game_tick_and_animate(1);
                 lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(1);
                 i = i + 1;

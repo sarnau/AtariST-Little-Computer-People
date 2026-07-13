@@ -1,37 +1,55 @@
 /*
  * sfx_irq.c -- SFX playback tick (XBIOS Dosound driver).
  *
- * soundeffect_irq_play is called from the 8Hz game loop (in
- * screen_render_8hz) whenever soundeffect_active_flag has been raised
- * by soundeffect_select.  It's the "commit" step of the queued-SFX
+ * sf_irqp is called from the 8Hz game loop (in
+ * sc_ren8) whenever g_sfacf has been raised
+ * by sf_sele.  It's the "commit" step of the queued-SFX
  * pipeline:
  *
- *   soundeffect_select   -> queue a candidate + set active_flag
- *   soundeffect_irq_play -> if allowed by priority + MIDI state:
+ *   sf_sele   -> queue a candidate + set active_flag
+ *   sf_irqp -> if allowed by priority + MIDI state:
  *                             copy Dosound bytes into the DMA buffer,
  *                             fire XBIOS Dosound, arm the countdown
  *
  * Playback is gated three ways:
  *   1. midi_is_playing -- MIDI takes exclusive PSG when running.
- *   2. soundeffect_playing_flag -- if another SFX is currently on,
+ *   2. g_sfplf -- if another SFX is currently on,
  *      only preempt if the new one has higher priority (lower value).
- *   3. soundeffect_current_priority tracks the priority of whatever's
+ *   3. g_sfcup tracks the priority of whatever's
  *      currently playing, so priority-tied SFX don't fight.
  *
  * Duration is either taken from the SFX's own 4-byte trailer (last
  * word=hi, second-last=lo of a 32-bit tick count divided by 25 to
  * convert Dosound envelope time to game 8Hz ticks) or overridden by
- * soundeffect_duration when the caller pinned it to a specific value.
+ * g_sfdur when the caller pinned it to a specific value.
  *
- * addr: soundeffect_irq_play()
+ * addr: sf_irqp()
  */
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern long     g_sfret;
+extern BOOL16   midi_is_playing;
+extern short    g_sfplf;
+extern short    g_sfpli;
+extern short            g_sfcup;
+extern short            g_sfddh;
+extern short            g_sfddl;
+extern long             g_sfHz2;
+extern unsigned char *  midi_note_length_params[];
+extern char             g_sfDoB[];
+extern BOOL16   g_sfacf;
+extern short    g_sfcur;
+extern short    g_sfdur;
+extern short    _soundeffect_priority_table[];
+extern short    g_hzlo;
 #include <osbind.h>
 
-extern void     soundeffects_off();
+extern void     sf_so();
 
 /* CONCAT22: pack two 16-bit shorts into a 32-bit long, high-word
    first.  Ghidra emits this as a macro; we express it as a small
@@ -46,9 +64,9 @@ short   lo;
 }
 
 /* Read the 200 Hz clock via GEMDOS Super mode.  Shared by
-   screen_render_8hz -- but each file keeps its own copy to avoid
+   sc_ren8 -- but each file keeps its own copy to avoid
    pulling in an internal-linkage helper across translation units.  On
-   host builds _hz_200_lo is 0 so the read is a no-op. */
+   host builds g_hzlo is 0 so the read is a no-op. */
 
 static short
 read_hz_200()
@@ -57,16 +75,16 @@ read_hz_200()
         short   lo;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        lo = _hz_200_lo;
+        lo = g_hzlo;
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
         return lo;
 }
 
-/* soundeffect_irq_play: commit the queued SFX to the Dosound driver.
-   addr: soundeffect_irq_play() */
+/* sf_irqp: commit the queued SFX to the Dosound driver.
+   addr: sf_irqp() */
 
 void
-soundeffect_irq_play()
+sf_irqp()
 {
         short           size;
         short           i;
@@ -79,23 +97,23 @@ soundeffect_irq_play()
         if (midi_is_playing != NO)
                 return;
 
-        new_priority = _soundeffect_priority_table[soundeffect_current];
+        new_priority = _soundeffect_priority_table[g_sfcur];
 
         /* If something's already playing, only interrupt for a strictly
            higher-priority effect (lower priority number). */
-        if (soundeffect_playing_flag != NO) {
-                if (soundeffect_current_priority < new_priority)
+        if (g_sfplf != NO) {
+                if (g_sfcup < new_priority)
                         return;
-                soundeffects_off();
+                sf_so();
         }
-        soundeffect_current_priority = new_priority;
-        soundeffect_playing_flag     = YES;
+        g_sfcup = new_priority;
+        g_sfplf     = YES;
 
         /* Fetch the SFX's Dosound sequence.  Layout:
              +0..1     size (short): number of bytes that follow
              +2..N     Dosound register-command stream
              (trailer) last 4 bytes = duration high/low words */
-        effectPtr = midi_note_length_params[soundeffect_current];
+        effectPtr = midi_note_length_params[g_sfcur];
         size      = *(short *) effectPtr;
         effectPtr = effectPtr + 2;
 
@@ -103,7 +121,7 @@ soundeffect_irq_play()
            code walks the pointer past the end of the copy, which is
            fine because we know the trailing 4 bytes are the duration
            block we're about to overwrite with the Dosound terminator. */
-        dosound_ptr = soundeffect_DoSound_Buffer;
+        dosound_ptr = g_sfDoB;
         for (i = 0; i < size; i = i + 1) {
                 *dosound_ptr = (char) *effectPtr;
                 effectPtr    = effectPtr    + 1;
@@ -119,25 +137,25 @@ soundeffect_irq_play()
         dosound_ptr[-2] = 0;
         dosound_ptr[-1] = 0;
 
-        soundeffect_default_duration_hi = *(short *) (effectPtr - 4);
-        soundeffect_default_duration_lo = *(short *) (effectPtr - 2);
-        soundeffect_playing_id          = soundeffect_current;
+        g_sfddh = *(short *) (effectPtr - 4);
+        g_sfddl = *(short *) (effectPtr - 2);
+        g_sfpli          = g_sfcur;
 
         /* Hand the sequence to the XBIOS Dosound player.  Runs from
            the VBL interrupt on the ST; no-op on the host. */
         _xbios(XBIOS_Dosound,
-               (long) soundeffect_DoSound_Buffer, 0L, 0L);
+               (long) g_sfDoB, 0L, 0L);
 
         /* Snapshot the 200 Hz counter for the countdown loop and
            compute the remaining ticks in game 8Hz units (Dosound
            envelope time / 25 = game ticks, since 200 Hz / 25 = 8 Hz). */
-        soundeffect_Hz200 = (long) (unsigned short) read_hz_200();
-        raw_ticks = concat22(soundeffect_default_duration_hi,
-                             soundeffect_default_duration_lo);
-        soundeffect_remaining_ticks = raw_ticks / 25L;
+        g_sfHz2 = (long) (unsigned short) read_hz_200();
+        raw_ticks = concat22(g_sfddh,
+                             g_sfddl);
+        g_sfret = raw_ticks / 25L;
 
         /* Caller-pinned duration overrides the Dosound-derived one.
            Signal value -1 means "use the auto-computed duration". */
-        if (soundeffect_duration != -1)
-                soundeffect_remaining_ticks = (long) soundeffect_duration;
+        if (g_sfdur != -1)
+                g_sfret = (long) g_sfdur;
 }

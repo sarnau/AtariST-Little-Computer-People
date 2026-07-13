@@ -1,8 +1,8 @@
 /*
  * letter_load.c -- decompress LETTER.TXT and index it into
- *                  letter_line_ptr[] for action_write_letter().
+ *                  letter_line_ptr[] for a_writl().
  *
- * file_read_compressed: nibble-based token decoder.  The on-disk file
+ * fr_reac: nibble-based token decoder.  The on-disk file
  * format is:
  *   +0    short   uncompressed_size + 0x11 header bytes
  *   +2    byte    compression_tokens[15]  (15 most common bytes)
@@ -25,24 +25,30 @@
  * We stash the original pointer in fbuffer_orig and free that.  The
  * visible behaviour is unchanged.
  *
- * addr: file_read_compressed(), file_load_letter_template()
+ * addr: fr_reac(), file_load_letter_template()
  */
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern char *   letter_txt_content;
+extern char *   letter_line_ptr[];
+extern unsigned char compression_tokens[];
 #include <osbind.h>
 
-extern void     file_read();
+extern void     fr_read();
 extern short    file_open();
 extern void     error_not_enough_memory();
 
-/* file_read_compressed: decode a token-compressed file into outbuffer.
+/* fr_reac: decode a token-compressed file into outbuffer.
    outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
-   addr: file_read_compressed() */
+   addr: fr_reac() */
 
 void
-file_read_compressed(filename, outbuffer, outsize)
+fr_reac(filename, outbuffer, outsize)
 char *          filename;
 unsigned char * outbuffer;
 short           outsize;
@@ -61,7 +67,7 @@ short           outsize;
                 unsigned char   sizebuf[2];
 
                 filehandle = file_open(filename, 0);
-                file_read(filehandle, 2L, sizebuf);
+                fr_read(filehandle, 2L, sizebuf);
                 /* On-disk size word is big-endian (68k native).
                    Reassemble explicitly so the loader works on any
                    host endian; on the ST the assembly is a no-op. */
@@ -74,8 +80,8 @@ short           outsize;
         if (fbuffer == (unsigned char *) 0)
                 error_not_enough_memory();
 
-        file_read(filehandle, 0xfL, compression_tokens);
-        file_read(filehandle, (long) (fsize - 0x11), fbuffer);
+        fr_read(filehandle, 0xfL, compression_tokens);
+        fr_read(filehandle, (long) (fsize - 0x11), fbuffer);
 
         flag = 1;
         for (count = 0; count < outsize; count = count + 1) {
@@ -116,7 +122,7 @@ short           outsize;
 
 /* file_load_letter_template: decompress LETTER.TXT into
    letter_txt_content and populate the 360-entry letter_line_ptr[]
-   line-start table.  Called by action_write_letter after the buffer
+   line-start table.  Called by a_writl after the buffer
    is allocated.
 
    Line terminator: any control byte (< ' ', which is 0x20).  There may
@@ -131,7 +137,7 @@ file_load_letter_template()
         char *  i;
         short   linecount;
 
-        file_read_compressed("letter.txt",
+        fr_reac("letter.txt",
                              (unsigned char *) letter_txt_content,
                              10496);
 

@@ -4,45 +4,80 @@
  * Ports for actions that walk somewhere in the house, play an
  * interaction animation with SFX, and update world state.
  *
- * addr: action_read_newspaper(), action_get_in_out_of_bed(),
- *       action_dance(), action_drink(), action_use_toilet(),
- *       action_wake_up_morning(), action_go_to_bed_night()
+ * addr: a_readn(), a_gioob(),
+ *       a_dance(), a_drink(), a_uset(),
+ *       a_wakum(), a_gotbn()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   intro_sequence_active;
+extern short    triggered_event_list[];
+extern short    lcp_x;
+extern short    lcp_y;
+extern BOOL16   ctrl_a_alarm_pressed_flag;
+extern short    lcp_water_level;
+extern short    g_hatas;
+extern short    g_hacur;
+extern short    g_hamod;
+extern BOOL16   action_interruptible_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern short    PLAYER_STATE_ARRAY[];
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern void     a_getd();
+extern short    lcp_toilet_door_open;
+extern short    lcp_record_playing;
+extern short    g_obidt;
+extern short    g_obi09;
+extern short    g_obi10;
+extern BOOL16   midi_is_playing;
+extern void     house_get_position_xy();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_lcyof;
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_selaf[];
+extern short    g_seslm[];
+extern short    randomRange();                  /* random.c */
 #include <osbind.h>             /* Random() */
 
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     spritedata_select_carried_object_left();
-extern void     spritedata_select();
-extern void     sprite_update_slots();
-extern void     soundeffect_select();
+extern void     sp_ssco();
+extern void     sp_sprs();
+extern void     sp_upds();
+extern void     sf_sele();
 extern void     object_draw();
-extern void     tv_turn_on();
-extern void     tv_turn_off();
+extern void     tt_on();
+extern void     tt_off();
 extern void     update_water_level_bar();
 extern void     lcp_check_recovery();
-extern void     action_drink_water_animation();
-extern void     action_listen_song();
-extern void     action_wake_from_alarm();
-extern void     action_take_shower();
-extern void     action_brush_teeth();
-extern void     action_open_close_bedroom_closet();
-extern void     action_eat_meal();
-extern void     action_close_toilet_door();
-extern void     action_kitchen_cabinet();
+extern void     a_driwa();
+extern void     a_lists();
+extern void     a_wakfa();
+extern void     a_takes();
+extern void     a_brust();
+extern void     a_opcbc();
+extern void     a_eatm();
+extern void     a_clotd();
+extern void     a_kitcc();
 extern void     hide_lcp_sprites();
 extern void     show_lcp_sprites();
 
-/* action_read_newspaper: armchair + TV + 200-frame reading loop.
-   addr: action_read_newspaper() */
+/* a_readn: armchair + TV + 200-frame reading loop.
+   addr: a_readn() */
 
 void
-action_read_newspaper()
+a_readn()
 {
         short           result;
         unsigned short  rnd;
@@ -50,17 +85,17 @@ action_read_newspaper()
 
         PLAYER_STATE_ARRAY[0] = STATE_READ_PAPER_HOLD;
         PLAYER_STATE_ARRAY[1] = STATE_READ_PAPER_TURN_PAGE;
-        tv_turn_on();
+        tt_on();
         house_get_position_xy(POS_TOP_ARMCHAIR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
-        head_anim_mode         = HEAD_ANIM_READING;
+        g_hamod         = HEAD_ANIM_READING;
         lcp_facing_direction   = FACING_LEFT;
         lcp_state              = STATE_SIT_IN_ARMCHAIR;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
         lcp_wait_head_reach_target();
         lcp_y = lcp_y + 8;
 
@@ -79,14 +114,14 @@ action_read_newspaper()
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_SIT_IN_ARMCHAIR;
         game_tick_and_animate(2);
-        tv_turn_off();
+        tt_off();
 }
 
-/* action_get_in_out_of_bed: undress and lie down, or reverse.
-   addr: action_get_in_out_of_bed() */
+/* a_gioob: undress and lie down, or reverse.
+   addr: a_gioob() */
 
 void
-action_get_in_out_of_bed()
+a_gioob()
 {
         short   result;
 
@@ -96,13 +131,13 @@ action_get_in_out_of_bed()
 
         if (lcp.is_sleeping == NO) {
                 house_get_position_xy(POS_MID_BED,
-                                      &walk_target_x, &walk_target_y);
+                                      &g_wtx, &g_wty);
                 result = lcp_walk_to_destination();
                 if (result != 0)
                         return;
                 lcp_facing_direction   = FACING_RIGHT;
                 lcp_state              = STATE_STAND_IDLE;
-                head_anim_target_state = 10;
+                g_hatas = 10;
                 lcp_wait_head_reach_target();
                 lcp.is_sleeping = YES;
                 lcp_x = lcp_x - 10;
@@ -120,18 +155,18 @@ action_get_in_out_of_bed()
                 lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(2);
                 lcp.is_sleeping = NO;
                 lcp_state              = STATE_STAND_IDLE;
-                head_anim_target_state = 10;
+                g_hatas = 10;
                 lcp_wait_head_reach_target();
                 game_tick_and_animate(2);
         }
 }
 
-/* action_dance: turn on the record player if needed, then step-shift
+/* a_dance: turn on the record player if needed, then step-shift
    until the song ends or the event queue interrupts.
-   addr: action_dance() */
+   addr: a_dance() */
 
 void
-action_dance()
+a_dance()
 {
         short   result;
         short   i;
@@ -141,20 +176,20 @@ action_dance()
 
         if (lcp_record_playing == NO) {
                 action_interruptible_flag = YES;
-                action_listen_song();
+                a_lists();
         }
         action_interruptible_flag = NO;
 
         house_get_position_xy(POS_TOP_DANCE_FLOOR,
-                              &walk_target_x, &walk_target_y);
-        walk_target_y = walk_target_y + 8;
+                              &g_wtx, &g_wty);
+        g_wty = g_wty + 8;
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         i = 0;
@@ -170,36 +205,36 @@ action_dance()
         game_tick_and_animate(0);
 }
 
-/* action_drink: sink -> glass -> tap -> drink -> reset thirst.
-   addr: action_drink() */
+/* a_drink: sink -> glass -> tap -> drink -> reset thirst.
+   addr: a_drink() */
 
 void
-action_drink()
+a_drink()
 {
         short   result;
 
         house_get_position_xy(POS_BTM_KITCHEN_SINK,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         action_interruptible_flag = YES;
-        spritedata_select_carried_object_left(SPRITE_GLASS);
+        sp_ssco(SPRITE_GLASS);
         house_get_position_xy(POS_BTM_WATER_TAP,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 
-        sprite_layer_flags[SPRITE_GLASS] = SPRITE_HIDDEN;
-        sprite_update_slots();
+        g_selaf[SPRITE_GLASS] = SPRITE_HIDDEN;
+        sp_upds();
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         if (lcp_water_level != 0) {
@@ -207,43 +242,43 @@ action_drink()
                 lcp_facing_direction = FACING_RIGHT;
                 game_tick_and_animate(0);
                 update_water_level_bar(-3);
-                head_anim_mode = HEAD_ANIM_DISABLED;
+                g_hamod = HEAD_ANIM_DISABLED;
                 lcp_state = STATE_DRINK_FROM_GLASS;
                 game_tick_and_animate(16);
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 lcp_y = lcp_y + 1;
                 game_tick_and_animate(3);
-                action_drink_water_animation(3);
+                a_driwa(3);
         }
 
         lcp.thirst_level = NEED_SATISFIED;
         lcp.thirst_timer = lcp.thirst_timer_max;
         lcp_check_recovery();
-        sprite_layer_flags[SPRITE_GLASS] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        lcp_carrying_object_flag = NO;
+        g_selaf[SPRITE_GLASS] = SPRITE_HIDDEN;
+        sp_upds();
+        g_lcyof = NO;
         action_interruptible_flag = NO;
 }
 
-/* action_use_toilet: 3-sprite door animation, sit + flush + refill.
-   addr: action_use_toilet() */
+/* a_uset: 3-sprite door animation, sit + flush + refill.
+   addr: a_uset() */
 
 void
-action_use_toilet()
+a_uset()
 {
         short   result;
         short   saved_x;
         short   counter;
 
         house_get_position_xy(POS_MID_TOILET_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         /* Open the door if it isn't already. */
@@ -251,106 +286,106 @@ action_use_toilet()
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(object_id_door_toilet_closed, 187, 87);
+                object_draw(g_obidt, 187, 87);
                 game_tick_and_animate(2);
-                object_draw(object_id_door_toilet_open_1, 187, 87);
-                soundeffect_select(SFX_DOOR_OPEN, 6L);
+                object_draw(g_obi09, 187, 87);
+                sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(object_id_door_toilet_open_2, 187, 87);
+                object_draw(g_obi10, 187, 87);
                 game_tick_and_animate(2);
                 lcp_toilet_door_open = YES;
         }
 
         /* Walk into the toilet cubicle. */
         lcp_facing_direction = FACING_RIGHT;
-        sprite_layer_flags[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_ANIM_3);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_ANIM_3]] = 187;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_ANIM_3]] = 87;
+        g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_ANIM_3);
+        g_sepex[g_seslm[SPRITE_DOOR_ANIM_3]] = 187;
+        g_sepey[g_seslm[SPRITE_DOOR_ANIM_3]] = 87;
 
         house_get_position_xy(POS_MID_TOILET_DOOR,
-                              &walk_target_x, &walk_target_y);
-        walk_target_y = walk_target_y - 3;
-        walk_target_x = walk_target_x - 10;
+                              &g_wtx, &g_wty);
+        g_wty = g_wty - 3;
+        g_wtx = g_wtx - 10;
         action_interruptible_flag = YES;
         lcp_walk_to_destination();
         saved_x = lcp_x;
 
         /* Close door behind the resident (3 sprite phases). */
-        sprite_layer_flags[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_ANIM_2);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_ANIM_2]] = 187;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_ANIM_2]] = 87;
-        object_draw(object_id_door_toilet_open_1, 187, 87);
+        g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_ANIM_2);
+        g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
+        g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
+        object_draw(g_obi09, 187, 87);
         game_tick_and_animate(1);
 
-        sprite_layer_flags[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_ANIM_1] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_ANIM_1);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_ANIM_1]] = 187;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_ANIM_1]] = 87;
-        object_draw(object_id_door_toilet_closed, 187, 87);
+        g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_ANIM_1] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_ANIM_1);
+        g_sepex[g_seslm[SPRITE_DOOR_ANIM_1]] = 187;
+        g_sepey[g_seslm[SPRITE_DOOR_ANIM_1]] = 87;
+        object_draw(g_obidt, 187, 87);
         hide_lcp_sprites();
-        soundeffect_select(SFX_DOOR_CLOSE, 6L);
+        sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(1);
 
         /* Do the thing.  45..60 ticks, then flush + 16 tick refill. */
         counter = randomRange(45, 60);
         game_tick_and_animate(counter);
-        soundeffect_select(SFX_TOILET_FLUSH, 6L);
+        sf_sele(SFX_TOILET_FLUSH, 6L);
         game_tick_and_animate(16);
 
         /* Reopen door + walk out. */
-        sprite_layer_flags[SPRITE_DOOR_ANIM_1] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_ANIM_2);
+        g_selaf[SPRITE_DOOR_ANIM_1] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_ANIM_2);
         show_lcp_sprites();
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_ANIM_2]] = 187;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_ANIM_2]] = 87;
-        object_draw(object_id_door_toilet_open_1, 187, 87);
-        soundeffect_select(SFX_DOOR_OPEN, 6L);
+        g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
+        g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
+        object_draw(g_obi09, 187, 87);
+        sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
 
-        sprite_layer_flags[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_ANIM_3);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_ANIM_3]] = 187;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_ANIM_3]] = 87;
-        object_draw(object_id_door_toilet_open_2, 187, 87);
+        g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_ANIM_3);
+        g_sepex[g_seslm[SPRITE_DOOR_ANIM_3]] = 187;
+        g_sepey[g_seslm[SPRITE_DOOR_ANIM_3]] = 87;
+        object_draw(g_obi10, 187, 87);
         game_tick_and_animate(1);
         lcp_toilet_door_open = YES;
 
         lcp_x = saved_x;
         house_get_position_xy(POS_MID_TOILET_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 
         if (lcp_toilet_door_open != NO) {
-                sprite_layer_flags[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
-                sprite_update_slots();
+                g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
+                sp_upds();
                 game_tick_and_animate(0);
         }
 
         counter = randomRange(0, 100);
         if (lcp.initiative_threshold < counter ||
             intro_sequence_active != NO)
-                action_close_toilet_door();
+                a_clotd();
 
         lcp.bathroom_need  = NO;
         lcp.bathroom_timer = 9999;
         action_interruptible_flag = NO;
 }
 
-/* action_wake_up_morning: scheduled morning routine.
-   addr: action_wake_up_morning() */
+/* a_wakum: scheduled morning routine.
+   addr: a_wakum() */
 
 void
-action_wake_up_morning()
+a_wakum()
 {
         short   counter;
 
@@ -359,87 +394,87 @@ action_wake_up_morning()
         counter = randomRange(40, 100);
         game_tick_and_animate(counter);
         if (lcp.is_sleeping == YES)
-                action_get_in_out_of_bed();
+                a_gioob();
 
-        action_interruptible_flag = YES; action_wake_from_alarm();
-        action_interruptible_flag = YES; action_take_shower();
-        action_interruptible_flag = YES; action_brush_teeth();
-        action_interruptible_flag = YES; action_open_close_bedroom_closet(0);
-        action_interruptible_flag = YES; action_eat_meal();
+        action_interruptible_flag = YES; a_wakfa();
+        action_interruptible_flag = YES; a_takes();
+        action_interruptible_flag = YES; a_brust();
+        action_interruptible_flag = YES; a_opcbc(0);
+        action_interruptible_flag = YES; a_eatm();
         action_interruptible_flag = NO;
 }
 
-/* action_go_to_bed_night: scheduled bedtime routine.
-   addr: action_go_to_bed_night() */
+/* a_gotbn: scheduled bedtime routine.
+   addr: a_gotbn() */
 
 void
-action_go_to_bed_night()
+a_gotbn()
 {
-        action_interruptible_flag = YES; action_take_shower();
-        action_interruptible_flag = YES; action_open_close_bedroom_closet(1);
-        action_interruptible_flag = YES; action_kitchen_cabinet();
-        action_interruptible_flag = YES; action_brush_teeth();
-        action_interruptible_flag = YES; action_get_in_out_of_bed();
+        action_interruptible_flag = YES; a_takes();
+        action_interruptible_flag = YES; a_opcbc(1);
+        action_interruptible_flag = YES; a_kitcc();
+        action_interruptible_flag = YES; a_brust();
+        action_interruptible_flag = YES; a_gioob();
         action_interruptible_flag = NO;
 }
 
-/* action_get_dressed: pure head-anim routine.  Turns the head to face
+/* a_getd: pure head-anim routine.  Turns the head to face
    a canonical resting direction, then oscillates the vertical tilt bit
    four times (undressing / dressing motion communicated via head bob).
    No walking, no world state change.
-   addr: action_get_dressed() */
+   addr: a_getd() */
 
 void
-action_get_dressed()
+a_getd()
 {
         short   entry_current;
         short   h;
         short   i;
 
-        entry_current = head_anim_current;
-        h = head_anim_current & 7;
+        entry_current = g_hacur;
+        h = g_hacur & 7;
 
         if (h == 0 || h == 1 || h == 7)
-                head_anim_target_state = 8;
+                g_hatas = 8;
         else if (h == 2)                        /* HEAD_ANIM_SHOWER value */
-                head_anim_target_state = 9;
+                g_hatas = 9;
         else if (h == 6)
-                head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE |
+                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE |
                                          7 /* HEAD_MODE_H_AMPLITUDE mask */;
         else if (h == 3 || h == 4)
-                head_anim_target_state = 10;
+                g_hatas = 10;
         else if (h == 5)
-                head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE |
+                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE |
                                          HEAD_ANIM_SHOWER;
 
-        head_anim_mode = HEAD_ANIM_DISABLED;
+        g_hamod = HEAD_ANIM_DISABLED;
         lcp_wait_head_reach_target();
 
         for (i = 0; i < 4; i = i + 1) {
-                head_anim_target_state = head_anim_current & 7;
+                g_hatas = g_hacur & 7;
                 lcp_wait_head_reach_target();
-                head_anim_target_state = head_anim_current | 0x10;
+                g_hatas = g_hacur | 0x10;
                 lcp_wait_head_reach_target();
         }
 
-        head_anim_target_state = entry_current;
+        g_hatas = entry_current;
         lcp_wait_head_reach_target();
 }
 
-/* lcp_idle_look_left / lcp_idle_look_right: the two 4-tick "stand-and-
+/* li_lool / li_loor: the two 4-tick "stand-and-
    look" gestures used by the TV toggle, record player, and post-action
    idle transitions.  The 1985 code sets FACING_RIGHT in both -- the
    "left" / "right" naming refers to which head-frame direction the
-   animation actually plays via head_anim_target_state, not the body
+   animation actually plays via g_hatas, not the body
    facing.  Preserved verbatim.
-   addr: lcp_idle_look_left(), lcp_idle_look_right() */
+   addr: li_lool(), li_loor() */
 
 void
-lcp_idle_look_left()
+li_lool()
 {
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
         lcp_state = STATE_BEND_DOWN;
         game_tick_and_animate(4);
@@ -449,11 +484,11 @@ lcp_idle_look_left()
 }
 
 void
-lcp_idle_look_right()
+li_loor()
 {
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
         lcp_state = STATE_BEND_DOWN;
         game_tick_and_animate(4);

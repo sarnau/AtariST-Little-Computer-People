@@ -4,50 +4,72 @@
  * Ports for do_action() handlers that don't need walking to a specific
  * house position and involve mostly head/body animation with sound.
  *
- * addr: action_wake_from_alarm(), action_hello(), action_yawn_and_stretch(),
- *       action_nod_head(), action_pet_dog(), action_call_dog()
+ * addr: a_wakfa(), a_hello(), a_yawas(),
+ *       a_nodh(), a_petd(), a_calld()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern BOOL16   intro_sequence_active;
+extern short    triggered_event_list[];
+extern BOOL16   ctrl_a_alarm_pressed_flag;
+extern short    g_hatas;
+extern short    g_hacur;
+extern short    g_hamod;
+extern short    g_hsfra;
+extern long     g_sfret;
+extern BOOL16   action_interruptible_flag;
+extern BOOL16   dog_pettable_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern short    PLAYER_STATE_ARRAY[];
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern void     house_get_position_xy();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    randomRange();                  /* random.c */
+extern void     do_action();                    /* actions.c */
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
 extern void     play_soundeffect_tv_click();
 extern void     play_soundeffect_greeting();
 extern void     play_soundeffect_speech();
 extern void     play_soundeffect_head_nod();
-extern void     soundeffects_off();
+extern void     sf_so();
 
-/* action_wake_from_alarm: Ctrl+A path.  Walks to the bedroom alarm,
+/* a_wakfa: Ctrl+A path.  Walks to the bedroom alarm,
    faces right, silences the alarm and clears the pressed flag.
-   addr: action_wake_from_alarm() */
+   addr: a_wakfa() */
 
 void
-action_wake_from_alarm()
+a_wakfa()
 {
         short   result;
 
         house_get_position_xy(POS_MID_BEDROOM_WALK,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result == 0) {
                 lcp_facing_direction   = FACING_RIGHT;
                 lcp_state              = STATE_STAND_FACING_SCREEN;
-                head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_wait_head_reach_target();
                 ctrl_a_alarm_pressed_flag = NO;
         }
 }
 
-/* action_hello: face-forward wave with a random 20-40 head sequence.
+/* a_hello: face-forward wave with a random 20-40 head sequence.
    Interruptible via the deferred-event queue.
-   addr: action_hello() */
+   addr: a_hello() */
 
 void
-action_hello()
+a_hello()
 {
         short   wave_count;
         short   pick;
@@ -57,13 +79,13 @@ action_hello()
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
-        head_anim_mode         = HEAD_ANIM_DISABLED;
+        g_hatas = 8;
+        g_hamod         = HEAD_ANIM_DISABLED;
         lcp_wait_head_reach_target();
 
-        saved_frame            = head_sprite_frame;
-        head_anim_target_state = HEAD_ANIM_DISABLED;
-        head_anim_current      = HEAD_ANIM_DISABLED;
+        saved_frame            = g_hsfra;
+        g_hatas = HEAD_ANIM_DISABLED;
+        g_hacur      = HEAD_ANIM_DISABLED;
 
         wave_count = randomRange(20, 40);
         prev_pick  = 0;
@@ -74,35 +96,35 @@ action_hello()
                 prev_pick = pick;
 
                 if (pick == 0) {
-                        head_sprite_frame = 5;
+                        g_hsfra = 5;
                         play_soundeffect_tv_click();
                 } else if (pick == 1) {
-                        head_sprite_frame = 6;
+                        g_hsfra = 6;
                         if (randomRange(0, 1) == 0)
                                 play_soundeffect_greeting();
                         else
                                 play_soundeffect_speech();
                 } else {
-                        head_sprite_frame = 4;
+                        g_hsfra = 4;
                         play_soundeffect_head_nod();
                 }
                 wait = randomRange(1, 2);
                 game_tick_and_animate(wait);
-                soundeffect_remaining_ticks = (long) wait;
+                g_sfret = (long) wait;
                 wave_count = wave_count - 1;
         }
 
-        head_anim_target_state = 8;
-        head_anim_current      = 8;
-        head_sprite_frame      = saved_frame;
+        g_hatas = 8;
+        g_hacur      = 8;
+        g_hsfra      = saved_frame;
         game_tick_and_animate(0);
 }
 
-/* action_yawn_and_stretch: 15-frame idle yawn.
-   addr: action_yawn_and_stretch() */
+/* a_yawas: 15-frame idle yawn.
+   addr: a_yawas() */
 
 void
-action_yawn_and_stretch()
+a_yawas()
 {
         short   i;
 
@@ -110,7 +132,7 @@ action_yawn_and_stretch()
         PLAYER_STATE_ARRAY[1]  = STATE_YAWN_STRETCH_ARMS;
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         for (i = 0; i < 15; i = i + 1) {
@@ -121,11 +143,11 @@ action_yawn_and_stretch()
         game_tick_and_animate(0);
 }
 
-/* action_nod_head: 3-frame nod with SFX.
-   addr: action_nod_head() */
+/* a_nodh: 3-frame nod with SFX.
+   addr: a_nodh() */
 
 void
-action_nod_head()
+a_nodh()
 {
         short   saved_frame;
 
@@ -134,41 +156,41 @@ action_nod_head()
         PLAYER_STATE_ARRAY[2]  = STATE_WALK_FRAME_5;
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_SIDE_VIEW;
-        head_anim_target_state = 8;
-        head_anim_mode         = HEAD_ANIM_DISABLED;
+        g_hatas = 8;
+        g_hamod         = HEAD_ANIM_DISABLED;
         lcp_wait_head_reach_target();
 
-        saved_frame            = head_sprite_frame;
-        head_anim_target_state = HEAD_ANIM_DISABLED;
-        head_anim_current      = HEAD_ANIM_DISABLED;
+        saved_frame            = g_hsfra;
+        g_hatas = HEAD_ANIM_DISABLED;
+        g_hacur      = HEAD_ANIM_DISABLED;
 
-        head_sprite_frame = PLAYER_STATE_ARRAY[0];
+        g_hsfra = PLAYER_STATE_ARRAY[0];
         game_tick_and_animate(1);
-        head_sprite_frame = PLAYER_STATE_ARRAY[1];
+        g_hsfra = PLAYER_STATE_ARRAY[1];
         game_tick_and_animate(1);
-        head_sprite_frame = PLAYER_STATE_ARRAY[2];
+        g_hsfra = PLAYER_STATE_ARRAY[2];
         game_tick_and_animate(2);
 
-        head_anim_target_state = 8;
-        head_anim_current      = 8;
-        head_sprite_frame      = saved_frame;
+        g_hatas = 8;
+        g_hacur      = 8;
+        g_hsfra      = saved_frame;
         game_tick_and_animate(0);
 }
 
-/* action_pet_dog: call the dog if not already pettable, then wait
+/* a_petd: call the dog if not already pettable, then wait
    100..200 frames (10 during intro) or until a new event queues.
-   addr: action_pet_dog() */
+   addr: a_petd() */
 
-extern void action_call_dog();
+extern void a_calld();
 
 void
-action_pet_dog()
+a_petd()
 {
         short   ticks;
 
         action_interruptible_flag = YES;
         if (dog_pettable_flag == NO)
-                action_call_dog();
+                a_calld();
         action_interruptible_flag = NO;
 
         ticks = randomRange(100, 200);
@@ -187,23 +209,23 @@ action_pet_dog()
         game_tick_and_animate(0);
 }
 
-/* action_call_dog: walk to POS_BTM_DOG_FOOD, crouch, set dog_pettable_flag.
+/* a_calld: walk to POS_BTM_DOG_FOOD, crouch, set dog_pettable_flag.
    Real Ghidra behaviour -- see previous session for the derivation.
-   addr: action_call_dog() */
+   addr: a_calld() */
 
 void
-action_call_dog()
+a_calld()
 {
         short   result;
 
         house_get_position_xy(43 /* POS_BTM_DOG_FOOD */,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
         lcp_state              = STATE_STAND_SIDE_VIEW;
         lcp_facing_direction   = FACING_RIGHT;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
         lcp_state = 35 /* STATE_EXERCISE_CROUCH */;
         game_tick_and_animate(5);

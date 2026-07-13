@@ -13,8 +13,13 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern void     lcp_become_sick();              /* health.c  */
+extern void     lcp_update_palette_colors();    /* render.c  */
 /* lcp_become_sick: transition from healthy -> mildly sick.  Sets the
    60-minute worsening countdown and nudges the mood one step sad.
    Palette refresh happens via lcp_update_palette_colors() in render.c.

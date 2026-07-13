@@ -11,7 +11,7 @@
  * deal_with_keycode() is the router.  Ctrl+A..W trigger event
  * queue items or one-shot flags; Ctrl+M (Enter) submits the command
  * buffer; cursor-left is backspace; other printable ASCII appends
- * to the command_input_buffer and prints via print_char.
+ * to the g_cdinb and prints via print_char.
  *
  * addr: get_pressed_key(), deal_with_keycode()
  */
@@ -19,13 +19,30 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   phone_answered_flag;
+extern BOOL16   phone_call_active_flag;
+extern BOOL16   ctrl_a_alarm_pressed_flag;
+extern short    lcp_water_level;
+extern BOOL16   dog_pettable_flag;
+extern short    g_srsdc;
+extern short    g_cdibp;
+extern BOOL16   game_input_mode_flag;
+extern char     g_cdinb[];
+extern BOOL16   food_delivery_available;
+extern short    g_ptanf;
+extern BOOL16   g_ptdoa;
+extern void     put_event_to_list();            /* ai.c      */
 #include <osbind.h>
 
 extern void     put_event_to_list();
 extern void     play_doorbell_sound();
 extern void     parse_command_to_action();
-extern void     soundeffect_select();
+extern void     sf_sele();
 extern void     update_water_level_bar();
 extern void     print_char();
 
@@ -117,15 +134,15 @@ short   keycode;
 
         case KEY_CTRL_W_WATER:
                 if (lcp_water_level != 10) {
-                        soundeffect_select(SFX_WATER_TAP, -1L);
+                        sf_sele(SFX_WATER_TAP, -1L);
                         update_water_level_bar(1);
                 }
                 return;
 
         case KEY_CTRL_P_PATTING:
-                if (dog_pettable_flag != NO && petting_dog_active == NO) {
-                        petting_anim_frame          = 0;
-                        petting_dog_active          = YES;
+                if (dog_pettable_flag != NO && g_ptdoa == NO) {
+                        g_ptanf          = 0;
+                        g_ptdoa          = YES;
                         lcp.happiness               = MOOD_HAPPY;
                         lcp.happiness_direction     = DIR_WORSENING;
                         lcp.happiness_duration_active =
@@ -136,18 +153,18 @@ short   keycode;
         case KEY_CTRL_M:
                 if (game_input_mode_flag == NO) {
                         parse_command_to_action();
-                        screen_scroll_down_count = 4;
-                        command_input_buffer_pos = 0;
+                        g_srsdc = 4;
+                        g_cdibp = 0;
                 }
                 return;
 
         case KEY_CURSOR_LEFT:
-                if (game_input_mode_flag == NO && command_input_buffer_pos > 0) {
-                        command_input_buffer_pos = command_input_buffer_pos - 1;
-                        ascii_char = command_input_buffer[command_input_buffer_pos];
-                        command_input_buffer[command_input_buffer_pos] = '\0';
+                if (game_input_mode_flag == NO && g_cdibp > 0) {
+                        g_cdibp = g_cdibp - 1;
+                        ascii_char = g_cdinb[g_cdibp];
+                        g_cdinb[g_cdibp] = '\0';
                         print_char((short) ascii_char,
-                                   command_input_buffer_pos << 3, 23,
+                                   g_cdibp << 3, 23,
                                    COLOR_white);
                 }
                 return;
@@ -155,14 +172,14 @@ short   keycode;
 
         /* Default: printable character in text-input mode. */
         if (game_input_mode_flag == NO &&
-            command_input_buffer_pos < 38 &&
+            g_cdibp < 38 &&
             keycode > 0x1f) {
-                command_input_buffer[command_input_buffer_pos] =
+                g_cdinb[g_cdibp] =
                         (char) keycode;
-                command_input_buffer_pos = command_input_buffer_pos + 1;
-                command_input_buffer[command_input_buffer_pos] = '\0';
+                g_cdibp = g_cdibp + 1;
+                g_cdinb[g_cdibp] = '\0';
                 print_char(keycode,
-                           (command_input_buffer_pos - 1) * 8, 23,
+                           (g_cdibp - 1) * 8, 23,
                            COLOR_black);
         }
 }

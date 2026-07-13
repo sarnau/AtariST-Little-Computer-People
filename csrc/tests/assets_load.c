@@ -17,15 +17,15 @@
 #include "../include/types.h"
 #include "../include/structs.h"
 
-extern short    asset_load_objects_table();
-extern short    asset_load_sprites_table();
-extern short    asset_load_lcp();
-extern MFDB     object_tab_mfdb_table[];
-extern short    object_tab_width[];
-extern short    object_tab_height[];
-extern MFDB     sprite_tab_mfdb_table[];
-extern short    sprite_tab_width[];
-extern short    sprite_tab_height[];
+extern short    al_loot();
+extern short    al_lost();
+extern short    al_loal();
+extern MFDB     g_obtmt[];
+extern short    g_obtaw[];
+extern short    g_obtah[];
+extern MFDB     g_setmt[];
+extern short    g_setaw[];
+extern short    g_setah[];
 
 static int
 copy_to_cwd(src, dst)
@@ -63,22 +63,22 @@ main()
         if (copy_to_cwd("../../../DATA/PE2.LCP",  "pe2.lcp"))  return 1;
 
         /* OBJECTS */
-        count = asset_load_objects_table();
+        count = al_loot();
         printf("OBJECTS: %d records\n", count);
         for (i = 0; i < count && i < 5; i = i + 1)
                 printf("  [%d] %dx%d\n", i,
-                       object_tab_width[i], object_tab_height[i]);
+                       g_obtaw[i], g_obtah[i]);
         if (count < 30 || count > 64) {
                 printf("  FAIL: unexpected count %d (want 30..64)\n", count);
                 fails++;
         }
 
         /* SPRITES */
-        count = asset_load_sprites_table();
+        count = al_lost();
         printf("SPRITES: %d records\n", count);
         for (i = 0; i < count && i < 5; i = i + 1)
                 printf("  [%d] %dx%d\n", i,
-                       sprite_tab_width[i], sprite_tab_height[i]);
+                       g_setaw[i], g_setah[i]);
         if (count < 30 || count > 64) {
                 printf("  FAIL: unexpected count %d (want 30..64)\n", count);
                 fails++;
@@ -87,7 +87,7 @@ main()
         /* BODY.LCP */
         {
                 static unsigned char body_buf[20000];
-                short frames = asset_load_lcp("body.lcp", body_buf,
+                short frames = al_loal("body.lcp", body_buf,
                                               sizeof body_buf);
                 printf("BODY.LCP: %d frames\n", frames);
                 if (frames < 80 || frames > 120) {
@@ -100,7 +100,7 @@ main()
         /* PE2.LCP -- character 2 head frames */
         {
                 static unsigned char pe_buf[20000];
-                short frames = asset_load_lcp("pe2.lcp", pe_buf,
+                short frames = al_loal("pe2.lcp", pe_buf,
                                               sizeof pe_buf);
                 printf("PE2.LCP: %d frames\n", frames);
                 if (frames < 40 || frames > 80) {

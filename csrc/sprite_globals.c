@@ -8,49 +8,50 @@
  */
 
 #include "types.h"
+#include "structs.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
 short   lcp_state                       = 0;
 short   lcp_facing_direction            = 0;    /* FACING_RIGHT */
-short   lcp_carrying_object_flag        = 0;
-short   lcp_carried_object              = -1;
-short   lcp_sprites_hidden              = 0;
+short   g_lcyof        = 0;
+short   g_lcieo              = -1;
+short   g_lssh              = 0;
 short   debug_hide_lcp_offscreen        = 0;
 
 /* ---- Dog --------------------------------------------------------------- */
 short   dog_x                           = 0;
 short   dog_y                           = 0;
-short   dog_target_x                    = 0;
-short   dog_target_y                    = 0;
-short   dog_waypoint_x                  = 0;
-short   dog_waypoint_y                  = 0;
-short   dog_walk_anim_cycle             = 0;
-short   dog_sprite_id                   = 0;
+short   g_dtx                    = 0;
+short   g_dty                    = 0;
+short   g_dyx                  = 0;
+short   g_dyy                  = 0;
+short   g_dwanc             = 0;
+short   g_dsid                   = 0;
 short   dog_on_stairs_flag              = 0;
 short   dog_initialized                 = 1;    /* until placed */
 
 /* ---- Hardware sprite double-buffer (8 slots) --------------------------- */
-short   sprite_pending_flag[8];
+short   g_sepef[8];
 short * sprite_pending_image[8];
 short * sprite_pending_mask[8];
-short   sprite_pending_x[8];
-short   sprite_pending_y[8];
-short   sprite_pending_height[8];
-short   sprite_pending_width[8];
+short   g_sepex[8];
+short   g_sepey[8];
+short   g_sepeh[8];
+short   g_sepew[8];
 short * sprite_active_image[8];
 short * sprite_active_mask[8];
-short   sprite_active_x[8];
-short   sprite_active_y[8];
-short   sprite_active_height[8];
-short   sprite_active_width[8];
+short   g_seacx[8];
+short   g_seacy[8];
+short   g_seach[8];
+short   g_seacw[8];
 
 /* ---- Sprite definitions (60 logical slots) ----------------------------- */
 short * sprite_def_image[60];
 short * sprite_def_mask[60];
-short   sprite_def_height[60];
-short   sprite_def_width[60];
-short   sprite_layer_flags[60];
-short   sprite_slot_map[60];
+short   g_sedeh[60];
+short   g_sedew[60];
+short   g_selaf[60];
+short   g_seslm[60];
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
 /* Verified against Ghidra body_sprite_frame_table[93] at 0x29bd0 and
@@ -65,15 +66,15 @@ short   body_y_offset_per_state[100];
 
 short * body_lcp_file;
 short * body_shape_data;
-short   lcp_sprite_img[168];    /* 21 rows * 4 words * 2 (image+mask) */
-short   lcp_sprite_mask[168];
+short   g_lsimg[168];    /* 21 rows * 4 words * 2 (image+mask) */
+short   g_lsmas[168];
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
-short   dog_walk_anim_frames[8];        /* SPRITE_DOG_WALK_1..8 */
+short   g_dwanf[8];        /* SPRITE_DOG_WALK_1..8 */
 short * dog_sprite_pointers[60];
 short * dog_mask_pointers[60];
-short   dog_flip_image_buffer[64];
-short   dog_flip_mask_buffer[64];
+short   g_dfimb[64];
+short   g_dfmab[64];
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
@@ -85,12 +86,12 @@ short   staircase_waypoint_coords[6]    = { 0, 100, 0, 161, 0, 200 };
 short   sub_animation_frame_counter     = 0;
 
 /* ---- Head sprite double-buffer + source pointers ---------------------- */
-short   head_sprite_buffer[168];        /* 21 rows * 4 words * 2 (image) */
-short   head_sprite_mask[168];
-short   head_sprite_mirror_flag         = 0;
+short   g_hsbuf[168];        /* 21 rows * 4 words * 2 (image) */
+short   g_hsmas[168];
+short   g_hsmif         = 0;
 short * pex_lcp_file;                   /* filled by asset loader */
 short * head_shape_data;
-short   head_anim_delay_countdown       = 0;
+short   g_hadec       = 0;
 
 /* Per-happiness-level head frame base index (into pex_lcp_file). */
 short   happiness_head_frame_offset[3]  = { 0, 66, 132 };
@@ -117,11 +118,11 @@ short   head_movement_delta_table[15]   = {
 short   head_tilt_frame_offset[3]       = { 0, 8, 16 };
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
-short   walk_waypoint_x                 = 0;
-short   walk_waypoint_y                 = 0;
+short   g_wyx                 = 0;
+short   g_wyy                 = 0;
 short   lcp_on_stairs_flag              = 0;
 BOOL16  footstep_trigger_flag           = 0;
-short   head_anim_state_last            = 0;
+short   g_hastl            = 0;
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
    The middle-floor branch of lcp_calc_floor_waypoint uses these to
    route through the between-floor landing instead of the raw

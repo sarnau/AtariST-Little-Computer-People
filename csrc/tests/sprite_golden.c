@@ -3,7 +3,7 @@
  *
  * Iterates lcp_state = 0..29 (the animation range for which
  * body_sprite_frame_table has non-zero entries) x both facings, calling
- * sprite_update_body() for each, and packs all 60 outputs into a
+ * sp_updb() for each, and packs all 60 outputs into a
  * single 4-column x 15-row atlas PGM (4*64 = 256 wide, 15*21 = 315 tall).
  *
  * The atlas is written to sprite_golden.pgm.  If tests/reference/
@@ -30,13 +30,13 @@ extern short    lcp_x;
 extern short    lcp_y;
 extern short    lcp_state;
 extern short    lcp_facing_direction;
-extern short    lcp_carrying_object_flag;
+extern short    g_lcyof;
 extern short    debug_hide_lcp_offscreen;
-extern short    sprite_pending_flag[];
+extern short    g_sepef[];
 extern short *  body_lcp_file;
 extern short *  body_shape_data;
-extern short    lcp_sprite_img[];
-extern void     sprite_update_body();
+extern short    g_lsimg[];
+extern void     sp_updb();
 
 #define N_STATES        30
 #define ATLAS_COLS      4
@@ -117,9 +117,9 @@ char ** argv;
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
         lcp_y                    = 100;
-        lcp_carrying_object_flag = 0;
+        g_lcyof = 0;
         debug_hide_lcp_offscreen = 0;
-        sprite_pending_flag[3]   = 0;
+        g_sepef[3]   = 0;
 
         memset(atlas, 255, sizeof(atlas));
 
@@ -131,20 +131,20 @@ char ** argv;
                 for (facing = 0; facing < 2; facing++) {
                         lcp_state            = i;
                         lcp_facing_direction = facing;
-                        memset(lcp_sprite_img, 0, 168 * sizeof(short));
+                        memset(g_lsimg, 0, 168 * sizeof(short));
                         /* Clear the double-buffer flag every iteration:
-                           sprite_update_body sets it to YES on exit and
+                           sp_updb sets it to YES on exit and
                            spin-waits for it to clear on entry; in-game
                            the render pipeline clears it, but in this
                            test we're the only thing running. */
-                        sprite_pending_flag[3] = 0;
-                        sprite_update_body();
+                        g_sepef[3] = 0;
+                        sp_updb();
 
                         row = tile_ix / ATLAS_COLS;
                         col = tile_ix % ATLAS_COLS;
                         render_tile(&atlas[row * TILE_H * ATLAS_W
                                            + col * TILE_W],
-                                    lcp_sprite_img);
+                                    g_lsimg);
                         tile_ix++;
                 }
         }

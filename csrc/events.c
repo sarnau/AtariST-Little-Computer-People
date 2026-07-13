@@ -12,8 +12,14 @@
 
 #include "types.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern BOOL16   intro_sequence_active;
+extern void     put_event_to_list();            /* ai.c      */
+extern short    get_event_from_list();          /* events.c  */
+extern void     check_for_any_action_triggers();/* ai.c      */
 /* Deferred-event FIFO.  Compact-empty: the queue is "empty" when
    triggered_event_list[9] holds ACTION_NONE (the sentinel used to test
    for a full queue).  put_event_to_list refuses to append while the

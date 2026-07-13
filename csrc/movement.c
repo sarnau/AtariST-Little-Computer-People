@@ -12,8 +12,17 @@
  */
 
 #include "types.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    date_day;
+extern short    date_month;
+extern short    date_year;
+extern void     house_get_position_xy();
+extern short    get_floor_number_from_y();
+extern short    calc_weekday();
+extern short    days_in_month();                /* calendar.c*/
 /* Per-position X and height tables, indexed by HOUSE_POS (0..47).  Data
    lives in a separate translation unit (tables.c) so the same table can
    be shared between movement.c and the sprite/render code. */

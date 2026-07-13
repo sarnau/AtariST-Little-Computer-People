@@ -21,8 +21,16 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    time_hours;
+extern PLAYER   lcp;                            /* the resident LCP */
+extern short    last_action;
+extern short    calc_weekday();
+extern short    randomRange();                  /* random.c */
+extern void     check_for_any_action_triggers();/* ai.c      */
 extern short    randomRange();
 
 /* Weekday enum values used by the weekend-bias branch.  Ghidra's enum

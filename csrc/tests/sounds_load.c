@@ -15,7 +15,7 @@
 
 #include "../include/types.h"
 
-extern void             soundeffects_load();
+extern void             sf_sl();
 extern unsigned char *  midi_note_length_params[];
 
 static void
@@ -46,7 +46,7 @@ main()
         setvbuf(stdout, NULL, _IONBF, 0);
         copy_file("../../../DATA/SOUNDS.LCP", "sounds.lcp");
 
-        soundeffects_load();
+        sf_sl();
 
         printf("First 16 loaded SFX slots:\n");
         for (i = 0; i < 16; i = i + 1) {

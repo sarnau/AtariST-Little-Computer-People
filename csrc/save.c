@@ -7,7 +7,7 @@
  * study, closes the door, and does the "packing" animation.
  *
  *   create_file()          -- ensures the target exists via GEMDOS Fcreate
- *   file_read()            -- retrying GEMDOS Fread with error alert
+ *   fr_read()            -- retrying GEMDOS Fread with error alert
  *   lcp_save()             -- writes N bytes to a named file (128 in practice)
  *   lcp_load()             -- reads 128 bytes and unpacks
  *                            door_states_and_flags into per-door globals
@@ -15,22 +15,53 @@
  *                            struct, calls lcp_save, and runs the study
  *                            enter/exit animation.
  *
- * addr: create_file(), file_read(), lcp_save(), lcp_load(),
+ * addr: create_file(), fr_read(), lcp_save(), lcp_load(),
  *       lcp_enter_study_and_save()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern short    lcp_x;
+extern short    lcp_water_level;
+extern BOOL16   action_interruptible_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern void     game_tick_and_animate();
+extern short    lcp_front_door_open;
+extern short    lcp_study_door_open;
+extern short    lcp_closet_door_open;
+extern short    lcp_cabinet_open;
+extern short    lcp_dresser_open;
+extern short    lcp_toilet_door_open;
+extern short    lcp_filing_cabinet_open;
+extern short    lcp_dog_bowl_status;
+extern short    lcp_food_count;
+extern short    lcp_record_playing;
+extern short    lcp_tv_on;
+extern short    g_obids;
+extern short    g_obi07;
+extern short    g_obi08;
+extern void     house_get_position_xy();
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_selaf[];
+extern short    g_seslm[];
+extern short    randomRange();                  /* random.c */
+extern void     lcp_update_palette_colors();    /* render.c  */
 #include <osbind.h>
 #include <stdio.h>
 
 /* Externals resolved elsewhere. */
-extern void     spritedata_select();
+extern void     sp_sprs();
 extern void     object_draw();
-extern void     soundeffect_select();
-extern void     sprite_update_slots();
+extern void     sf_sele();
+extern void     sp_upds();
 extern void     lcp_update_palette_colors();
 extern void     show_lcp_sprites();
 extern short    lcp_walk_to_destination();
@@ -38,7 +69,7 @@ extern short    randomRange();
 extern void     error_unable_to_write();
 
 /* file_open: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
-   Same retry-then-alert pattern as file_read/lcp_save -- three tries
+   Same retry-then-alert pattern as fr_read/lcp_save -- three tries
    with a 1-second sleep, then loop with a Retry alert.
    addr: file_open() */
 
@@ -91,13 +122,13 @@ char *  filename;
         _gemdos(GEMDOS_Fclose, (long) iVar1, 0L, 0L);
 }
 
-/* file_read: GEMDOS Fread with retry-then-alert error handling.  After
+/* fr_read: GEMDOS Fread with retry-then-alert error handling.  After
    three failed attempts, throws a Retry alert and loops.
 
-   addr: file_read() */
+   addr: fr_read() */
 
 void
-file_read(fileHandle, count, buffer)
+fr_read(fileHandle, count, buffer)
 short   fileHandle;
 long    count;
 void *  buffer;
@@ -171,7 +202,7 @@ lcp_load()
         if (fileHandle < 0)
                 return 0;
 
-        file_read(fileHandle, 0x80L, &lcp);
+        fr_read(fileHandle, 0x80L, &lcp);
         _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
 
         lcp_water_level         = lcp.water_level;
@@ -216,14 +247,14 @@ BOOL16  play_door_sound;
         saved_x = lcp_x;
 
         /* Phase 1: door closes (sprite in front of the resident). */
-        sprite_layer_flags[SPRITE_DOOR_STUDY_1] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_STUDY_1);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_1]] = 178;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_1]] =  23;
-        object_draw(object_id_door_study_closed, 178, 23);
+        g_selaf[SPRITE_DOOR_STUDY_1] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_STUDY_1);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = 178;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] =  23;
+        object_draw(g_obids, 178, 23);
 
         if (play_door_sound != NO)
-                soundeffect_select(SFX_DOOR_CLOSE, 6L);
+                sf_sele(SFX_DOOR_CLOSE, 6L);
 
         game_tick_and_animate(1);
         counter = randomRange(15, 30);
@@ -249,46 +280,46 @@ BOOL16  play_door_sound;
         }
 
         /* Phase 3a: door swings ajar. */
-        sprite_layer_flags[SPRITE_DOOR_STUDY_1] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_STUDY_AJAR);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_AJAR]] = 178;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        object_draw(object_id_door_study_open_1, 178, 23);
-        soundeffect_select(SFX_DOOR_OPEN, 6L);
+        g_selaf[SPRITE_DOOR_STUDY_1] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_STUDY_AJAR);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
+        object_draw(g_obi07, 178, 23);
+        sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
 
         /* Phase 3b: door wide open, resident visible. */
-        sprite_layer_flags[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        sprite_layer_flags[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
-        spritedata_select(SPRITE_DOOR_STUDY_WIDE_OPEN);
-        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
-        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
-        object_draw(object_id_door_study_open_2, 178, 23);
+        g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
+        sp_upds();
+        g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_DOOR_STUDY_WIDE_OPEN);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
+        object_draw(g_obi08, 178, 23);
         show_lcp_sprites();
         game_tick_and_animate(1);
 
         /* Phase 4: walk resident back to the study door. */
         lcp_x = saved_x;
         house_get_position_xy(POS_TOP_STUDY_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         action_interruptible_flag = YES;
         lcp_walk_to_destination();
         action_interruptible_flag = NO;
 
         /* Phase 5: close door, clear the "study door open" flag. */
         if (lcp_study_door_open != NO) {
-                sprite_layer_flags[SPRITE_DOOR_STUDY_WIDE_OPEN] =
+                g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] =
                         SPRITE_HIDDEN;
-                sprite_update_slots();
+                sp_upds();
                 game_tick_and_animate(0);
         }
-        object_draw(object_id_door_study_open_1, 178, 23);
+        object_draw(g_obi07, 178, 23);
         game_tick_and_animate(2);
-        object_draw(object_id_door_study_closed,  178, 23);
-        soundeffect_select(SFX_DOOR_CLOSE, 6L);
+        object_draw(g_obids,  178, 23);
+        sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_study_door_open = NO;
 }

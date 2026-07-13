@@ -29,12 +29,19 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern void *   dest_screenbase_ptr;
+extern short *  cards_data;
+extern MFDB     cards_MFDB_blocks[];
+extern MFDB     MFDB_dest_screenbase_cards;
 #include <osbind.h>
 
 extern short    file_open();
-extern void     file_read();
-extern void     sprite_init_MFDB();
+extern void     fr_read();
+extern void     sp_iniM();
 
 /* poker_load_card_graphics: read 53 card bitmaps from disk into
    cards_data, synthesise the 54th highlight pattern, then wire all 54
@@ -57,17 +64,17 @@ poker_load_card_graphics()
         /* 4 suits x (12 face cards reverse-ranked + 1 per-suit back). */
         for (suit = 0; suit < 4; suit = suit + 1) {
                 for (rank = 0; rank < 12; rank = rank + 1) {
-                        file_read(fileHandle, 0xc0L,
+                        fr_read(fileHandle, 0xc0L,
                                   buf + suit * 0x4e0 +
                                         (short) (11 - rank) * 0x60);
                 }
                 /* Per-suit trailer slot at word offset 0x480. */
-                file_read(fileHandle, 0xc0L,
+                fr_read(fileHandle, 0xc0L,
                           buf + suit * 0x4e0 + 0x480);
         }
 
         /* Standard face-down back at slot 52. */
-        file_read(fileHandle, 0xc0L, cards_data + 0x1380);
+        fr_read(fileHandle, 0xc0L, cards_data + 0x1380);
         _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
 
         /* Synthesize the highlight overlay at slot 53: a 4-plane
@@ -86,13 +93,13 @@ poker_load_card_graphics()
            into cards_data than the previous, dimensions 16 wide by
            24 tall. */
         for (i = 0; i < 54; i = i + 1)
-                sprite_init_MFDB(0L, &cards_MFDB_blocks[i],
+                sp_iniM(0L, &cards_MFDB_blocks[i],
                                  cards_data + i * 0x60,
                                  (short) 16, (short) 24);
 
         /* Destination MFDB for the game display area (full-width strip
            of 320 pixels by 77 rows). */
-        sprite_init_MFDB(0L, &MFDB_dest_screenbase_cards,
+        sp_iniM(0L, &MFDB_dest_screenbase_cards,
                          dest_screenbase_ptr,
                          (short) 320, (short) 77);
 }

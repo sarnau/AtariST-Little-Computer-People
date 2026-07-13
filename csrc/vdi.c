@@ -37,8 +37,16 @@
 
 #include "types.h"
 #include "structs.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    contrl[];
+extern short    intin[];
+extern short    ptsin[];
+extern short    intout[];
+extern short    ptsout[];
+extern short *  vdipb[];
 /* Trap #2 dispatcher.  On the ST it's the standard AES/VDI entry point;
    here it's declared as an external function that on the target maps
    to Alcyon's assembler `crystal` (or similar) stub, and on the host

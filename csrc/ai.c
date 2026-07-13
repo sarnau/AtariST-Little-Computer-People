@@ -15,15 +15,41 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    time_hours;
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   lunch_meal_triggered_today;
+extern BOOL16   dinner_meal_triggered_today;
+extern BOOL16   morning_wakeup_triggered_today;
+extern BOOL16   bedtime_triggered_today;
+extern short    triggered_event_list[];
+extern BOOL16   in_execute_event_routine_flag;
+extern short    last_action;
+extern short    trigger_action;
+extern BOOL16   ctrl_a_alarm_pressed_flag;
+extern short    lcp_water_level;
+extern short    g_aliss;
+extern short    g_aqueu[];
+extern short    g_apriq[];
+extern void     a_getd();
+extern char     g_cdinb[];
+extern char *   _command_input_ptr;
+extern short    g_aprio;
+extern short    randomRange();                  /* random.c */
+extern short    get_event_from_list();          /* events.c  */
+extern void     execute_event();                /* ai.c      */
+extern void     check_for_any_action_triggers();/* ai.c      */
+extern void     do_action();                    /* actions.c */
 /* Forward-declared handlers (real ports arrive later, one .c per group). */
-extern void     action_get_in_out_of_bed();
-extern void     action_get_dressed();
-extern void     event_receive_record_delivery();
-extern void     event_receive_food_delivery();
-extern void     event_receive_book_delivery();
-extern void     event_receive_dog_food();
+extern void     a_gioob();
+extern void     a_getd();
+extern void     er_recd();
+extern void     er_food();
+extern void     er_bood();
+extern void     er_dogf();
 extern void     event_answer_phone();
 
 /* execute_event: dispatch a single deferred event to its handler.
@@ -41,27 +67,27 @@ short   event;
         in_execute_event_routine_flag = YES;
 
         if (lcp.is_sleeping != NO)
-                action_get_in_out_of_bed();
+                a_gioob();
 
         switch (event) {
         case ACTION_EVENT_RECORD_DELIVERY:
-                event_receive_record_delivery();
+                er_recd();
                 break;
         case ACTION_EVENT_FOOD_DELIVERY:
                 if (((lcp.door_states_and_flags >> 9) & 7) != 4)
-                        event_receive_food_delivery();
+                        er_food();
                 break;
         case ACTION_EVENT_PHONE_CALL:
                 event_answer_phone();
                 break;
         case ACTION_EVENT_DOG_FOOD:
-                event_receive_dog_food();
+                er_dogf();
                 break;
         case ACTION_EVENT_BOOK_DELIVERY:
-                event_receive_book_delivery();
+                er_bood();
                 break;
         case ACTION_GET_DRESSED:
-                action_get_dressed();
+                a_getd();
                 break;
         }
 
@@ -78,9 +104,9 @@ extern short    randomRange();
 /* Command-queue globals filled from typed input.  Priority is bumped
    every rejected round until it crosses the 8 threshold, at which point
    the queued command wins. */
-extern short    _action_list_size;
-extern short    _action_queue[];
-extern short    _action_priority_queue[];
+extern short    g_aliss;
+extern short    g_aqueu[];
+extern short    g_apriq[];
 
 /* check_for_any_action_triggers: pick the next action for the resident.
    The nine priority levels (in order):
@@ -191,29 +217,29 @@ check_for_any_action_triggers()
            out on every rejected round; high-priority (>=8) fire
            immediately.  Middle-priority items get their priority
            incremented and stay in the queue for another shot. */
-        if (_action_list_size > 0) {
-                if (_action_priority_queue[0] < 4) {
+        if (g_aliss > 0) {
+                if (g_apriq[0] < 4) {
                         for (index = 0; index < 9; index = index + 1) {
-                                _action_queue[index] = _action_queue[index + 1];
-                                _action_priority_queue[index] =
-                                        _action_priority_queue[index + 1];
+                                g_aqueu[index] = g_aqueu[index + 1];
+                                g_apriq[index] =
+                                        g_apriq[index + 1];
                         }
-                } else if (_action_priority_queue[0] > 7) {
-                        trigger_action = _action_queue[0];
-                        if (_action_queue[0] == ACTION_PLAY_A_GAME ||
-                            _action_queue[0] == ACTION_PLAY_WITH_RECORD)
-                                action_get_dressed();
+                } else if (g_apriq[0] > 7) {
+                        trigger_action = g_aqueu[0];
+                        if (g_aqueu[0] == ACTION_PLAY_A_GAME ||
+                            g_aqueu[0] == ACTION_PLAY_WITH_RECORD)
+                                a_getd();
                         for (index = 0; index < 9; index = index + 1) {
-                                _action_queue[index] = _action_queue[index + 1];
-                                _action_priority_queue[index] =
-                                        _action_priority_queue[index + 1];
+                                g_aqueu[index] = g_aqueu[index + 1];
+                                g_apriq[index] =
+                                        g_apriq[index + 1];
                         }
-                        _action_list_size = _action_list_size - 1;
+                        g_aliss = g_aliss - 1;
                         do_action();
                         return;
                 } else {
-                        _action_priority_queue[0] =
-                                _action_priority_queue[0] + 1;
+                        g_apriq[0] =
+                                g_apriq[0] + 1;
                 }
         }
 
@@ -225,9 +251,9 @@ check_for_any_action_triggers()
 
 /* parse_command_to_action: called from deal_with_keycode when the user
    presses Enter.  Runs the natural-language parser
-   check_entered_command() over the current command_input_buffer, and
+   check_entered_command() over the current g_cdinb, and
    if it returns a valid ACTION_ID and the queue has room, appends it
-   with the priority currently sitting in _action_priority.
+   with the priority currently sitting in g_aprio.
 
    addr: parse_command_to_action() */
 
@@ -238,11 +264,11 @@ parse_command_to_action()
 {
         short   entered;
 
-        _command_input_ptr = command_input_buffer;
-        entered = check_entered_command(command_input_buffer);
-        if (entered >= 0 && _action_list_size < 10) {
-                _action_queue[_action_list_size]           = entered;
-                _action_priority_queue[_action_list_size]  = _action_priority;
-                _action_list_size = _action_list_size + 1;
+        _command_input_ptr = g_cdinb;
+        entered = check_entered_command(g_cdinb);
+        if (entered >= 0 && g_aliss < 10) {
+                g_aqueu[g_aliss]           = entered;
+                g_apriq[g_aliss]  = g_aprio;
+                g_aliss = g_aliss + 1;
         }
 }

@@ -10,42 +10,79 @@
  *   6. attach a carried sprite and walk to the destination shelf
  *   7. bend down / reach forward again to put it down
  *
- * The Ctrl+D dog-food variant reuses event_receive_food_delivery with
+ * The Ctrl+D dog-food variant reuses er_food with
  * delivery_is_for_dog=YES so the food goes to the dog bowl instead of
  * the kitchen cabinet.
  *
  * event_answer_phone is grouped here because it's the same event-queue
  * consumer even though it's a phone call rather than a delivery.
  *
- * addr: event_receive_food_delivery(), event_receive_book_delivery(),
- *       event_receive_record_delivery(), event_receive_dog_food(),
+ * addr: er_food(), er_bood(),
+ *       er_recd(), er_dogf(),
  *       event_answer_phone(), walk_to_front_door(),
- *       action_open_close_front_door(), action_open_close_cabinet()
+ *       a_opcfd(), a_opecc()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern PLAYER   lcp;                            /* the resident LCP */
+extern BOOL16   phone_answered_flag;
+extern BOOL16   phone_call_active_flag;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hacur;
+extern short    g_hamod;
+extern short    g_hsfra;
+extern long     g_sfret;
+extern BOOL16   action_interruptible_flag;
+extern BOOL16   dog_pettable_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short    lcp_front_door_open;
+extern short    lcp_cabinet_open;
+extern short    lcp_dog_bowl_status;
+extern short    lcp_food_count;
+extern short    g_obidf;
+extern short    g_obi05;
+extern short    g_obi06;
+extern short    g_obicc;
+extern short    g_obico;
+extern short    g_obi02;
+extern short    g_obipc;
+extern BOOL16   delivery_is_for_dog;
+extern BOOL16   phone_hangup_flag;
+extern BOOL16   g_ptdoa;
+extern void     house_get_position_xy();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_lcyof;
+extern short    g_selaf[];
+extern short    randomRange();                  /* random.c */
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     spritedata_select_carried_object_left();
-extern void     spritedata_select_carried_object_right();
-extern void     sprite_update_slots();
-extern void     soundeffect_select();
+extern void     sp_ssco();
+extern void     sp_ss02();
+extern void     sp_upds();
+extern void     sf_sele();
 extern void     object_draw();
-extern void     action_feed_dog();
-extern void     action_get_snack_from_fridge();
-extern void     action_call_dog();
+extern void     a_feedd();
+extern void     a_gesff();
+extern void     a_calld();
 extern void     play_soundeffect_tv_click();
 extern void     play_soundeffect_greeting();
 extern void     play_soundeffect_speech();
 extern void     play_soundeffect_head_nod();
-extern void     screen_draw_food_cabinet();
+extern void     sc_drfc();
 
-extern void     action_open_close_front_door();
-extern void     action_open_close_cabinet();
+extern void     a_opcfd();
+extern void     a_opecc();
 
 /* walk_to_front_door: tiny helper used by all four delivery events.
    addr: walk_to_front_door() */
@@ -54,17 +91,17 @@ void
 walk_to_front_door()
 {
         house_get_position_xy(POS_BTM_FRONT_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 }
 
-/* action_open_close_front_door: toggle the front door with SFX+draw.
+/* a_opcfd: toggle the front door with SFX+draw.
    Called from every delivery event and from event handlers via the
    initiative-threshold roll.  door_status=0 opens, 1 closes.
-   addr: action_open_close_front_door() */
+   addr: a_opcfd() */
 
 void
-action_open_close_front_door(door_status)
+a_opcfd(door_status)
 short   door_status;
 {
         if (door_status == 0) {
@@ -73,19 +110,19 @@ short   door_status;
                 lcp_facing_direction = FACING_RIGHT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(object_id_door_front_open_1, 294, 151);
-                soundeffect_select(SFX_DOOR_OPEN, 6L);
+                object_draw(g_obi05, 294, 151);
+                sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(object_id_door_front_open_2, 294, 151);
+                object_draw(g_obi06, 294, 151);
                 game_tick_and_animate(2);
                 lcp_front_door_open = YES;
         } else {
                 if (lcp_front_door_open == NO)
                         return;
-                object_draw(object_id_door_front_open_1, 294, 151);
+                object_draw(g_obi05, 294, 151);
                 game_tick_and_animate(2);
-                object_draw(object_id_door_front_closed, 294, 151);
-                soundeffect_select(SFX_DOOR_CLOSE, 6L);
+                object_draw(g_obidf, 294, 151);
+                sf_sele(SFX_DOOR_CLOSE, 6L);
                 game_tick_and_animate(2);
                 lcp_front_door_open = NO;
         }
@@ -93,12 +130,12 @@ short   door_status;
         game_tick_and_animate(0);
 }
 
-/* action_open_close_cabinet: kitchen cabinet toggle used by the food
+/* a_opecc: kitchen cabinet toggle used by the food
    delivery to reveal / hide the stocked cabinet interior.
-   addr: action_open_close_cabinet() */
+   addr: a_opecc() */
 
 void
-action_open_close_cabinet(open_close_status)
+a_opecc(open_close_status)
 short   open_close_status;
 {
         if (open_close_status == 0) {
@@ -107,21 +144,21 @@ short   open_close_status;
                 lcp_cabinet_open = YES;
                 lcp_state = STATE_REACH_INTO_CABINET;
                 game_tick_and_animate(3);
-                object_draw(object_id_cabinet_open_1, 46, 140);
-                soundeffect_select(SFX_DOOR_OPEN, 6L);
+                object_draw(g_obico, 46, 140);
+                sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(object_id_cabinet_open_2, 46, 140);
-                screen_draw_food_cabinet();
+                object_draw(g_obi02, 46, 140);
+                sc_drfc();
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 game_tick_and_animate(2);
         } else if (lcp_cabinet_open != NO) {
                 lcp_cabinet_open = NO;
                 lcp_state = STATE_REACH_INTO_CABINET;
                 game_tick_and_animate(3);
-                object_draw(object_id_cabinet_open_1, 46, 140);
+                object_draw(g_obico, 46, 140);
                 game_tick_and_animate(2);
-                object_draw(object_id_cabinet_closed, 46, 140);
-                soundeffect_select(SFX_DOOR_CLOSE, 6L);
+                object_draw(g_obicc, 46, 140);
+                sf_sele(SFX_DOOR_CLOSE, 6L);
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 game_tick_and_animate(2);
         }
@@ -139,9 +176,9 @@ delivery_pickup_at_door()
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
-        action_open_close_front_door(0);
+        a_opcfd(0);
 
         lcp_state = STATE_BEND_DOWN;
         game_tick_and_animate(1);
@@ -154,15 +191,15 @@ delivery_pickup_at_door()
 
         roll = randomRange(0, 100);
         if (lcp.initiative_threshold < roll)
-                action_open_close_front_door(1);
+                a_opcfd(1);
 }
 
-/* event_receive_food_delivery: Ctrl+F grocery event.  Also reused by
-   event_receive_dog_food with delivery_is_for_dog set.
-   addr: event_receive_food_delivery() */
+/* er_food: Ctrl+F grocery event.  Also reused by
+   er_dogf with delivery_is_for_dog set.
+   addr: er_food() */
 
 void
-event_receive_food_delivery()
+er_food()
 {
         unsigned short  food_count;
         short           roll;
@@ -172,20 +209,20 @@ event_receive_food_delivery()
         delivery_pickup_at_door();
 
         if (delivery_is_for_dog == NO) {
-                spritedata_select_carried_object_left(SPRITE_FOOD_PACKAGE);
+                sp_ssco(SPRITE_FOOD_PACKAGE);
                 house_get_position_xy(POS_BTM_KITCHEN_CABINET,
-                                      &walk_target_x, &walk_target_y);
+                                      &g_wtx, &g_wty);
                 lcp_walk_to_destination();
 
-                sprite_layer_flags[9] = SPRITE_HIDDEN;
-                sprite_update_slots();
-                lcp_carrying_object_flag = NO;
+                g_selaf[9] = SPRITE_HIDDEN;
+                sp_upds();
+                g_lcyof = NO;
                 lcp_facing_direction     = FACING_RIGHT;
                 lcp_state                = STATE_STAND_FACING_SCREEN;
-                head_anim_target_state   = HEAD_ANIM_HORIZONTAL_RANGE;
+                g_hatas   = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_wait_head_reach_target();
 
-                action_open_close_cabinet(0);
+                a_opecc(0);
 
                 /* Stock the cabinet: the 3-bit food count lives at
                    bits 9..11 of door_states_and_flags.  Bump it up to
@@ -200,49 +237,49 @@ event_receive_food_delivery()
                                 (lcp.door_states_and_flags & ~DSF_FOOD_MASK);
                         lcp_state = STATE_REACH_INTO_CABINET;
                         game_tick_and_animate(3);
-                        screen_draw_food_cabinet();
+                        sc_drfc();
                         lcp_state = STATE_STAND_FACING_SCREEN;
                         game_tick_and_animate(1);
                 }
 
                 roll = randomRange(0, 100);
                 if (lcp.initiative_threshold < roll)
-                        action_open_close_cabinet(1);
+                        a_opecc(1);
                 action_interruptible_flag = NO;
         } else {
-                spritedata_select_carried_object_left(SPRITE_FOOD_PACKAGE);
+                sp_ssco(SPRITE_FOOD_PACKAGE);
                 if (lcp_dog_bowl_status == BOWL_EMPTY) {
-                        action_feed_dog(1);
+                        a_feedd(1);
                 } else {
-                        action_get_snack_from_fridge();
-                        sprite_layer_flags[9] = SPRITE_HIDDEN;
-                        sprite_update_slots();
-                        lcp_carrying_object_flag = NO;
+                        a_gesff();
+                        g_selaf[9] = SPRITE_HIDDEN;
+                        sp_upds();
+                        g_lcyof = NO;
                 }
         }
 }
 
-/* event_receive_book_delivery: Ctrl+B.  Book -> bookshelf.
-   addr: event_receive_book_delivery() */
+/* er_bood: Ctrl+B.  Book -> bookshelf.
+   addr: er_bood() */
 
 void
-event_receive_book_delivery()
+er_bood()
 {
         action_interruptible_flag = YES;
         walk_to_front_door();
         delivery_pickup_at_door();
 
-        spritedata_select_carried_object_left(SPRITE_BOOK);
+        sp_ssco(SPRITE_BOOK);
         house_get_position_xy(POS_MID_BATHROOM_ENTRANCE,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 
-        sprite_layer_flags[SPRITE_BOOK] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        lcp_carrying_object_flag = NO;
+        g_selaf[SPRITE_BOOK] = SPRITE_HIDDEN;
+        sp_upds();
+        g_lcyof = NO;
         lcp_facing_direction     = FACING_RIGHT;
         lcp_state                = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state   = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas   = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         lcp_state = STATE_REACH_INTO_CABINET;
@@ -252,30 +289,30 @@ event_receive_book_delivery()
         action_interruptible_flag = NO;
 }
 
-/* event_receive_record_delivery: Ctrl+R.  Record -> dance floor shelf.
+/* er_recd: Ctrl+R.  Record -> dance floor shelf.
    Note the original also increments lcp_food_count at the end -- this
    looks like an off-by-one bug (should have been counting records), but
    preserved for faithfulness.
-   addr: event_receive_record_delivery() */
+   addr: er_recd() */
 
 void
-event_receive_record_delivery()
+er_recd()
 {
         action_interruptible_flag = YES;
         walk_to_front_door();
         delivery_pickup_at_door();
 
-        spritedata_select_carried_object_left(SPRITE_VINYL_CARRY);
+        sp_ssco(SPRITE_VINYL_CARRY);
         house_get_position_xy(POS_TOP_DANCE_FLOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
-        sprite_layer_flags[SPRITE_VINYL_CARRY] = SPRITE_HIDDEN;
-        sprite_update_slots();
-        lcp_carrying_object_flag = NO;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_selaf[SPRITE_VINYL_CARRY] = SPRITE_HIDDEN;
+        sp_upds();
+        g_lcyof = NO;
         lcp_wait_head_reach_target();
 
         lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
@@ -288,15 +325,15 @@ event_receive_record_delivery()
         action_interruptible_flag = NO;
 }
 
-/* event_receive_dog_food: Ctrl+D.  Trivial trampoline into food
+/* er_dogf: Ctrl+D.  Trivial trampoline into food
    delivery with delivery_is_for_dog set.
-   addr: event_receive_dog_food() */
+   addr: er_dogf() */
 
 void
-event_receive_dog_food()
+er_dogf()
 {
         delivery_is_for_dog = YES;
-        event_receive_food_delivery();
+        er_food();
         delivery_is_for_dog = NO;
 }
 
@@ -318,11 +355,11 @@ event_answer_phone()
         short   subpick;
 
         action_interruptible_flag = YES;
-        action_call_dog();
+        a_calld();
         action_interruptible_flag = NO;
 
-        head_anim_mode         = HEAD_ANIM_DISABLED;
-        head_anim_target_state = 8;
+        g_hamod         = HEAD_ANIM_DISABLED;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
 
         lcp_y = lcp_y + 6;
@@ -333,54 +370,54 @@ event_answer_phone()
         phone_call_active_flag = NO;
         phone_hangup_flag      = YES;
         game_tick_and_animate(0);
-        object_draw(object_id_phone_call, 190, 168);
+        object_draw(g_obipc, 190, 168);
 
         lcp_state = STATE_PHONE_TALKING;
         game_tick_and_animate(1);
 
-        saved_frame            = head_sprite_frame;
-        head_anim_target_state = HEAD_ANIM_DISABLED;
-        head_anim_current      = HEAD_ANIM_DISABLED;
+        saved_frame            = g_hsfra;
+        g_hatas = HEAD_ANIM_DISABLED;
+        g_hacur      = HEAD_ANIM_DISABLED;
 
         ticks = randomRange(0x28, 0x32);
         while (ticks != 0) {
                 pick = randomRange(0, 2);
                 if (pick == 0) {
-                        head_sprite_frame = 5;
+                        g_hsfra = 5;
                         play_soundeffect_tv_click();
                 } else if (pick == 1) {
-                        head_sprite_frame = 6;
+                        g_hsfra = 6;
                         subpick = randomRange(0, 1);
                         if (subpick == 0)
                                 play_soundeffect_greeting();
                         else
                                 play_soundeffect_speech();
                 } else {
-                        head_sprite_frame = saved_frame;
+                        g_hsfra = saved_frame;
                         play_soundeffect_head_nod();
                 }
                 subpick = randomRange(1, 2);
                 game_tick_and_animate(subpick);
-                soundeffect_remaining_ticks = (long) subpick;
+                g_sfret = (long) subpick;
                 ticks = ticks - 1;
         }
 
         phone_hangup_flag = YES;
         lcp_state         = STATE_PHONE_PICKUP;
-        head_sprite_frame = saved_frame;
+        g_hsfra = saved_frame;
         game_tick_and_animate(1);
 
         lcp_y = lcp_y - 6;
         lcp_state = STATE_CROUCH_DOWN;
         game_tick_and_animate(1);
 
-        while (petting_dog_active != NO)
+        while (g_ptdoa != NO)
                 game_tick_and_animate(0);
 
         dog_pettable_flag = NO;
         lcp_y = lcp_y - 2;
-        head_anim_target_state = 8;
-        head_anim_current      = 8;
+        g_hatas = 8;
+        g_hacur      = 8;
         lcp_state = STATE_STAND_SIDE_VIEW;
         lcp_wait_head_reach_target();
         game_tick_and_animate(0);

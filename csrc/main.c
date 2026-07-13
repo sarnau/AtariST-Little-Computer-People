@@ -16,11 +16,21 @@
  */
 
 #include "types.h"
-#include "globals.h"
-
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    lcp_loaded;
+extern short    copyprot_check_return;
+extern short    game_speed_counter;
+extern void     game_tick_and_animate();
+extern void     house_get_position_xy();
+extern void     check_for_any_action_triggers();/* ai.c      */
 extern void     game_tick_and_animate();
 extern void     check_for_any_action_triggers();
-extern void     action_sleep();
+extern void     a_sleep();
 extern void     lcp_enter_study_and_save();
 
 #define POS_TOP_STUDY_DOOR      7       /* HOUSE_POS index */
@@ -51,5 +61,5 @@ endless_game_loop()
         }
 
         for (;;)
-                action_sleep(-1);
+                a_sleep(-1);
 }

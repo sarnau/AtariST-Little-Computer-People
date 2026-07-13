@@ -49,7 +49,7 @@ char ** argv;
         fclose(f);
         printf("copied %zu bytes to CWD/letter.txt\n", nread);
 
-        /* action_write_letter allocates letter_txt_content via
+        /* a_writl allocates letter_txt_content via
            _gemdos(GEMDOS_Malloc); we do that here manually. */
         letter_txt_content = (char *) malloc(10496);
         if (letter_txt_content == NULL) { perror("malloc"); return 2; }

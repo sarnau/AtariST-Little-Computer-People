@@ -5,43 +5,67 @@
  * pattern, without persistent world-state updates (unlike toilet or
  * kitchen).  Water-running SFX is toggled on entry and stopped on exit.
  *
- * addr: action_take_shower(), action_brush_teeth(), action_wash_hands()
+ * addr: a_takes(), a_brust(), a_washh()
  */
 
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    triggered_event_list[];
+extern short    lcp_x;
+extern short    lcp_y;
+extern short    g_hatas;
+extern short    g_hamod;
+extern BOOL16   action_interruptible_flag;
+extern short    g_wtx;
+extern short    g_wty;
+extern short    PLAYER_STATE_ARRAY[];
+extern void     lcp_wait_head_reach_target();
+extern void     game_tick_and_animate();
+extern short    g_sfplf;
+extern short    g_sfpli;
+extern void     house_get_position_xy();
+extern short    lcp_state;
+extern short    lcp_facing_direction;
+extern short    g_sepex[];
+extern short    g_sepey[];
+extern short    g_selaf[];
+extern short    g_seslm[];
+extern short    randomRange();                  /* random.c */
 #include <osbind.h>             /* Random() */
 
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     spritedata_select();
-extern void     sprite_update_slots();
-extern void     soundeffect_select();
-extern void     soundeffects_off();
-extern void     spritedata_select_carried_object_left();
+extern void     sp_sprs();
+extern void     sp_upds();
+extern void     sf_sele();
+extern void     sf_so();
+extern void     sp_ssco();
 
-/* action_take_shower: enter the shower cubicle, randomly alternate
+/* a_takes: enter the shower cubicle, randomly alternate
    scrub / wash blocks for 20..25 cycles, exit.  Head-anim mode gets a
    dedicated HEAD_ANIM_SHOWER so the head bobs left/right in step.
-   addr: action_take_shower() */
+   addr: a_takes() */
 
 void
-action_take_shower()
+a_takes()
 {
         short   result;
         short   count;
         short   pick;
 
         house_get_position_xy(POS_MID_SHOWER_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         house_get_position_xy(POS_MID_SHOWER_INSIDE,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         action_interruptible_flag = YES;
         lcp_walk_to_destination();
 
@@ -49,9 +73,9 @@ action_take_shower()
         lcp_state = STATE_SHOWER_STAND;
         lcp_x = lcp_x - 8;
         lcp_y = lcp_y - 23;
-        head_anim_target_state = 8;
+        g_hatas = 8;
         lcp_wait_head_reach_target();
-        head_anim_mode = HEAD_ANIM_SHOWER;
+        g_hamod = HEAD_ANIM_SHOWER;
 
         count = randomRange(20, 25);
         while (count != 0) {
@@ -76,19 +100,19 @@ action_take_shower()
         lcp_y = lcp_y + 29;
         game_tick_and_animate(2);
         house_get_position_xy(POS_MID_SHOWER_DOOR,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
-        head_anim_mode = HEAD_ANIM_DISABLED;
+        g_hamod = HEAD_ANIM_DISABLED;
         action_interruptible_flag = NO;
 }
 
-/* action_brush_teeth: 24..35 cycle brush loop.  The "toothbrush"
+/* a_brust: 24..35 cycle brush loop.  The "toothbrush"
    sprite is actually SPRITE_STUDY_DOOR_FRAME (id 6) repositioned above
    the resident's head, alternating between two X positions.
-   addr: action_brush_teeth() */
+   addr: a_brust() */
 
 void
-action_brush_teeth()
+a_brust()
 {
         unsigned short  brush_cycles;
         short           result;
@@ -97,48 +121,48 @@ action_brush_teeth()
 
         brush_cycles = (unsigned short) randomRange(24, 35);
         house_get_position_xy(POS_MID_BATHROOM_SINK,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
-        head_anim_mode = HEAD_ANIM_DISABLED;
+        g_hamod = HEAD_ANIM_DISABLED;
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_BRUSH_TEETH;
-        head_anim_target_state = 10;
+        g_hatas = 10;
         lcp_y = lcp_y - 2;
         lcp_wait_head_reach_target();
 
-        sprite_layer_flags[SPRITE_STUDY_DOOR_FRAME] = SPRITE_BEHIND_LCP;
-        spritedata_select(SPRITE_STUDY_DOOR_FRAME);
+        g_selaf[SPRITE_STUDY_DOOR_FRAME] = SPRITE_BEHIND_LCP;
+        sp_sprs(SPRITE_STUDY_DOOR_FRAME);
         x_left  = lcp_x + 8;
         x_right = lcp_x + 12;
-        sprite_pending_x[sprite_slot_map[SPRITE_STUDY_DOOR_FRAME]] = x_left;
-        sprite_pending_y[sprite_slot_map[SPRITE_STUDY_DOOR_FRAME]] = lcp_y - 24;
+        g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;
+        g_sepey[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = lcp_y - 24;
 
         while (brush_cycles != 0) {
                 if (((brush_cycles - 1) & 1) == 0)
-                        sprite_pending_x[sprite_slot_map[SPRITE_STUDY_DOOR_FRAME]] = x_right;
+                        g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_right;
                 else
-                        sprite_pending_x[sprite_slot_map[SPRITE_STUDY_DOOR_FRAME]] = x_left;
+                        g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;
                 game_tick_and_animate(0);
                 brush_cycles = brush_cycles - 1;
         }
 
-        sprite_layer_flags[SPRITE_STUDY_DOOR_FRAME] = SPRITE_HIDDEN;
-        sprite_update_slots();
+        g_selaf[SPRITE_STUDY_DOOR_FRAME] = SPRITE_HIDDEN;
+        sp_upds();
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_STAND_FACING_SCREEN;
         lcp_y = lcp_y + 2;
         game_tick_and_animate(0);
 }
 
-/* action_wash_hands: sink + water + 4..127 random wash cycles picking
+/* a_washh: sink + water + 4..127 random wash cycles picking
    from 3 hand-position states.  Stops water on any interruption.
-   addr: action_wash_hands() */
+   addr: a_washh() */
 
 void
-action_wash_hands()
+a_washh()
 {
         short           result;
         unsigned short  rnd;
@@ -151,18 +175,18 @@ action_wash_hands()
         PLAYER_STATE_ARRAY[2] = STATE_WASH_HANDS_RIGHT;
 
         house_get_position_xy(POS_MID_BATHROOM_SINK,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         rnd = (unsigned short) Random();
-        soundeffect_select(SFX_WATER_RUNNING, 10000L);
+        sf_sele(SFX_WATER_RUNNING, 10000L);
 
         counter   = 0;
         last_pick = 0;
@@ -182,25 +206,25 @@ action_wash_hands()
                 counter = counter + 1;
         }
 
-        if (soundeffect_playing_flag != NO &&
-            soundeffect_playing_id == SFX_WATER_RUNNING)
-                soundeffects_off();
+        if (g_sfplf != NO &&
+            g_sfpli == SFX_WATER_RUNNING)
+                sf_so();
 
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(0);
 }
 
-/* action_drink_water_animation: fill / drink a glass (carried_object
+/* a_driwa: fill / drink a glass (carried_object
    pre-selected by the caller).  Runs the same 3-position hand-shift
-   loop as action_wash_hands but scoped to lower amplitudes (bit 0x1f
+   loop as a_washh but scoped to lower amplitudes (bit 0x1f
    instead of 0x7f), so it plays for ~4..35 ticks instead of ~4..127.
    The `value` argument is the SPRITE_ID of the object being carried
    (typically SPRITE_GLASS).
-   addr: action_drink_water_animation() */
+   addr: a_driwa() */
 
 void
-action_drink_water_animation(value)
+a_driwa(value)
 short   value;
 {
         unsigned short  rnd;
@@ -212,20 +236,20 @@ short   value;
         PLAYER_STATE_ARRAY[1] = STATE_WASH_HANDS_LEFT;
         PLAYER_STATE_ARRAY[2] = STATE_WASH_HANDS_RIGHT;
 
-        spritedata_select_carried_object_left(value);
+        sp_ssco(value);
         house_get_position_xy(POS_BTM_KITCHEN_SINK,
-                              &walk_target_x, &walk_target_y);
+                              &g_wtx, &g_wty);
         lcp_walk_to_destination();
-        sprite_layer_flags[value] = SPRITE_HIDDEN;
-        sprite_update_slots();
+        g_selaf[value] = SPRITE_HIDDEN;
+        sp_upds();
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
-        head_anim_target_state = HEAD_ANIM_HORIZONTAL_RANGE;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
         rnd = (unsigned short) Random();
-        soundeffect_select(SFX_WATER_RUNNING, 10000L);
+        sf_sele(SFX_WATER_RUNNING, 10000L);
 
         last_pick = 0;
         for (counter = 0;
@@ -244,9 +268,9 @@ short   value;
                 game_tick_and_animate(1);
         }
 
-        if (soundeffect_playing_flag != NO &&
-            soundeffect_playing_id == SFX_WATER_RUNNING)
-                soundeffects_off();
+        if (g_sfplf != NO &&
+            g_sfpli == SFX_WATER_RUNNING)
+                sf_so();
 
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_STAND_FACING_SCREEN;

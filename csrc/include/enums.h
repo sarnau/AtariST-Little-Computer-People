@@ -262,7 +262,7 @@
 #define XBIOS_Midiws                            12
 #define XBIOS_Dosound                           32      /* run PSG sequence  */
 
-/* ---- Additional colours used by tv_draw_static_noise --------------- */
+/* ---- Additional colours used by td_nois --------------- */
 #define COLOR_dk_brown                  15
 #define COLOR_red                       2
 #define COLOR_grey                      8

@@ -14,7 +14,7 @@
  *        word puzzle, 10400 for poker/war, 0x28a0 = 10432 for
  *        blackjack).  On OOM, error_not_enough_memory (infinite alert
  *        loop on ST; exit(1) on host).
- *     2. Load the required data file with file_read_compressed
+ *     2. Load the required data file with fr_reac
  *        ("words" for anagram, "wordpz.txt" for word puzzle).  Card
  *        games load their graphics via poker_load_card_graphics.
  *     3. Call minigame_setup_screen.
@@ -39,13 +39,35 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "globals.h"
+/* --- per-file extern block (auto-generated for Alcyon).
+       For the monolithic "everything" view see
+       include/globals.h.  Alcyon C 4.14 has a fixed-size
+       symbol table that overflows on the full globals.h. */
+extern short    triggered_event_list[];
+extern void     game_tick_and_animate();
+extern short    disable_key_input_flag;
+extern short    text_scroll_timer;
+extern char *   letter_line_ptr[];
+extern short    vdihandle;
+extern char *   anagram_words_buffer;
+extern char *   word_puzzle_data_buffer;
+extern short *  cards_data;
+extern short    word_puzzle_current_index;
+extern short    _poker_round_count;
+extern BOOL16   poker_quit_flag;
+extern short    g_pcmon;
+extern short    g_ppmon;
+extern short    g_ppppa;
+extern short    poker_draw_discard_flags[];
+extern short    g_pcdrp[];
+extern short    g_ppdrp[];
+extern short    randomRange();                  /* random.c */
 #include <osbind.h>
 
 extern short    get_pressed_key();
 extern void     string_print();
 extern void     fill_top_rect_with_background();
-extern void     file_read_compressed();
+extern void     fr_reac();
 extern void     error_not_enough_memory();
 extern void     init_vdi_and_screen();
 extern void     exit_vdi_and_screen();
@@ -137,7 +159,7 @@ anagram_main()
                 (char *) _gemdos(GEMDOS_Malloc, 10000L, 0L, 0L);
         if (anagram_words_buffer == (char *) 0)
                 error_not_enough_memory();
-        file_read_compressed("words",
+        fr_reac("words",
                              (unsigned char *) anagram_words_buffer,
                              10000);
 
@@ -168,7 +190,7 @@ word_puzzle_main()
                 error_not_enough_memory();
 
         minigame_setup_screen();
-        file_read_compressed("wordpz.txt",
+        fr_reac("wordpz.txt",
                              (unsigned char *) word_puzzle_data_buffer,
                              1536);
 
@@ -207,9 +229,9 @@ poker_main()
 
         _poker_round_count    = 0;
         poker_quit_flag       = NO;
-        poker_computer_money  = 400;
-        poker_player_money    = 400;
-        poker_pot_amount      = 0;
+        g_pcmon  = 400;
+        g_ppmon    = 400;
+        g_ppppa      = 0;
 
         string_print("***POKER***", 5, 8, COLOR_black);
         /* Round loop with ante/deal/bet/draw/showdown phases -- deferred. */
@@ -240,9 +262,9 @@ poker_war_main()
         poker_load_card_graphics();
         minigame_setup_screen();
 
-        poker_computer_money = 26;
-        poker_player_money   = 26;
-        poker_pot_amount     = 0;
+        g_pcmon = 26;
+        g_ppmon   = 26;
+        g_ppppa     = 0;
 
         /* Deck initialization: 52 cards indexed 0..51. */
         for (i = 0; i < 52; i = i + 1)
@@ -266,8 +288,8 @@ poker_war_main()
         /* Split the shuffled deck into two 26-card piles. */
         k = 0;
         for (i = 0; i < 52; i = i + 2) {
-                poker_computer_draw_pile[k] = poker_draw_discard_flags[i];
-                poker_player_draw_pile[k]   = poker_draw_discard_flags[i + 1];
+                g_pcdrp[k] = poker_draw_discard_flags[i];
+                g_ppdrp[k]   = poker_draw_discard_flags[i + 1];
                 k = k + 1;
         }
 
@@ -291,8 +313,8 @@ poker_blackjack_main()
         poker_load_card_graphics();
         minigame_setup_screen();
 
-        poker_computer_money = 400;
-        poker_player_money   = 400;
+        g_pcmon = 400;
+        g_ppmon   = 400;
 
         string_print("***BLACKJACK***", 5, 8, COLOR_black);
         /* Round loop with bet/deal/hit/stand/dealer/settle -- deferred. */
