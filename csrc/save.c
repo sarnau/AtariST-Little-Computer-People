@@ -1,0 +1,294 @@
+/*
+ * save.c -- HYBER save file I/O and the study-door save flow.
+ *
+ * The Atari ST version persists 128 bytes of PLAYER state to a
+ * single file named "hyber" in the current directory.  Load happens
+ * once at startup; save happens whenever the resident walks into the
+ * study, closes the door, and does the "packing" animation.
+ *
+ *   create_file()          -- ensures the target exists via GEMDOS Fcreate
+ *   file_read()            -- retrying GEMDOS Fread with error alert
+ *   lcp_save()             -- writes N bytes to a named file (128 in practice)
+ *   lcp_load()             -- reads 128 bytes and unpacks
+ *                            door_states_and_flags into per-door globals
+ *   lcp_enter_study_and_save() -- packs runtime state back into the PLAYER
+ *                            struct, calls lcp_save, and runs the study
+ *                            enter/exit animation.
+ *
+ * addr: create_file(), file_read(), lcp_save(), lcp_load(),
+ *       lcp_enter_study_and_save()
+ */
+
+#include "types.h"
+#include "structs.h"
+#include "enums.h"
+#include "globals.h"
+#include <osbind.h>
+#include <stdio.h>
+
+/* Externals resolved elsewhere. */
+extern void     spritedata_select();
+extern void     object_draw();
+extern void     soundeffect_select();
+extern void     sprite_update_slots();
+extern void     lcp_update_palette_colors();
+extern void     show_lcp_sprites();
+extern short    lcp_walk_to_destination();
+extern short    randomRange();
+extern void     error_unable_to_write();
+
+/* file_open: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
+   Same retry-then-alert pattern as file_read/lcp_save -- three tries
+   with a 1-second sleep, then loop with a Retry alert.
+   addr: file_open() */
+
+short
+file_open(filename, rwmode)
+char *  filename;
+short   rwmode;
+{
+        short   fhandle;
+        short   retry;
+
+        retry = 0;
+        for (;;) {
+                fhandle = _gemdos(GEMDOS_Fopen, (long) filename, (long) rwmode, 0L);
+                if (fhandle >= 0)
+                        return fhandle;
+                retry = retry + 1;
+                if (retry < 3)
+                        evnt_timer(1000, 0);
+                else
+                        form_alert(0,
+                                "[1][Bad file open.|Try re-booting.][RETRY]");
+        }
+}
+
+/* create_file: idempotent GEMDOS Fcreate.  Uses access() to see if the
+   file already exists; if not, keep retrying Fcreate until it succeeds.
+   The original quietly Fcloses the temporary handle it opened -- we
+   preserve that so the file is closed even in the success path.
+
+   addr: create_file() */
+
+void
+create_file(filename)
+char *  filename;
+{
+        short   rval;
+        short   iVar1;
+
+        rval = access(filename, 4);
+        if (rval == 0)
+                return;
+
+        for (;;) {
+                iVar1 = _gemdos(GEMDOS_Fcreate, (long) filename, 0L, 0L);
+                if (iVar1 >= 0)
+                        break;
+                error_unable_to_write();
+        }
+        _gemdos(GEMDOS_Fclose, (long) iVar1, 0L, 0L);
+}
+
+/* file_read: GEMDOS Fread with retry-then-alert error handling.  After
+   three failed attempts, throws a Retry alert and loops.
+
+   addr: file_read() */
+
+void
+file_read(fileHandle, count, buffer)
+short   fileHandle;
+long    count;
+void *  buffer;
+{
+        short   err;
+        short   retry;
+
+        retry = 0;
+        for (;;) {
+                err = _gemdos(GEMDOS_Fread, (long) fileHandle, count, (long) buffer);
+                if (err >= 0)
+                        return;
+                retry = retry + 1;
+                if (retry < 3)
+                        evnt_timer(1000, 0);
+                else
+                        form_alert(0,
+                                "[1][Bad file read.|Try re-booting.][RETRY]");
+        }
+}
+
+/* lcp_save: create + open + write + close a file, retrying on every
+   failure via error_unable_to_write() (which pops a Retry alert).
+   Original signature took (filename, size, addr) with size as short --
+   preserved verbatim.
+
+   addr: lcp_save() */
+
+void
+lcp_save(filename, size, addr)
+char *  filename;
+short   size;
+void *  addr;
+{
+        short   filehandle;
+        long    lVar1;
+
+        create_file(filename);
+
+        for (;;) {
+                filehandle = _gemdos(GEMDOS_Fopen, (long) filename, 1L, 0L);
+                if (filehandle >= 0)
+                        break;
+                error_unable_to_write();
+        }
+
+        for (;;) {
+                lVar1 = _gemdos(GEMDOS_Fwrite, (long) filehandle,
+                                (long) size, (long) addr);
+                if (lVar1 == (long) size)
+                        break;
+                error_unable_to_write();
+        }
+
+        _gemdos(GEMDOS_Fclose, (long) filehandle, 0L, 0L);
+}
+
+/* lcp_load: read 128 bytes from "hyber" into the PLAYER struct, unpack
+   the door bitfield into per-door runtime globals, and repaint the
+   palette (which may depend on lcp.sickness_level).  Returns 1 on
+   success, 0 if no save file.
+
+   addr: lcp_load() */
+
+short
+lcp_load()
+{
+        short   fileHandle;
+
+        fileHandle = _gemdos(GEMDOS_Fopen, (long) "hyber", 0L, 0L);
+        if (fileHandle < 0)
+                return 0;
+
+        file_read(fileHandle, 0x80L, &lcp);
+        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+
+        lcp_water_level         = lcp.water_level;
+        lcp_front_door_open     = lcp.door_states_and_flags & DSF_FRONT_DOOR;
+        lcp_dresser_open        = (lcp.door_states_and_flags & DSF_DRESSER)          >> 4;
+        lcp_cabinet_open        = (lcp.door_states_and_flags & DSF_KITCHEN_CABINET)  >> 3;
+        lcp_closet_door_open    = (lcp.door_states_and_flags & DSF_CLOSET_DOOR)      >> 2;
+        lcp_study_door_open     = (lcp.door_states_and_flags & DSF_STUDY_DOOR)       >> 1;
+        lcp_toilet_door_open    = (lcp.door_states_and_flags & DSF_TOILET_DOOR)      >> 5;
+        lcp_filing_cabinet_open = (lcp.door_states_and_flags & DSF_FILING_CABINET)   >> 6;
+        lcp_dog_bowl_status     = (lcp.door_states_and_flags & DSF_DOG_BOWL_MASK)    >> 7;
+        lcp_food_count          = lcp.food_supply;
+        lcp_record_playing      = lcp.record_playing;
+        lcp_tv_on               = lcp.tv_on;
+
+        lcp_update_palette_colors();
+        return 1;
+}
+
+/* lcp_enter_study_and_save: three-phase animation:
+     1. Study door closes behind the resident (SPRITE_DOOR_STUDY_1).
+     2. Optionally write PLAYER -> HYBER (do_save flag).
+     3. Study door swings back open (SPRITE_DOOR_STUDY_AJAR ->
+        SPRITE_DOOR_STUDY_WIDE_OPEN), resident walks back to the door,
+        then the door closes.
+
+   The bit-field for door_states_and_flags is repacked from the eight
+   per-door runtime globals; the food-count nibble (bits 9..11) is
+   preserved via the FE00 mask so the delivery event handler's 3-bit
+   counter survives the save.
+
+   addr: lcp_enter_study_and_save() */
+
+void
+lcp_enter_study_and_save(do_save, play_door_sound)
+BOOL16  do_save;
+BOOL16  play_door_sound;
+{
+        short   saved_x;
+        short   counter;
+
+        saved_x = lcp_x;
+
+        /* Phase 1: door closes (sprite in front of the resident). */
+        sprite_layer_flags[SPRITE_DOOR_STUDY_1] = SPRITE_IN_FRONT;
+        spritedata_select(SPRITE_DOOR_STUDY_1);
+        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_1]] = 178;
+        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_1]] =  23;
+        object_draw(object_id_door_study_closed, 178, 23);
+
+        if (play_door_sound != NO)
+                soundeffect_select(SFX_DOOR_CLOSE, 6L);
+
+        game_tick_and_animate(1);
+        counter = randomRange(15, 30);
+        game_tick_and_animate(counter);
+
+        /* Phase 2: repack door state and write HYBER. */
+        if (do_save != NO) {
+                lcp.water_level = lcp_water_level;
+                lcp.door_states_and_flags =
+                        lcp_front_door_open |
+                        (lcp_dog_bowl_status     << 7) |
+                        (lcp_filing_cabinet_open << 6) |
+                        (lcp_toilet_door_open    << 5) |
+                        (lcp_dresser_open        << 4) |
+                        (lcp_cabinet_open        << 3) |
+                        (lcp_closet_door_open    << 2) |
+                        (lcp_study_door_open     << 1) |
+                        (lcp.door_states_and_flags & DSF_PRESERVE_UPPER_MASK);
+                lcp.record_playing = lcp_record_playing;
+                lcp.tv_on          = lcp_tv_on;
+                lcp.food_supply    = lcp_food_count;
+                lcp_save("hyber", 0x80, &lcp);
+        }
+
+        /* Phase 3a: door swings ajar. */
+        sprite_layer_flags[SPRITE_DOOR_STUDY_1] = SPRITE_HIDDEN;
+        sprite_update_slots();
+        sprite_layer_flags[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
+        spritedata_select(SPRITE_DOOR_STUDY_AJAR);
+        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_AJAR]] = 178;
+        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_AJAR]] =  23;
+        object_draw(object_id_door_study_open_1, 178, 23);
+        soundeffect_select(SFX_DOOR_OPEN, 6L);
+        game_tick_and_animate(1);
+
+        /* Phase 3b: door wide open, resident visible. */
+        sprite_layer_flags[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
+        sprite_update_slots();
+        sprite_layer_flags[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
+        spritedata_select(SPRITE_DOOR_STUDY_WIDE_OPEN);
+        sprite_pending_x[sprite_slot_map[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
+        sprite_pending_y[sprite_slot_map[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
+        object_draw(object_id_door_study_open_2, 178, 23);
+        show_lcp_sprites();
+        game_tick_and_animate(1);
+
+        /* Phase 4: walk resident back to the study door. */
+        lcp_x = saved_x;
+        house_get_position_xy(POS_TOP_STUDY_DOOR,
+                              &walk_target_x, &walk_target_y);
+        action_interruptible_flag = YES;
+        lcp_walk_to_destination();
+        action_interruptible_flag = NO;
+
+        /* Phase 5: close door, clear the "study door open" flag. */
+        if (lcp_study_door_open != NO) {
+                sprite_layer_flags[SPRITE_DOOR_STUDY_WIDE_OPEN] =
+                        SPRITE_HIDDEN;
+                sprite_update_slots();
+                game_tick_and_animate(0);
+        }
+        object_draw(object_id_door_study_open_1, 178, 23);
+        game_tick_and_animate(2);
+        object_draw(object_id_door_study_closed,  178, 23);
+        soundeffect_select(SFX_DOOR_CLOSE, 6L);
+        game_tick_and_animate(2);
+        lcp_study_door_open = NO;
+}
