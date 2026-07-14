@@ -49,13 +49,13 @@ extern void     sp_lcha();
 extern void     sp_lchu();
 extern void     sc_ren8();
 extern void     clock_redraw_hands();
-extern void     object_draw();
+extern void     od_draw();
 extern void     game_simulate_one_second();
 extern void     sf_sele();
 extern void     sf_so();
 extern void     sp_sprs();
 extern void     sp_upds();
-extern void     record_player_animate_needle();
+extern void     rp_anim();
 extern void     td_nois();
 extern void     fill_top_rect_with_background();
 extern void     sc_sctd();
@@ -122,7 +122,7 @@ short   counter;
                 sub_animation_frame_counter =
                         sub_animation_frame_counter + 1;
 
-                object_draw(0, 271, 92);         /* TODO: clock frame */
+                od_draw(0, 271, 92);         /* TODO: clock frame */
                 game_simulate_one_second();
                 clock_redraw_hands();
 

@@ -44,17 +44,17 @@ extern BOOL16   bedtime_triggered_today;
 extern short    days_per_month[];
 
 /* ---- Deferred event queue (defined in events.c) ----------------------- */
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern BOOL16   in_execute_event_routine_flag;
 
 /* ---- Command / AI state ----------------------------------------------- */
 extern short    last_action;
-extern short    trigger_action;
+extern short    g_trac;
 
 /* ---- LCP position and world state ------------------------------------- */
 extern short    lcp_x;
 extern short    lcp_y;
-extern short    lcp_loaded;
+extern short    g_lcldd;
 extern short    copyprot_check_return;
 extern short    game_speed_counter;
 
@@ -73,7 +73,7 @@ extern short    g_hacur;
 extern short    g_hamod;
 extern short    g_hsfra;
 extern long     g_sfret;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern BOOL16   dog_pettable_flag;
 extern short    g_wtx;
 extern short    g_wty;
@@ -129,7 +129,7 @@ extern short    g_sfplf;
 extern short    g_sfpli;
 
 /* ---- Leisure / music / fire globals ---------------------------------- */
-extern BOOL16   record_browsing_active;
+extern BOOL16   g_rbact;
 extern char *   midi_song_buffer;
 extern short    org_song_file_count;
 extern BOOL16   fire_active_flag;
@@ -141,9 +141,9 @@ extern short    g_srsdc;
 extern short    g_cdibp;
 
 /* ---- Letter subsystem ------------------------------------------------- */
-extern char *   letter_txt_content;
-extern char *   letter_line_ptr[];
-extern char *   letter_greeting_table[];
+extern char *   g_lttx;
+extern char *   g_ltlp[];
+extern char *   g_ltg[];
 extern char *   month_name_table[];
 extern short    g_ltcwt[];
 extern char     g_ltscb[];
@@ -182,7 +182,7 @@ extern short    ptsout[];
 extern short *  vdipb[];
 
 /* ---- Screen buffer pointers ------------------------------------------ */
-extern void *   dest_screenbase_ptr;
+extern void *   g_dscp;
 
 /* ---- Palette state --------------------------------------------------- */
 extern short    main_colorpalette[];
@@ -214,7 +214,7 @@ extern long             g_mtcou;
 extern short            midi_direct_write_mode;
 extern short            g_mtdiv;
 extern short            g_mtpre;
-extern short            midi_event_duration;
+extern short            g_medu;
 extern short            midi_next_event_tick;
 extern short            midi_last_processed_tick;
 extern BOOL16           g_msmsa;
@@ -222,10 +222,10 @@ extern BOOL16           g_msmsa;
 extern unsigned char    midi_channel_map[];
 extern short            g_mcpro[];
 extern short            midi_program_map[];
-extern unsigned char    midi_scale_transpose_table[];
-extern unsigned char    midi_scale_mask_table[];
-extern BOOL16           midi_output_enabled;
-extern unsigned char    midi_event[];
+extern unsigned char    g_mstr[];
+extern unsigned char    g_msmk[];
+extern BOOL16           g_moen;
+extern unsigned char    g_meve[];
 extern long             g_momap;
 
 /* ---- PSG channel state ---------------------------------------------- */
@@ -249,10 +249,10 @@ extern unsigned char *  midi_note_length_params[];
 extern char             g_sfDoB[];
 
 /* ---- Screen buffer state -------------------------------------------- */
-extern void *   screen_logbase;
+extern void *   g_srlgb;
 extern void *   save_logbase;
-extern void *   screen_ptr;
-extern short *  dest_scr_buffer;
+extern void *   g_srptr;
+extern short *  g_dsb;
 
 /* ---- Clock display ---------------------------------------------------- */
 extern short    g_cmmin;
@@ -276,9 +276,9 @@ extern short    g_obtah[];
 extern short    g_setaw[];
 extern short    g_setah[];
 
-/* Legacy pointer form retained for object_draw / render.c callers that
+/* Legacy pointer form retained for od_draw / render.c callers that
    walk the mfdb table by index arithmetic. */
-extern void *   object_tab_mfdb;
+extern void *   g_otmfd;
 /* MFDB_screen_ptr now declared with the frame-timing MFDBs below. */
 
 /* ---- Record player / letter needle state (packed inside letter subsys) */
@@ -343,21 +343,21 @@ extern short    g_tp3yc[];
 extern short    g_tpcoi[];
 
 /* ---- NLP parser tables (populated at runtime from vocabulary data)  */
-extern unsigned char    _entered_word_bytes[];
+extern unsigned char    g_ewb[];
 extern char             _user_input_buffer[];
 extern short            _happiness_to_priority[];
 extern char *           valid_word_table[];
 extern short            word__entered_to_position[];
-extern short            _enteredword_to_bit[];
+extern short            g_ew2b[];
 extern unsigned char    _bitmask_1_2_4_8_10_20_40_80_0[];
-extern WORD_TO_ACTION   _enteredword_to_action[];
+extern WORD_TO_ACTION   g_ew2a[];
 
 /* ---- Mini-game state -------------------------------------------------- */
-extern char *   anagram_words_buffer;
-extern char *   word_puzzle_data_buffer;
+extern char *   g_agwb;
+extern char *   g_wpdb;
 extern short *  cards_data;
 
-extern short    word_puzzle_current_index;
+extern short    g_wpci;
 extern short    g_agclc;
 extern short    g_aggun;
 extern short    g_agacu;
@@ -366,7 +366,7 @@ extern short    g_agwol;
 extern char     g_aginb[];
 extern char     g_agorw[];
 extern char     g_agscw[];
-extern char *   anagram_wrong_guess_messages[];
+extern char *   g_agwgm[];
 
 extern short    _poker_round_count;
 extern BOOL16   poker_quit_flag;
@@ -388,7 +388,7 @@ extern MFDB     cards_MFDB_blocks[];
 extern MFDB     MFDB_dest_screenbase_cards;
 
 /* ---- Delivery / phone / petting flags -------------------------------- */
-extern BOOL16   delivery_is_for_dog;
+extern BOOL16   g_dvdog;
 extern BOOL16   phone_hangup_flag;
 extern BOOL16   g_ptdoa;
 
@@ -445,22 +445,22 @@ extern short    dog_initialized;
 
 /* ---- Hardware sprite double-buffer (8 slots) -------------------------- */
 extern short    g_sepef[];
-extern short *  sprite_pending_image[];
-extern short *  sprite_pending_mask[];
+extern short *  g_sepim[];
+extern short *  g_sepms[];
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_sepeh[];
 extern short    g_sepew[];
-extern short *  sprite_active_image[];
-extern short *  sprite_active_mask[];
+extern short *  g_seaim[];
+extern short *  g_seams[];
 extern short    g_seacx[];
 extern short    g_seacy[];
 extern short    g_seach[];
 extern short    g_seacw[];
 
 /* ---- Sprite definition arrays (indexed by SPRITE_ID, 60 slots) -------- */
-extern short *  sprite_def_image[];
-extern short *  sprite_def_mask[];
+extern short *  g_sedim[];
+extern short *  g_sedms[];
 extern short    g_sedeh[];
 extern short    g_sedew[];
 extern short    g_selaf[];

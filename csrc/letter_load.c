@@ -1,6 +1,6 @@
 /*
  * letter_load.c -- decompress LETTER.TXT and index it into
- *                  letter_line_ptr[] for a_writl().
+ *                  g_ltlp[] for a_writl().
  *
  * fr_reac: nibble-based token decoder.  The on-disk file
  * format is:
@@ -13,10 +13,10 @@
  *   nibble in 0..14  ->  emit compression_tokens[nibble]
  *   nibble == 15     ->  read two more nibbles for a literal 8-bit byte
  *
- * file_load_letter_template: after decompression, letter_txt_content
+ * file_load_letter_template: after decompression, g_lttx
  * is a stream of newline-terminated (well, control-char-terminated)
  * strings.  We walk it exactly 360 times, recording the start of each
- * line into letter_line_ptr[i] and then skipping past the terminator
+ * line into g_ltlp[i] and then skipping past the terminator
  * run (any bytes < ' ') to the start of the next line.
  *
  * Fidelity note: the 1985 code passes the *advanced* fbuffer to
@@ -34,8 +34,8 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern char *   letter_txt_content;
-extern char *   letter_line_ptr[];
+extern char *   g_lttx;
+extern char *   g_ltlp[];
 extern unsigned char compression_tokens[];
 #include <osbind.h>
 
@@ -121,7 +121,7 @@ short           outsize;
 }
 
 /* file_load_letter_template: decompress LETTER.TXT into
-   letter_txt_content and populate the 360-entry letter_line_ptr[]
+   g_lttx and populate the 360-entry g_ltlp[]
    line-start table.  Called by a_writl after the buffer
    is allocated.
 
@@ -138,12 +138,12 @@ file_load_letter_template()
         short   linecount;
 
         fr_reac("letter.txt",
-                             (unsigned char *) letter_txt_content,
+                             (unsigned char *) g_lttx,
                              10496);
 
-        i = letter_txt_content;
+        i = g_lttx;
         for (linecount = 0; linecount < 360; linecount = linecount + 1) {
-                letter_line_ptr[linecount] = i;
+                g_ltlp[linecount] = i;
 
                 /* Advance past the line body -- anything with a
                    printable byte value.  0x21 = '!' matches the

@@ -7,7 +7,7 @@
  * below so the compilable-on-host promise holds without any observable
  * audio effect.
  *
- * addr: midi_out_write_byte(), psg_copy_envelope_params(),
+ * addr: mowrit(), psg_copy_envelope_params(),
  *       psg_write_register(), psg_set_mixer()
  */
 
@@ -19,26 +19,26 @@
 /* Host scratch bytes -- each hardware register aliases one of these
    via #defines in st_io.h.  volatile keeps the compiler from optimising
    the writes away. */
-volatile unsigned char  host_midictl_scratch    = 2;    /* TDRE always set */
-volatile unsigned char  host_midi_scratch       = 0;
-volatile unsigned char  host_giselect_scratch   = 0;
-volatile unsigned char  host_giwrite_scratch    = 0;
+volatile unsigned char  g_hmc    = 2;    /* TDRE always set */
+volatile unsigned char  g_hms       = 0;
+volatile unsigned char  g_hgis   = 0;
+volatile unsigned char  g_hgiw    = 0;
 #endif
 
-/* midi_out_write_byte: poll the ACIA status register for
+/* mowrit: poll the ACIA status register for
    TDRE (Transmit Data Register Empty, bit 1), then write one byte
    to the data register.  Used by the "direct write" path of
    mq_dise when the sequencer is in speed-critical
    mode (bypassing the XBIOS Midiws trap).
 
-   On the host the TDRE bit is preseeded to 1 (see host_midictl_scratch
+   On the host the TDRE bit is preseeded to 1 (see g_hmc
    above) so the poll returns immediately -- otherwise host builds
    would spin forever.
 
-   addr: midi_out_write_byte() */
+   addr: mowrit() */
 
 void
-midi_out_write_byte(byte)
+mowrit(byte)
 char    byte;
 {
         unsigned char   status;

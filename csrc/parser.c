@@ -9,12 +9,12 @@
  *      words nudge the priority up (making the command less likely to
  *      actually fire, since higher = deprioritised).
  *   3. For each recognised WORD_ID, set one bit in the appropriate
- *      position slot of _entered_word_bytes[] using the two lookup
+ *      position slot of g_ewb[] using the two lookup
  *      tables word__entered_to_position[] (which of the 10 bytes) and
- *      _enteredword_to_bit[] (which of the 8 bits).
- *   4. Walk _enteredword_to_action[] in order.  Each entry is a per-
+ *      g_ew2b[] (which of the 8 bits).
+ *   4. Walk g_ew2a[] in order.  Each entry is a per-
  *      position bitmask; a row matches if every bit set in
- *      entry.table[i] is also set in _entered_word_bytes[i], for all
+ *      entry.table[i] is also set in g_ewb[i], for all
  *      i in 0..9.  First match wins.  Table is terminated by a row
  *      whose table[0] byte is 0xff.
  *
@@ -31,14 +31,14 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    g_aprio;
-extern unsigned char    _entered_word_bytes[];
+extern unsigned char    g_ewb[];
 extern char             _user_input_buffer[];
 extern short            _happiness_to_priority[];
 extern char *           valid_word_table[];
 extern short            word__entered_to_position[];
-extern short            _enteredword_to_bit[];
+extern short            g_ew2b[];
 extern unsigned char    _bitmask_1_2_4_8_10_20_40_80_0[];
-extern WORD_TO_ACTION   _enteredword_to_action[];
+extern WORD_TO_ACTION   g_ew2a[];
 extern short    randomRange();                  /* random.c */
 extern short    randomRange();
 
@@ -135,7 +135,7 @@ char *  str;
 
         /* Clear the accumulated position/bit mask. */
         for (i = 0; i < 10; i = i + 1)
-                _entered_word_bytes[i] = 0;
+                g_ewb[i] = 0;
 
         /* Seed the priority from happiness + a small random nudge. */
         rnd = randomRange(0, 3);
@@ -150,8 +150,8 @@ char *  str;
                         g_aprio = g_aprio + 4;
                 } else if (entered_word > 0) {
                         short   pos = word__entered_to_position[entered_word];
-                        short   bit = _enteredword_to_bit[entered_word];
-                        _entered_word_bytes[pos] |=
+                        short   bit = g_ew2b[entered_word];
+                        g_ewb[pos] |=
                                 _bitmask_1_2_4_8_10_20_40_80_0[bit];
                 }
         }
@@ -160,19 +160,19 @@ char *  str;
            the 0xff sentinel. */
         action_index = 0;
         for (;;) {
-                if (_enteredword_to_action[action_index].table[0] == 0xff)
+                if (g_ew2a[action_index].table[0] == 0xff)
                         return ACTION_NONE;
                 for (i = 0; i < 10; i = i + 1) {
                         unsigned char   required =
-                                _enteredword_to_action[action_index].table[i];
-                        if ((_entered_word_bytes[i] & required) != required)
+                                g_ew2a[action_index].table[i];
+                        if ((g_ewb[i] & required) != required)
                                 break;
                 }
                 if (i >= 10) {
                         g_aprio = g_aprio +
-                                _enteredword_to_action[action_index].priority_offset;
+                                g_ew2a[action_index].priority_offset;
                         return (short) (char)
-                                _enteredword_to_action[action_index].action;
+                                g_ew2a[action_index].action;
                 }
                 action_index = action_index + 1;
         }

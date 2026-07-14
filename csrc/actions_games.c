@@ -28,12 +28,12 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern BOOL16   intro_sequence_active;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern short    PLAYER_STATE_ARRAY[];
@@ -69,7 +69,7 @@ extern void     sp_ssco();
 extern void     sp_ss02();
 extern void     sp_sprs();
 extern void     sp_upds();
-extern void     object_draw();
+extern void     od_draw();
 extern void     fill_top_rect_with_background();
 extern void     a_watat();
 extern void     a_opcfc();
@@ -79,11 +79,11 @@ extern void     a_wandi();
 /* Mini-game entry points.  Each lives in its own games/*.c when we
    port them for real; for now they're stubs in stubs.c that return
    immediately. */
-extern void     anagram_main();
+extern void     ag_main();
 extern void     poker_war_main();
 extern void     poker_main();
 extern void     poker_blackjack_main();
-extern void     word_puzzle_main();
+extern void     wp_main();
 
 /* a_playc: sit and type.  The 3 state constants in
    PLAYER_STATE_ARRAY are the two typing poses plus the resting
@@ -129,7 +129,7 @@ a_playc()
         while ((short) type_counter <
                (short) ((random_seed & 0x1ff) | 0x80) &&
                intro_sequence_active == NO &&
-               triggered_event_list[0] == ACTION_NONE) {
+               g_trel[0] == ACTION_NONE) {
                 random_duration = (unsigned short) Random();
                 is_even_frame   = ((type_counter & 1) == 0);
 
@@ -222,10 +222,10 @@ a_plaag()
                 lcp_state = STATE_BEND_DOWN;
                 game_tick_and_animate(1);
                 lcp_state = STATE_REACH_FORWARD;
-                object_draw(g_obi13, 258, 47);
+                od_draw(g_obi13, 258, 47);
                 game_tick_and_animate(2);
                 lcp_state = STATE_PICK_UP_FROM_FLOOR;
-                object_draw(g_obi14, 258, 47);
+                od_draw(g_obi14, 258, 47);
                 game_tick_and_animate(2);
                 lcp_filing_cabinet_open = YES;
                 lcp_state = STATE_BEND_DOWN;
@@ -269,7 +269,7 @@ a_plaag()
                                               &g_wty);
                         g_wty = g_wty + 6;
                         g_wtx = g_wtx + 2;
-                        action_interruptible_flag = YES;
+                        g_actif = YES;
                         lcp_walk_to_destination();
 
                         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
@@ -308,11 +308,11 @@ a_plaag()
 
                         /* Dispatch. */
                         switch (keycode) {
-                        case '1': anagram_main();         break;
+                        case '1': ag_main();         break;
                         case '2': poker_war_main();       break;
                         case '3': poker_main();           break;
                         case '4': poker_blackjack_main(); break;
-                        case '5': word_puzzle_main();     break;
+                        case '5': wp_main();     break;
                         }
 
                         /* Pack up. */
@@ -349,7 +349,7 @@ a_plaag()
                         g_lcyof = NO;
                         lcp_wait_head_reach_target();
                         a_opcfc();
-                        action_interruptible_flag = NO;
+                        g_actif = NO;
                         dog_visible = NO;
                         return;
                 }
@@ -365,9 +365,9 @@ a_plaag()
                 g_wtx    = lcp_x;
                 walk_result      = get_floor_number_from_y(lcp_y);
                 g_wty    = floor_center_y_coords[walk_result - 1];
-                action_interruptible_flag = YES;
+                g_actif = YES;
                 lcp_walk_to_destination();
-                action_interruptible_flag = NO;
+                g_actif = NO;
 
                 lcp_facing_direction   = FACING_RIGHT;
                 lcp_state              = STATE_STAND_SIDE_VIEW;
@@ -389,9 +389,9 @@ a_plaag()
                 game_tick_and_animate(0);
                 house_get_position_xy(POS_TOP_FILING_CABINET,
                                       &g_wtx, &g_wty);
-                action_interruptible_flag = YES;
+                g_actif = YES;
                 lcp_walk_to_destination();
-                action_interruptible_flag = NO;
+                g_actif = NO;
 
                 lcp_state              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;

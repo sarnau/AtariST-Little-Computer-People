@@ -33,13 +33,13 @@ extern short    g_obi02;
 extern short    g_obibg;
 extern short    vdihandle;
 extern short    _vdi_color_table[];
-extern void *   dest_screenbase_ptr;
-extern short *  dest_scr_buffer;
+extern void *   g_dscp;
+extern short *  g_dsb;
 extern short    g_cmmin;
 extern short    g_chhou;
 extern short    g_obtaw[];
 extern short    g_obtah[];
-extern void *   object_tab_mfdb;
+extern void *   g_otmfd;
 extern MFDB     MFDB_screen_ptr;        /* alias with older name */
 extern void     house_get_position_xy();
 extern short    randomRange();                  /* random.c */
@@ -47,7 +47,7 @@ extern void     lcp_update_palette_colors();    /* render.c  */
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
 extern void     sf_sele();
-extern void     play_soundeffect_tv_click();
+extern void     p_sftvc();
 extern void     td_line();
 extern void     li_lool();
 extern void     sc_sdtb();
@@ -79,30 +79,30 @@ clock_redraw_hands()
         clock_draw_hands(time_minutes, time_hours, COLOR_grey);
 }
 
-/* object_draw: blit a pre-loaded background object at (x, y) via
+/* od_draw: blit a pre-loaded background object at (x, y) via
    vdi_copy_rect (VRO copy S_ONLY = replace, no transparency).  Each
    object has its width/height stored in g_obtaw/height[] and
-   its MFDB source rect in object_tab_mfdb offset by object_index.
-   addr: object_draw() */
+   its MFDB source rect in g_otmfd offset by g_oiidx.
+   addr: od_draw() */
 
 extern void     vdi_copy_rect();
 
 void
-object_draw(object_index, x, y)
-short   object_index;
+od_draw(g_oiidx, x, y)
+short   g_oiidx;
 short   x;
 short   y;
 {
         vdi_copy_rect(
                 vdihandle, S_ONLY,
-                (MFDB *) ((char *) object_tab_mfdb + object_index),
+                (MFDB *) ((char *) g_otmfd + g_oiidx),
                 &MFDB_screen_ptr,
                 0, 0,
-                g_obtaw[object_index]  - 1,
-                g_obtah[object_index] - 1,
+                g_obtaw[g_oiidx]  - 1,
+                g_obtah[g_oiidx] - 1,
                 x, y,
-                x + g_obtaw[object_index]  - 1,
-                y + g_obtah[object_index] - 1);
+                x + g_obtaw[g_oiidx]  - 1,
+                y + g_obtah[g_oiidx] - 1);
 }
 
 /* fill_top_rect_with_background: clear the top text strip (rows 0
@@ -121,23 +121,23 @@ short   max_y;
 {
         short   y;
 
-        /* dest_screenbase_ptr is the 8-row-tall top strip within
-           dest_scr_buffer -- offset 0x7f words (=254 bytes) forward
+        /* g_dscp is the 8-row-tall top strip within
+           g_dsb -- offset 0x7f words (=254 bytes) forward
            to hit the row-0 baseline. */
-        dest_screenbase_ptr = (void *) (dest_scr_buffer + 0x7f);
+        g_dscp = (void *) (g_dsb + 0x7f);
 
         for (y = 0; y < max_y - 1; y = y + 1) {
                 if (max_y < 70)
-                        sc_firw(dest_screenbase_ptr, y);
+                        sc_firw(g_dscp, y);
                 else
-                        sc_firs(dest_screenbase_ptr, y);
+                        sc_firs(g_dscp, y);
         }
-        sc_firb(dest_screenbase_ptr, max_y - 1);
+        sc_firb(g_dscp, max_y - 1);
 }
 
 /* sc_sctd, td_nois -> render_extra.c */
 
-/* record_player_animate_needle -> render_extra.c */
+/* rp_anim -> render_extra.c */
 
 /* ---- TV toggle ------------------------------------------------------- */
 
@@ -162,7 +162,7 @@ tt_on()
         game_tick_and_animate(2);
         li_lool();
         lcp_tv_on = YES;
-        play_soundeffect_tv_click();
+        p_sftvc();
         return 0;
 }
 
@@ -211,12 +211,12 @@ sc_drfc()
                 return;
 
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
-        object_draw(g_obi02, 46, 140);
+        od_draw(g_obi02, 46, 140);
 
-        if (cabinet_content > 0) object_draw(g_obibg, 50, 159);
-        if (cabinet_content > 1) object_draw(g_obibg, 58, 159);
-        if (cabinet_content > 2) object_draw(g_obibg, 50, 151);
-        if (cabinet_content > 3) object_draw(g_obibg, 58, 151);
+        if (cabinet_content > 0) od_draw(g_obibg, 50, 159);
+        if (cabinet_content > 1) od_draw(g_obibg, 58, 159);
+        if (cabinet_content > 2) od_draw(g_obibg, 50, 151);
+        if (cabinet_content > 3) od_draw(g_obibg, 58, 151);
 }
 
 /* ---- Water tank level bar (VDI polylines) ---------------------------- */

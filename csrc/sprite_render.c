@@ -34,8 +34,8 @@ extern MFDB     g_semfi[];
 extern MFDB     g_semfm[];
 extern short    g_sepex[];
 extern short    g_sepey[];
-extern short *  sprite_active_image[];
-extern short *  sprite_active_mask[];
+extern short *  g_seaim[];
+extern short *  g_seams[];
 extern short    g_seach[];
 extern short    g_seacw[];
 extern void     vdi_copy_rect();
@@ -81,9 +81,9 @@ short   index;
         h  = g_seach[index];
 
         sp_iniM(0L, &g_semfi[index],
-                         sprite_active_image[index], w, h);
+                         g_seaim[index], w, h);
         sp_iniM(0L, &g_semfm[index],
-                         sprite_active_mask[index],  w, h);
+                         g_seams[index],  w, h);
 
         vdi_copy_rect(vdihandle, NOTS_AND_D,
                       &g_semfm[index], &g_srmfd,

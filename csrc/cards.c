@@ -33,7 +33,7 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern void *   dest_screenbase_ptr;
+extern void *   g_dscp;
 extern short *  cards_data;
 extern MFDB     cards_MFDB_blocks[];
 extern MFDB     MFDB_dest_screenbase_cards;
@@ -100,6 +100,6 @@ poker_load_card_graphics()
         /* Destination MFDB for the game display area (full-width strip
            of 320 pixels by 77 rows). */
         sp_iniM(0L, &MFDB_dest_screenbase_cards,
-                         dest_screenbase_ptr,
+                         g_dscp,
                          (short) 320, (short) 77);
 }

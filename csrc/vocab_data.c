@@ -11,7 +11,7 @@
  * ACTION_NONE.
  *
  * addr: valid_word_table[], word__entered_to_position[],
- *       _enteredword_to_bit[], _enteredword_to_action[]
+ *       g_ew2b[], g_ew2a[]
  */
 
 #include "types.h"
@@ -83,7 +83,7 @@ short word__entered_to_position[160] = {
 
 };
 
-short _enteredword_to_bit[160] = {
+short g_ew2b[160] = {
     3, 0, 1, 2, 2, 4, 4, 5, 5, 5, 
     5, 5, 6, 6, 6, 6, 6, 6, 7, 0, 
     0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 
@@ -103,7 +103,7 @@ short _enteredword_to_bit[160] = {
 
 };
 
-WORD_TO_ACTION _enteredword_to_action[34] = {
+WORD_TO_ACTION g_ew2a[34] = {
     { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 }, 24, 15 },
     { { 0x00, 0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00 }, 20, 4 },
     { { 0x02, 0x04, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00 }, 20, 2 },

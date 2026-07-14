@@ -34,11 +34,11 @@ BOOL16  bedtime_triggered_today         = NO;
 BOOL16  in_execute_event_routine_flag   = NO;
 
 short   last_action                     = ACTION_NONE;
-short   trigger_action                  = ACTION_NONE;
+short   g_trac                  = ACTION_NONE;
 
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
-short   lcp_loaded                      = 0;
+short   g_lcldd                      = 0;
 short   copyprot_check_return           = 1;
 short   game_speed_counter              = 5;
 
@@ -54,7 +54,7 @@ short   g_hacur               = 0;
 short   g_hamod                  = 0;
 short   g_hsfra               = 0;
 long    g_sfret     = 0;
-BOOL16  action_interruptible_flag       = NO;
+BOOL16  g_actif       = NO;
 BOOL16  dog_pettable_flag               = NO;
 short   g_wtx                   = 0;
 short   g_wty                   = 0;
@@ -99,7 +99,7 @@ short   dog_food_bowl_change            = 0;
 short   g_sfplf        = NO;
 short   g_sfpli          = 0;
 
-BOOL16  record_browsing_active          = NO;
+BOOL16  g_rbact          = NO;
 char *  midi_song_buffer                = (char *) 0;
 short   org_song_file_count             = 8;
 BOOL16  fire_active_flag                = NO;
@@ -110,15 +110,15 @@ short   text_scroll_timer               = 0;
 short   g_srsdc        = 0;
 short   g_cdibp        = 0;
 
-/* Letter subsystem storage.  letter_line_ptr[] and _greeting_table are
+/* Letter subsystem storage.  g_ltlp[] and _greeting_table are
    populated at runtime from letter.txt (see file_load_letter_template);
    NULL entries make lt_tysa a safe no-op on the
    host build until the template loader is ported.  360 slots covers
    the 4 sections × 96 pointers (section 3 uses 72) shape referenced by
    a_writl. */
-char *  letter_txt_content              = (char *) 0;
-char *  letter_line_ptr[512]            = { (char *) 0 };
-char *  letter_greeting_table[8]        = { (char *) 0 };
+char *  g_lttx              = (char *) 0;
+char *  g_ltlp[512]            = { (char *) 0 };
+char *  g_ltg[8]        = { (char *) 0 };
 char *  month_name_table[12] = {
         "January", "February", "March",     "April",
         "May",     "June",     "July",      "August",
@@ -174,7 +174,7 @@ short   intout[128];
 short   ptsout[128];
 short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
 
-void *  dest_screenbase_ptr             = (void *) 0;
+void *  g_dscp             = (void *) 0;
 
 /* main_colorpalette[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.  Set at
@@ -258,7 +258,7 @@ long            g_mtcou       = 0;
 short           midi_direct_write_mode  = 0;
 short           g_mtdiv       = 100;
 short           g_mtpre     = 100;
-short           midi_event_duration     = 100;
+short           g_medu     = 100;
 short           midi_next_event_tick    = 100;
 short           midi_last_processed_tick= 100;
 BOOL16          g_msmsa   = NO;
@@ -274,7 +274,7 @@ short           midi_program_map[16];
    0..131 (C-1..G9).  Populated by mq_bust at song
    start; each note maps to either itself (identity) or a shifted note
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
-unsigned char   midi_scale_transpose_table[132];
+unsigned char   g_mstr[132];
 
 /* Chord mask lookup: 7-bit mask per scale-value 0..15 selecting which
    of the 7 diatonic scale degrees are present.  Bit order (per
@@ -289,7 +289,7 @@ unsigned char   midi_scale_transpose_table[132];
    these are the standard set of Western scales/modes any 1985 game
    audio tool would ship.  Exact byte-values pending a Ghidra data
    dump, but the diatonic-mask semantics are correct. */
-unsigned char   midi_scale_mask_table[16] = {
+unsigned char   g_msmk[16] = {
         /* 0: unused    */ 0x7F,
         /* 1: chromatic */ 0x7F,     /* all degrees; scale table stays identity */
         /* 2: major     */ 0x7F,     /* 1234567 = 1111111 */
@@ -308,8 +308,8 @@ unsigned char   midi_scale_mask_table[16] = {
         /*15: diminished*/ 0x55      /* octatonic (8 notes) */
 };
 
-BOOL16          midi_output_enabled     = YES;
-unsigned char   midi_event[4];
+BOOL16          g_moen     = YES;
+unsigned char   g_meve[4];
 
 /* g_momap: the "maxPosition" argument passed to
    mq_inis at song start.  0 means "no explicit end-of-song
@@ -351,10 +351,10 @@ unsigned char * midi_note_length_params[32];
    effect starts. */
 char            g_sfDoB[256];
 
-void *  screen_logbase                  = (void *) 0;
+void *  g_srlgb                  = (void *) 0;
 void *  save_logbase                    = (void *) 0;
-void *  screen_ptr                      = (void *) 0;
-short * dest_scr_buffer                 = (short *) 0;
+void *  g_srptr                      = (void *) 0;
+short * g_dsb                 = (short *) 0;
 
 short   g_cmmin                    = 0;
 short   g_chhou                      = 0;
@@ -384,7 +384,7 @@ unsigned char   sprites_files[14000];
 MFDB    g_obtmt[64];
 MFDB    g_setmt[64];
 
-void *  object_tab_mfdb                 = g_obtmt;
+void *  g_otmfd                 = g_obtmt;
 short   g_obtaw[64];
 short   g_obtah[64];
 short   g_setaw[64];
@@ -501,7 +501,7 @@ short   g_tpcoi[4]     = { 2, 3, 4, 5 };
    Populated below by a Python generator run offline; see the parser
    test for verification that "please play a game" now matches. */
 
-unsigned char   _entered_word_bytes[10];
+unsigned char   g_ewb[10];
 char            _user_input_buffer[32];
 short           _happiness_to_priority[3]        = { 2, 4, 6 };
 unsigned char   _bitmask_1_2_4_8_10_20_40_80_0[9] = {
@@ -509,11 +509,11 @@ unsigned char   _bitmask_1_2_4_8_10_20_40_80_0[9] = {
 };
 
 /* ---- Mini-game storage ----------------------------------------------- */
-char *          anagram_words_buffer            = (char *) 0;
-char *          word_puzzle_data_buffer         = (char *) 0;
+char *          g_agwb            = (char *) 0;
+char *          g_wpdb         = (char *) 0;
 short *         cards_data                      = (short *) 0;
 
-short           word_puzzle_current_index       = 0;
+short           g_wpci       = 0;
 short           g_agclc              = 0;
 short           g_aggun            = 1;
 short           g_agacu          = 0;
@@ -522,7 +522,7 @@ short           g_agwol             = 0;
 char            g_aginb[12];
 char            g_agorw[12];
 char            g_agscw[12];
-char *          anagram_wrong_guess_messages[3] = {
+char *          g_agwgm[3] = {
         "Nope, try again!",
         "Not quite...",
         "Sorry, wrong guess."
@@ -545,6 +545,6 @@ short           g_ppdrp[26];
 MFDB            cards_MFDB_blocks[54]           = { { 0 } };
 MFDB            MFDB_dest_screenbase_cards      = { 0 };
 
-BOOL16  delivery_is_for_dog             = NO;
+BOOL16  g_dvdog             = NO;
 BOOL16  phone_hangup_flag               = NO;
 BOOL16  g_ptdoa              = NO;

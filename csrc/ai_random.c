@@ -8,9 +8,9 @@
  * relaxed table; sickness locks it to "sleep".
  *
  * Tables:
- *   action_table_active[16]     -- morning / early day (0..6 h since wake)
- *   action_table_moderate[16]   -- midday (7..12 h since wake)
- *   action_table_relaxed[16]    -- evening (13..17 h since wake)
+ *   g_atact[16]     -- morning / early day (0..6 h since wake)
+ *   g_atmod[16]   -- midday (7..12 h since wake)
+ *   g_atrel[16]    -- evening (13..17 h since wake)
  *
  * activity_schedule_table[8][3] is indexed by activity_level and by
  * (hours_since_wake / 2) % 3 to pick the effective table for the roll.
@@ -40,12 +40,11 @@ extern short    randomRange();
 
 /* Three action tables (16 entries each) and the schedule indirection.
    Values match Ghidra activity_schedule_table[3][8] at 0x2b96e and
-   action_table_active/moderate/relaxed at 0x2b8fe/0x2b91e/0x2b93e. */
+   g_atact/moderate/relaxed at 0x2b8fe/0x2b91e/0x2b93e. */
 extern short *  activity_schedule_table[];      /* pointer array */
-extern short    action_table_active[];
-extern short    action_table_moderate[];
-extern short    action_table_relaxed[];
-extern short    calc_weekday();
+extern short    g_atact[];
+extern short    g_atmod[];
+extern short    g_atrel[];
 
 /* check_time_based_actions: pick a random action for right now.
    Returns ACTION_NONE if the resident is sleeping and the time-of-day
@@ -90,16 +89,16 @@ check_time_based_actions()
         for (;;) {
                 if (table_pick == 0) {
                         action_index = randomRange(0, 15);
-                        if (action_table_active[action_index] != last_action)
-                                return action_table_active[action_index];
+                        if (g_atact[action_index] != last_action)
+                                return g_atact[action_index];
                 } else if (table_pick == 1) {
                         action_index = randomRange(0, 15);
-                        if (action_table_moderate[action_index] != last_action)
-                                return action_table_moderate[action_index];
+                        if (g_atmod[action_index] != last_action)
+                                return g_atmod[action_index];
                 } else if (table_pick == 2) {
                         action_index = randomRange(0, 15);
-                        if (action_table_relaxed[action_index] != last_action)
-                                return action_table_relaxed[action_index];
+                        if (g_atrel[action_index] != last_action)
+                                return g_atrel[action_index];
                 } else {
                         /* Sleep bucket -- either bed or nothing. */
                         if (lcp.is_sleeping == NO)

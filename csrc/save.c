@@ -9,13 +9,13 @@
  *   create_file()          -- ensures the target exists via GEMDOS Fcreate
  *   fr_read()            -- retrying GEMDOS Fread with error alert
  *   lcp_save()             -- writes N bytes to a named file (128 in practice)
- *   lcp_load()             -- reads 128 bytes and unpacks
+ *   lc_load()             -- reads 128 bytes and unpacks
  *                            door_states_and_flags into per-door globals
  *   lcp_enter_study_and_save() -- packs runtime state back into the PLAYER
  *                            struct, calls lcp_save, and runs the study
  *                            enter/exit animation.
  *
- * addr: create_file(), fr_read(), lcp_save(), lcp_load(),
+ * addr: create_file(), fr_read(), lcp_save(), lc_load(),
  *       lcp_enter_study_and_save()
  */
 
@@ -29,7 +29,7 @@
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    lcp_x;
 extern short    lcp_water_level;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern void     game_tick_and_animate();
@@ -59,7 +59,7 @@ extern void     lcp_update_palette_colors();    /* render.c  */
 
 /* Externals resolved elsewhere. */
 extern void     sp_sprs();
-extern void     object_draw();
+extern void     od_draw();
 extern void     sf_sele();
 extern void     sp_upds();
 extern void     lcp_update_palette_colors();
@@ -186,15 +186,15 @@ void *  addr;
         _gemdos(GEMDOS_Fclose, (long) filehandle, 0L, 0L);
 }
 
-/* lcp_load: read 128 bytes from "hyber" into the PLAYER struct, unpack
+/* lc_load: read 128 bytes from "hyber" into the PLAYER struct, unpack
    the door bitfield into per-door runtime globals, and repaint the
    palette (which may depend on lcp.sickness_level).  Returns 1 on
    success, 0 if no save file.
 
-   addr: lcp_load() */
+   addr: lc_load() */
 
 short
-lcp_load()
+lc_load()
 {
         short   fileHandle;
 
@@ -237,9 +237,9 @@ lcp_load()
    addr: lcp_enter_study_and_save() */
 
 void
-lcp_enter_study_and_save(do_save, play_door_sound)
+lcp_enter_study_and_save(do_save, p_dosnd)
 BOOL16  do_save;
-BOOL16  play_door_sound;
+BOOL16  p_dosnd;
 {
         short   saved_x;
         short   counter;
@@ -251,9 +251,9 @@ BOOL16  play_door_sound;
         sp_sprs(SPRITE_DOOR_STUDY_1);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] =  23;
-        object_draw(g_obids, 178, 23);
+        od_draw(g_obids, 178, 23);
 
-        if (play_door_sound != NO)
+        if (p_dosnd != NO)
                 sf_sele(SFX_DOOR_CLOSE, 6L);
 
         game_tick_and_animate(1);
@@ -286,7 +286,7 @@ BOOL16  play_door_sound;
         sp_sprs(SPRITE_DOOR_STUDY_AJAR);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        object_draw(g_obi07, 178, 23);
+        od_draw(g_obi07, 178, 23);
         sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
 
@@ -297,7 +297,7 @@ BOOL16  play_door_sound;
         sp_sprs(SPRITE_DOOR_STUDY_WIDE_OPEN);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
-        object_draw(g_obi08, 178, 23);
+        od_draw(g_obi08, 178, 23);
         show_lcp_sprites();
         game_tick_and_animate(1);
 
@@ -305,9 +305,9 @@ BOOL16  play_door_sound;
         lcp_x = saved_x;
         house_get_position_xy(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         /* Phase 5: close door, clear the "study door open" flag. */
         if (lcp_study_door_open != NO) {
@@ -316,9 +316,9 @@ BOOL16  play_door_sound;
                 sp_upds();
                 game_tick_and_animate(0);
         }
-        object_draw(g_obi07, 178, 23);
+        od_draw(g_obi07, 178, 23);
         game_tick_and_animate(2);
-        object_draw(g_obids,  178, 23);
+        od_draw(g_obids,  178, 23);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_study_door_open = NO;

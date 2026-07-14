@@ -27,7 +27,7 @@ extern short    check_valid_word_input();
 extern char *   command_upperstr();
 extern short    lcp_toupper();
 extern short    g_aprio;
-extern unsigned char _entered_word_bytes[];
+extern unsigned char g_ewb[];
 
 static int
 test_toupper(void)

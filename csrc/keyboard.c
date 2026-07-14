@@ -40,7 +40,7 @@ extern void     put_event_to_list();            /* ai.c      */
 #include <osbind.h>
 
 extern void     put_event_to_list();
-extern void     play_doorbell_sound();
+extern void     p_dobls();
 extern void     parse_command_to_action();
 extern void     sf_sele();
 extern void     update_water_level_bar();
@@ -97,7 +97,7 @@ short   keycode;
                 return;
 
         case KEY_CTRL_B_BOOK:
-                play_doorbell_sound();
+                p_dobls();
                 put_event_to_list(ACTION_EVENT_BOOK_DELIVERY);
                 return;
 
@@ -109,7 +109,7 @@ short   keycode;
                 return;
 
         case KEY_CTRL_D_DOGFOOD:
-                play_doorbell_sound();
+                p_dobls();
                 put_event_to_list(ACTION_EVENT_DOG_FOOD);
                 return;
 
@@ -120,14 +120,14 @@ short   keycode;
                 if (food_count == 4) {
                         food_delivery_available = YES;
                 } else {
-                        play_doorbell_sound();
+                        p_dobls();
                         put_event_to_list(ACTION_EVENT_FOOD_DELIVERY);
                 }
                 return;
 
         case KEY_CTRL_R_RECORD:
                 if (game_input_mode_flag == NO) {
-                        play_doorbell_sound();
+                        p_dobls();
                         put_event_to_list(ACTION_EVENT_RECORD_DELIVERY);
                 }
                 return;

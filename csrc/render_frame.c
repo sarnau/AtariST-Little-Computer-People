@@ -40,7 +40,7 @@ extern short    lcp_dog_bowl_status;
 extern short    dog_food_bowl_change;
 extern short    g_sfpli;
 extern short    text_scroll_timer;
-extern void *   dest_screenbase_ptr;
+extern void *   g_dscp;
 extern BOOL16   g_sfacf;
 extern short    last_hz200;
 extern long     last_vbclock;
@@ -67,14 +67,14 @@ extern short    g_dtx;
 extern short    g_dty;
 extern short    g_dsid;
 extern short    g_sepef[];
-extern short *  sprite_pending_image[];
-extern short *  sprite_pending_mask[];
+extern short *  g_sepim[];
+extern short *  g_sepms[];
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_sepeh[];
 extern short    g_sepew[];
-extern short *  sprite_active_image[];
-extern short *  sprite_active_mask[];
+extern short *  g_seaim[];
+extern short *  g_seams[];
 extern short    g_seacx[];
 extern short    g_seacy[];
 extern short    g_seach[];
@@ -235,7 +235,7 @@ sc_ren8()
         if (text_scroll_timer < 1) {
                 if (text_scroll_timer < 0) {
                         /* Partial (top-strip only). */
-                        blkcopy32(dest_screenbase_ptr,
+                        blkcopy32(g_dscp,
                                   g_srmfd.fd_addr, 385);
                         blkcopy32((char *) MFDB_screen_ptr.fd_addr + 12320,
                                   (char *) g_srmfd.fd_addr + 12320,
@@ -247,7 +247,7 @@ sc_ren8()
                 }
         } else {
                 /* Split copy for letter scroll. */
-                blkcopy32(dest_screenbase_ptr,
+                blkcopy32(g_dscp,
                           g_srmfd.fd_addr, 135);
                 blkcopy32((char *) MFDB_screen_ptr.fd_addr + 4320,
                           (char *) g_srmfd.fd_addr + 4320, 865);
@@ -260,12 +260,12 @@ sc_ren8()
                         g_sepef[index]  = NO;
                         g_sepex[index]     = g_seacx[index];
                         g_sepey[index]     = g_seacy[index];
-                        sprite_active_image[index]  = sprite_pending_image[index];
-                        sprite_active_mask[index]   = sprite_pending_mask[index];
+                        g_seaim[index]  = g_sepim[index];
+                        g_seams[index]   = g_sepms[index];
                         g_seach[index] = g_sepeh[index];
                         g_seacw[index]  = g_sepew[index];
                 }
-                if (sprite_active_image[index] != NULL)
+                if (g_seaim[index] != NULL)
                         sp_draw(index);
         }
 

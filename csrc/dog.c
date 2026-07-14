@@ -31,8 +31,8 @@ extern short    dog_on_stairs_flag;
 extern short    dog_initialized;
 extern short    g_sepex[];
 extern short    g_sepey[];
-extern short *  sprite_active_image[];
-extern short *  sprite_active_mask[];
+extern short *  g_seaim[];
+extern short *  g_seams[];
 extern short    g_seach[];
 extern short    g_seacw[];
 extern short    g_sedeh[];
@@ -229,22 +229,22 @@ dog_move_and_animate()
    addr: sp_spud() */
 
 void
-sp_spud(sprite_id, layer_position, flip_horizontal)
-short   sprite_id;
+sp_spud(g_seid, layer_position, flip_horizontal)
+short   g_seid;
 short   layer_position;
 BOOL16  flip_horizontal;
 {
-        sprite_active_image[0] = NULL;
-        sprite_active_image[7] = NULL;
+        g_seaim[0] = NULL;
+        g_seaim[7] = NULL;
 
-        if (sprite_id < 0 || dog_initialized != NO)
+        if (g_seid < 0 || dog_initialized != NO)
                 return;
 
         if (flip_horizontal != NO) {
-                sp_flih(dog_sprite_pointers[sprite_id],
+                sp_flih(dog_sprite_pointers[g_seid],
                                        (unsigned short *) g_dfimb,
                                        15, 2);
-                sp_flih(dog_mask_pointers[sprite_id],
+                sp_flih(dog_mask_pointers[g_seid],
                                        (unsigned short *) g_dfmab,
                                        15, 2);
         }
@@ -259,18 +259,18 @@ BOOL16  flip_horizontal;
         g_sepey[7] = dog_y - 17;
 
         if (flip_horizontal == NO) {
-                sprite_active_mask[0] = dog_mask_pointers[sprite_id];
-                sprite_active_mask[7] = dog_mask_pointers[sprite_id];
+                g_seams[0] = dog_mask_pointers[g_seid];
+                g_seams[7] = dog_mask_pointers[g_seid];
                 if (layer_position == 1)
-                        sprite_active_image[7] = dog_sprite_pointers[sprite_id];
+                        g_seaim[7] = dog_sprite_pointers[g_seid];
                 else
-                        sprite_active_image[0] = dog_sprite_pointers[sprite_id];
+                        g_seaim[0] = dog_sprite_pointers[g_seid];
         } else {
-                sprite_active_mask[0] = g_dfmab;
-                sprite_active_mask[7] = g_dfmab;
+                g_seams[0] = g_dfmab;
+                g_seams[7] = g_dfmab;
                 if (layer_position == 1)
-                        sprite_active_image[7] = g_dfimb;
+                        g_seaim[7] = g_dfimb;
                 else
-                        sprite_active_image[0] = g_dfimb;
+                        g_seaim[0] = g_dfimb;
         }
 }

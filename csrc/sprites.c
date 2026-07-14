@@ -54,20 +54,20 @@ extern short    g_lcieo;
 extern short    g_lssh;
 extern short    debug_hide_lcp_offscreen;
 extern short    g_sepef[];
-extern short *  sprite_pending_image[];
-extern short *  sprite_pending_mask[];
+extern short *  g_sepim[];
+extern short *  g_sepms[];
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_sepeh[];
 extern short    g_sepew[];
-extern short *  sprite_active_image[];
-extern short *  sprite_active_mask[];
+extern short *  g_seaim[];
+extern short *  g_seams[];
 extern short    g_seacx[];
 extern short    g_seacy[];
 extern short    g_seach[];
 extern short    g_seacw[];
-extern short *  sprite_def_image[];
-extern short *  sprite_def_mask[];
+extern short *  g_sedim[];
+extern short *  g_sedms[];
 extern short    g_sedeh[];
 extern short    g_sedew[];
 extern short    g_selaf[];
@@ -123,11 +123,11 @@ sp_updb()
 
         g_sepeh[3] = 21;
         g_sepew[3]  = 32;
-        sprite_pending_image[3]  = g_lsimg;
-        sprite_pending_mask[3]   = g_lsmas;
+        g_sepim[3]  = g_lsimg;
+        g_sepms[3]   = g_lsmas;
 
         if (g_lssh != NO)
-                sprite_pending_image[3] = NULL;
+                g_sepim[3] = NULL;
 
         g_sepef[3] = YES;
 }
@@ -140,20 +140,20 @@ sp_updb()
    addr: sp_ssco() */
 
 void
-sp_ssco(sprite_index)
-short   sprite_index;
+sp_ssco(g_seix)
+short   g_seix;
 {
         short   slot;
 
-        g_selaf[sprite_index] = SPRITE_BEHIND_LCP;
+        g_selaf[g_seix] = SPRITE_BEHIND_LCP;
         sp_upds();
-        slot = g_seslm[sprite_index];
-        sprite_active_image[slot]  = sprite_def_image[sprite_index];
-        sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        g_seach[slot] = g_sedeh[sprite_index];
-        g_seacw[slot]  = g_sedew[sprite_index];
+        slot = g_seslm[g_seix];
+        g_seaim[slot]  = g_sedim[g_seix];
+        g_seams[slot]   = g_sedms[g_seix];
+        g_seach[slot] = g_sedeh[g_seix];
+        g_seacw[slot]  = g_sedew[g_seix];
         g_lcyof = YES;
-        g_lcieo       = sprite_index;
+        g_lcieo       = g_seix;
 }
 
 /* sp_sprs: the "generic" sprite activator used by save.c and
@@ -164,17 +164,17 @@ short   sprite_index;
    addr: sp_sprs() */
 
 void
-sp_sprs(sprite_index)
-short   sprite_index;
+sp_sprs(g_seix)
+short   g_seix;
 {
         short   slot;
 
         sp_upds();
-        slot = g_seslm[sprite_index];
-        sprite_active_image[slot]  = sprite_def_image[sprite_index];
-        sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        g_seach[slot] = g_sedeh[sprite_index];
-        g_seacw[slot]  = g_sedew[sprite_index];
+        slot = g_seslm[g_seix];
+        g_seaim[slot]  = g_sedim[g_seix];
+        g_seams[slot]   = g_sedms[g_seix];
+        g_seach[slot] = g_sedeh[g_seix];
+        g_seacw[slot]  = g_sedew[g_seix];
 }
 
 /* lcp_wait_head_reach_target: spin ticking the animation loop until the
@@ -197,10 +197,10 @@ lcp_wait_head_reach_target()
 void
 hide_lcp_sprites()
 {
-        saved_body_sprite_ptr  = sprite_active_image[3];
-        saved_head_sprite_ptr  = sprite_active_image[4];
-        sprite_active_image[3] = NULL;
-        sprite_active_image[4] = NULL;
+        saved_body_sprite_ptr  = g_seaim[3];
+        saved_head_sprite_ptr  = g_seaim[4];
+        g_seaim[3] = NULL;
+        g_seaim[4] = NULL;
         g_lssh     = YES;
 }
 
@@ -210,8 +210,8 @@ hide_lcp_sprites()
 void
 show_lcp_sprites()
 {
-        sprite_active_image[3] = saved_body_sprite_ptr;
-        sprite_active_image[4] = saved_head_sprite_ptr;
+        g_seaim[3] = saved_body_sprite_ptr;
+        g_seaim[4] = saved_head_sprite_ptr;
         g_lssh     = NO;
 }
 
@@ -220,20 +220,20 @@ show_lcp_sprites()
    addr: sp_ss02() */
 
 void
-sp_ss02(sprite_index)
-short   sprite_index;
+sp_ss02(g_seix)
+short   g_seix;
 {
         short   slot;
 
-        g_selaf[sprite_index] = SPRITE_IN_FRONT;
+        g_selaf[g_seix] = SPRITE_IN_FRONT;
         sp_upds();
-        slot = g_seslm[sprite_index];
-        sprite_active_image[slot]  = sprite_def_image[sprite_index];
-        sprite_active_mask[slot]   = sprite_def_mask[sprite_index];
-        g_seach[slot] = g_sedeh[sprite_index];
-        g_seacw[slot]  = g_sedew[sprite_index];
+        slot = g_seslm[g_seix];
+        g_seaim[slot]  = g_sedim[g_seix];
+        g_seams[slot]   = g_sedms[g_seix];
+        g_seach[slot] = g_sedeh[g_seix];
+        g_seacw[slot]  = g_sedew[g_seix];
         g_lcyof = YES;
-        g_lcieo       = sprite_index;
+        g_lcieo       = g_seix;
 }
 
 /* ---- Sprite compositing pipeline -------------------------------------- */
@@ -386,9 +386,9 @@ sp_upds()
         short   i;
 
         if (g_selaf[0] == SPRITE_HIDDEN)
-                sprite_active_image[g_seslm[0]] = NULL;
+                g_seaim[g_seslm[0]] = NULL;
         if (g_selaf[1] == SPRITE_HIDDEN)
-                sprite_active_image[g_seslm[0]] = NULL;
+                g_seaim[g_seslm[0]] = NULL;
 
         for (spriteID = 3; spriteID < 60; spriteID = spriteID + 1) {
                 if (g_selaf[spriteID] == SPRITE_HIDDEN) {
@@ -415,8 +415,8 @@ sp_upds()
                                         g_seslm[index] = 5;
                                         g_sepex[5]     = g_sepex[6];
                                         g_sepey[5]     = g_sepey[6];
-                                        sprite_active_image[5]  = sprite_active_image[6];
-                                        sprite_active_mask[5]   = sprite_active_mask[6];
+                                        g_seaim[5]  = g_seaim[6];
+                                        g_seams[5]   = g_seams[6];
                                         g_seach[5] = g_seach[6];
                                         g_seacw[5]  = g_seacw[6];
                                 }
@@ -426,12 +426,12 @@ sp_upds()
                                 sVar1 = g_seslm[spriteID];
                                 g_sepex[sVar1]     = g_sepex[i];
                                 g_sepey[sVar1]     = g_sepey[i];
-                                sprite_active_image[sVar1]  = sprite_active_image[i];
-                                sprite_active_mask[sVar1]   = sprite_active_mask[i];
+                                g_seaim[sVar1]  = g_seaim[i];
+                                g_seams[sVar1]   = g_seams[i];
                                 g_seach[sVar1] = g_seach[i];
                                 g_seacw[sVar1]  = g_seacw[i];
                                 if (sVar1 != i)
-                                        sprite_active_image[i] = NULL;
+                                        g_seaim[i] = NULL;
                         }
                         continue;
                 }
@@ -455,8 +455,8 @@ sp_upds()
                                         g_seslm[index] = 1;
                                         g_sepex[1]     = g_sepex[2];
                                         g_sepey[1]     = g_sepey[2];
-                                        sprite_active_image[1]  = sprite_active_image[2];
-                                        sprite_active_mask[1]   = sprite_active_mask[2];
+                                        g_seaim[1]  = g_seaim[2];
+                                        g_seams[1]   = g_seams[2];
                                         g_seach[1] = g_seach[2];
                                         g_seacw[1]  = g_seacw[2];
                                 }
@@ -466,12 +466,12 @@ sp_upds()
                                 sVar1 = g_seslm[spriteID];
                                 g_sepex[sVar1]     = g_sepex[i];
                                 g_sepey[sVar1]     = g_sepey[i];
-                                sprite_active_image[sVar1]  = sprite_active_image[i];
-                                sprite_active_mask[sVar1]   = sprite_active_mask[i];
+                                g_seaim[sVar1]  = g_seaim[i];
+                                g_seams[sVar1]   = g_seams[i];
                                 g_seach[sVar1] = g_seach[i];
                                 g_seacw[sVar1]  = g_seacw[i];
                                 if (sVar1 != i)
-                                        sprite_active_image[i] = NULL;
+                                        g_seaim[i] = NULL;
                         }
                 }
         }
@@ -484,7 +484,7 @@ sp_upds()
                      index = index + 1)
                         ;
                 if (index == 60)
-                        sprite_active_image[spriteID] = NULL;
+                        g_seaim[spriteID] = NULL;
         }
 }
 
@@ -532,11 +532,11 @@ sp_lchu()
 
         g_sepeh[4] = 21;
         g_sepew[4]  = 32;
-        sprite_pending_image[4]  = g_hsbuf;
-        sprite_pending_mask[4]   = g_hsmas;
+        g_sepim[4]  = g_hsbuf;
+        g_sepms[4]   = g_hsmas;
 
         if (g_lssh != NO)
-                sprite_pending_image[4] = NULL;
+                g_sepim[4] = NULL;
 
         g_sepef[4] = YES;
 }

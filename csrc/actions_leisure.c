@@ -22,12 +22,12 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern BOOL16   intro_sequence_active;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern BOOL16   dog_pettable_flag;
 extern short    g_wtx;
 extern short    g_wty;
@@ -47,7 +47,7 @@ extern short    g_obids;
 extern short    g_obi07;
 extern short    g_obi08;
 extern BOOL16   midi_is_playing;
-extern BOOL16   record_browsing_active;
+extern BOOL16   g_rbact;
 extern char *   midi_song_buffer;
 extern short    org_song_file_count;
 extern BOOL16   fire_active_flag;
@@ -75,7 +75,7 @@ extern void     sp_sprs();
 extern void     sp_ssco();
 extern void     sp_upds();
 extern void     sf_sele();
-extern void     object_draw();
+extern void     od_draw();
 extern void     a_opcfd();
 extern void     a_opcfc();
 extern void     a_opecc();
@@ -221,10 +221,10 @@ a_plawr()
         PLAYER_STATE_ARRAY[3] = STATE_BROWSE_VINYL_PULL_OUT;
 
         prev_a = prev_b = prev_c = 0;
-        action_interruptible_flag = YES;
+        g_actif = YES;
         if (lcp_record_playing != NO)
                 a_playp();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         house_get_position_xy(POS_TOP_RECORD_SHELF,
                               &g_wtx, &g_wty);
@@ -232,7 +232,7 @@ a_plawr()
         if (result != 0)
                 return;
 
-        record_browsing_active = YES;
+        g_rbact = YES;
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_STAND_FACING_SCREEN;
@@ -298,7 +298,7 @@ a_plawr()
                 _gemdos(GEMDOS_Mfree, (long) midi_song_buffer, 0L, 0L);
                 midi_song_buffer = (char *) 0;
         }
-        record_browsing_active = NO;
+        g_rbact = NO;
 }
 
 /* a_lighf: firewood run from front-door pickup to the
@@ -326,7 +326,7 @@ a_lighf()
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
         a_opcfd(0);
-        action_interruptible_flag = YES;
+        g_actif = YES;
 
         house_get_position_xy(POS_BTM_FRONT_DOOR,
                               &g_wtx, &g_wty);
@@ -361,7 +361,7 @@ a_lighf()
 
         house_get_position_xy(POS_BTM_FIREPLACE_LOGS,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
 
         lcp_facing_direction   = FACING_RIGHT;
@@ -390,7 +390,7 @@ a_lighf()
         lcp_facing_direction = FACING_RIGHT;
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(0);
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_socwd: call the dog over, sit on the couch,
@@ -402,10 +402,10 @@ a_socwd()
 {
         short   ticks;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         a_calld();
-        action_interruptible_flag = NO;
-        if (triggered_event_list[0] != ACTION_NONE) {
+        g_actif = NO;
+        if (g_trel[0] != ACTION_NONE) {
                 lcp_state = STATE_STAND_SIDE_VIEW;
                 game_tick_and_animate(0);
                 return;
@@ -425,7 +425,7 @@ a_socwd()
 
         ticks = randomRange(30, 50);
         lcp_state = STATE_SIT_COUCH_PETTING_DOG;
-        while (ticks != 0 && triggered_event_list[0] == ACTION_NONE) {
+        while (ticks != 0 && g_trel[0] == ACTION_NONE) {
                 game_tick_and_animate(3);
                 ticks = ticks - 1;
         }
@@ -481,7 +481,7 @@ a_sitae()
         duration = (unsigned short) Random();
         i = 0;
         while (i < ((duration & 0x7f) | 8) &&
-               triggered_event_list[0] == ACTION_NONE) {
+               g_trel[0] == ACTION_NONE) {
                 lcp_state = PLAYER_STATE_ARRAY[i & 3];
                 if (lcp_state == STATE_EXERCISE_ARMS_CENTER)
                         game_tick_and_animate(0);
@@ -516,7 +516,7 @@ short   value;
         lcp_wait_head_reach_target();
         if (lcp_front_door_open == NO)
                 a_opcfd(0);
-        action_interruptible_flag = YES;
+        g_actif = YES;
 
         house_get_position_xy(POS_BTM_FRONT_DOOR,
                               &g_wtx, &g_wty);
@@ -544,7 +544,7 @@ short   value;
 
         result = randomRange(0, 100);
         if (lcp.initiative_threshold < result) {
-                action_interruptible_flag = YES;
+                g_actif = YES;
                 house_get_position_xy(POS_BTM_FRONT_DOOR,
                                       &g_wtx, &g_wty);
                 lcp_walk_to_destination();
@@ -554,7 +554,7 @@ short   value;
                 lcp_wait_head_reach_target();
                 a_opcfd(1);
         }
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_tidyh: walk to filing cabinet, possibly close it.
@@ -616,9 +616,9 @@ a_cleau()
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(g_obi07, 178, 23);
+                od_draw(g_obi07, 178, 23);
                 game_tick_and_animate(2);
-                object_draw(g_obids,  178, 23);
+                od_draw(g_obids,  178, 23);
                 sf_sele(SFX_DOOR_CLOSE, 6L);
                 game_tick_and_animate(2);
                 lcp_study_door_open = NO;
@@ -704,9 +704,9 @@ short   value;
 
         house_get_position_xy(POS_MID_BEDROOM_CLOSET,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         lcp_facing_direction   = FACING_RIGHT;
         lcp_state              = STATE_STAND_FACING_SCREEN;
@@ -717,12 +717,12 @@ short   value;
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(g_obidc, 75, 87);
+                od_draw(g_obidc, 75, 87);
                 game_tick_and_animate(2);
-                object_draw(g_obi03, 75, 87);
+                od_draw(g_obi03, 75, 87);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(g_obi04, 75, 87);
+                od_draw(g_obi04, 75, 87);
                 game_tick_and_animate(2);
                 lcp_closet_door_open = YES;
         }
@@ -738,10 +738,10 @@ short   value;
                               &g_wtx, &g_wty);
         g_wty = g_wty - 3;
         g_wtx = g_wtx - 10;
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
         saved_x = lcp_x;
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         /* Close door behind: wide -> ajar -> lcp-inside. */
         g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
@@ -750,7 +750,7 @@ short   value;
         sp_sprs(SPRITE_CLOSET_AJAR);
         g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
-        object_draw(g_obi03, 75, 87);
+        od_draw(g_obi03, 75, 87);
         game_tick_and_animate(1);
 
         g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_HIDDEN;
@@ -760,7 +760,7 @@ short   value;
         hide_lcp_sprites();
         g_sepex[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 87;
-        object_draw(g_obidc, 75, 87);
+        od_draw(g_obidc, 75, 87);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(1);
 
@@ -781,7 +781,7 @@ short   value;
         show_lcp_sprites();
         g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
-        object_draw(g_obi03, 75, 87);
+        od_draw(g_obi03, 75, 87);
         sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
 
@@ -791,16 +791,16 @@ short   value;
         sp_sprs(SPRITE_CLOSET_WIDE_OPEN);
         g_sepex[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 87;
-        object_draw(g_obi04, 75, 87);
+        od_draw(g_obi04, 75, 87);
         game_tick_and_animate(1);
         lcp_closet_door_open = YES;
 
         lcp_x = saved_x;
         house_get_position_xy(POS_MID_BEDROOM_CLOSET,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         if (lcp_closet_door_open != NO) {
                 g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
@@ -844,12 +844,12 @@ short   value;
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(g_obids,  178, 23);
+                od_draw(g_obids,  178, 23);
                 game_tick_and_animate(2);
-                object_draw(g_obi07,  178, 23);
+                od_draw(g_obi07,  178, 23);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(g_obi08,  178, 23);
+                od_draw(g_obi08,  178, 23);
                 game_tick_and_animate(2);
                 lcp_study_door_open = YES;
         }
@@ -865,9 +865,9 @@ short   value;
                               &g_wtx, &g_wty);
         g_wty = g_wty - 3;
         g_wtx = g_wtx - 10;
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         /* Swap wide-open sprite for ajar and hide the resident. */
         g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_HIDDEN;
@@ -876,7 +876,7 @@ short   value;
         sp_sprs(SPRITE_DOOR_STUDY_AJAR);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        object_draw(g_obi07, 178, 23);
+        od_draw(g_obi07, 178, 23);
         hide_lcp_sprites();
         game_tick_and_animate(1);
         g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;

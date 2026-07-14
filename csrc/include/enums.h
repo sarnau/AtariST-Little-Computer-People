@@ -276,7 +276,7 @@
 
 /* ---- VDI fill styles ------------------------------------------------ */
 #define FILL_SOLID                      1
-#define vsf_interior_PATTERN            1       /* VDI fill interior=pattern */
+#define VSFPATT            1       /* VDI fill interior=pattern */
 
 /* ---- More SFX IDs --------------------------------------------------- */
 #define SFX_GREETING                    9
@@ -356,7 +356,7 @@
    Verified against Ghidra ACTION_ID enum.  0..37 are player actions
    dispatched by do_action(); 38..44 are deferred events dispatched by
    execute_event().  ACTION_NONE (-1) is the empty sentinel used by the
-   trigger_action global and the event FIFO. */
+   g_trac global and the event FIFO. */
 #define ACTION_NONE                     (-1)
 #define ACTION_SIT_AND_EXERCISE          0
 #define ACTION_READ_NEWSPAPER            1

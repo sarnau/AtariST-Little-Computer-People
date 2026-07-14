@@ -25,10 +25,10 @@ extern BOOL16   lunch_meal_triggered_today;
 extern BOOL16   dinner_meal_triggered_today;
 extern BOOL16   morning_wakeup_triggered_today;
 extern BOOL16   bedtime_triggered_today;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern BOOL16   in_execute_event_routine_flag;
 extern short    last_action;
-extern short    trigger_action;
+extern short    g_trac;
 extern BOOL16   ctrl_a_alarm_pressed_flag;
 extern short    lcp_water_level;
 extern short    g_aliss;
@@ -45,7 +45,6 @@ extern void     check_for_any_action_triggers();/* ai.c      */
 extern void     do_action();                    /* actions.c */
 /* Forward-declared handlers (real ports arrive later, one .c per group). */
 extern void     a_gioob();
-extern void     a_getd();
 extern void     er_recd();
 extern void     er_food();
 extern void     er_bood();
@@ -104,9 +103,6 @@ extern short    randomRange();
 /* Command-queue globals filled from typed input.  Priority is bumped
    every rejected round until it crosses the 8 threshold, at which point
    the queued command wins. */
-extern short    g_aliss;
-extern short    g_aqueu[];
-extern short    g_apriq[];
 
 /* check_for_any_action_triggers: pick the next action for the resident.
    The nine priority levels (in order):
@@ -133,7 +129,7 @@ check_for_any_action_triggers()
         short   index;
 
         /* P1: process any deferred event first */
-        if (triggered_event_list[0] != ACTION_NONE) {
+        if (g_trel[0] != ACTION_NONE) {
                 event = get_event_from_list();
                 execute_event(event);
                 return;
@@ -141,14 +137,14 @@ check_for_any_action_triggers()
 
         /* P2: alarm clock */
         if (ctrl_a_alarm_pressed_flag != NO) {
-                trigger_action = ACTION_WAKE_FROM_ALARM;
+                g_trac = ACTION_WAKE_FROM_ALARM;
                 do_action();
                 return;
         }
 
         /* P3: bathroom */
         if (lcp.bathroom_need != NO) {
-                trigger_action = ACTION_USE_TOILET;
+                g_trac = ACTION_USE_TOILET;
                 do_action();
                 return;
         }
@@ -167,7 +163,7 @@ check_for_any_action_triggers()
                 if (rnd > sickness_skip_probability &&
                     !(lcp.sickness_level != SICKNESS_HEALTHY &&
                       lcp_water_level == 0)) {
-                        trigger_action = ACTION_DRINK;
+                        g_trac = ACTION_DRINK;
                         do_action();
                         return;
                 }
@@ -180,7 +176,7 @@ check_for_any_action_triggers()
                     !(lcp.sickness_level != SICKNESS_HEALTHY &&
                       ((lcp.door_states_and_flags >> 9) & 7) == 0) &&
                     last_action != ACTION_KITCHEN_CABINET) {
-                        trigger_action = ACTION_KITCHEN_CABINET;
+                        g_trac = ACTION_KITCHEN_CABINET;
                         do_action();
                         last_action = ACTION_KITCHEN_CABINET;
                         return;
@@ -189,25 +185,25 @@ check_for_any_action_triggers()
 
         /* P6-P9: once-per-day scheduled events */
         if (!lunch_meal_triggered_today && lcp.lunch_hour == time_hours) {
-                trigger_action = ACTION_EAT_MEAL;
+                g_trac = ACTION_EAT_MEAL;
                 do_action();
                 lunch_meal_triggered_today = YES;
                 return;
         }
         if (!dinner_meal_triggered_today && lcp.dinner_hour == time_hours) {
-                trigger_action = ACTION_EAT_MEAL;
+                g_trac = ACTION_EAT_MEAL;
                 do_action();
                 dinner_meal_triggered_today = YES;
                 return;
         }
         if (!morning_wakeup_triggered_today && lcp.wake_hour == time_hours) {
-                trigger_action = ACTION_WAKE_UP_MORNING;
+                g_trac = ACTION_WAKE_UP_MORNING;
                 do_action();
                 morning_wakeup_triggered_today = YES;
                 return;
         }
         if (!bedtime_triggered_today && lcp.bedtime_hour == time_hours) {
-                trigger_action = ACTION_GO_TO_BED_NIGHT;
+                g_trac = ACTION_GO_TO_BED_NIGHT;
                 do_action();
                 bedtime_triggered_today = YES;
                 return;
@@ -225,7 +221,7 @@ check_for_any_action_triggers()
                                         g_apriq[index + 1];
                         }
                 } else if (g_apriq[0] > 7) {
-                        trigger_action = g_aqueu[0];
+                        g_trac = g_aqueu[0];
                         if (g_aqueu[0] == ACTION_PLAY_A_GAME ||
                             g_aqueu[0] == ACTION_PLAY_WITH_RECORD)
                                 a_getd();
@@ -244,8 +240,8 @@ check_for_any_action_triggers()
         }
 
         /* P11: time/mood-based random pick */
-        trigger_action = check_time_based_actions();
-        if (trigger_action >= 0)
+        g_trac = check_time_based_actions();
+        if (g_trac >= 0)
                 do_action();
 }
 

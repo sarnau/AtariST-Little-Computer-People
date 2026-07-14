@@ -15,12 +15,12 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern short    PLAYER_STATE_ARRAY[];
@@ -66,7 +66,7 @@ a_takes()
 
         house_get_position_xy(POS_MID_SHOWER_INSIDE,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
 
         lcp_facing_direction = FACING_RIGHT;
@@ -103,7 +103,7 @@ a_takes()
                               &g_wtx, &g_wty);
         lcp_walk_to_destination();
         g_hamod = HEAD_ANIM_DISABLED;
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_brust: 24..35 cycle brush loop.  The "toothbrush"
@@ -191,7 +191,7 @@ a_washh()
         counter   = 0;
         last_pick = 0;
         while (counter < (short) ((rnd & 0x7f) | 4) &&
-               triggered_event_list[0] == ACTION_NONE) {
+               g_trel[0] == ACTION_NONE) {
                 val = (unsigned short) Random();
                 while ((val & 3) == last_pick)
                         val = (unsigned short) Random();

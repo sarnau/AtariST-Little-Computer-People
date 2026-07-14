@@ -16,14 +16,14 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern BOOL16   intro_sequence_active;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern BOOL16   ctrl_a_alarm_pressed_flag;
 extern short    g_hatas;
 extern short    g_hacur;
 extern short    g_hamod;
 extern short    g_hsfra;
 extern long     g_sfret;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern BOOL16   dog_pettable_flag;
 extern short    g_wtx;
 extern short    g_wty;
@@ -37,10 +37,10 @@ extern short    randomRange();                  /* random.c */
 extern void     do_action();                    /* actions.c */
 extern short    randomRange();
 extern short    lcp_walk_to_destination();
-extern void     play_soundeffect_tv_click();
-extern void     play_soundeffect_greeting();
-extern void     play_soundeffect_speech();
-extern void     play_soundeffect_head_nod();
+extern void     p_sftvc();
+extern void     p_sfgrt();
+extern void     p_sfspe();
+extern void     p_sfhnd();
 extern void     sf_so();
 
 /* a_wakfa: Ctrl+A path.  Walks to the bedroom alarm,
@@ -97,16 +97,16 @@ a_hello()
 
                 if (pick == 0) {
                         g_hsfra = 5;
-                        play_soundeffect_tv_click();
+                        p_sftvc();
                 } else if (pick == 1) {
                         g_hsfra = 6;
                         if (randomRange(0, 1) == 0)
-                                play_soundeffect_greeting();
+                                p_sfgrt();
                         else
-                                play_soundeffect_speech();
+                                p_sfspe();
                 } else {
                         g_hsfra = 4;
-                        play_soundeffect_head_nod();
+                        p_sfhnd();
                 }
                 wait = randomRange(1, 2);
                 game_tick_and_animate(wait);
@@ -188,10 +188,10 @@ a_petd()
 {
         short   ticks;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         if (dog_pettable_flag == NO)
                 a_calld();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         ticks = randomRange(100, 200);
         if (intro_sequence_active != NO)
@@ -202,7 +202,7 @@ a_petd()
                 if (ticks == 0)
                         break;
                 game_tick_and_animate(0);
-        } while (triggered_event_list[0] == ACTION_NONE);
+        } while (g_trel[0] == ACTION_NONE);
 
         dog_pettable_flag = NO;
         lcp_state         = STATE_STAND_SIDE_VIEW;

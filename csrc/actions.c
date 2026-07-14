@@ -2,7 +2,7 @@
  * actions.c -- do_action() dispatcher (45 cases).
  *
  * Called from check_for_any_action_triggers() with a resolved ACTION_ID
- * already in trigger_action.  Snapshots trigger_action into last_action
+ * already in g_trac.  Snapshots g_trac into last_action
  * (used by the AI to avoid picking the same action twice in a row),
  * clears the trigger, waking the resident first if asleep, then
  * switches to the per-action handler.  All 45 handlers live in
@@ -20,7 +20,7 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    last_action;
-extern short    trigger_action;
+extern short    g_trac;
 extern void     a_getd();
 extern void     check_for_any_action_triggers();/* ai.c      */
 extern void     do_action();                    /* actions.c */
@@ -56,7 +56,6 @@ extern void     a_plawr();
 extern void     a_opcuc();
 extern void     a_gesff();
 extern void     a_opcbc();
-extern void     a_getd();
 extern void     a_cleau();
 extern void     a_tidyh();
 extern void     a_chefd();
@@ -67,7 +66,7 @@ extern void     a_petd();
 extern void     a_wakum();
 extern void     a_gotbn();
 
-/* do_action: dispatch trigger_action to its handler.
+/* do_action: dispatch g_trac to its handler.
    addr: do_action() */
 
 void
@@ -75,9 +74,9 @@ do_action()
 {
         short   action_number;
 
-        action_number = trigger_action;
-        last_action   = trigger_action;
-        trigger_action = ACTION_NONE;
+        action_number = g_trac;
+        last_action   = g_trac;
+        g_trac = ACTION_NONE;
 
         if (lcp.is_sleeping != NO)
                 a_gioob();

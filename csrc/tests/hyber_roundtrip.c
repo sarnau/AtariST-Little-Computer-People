@@ -1,7 +1,7 @@
 /*
  * hyber_roundtrip.c -- host-side smoke test for the HYBER save file.
  *
- * Copies DATA/HYBER into the CWD as "hyber", calls lcp_load() to parse
+ * Copies DATA/HYBER into the CWD as "hyber", calls lc_load() to parse
  * it into the PLAYER struct, then lcp_save() to write it back out and
  * verifies the two files are byte-identical.
  *
@@ -9,7 +9,7 @@
  * *print* byte-swapped ("wake=1536" instead of "wake=6") because the
  * PLAYER struct assumes ST-native big-endian, and no swap is applied
  * here.  What we verify is that the raw 128-byte block round-trips
- * bit-for-bit -- that's the contract lcp_save/lcp_load must honour on
+ * bit-for-bit -- that's the contract lcp_save/lc_load must honour on
  * the ST, and it's the property that carries the file across a real
  * game session.  A future test can add byteswap-aware field readers if
  * we want portable field-level assertions.
@@ -26,7 +26,7 @@
 #include "../include/structs.h"
 
 extern PLAYER   lcp;
-extern short    lcp_load();
+extern short    lc_load();
 extern void     lcp_save();
 
 int
@@ -55,8 +55,8 @@ char ** argv;
         fwrite(orig, 1, 128, f);
         fclose(f);
 
-        if (lcp_load() == 0) {
-                fprintf(stderr, "lcp_load returned 0 (file missing?)\n");
+        if (lc_load() == 0) {
+                fprintf(stderr, "lc_load returned 0 (file missing?)\n");
                 return 2;
         }
         printf("owner   = %.24s\n", lcp.owner_name);

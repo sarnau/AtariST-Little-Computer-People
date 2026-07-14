@@ -281,3 +281,79 @@ Under Alcyon C 4.14 the external symbol table truncates C names to 7 characters.
 | g_wty   | walk_target_y                                    |
 | g_wyx   | walk_waypoint_x                                  |
 | g_wyy   | walk_waypoint_y                                  |
+
+## Second-pass renames (cross-namespace collisions)
+
+These 7-char prefixes collided between the function and global
+namespaces, which my initial per-kind analysis missed.
+
+| short   | long                                             |
+|---------|--------------------------------------------------|
+| g_dvdog | delivery_is_for_dog                              |
+| dv_pick | delivery_pickup_at_door                          |
+| lc_load | lcp_load                                         |
+| g_lcldd | lcp_loaded                                       |
+| mowrit  | midi_out_write_byte                              |
+| g_moen  | midi_output_enabled                              |
+| g_rbact | record_browsing_active                           |
+| rp_anim | record_player_animate_needle                     |
+| g_wpci  | word_puzzle_current_index                        |
+| g_wpdb  | word_puzzle_data_buffer                          |
+| wp_main | word_puzzle_main                                 |
+
+## Third-pass renames (post-Alcyon-compile collisions)
+
+Discovered after starting the actual Alcyon build: identifiers
+that my initial `globals.h` extern extraction missed, plus
+multiple items sharing prefixes not previously flagged.
+
+| short   | long                                             |
+|---------|--------------------------------------------------|
+| g_ewb   | _entered_word_bytes                              |
+| g_ew2a  | _enteredword_to_action                           |
+| g_ew2b  | _enteredword_to_bit                              |
+| g_actif | action_interruptible_flag                        |
+| g_atact | action_table_active                              |
+| g_atmod | action_table_moderate                            |
+| g_atrel | action_table_relaxed                             |
+| ag_main | anagram_main                                     |
+| g_agwb  | anagram_words_buffer                             |
+| g_agwgm | anagram_wrong_guess_messages                     |
+| g_dsb   | dest_scr_buffer                                  |
+| g_dscp  | dest_screenbase_ptr                              |
+| g_hgis  | host_giselect_scratch                            |
+| g_hgiw  | host_giwrite_scratch                             |
+| g_hms   | host_midi_scratch                                |
+| g_hmc   | host_midictl_scratch                             |
+| g_ltg   | letter_greeting_table                            |
+| g_ltlp  | letter_line_ptr                                  |
+| g_lttx  | letter_txt_content                               |
+| g_meve  | midi_event                                       |
+| g_medu  | midi_event_duration                              |
+| g_msmk  | midi_scale_mask_table                            |
+| g_mstr  | midi_scale_transpose_table                       |
+| od_draw | object_draw                                      |
+| g_oiidx | object_index                                     |
+| g_otmfd | object_tab_mfdb                                  |
+| p_dosnd | play_door_sound                                  |
+| p_dobls | play_doorbell_sound                              |
+| p_sfgrt | play_soundeffect_greeting                        |
+| p_sfhnd | play_soundeffect_head_nod                        |
+| p_sfspe | play_soundeffect_speech                          |
+| p_sftvc | play_soundeffect_tv_click                        |
+| g_rphs  | room_position_height_table                       |
+| g_rpxs  | room_position_x_table                            |
+| g_srlgb | screen_logbase                                   |
+| g_srptr | screen_ptr                                       |
+| g_seaim | sprite_active_image                              |
+| g_seams | sprite_active_mask                               |
+| g_sedim | sprite_def_image                                 |
+| g_sedms | sprite_def_mask                                  |
+| g_seid  | sprite_id                                        |
+| g_seix  | sprite_index                                     |
+| g_sepim | sprite_pending_image                             |
+| g_sepms | sprite_pending_mask                              |
+| g_txx   | target_x                                         |
+| g_txy   | target_y                                         |
+| g_trac  | trigger_action                                   |
+| g_trel  | triggered_event_list                             |

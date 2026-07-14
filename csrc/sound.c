@@ -9,7 +9,7 @@
  * All stubs for now so callers link.
  *
  * addr: sf_sele(), sf_so(),
- *       play_soundeffect_*(), record_player_animate_needle()
+ *       play_soundeffect_*(), rp_anim()
  */
 
 #include "types.h"
@@ -78,11 +78,11 @@ sf_so()
    right (id, duration) pair from Ghidra and hands off to
    sf_sele.  Duration units are 8Hz ticks. */
 
-void play_soundeffect_tv_click(void)    { sf_sele(SFX_TV_CLICK,  2L); }
-void play_soundeffect_greeting(void)    { sf_sele(SFX_GREETING,  2L); }
-void play_soundeffect_speech(void)      { sf_sele(SFX_SPEECH,    3L); }
-void play_soundeffect_head_nod(void)    { sf_sele(SFX_HEAD_NOD,  2L); }
-void play_doorbell_sound(void)          { sf_sele(SFX_DOORBELL,  4L); }
+void p_sftvc(void)    { sf_sele(SFX_TV_CLICK,  2L); }
+void p_sfgrt(void)    { sf_sele(SFX_GREETING,  2L); }
+void p_sfspe(void)      { sf_sele(SFX_SPEECH,    3L); }
+void p_sfhnd(void)    { sf_sele(SFX_HEAD_NOD,  2L); }
+void p_dobls(void)          { sf_sele(SFX_DOORBELL,  4L); }
 
 /* Small SFX wrappers used by the write-letter routine.  Both are
    1-line trampolines into sf_sele with per-effect duration.

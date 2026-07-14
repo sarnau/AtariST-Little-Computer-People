@@ -22,10 +22,10 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern BOOL16   midi_is_playing;
-extern BOOL16   record_browsing_active;
+extern BOOL16   g_rbact;
 extern short    vdihandle;
 extern short    _vdi_color_table[];
-extern void *   dest_screenbase_ptr;
+extern void *   g_dscp;
 extern short    main_colorpalette[];
 extern short    g_clcop[];
 extern short    g_clcos[];
@@ -87,7 +87,7 @@ pa_skic()
 /* lcp_update_palette_colors: refresh the sickness tint at palette
    slot 6.  ST_PEACH (0x743) when healthy, ST_SICK_GREEN (0x363) when
    sick.  Called from sim.c on recovery, from health.c on onset, and
-   from lcp_load after HYBER restore.
+   from lc_load after HYBER restore.
    addr: lcp_update_palette_colors() */
 
 void
@@ -145,15 +145,15 @@ sc_sctd()
         char *  dest_ptr;
         char *  src_ptr;
 
-        dest_ptr = (char *) dest_screenbase_ptr;
-        src_ptr  = (char *) dest_screenbase_ptr;
+        dest_ptr = (char *) g_dscp;
+        src_ptr  = (char *) g_dscp;
         for (row = 0; row < 13; row = row + 1) {
                 src_ptr = src_ptr + 320;
                 blkcopy32(src_ptr, dest_ptr, 10);
                 dest_ptr = dest_ptr + 320;
         }
-        sc_firw(dest_screenbase_ptr, 24);
-        sc_firw(dest_screenbase_ptr, 25);
+        sc_firw(g_dscp, 24);
+        sc_firw(g_dscp, 25);
 }
 
 /* print_char: render one character via VDI.  Sets the log-base to the
@@ -178,7 +178,7 @@ short   color;
         str[1] = 0;
 
         saved_log = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) dest_screenbase_ptr,
+        _xbios(XBIOS_Setscreen, (long) g_dscp,
                -1L, -1L);
         vst_color(vdihandle, _vdi_color_table[color]);
         vswr_mode(vdihandle, MD_TRANS);
@@ -187,7 +187,7 @@ short   color;
         _xbios(XBIOS_Setscreen, (long) saved_log, -1L, -1L);
 }
 
-/* record_player_animate_needle: sweep the needle back and forth from
+/* rp_anim: sweep the needle back and forth from
    x=70..83 at y=42, one pixel per frame, wrapping at 0.  If music is
    playing and we're not currently browsing records, roll a random VU
    meter LED (0..6) at y=47 and toggle its lit/unlit state (red if the
@@ -195,10 +195,10 @@ short   color;
    black).  The `g_ltlic` / `g_ltpac` variable
    names are 1985 shared-storage reuse -- they double as record-player
    state when no letter is being written.
-   addr: record_player_animate_needle() */
+   addr: rp_anim() */
 
 void
-record_player_animate_needle()
+rp_anim()
 {
         unsigned short  rnd;
         short           col;
@@ -210,7 +210,7 @@ record_player_animate_needle()
                 g_ltlic = 13;
         _draw_pixel(g_ltlic + 70, 42, COLOR_black);
 
-        if (midi_is_playing == NO || record_browsing_active != NO)
+        if (midi_is_playing == NO || g_rbact != NO)
                 return;
 
         rnd = (unsigned short) Random();

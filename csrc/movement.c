@@ -2,7 +2,7 @@
  * movement.c -- coordinate mapping and floor lookup.
  *
  * house_get_position_xy() converts a HOUSE_POS index (0..47) into screen
- * coordinates via room_position_x_table[] and per-floor baselines.
+ * coordinates via g_rpxs[] and per-floor baselines.
  * get_floor_number_from_y() is its inverse for pathfinding decisions.
  * calc_weekday() lives here because it's a pure calendar helper the
  * scheduling code consults.
@@ -26,8 +26,8 @@ extern short    days_in_month();                /* calendar.c*/
 /* Per-position X and height tables, indexed by HOUSE_POS (0..47).  Data
    lives in a separate translation unit (tables.c) so the same table can
    be shared between movement.c and the sprite/render code. */
-extern short    room_position_x_table[];
-extern short    room_position_height_table[];
+extern short    g_rpxs[];
+extern short    g_rphs[];
 
 #define POS_BTM_SCREEN_EDGE     47
 
@@ -39,17 +39,17 @@ extern short    room_position_height_table[];
    addr: house_get_position_xy() */
 
 void
-house_get_position_xy(index, target_x, target_y)
+house_get_position_xy(index, g_txx, g_txy)
 short   index;
-short   *target_x;
-short   *target_y;
+short   *g_txx;
+short   *g_txy;
 {
         short   floor_y_pos;
 
         if (index > 47)
                 index = POS_BTM_SCREEN_EDGE;
 
-        *target_x = room_position_x_table[index] << 1;
+        *g_txx = g_rpxs[index] << 1;
 
         if (index < 16)
                 floor_y_pos = 77;
@@ -58,7 +58,7 @@ short   *target_y;
         else
                 floor_y_pos = 202;
 
-        *target_y = floor_y_pos - room_position_height_table[index + 1];
+        *g_txy = floor_y_pos - g_rphs[index + 1];
 }
 
 /* get_floor_number_from_y: inverse mapping, screen Y -> floor 1..3.

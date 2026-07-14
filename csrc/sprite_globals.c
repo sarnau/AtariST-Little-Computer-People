@@ -32,22 +32,22 @@ short   dog_initialized                 = 1;    /* until placed */
 
 /* ---- Hardware sprite double-buffer (8 slots) --------------------------- */
 short   g_sepef[8];
-short * sprite_pending_image[8];
-short * sprite_pending_mask[8];
+short * g_sepim[8];
+short * g_sepms[8];
 short   g_sepex[8];
 short   g_sepey[8];
 short   g_sepeh[8];
 short   g_sepew[8];
-short * sprite_active_image[8];
-short * sprite_active_mask[8];
+short * g_seaim[8];
+short * g_seams[8];
 short   g_seacx[8];
 short   g_seacy[8];
 short   g_seach[8];
 short   g_seacw[8];
 
 /* ---- Sprite definitions (60 logical slots) ----------------------------- */
-short * sprite_def_image[60];
-short * sprite_def_mask[60];
+short * g_sedim[60];
+short * g_sedms[60];
 short   g_sedeh[60];
 short   g_sedew[60];
 short   g_selaf[60];

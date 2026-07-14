@@ -11,7 +11,7 @@
  *   7. bend down / reach forward again to put it down
  *
  * The Ctrl+D dog-food variant reuses er_food with
- * delivery_is_for_dog=YES so the food goes to the dog bowl instead of
+ * g_dvdog=YES so the food goes to the dog bowl instead of
  * the kitchen cabinet.
  *
  * event_answer_phone is grouped here because it's the same event-queue
@@ -39,7 +39,7 @@ extern short    g_hacur;
 extern short    g_hamod;
 extern short    g_hsfra;
 extern long     g_sfret;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern BOOL16   dog_pettable_flag;
 extern short    g_wtx;
 extern short    g_wty;
@@ -56,7 +56,7 @@ extern short    g_obicc;
 extern short    g_obico;
 extern short    g_obi02;
 extern short    g_obipc;
-extern BOOL16   delivery_is_for_dog;
+extern BOOL16   g_dvdog;
 extern BOOL16   phone_hangup_flag;
 extern BOOL16   g_ptdoa;
 extern void     house_get_position_xy();
@@ -71,14 +71,14 @@ extern void     sp_ssco();
 extern void     sp_ss02();
 extern void     sp_upds();
 extern void     sf_sele();
-extern void     object_draw();
+extern void     od_draw();
 extern void     a_feedd();
 extern void     a_gesff();
 extern void     a_calld();
-extern void     play_soundeffect_tv_click();
-extern void     play_soundeffect_greeting();
-extern void     play_soundeffect_speech();
-extern void     play_soundeffect_head_nod();
+extern void     p_sftvc();
+extern void     p_sfgrt();
+extern void     p_sfspe();
+extern void     p_sfhnd();
 extern void     sc_drfc();
 
 extern void     a_opcfd();
@@ -110,18 +110,18 @@ short   door_status;
                 lcp_facing_direction = FACING_RIGHT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(g_obi05, 294, 151);
+                od_draw(g_obi05, 294, 151);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(g_obi06, 294, 151);
+                od_draw(g_obi06, 294, 151);
                 game_tick_and_animate(2);
                 lcp_front_door_open = YES;
         } else {
                 if (lcp_front_door_open == NO)
                         return;
-                object_draw(g_obi05, 294, 151);
+                od_draw(g_obi05, 294, 151);
                 game_tick_and_animate(2);
-                object_draw(g_obidf, 294, 151);
+                od_draw(g_obidf, 294, 151);
                 sf_sele(SFX_DOOR_CLOSE, 6L);
                 game_tick_and_animate(2);
                 lcp_front_door_open = NO;
@@ -144,10 +144,10 @@ short   open_close_status;
                 lcp_cabinet_open = YES;
                 lcp_state = STATE_REACH_INTO_CABINET;
                 game_tick_and_animate(3);
-                object_draw(g_obico, 46, 140);
+                od_draw(g_obico, 46, 140);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(g_obi02, 46, 140);
+                od_draw(g_obi02, 46, 140);
                 sc_drfc();
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 game_tick_and_animate(2);
@@ -155,9 +155,9 @@ short   open_close_status;
                 lcp_cabinet_open = NO;
                 lcp_state = STATE_REACH_INTO_CABINET;
                 game_tick_and_animate(3);
-                object_draw(g_obico, 46, 140);
+                od_draw(g_obico, 46, 140);
                 game_tick_and_animate(2);
-                object_draw(g_obicc, 46, 140);
+                od_draw(g_obicc, 46, 140);
                 sf_sele(SFX_DOOR_CLOSE, 6L);
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 game_tick_and_animate(2);
@@ -170,7 +170,7 @@ short   open_close_status;
    initiative-threshold roll. */
 
 static void
-delivery_pickup_at_door()
+dv_pick()
 {
         short   roll;
 
@@ -195,7 +195,7 @@ delivery_pickup_at_door()
 }
 
 /* er_food: Ctrl+F grocery event.  Also reused by
-   er_dogf with delivery_is_for_dog set.
+   er_dogf with g_dvdog set.
    addr: er_food() */
 
 void
@@ -204,11 +204,11 @@ er_food()
         unsigned short  food_count;
         short           roll;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         walk_to_front_door();
-        delivery_pickup_at_door();
+        dv_pick();
 
-        if (delivery_is_for_dog == NO) {
+        if (g_dvdog == NO) {
                 sp_ssco(SPRITE_FOOD_PACKAGE);
                 house_get_position_xy(POS_BTM_KITCHEN_CABINET,
                                       &g_wtx, &g_wty);
@@ -245,7 +245,7 @@ er_food()
                 roll = randomRange(0, 100);
                 if (lcp.initiative_threshold < roll)
                         a_opecc(1);
-                action_interruptible_flag = NO;
+                g_actif = NO;
         } else {
                 sp_ssco(SPRITE_FOOD_PACKAGE);
                 if (lcp_dog_bowl_status == BOWL_EMPTY) {
@@ -265,9 +265,9 @@ er_food()
 void
 er_bood()
 {
-        action_interruptible_flag = YES;
+        g_actif = YES;
         walk_to_front_door();
-        delivery_pickup_at_door();
+        dv_pick();
 
         sp_ssco(SPRITE_BOOK);
         house_get_position_xy(POS_MID_BATHROOM_ENTRANCE,
@@ -286,7 +286,7 @@ er_bood()
         game_tick_and_animate(3);
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(2);
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* er_recd: Ctrl+R.  Record -> dance floor shelf.
@@ -298,9 +298,9 @@ er_bood()
 void
 er_recd()
 {
-        action_interruptible_flag = YES;
+        g_actif = YES;
         walk_to_front_door();
-        delivery_pickup_at_door();
+        dv_pick();
 
         sp_ssco(SPRITE_VINYL_CARRY);
         house_get_position_xy(POS_TOP_DANCE_FLOOR,
@@ -322,19 +322,19 @@ er_recd()
         game_tick_and_animate(0);
 
         lcp_food_count = lcp_food_count + 1;    /* 1985 typo, preserved */
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* er_dogf: Ctrl+D.  Trivial trampoline into food
-   delivery with delivery_is_for_dog set.
+   delivery with g_dvdog set.
    addr: er_dogf() */
 
 void
 er_dogf()
 {
-        delivery_is_for_dog = YES;
+        g_dvdog = YES;
         er_food();
-        delivery_is_for_dog = NO;
+        g_dvdog = NO;
 }
 
 /* event_answer_phone: Ctrl+C or random daytime call.  Calls the dog
@@ -354,9 +354,9 @@ event_answer_phone()
         short   ticks;
         short   subpick;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         a_calld();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         g_hamod         = HEAD_ANIM_DISABLED;
         g_hatas = 8;
@@ -370,7 +370,7 @@ event_answer_phone()
         phone_call_active_flag = NO;
         phone_hangup_flag      = YES;
         game_tick_and_animate(0);
-        object_draw(g_obipc, 190, 168);
+        od_draw(g_obipc, 190, 168);
 
         lcp_state = STATE_PHONE_TALKING;
         game_tick_and_animate(1);
@@ -384,17 +384,17 @@ event_answer_phone()
                 pick = randomRange(0, 2);
                 if (pick == 0) {
                         g_hsfra = 5;
-                        play_soundeffect_tv_click();
+                        p_sftvc();
                 } else if (pick == 1) {
                         g_hsfra = 6;
                         subpick = randomRange(0, 1);
                         if (subpick == 0)
-                                play_soundeffect_greeting();
+                                p_sfgrt();
                         else
-                                play_soundeffect_speech();
+                                p_sfspe();
                 } else {
                         g_hsfra = saved_frame;
-                        play_soundeffect_head_nod();
+                        p_sfhnd();
                 }
                 subpick = randomRange(1, 2);
                 game_tick_and_animate(subpick);

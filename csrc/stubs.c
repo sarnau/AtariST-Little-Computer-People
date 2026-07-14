@@ -40,7 +40,7 @@
 
    mq_dise -> midi_seq.c
 
-   midi_out_write_byte, psg_copy_envelope_params, psg_write_register,
+   mowrit, psg_copy_envelope_params, psg_write_register,
    psg_set_mixer -> psg_io.c */
 
 /* draw_line, sc_sdtb/frontbuffer,
@@ -73,14 +73,14 @@
 
 /* Sprite pipeline                          -- all ported in sprites.c / sprites_head.c */
 
-/* Study / save   -- lcp_enter_study_and_save, lcp_save, lcp_load, fr_read,
+/* Study / save   -- lcp_enter_study_and_save, lcp_save, lc_load, fr_read,
    create_file all ported in save.c.  Only the peripheral error / cosmetic
    helpers remain stubs. */
 /* error_unable_to_write, error_not_enough_memory -> alerts.c */
 /* show_lcp_sprites -> sprites.c */
 
 /* Keyboard -> keyboard.c
-   play_doorbell_sound -> sound.c
+   p_dobls -> sound.c
    parse_command_to_action -> ai.c */
 
 /* check_entered_command, command_upperstr, check_valid_word_input,
@@ -90,7 +90,7 @@
 
 /* sf_irqp -> sfx_irq.c */
 
-/* anagram_main, word_puzzle_main, poker_main, poker_war_main,
+/* ag_main, wp_main, poker_main, poker_war_main,
    poker_blackjack_main -> games.c
    minigame_setup_screen, play_erase_rect       -> games.c */
 

@@ -122,19 +122,20 @@ $(HOSTOBJDIR):
 	@mkdir -p $@
 
 # ---- Alcyon build (LCP.PRG) ----------------------------------------------
+# Drives Alcyon C 4.14 headless via Hatari.  See tools/alcyon_build.sh
+# for the design rationale (2-phase compile per file to survive c068
+# crashes, 8.3 filename aliasing via tools/filename_map.txt).
+#
+# Uses EmuTOS bundled with Homebrew Hatari by default.  Override with:
+#   make alcyon HATARI=/path/to/hatari TOS_IMG=/path/to/tos.img
 .PHONY: alcyon
-alcyon: $(LCP_PRG)
+alcyon:
+	@tools/alcyon_build.sh
 
-$(LCP_PRG): $(ALCYONOBJS)
-	@echo "  LD  $@"
-	@$(ALCYON_LD) $(ALCYON_LDFLAGS) -o $@ $(ALCYONOBJS)
-
-$(ALCYONOBJDIR)/%.o: %.c | $(ALCYONOBJDIR)
-	@echo "  CC  $<"
-	@$(ALCYON_CC) $(ALCYON_CFLAGS) -c -o $@ $<
-
-$(ALCYONOBJDIR):
-	@mkdir -p $@
+# Direct .o-only target: run alcyon_build.sh without linking.  Useful
+# for iterating during Alcyon fidelity work.
+.PHONY: alcyon-objs
+alcyon-objs: alcyon
 
 # ---- Housekeeping --------------------------------------------------------
 .PHONY: linktest

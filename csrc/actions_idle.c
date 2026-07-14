@@ -16,7 +16,7 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
@@ -157,7 +157,7 @@ short   value;
 
         i = 0;
         while (i < duration &&
-               triggered_event_list[0] == ACTION_NONE) {
+               g_trel[0] == ACTION_NONE) {
                 lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(1);
                 lcp_state = PLAYER_STATE_ARRAY[1]; game_tick_and_animate(0);
                 sf_sele(SFX_SNORING, 3L);

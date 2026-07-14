@@ -30,13 +30,13 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern BOOL16   intro_sequence_active;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern BOOL16   in_execute_event_routine_flag;
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern void     game_tick_and_animate();
@@ -87,11 +87,11 @@ lcp_walk_to_destination()
                         return 0;
                 lcp_pathfind_one_step();
         } while (in_execute_event_routine_flag != NO ||
-                 triggered_event_list[0] == ACTION_NONE ||
+                 g_trel[0] == ACTION_NONE ||
                  g_lcyof != NO ||
                  intro_sequence_active != NO ||
                  lcp_on_stairs_flag != NO ||
-                 action_interruptible_flag != NO);
+                 g_actif != NO);
 
         g_wty = 0;
         g_wtx = 0;

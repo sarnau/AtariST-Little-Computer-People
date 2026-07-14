@@ -28,15 +28,15 @@
 /* Host: hardware doesn't exist; each register aliases a scratch byte
    defined in psg_io.c so the writes go somewhere real (avoids UB from
    volatile deref of NULL) but produce no output. */
-extern volatile unsigned char   host_midictl_scratch;
-extern volatile unsigned char   host_midi_scratch;
-extern volatile unsigned char   host_giselect_scratch;
-extern volatile unsigned char   host_giwrite_scratch;
+extern volatile unsigned char   g_hmc;
+extern volatile unsigned char   g_hms;
+extern volatile unsigned char   g_hgis;
+extern volatile unsigned char   g_hgiw;
 
-#define midictl         host_midictl_scratch
-#define midi            host_midi_scratch
-#define giselect        host_giselect_scratch
-#define giwrite         host_giwrite_scratch
+#define midictl         g_hmc
+#define midi            g_hms
+#define giselect        g_hgis
+#define giwrite         g_hgiw
 
 #else
 /* ST target: bind directly to the real hardware addresses. */

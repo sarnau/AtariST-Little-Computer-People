@@ -16,14 +16,14 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hacur;
 extern short    g_hamod;
 extern short    g_hsfra;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern short    PLAYER_STATE_ARRAY[];
@@ -52,7 +52,7 @@ extern void     sp_ss02();
 extern void     sp_sprs();
 extern void     sp_upds();
 extern void     sf_sele();
-extern void     object_draw();
+extern void     od_draw();
 extern void     a_opecc();
 extern void     a_opecf();
 extern void     a_kitcc();
@@ -89,7 +89,7 @@ a_eatm()
         sp_ssco(SPRITE_COOKING_POT);
         house_get_position_xy(POS_BTM_STOVE,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
@@ -106,11 +106,11 @@ a_eatm()
         counter = randomRange(30, 50);
         while (counter != 0) {
                 pick = randomRange(0, 2);
-                object_draw(g_obisa[pick], 6, 172);
+                od_draw(g_obisa[pick], 6, 172);
                 game_tick_and_animate(1);
                 counter = counter - 1;
         }
-        object_draw(g_obiso, 6, 172);
+        od_draw(g_obiso, 6, 172);
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         sp_upds();
@@ -119,14 +119,14 @@ a_eatm()
         /* Back to cabinet, then chain into kitchen_cabinet to eat. */
         house_get_position_xy(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
         g_selaf[SPRITE_55] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
         game_tick_and_animate(0);
         a_kitcc();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_kitcc: the eat routine.  Open cabinet, decrement
@@ -146,7 +146,7 @@ a_kitcc()
 
         PLAYER_STATE_ARRAY[0] = STATE_EAT_BITE;
         PLAYER_STATE_ARRAY[1] = STATE_EAT_CHEW;
-        action_interruptible_flag = YES;
+        g_actif = YES;
 
         house_get_position_xy(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
@@ -162,7 +162,7 @@ a_kitcc()
         food_count = (lcp.door_states_and_flags >> 9) & 7;
         if (food_count == 0) {
                 game_tick_and_animate(2);
-                action_interruptible_flag = NO;
+                g_actif = NO;
                 return;
         }
 
@@ -235,7 +235,7 @@ a_kitcc()
 
                 inner = randomRange(4, 8);
                 while (inner > 0 &&
-                       triggered_event_list[0] == ACTION_NONE) {
+                       g_trel[0] == ACTION_NONE) {
                         chew_delay = randomRange(1, 2);
                         game_tick_and_animate(chew_delay);
                         g_hsfra = 1;
@@ -280,7 +280,7 @@ a_kitcc()
         lcp.hunger_level   = NEED_SATISFIED;
         lcp.bathroom_timer = lcp.bathroom_timer_max;
         lcp_check_recovery();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_feedd: fridge -> dog bowl -> fridge.  Called both
@@ -308,12 +308,12 @@ short   value;
 
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state            = STATE_REACH_INTO_CABINET;
-                object_draw(g_obi15, 24, 153);
+                od_draw(g_obi15, 24, 153);
                 game_tick_and_animate(1);
-                object_draw(g_obi16, 24, 153);
+                od_draw(g_obi16, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(1);
-                object_draw(g_obi17, 24, 153);
+                od_draw(g_obi17, 24, 153);
                 game_tick_and_animate(1);
 
                 lcp_facing_direction = FACING_RIGHT;
@@ -328,9 +328,9 @@ short   value;
                 lcp_state = STATE_STAND_FACING_SCREEN;
                 game_tick_and_animate(2);
 
-                object_draw(g_obi16, 24, 153);
+                od_draw(g_obi16, 24, 153);
                 game_tick_and_animate(1);
-                object_draw(g_obi15, 24, 153);
+                od_draw(g_obi15, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(1);
 
@@ -340,7 +340,7 @@ short   value;
         /* Package -> dog bowl (fill it). */
         house_get_position_xy(POS_BTM_DOG_BOWL,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
 
         lcp_facing_direction   = FACING_RIGHT;
@@ -364,14 +364,14 @@ short   value;
         sp_ssco(SPRITE_FOOD_PACKAGE);
         house_get_position_xy(POS_BTM_FRIDGE,
                               &g_wtx, &g_wty);
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
 
         g_selaf[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
         a_opecf();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_gesff: trampoline into a_opecf

@@ -43,7 +43,7 @@ extern short    lcp_facing_direction;
 extern short    randomRange();                  /* random.c */
 extern short    randomRange();
 extern void     sf_sele();
-extern void     object_draw();
+extern void     od_draw();
 
 /* a_clotd: 2-frame close animation.
    addr: a_clotd() */
@@ -59,9 +59,9 @@ a_clotd()
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_BEND_AND_REACH;
         game_tick_and_animate(2);
-        object_draw(g_obi09, 187, 87);
+        od_draw(g_obi09, 187, 87);
         game_tick_and_animate(2);
-        object_draw(g_obidt, 187, 87);
+        od_draw(g_obidt, 187, 87);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_toilet_door_open = NO;
@@ -85,9 +85,9 @@ a_clocd()
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_BEND_AND_REACH;
         game_tick_and_animate(2);
-        object_draw(g_obi03, 75, 87);
+        od_draw(g_obi03, 75, 87);
         game_tick_and_animate(2);
-        object_draw(g_obidc, 75, 87);
+        od_draw(g_obidc, 75, 87);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(2);
         lcp_closet_door_open = NO;
@@ -112,12 +112,12 @@ a_opecf()
 
         lcp_facing_direction = FACING_LEFT;
         lcp_state = STATE_REACH_INTO_CABINET;
-        object_draw(g_obi15, 24, 153);
+        od_draw(g_obi15, 24, 153);
         game_tick_and_animate(1);
-        object_draw(g_obi16, 24, 153);
+        od_draw(g_obi16, 24, 153);
         sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
-        object_draw(g_obi17, 24, 153);
+        od_draw(g_obi17, 24, 153);
         game_tick_and_animate(1);
 
         lcp_facing_direction = FACING_RIGHT;
@@ -132,9 +132,9 @@ a_opecf()
         lcp_state = STATE_STAND_FACING_SCREEN;
         game_tick_and_animate(8);
 
-        object_draw(g_obi16, 24, 153);
+        od_draw(g_obi16, 24, 153);
         game_tick_and_animate(1);
-        object_draw(g_obi15, 24, 153);
+        od_draw(g_obi15, 24, 153);
         sf_sele(SFX_DOOR_OPEN, 6L);   /* verbatim */
         game_tick_and_animate(1);
 }
@@ -152,10 +152,10 @@ a_opcfc()
         lcp_state = STATE_REACH_FORWARD;     game_tick_and_animate(2);
         lcp_state = STATE_PICK_UP_FROM_FLOOR;game_tick_and_animate(2);
         lcp_state = STATE_REACH_FORWARD;
-        object_draw(g_obi13, 258, 47);
+        od_draw(g_obi13, 258, 47);
         game_tick_and_animate(1);
         lcp_state = STATE_BEND_DOWN;
-        object_draw(g_obifc, 258, 47);
+        od_draw(g_obifc, 258, 47);
         game_tick_and_animate(1);
         lcp_filing_cabinet_open = NO;
         lcp_state = STATE_STAND_FACING_SCREEN;
@@ -176,9 +176,9 @@ short   open_close_status;
                 lcp_dresser_open = YES;
                 lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
                 lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-                object_draw(g_obido, 97, 115);
+                od_draw(g_obido, 97, 115);
                 game_tick_and_animate(2);
-                object_draw(g_obi12, 97, 115);
+                od_draw(g_obi12, 97, 115);
                 game_tick_and_animate(2);
         } else {
                 if (lcp_dresser_open == NO)
@@ -186,9 +186,9 @@ short   open_close_status;
                 lcp_dresser_open = NO;
                 lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
                 lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-                object_draw(g_obido, 97, 115);
+                od_draw(g_obido, 97, 115);
                 game_tick_and_animate(2);
-                object_draw(g_obi11, 97, 115);
+                od_draw(g_obi11, 97, 115);
                 game_tick_and_animate(2);
         }
         lcp_state = STATE_STAND_FACING_SCREEN;
@@ -211,10 +211,10 @@ a_watat()
         if (lcp_filing_cabinet_open == NO) {
                 lcp_filing_cabinet_open = YES;
                 lcp_state = STATE_REACH_FORWARD;
-                object_draw(g_obi13, 258, 47);
+                od_draw(g_obi13, 258, 47);
                 game_tick_and_animate(2);
                 lcp_state = STATE_PICK_UP_FROM_FLOOR;
-                object_draw(g_obi14, 258, 47);
+                od_draw(g_obi14, 258, 47);
                 game_tick_and_animate(2);
         } else {
                 lcp_state = STATE_REACH_FORWARD;

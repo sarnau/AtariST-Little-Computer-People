@@ -18,7 +18,7 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern BOOL16   intro_sequence_active;
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
 extern BOOL16   ctrl_a_alarm_pressed_flag;
@@ -26,7 +26,7 @@ extern short    lcp_water_level;
 extern short    g_hatas;
 extern short    g_hacur;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern short    PLAYER_STATE_ARRAY[];
@@ -56,7 +56,7 @@ extern void     sp_ssco();
 extern void     sp_sprs();
 extern void     sp_upds();
 extern void     sf_sele();
-extern void     object_draw();
+extern void     od_draw();
 extern void     tt_on();
 extern void     tt_off();
 extern void     update_water_level_bar();
@@ -100,7 +100,7 @@ a_readn()
         lcp_y = lcp_y + 8;
 
         t = 0;
-        while (t < 200 && triggered_event_list[0] == ACTION_NONE) {
+        while (t < 200 && g_trel[0] == ACTION_NONE) {
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state            = PLAYER_STATE_ARRAY[0];
                 rnd = (unsigned short) Random();
@@ -175,10 +175,10 @@ a_dance()
         PLAYER_STATE_ARRAY[1] = STATE_DANCE_STEP_RIGHT;
 
         if (lcp_record_playing == NO) {
-                action_interruptible_flag = YES;
+                g_actif = YES;
                 a_lists();
         }
-        action_interruptible_flag = NO;
+        g_actif = NO;
 
         house_get_position_xy(POS_TOP_DANCE_FLOOR,
                               &g_wtx, &g_wty);
@@ -196,7 +196,7 @@ a_dance()
         while (midi_is_playing != NO) {
                 i = i + 1;
                 lcp_state = PLAYER_STATE_ARRAY[i & 1];
-                if (triggered_event_list[0] != ACTION_NONE)
+                if (g_trel[0] != ACTION_NONE)
                         break;
                 game_tick_and_animate(2);
         }
@@ -224,7 +224,7 @@ a_drink()
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_wait_head_reach_target();
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         sp_ssco(SPRITE_GLASS);
         house_get_position_xy(POS_BTM_WATER_TAP,
                               &g_wtx, &g_wty);
@@ -257,7 +257,7 @@ a_drink()
         g_selaf[SPRITE_GLASS] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_uset: 3-sprite door animation, sit + flush + refill.
@@ -286,12 +286,12 @@ a_uset()
                 lcp_facing_direction = FACING_LEFT;
                 lcp_state = STATE_BEND_AND_REACH;
                 game_tick_and_animate(2);
-                object_draw(g_obidt, 187, 87);
+                od_draw(g_obidt, 187, 87);
                 game_tick_and_animate(2);
-                object_draw(g_obi09, 187, 87);
+                od_draw(g_obi09, 187, 87);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 game_tick_and_animate(2);
-                object_draw(g_obi10, 187, 87);
+                od_draw(g_obi10, 187, 87);
                 game_tick_and_animate(2);
                 lcp_toilet_door_open = YES;
         }
@@ -307,7 +307,7 @@ a_uset()
                               &g_wtx, &g_wty);
         g_wty = g_wty - 3;
         g_wtx = g_wtx - 10;
-        action_interruptible_flag = YES;
+        g_actif = YES;
         lcp_walk_to_destination();
         saved_x = lcp_x;
 
@@ -318,7 +318,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_2);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
-        object_draw(g_obi09, 187, 87);
+        od_draw(g_obi09, 187, 87);
         game_tick_and_animate(1);
 
         g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
@@ -327,7 +327,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_1);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_1]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_1]] = 87;
-        object_draw(g_obidt, 187, 87);
+        od_draw(g_obidt, 187, 87);
         hide_lcp_sprites();
         sf_sele(SFX_DOOR_CLOSE, 6L);
         game_tick_and_animate(1);
@@ -346,7 +346,7 @@ a_uset()
         show_lcp_sprites();
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
-        object_draw(g_obi09, 187, 87);
+        od_draw(g_obi09, 187, 87);
         sf_sele(SFX_DOOR_OPEN, 6L);
         game_tick_and_animate(1);
 
@@ -356,7 +356,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_3);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_3]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_3]] = 87;
-        object_draw(g_obi10, 187, 87);
+        od_draw(g_obi10, 187, 87);
         game_tick_and_animate(1);
         lcp_toilet_door_open = YES;
 
@@ -378,7 +378,7 @@ a_uset()
 
         lcp.bathroom_need  = NO;
         lcp.bathroom_timer = 9999;
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }
 
 /* a_wakum: scheduled morning routine.
@@ -389,19 +389,19 @@ a_wakum()
 {
         short   counter;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
         ctrl_a_alarm_pressed_flag = YES;
         counter = randomRange(40, 100);
         game_tick_and_animate(counter);
         if (lcp.is_sleeping == YES)
                 a_gioob();
 
-        action_interruptible_flag = YES; a_wakfa();
-        action_interruptible_flag = YES; a_takes();
-        action_interruptible_flag = YES; a_brust();
-        action_interruptible_flag = YES; a_opcbc(0);
-        action_interruptible_flag = YES; a_eatm();
-        action_interruptible_flag = NO;
+        g_actif = YES; a_wakfa();
+        g_actif = YES; a_takes();
+        g_actif = YES; a_brust();
+        g_actif = YES; a_opcbc(0);
+        g_actif = YES; a_eatm();
+        g_actif = NO;
 }
 
 /* a_gotbn: scheduled bedtime routine.
@@ -410,12 +410,12 @@ a_wakum()
 void
 a_gotbn()
 {
-        action_interruptible_flag = YES; a_takes();
-        action_interruptible_flag = YES; a_opcbc(1);
-        action_interruptible_flag = YES; a_kitcc();
-        action_interruptible_flag = YES; a_brust();
-        action_interruptible_flag = YES; a_gioob();
-        action_interruptible_flag = NO;
+        g_actif = YES; a_takes();
+        g_actif = YES; a_opcbc(1);
+        g_actif = YES; a_kitcc();
+        g_actif = YES; a_brust();
+        g_actif = YES; a_gioob();
+        g_actif = NO;
 }
 
 /* a_getd: pure head-anim routine.  Turns the head to face

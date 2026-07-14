@@ -32,7 +32,7 @@
  * to link and run to completion.
  *
  * addr: minigame_setup_screen(), play_erase_rect(),
- *       anagram_main(), word_puzzle_main(), poker_main(),
+ *       ag_main(), wp_main(), poker_main(),
  *       poker_war_main(), poker_blackjack_main()
  */
 
@@ -43,16 +43,16 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    triggered_event_list[];
+extern short    g_trel[];
 extern void     game_tick_and_animate();
 extern short    disable_key_input_flag;
 extern short    text_scroll_timer;
-extern char *   letter_line_ptr[];
+extern char *   g_ltlp[];
 extern short    vdihandle;
-extern char *   anagram_words_buffer;
-extern char *   word_puzzle_data_buffer;
+extern char *   g_agwb;
+extern char *   g_wpdb;
 extern short *  cards_data;
-extern short    word_puzzle_current_index;
+extern short    g_wpci;
 extern short    _poker_round_count;
 extern BOOL16   poker_quit_flag;
 extern short    g_pcmon;
@@ -143,24 +143,24 @@ game_poll_wait_for_quit()
                 game_tick_and_animate(0);
                 if (key == KEY_F10)
                         return 1;
-                if (triggered_event_list[0] != ACTION_NONE)
+                if (g_trel[0] != ACTION_NONE)
                         return 1;
         }
 }
 
-/* anagram_main: outer flow verified; word-selection / scrambling /
+/* ag_main: outer flow verified; word-selection / scrambling /
    input-buffer inner loops are deferred.
-   addr: anagram_main() */
+   addr: ag_main() */
 
 void
-anagram_main()
+ag_main()
 {
-        anagram_words_buffer =
+        g_agwb =
                 (char *) _gemdos(GEMDOS_Malloc, 10000L, 0L, 0L);
-        if (anagram_words_buffer == (char *) 0)
+        if (g_agwb == (char *) 0)
                 error_not_enough_memory();
         fr_reac("words",
-                             (unsigned char *) anagram_words_buffer,
+                             (unsigned char *) g_agwb,
                              10000);
 
         minigame_setup_screen();
@@ -168,37 +168,37 @@ anagram_main()
         /* anagram_show_intro_text, anagram_select_and_scramble_word,
            the guess/clue loop -- deferred. */
         game_poll_wait_for_quit();
-        game_cleanup(anagram_words_buffer);
-        anagram_words_buffer = (char *) 0;
+        game_cleanup(g_agwb);
+        g_agwb = (char *) 0;
 }
 
-/* word_puzzle_main: outer flow verified; per-puzzle parse + fill-in-
+/* wp_main: outer flow verified; per-puzzle parse + fill-in-
    the-blank dispatch is deferred.  Loads 66-line wordpz.txt into
-   letter_line_ptr entries 0..0x41 via the same line-indexing pattern
+   g_ltlp entries 0..0x41 via the same line-indexing pattern
    as file_load_letter_template.
-   addr: word_puzzle_main() */
+   addr: wp_main() */
 
 void
-word_puzzle_main()
+wp_main()
 {
         char *  parse_ptr;
         short   line_index;
 
-        word_puzzle_data_buffer =
+        g_wpdb =
                 (char *) _gemdos(GEMDOS_Malloc, 2000L, 0L, 0L);
-        if (word_puzzle_data_buffer == (char *) 0)
+        if (g_wpdb == (char *) 0)
                 error_not_enough_memory();
 
         minigame_setup_screen();
         fr_reac("wordpz.txt",
-                             (unsigned char *) word_puzzle_data_buffer,
+                             (unsigned char *) g_wpdb,
                              1536);
 
         /* Index the 66 lines (33 puzzles * 2 lines each). */
-        parse_ptr = word_puzzle_data_buffer;
+        parse_ptr = g_wpdb;
         for (line_index = 0; line_index < 0x42;
              line_index = line_index + 1) {
-                letter_line_ptr[line_index] = parse_ptr;
+                g_ltlp[line_index] = parse_ptr;
                 do {
                         parse_ptr = parse_ptr + 1;
                 } while ((unsigned char) *parse_ptr > 31);
@@ -206,12 +206,12 @@ word_puzzle_main()
                         parse_ptr = parse_ptr + 1;
         }
 
-        word_puzzle_current_index = 0;
+        g_wpci = 0;
         string_print("**WORD PUZZLE #  **", 8, 8, COLOR_black);
         /* The per-puzzle "choose then solve" loop -- deferred. */
         game_poll_wait_for_quit();
-        game_cleanup(word_puzzle_data_buffer);
-        word_puzzle_data_buffer = (char *) 0;
+        game_cleanup(g_wpdb);
+        g_wpdb = (char *) 0;
 }
 
 /* poker_main: outer flow verified; 5-card-draw round logic (ante, deal,

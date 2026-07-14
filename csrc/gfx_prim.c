@@ -20,10 +20,10 @@
        symbol table that overflows on the full globals.h. */
 extern short    vdihandle;
 extern short    _vdi_color_table[];
-extern void *   dest_screenbase_ptr;
-extern void *   screen_logbase;
+extern void *   g_dscp;
+extern void *   g_srlgb;
 extern void *   save_logbase;
-extern void *   screen_ptr;
+extern void *   g_srptr;
 #include <osbind.h>
 
 extern void     vsl_color();
@@ -61,7 +61,7 @@ short   color;
 }
 
 /* sc_sdtb: XBIOS Logbase() saves the current
-   log-base pointer; Setscreen redirects VDI output to screen_ptr (the
+   log-base pointer; Setscreen redirects VDI output to g_srptr (the
    off-screen buffer).  Also resets the VDI fill mode to solid black so
    subsequent fill calls have a well-known state.
    addr: sc_sdtb() */
@@ -69,10 +69,10 @@ short   color;
 void
 sc_sdtb()
 {
-        screen_logbase = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) screen_ptr, -1L, -1L);
+        g_srlgb = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
+        _xbios(XBIOS_Setscreen, (long) g_srptr, -1L, -1L);
         vswr_mode(vdihandle, MD_REPLACE);
-        vsf_interior(vdihandle, vsf_interior_PATTERN);
+        vsf_interior(vdihandle, VSFPATT);
         vsf_style(vdihandle, FILL_SOLID);
         vsf_color(vdihandle, COLOR_black);
 }
@@ -84,7 +84,7 @@ sc_sdtb()
 void
 sc_sdtf()
 {
-        _xbios(XBIOS_Setscreen, (long) screen_logbase, -1L, -1L);
+        _xbios(XBIOS_Setscreen, (long) g_srlgb, -1L, -1L);
 }
 
 /* sc_firw: paint one row (160 bytes = 80 words = 20
@@ -171,9 +171,9 @@ void
 init_vdi_and_screen()
 {
         save_logbase = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) dest_screenbase_ptr, -1L, -1L);
+        _xbios(XBIOS_Setscreen, (long) g_dscp, -1L, -1L);
         vswr_mode(vdihandle, MD_REPLACE);
-        vsf_interior(vdihandle, vsf_interior_PATTERN);
+        vsf_interior(vdihandle, VSFPATT);
         vsf_style(vdihandle, FILL_SOLID);
         vsf_color(vdihandle, _vdi_color_table[0xc]);
 }
@@ -193,7 +193,7 @@ exit_vdi_and_screen()
    frontbuffer restore -- but the collapsed endpoints let the VDI take
    the single-pixel fast path in the polyline handler.
 
-   Used by record_player_animate_needle for the needle sweep pixels
+   Used by rp_anim for the needle sweep pixels
    and by the mini-games' cursor + score indicators.
 
    addr: _draw_pixel() (in the graphics-primitives cluster; exact

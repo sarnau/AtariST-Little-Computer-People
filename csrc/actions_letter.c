@@ -11,7 +11,7 @@
  *                      ending) chosen from 4 alternates each.  Sickness
  *                      or happiness modifies which alternate row we
  *                      pull from.
- *   Greeting        -- one of 4 sign-offs from letter_greeting_table[]
+ *   Greeting        -- one of 4 sign-offs from g_ltg[]
  *   Signature       -- lcp.character_name
  *
  * Text is fed one character at a time through letter_type_character_
@@ -21,7 +21,7 @@
  * at 40 columns (0x27 threshold) and inserts a carriage return when
  * a word would overflow.
  *
- * The letter template pointers (letter_line_ptr[], letter_greeting_
+ * The letter template pointers (g_ltlp[], letter_greeting_
  * table[]) live in globals.c initialised to NULL.  file_load_letter_
  * template() -- still stubbed -- would populate them from letter.txt
  * on the ST disk.  Until that lands, lt_tysa()
@@ -47,7 +47,7 @@ extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hamod;
-extern BOOL16   action_interruptible_flag;
+extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
 extern void     lcp_wait_head_reach_target();
@@ -57,9 +57,9 @@ extern short    disable_key_input_flag;
 extern short    text_scroll_timer;
 extern short    g_srsdc;
 extern short    g_cdibp;
-extern char *   letter_txt_content;
-extern char *   letter_line_ptr[];
-extern char *   letter_greeting_table[];
+extern char *   g_lttx;
+extern char *   g_ltlp[];
+extern char *   g_ltg[];
 extern char *   month_name_table[];
 extern short    g_ltcwt[];
 extern char     g_ltscb[];
@@ -343,7 +343,7 @@ a_writl()
         if (result != 0)
                 return;
 
-        action_interruptible_flag = YES;
+        g_actif = YES;
 
         /* Drop the typewriter + typing sprites. */
         g_selaf[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
@@ -383,8 +383,8 @@ a_writl()
         fill_top_rect_with_background(0x1b);
 
         /* Allocate the letter template buffer -- 0x2900 bytes. */
-        letter_txt_content = (char *) _gemdos(GEMDOS_Malloc, 0x2900L, 0L, 0L);
-        if (letter_txt_content == (char *) 0)
+        g_lttx = (char *) _gemdos(GEMDOS_Malloc, 0x2900L, 0L, 0L);
+        if (g_lttx == (char *) 0)
                 error_not_enough_memory();
         file_load_letter_template();
 
@@ -442,21 +442,21 @@ a_writl()
                         line_spacing =  2;
                 walk_result = randomRange(0, 3);
                 cursor_y = lt_tysa(
-                        letter_line_ptr[template_index + walk_result],
+                        g_ltlp[template_index + walk_result],
                         line_spacing);
                 char_test = (cursor_y != '-');
 
                 /* Middle line */
                 walk_result = randomRange(0, 3);
                 cursor_y = lt_tysa(
-                        letter_line_ptr[template_index + walk_result + 4],
+                        g_ltlp[template_index + walk_result + 4],
                         char_test);
                 char_test = (cursor_y != '-');
 
                 /* Ending line */
                 walk_result = randomRange(0, 3);
                 lt_tysa(
-                        letter_line_ptr[template_index + walk_result + 8],
+                        g_ltlp[template_index + walk_result + 8],
                         char_test);
         }
 
@@ -465,7 +465,7 @@ a_writl()
         line_spacing = -8;
         walk_result = randomRange(0, 3);
         lt_tysa(
-                letter_greeting_table[walk_result], line_spacing);
+                g_ltg[walk_result], line_spacing);
         lt_tyca('\r');
 
         sprintf(input_string, "%s", lcp.character_name);
@@ -476,7 +476,7 @@ a_writl()
         text_scroll_timer        = 0;
         g_cdibp = 0;
         disable_key_input_flag   = NO;
-        _gemdos(GEMDOS_Mfree, (long) letter_txt_content, 0L, 0L);
+        _gemdos(GEMDOS_Mfree, (long) g_lttx, 0L, 0L);
 
         g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
         g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
@@ -493,7 +493,7 @@ a_writl()
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_y = lcp_y - 6;
         game_tick_and_animate(0);
-        action_interruptible_flag = YES;
+        g_actif = YES;
 
         house_get_position_xy(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
@@ -510,5 +510,5 @@ a_writl()
         g_selaf[SPRITE_TYPING_3]   = SPRITE_HIDDEN;
         g_selaf[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
         sp_upds();
-        action_interruptible_flag = NO;
+        g_actif = NO;
 }

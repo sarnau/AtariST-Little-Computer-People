@@ -106,7 +106,7 @@ typedef struct {
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
    `table[10]` is a per-position bitmask: for each of the 10 position
    slots, all bits that must be present in the accumulated
-   _entered_word_bytes[] before this entry matches.  A sentinel entry
+   g_ewb[] before this entry matches.  A sentinel entry
    with `table[0] == 0xff` terminates the table.  `priority_offset`
    nudges the action's queue priority up or down; `action` is the
    ACTION_ID to fire (stored as char to save 1 byte per row -- the

@@ -10,11 +10,11 @@
 #include "types.h"
 #include "enums.h"
 
-/* room_position_x_table[48]: X half-pixel coordinate per HOUSE_POS.
+/* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
    Table value gets left-shifted by 1 at the call site to yield the
    full-pixel X (see house_get_position_xy).
-   addr: room_position_x_table at 0x019eb2 */
-short   room_position_x_table[48] = {
+   addr: g_rpxs at 0x019eb2 */
+short   g_rpxs[48] = {
         /* Floor 3 -- top       0..15 */
          22,  36,  49,  55,  60,  56,  73,  96,
         106, 118, 113, 110, 131,  47, 133, 146,
@@ -76,11 +76,11 @@ unsigned short  revert_table[256] = {
    (read, play), evening is low-activity (nod, wander).  Exact values
    need a data-segment dump from Ghidra to be byte-accurate; the shape
    of the tables (16 shorts, all ACTION_ID) is verified.
-   addr: action_table_active[] at 0x2b8fe,
-         action_table_moderate[] at 0x2b91e,
-         action_table_relaxed[] at 0x2b93e */
+   addr: g_atact[] at 0x2b8fe,
+         g_atmod[] at 0x2b91e,
+         g_atrel[] at 0x2b93e */
 
-short   action_table_active[16] = {
+short   g_atact[16] = {
         ACTION_HELLO,           ACTION_DRINK,           ACTION_KITCHEN_CABINET,
         ACTION_READ_NEWSPAPER,  ACTION_PLAY_COMPUTER,   ACTION_PLAY_A_GAME,
         ACTION_TIDY_HOUSE,      ACTION_WANDER_IDLY,     ACTION_NOD_HEAD,
@@ -89,7 +89,7 @@ short   action_table_active[16] = {
         ACTION_YAWN_AND_STRETCH
 };
 
-short   action_table_moderate[16] = {
+short   g_atmod[16] = {
         ACTION_READ_NEWSPAPER,  ACTION_PLAY_COMPUTER,   ACTION_PLAY_A_GAME,
         ACTION_TIDY_HOUSE,      ACTION_WANDER_IDLY,     ACTION_NOD_HEAD,
         ACTION_TOGGLE_TV,       ACTION_PLAY_WITH_RECORD,ACTION_HELLO,
@@ -98,7 +98,7 @@ short   action_table_moderate[16] = {
         ACTION_PACE_NERVOUSLY
 };
 
-short   action_table_relaxed[16] = {
+short   g_atrel[16] = {
         ACTION_YAWN_AND_STRETCH,ACTION_PEEK_AROUND,     ACTION_NOD_HEAD,
         ACTION_WANDER_IDLY,     ACTION_SIT_ON_COUCH_WITH_DOG,
         ACTION_TOGGLE_TV,       ACTION_READ_NEWSPAPER,  ACTION_WRITE_LETTER,
@@ -117,13 +117,13 @@ short *         activity_schedule_table[3] = {
         _schedule_row_0, _schedule_row_1, _schedule_row_2
 };
 
-/* room_position_height_table[49]: Y offset from floor baseline, indexed
+/* g_rphs[49]: Y offset from floor baseline, indexed
    by (HOUSE_POS + 1).  Entry 0 is a dummy left over from the original
    Alcyon C source (probably a "position 0" sentinel).  Some bottom-floor
    entries are negative to plant the resident's feet below the visible
    baseline (e.g. front-door threshold).
-   addr: room_position_height_table at 0x019f2c */
-short   room_position_height_table[49] = {
+   addr: g_rphs at 0x019f2c */
+short   g_rphs[49] = {
         /* dummy[0] */
           9,
         /* Floor 3 -- indices 1..16  (HOUSE_POS  0..15) */

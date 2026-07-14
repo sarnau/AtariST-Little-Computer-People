@@ -68,17 +68,17 @@ extern long             g_mtcou;
 extern short            midi_direct_write_mode;
 extern short            g_mtdiv;
 extern short            g_mtpre;
-extern short            midi_event_duration;
+extern short            g_medu;
 extern short            midi_next_event_tick;
 extern short            midi_last_processed_tick;
 extern BOOL16           g_msmsa;
 extern unsigned char    midi_channel_map[];
 extern short            g_mcpro[];
 extern short            midi_program_map[];
-extern unsigned char    midi_scale_transpose_table[];
-extern unsigned char    midi_scale_mask_table[];
-extern BOOL16           midi_output_enabled;
-extern unsigned char    midi_event[];
+extern unsigned char    g_mstr[];
+extern unsigned char    g_msmk[];
+extern BOOL16           g_moen;
+extern unsigned char    g_meve[];
 extern BOOL16           psg_output_enabled;
 extern BOOL16           psg_notes_active;
 extern unsigned char    psg_channel_notes[];
@@ -90,7 +90,7 @@ extern char             g_mnhil;
 extern short            g_mccha;
 #include <osbind.h>
 
-extern void             midi_out_write_byte();
+extern void             mowrit();
 extern void             psg_copy_envelope_params();
 extern void             psg_write_register();
 extern void             psg_set_mixer();
@@ -370,7 +370,7 @@ mq_stap()
         midi_direct_write_mode  = 0;
         g_mtdiv       = 100;
         g_mtpre     = 100;
-        midi_event_duration     = 100;
+        g_medu     = 100;
         midi_next_event_tick    = 100;
         midi_last_processed_tick= 100;
         g_msmsa   = YES;
@@ -404,7 +404,7 @@ unsigned char * p;
    Starts identity, then blanks (0xFF = skip) the 5 chromatic non-
    diatonic notes in the octave.  If the scale parameter is anything
    other than 1 (chromatic), applies a 7-bit chord mask from
-   midi_scale_mask_table[scale] per octave, shifting missing degrees
+   g_msmk[scale] per octave, shifting missing degrees
    by +1 (scale < 9) or -1 (scale >= 9) toward the nearest present
    degree.  This is how the game constrains melodies to pentatonic /
    blues / other scale flavours.
@@ -426,18 +426,18 @@ short   value;
         /* Identity map first, then blank the chromatic-only notes in
            the first octave (indices 1, 3, 6, 8, 10 = C#, D#, F#, G#, A#). */
         for (i = 0; i < 0x84; i = i + 1)
-                midi_scale_transpose_table[i] = (unsigned char) i;
-        midi_scale_transpose_table[1]  = 0xff;
-        midi_scale_transpose_table[3]  = 0xff;
-        midi_scale_transpose_table[6]  = 0xff;
-        midi_scale_transpose_table[8]  = 0xff;
-        midi_scale_transpose_table[10] = 0xff;
+                g_mstr[i] = (unsigned char) i;
+        g_mstr[1]  = 0xff;
+        g_mstr[3]  = 0xff;
+        g_mstr[6]  = 0xff;
+        g_mstr[8]  = 0xff;
+        g_mstr[10] = 0xff;
 
         if (value == 1)
                 return;
 
         note_shift = (value < 9) ? 1 : -1;
-        chord_mask = midi_scale_mask_table[value];
+        chord_mask = g_msmk[value];
 
         /* Walk one octave per iteration and apply the mask to the 7
            diatonic-plus-one degree slots (indices 0, 2, 4, 5, 7, 9, 11
@@ -446,19 +446,19 @@ short   value;
            offset +0). */
         for (i = 0; i < 0x84; i = i + 12) {
                 if ((chord_mask & 0x01) == 0)
-                        midi_scale_transpose_table[i + 11] += note_shift;
+                        g_mstr[i + 11] += note_shift;
                 if ((chord_mask & 0x02) == 0)
-                        midi_scale_transpose_table[i + 9]  += note_shift;
+                        g_mstr[i + 9]  += note_shift;
                 if ((chord_mask & 0x04) == 0)
-                        midi_scale_transpose_table[i + 7]  += note_shift;
+                        g_mstr[i + 7]  += note_shift;
                 if ((chord_mask & 0x08) == 0)
-                        midi_scale_transpose_table[i + 5]  += note_shift;
+                        g_mstr[i + 5]  += note_shift;
                 if ((chord_mask & 0x10) == 0)
-                        midi_scale_transpose_table[i + 4]  += note_shift;
+                        g_mstr[i + 4]  += note_shift;
                 if ((chord_mask & 0x20) == 0)
-                        midi_scale_transpose_table[i + 2]  += note_shift;
+                        g_mstr[i + 2]  += note_shift;
                 if ((chord_mask & 0x40) == 0)
-                        midi_scale_transpose_table[i]      += note_shift;
+                        g_mstr[i]      += note_shift;
         }
 }
 
@@ -485,13 +485,13 @@ short   index;
         physical = midi_channel_map[index] & 0xf;
         if (g_mcpro[physical] == midi_program_map[index])
                 return;
-        if (midi_output_enabled == NO)
+        if (g_moen == NO)
                 return;
 
-        midi_event[0] = (midi_channel_map[index] & 0xf) | 0xc0;
-        midi_event[1] = (unsigned char) midi_program_map[index];
+        g_meve[0] = (midi_channel_map[index] & 0xf) | 0xc0;
+        g_meve[1] = (unsigned char) midi_program_map[index];
         g_mcpro[physical] = midi_program_map[index];
-        mq_dise(midi_event, (short) 2, (short) 0);
+        mq_dise(g_meve, (short) 2, (short) 0);
 }
 
 /* ---- mq_dise ---------------------------------------- */
@@ -505,7 +505,7 @@ short   index;
    MIDI OUT path:
      Apply an octave transposition (envelope_val - upper-nibble-of-
      midiChannel) * -12 semitones to the note byte, then either
-     stream the bytes one-at-a-time through midi_out_write_byte (when
+     stream the bytes one-at-a-time through mowrit (when
      midi_direct_write_mode is 1, used by speed-critical hot loops)
      or hand the whole event to Midiws.  The note byte is restored
      to its original value after the write so the PSG path below sees
@@ -561,7 +561,7 @@ short           midiChannel;
         short           ret;
 
         /* ---- MIDI OUT path ---- */
-        if (midi_output_enabled != NO) {
+        if (g_moen != NO) {
                 saved_note = midiEventPtr[1];
                 if (midiChannel != 0) {
                         short   octave_delta = envelope_val -
@@ -571,7 +571,7 @@ short           midiChannel;
                 }
                 if (midi_direct_write_mode == 1) {
                         while (midiEventSize != 0) {
-                                midi_out_write_byte(*midiEventPtr);
+                                mowrit(*midiEventPtr);
                                 midiEventPtr = midiEventPtr + 1;
                                 midiEventSize = midiEventSize - 1;
                         }
