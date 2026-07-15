@@ -103,6 +103,7 @@ extern void *   g_srptr;
 extern short *  g_dsb;          /* display-screen buffer (same block as g_srptr) */
 extern void *   g_dscp;         /* current-row cursor into g_dsb */
 extern short    vdihandle;
+extern void *   save_physbase;  /* front buffer (Physbase at startup) */
 extern short    al_loot();      /* asset_load_objects_table */
 extern short    al_lost();      /* asset_load_sprites_table */
 extern void     al_locs();      /* asset_load_character_sheets */
@@ -111,6 +112,8 @@ extern void     sf_sl();        /* soundeffects_load */
 extern short    lc_load();      /* lcp_load */
 extern void     decompress_scn();
 extern void     init_vdi_and_screen();
+extern void     init_compositing_screens();
+extern void     register_alt_screen();
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -123,6 +126,27 @@ extern void     appl_exit();
 
 /* Cconws (GEMDOS 0x09) -- print a null-terminated string to CON:. */
 #define Cconws(s)      gemdos(0x09, s)
+
+/* dump_hex: print "<label>XXXXXXXX\r\n" using Cconws only (no printf
+   dependency; K&R-safe 68000 assembly-esque loop). */
+static void
+dump_hex(label, val)
+char *  label;
+long    val;
+{
+        char    buf[12];
+        short   i;
+        short   nib;
+        gemdos(0x09, label);
+        for (i = 0; i < 8; i = i + 1) {
+                nib = (short) ((val >> ((7 - i) * 4)) & 0xf);
+                buf[i] = (char) (nib < 10 ? '0' + nib : 'A' + nib - 10);
+        }
+        buf[8]  = '\r';
+        buf[9]  = '\n';
+        buf[10] = 0;
+        gemdos(0x09, buf);
+}
 /* Cconin (GEMDOS 0x01) -- read a char from CON: (blocks). */
 #define Cconin()       gemdos(0x01)
 /* Pterm (GEMDOS 0x4c) -- terminate cleanly. */
@@ -187,29 +211,57 @@ char ** argv;
         Cconws("[5] load HYBER save...\r\n");
         lc_load();
 
-        Cconws("[5b] alloc back-screen (32K+256)...\r\n");
+        Cconws("[5b] alloc back-screen (32000 + 256 slack)...\r\n");
         {
                 long raw;
+                /* ST low-res screen is 32000 bytes (320*200/2), plus 256
+                   bytes of slack to allow aligning UP to a 256-byte
+                   boundary (the shifter ignores the low 8 bits of the
+                   screen base). */
                 raw = gemdos(0x48, 32256L);      /* Malloc */
-                /* Align to 256-byte boundary (ST screen requirement) */
-                g_srptr = (void *) ((raw + 255L) & ~255L);
                 if (raw == 0L) {
                         Cconws("*** Malloc failed!\r\n");
                         Cconin();
                         Pterm(1);
                 }
+                g_srptr = (void *) ((raw + 255L) & ~255L);
+                dump_hex("  raw     = ", raw);
+                dump_hex("  g_srptr = ", (long) g_srptr);
         }
 
         Cconws("[6] decompress house.scn...\r\n");
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
 
         Cconws("[7] init VDI screen...\r\n");
-        /* Point g_dsb/g_dscp at the Malloc'd back-screen block so
-           init_vdi_and_screen's Setscreen sees a valid buffer instead
-           of NULL (which would DMA the shifter at $0 and clobber the
-           exception vector table). */
+        /* Wire the compositing pointers before any XBIOS Setscreen
+           gets called.  save_physbase snapshots the real physbase
+           (whatever GEM handed us) so the double-buffer flip in
+           renderf can toggle between it and the alternate buffer.
+           g_dsb/g_dscp point into our Malloc'd back-screen so
+           init_vdi_and_screen's Setscreen has a valid target. */
+        save_physbase = (void *) xbios(2 /* Physbase */);
+        dump_hex("  save_ph = ", (long) save_physbase);
         g_dsb  = (short *) g_srptr;
         g_dscp = (void  *) (g_dsb + 0x7f);
+        dump_hex("  g_dsb   = ", (long) g_dsb);
+        dump_hex("  g_dscp  = ", (long) g_dscp);
+        {
+                /* Alternate screen buffer for the double-buffer flip.
+                   The 1985 code hardcoded 0x2CA00 in the render loop;
+                   we Malloc a fresh 32K+256 block and pass it in.
+                   Must be 256-byte aligned (shifter DMA requirement). */
+                long alt;
+                alt = gemdos(0x48, 32256L);
+                if (alt == 0L) {
+                        Cconws("*** alt-screen Malloc failed\r\n");
+                        Cconin();
+                        Pterm(1);
+                }
+                alt = (alt + 255L) & ~255L;
+                dump_hex("  alt-buf = ", alt);
+                register_alt_screen((void *) alt);
+        }
+        init_compositing_screens();
         init_vdi_and_screen();
 
         Cconws("[8] about to call endless_game_loop\r\n");

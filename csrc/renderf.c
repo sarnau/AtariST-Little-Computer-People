@@ -45,6 +45,7 @@ extern BOOL16   g_sfacf;
 extern short    last_hz200;
 extern long     last_vbclock;
 extern void *   save_physbase;
+extern void *   alt_screen_ptr;         /* Malloc'd alternate screen; init in main() */
 extern MFDB     g_srmfd;
 extern MFDB     MFDB_screen_ptr;        /* alias with older name */
 extern MFDB *   current_screen_mfdb;
@@ -280,13 +281,46 @@ sc_ren8()
                 g_sfacf = NO;
         }
 
-        /* Toggle compositing buffer between the physbase we started
-           with and the alternate at 0x2CA00. */
+        /* Toggle compositing buffer between save_physbase (the real
+           GEM screen we started with) and alt_screen_ptr (a Malloc'd
+           32K+256 back-buffer registered by main() via
+           register_alt_screen()).  Both are 256-byte aligned as the
+           shifter DMA requires.  The 1985 code used a hardcoded
+           0x2CA00 alt buffer -- fine when LCP.PRG lived low in RAM,
+           but with a modern basepage that address lies INSIDE our
+           own text/data, so displaying it showed our program's
+           bytes as pixels. */
         if (current_screen_mfdb->fd_addr == save_physbase)
-                current_screen_mfdb->fd_addr = (void *) 0x2ca00L;
+                current_screen_mfdb->fd_addr = alt_screen_ptr;
         else
                 current_screen_mfdb->fd_addr = save_physbase;
 
         animation_tick_counter = animation_tick_counter + 1;
         last_vbclock = read_vbclock();
+}
+
+/* init_compositing_screens: wire g_srmfd/current_screen_mfdb to
+   save_physbase so the page-flip has a valid target the first time
+   it runs.  Called from main() BEFORE endless_game_loop so the very
+   first Setscreen(-1, g_srmfd.fd_addr, -1) doesn't hand NULL to the
+   shifter.  Not a 1985 function -- init was baked into the boot
+   sequence we haven't fully ported. */
+void
+init_compositing_screens()
+{
+        g_srmfd.fd_addr = save_physbase;
+        current_screen_mfdb = &g_srmfd;
+}
+
+/* alt_screen_ptr / register_alt_screen: replacement for the 1985
+   code's hardcoded 0x2CA00 alt-buffer address.  main() Malloc's a
+   256-aligned 32K block and hands it here so the page-flip has a
+   valid target that doesn't collide with our own basepage. */
+void *  alt_screen_ptr = (void *) 0;
+
+void
+register_alt_screen(p)
+void *  p;
+{
+        alt_screen_ptr = p;
 }
