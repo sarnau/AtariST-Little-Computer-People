@@ -110,7 +110,7 @@ extern long xbios();
    -> screen_set_draw_to_backbuffer -> draw water pipe + doors +
    food-bowl objects -> screen_draw_food_cabinet ->
    daily_reset_action_flags -> palette_apply_clothing_colors ->
-   copyprot_main_check -> sprite_init_MFDBs -> (cutscene if new) ->
+   copyprot_main_check -> sp_imfs -> (cutscene if new) ->
    endless_game_loop.
 
    Almost none of those subroutines are ported yet; this stub only
@@ -130,6 +130,7 @@ extern short    lc_load();      /* lcp_load */
 extern void     decompress_scn();
 extern void     init_vdi_and_screen();
 extern void     setup_screen_buffer();  /* Ghidra 0x16576 */
+extern void     sp_imfs();    /* Ghidra */
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -186,6 +187,7 @@ char ** argv;
 
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
         init_vdi_and_screen();
+        sp_imfs();            /* Ghidra: last major init before endless_game_loop */
         endless_game_loop();
 
         Pterm(0);

@@ -540,3 +540,61 @@ sp_lchu()
 
         g_sepef[4] = YES;
 }
+
+/* sp_imfs (Ghidra): populate the 8 per-slot MFDB pairs
+   (image + mask) from the active sprite tables, wire the compositing
+   MFDB (screen_mfdb == g_srmfd) at SCREEN_BUFFER_A + 0xCD, and call
+   sp_drin.  Also zeroes last_hz200 so the very first sc_ren8
+   frame-rate gate sees a 0->N delta and proceeds.
+
+   Note on the offset 0xCD: same shape as setup_screen_buffer's 0x12F,
+   just a different header size, and NOT rounded up here (unlike
+   setup_screen_buffer's align-up-to-512).  The 1985 code left this
+   compositing target unaligned; VDI raster ops don't require it and
+   the shifter is pointed elsewhere via the page-flip in sc_ren8.
+
+   addr: sp_imfs() */
+
+extern short            last_hz200;
+extern short            screen_scale_factor;
+extern MFDB             sprite_mfdb_image[];
+extern MFDB             sprite_mfdb_mask[];
+extern MFDB             g_srmfd;                /* Ghidra "screen_mfdb" */
+extern unsigned char    SCREEN_BUFFER_A[];
+extern short *          g_seaim[];              /* sprite_active_image */
+extern short *          g_seams[];              /* sprite_active_mask */
+extern short            g_seach[];              /* sprite_active_height */
+extern short            g_seacw[];              /* sprite_active_width */
+extern void             sp_imfd();
+extern void             sp_drin();
+
+void
+sp_imfs()
+{
+        short   i;
+
+        last_hz200 = 0;
+        for (i = 0; i < 8; i = i + 1) {
+                sp_imfd(0L, &sprite_mfdb_image[i],
+                                 (void *) g_seaim[i],
+                                 g_seacw[i], g_seach[i]);
+                sp_imfd(0L, &sprite_mfdb_mask[i],
+                                 (void *) g_seams[i],
+                                 g_seacw[i], g_seach[i]);
+        }
+        sp_imfd(0L, &g_srmfd,
+                         (void *) (SCREEN_BUFFER_A + 0xCD),
+                         (short) (screen_scale_factor * 320),
+                         (short) (screen_scale_factor * 200));
+        sp_drin();
+}
+
+/* sp_drin (Ghidra): empty stub.  Present in the 1985 code
+   as a hook -- probably a wired-up function pointer table entry that
+   was reduced to a no-op in the final build.
+   addr: sp_drin() */
+
+void
+sp_drin()
+{
+}

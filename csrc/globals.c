@@ -368,13 +368,23 @@ short   screen_scale_factor             = 1;
    buffer instead of another off-screen bitmap. */
 MFDB    MFDB_A                          = { 0 };
 
-/* SCREEN_BUFFER_B (Ghidra 0x34953) -- BSS scratch for the
-   double-buffered compositing screen.  setup_screen_buffer()
-   takes this + 0x12F and aligns UP to the next 512-byte boundary
-   for the 320x200 ST screen (32000 bytes).  Sized generously so
-   the 0x12F header + 512-byte align slack + 32000 pixel bytes all
-   fit. */
+/* SCREEN_BUFFER_A / SCREEN_BUFFER_B (Ghidra 0x2CCE3 / 0x34953) -- BSS
+   scratch for the two double-buffer compositing screens.
+   setup_screen_buffer() aligns SCREEN_BUFFER_B + 0x12F up to a 512-
+   byte boundary for MFDB_screen_ptr (the house-scene / background
+   source).  sprite_init_MFDBs() uses SCREEN_BUFFER_A + 0xCD as the
+   screen_mfdb (aka g_srmfd) compositing target.  Sized generously so
+   the header + align slack + 32000 pixel bytes for the 320x200 ST
+   screen all fit. */
+unsigned char   SCREEN_BUFFER_A[33280];
 unsigned char   SCREEN_BUFFER_B[33280];
+
+/* sprite_mfdb_image / sprite_mfdb_mask (Ghidra) -- per-slot MFDB
+   descriptors for the 8-way hardware-sprite double buffer.
+   Populated by sprite_init_MFDBs from the sprite_active_* arrays
+   before endless_game_loop; consumed by the sprite draw path. */
+MFDB    sprite_mfdb_image[8];
+MFDB    sprite_mfdb_mask[8];
 
 short   g_cmmin                    = 0;
 short   g_chhou                      = 0;

@@ -254,17 +254,17 @@ short   count;
         } while (remaining != -1);
 }
 
-/* sprite_init_MFDB (Ghidra 0x16612): initialise a VDI MFDB
+/* sp_imfd (Ghidra 0x16612): initialise a VDI MFDB
    descriptor.  Sets bitmap address, pixel dimensions, word-width
    (w/16), standard-format flag = 0 (device native), and always
    4 bitplanes for ST low resolution.  The first parameter is
    originally an nplanes hint but is hardcoded to 4 inside the
    function and effectively ignored -- kept in the signature to
    match the 1985 shape.
-   addr: sprite_init_MFDB() */
+   addr: sp_imfd() */
 
 void
-sprite_init_MFDB(unused, mfdb, addr, w, h)
+sp_imfd(unused, mfdb, addr, w, h)
 long    unused;
 MFDB *  mfdb;
 void *  addr;
@@ -320,7 +320,7 @@ MFDB *  pdesMFDB;
      3. Populate MFDB_screen_ptr describing that buffer as a
         scale*320 x scale*200 device-format bitmap (scale=1 =
         low-res, so 320x200).  0x1D00 is the "unused" first arg to
-        sprite_init_MFDB (originally an nplanes hint).
+        sp_imfd (originally an nplanes hint).
      4. Snapshot the currently visible physbase into the buffer via
         copy_screen so the first compositing frame has something
         sensible to blend on top of.
@@ -335,7 +335,7 @@ setup_screen_buffer()
         buf = (long) SCREEN_BUFFER_B + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
-        sprite_init_MFDB(0x1D00L, &MFDB_screen_ptr, g_srptr,
+        sp_imfd(0x1D00L, &MFDB_screen_ptr, g_srptr,
                          (short) (screen_scale_factor * 0x140),
                          (short) (screen_scale_factor * 200));
         copy_screen(vdihandle, &MFDB_screen_ptr);
