@@ -106,11 +106,17 @@ sp_updb()
         if (g_lcyof != NO && lcp_state < 25)
                 frame = carry_body_frame_table[lcp_state];
 
-        sp_lcpf((short *) (body_lcp_file + frame),
-                        (short *) (body_shape_data + frame),
-                        (short *) g_lsimg,
-                        (short *) g_lsmas,
-                        2, 21, lcp_facing_direction, 1);
+        /* Ghidra `body_lcp_file + frame` / `body_shape_data + frame`
+           is shorthand for `+ frame * stride`: 168 bytes per body
+           frame in body.lcp (SOURCE), 84 bytes per frame in
+           body_shape_data (DEST).  The decompile collapses the
+           multiplication into type-based scaling; the disassembly
+           at Ghidra 0x2669a (`muls.w #0x54, D0`) confirms *84. */
+        sp_lcpf((short *) ((char *) body_lcp_file    + (long) frame * 168L),
+                (short *) ((char *) body_shape_data  + (long) frame *  84L),
+                (short *) g_lsimg,
+                (short *) g_lsmas,
+                2, 21, lcp_facing_direction, 1);
 
         if (lcp_facing_direction == FACING_RIGHT)
                 g_seacx[3] = lcp_x - 4;
@@ -511,10 +517,12 @@ sp_lchu()
         headIndex = happiness_head_frame_offset[lcp.happiness] +
                     (g_hsfra & 0x7f);
 
-        sp_lcpf((short *) (pex_lcp_file  + headIndex),
-                        (short *) (head_shape_data + headIndex),
-                        g_hsbuf, g_hsmas,
-                        2, 21, g_hsmif, 0);
+        /* Same stride-scaling shape as sp_updb -- 168 bytes per head
+           frame in PEx.LCP, 84 bytes per frame in head_shape_data. */
+        sp_lcpf((short *) ((char *) pex_lcp_file    + (long) headIndex * 168L),
+                (short *) ((char *) head_shape_data + (long) headIndex *  84L),
+                g_hsbuf, g_hsmas,
+                2, 21, g_hsmif, 0);
 
         if (g_hsmif == NO)
                 g_seacx[4] = lcp_x + head_x_offset_per_state[lcp_state] - 4;
