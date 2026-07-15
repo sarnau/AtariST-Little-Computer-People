@@ -93,9 +93,14 @@ short   g_oiidx;
 short   x;
 short   y;
 {
+        /* Ghidra: `object_tab_mfdb + object_index` (MFDB* pointer
+           arithmetic).  Our port had `(char*)g_otmfd + g_oiidx`
+           which treats g_oiidx as a byte offset instead of an array
+           index -- MFDB is 18 bytes so all non-zero object IDs
+           landed misaligned and VDI got junk width/height. */
         vdi_copy_rect(
                 vdihandle, S_ONLY,
-                (MFDB *) ((char *) g_otmfd + g_oiidx),
+                &((MFDB *) g_otmfd)[g_oiidx],
                 &MFDB_screen_ptr,
                 0, 0,
                 g_obtaw[g_oiidx]  - 1,
