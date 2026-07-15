@@ -1,5 +1,5 @@
 /*
- * actions_food.c -- meal, kitchen, feed-dog, snack handlers.
+ * afood.c -- meal, kitchen, feed-dog, snack handlers.
  *
  * All four share the kitchen-cabinet / fridge / stove workflow and
  * update food-supply / hunger / dog-bowl state at their tail.

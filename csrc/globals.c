@@ -326,7 +326,7 @@ BOOL16          psg_notes_active                = NO;
 unsigned char   psg_channel_notes[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psg_envelope[3];
 
-/* psg_freq_table[132] -- populated in psg_freq_data.c from first
+/* psg_freq_table[132] -- populated in psgfreq.c from first
    principles (YM2149 formula: period = 2000000 / (16 * midi_freq)).
    Definition lives in its own TU so the ~1KB of table data doesn't
    clutter globals.c. */

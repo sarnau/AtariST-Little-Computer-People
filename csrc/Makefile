@@ -20,7 +20,7 @@
 
 # ---- Source list ---------------------------------------------------------
 SOURCES         := globals.c \
-                   sprite_globals.c \
+                   sprglobs.c \
                    tables.c \
                    sim.c \
                    calendar.c \
@@ -31,42 +31,42 @@ SOURCES         := globals.c \
                    movement.c \
                    walk.c \
                    sprites.c \
-                   sprites_head.c \
+                   sprhead.c \
                    dog.c \
                    actions.c \
-                   action_stubs.c \
-                   action_simple.c \
-                   actions_idle.c \
-                   actions_house.c \
-                   actions_food.c \
-                   actions_bathroom.c \
-                   actions_leisure.c \
-                   actions_letter.c \
-                   actions_doors.c \
-                   letter_load.c \
-                   render_extra.c \
+                   astubs.c \
+                   asimple.c \
+                   aidle.c \
+                   ahouse.c \
+                   afood.c \
+                   abathrm.c \
+                   aleisure.c \
+                   aletter.c \
+                   adoors.c \
+                   letload.c \
+                   renderx.c \
                    gfx_prim.c \
                    clock.c \
                    keyboard.c \
-                   render_frame.c \
+                   renderf.c \
                    parser.c \
-                   actions_games.c \
-                   sprite_render.c \
-                   tv_animate.c \
+                   agames.c \
+                   sprender.c \
+                   tvanim.c \
                    games.c \
                    cards.c \
                    midi_seq.c \
                    psg_io.c \
                    sfx_irq.c \
                    vdi.c \
-                   vocab_data.c \
-                   psg_freq_data.c \
+                   vocab.c \
+                   psgfreq.c \
                    assets.c \
                    alerts.c \
-                   deliveries.c \
-                   ai_random.c \
+                   delivery.c \
+                   airandom.c \
                    save.c \
-                   save_host.c \
+                   savehost.c \
                    render.c \
                    sound.c \
                    tick.c \
@@ -124,18 +124,23 @@ $(HOSTOBJDIR):
 # ---- Alcyon build (LCP.PRG) ----------------------------------------------
 # Drives Alcyon C 4.14 headless via Hatari.  See tools/alcyon_build.sh
 # for the design rationale (2-phase compile per file to survive c068
-# crashes, 8.3 filename aliasing via tools/filename_map.txt).
+# crashes).  All .c/.h basenames are already 8.3-safe so nothing here
+# needs aliasing.
 #
 # Uses EmuTOS bundled with Homebrew Hatari by default.  Override with:
 #   make alcyon HATARI=/path/to/hatari TOS_IMG=/path/to/tos.img
 .PHONY: alcyon
-alcyon:
+alcyon: alcyon-objs alcyon-link
+
+# Compile every .c to build/alcyon/*.o (headless Hatari).
+.PHONY: alcyon-objs
+alcyon-objs:
 	@tools/alcyon_build.sh
 
-# Direct .o-only target: run alcyon_build.sh without linking.  Useful
-# for iterating during Alcyon fidelity work.
-.PHONY: alcyon-objs
-alcyon-objs: alcyon
+# Archive + doindex + aln -> build/alcyon/LCP.PRG.
+.PHONY: alcyon-link
+alcyon-link:
+	@tools/alcyon_link.sh
 
 # ---- Housekeeping --------------------------------------------------------
 .PHONY: linktest
@@ -148,22 +153,22 @@ linktest: host
 
 .PHONY: hyber_test
 hyber_test: host
-	@echo "  CC    tests/hyber_roundtrip.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/hyber_test tests/hyber_roundtrip.c $(HOSTOBJS)
+	@echo "  CC    tests/t_hyber.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/hyber_test tests/t_hyber.c $(HOSTOBJS)
 	@echo "  RUN   build/host/hyber_test"
 	@cd build/host && ./hyber_test
 
 .PHONY: letter_test
 letter_test: host
-	@echo "  CC    tests/letter_load.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/letter_test tests/letter_load.c $(HOSTOBJS)
+	@echo "  CC    tests/t_letter.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/letter_test tests/t_letter.c $(HOSTOBJS)
 	@echo "  RUN   build/host/letter_test"
 	@cd build/host && ./letter_test
 
 .PHONY: parser_test
 parser_test: host
-	@echo "  CC    tests/parser_smoke.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/parser_test tests/parser_smoke.c $(HOSTOBJS)
+	@echo "  CC    tests/t_parser.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/parser_test tests/t_parser.c $(HOSTOBJS)
 	@echo "  RUN   build/host/parser_test"
 	@cd build/host && ./parser_test
 
@@ -176,22 +181,22 @@ vdi_pb_test: host
 
 .PHONY: assets_test
 assets_test: host
-	@echo "  CC    tests/assets_load.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/assets_test tests/assets_load.c $(HOSTOBJS)
+	@echo "  CC    tests/t_assets.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/assets_test tests/t_assets.c $(HOSTOBJS)
 	@echo "  RUN   build/host/assets_test"
 	@cd build/host && ./assets_test
 
 .PHONY: scn_test
 scn_test: host
-	@echo "  CC    tests/scn_decode.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/scn_test tests/scn_decode.c $(HOSTOBJS)
+	@echo "  CC    tests/t_scn.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/scn_test tests/t_scn.c $(HOSTOBJS)
 	@echo "  RUN   build/host/scn_test"
 	@cd build/host && ./scn_test
 
 .PHONY: sounds_test
 sounds_test: host
-	@echo "  CC    tests/sounds_load.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/sounds_test tests/sounds_load.c $(HOSTOBJS)
+	@echo "  CC    tests/t_sounds.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/sounds_test tests/t_sounds.c $(HOSTOBJS)
 	@echo "  RUN   build/host/sounds_test"
 	@cd build/host && ./sounds_test
 
@@ -204,15 +209,15 @@ sim_test: host
 
 .PHONY: sprite_test
 sprite_test: host
-	@echo "  CC    tests/sprite_compose.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/sprite_test tests/sprite_compose.c $(HOSTOBJS)
+	@echo "  CC    tests/t_sprite.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/sprite_test tests/t_sprite.c $(HOSTOBJS)
 	@echo "  RUN   build/host/sprite_test"
 	@cd build/host && ./sprite_test
 
 .PHONY: sprite_golden_test
 sprite_golden_test: host
-	@echo "  CC    tests/sprite_golden.c"
-	@$(CC) $(HOST_CFLAGS) -o build/host/sprite_golden_test tests/sprite_golden.c $(HOSTOBJS)
+	@echo "  CC    tests/t_sprgld.c"
+	@$(CC) $(HOST_CFLAGS) -o build/host/sprite_golden_test tests/t_sprgld.c $(HOSTOBJS)
 	@echo "  RUN   build/host/sprite_golden_test"
 	@cd build/host && ./sprite_golden_test
 

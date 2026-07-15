@@ -1,5 +1,5 @@
 /*
- * letter_load.c -- decompress LETTER.TXT and index it into
+ * letload.c -- decompress LETTER.TXT and index it into
  *                  g_ltlp[] for a_writl().
  *
  * fr_reac: nibble-based token decoder.  The on-disk file

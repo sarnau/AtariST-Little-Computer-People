@@ -1,5 +1,5 @@
 /*
- * deliveries.c -- Ctrl+F/B/R/D/C doorbell events.
+ * delivery.c -- Ctrl+F/B/R/D/C doorbell events.
  *
  * All five deferred events share the same open-door-pick-up pattern:
  *   1. walk_to_front_door

@@ -1,5 +1,5 @@
 /*
- * vocab_data.c -- NLP parser data tables.
+ * vocab.c -- NLP parser data tables.
  *
  * Vocabulary (160 words), position/bit maps, and 33 action-matching
  * rules for the check_entered_command dispatcher.  Ported from the

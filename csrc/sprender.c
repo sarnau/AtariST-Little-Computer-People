@@ -1,5 +1,5 @@
 /*
- * sprite_render.c -- masked-blit sprite renderer.
+ * sprender.c -- masked-blit sprite renderer.
  *
  * sp_draw is called from sc_ren8 for each of the 8 hardware
  * sprite slots.  It uses the standard Atari ST two-pass masked blit:

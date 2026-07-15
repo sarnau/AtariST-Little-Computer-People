@@ -1,5 +1,5 @@
 /*
- * ai_random.c -- time-of-day / mood-based random action selector.
+ * airandom.c -- time-of-day / mood-based random action selector.
  *
  * Called as the 11th and lowest-priority tier of the AI decision
  * ladder in check_for_any_action_triggers.  Picks one of three action

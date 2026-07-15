@@ -1,5 +1,5 @@
 /*
- * actions_idle.c -- short "no-walk" idle / gesture handlers.
+ * aidle.c -- short "no-walk" idle / gesture handlers.
  *
  * All share the same shape: pick a pair of animation states, tick
  * through them for a short duration, return to STATE_STAND_SIDE_VIEW.

@@ -1,5 +1,5 @@
 /*
- * actions_games.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
+ * agames.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
  *
  * Two long routines that share the "walk to a specific room, sit down,
  * and interact with a device" shape but branch out completely different

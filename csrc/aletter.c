@@ -1,5 +1,5 @@
 /*
- * actions_letter.c -- ACTION_WRITE_LETTER + its typewriter helpers.
+ * aletter.c -- ACTION_WRITE_LETTER + its typewriter helpers.
  *
  * The resident walks to the filing cabinet, grabs paper, moves to the
  * desk, and types a procedurally-assembled letter:

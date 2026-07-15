@@ -1,5 +1,5 @@
 /*
- * letter_load.c -- host-side smoke test for LETTER.TXT decoder.
+ * letload.c -- host-side smoke test for LETTER.TXT decoder.
  *
  * Copies DATA/LETTER.TXT into the CWD as "letter.txt", calls
  * file_load_letter_template() which internally allocates the 10496-byte

@@ -75,14 +75,16 @@ sf_so()
 }
 
 /* One-line SFX wrappers used by animation code.  Each just picks the
-   right (id, duration) pair from Ghidra and hands off to
-   sf_sele.  Duration units are 8Hz ticks. */
+   right (id, duration) pair from Ghidra and hands off to sf_sele.
+   Duration units are 8Hz ticks.  Written K&R-style (empty parens,
+   no `void`) so Alcyon C 4.14 recognises the definitions and emits
+   .globl symbols for the linker. */
 
-void p_sftvc(void)    { sf_sele(SFX_TV_CLICK,  2L); }
-void p_sfgrt(void)    { sf_sele(SFX_GREETING,  2L); }
-void p_sfspe(void)      { sf_sele(SFX_SPEECH,    3L); }
-void p_sfhnd(void)    { sf_sele(SFX_HEAD_NOD,  2L); }
-void p_dobls(void)          { sf_sele(SFX_DOORBELL,  4L); }
+void p_sftvc() { sf_sele(SFX_TV_CLICK,  2L); }
+void p_sfgrt() { sf_sele(SFX_GREETING,  2L); }
+void p_sfspe() { sf_sele(SFX_SPEECH,    3L); }
+void p_sfhnd() { sf_sele(SFX_HEAD_NOD,  2L); }
+void p_dobls() { sf_sele(SFX_DOORBELL,  4L); }
 
 /* Small SFX wrappers used by the write-letter routine.  Both are
    1-line trampolines into sf_sele with per-effect duration.
@@ -180,7 +182,7 @@ sf_sl()
         _gemdos(GEMDOS_Fclose, (long) fhandle, 0L, 0L);
 }
 
-/* DTA layout matches actions_leisure.c's local typedef; kept lightweight
+/* DTA layout matches aleisure.c's local typedef; kept lightweight
    here so we don't have to pull the whole file-directory abstraction in. */
 struct DTA_hdr {
         char    _reserved[21];

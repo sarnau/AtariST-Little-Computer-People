@@ -6,7 +6,7 @@
  * (used by the AI to avoid picking the same action twice in a row),
  * clears the trigger, waking the resident first if asleep, then
  * switches to the per-action handler.  All 45 handlers live in
- * separate .c files (or, until ported, action_stubs.c).
+ * separate .c files (or, until ported, astubs.c).
  *
  * addr: do_action()
  */
@@ -25,7 +25,7 @@ extern void     a_getd();
 extern void     check_for_any_action_triggers();/* ai.c      */
 extern void     do_action();                    /* actions.c */
 /* Forward-declarations for every action_ handler.  Real ports live in
-   action_*.c; unported ones share stub bodies in action_stubs.c. */
+   action_*.c; unported ones share stub bodies in astubs.c. */
 extern void     a_sitae();
 extern void     a_readn();
 extern void     a_playc();

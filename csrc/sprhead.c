@@ -1,5 +1,5 @@
 /*
- * sprites_head.c -- LCP head-animation state machine.
+ * sprhead.c -- LCP head-animation state machine.
  *
  * g_hacur and g_hatas are 8-bit direction
  * codes packed as follows:

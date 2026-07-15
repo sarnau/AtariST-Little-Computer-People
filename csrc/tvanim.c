@@ -1,5 +1,5 @@
 /*
- * tv_animate.c -- TV screen contents (bouncing line, pattern lines).
+ * tvanim.c -- TV screen contents (bouncing line, pattern lines).
  *
  * When a_playc triggers the rare "clear the screen and
  * pretend to be watching TV" gesture, tv_scrc blanks the

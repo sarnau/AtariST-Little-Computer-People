@@ -1,5 +1,5 @@
 /*
- * save_host.c -- HOST-only GEMDOS shim used by save.c during host builds.
+ * savehost.c -- HOST-only GEMDOS shim used by save.c during host builds.
  *
  * On the Atari ST the original code calls _gemdos(fn, ...) which
  * expands to a trap #1 with the function number in D0.  On the host we

@@ -1,5 +1,5 @@
 /*
- * actions_bathroom.c -- hygiene handlers.
+ * abathrm.c -- hygiene handlers.
  *
  * All three share the bathroom-sink / shower-cubicle walk-and-animate
  * pattern, without persistent world-state updates (unlike toilet or

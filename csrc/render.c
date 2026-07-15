@@ -56,9 +56,9 @@ extern void     vsl_color();
 extern void     v_pline();
 extern void     sc_firw();
 
-/* lcp_update_palette_colors -> render_extra.c */
+/* lcp_update_palette_colors -> renderx.c */
 
-/* sc_ren8 -> render_frame.c */
+/* sc_ren8 -> renderf.c */
 
 /* clock_redraw_hands: erase the previous minute/hour hand pair (paint
    in white), then draw the new pair (paint in grey).  Compares
@@ -135,9 +135,9 @@ short   max_y;
         sc_firb(g_dscp, max_y - 1);
 }
 
-/* sc_sctd, td_nois -> render_extra.c */
+/* sc_sctd, td_nois -> renderx.c */
 
-/* rp_anim -> render_extra.c */
+/* rp_anim -> renderx.c */
 
 /* ---- TV toggle ------------------------------------------------------- */
 

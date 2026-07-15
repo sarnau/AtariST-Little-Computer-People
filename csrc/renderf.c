@@ -1,5 +1,5 @@
 /*
- * render_frame.c -- sc_ren8, the main 8Hz compositor.
+ * renderf.c -- sc_ren8, the main 8Hz compositor.
  *
  * Structure:
  *   1. Rate-gate on the 200 Hz clock: skip until at least 25 ticks

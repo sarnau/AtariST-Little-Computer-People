@@ -1,5 +1,5 @@
 /*
- * actions_doors.c -- door / cabinet / fridge / dresser open/close helpers.
+ * adoors.c -- door / cabinet / fridge / dresser open/close helpers.
  *
  * These are the small "close it" companions to the larger walk-and-
  * interact handlers.  They assume the resident is already at the

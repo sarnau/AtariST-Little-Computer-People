@@ -1,5 +1,5 @@
 /*
- * actions_leisure.c -- music, fireplace, couch, exercise, and the
+ * aleisure.c -- music, fireplace, couch, exercise, and the
  *                      lightweight house-upkeep handlers.
  *
  * Grouped because they all wire into the same music / dog / couch /

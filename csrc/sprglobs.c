@@ -1,5 +1,5 @@
 /*
- * sprite_globals.c -- storage for sprite pipeline, LCP animation, and
+ * sprglobs.c -- storage for sprite pipeline, LCP animation, and
  *                     dog state.
  *
  * Kept separate from globals.c because the sprite arrays are large and

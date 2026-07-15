@@ -1,5 +1,5 @@
 /*
- * psg_freq_data.c -- YM2149 tone-period LUT.
+ * psgfreq.c -- YM2149 tone-period LUT.
  *
  * Computed from first principles (equal-tempered scale over MIDI note
  * range) rather than dumped from ROM.  The 1985 code may use slightly

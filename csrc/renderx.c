@@ -1,5 +1,5 @@
 /*
- * render_extra.c -- palette, TV, screen-scroll, and print_char.
+ * renderx.c -- palette, TV, screen-scroll, and print_char.
  *
  * Split from render.c to keep the file digest manageable.  Everything
  * here is a real port of a Ghidra-verified function; the underlying

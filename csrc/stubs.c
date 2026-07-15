@@ -9,30 +9,30 @@
 #include "types.h"
 
 /* AI                                                                     */
-/* check_time_based_actions moved to ai_random.c */
+/* check_time_based_actions moved to airandom.c */
 
 /* Cross-file helper stubs still pending real ports.                       */
 /* tt_on, tt_off, update_water_level_bar,
    sc_drfc    -> render.c
    hide_lcp_sprites, show_lcp_sprites -> sprites.c
    lcp_check_recovery          -> health.c
-   a_driwa-> actions_bathroom.c
+   a_driwa-> abathrm.c
    a_clotd, a_clocd,
    a_opecf, a_opcfc,
-   a_opecd, a_watat -> actions_doors.c
-   li_lool/right    -> actions_house.c
+   a_opecd, a_watat -> adoors.c
+   li_lool/right    -> ahouse.c
    a_lists, a_takes, a_brust
-                                -> actions_leisure.c / actions_bathroom.c */
+                                -> aleisure.c / abathrm.c */
 /* a_eatm, a_kitcc, a_feedd,
-   a_gesff          -> actions_food.c */
-/* a_opcbc -> actions_leisure.c
+   a_gesff          -> afood.c */
+/* a_opcbc -> aleisure.c
    a_opecf, a_opcfc,
    a_opecd, a_clocd,
-   a_watat -> actions_doors.c
-   li_loor -> actions_house.c */
+   a_watat -> adoors.c
+   li_loor -> ahouse.c */
 /* song_play -> sound.c
    pa_cloc, pa_skic,
-   td_line, sc_sctd -> render_extra.c */
+   td_line, sc_sctd -> renderx.c */
 /* mq_inis, mq_parh, mq_resp,
    mq_skip, mq_setp, mq_stap,
    mq_pacm, mq_bust,
@@ -61,8 +61,8 @@
 /* input_string defined in globals.c */
 
 /* Letter subsystem helpers (letter template + text rendering). */
-/* file_load_letter_template -> letter_load.c */
-/* print_char                          -> render_extra.c */
+/* file_load_letter_template -> letload.c */
+/* print_char                          -> renderx.c */
 /* lt_sets      -> sound.c */
 /* select_random_click_sound           -> sound.c */
 /* error_not_enough_memory             -> alerts.c */
@@ -71,7 +71,7 @@
    lcp_calc_floor_waypoint, dog_calc_walk_path, lcp_play_footstep_sound
    all ported in walk.c */
 
-/* Sprite pipeline                          -- all ported in sprites.c / sprites_head.c */
+/* Sprite pipeline                          -- all ported in sprites.c / sprhead.c */
 
 /* Study / save   -- lcp_enter_study_and_save, lcp_save, lc_load, fr_read,
    create_file all ported in save.c.  Only the peripheral error / cosmetic
@@ -86,7 +86,7 @@
 /* check_entered_command, command_upperstr, check_valid_word_input,
    lcp_toupper -> parser.c */
 
-/* sp_draw -> sprite_render.c */
+/* sp_draw -> sprender.c */
 
 /* sf_irqp -> sfx_irq.c */
 
@@ -98,9 +98,9 @@
 
 /* init_vdi_and_screen, exit_vdi_and_screen -> gfx_prim.c */
 
-/* string_print       -> render_extra.c
+/* string_print       -> renderx.c
    tv_scrc, tv_boul, tv_patl
-                      -> tv_animate.c
-   sp_draw, sp_iniM -> sprite_render.c */
+                      -> tvanim.c
+   sp_draw, sp_iniM -> sprender.c */
 
 /* v_bar -> vdi.c */

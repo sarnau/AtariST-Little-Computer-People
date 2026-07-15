@@ -392,7 +392,7 @@ extern BOOL16   g_dvdog;
 extern BOOL16   phone_hangup_flag;
 extern BOOL16   g_ptdoa;
 
-/* ---- Sprite head pipeline (defined in sprite_globals.c) --------------- */
+/* ---- Sprite head pipeline (defined in sprglobs.c) --------------- */
 extern short    g_hsbuf[];
 extern short    g_hsmas[];
 extern short    g_hsmif;

@@ -1,5 +1,5 @@
 /*
- * action_simple.c -- short idle / gesture actions.
+ * asimple.c -- short idle / gesture actions.
  *
  * Ports for do_action() handlers that don't need walking to a specific
  * house position and involve mostly head/body animation with sound.

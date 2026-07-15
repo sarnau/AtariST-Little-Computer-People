@@ -11,10 +11,9 @@
 #       poison file N+1.  Adds ~2 sec/file boot overhead but is
 #       robust.
 #
-#  - Long .c filenames (>8 chars) collide at TOS's 8.3 layer.  We
-#    stage each source under its short alias from
-#    tools/filename_map.txt.  The .o is copied back under the
-#    original long name.
+#  - All csrc/*.c basenames are already 8.3-safe -- see the rename
+#    pass documented in namemap.md -- so no filename aliasing is
+#    needed.
 #
 #  - Long C identifiers hit the 7-char external-symbol truncation
 #    inside the compiler.  Handled in-source (see namemap.md).
@@ -34,17 +33,11 @@ HATARI=${HATARI:-hatari}
 TOS_IMG=${TOS_IMG:-/opt/homebrew/Cellar/hatari/2.6.1/Hatari.app/Contents/Resources/tos.img}
 VBLS=${VBLS:-15000}
 OUT=$CSRC/build/alcyon
-MAP=$CSRC/tools/filename_map.txt
 
 [ -d "$HC_ROOT/TOOLS" ] || { echo "ERROR: $HC_ROOT/TOOLS missing (bootstrap needed)"; exit 1; }
-[ -f "$MAP" ]           || { echo "ERROR: $MAP missing"; exit 1; }
 
 # Load alias map.
-# Alias lookup helper: no bash-4 associative arrays on macOS.
-lookup_alias() {
-    awk -F'\t' -v want="$1" '$1 == want { print $2; found=1; exit }
-                              END { if (!found) print want }' "$MAP"
-}
+# (no filename aliasing needed -- all sources are 8.3-safe now)
 
 # Stage headers once.
 rm -rf "$HC_ROOT/SRC"
@@ -58,7 +51,7 @@ else
     TO_BUILD=""
     for c in "$CSRC"/*.c; do
         base=$(basename "$c")
-        [ "$base" = "save_host.c" ] && continue
+        [ "$base" = "savehost.c" ] && continue
         TO_BUILD="$TO_BUILD $base"
     done
 fi
@@ -69,7 +62,7 @@ for base in $TO_BUILD; do
     total=$((total + 1))
     src="$CSRC/$base"
     [ -f "$src" ] || { echo "  SKIP: $base (not found)"; missed=$((missed + 1)); continue; }
-    alias_base="$(lookup_alias "$base")"
+    alias_base="$base"
     stem="${alias_base%.c}"
 
     # Stage this file

@@ -1,5 +1,5 @@
 /*
- * actions_house.c -- walk-and-interact action handlers.
+ * ahouse.c -- walk-and-interact action handlers.
  *
  * Ports for actions that walk somewhere in the house, play an
  * interaction animation with SFX, and update world state.
