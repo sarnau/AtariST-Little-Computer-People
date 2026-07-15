@@ -45,7 +45,6 @@ extern BOOL16   g_sfacf;
 extern short    last_hz200;
 extern long     last_vbclock;
 extern void *   save_physbase;
-extern void *   alt_screen_ptr;         /* Malloc'd alternate screen; init in main() */
 extern MFDB     g_srmfd;
 extern MFDB     MFDB_screen_ptr;        /* alias with older name */
 extern MFDB *   current_screen_mfdb;
@@ -95,23 +94,22 @@ extern void     sp_draw();
 /* Read the 200 Hz clock via GEMDOS Super mode.  On the host we return
    0 -- the render skip-gate then always fires immediately (which is
    fine; the game state is unchanged, and rendering isn't visible under
-   host builds anyway). */
+   host builds anyway).
 
-/* TOS system variables (protected memory -- must be read in
-   supervisor mode).  Addresses per Atari system doc:
-     $0462  _vbclock  long  -- VBL counter
-     $04BA  _hz_200   long  -- 200 Hz counter */
+   g_hzhi/g_hzlo are populated by the VBL / MIDI-timer IRQ handler that
+   the 1985 boot code installs (midi_seq_init_timer).  Until that
+   handler is ported both stay 0 and the frame-rate gate always fires. */
 
 static short
 read_hz_200()
 {
         void *  saveSSP;
-        long    v;
+        short   hi;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        v = *((long *) 0x04BAL);
+        hi = g_hzlo;                /* low word of _hz_200 (200 Hz) */
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
-        return (short) (v & 0xFFFFL);
+        return hi;
 }
 
 static long
@@ -121,7 +119,7 @@ read_vbclock()
         long    v;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        v = *((long *) 0x0462L);
+        v = _vbclock;
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
         return v;
 }
@@ -285,57 +283,13 @@ sc_ren8()
                 g_sfacf = NO;
         }
 
-        /* Toggle compositing buffer between save_physbase (the real
-           GEM screen we started with) and alt_screen_ptr (a Malloc'd
-           32K+256 back-buffer registered by main() via
-           register_alt_screen()).  Both are 256-byte aligned as the
-           shifter DMA requires.  The 1985 code used a hardcoded
-           0x2CA00 alt buffer -- fine when LCP.PRG lived low in RAM,
-           but with a modern basepage that address lies INSIDE our
-           own text/data, so displaying it showed our program's
-           bytes as pixels. */
+        /* Toggle compositing buffer between the physbase we started
+           with and the alternate at 0x2CA00. */
         if (current_screen_mfdb->fd_addr == save_physbase)
-                current_screen_mfdb->fd_addr = alt_screen_ptr;
+                current_screen_mfdb->fd_addr = (void *) 0x2ca00L;
         else
                 current_screen_mfdb->fd_addr = save_physbase;
 
         animation_tick_counter = animation_tick_counter + 1;
         last_vbclock = read_vbclock();
-}
-
-/* init_compositing_screens: wire g_srmfd/current_screen_mfdb to
-   save_physbase so the page-flip has a valid target the first time
-   it runs.  Called from main() BEFORE endless_game_loop so the very
-   first Setscreen(-1, g_srmfd.fd_addr, -1) doesn't hand NULL to the
-   shifter.  Not a 1985 function -- init was baked into the boot
-   sequence we haven't fully ported. */
-extern void *   g_srptr;
-
-void
-init_compositing_screens()
-{
-        /* g_srmfd + current_screen_mfdb -- the compositing buffer.
-           Starts as the real physbase; toggled between save_physbase
-           and alt_screen_ptr each frame by the flip in sc_ren8. */
-        g_srmfd.fd_addr = save_physbase;
-        current_screen_mfdb = &g_srmfd;
-
-        /* MFDB_screen_ptr -- the SOURCE for sc_ren8's background
-           blkcopy32.  The 1985 game decompressed HOUSE.SCN in place
-           at this address; we've decompressed into g_srptr so point
-           at that. */
-        MFDB_screen_ptr.fd_addr = g_srptr;
-}
-
-/* alt_screen_ptr / register_alt_screen: replacement for the 1985
-   code's hardcoded 0x2CA00 alt-buffer address.  main() Malloc's a
-   256-aligned 32K block and hands it here so the page-flip has a
-   valid target that doesn't collide with our own basepage. */
-void *  alt_screen_ptr = (void *) 0;
-
-void
-register_alt_screen(p)
-void *  p;
-{
-        alt_screen_ptr = p;
 }

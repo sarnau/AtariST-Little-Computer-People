@@ -98,22 +98,37 @@ extern long xbios();
 
 /* Init dependencies -- Alcyon-renamed short names (see namemap.md).
    Original names in comments for cross-reference. */
+/* main -- Ghidra 0x00015546.  See there for the faithful init
+   sequence: midi_seq_init_timer -> aes_vdi_jnit -> conterm clear ->
+   Dsetpath("data") -> vdi_init -> setup_screen_buffer ->
+   init_build_bit_revert_table -> count_songs -> lcp_load ->
+   show_title_screen_enter_name_and_date -> house.scn open+decompress ->
+   fill_top_rect_with_background(27) -> clock_draw_initial ->
+   file_load("body.lcp") -> lcp_create_random (if new) ->
+   file_load(pex_lcp) -> sprite_lcp_build_all -> load_objects/sprites
+   -> soundeffects_load -> dog_init_position -> update_water_level_bar
+   -> screen_set_draw_to_backbuffer -> draw water pipe + doors +
+   food-bowl objects -> screen_draw_food_cabinet ->
+   daily_reset_action_flags -> palette_apply_clothing_colors ->
+   copyprot_main_check -> sprite_init_MFDBs -> (cutscene if new) ->
+   endless_game_loop.
+
+   Almost none of those subroutines are ported yet; this stub only
+   exercises the parts we do have so LCP.PRG at least builds and
+   launches for smoke tests.  Every added line here should either
+   correspond to an original Ghidra call, or be marked as diagnostic
+   scaffolding to remove. */
+
 extern short    main_colorpalette[];
 extern void *   g_srptr;
-extern short *  g_dsb;          /* display-screen buffer (same block as g_srptr) */
-extern void *   g_dscp;         /* current-row cursor into g_dsb */
 extern short    vdihandle;
-extern void *   save_physbase;  /* front buffer (Physbase at startup) */
 extern short    al_loot();      /* asset_load_objects_table */
 extern short    al_lost();      /* asset_load_sprites_table */
 extern void     al_locs();      /* asset_load_character_sheets */
-extern void     file_load_letter_template();
 extern void     sf_sl();        /* soundeffects_load */
 extern short    lc_load();      /* lcp_load */
 extern void     decompress_scn();
 extern void     init_vdi_and_screen();
-extern void     init_compositing_screens();
-extern void     register_alt_screen();
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -124,37 +139,9 @@ extern void     v_opnvwk();
 extern void     v_clsvwk();
 extern void     appl_exit();
 
-/* Cconws (GEMDOS 0x09) -- print a null-terminated string to CON:. */
-#define Cconws(s)      gemdos(0x09, s)
-
-/* dump_hex: print "<label>XXXXXXXX\r\n" using Cconws only (no printf
-   dependency; K&R-safe 68000 assembly-esque loop). */
-static void
-dump_hex(label, val)
-char *  label;
-long    val;
-{
-        char    buf[12];
-        short   i;
-        short   nib;
-        gemdos(0x09, label);
-        for (i = 0; i < 8; i = i + 1) {
-                nib = (short) ((val >> ((7 - i) * 4)) & 0xf);
-                buf[i] = (char) (nib < 10 ? '0' + nib : 'A' + nib - 10);
-        }
-        buf[8]  = '\r';
-        buf[9]  = '\n';
-        buf[10] = 0;
-        gemdos(0x09, buf);
-}
-/* Cconin (GEMDOS 0x01) -- read a char from CON: (blocks). */
-#define Cconin()       gemdos(0x01)
-/* Pterm (GEMDOS 0x4c) -- terminate cleanly. */
-#define Pterm(n)       gemdos(0x4c, n)
-/* Bconout (BIOS 3) -- byte to CON: (device 2).  A '\x07' rings the bell. */
-#define Bconout(d, c)  bios(3, d, c)
-/* Setcolor (XBIOS 7) -- change one palette slot (0..15) to 12-bit RGB. */
-#define Setcolor(i, c) xbios(7, i, c)
+#define Cconws(s)       gemdos(0x09, s)
+#define Cconin()        gemdos(0x01)
+#define Pterm(n)        gemdos(0x4c, n)
 
 int
 main(argc, argv)
@@ -166,107 +153,44 @@ char ** argv;
 
         Cconws("\r\nLCP (Alcyon 4.14)\r\n");
 
-        Cconws("[0a] appl_init...\r\n");
         appl_init();
-
-        Cconws("[0b] graf_handle...\r\n");
         {
                 short wchar, hchar, wbox, hbox, gh;
                 gh = graf_handle(&wchar, &hchar, &wbox, &hbox);
                 vdihandle = gh;
         }
-
-        Cconws("[0c] v_opnvwk...\r\n");
         {
                 short work_in[11];
                 short work_out[57];
                 short i;
                 for (i = 0; i < 10; i = i + 1) work_in[i] = 1;
-                work_in[0] = 1;         /* default screen device */
-                work_in[10] = 2;        /* raster coords */
+                work_in[0] = 1;
+                work_in[10] = 2;
                 v_opnvwk(work_in, &vdihandle, work_out);
         }
 
-        Cconws("[1] palette...\r\n");
+        /* Palette + asset loads that we do have ported.  Once the
+           real init at Ghidra 0x00015546 lands, main() delegates
+           into it and this block goes away. */
         {
                 short   i;
                 for (i = 0; i < 16; i = i + 1)
                         xbios(7, i, main_colorpalette[i]);
         }
-
-        Cconws("[2] load OBJECTS...\r\n");
         al_loot();
-
-        Cconws("[3] load SPRITES...\r\n");
         al_lost();
-
-        Cconws("[4] load BODY/PEx.LCP...\r\n");
         al_locs();
-
-        /* NOTE: LETTER.TXT and SOUNDS.LCP are loaded ON-DEMAND by
-           the action handlers (a_writl allocates g_lttx via Malloc
-           then calls file_load_letter_template; sf_sl also allocates
-           per-effect).  Boot-time loading writes to NULL pointers. */
-
-        Cconws("[5] load HYBER save...\r\n");
         lc_load();
 
-        Cconws("[5b] alloc back-screen (32000 + 256 slack)...\r\n");
         {
                 long raw;
-                /* ST low-res screen is 32000 bytes (320*200/2), plus 256
-                   bytes of slack to allow aligning UP to a 256-byte
-                   boundary (the shifter ignores the low 8 bits of the
-                   screen base). */
-                raw = gemdos(0x48, 32256L);      /* Malloc */
-                if (raw == 0L) {
-                        Cconws("*** Malloc failed!\r\n");
-                        Cconin();
-                        Pterm(1);
-                }
+                raw = gemdos(0x48, 32256L);
+                if (raw == 0L) { Cconws("Malloc?\r\n"); Pterm(1); }
                 g_srptr = (void *) ((raw + 255L) & ~255L);
-                dump_hex("  raw     = ", raw);
-                dump_hex("  g_srptr = ", (long) g_srptr);
         }
-
-        Cconws("[6] decompress house.scn...\r\n");
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
-
-        Cconws("[7] init VDI screen...\r\n");
-        /* Wire the compositing pointers before any XBIOS Setscreen
-           gets called.  save_physbase snapshots the real physbase
-           (whatever GEM handed us) so the double-buffer flip in
-           renderf can toggle between it and the alternate buffer.
-           g_dsb/g_dscp point into our Malloc'd back-screen so
-           init_vdi_and_screen's Setscreen has a valid target. */
-        save_physbase = (void *) xbios(2 /* Physbase */);
-        dump_hex("  save_ph = ", (long) save_physbase);
-        g_dsb  = (short *) g_srptr;
-        g_dscp = (void  *) (g_dsb + 0x7f);
-        dump_hex("  g_dsb   = ", (long) g_dsb);
-        dump_hex("  g_dscp  = ", (long) g_dscp);
-        {
-                /* Alternate screen buffer for the double-buffer flip.
-                   The 1985 code hardcoded 0x2CA00 in the render loop;
-                   we Malloc a fresh 32K+256 block and pass it in.
-                   Must be 256-byte aligned (shifter DMA requirement). */
-                long alt;
-                alt = gemdos(0x48, 32256L);
-                if (alt == 0L) {
-                        Cconws("*** alt-screen Malloc failed\r\n");
-                        Cconin();
-                        Pterm(1);
-                }
-                alt = (alt + 255L) & ~255L;
-                dump_hex("  alt-buf = ", alt);
-                register_alt_screen((void *) alt);
-        }
-        init_compositing_screens();
         init_vdi_and_screen();
-
-        Cconws("[8] entering endless_game_loop\r\n");
         endless_game_loop();
-        Cconws("[8c] returned (shouldn't happen)\r\n");
 
         Pterm(0);
         return 0;
