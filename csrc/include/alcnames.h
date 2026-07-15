@@ -18,7 +18,8 @@
 #define ALCNAMES_H
 
 #ifdef __ALCYON__
-#define void  int   /* Alcyon has no `void` keyword; use int for K&R */
+#define void      int   /* Alcyon has no `void` keyword; use int for K&R */
+#define volatile        /* Alcyon has no `volatile`; strip it */
 #endif
 
 #endif  /* ALCNAMES_H */

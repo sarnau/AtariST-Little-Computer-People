@@ -275,8 +275,17 @@ long            dest_size_words;
         unsigned short  literal;
         unsigned char   sizebuf[2];
 
+#ifdef __ALCYON__
+        gemdos(9, "  scn.a\r\n");     /* Cconws marker A: entered */
+#endif
         filehandle = file_open(filename, 0);
+#ifdef __ALCYON__
+        gemdos(9, "  scn.b\r\n");     /* B: file opened */
+#endif
         fr_read(filehandle, 2L, sizebuf);
+#ifdef __ALCYON__
+        gemdos(9, "  scn.c\r\n");     /* C: size read */
+#endif
 
         /* File size is big-endian.  Reassemble explicitly for host
            portability; on the ST this is a no-op. */
@@ -295,47 +304,114 @@ long            dest_size_words;
 
         /* Read the compressed body.  Total header = 32 bytes, so body
            length is fileSize - 32.  Allocate + slurp. */
+#ifdef __ALCYON__
+        gemdos(9, "  scn.d dict done\r\n");
+#endif
         body_size = body_size - 32;
         fbuffer = (unsigned char *) _gemdos(GEMDOS_Malloc,
                                             body_size, 0L, 0L);
         fbuffer_orig = fbuffer;
+#ifdef __ALCYON__
+        gemdos(9, "  scn.e malloc\r\n");
+#endif
         if (fbuffer == (unsigned char *) 0)
                 error_not_enough_memory();
         fr_read(filehandle, body_size, fbuffer);
+#ifdef __ALCYON__
+        gemdos(9, "  scn.f body read\r\n");
+#endif
+
+        /* DIAGNOSTIC: try one write to out_words first.  If this crashes,
+           the pointer or buffer is bad.  If it doesn't, the decode loop
+           is the crash. */
+#ifdef __ALCYON__
+        gemdos(9, "  scn.g try write out_words[0]\r\n");
+#endif
+        out_words[0] = 0x1234;
+#ifdef __ALCYON__
+        gemdos(9, "  scn.h wrote\r\n");
+#endif
+#ifdef __ALCYON__
+        gemdos(9, "  scn.i try write out_words[15999]\r\n");
+#endif
+        out_words[15999] = 0x5678;
+#ifdef __ALCYON__
+        gemdos(9, "  scn.j wrote last word\r\n");
+#endif
 
         /* Decode.  Same nibble state-machine as fr_reac,
            just wider symbols. */
-        flag = 1;
-        for (count = 0; count < dest_size_words; count = count + 1) {
-                if (flag == 0) {
-                        nibble = (unsigned short) *fbuffer;
-                        fbuffer = fbuffer + 1;
-                } else {
-                        nibble = (unsigned short) ((*fbuffer >> 4) & 0x0f);
-                }
-                nibble = nibble & 0xf;
-                flag = (flag == 0) ? 1 : 0;
+        /* Simple sequential nibble reader: unpack all body bytes into
+           a nibble buffer up front, then walk the nibble stream.
+           Avoids the flag state-machine that c168 mis-compiles. */
+        {
+                unsigned char * np;
+                unsigned char * nbuf;
+                long           bn;
+                long           ni;
+                unsigned short lit;
 
-                if (nibble == 0xf) {
-                        /* Escape: 4 nibbles = 16-bit literal word. */
-                        literal = 0;
-                        for (i = 0; i < 4; i = i + 1) {
-                                unsigned short n;
-                                if (flag == 0) {
-                                        n = (unsigned short) *fbuffer;
-                                        fbuffer = fbuffer + 1;
-                                } else {
-                                        n = (unsigned short)
-                                                ((*fbuffer >> 4) & 0x0f);
-                                }
-                                literal = (literal << 4) | (n & 0xf);
-                                flag = (flag == 0) ? 1 : 0;
-                        }
-                        *out_words = literal;
-                } else {
-                        *out_words = word_dict[nibble];
+#ifdef __ALCYON__
+                gemdos(9, "  scn.k unpack nibbles\r\n");
+#endif
+                nbuf = (unsigned char *) _gemdos(GEMDOS_Malloc,
+                                                 body_size * 2L, 0L, 0L);
+                if (nbuf == (unsigned char *) 0)
+                        error_not_enough_memory();
+                np = nbuf;
+                for (bn = 0; bn < body_size; bn = bn + 1) {
+                        *np++ = (fbuffer_orig[bn] >> 4) & 0x0f;
+                        *np++ = fbuffer_orig[bn] & 0x0f;
                 }
-                out_words = out_words + 1;
+
+#ifdef __ALCYON__
+                gemdos(9, "  scn.l1 decode start\r\n");
+#endif
+                np = nbuf;
+#ifdef __ALCYON__
+                gemdos(9, "  scn.l2 first read np\r\n");
+#endif
+                {
+                        unsigned char first = *np;
+                        char m[8];
+                        m[0] = ' '; m[1] = 'n'; m[2] = '=';
+                        m[3] = '0' + (char)(first / 10);
+                        m[4] = '0' + (char)(first % 10);
+                        m[5] = '\r'; m[6] = '\n'; m[7] = 0;
+#ifdef __ALCYON__
+                        gemdos(9, m);
+#endif
+                }
+#ifdef __ALCYON__
+                gemdos(9, "  scn.l3 read word_dict\r\n");
+#endif
+                {
+                        unsigned short wd = word_dict[1];
+#ifdef __ALCYON__
+                        gemdos(9, "  scn.l4 word_dict[1] ok\r\n");
+#endif
+                        out_words[0] = wd;
+#ifdef __ALCYON__
+                        gemdos(9, "  scn.l5 wrote out_words[0]\r\n");
+#endif
+                }
+                for (count = 0; count < dest_size_words; count = count + 1) {
+                        if (*np == 0x0f) {
+                                np = np + 1;
+                                lit = *np++;
+                                lit = (lit << 4) | *np++;
+                                lit = (lit << 4) | *np++;
+                                lit = (lit << 4) | *np++;
+                                out_words[count] = lit;
+                        } else {
+                                out_words[count] = word_dict[*np];
+                                np = np + 1;
+                        }
+                }
+#ifdef __ALCYON__
+                gemdos(9, "  scn.m decode done\r\n");
+#endif
+                _gemdos(GEMDOS_Mfree, (long) nbuf, 0L, 0L);
         }
 
         _gemdos(GEMDOS_Fclose, (long) filehandle, 0L, 0L);

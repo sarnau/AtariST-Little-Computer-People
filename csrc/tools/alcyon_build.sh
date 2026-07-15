@@ -1,50 +1,28 @@
 #!/usr/bin/env bash
-# alcyon_build.sh -- drive Alcyon C 4.14 headless via Hatari to build
-# every csrc/*.c into a .o under csrc/build/alcyon/.
+# alcyon_build.sh -- drive Alcyon C 4.14 NATIVELY on macOS.
 #
-# Design notes accumulated from painful trial-and-error:
-#
-#  - c068 (the C parser) crashes on complex files EVEN AS IT WRITES
-#    ITS OUTPUT.  The crash is fatal for COMMAND.PRG's batch runner
-#    but the .1 / .2 files are already on disk when it happens.
-#    -> we launch hatari ONCE PER FILE so a crash on file N doesn't
-#       poison file N+1.  Adds ~2 sec/file boot overhead but is
-#       robust.
-#
-#  - All csrc/*.c basenames are already 8.3-safe -- see the rename
-#    pass documented in namemap.md -- so no filename aliasing is
-#    needed.
-#
-#  - Long C identifiers hit the 7-char external-symbol truncation
-#    inside the compiler.  Handled in-source (see namemap.md).
+# Uses the native-macOS ports of cp68/c068/c168/as68 at ~/hatari-c/bin/
+# instead of Hatari, so each compile takes a fraction of a second
+# instead of ~15 seconds.
 #
 # Environment:
-#   HATARI     hatari binary   (default: hatari)
-#   TOS_IMG    TOS/EmuTOS ROM
-#   HC_ROOT    workspace dir   (default: $HOME/hatari-c)
-#   VBLS       hatari --run-vbls per file (default: 15000)
-#   FILES      space-separated .c basenames to build (default: all)
+#   ALCYON_BIN  directory holding cp68/c068/c168/as68
+#               (default: $HOME/hatari-c/bin)
+#   ALCYON_INC  directory holding Alcyon system headers (osbind.h etc.)
+#               (default: $HOME/hatari-c/TOOLS/INCLUDE)
+#   FILES       space-separated .c basenames to build (default: all)
 
 set -euo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-HC_ROOT=${HC_ROOT:-$HOME/hatari-c}
-HATARI=${HATARI:-hatari}
-TOS_IMG=${TOS_IMG:-/opt/homebrew/Cellar/hatari/2.6.1/Hatari.app/Contents/Resources/tos.img}
-VBLS=${VBLS:-15000}
+ALCYON_BIN=${ALCYON_BIN:-$HOME/hatari-c/bin}
+ALCYON_INC=${ALCYON_INC:-$HOME/hatari-c/TOOLS/INCLUDE}
 OUT=$CSRC/build/alcyon
+WORK=$OUT/work
 
-[ -d "$HC_ROOT/TOOLS" ] || { echo "ERROR: $HC_ROOT/TOOLS missing (bootstrap needed)"; exit 1; }
+mkdir -p "$OUT" "$WORK"
 
-# Load alias map.
-# (no filename aliasing needed -- all sources are 8.3-safe now)
-
-# Stage headers once.
-rm -rf "$HC_ROOT/SRC"
-mkdir -p "$HC_ROOT/SRC" "$OUT"
-cp "$CSRC/include"/*.h "$HC_ROOT/SRC/"
-
-# Which files to build?  Env var FILES overrides default (=all).
+# Which files to build?
 if [ -n "${FILES:-}" ]; then
     TO_BUILD="$FILES"
 else
@@ -61,48 +39,43 @@ missed_list=""
 for base in $TO_BUILD; do
     total=$((total + 1))
     src="$CSRC/$base"
-    [ -f "$src" ] || { echo "  SKIP: $base (not found)"; missed=$((missed + 1)); continue; }
-    alias_base="$base"
-    stem="${alias_base%.c}"
+    [ -f "$src" ] || { echo "  SKIP: $base"; missed=$((missed + 1)); continue; }
+    stem="${base%.c}"
 
-    # Stage this file
-    cp "$src" "$HC_ROOT/SRC/$alias_base"
+    # cp68: preprocess
+    "$ALCYON_BIN/cp68" -P -D__ALCYON__ -I "$ALCYON_INC" -I "$CSRC/include" \
+        "$src" "$WORK/$stem.i" > /dev/null 2>&1 || {
+        echo "  MISS $base (cp68)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;
+    }
 
-    # Phase 1: cp68 + c068.  c068 may crash on complex files but it
-    # writes its .1/.2 output BEFORE crashing, so we recover in phase 2.
-    {
-        echo "echo $base phase1"
-        printf '\\TOOLS\\CP68.TTP -P -D__ALCYON__ -I\\TOOLS\\INCLUDE -I\\SRC \\SRC\\%s.c \\SRC\\%s.i\n' "$stem" "$stem"
-        printf '\\TOOLS\\C068.TTP \\SRC\\%s.i \\SRC\\%s.1 \\SRC\\%s.2 \\SRC\\%s.3 -f\n' "$stem" "$stem" "$stem" "$stem"
-    } > "$HC_ROOT/AUTOEXEC.BAT"
-    "$HATARI" --harddrive "$HC_ROOT" --tos "$TOS_IMG" \
-        --fast-forward on --fast-boot on --sound off \
-        --frameskips 5 --monitor mono --tos-res high \
-        --conout 2 --run-vbls "$VBLS" -w --borders off \
-        >> "$OUT/alcyon_build.log" 2>&1 || true
+    # c068: parse
+    "$ALCYON_BIN/c068" "$WORK/$stem.i" \
+        "$WORK/$stem.1" "$WORK/$stem.2" "$WORK/$stem.3" -f > /dev/null 2>&1 || {
+        echo "  MISS $base (c068)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;
+    }
 
-    # Phase 2a: c168 in a fresh COMMAND.PRG (may crash but writes .s
-    # before crashing).
-    if [ -f "$HC_ROOT/SRC/$stem.1" ] && [ -f "$HC_ROOT/SRC/$stem.2" ]; then
-        {
-            echo "echo $base phase2a"
-            printf '\\TOOLS\\C168.TTP \\SRC\\%s.1 \\SRC\\%s.2 \\SRC\\%s.s\n' "$stem" "$stem" "$stem"
-        } > "$HC_ROOT/AUTOEXEC.BAT"
-        "$HATARI" --harddrive "$HC_ROOT" --tos "$TOS_IMG" \
-            --fast-forward on --fast-boot on --sound off \
-            --frameskips 5 --monitor mono --tos-res high \
-            --conout 2 --run-vbls "$VBLS" -w --borders off \
-            >> "$OUT/alcyon_build.log" 2>&1 || true
-    fi
+    # c168: generate assembly
+    "$ALCYON_BIN/c168" "$WORK/$stem.1" "$WORK/$stem.2" "$WORK/$stem.s" > /dev/null 2>&1 || {
+        echo "  MISS $base (c168)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;
+    }
 
-    # Post-process: dedup L-labels that c168 emits at each new .text
-    # boundary.  as68 refuses to assemble a file with duplicate labels;
-    # rename second-and-later occurrences to L<n>_<k>.
-    if [ -f "$HC_ROOT/SRC/$stem.s" ]; then
-        python3 -c "
-import re, sys
-p = '$HC_ROOT/SRC/${stem}.s'
-lines = open(p).readlines()
+    # Post-process .s:
+    #  1. Truncate all _identifiers to 8 chars so as68 emits
+    #     old-format single-entry symbol tables (native lo68/aln
+    #     misinterpret c168's new-format multi-entry long-name
+    #     encoding, seeing the continuation entries as separate
+    #     unresolved symbols).
+    #  2. Dedup L-labels (c168 emits duplicate L1: across data blocks).
+    python3 -c "
+import re
+p = '$WORK/${stem}.s'
+s = open(p).read()
+# Truncate _identifiers to 8 chars total (7 C-name chars + underscore)
+def trunc(m):
+    name = m.group(0)
+    return name[:8] if len(name) > 8 else name
+s = re.sub(r'\b_[a-zA-Z_][a-zA-Z_0-9]*', trunc, s)
+lines = s.split('\n')
 seen = {}
 out = []
 for ln in lines:
@@ -111,40 +84,27 @@ for ln in lines:
         lbl = m.group(1)
         seen[lbl] = seen.get(lbl, 0) + 1
         if seen[lbl] > 1:
-            out.append(f'{lbl}_{seen[lbl]}:{m.group(2)}\n')
+            out.append(f'{lbl}_{seen[lbl]}:{m.group(2)}')
             continue
     out.append(ln)
-open(p, 'w').writelines(out)
+open(p, 'w').write('\n'.join(out))
 "
-    fi
 
-    # Phase 2b: as68 in a fresh COMMAND.PRG.
-    if [ -f "$HC_ROOT/SRC/$stem.s" ]; then
-        {
-            echo "echo $base phase2b"
-            printf '\\TOOLS\\AS68.TTP -l -u \\SRC\\%s.s\n' "$stem"
-        } > "$HC_ROOT/AUTOEXEC.BAT"
-        "$HATARI" --harddrive "$HC_ROOT" --tos "$TOS_IMG" \
-            --fast-forward on --fast-boot on --sound off \
-            --frameskips 5 --monitor mono --tos-res high \
-            --conout 2 --run-vbls "$VBLS" -w --borders off \
-            >> "$OUT/alcyon_build.log" 2>&1 || true
-    fi
+    # as68: assemble.  Runs FROM the work dir so its temp files land there.
+    (cd "$WORK" && "$ALCYON_BIN/as68" -l -u "$stem.s") > /dev/null 2>&1 || {
+        echo "  MISS $base (as68)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;
+    }
 
-    if [ -f "$HC_ROOT/SRC/$stem.o" ]; then
-        cp "$HC_ROOT/SRC/$stem.o" "$OUT/${base%.c}.o"
+    if [ -f "$WORK/$stem.o" ]; then
+        cp "$WORK/$stem.o" "$OUT/$stem.o"
         built=$((built + 1))
-        printf '  [%2d/%2d] OK   %s\n' "$total" "$(echo $TO_BUILD | wc -w | tr -d ' ')" "$base"
     else
         missed=$((missed + 1))
         missed_list="$missed_list $base"
-        printf '  [%2d/%2d] MISS %s\n' "$total" "$(echo $TO_BUILD | wc -w | tr -d ' ')" "$base"
+        echo "  MISS $base (no .o)"
     fi
 done
 
-echo
-echo "Alcyon build: $built OK, $missed missing.  Log: $OUT/alcyon_build.log"
-if [ -n "$missed_list" ]; then
-    echo "Missing:$missed_list"
-fi
+echo "Alcyon build: $built OK, $missed missing"
+if [ -n "$missed_list" ]; then echo "Missing:$missed_list"; fi
 exit $([ "$missed" -eq 0 ] && echo 0 || echo 1)

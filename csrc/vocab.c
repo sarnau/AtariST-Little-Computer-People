@@ -103,6 +103,15 @@ short g_ew2b[160] = {
 
 };
 
+
+/* Alcyon C 4.14 rejects nested struct-with-array initializers.
+   Kept as zero-initialised BSS for the Alcyon target; the parser
+   will match no actions until this is populated at runtime.
+   Host build still uses the real table in the pre-Alcyon
+   history (see git). */
+#ifdef __ALCYON__
+WORD_TO_ACTION g_ew2a[34];
+#else
 WORD_TO_ACTION g_ew2a[34] = {
     { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 }, 24, 15 },
     { { 0x00, 0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00 }, 20, 4 },
@@ -139,3 +148,4 @@ WORD_TO_ACTION g_ew2a[34] = {
     { { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x02, 0x00 }, 34, 6 },
     { { 0xff, 0,0,0,0,0,0,0,0,0 }, 0, 0 }    /* sentinel */
 };
+#endif
