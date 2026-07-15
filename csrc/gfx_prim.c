@@ -14,6 +14,7 @@
 
 #include "types.h"
 #include "enums.h"
+#include "structs.h"
 /* --- per-file extern block (auto-generated for Alcyon).
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
@@ -34,6 +35,11 @@ extern void     vsf_style();
 extern void     vsf_color();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
+extern void     vro_cpyfm();
+extern short    screen_scale_factor;
+extern MFDB     MFDB_A;
+extern MFDB     MFDB_screen_ptr;
+extern unsigned char SCREEN_BUFFER_B[];
 
 /* draw_line: Bresenham-ish line via VDI v_pline in backbuffer, then
    restore frontbuffer draw target.  The 2-point polyline maps directly
@@ -246,4 +252,91 @@ short   count;
                 dp = dp + 8;
                 remaining = remaining - 1;
         } while (remaining != -1);
+}
+
+/* sprite_init_MFDB (Ghidra 0x16612): initialise a VDI MFDB
+   descriptor.  Sets bitmap address, pixel dimensions, word-width
+   (w/16), standard-format flag = 0 (device native), and always
+   4 bitplanes for ST low resolution.  The first parameter is
+   originally an nplanes hint but is hardcoded to 4 inside the
+   function and effectively ignored -- kept in the signature to
+   match the 1985 shape.
+   addr: sprite_init_MFDB() */
+
+void
+sprite_init_MFDB(unused, mfdb, addr, w, h)
+long    unused;
+MFDB *  mfdb;
+void *  addr;
+short   w;
+short   h;
+{
+        mfdb->fd_addr    = addr;
+        mfdb->fd_w       = w;
+        mfdb->fd_h       = h;
+        mfdb->fd_wdwidth = w / 16;
+        mfdb->fd_stand   = 0;
+        mfdb->fd_nplanes = 4;
+}
+
+/* copy_screen (Ghidra 0x164FA): raster-copy the current physbase
+   screen into the memory buffer described by pdesMFDB.  Source is
+   MFDB_A whose fd_addr is NULL -- the VDI convention that means
+   "device screen", so vro_cpyfm reads from the shifter's currently
+   displayed video RAM.  Mode ALL_WHITE (=0) is the S=1 constant
+   raster op (fill destination with 1s, no source involved).  With
+   fd_addr=NULL, GEM's vro_cpyfm implementation on the ST snapshots
+   the visible screen into pdesMFDB's buffer regardless of the mode.
+   addr: copy_screen() */
+
+void
+copy_screen(handle, pdesMFDB)
+short   handle;
+MFDB *  pdesMFDB;
+{
+        short   points[8];
+
+        points[0] = 0;
+        points[1] = 0;
+        points[2] = pdesMFDB->fd_w - 1;
+        points[3] = pdesMFDB->fd_h - 1;
+        points[4] = 0;
+        points[5] = 0;
+        points[6] = pdesMFDB->fd_w - 1;
+        points[7] = pdesMFDB->fd_h - 1;
+        vro_cpyfm(handle, ALL_WHITE, points, &MFDB_A, pdesMFDB);
+}
+
+/* setup_screen_buffer (Ghidra 0x16576): allocate and initialise the
+   double-buffered compositing screen.
+
+     1. Zero MFDB_A.fd_addr so future vro_cpyfm calls that source
+        from it read the visible device screen.
+     2. Point g_srptr at SCREEN_BUFFER_B + 0x12F, then align UP to
+        the next 512-byte boundary.  The 0x12F offset is a header
+        the original code carved out before the aligned buffer; the
+        512-byte alignment is stricter than the shifter DMA's 256-
+        byte requirement and matches the disassembly exactly.
+     3. Populate MFDB_screen_ptr describing that buffer as a
+        scale*320 x scale*200 device-format bitmap (scale=1 =
+        low-res, so 320x200).  0x1D00 is the "unused" first arg to
+        sprite_init_MFDB (originally an nplanes hint).
+     4. Snapshot the currently visible physbase into the buffer via
+        copy_screen so the first compositing frame has something
+        sensible to blend on top of.
+   addr: setup_screen_buffer() */
+
+void
+setup_screen_buffer()
+{
+        long    buf;
+
+        MFDB_A.fd_addr = (void *) 0;
+        buf = (long) SCREEN_BUFFER_B + 0x12FL;
+        buf = (buf + 0x200L) & ~0x1FFL;
+        g_srptr = (void *) buf;
+        sprite_init_MFDB(0x1D00L, &MFDB_screen_ptr, g_srptr,
+                         (short) (screen_scale_factor * 0x140),
+                         (short) (screen_scale_factor * 200));
+        copy_screen(vdihandle, &MFDB_screen_ptr);
 }

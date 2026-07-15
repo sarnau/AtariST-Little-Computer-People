@@ -270,6 +270,7 @@
 /* ---- VDI raster op modes ---------------------------------------------
    Source/destination combining modes for vro_cpyfm.  Names match the
    GEM VDI header. */
+#define ALL_WHITE                       0       /* dest set to all 1s     */
 #define S_ONLY                          3       /* replace dest w/ source */
 #define NOTS_AND_D                      4       /* (NOT src) AND dest    */
 #define S_XOR_D                         6       /* source XOR dest       */

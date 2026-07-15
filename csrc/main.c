@@ -129,6 +129,7 @@ extern void     sf_sl();        /* soundeffects_load */
 extern short    lc_load();      /* lcp_load */
 extern void     decompress_scn();
 extern void     init_vdi_and_screen();
+extern void     setup_screen_buffer();  /* Ghidra 0x16576 */
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -177,17 +178,12 @@ char ** argv;
                 for (i = 0; i < 16; i = i + 1)
                         xbios(7, i, main_colorpalette[i]);
         }
+        setup_screen_buffer();          /* Ghidra 0x16576: g_srptr + MFDB_screen_ptr */
         al_loot();
         al_lost();
         al_locs();
         lc_load();
 
-        {
-                long raw;
-                raw = gemdos(0x48, 32256L);
-                if (raw == 0L) { Cconws("Malloc?\r\n"); Pterm(1); }
-                g_srptr = (void *) ((raw + 255L) & ~255L);
-        }
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
         init_vdi_and_screen();
         endless_game_loop();

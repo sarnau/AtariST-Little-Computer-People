@@ -356,6 +356,26 @@ void *  save_logbase                    = (void *) 0;
 void *  g_srptr                      = (void *) 0;
 short * g_dsb                 = (short *) 0;
 
+/* screen_scale_factor (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
+   Multiplier for the 320x200 low-res screen dimensions in
+   sprite_init_MFDB, matching the shape of the 1985 code even though
+   the value is a constant. */
+short   screen_scale_factor             = 1;
+
+/* MFDB_A (Ghidra 0x2C82A) -- source MFDB for VDI raster copies.
+   fd_addr = NULL is the VDI convention for "device screen", so
+   vro_cpyfm(...) copies from the visible physbase into a memory
+   buffer instead of another off-screen bitmap. */
+MFDB    MFDB_A                          = { 0 };
+
+/* SCREEN_BUFFER_B (Ghidra 0x34953) -- BSS scratch for the
+   double-buffered compositing screen.  setup_screen_buffer()
+   takes this + 0x12F and aligns UP to the next 512-byte boundary
+   for the 320x200 ST screen (32000 bytes).  Sized generously so
+   the 0x12F header + 512-byte align slack + 32000 pixel bytes all
+   fit. */
+unsigned char   SCREEN_BUFFER_B[33280];
+
 short   g_cmmin                    = 0;
 short   g_chhou                      = 0;
 
