@@ -66,6 +66,11 @@ short   body_y_offset_per_state[100];
 
 short * body_lcp_file;
 short * body_shape_data;
+/* body_shape_data buffer (Ghidra 0x3D23C, 98 * 84 = 8232 bytes):
+   destination for sprite_lcp_build_all_body's 30-bit dilation of the
+   raw 168-byte body frames.  84 bytes = 21 rows * 2 words per row.
+   BSS-resident so it survives to game end without heap traffic. */
+short   body_shape_data_buf[98 * 42];    /* 42 shorts/frame = 84 bytes */
 short   g_lsimg[168];    /* 21 rows * 4 words * 2 (image+mask) */
 short   g_lsmas[168];
 
@@ -91,6 +96,10 @@ short   g_hsmas[168];
 short   g_hsmif         = 0;
 short * pex_lcp_file;                   /* filled by asset loader */
 short * head_shape_data;
+/* head_shape_data buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
+   destination for sprite_lcp_build_all_head's dilation of the raw
+   168-byte head frames from the PEx.LCP file. */
+short   head_shape_data_buf[66 * 42];    /* 42 shorts/frame = 84 bytes */
 short   g_hadec       = 0;
 
 /* Per-happiness-level head frame base index (into pex_lcp_file). */

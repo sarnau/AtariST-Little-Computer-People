@@ -150,6 +150,33 @@ void *  buffer;
         }
 }
 
+/* file_load: open + read header + read payload + close.  The 1985
+   .lcp/.pex files carry a 4-byte header of two shorts -- the first
+   short is discarded (temp), the second is the payload byte count.
+   Ghidra:
+       fileHandle = file_open(filename, 0);
+       file_read(fileHandle, 2, &temp);
+       file_read(fileHandle, 2, &size);
+       file_read(fileHandle, size, buffer);
+       _gemdos(GEMDOS_Fclose, fileHandle);
+   addr: file_load() */
+
+void
+file_load(filename, buffer)
+char *  filename;
+void *  buffer;
+{
+        short   fileHandle;
+        short   size;
+        short   temp;
+
+        fileHandle = file_open(filename, 0);
+        fr_read(fileHandle, 2L, &temp);
+        fr_read(fileHandle, 2L, &size);
+        fr_read(fileHandle, (long) size, buffer);
+        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+}
+
 /* lcp_save: create + open + write + close a file, retrying on every
    failure via error_unable_to_write() (which pops a Retry alert).
    Original signature took (filename, size, addr) with size as short --

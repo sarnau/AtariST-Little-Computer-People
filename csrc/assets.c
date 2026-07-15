@@ -56,6 +56,10 @@ extern short    g_setaw[];
 extern short    g_setah[];
 extern short *  pex_lcp_file;                   /* source head sheet */
 extern short *  body_lcp_file;
+extern short *  body_shape_data;
+extern short *  head_shape_data;
+extern short    body_shape_data_buf[];
+extern short    head_shape_data_buf[];
 #include <osbind.h>
 
 extern short    file_open();
@@ -220,7 +224,8 @@ al_locs()
 
         al_loal("body.lcp", body_lcp_buffer,
                        (long) sizeof(body_lcp_buffer));
-        body_lcp_file = (short *) body_lcp_buffer;
+        body_lcp_file    = (short *) body_lcp_buffer;
+        body_shape_data  = body_shape_data_buf;
 
         which = lcp.character_sprite_id;
         if (which < 2 || which > 6)
@@ -237,7 +242,8 @@ al_locs()
 
         al_loal(pex_filename, pex_lcp_buffer,
                        (long) sizeof(pex_lcp_buffer));
-        pex_lcp_file = (short *) pex_lcp_buffer;
+        pex_lcp_file    = (short *) pex_lcp_buffer;
+        head_shape_data = head_shape_data_buf;
 }
 
 /* decompress_scn: decode a .SCN screen-image file into

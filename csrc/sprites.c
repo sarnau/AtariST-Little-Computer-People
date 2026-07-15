@@ -598,3 +598,162 @@ void
 sp_drin()
 {
 }
+
+/* sp_lbbd (Ghidra sprite_lcp_build_all_body):
+   dilate one 21-row body frame into shape data.  The 168-byte source
+   is 4 shorts per row (a 64-bit sprite word split across four shorts,
+   read in the order src[0]|src[1] << 16 | src[2] << 16 (?)) -- Ghidra
+   decompiled the pack as
+       mask = src[3] | ((src[1] | src[0]) << 16) | src[2];
+   Each row's mask is walked bit-by-bit from bit 30 down to bit 1,
+   and every isolated ON bit is smeared into its neighbours (bit-1,
+   bit, bit+1 all set) -- a 3-pixel-wide dilation that produces the
+   silhouette outline.  A second pass then bit-ORs each row into its
+   predecessor for vertical dilation.
+   addr: sp_lcp_build_all_body() */
+
+extern long             bitmask_32bit_or[];
+
+void
+sp_lbbd(src, dest, height)
+unsigned short *src;
+unsigned short *dest;
+short           height;
+{
+        long   img;
+        long   mask;
+        short           bit;
+        short           h;
+        short           flag;
+        unsigned short *dp;
+
+        dp = dest;
+        for (h = 0; h < height; h = h + 1) {
+                img  = 0L;
+                mask = ((long) (src[3] | src[2]))
+                     | (((long) (src[1] | src[0])) << 16);
+                src = src + 4;
+                flag = 0;
+                for (bit = 30; bit > 0; bit = bit - 1) {
+                        if (flag) {
+                                img = img | bitmask_32bit_or[bit];
+                                if ((bitmask_32bit_or[bit] & mask) == 0L)
+                                        flag = 0;
+                        } else if ((bitmask_32bit_or[bit] & mask) != 0L) {
+                                img = img
+                                      | bitmask_32bit_or[bit - 1]
+                                      | bitmask_32bit_or[bit]
+                                      | bitmask_32bit_or[bit + 1];
+                                flag = 1;
+                        }
+                }
+                dest[0] = (unsigned short) (img >> 16);
+                dest[1] = (unsigned short) img;
+                dest = dest + 2;
+        }
+        /* Vertical dilation: OR each row into the row above. */
+        dest = dest - 1;
+        for (h = 0; h < (short) (height - 1); h = h + 1) {
+                dest[0]  = dest[-2] | dest[0];
+                dest[-1] = dest[-3] | dest[-1];
+                dest = dest - 2;
+        }
+        (void) dp;
+}
+
+/* sp_lbhd (Ghidra sprite_lcp_build_all_head):
+   dilate one 21-row head frame.  Same source packing as sp_lbbd but a
+   different bit-smearing rule:
+     - start with mask = 0xFFFFFFFF and img = the packed source pixels
+     - shrink mask from bit 31 downwards until bit_or[bit-1] & img != 0
+     - shrink mask from bit 0 upwards   until bit_or[bit+1] & img != 0
+   The result is a mask that covers exactly the horizontal extent of
+   the ON pixels (plus 1 bit of slack on each side) -- the head's
+   convex-hull outline instead of a pixel-precise dilation.
+   Then the same vertical-OR merge as sp_lbbd.
+   addr: sp_lcp_build_all_head() */
+
+extern long             bitmask_32bit_and[];
+
+void
+sp_lbhd(src, dest, height)
+unsigned short *src;
+unsigned short *dest;
+short           height;
+{
+        long   img;
+        long   mask;
+        short           bit;
+        short           h;
+        unsigned short *dp;
+
+        dp = dest;
+        for (h = 0; h < height; h = h + 1) {
+                mask = -1L;
+                img  = ((long) (src[3] | src[2]))
+                     | (((long) (src[1] | src[0])) << 16);
+                src = src + 4;
+                bit = 31;
+                while (bit > 0 &&
+                       (bitmask_32bit_or[bit - 1] & img) == 0L) {
+                        mask = bitmask_32bit_and[bit] & mask;
+                        bit = bit - 1;
+                }
+                bit = 0;
+                while (bit < 31 &&
+                       (bitmask_32bit_or[bit + 1] & img) == 0L) {
+                        mask = bitmask_32bit_and[bit] & mask;
+                        bit = bit + 1;
+                }
+                dest[0] = (unsigned short) (mask >> 16);
+                dest[1] = (unsigned short) mask;
+                dest = dest + 2;
+        }
+        /* Vertical dilation: OR each row into the row BELOW (opposite
+           direction to sp_lbbd). */
+        dest = dp;
+        for (h = 0; h < (short) (height - 1); h = h + 1) {
+                dest[0] = dest[2] | dest[0];
+                dest[1] = dest[3] | dest[1];
+                dest = dest + 2;
+        }
+}
+
+/* sp_lbal (Ghidra sprite_lcp_build_all):
+   dispatcher.  Iterate 98 body frames (168 source bytes each ->
+   84 dest bytes each) then 66 head frames, calling sp_lbbd /
+   sp_lbhd.  Sources come from body_lcp_file / pex_lcp_file loaded
+   by file_load; destinations are the BSS arrays body_shape_data_buf
+   / head_shape_data_buf we allocate in sprglobs.c.
+   addr: sp_lcp_build_all() */
+
+void
+sp_lbal()
+{
+        short   index;
+        char *  src_ptr;
+        char *  dst_ptr;
+
+        /* Precompute walking pointers instead of the more obvious
+           `body_lcp_file + index * 168` per iteration -- the Alcyon
+           codegen for the (short * ) + (int * short) expression
+           crashed on the very first iteration in testing; walking
+           two char* accumulators is byte-for-byte equivalent and
+           compiles cleanly. */
+        src_ptr = (char *) body_lcp_file;
+        dst_ptr = (char *) body_shape_data;
+        for (index = 0; index < 98; index = index + 1) {
+                sp_lbbd((unsigned short *) src_ptr,
+                        (unsigned short *) dst_ptr, 21);
+                src_ptr = src_ptr + 168;
+                dst_ptr = dst_ptr + 84;
+        }
+        src_ptr = (char *) pex_lcp_file;
+        dst_ptr = (char *) head_shape_data;
+        for (index = 0; index < 66; index = index + 1) {
+                sp_lbhd((unsigned short *) src_ptr,
+                        (unsigned short *) dst_ptr, 21);
+                src_ptr = src_ptr + 168;
+                dst_ptr = dst_ptr + 84;
+        }
+}

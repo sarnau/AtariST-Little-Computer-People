@@ -96,7 +96,7 @@ extern long xbios();
    -> screen_set_draw_to_backbuffer -> draw water pipe + doors +
    food-bowl objects -> screen_draw_food_cabinet ->
    daily_reset_action_flags -> palette_apply_clothing_colors ->
-   copyprot_main_check -> sp_imfs -> (cutscene if new) ->
+   cp_main -> sp_imfs -> (cutscene if new) ->
    endless_game_loop.
 
    Almost none of those subroutines are ported yet; this stub only
@@ -114,9 +114,11 @@ extern void     al_locs();      /* asset_load_character_sheets */
 extern void     sf_sl();        /* soundeffects_load */
 extern short    lc_load();      /* lcp_load */
 extern void     decompress_scn();
-extern void     init_vdi_and_screen();
 extern void     setup_screen_buffer();  /* Ghidra 0x16576 */
-extern void     sp_imfs();    /* Ghidra */
+extern void     sp_imfs();              /* Ghidra sprite_init_MFDBs */
+extern void     sp_lbal();              /* Ghidra sprite_lcp_build_all */
+extern void     init_bitmask_tables();  /* fills bitmask_32bit_or/and */
+extern short    cp_main();  /* Ghidra (stubbed to return 1) */
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -165,15 +167,16 @@ char ** argv;
                 for (i = 0; i < 16; i = i + 1)
                         xbios(7, i, main_colorpalette[i]);
         }
-        setup_screen_buffer();          /* Ghidra 0x16576: g_srptr + MFDB_screen_ptr */
+        setup_screen_buffer();          /* Ghidra 0x16576 */
+        init_bitmask_tables();
         al_loot();
         al_lost();
-        al_locs();
-        lc_load();
-
+        al_locs();                      /* body.lcp + PEx.LCP */
+        sp_lbal();                      /* Ghidra sprite_lcp_build_all */
+        lc_load();                      /* Ghidra lcp_load */
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
-        init_vdi_and_screen();
-        sp_imfs();            /* Ghidra: last major init before endless_game_loop */
+        copyprot_check_return = cp_main();
+        sp_imfs();                      /* Ghidra sprite_init_MFDBs */
         endless_game_loop();
 
         Pterm(0);

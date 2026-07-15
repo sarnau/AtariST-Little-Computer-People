@@ -39,7 +39,7 @@ short   g_trac                  = ACTION_NONE;
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
 short   g_lcldd                      = 0;
-short   copyprot_check_return           = 1;
+short   copyprot_check_return           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
 short   game_speed_counter              = 5;
 
 BOOL16  ctrl_a_alarm_pressed_flag       = NO;

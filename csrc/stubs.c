@@ -104,3 +104,19 @@
    sp_draw, sp_iniM -> sprender.c */
 
 /* v_bar -> vdi.c */
+
+/* cp_main (Ghidra 0x122FC-ish, large): real routine
+   drives the WD1772 FDC directly through a self-modifying,
+   XOR-encrypted MFM-gap-count check on the protection track.
+   Stubbed to a constant non-zero return here -- the port doesn't
+   emulate an original disk, so we always take the "authentic"
+   branch.  main() writes the return value into copyprot_check_return
+   which endless_game_loop tests to decide between the tight game
+   loop and the anti-piracy sleep loop.
+   addr: cp_main() */
+
+short
+cp_main()
+{
+        return 1;
+}
