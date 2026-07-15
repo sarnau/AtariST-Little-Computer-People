@@ -36,8 +36,13 @@ BOOL16  in_execute_event_routine_flag   = NO;
 short   last_action                     = ACTION_NONE;
 short   g_trac                  = ACTION_NONE;
 
-short   lcp_x                           = 0;
-short   lcp_y                           = 0;
+/* Ghidra's endless_game_loop always sets these via
+   house_get_position_xy() or lcp_create_random() during boot.  Give
+   them safe on-screen defaults so the first sc_ren8 doesn't feed
+   VDI a negative dst rect if we haven't reached those functions
+   yet. */
+short   lcp_x                           = 160;
+short   lcp_y                           = 100;
 short   g_lcldd                      = 0;
 short   copyprot_check_return           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
 short   game_speed_counter              = 5;
