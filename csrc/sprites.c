@@ -582,10 +582,22 @@ sp_imfs()
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }
-        sp_iniM(0L, &g_srmfd,
-                         (void *) (SCREEN_BUFFER_A + 0xCD),
-                         (short) (screen_scale_factor * 320),
-                         (short) (screen_scale_factor * 200));
+        {
+                /* Ghidra: SCREEN_BUFFER_A + 0xCD.  0xCD = 205 is odd, so
+                   in the 1985 image SCREEN_BUFFER_A was placed at an odd
+                   address so that + 0xCD landed on an even boundary
+                   suitable for MOVE.L reads/writes.  Our linker puts BSS
+                   on an even boundary, so we round the pointer UP to
+                   the next even byte to reproduce the ORIGINAL parity
+                   -- blkcopy32 (called for the sc_ren8 full-screen
+                   background copy) does MOVE.L (A1),(A0) and traps with
+                   Address Error on odd operands. */
+                long    buf;
+                buf = ((long) SCREEN_BUFFER_A + 0xCDL + 1L) & ~1L;
+                sp_iniM(0L, &g_srmfd, (void *) buf,
+                        (short) (screen_scale_factor * 320),
+                        (short) (screen_scale_factor * 200));
+        }
         sp_drin();
 }
 
