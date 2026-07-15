@@ -557,8 +557,8 @@ sp_lchu()
 
 extern short            last_hz200;
 extern short            screen_scale_factor;
-extern MFDB             sprite_mfdb_image[];
-extern MFDB             sprite_mfdb_mask[];
+extern MFDB             g_semfi[];
+extern MFDB             g_semfm[];
 extern MFDB             g_srmfd;                /* Ghidra "screen_mfdb" */
 extern unsigned char    SCREEN_BUFFER_A[];
 extern short *          g_seaim[];              /* sprite_active_image */
@@ -575,10 +575,10 @@ sp_imfs()
 
         last_hz200 = 0;
         for (i = 0; i < 8; i = i + 1) {
-                sp_iniM(0L, &sprite_mfdb_image[i],
+                sp_iniM(0L, &g_semfi[i],
                                  (void *) g_seaim[i],
                                  g_seacw[i], g_seach[i]);
-                sp_iniM(0L, &sprite_mfdb_mask[i],
+                sp_iniM(0L, &g_semfm[i],
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }

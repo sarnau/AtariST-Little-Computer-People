@@ -379,12 +379,11 @@ MFDB    MFDB_A                          = { 0 };
 unsigned char   SCREEN_BUFFER_A[33280];
 unsigned char   SCREEN_BUFFER_B[33280];
 
-/* sprite_mfdb_image / sprite_mfdb_mask (Ghidra) -- per-slot MFDB
-   descriptors for the 8-way hardware-sprite double buffer.
-   Populated by sprite_init_MFDBs from the sprite_active_* arrays
-   before endless_game_loop; consumed by the sprite draw path. */
-MFDB    sprite_mfdb_image[8];
-MFDB    sprite_mfdb_mask[8];
+/* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
+   per-slot 8-way sprite MFDBs.  Our port already had them under the
+   older names g_semfi / g_semfm (defined later in this file with
+   { { 0 } } initializers) and referenced from sprender.c's sp_draw.
+   sp_imfs writes through those existing arrays -- see sprites.c. */
 
 short   g_cmmin                    = 0;
 short   g_chhou                      = 0;
