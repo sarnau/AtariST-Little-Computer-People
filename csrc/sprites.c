@@ -565,7 +565,7 @@ extern short *          g_seaim[];              /* sprite_active_image */
 extern short *          g_seams[];              /* sprite_active_mask */
 extern short            g_seach[];              /* sprite_active_height */
 extern short            g_seacw[];              /* sprite_active_width */
-extern void             sp_imfd();
+extern void             sp_iniM();
 extern void             sp_drin();
 
 void
@@ -575,14 +575,14 @@ sp_imfs()
 
         last_hz200 = 0;
         for (i = 0; i < 8; i = i + 1) {
-                sp_imfd(0L, &sprite_mfdb_image[i],
+                sp_iniM(0L, &sprite_mfdb_image[i],
                                  (void *) g_seaim[i],
                                  g_seacw[i], g_seach[i]);
-                sp_imfd(0L, &sprite_mfdb_mask[i],
+                sp_iniM(0L, &sprite_mfdb_mask[i],
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }
-        sp_imfd(0L, &g_srmfd,
+        sp_iniM(0L, &g_srmfd,
                          (void *) (SCREEN_BUFFER_A + 0xCD),
                          (short) (screen_scale_factor * 320),
                          (short) (screen_scale_factor * 200));

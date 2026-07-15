@@ -254,30 +254,10 @@ short   count;
         } while (remaining != -1);
 }
 
-/* sp_imfd (Ghidra 0x16612): initialise a VDI MFDB
-   descriptor.  Sets bitmap address, pixel dimensions, word-width
-   (w/16), standard-format flag = 0 (device native), and always
-   4 bitplanes for ST low resolution.  The first parameter is
-   originally an nplanes hint but is hardcoded to 4 inside the
-   function and effectively ignored -- kept in the signature to
-   match the 1985 shape.
-   addr: sp_imfd() */
-
-void
-sp_imfd(unused, mfdb, addr, w, h)
-long    unused;
-MFDB *  mfdb;
-void *  addr;
-short   w;
-short   h;
-{
-        mfdb->fd_addr    = addr;
-        mfdb->fd_w       = w;
-        mfdb->fd_h       = h;
-        mfdb->fd_wdwidth = w / 16;
-        mfdb->fd_stand   = 0;
-        mfdb->fd_nplanes = 4;
-}
+/* sprite_init_MFDB (Ghidra 0x16612) is already ported as sp_iniM in
+   sprender.c -- we call it from setup_screen_buffer below rather than
+   duplicating the body here. */
+extern void     sp_iniM();
 
 /* copy_screen (Ghidra 0x164FA): raster-copy the current physbase
    screen into the memory buffer described by pdesMFDB.  Source is
@@ -335,7 +315,7 @@ setup_screen_buffer()
         buf = (long) SCREEN_BUFFER_B + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
-        sp_imfd(0x1D00L, &MFDB_screen_ptr, g_srptr,
+        sp_iniM(0x1D00L, &MFDB_screen_ptr, g_srptr,
                          (short) (screen_scale_factor * 0x140),
                          (short) (screen_scale_factor * 200));
         copy_screen(vdihandle, &MFDB_screen_ptr);
