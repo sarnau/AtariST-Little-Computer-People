@@ -264,8 +264,7 @@ char ** argv;
         init_compositing_screens();
         init_vdi_and_screen();
 
-        Cconws("[8] about to call endless_game_loop\r\n");
-        Cconws("[8a] pre-call marker\r\n");
+        Cconws("[8] entering endless_game_loop\r\n");
         endless_game_loop();
         Cconws("[8c] returned (shouldn't happen)\r\n");
 

@@ -97,16 +97,21 @@ extern void     sp_draw();
    fine; the game state is unchanged, and rendering isn't visible under
    host builds anyway). */
 
+/* TOS system variables (protected memory -- must be read in
+   supervisor mode).  Addresses per Atari system doc:
+     $0462  _vbclock  long  -- VBL counter
+     $04BA  _hz_200   long  -- 200 Hz counter */
+
 static short
 read_hz_200()
 {
         void *  saveSSP;
-        short   hi;
+        long    v;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        hi = g_hzlo;                /* low word of _hz_200 (200 Hz) */
+        v = *((long *) 0x04BAL);
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
-        return hi;
+        return (short) (v & 0xFFFFL);
 }
 
 static long
@@ -116,7 +121,7 @@ read_vbclock()
         long    v;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        v = _vbclock;
+        v = *((long *) 0x0462L);
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
         return v;
 }
@@ -269,7 +274,6 @@ sc_ren8()
                 if (g_seaim[index] != NULL)
                         sp_draw(index);
         }
-
         /* --- Page flip --- */
         current_screen_mfdb = &g_srmfd;
         _xbios(XBIOS_Vsync, 0L, 0L, 0L);
@@ -305,11 +309,22 @@ sc_ren8()
    first Setscreen(-1, g_srmfd.fd_addr, -1) doesn't hand NULL to the
    shifter.  Not a 1985 function -- init was baked into the boot
    sequence we haven't fully ported. */
+extern void *   g_srptr;
+
 void
 init_compositing_screens()
 {
+        /* g_srmfd + current_screen_mfdb -- the compositing buffer.
+           Starts as the real physbase; toggled between save_physbase
+           and alt_screen_ptr each frame by the flip in sc_ren8. */
         g_srmfd.fd_addr = save_physbase;
         current_screen_mfdb = &g_srmfd;
+
+        /* MFDB_screen_ptr -- the SOURCE for sc_ren8's background
+           blkcopy32.  The 1985 game decompressed HOUSE.SCN in place
+           at this address; we've decompressed into g_srptr so point
+           at that. */
+        MFDB_screen_ptr.fd_addr = g_srptr;
 }
 
 /* alt_screen_ptr / register_alt_screen: replacement for the 1985
