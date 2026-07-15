@@ -40,28 +40,14 @@ extern void     lcp_enter_study_and_save();
 void
 endless_game_loop()
 {
-#ifdef __ALCYON__
-        gemdos(9, "IN\r\n");
-        gemdos(9, "  egl.a\r\n");
-#endif
         if (g_lcldd != 0) {
                 house_get_position_xy(POS_TOP_STUDY_DOOR, &lcp_x, &lcp_y);
                 lcp_y = lcp_y - 3;
                 lcp_x = lcp_x - 10;
                 lcp_enter_study_and_save(NO, NO);
         }
-#ifdef __ALCYON__
-        gemdos(9, "  egl.b check copyprot\r\n");
-#endif
-
         if (copyprot_check_return != 0) {
-#ifdef __ALCYON__
-                gemdos(9, "  egl.c set speed\r\n");
-#endif
                 game_speed_counter = 5;
-#ifdef __ALCYON__
-                gemdos(9, "  egl.d enter tight loop\r\n");
-#endif
                 for (;;) {
                         game_tick_and_animate(0);
                         check_for_any_action_triggers();

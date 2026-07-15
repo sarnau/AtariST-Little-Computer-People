@@ -91,25 +91,27 @@ extern void     sf_irqp();
 extern void     blkcopy32();
 extern void     sp_draw();
 
-/* Read the 200 Hz clock via GEMDOS Super mode.  On the host we return
-   0 -- the render skip-gate then always fires immediately (which is
-   fine; the game state is unchanged, and rendering isn't visible under
-   host builds anyway).
-
-   g_hzhi/g_hzlo are populated by the VBL / MIDI-timer IRQ handler that
-   the 1985 boot code installs (midi_seq_init_timer).  Until that
-   handler is ported both stay 0 and the frame-rate gate always fires. */
+/* Read the 200 Hz clock via GEMDOS Super mode.  Matches Ghidra's
+   screen_render_8hz shape:
+       saveSSP = _gemdos(Super, 0);
+       save_hz200 = _hz_200._2_2_;   // low word of _hz_200 (long)
+       save_vbclock = _vbclock;
+       _gemdos(Super, saveSSP);
+   _hz_200 lives at absolute address $04BA in TOS's low-memory system
+   variables (populated by the TOS timer IRQ, no game-side handler
+   needed); _vbclock lives at $0462 and is bumped by TOS's VBL IRQ.
+   Both must be read in supervisor mode. */
 
 static short
 read_hz_200()
 {
         void *  saveSSP;
-        short   hi;
+        long    v;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        hi = g_hzlo;                /* low word of _hz_200 (200 Hz) */
+        v = *((long *) 0x04BAL);
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
-        return hi;
+        return (short) (v & 0xFFFFL);
 }
 
 static long
@@ -119,7 +121,7 @@ read_vbclock()
         long    v;
 
         saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
-        v = _vbclock;
+        v = *((long *) 0x0462L);
         _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
         return v;
 }
