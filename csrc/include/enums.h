@@ -392,11 +392,10 @@
 #define SPRITE_DOG_LAY_DOWN             0x21
 #define SPRITE_DOG_WALK_RIGHT_9         0x2a
 
-/* ---- Action / event IDs -----------------------------------------------
-   Verified against Ghidra ACTION_ID enum.  0..37 are player actions
-   dispatched by do_action(); 38..44 are deferred events dispatched by
-   execute_event().  ACTION_NONE (-1) is the empty sentinel used by the
-   g_trac global and the event FIFO. */
+/* ---- ACTION_ID (dumped verbatim from Ghidra) --------------------------
+   The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions
+   in the original binary, not appended at the end.  ACTION_NONE (-1)
+   is the empty sentinel used by g_trac and the event FIFO. */
 #define ACTION_NONE                     (-1)
 #define ACTION_SIT_AND_EXERCISE          0
 #define ACTION_READ_NEWSPAPER            1
@@ -426,23 +425,23 @@
 #define ACTION_EAT_MEAL                 25
 #define ACTION_PLAY_WITH_RECORD         26
 #define ACTION_OPEN_UPSTAIRS_CLOSET     27
-#define ACTION_GET_SNACK_FROM_FRIDGE    28
-#define ACTION_OPEN_BEDROOM_CLOSET      29
-#define ACTION_GET_DRESSED              30
-#define ACTION_CLEAN_UP                 31
-#define ACTION_TIDY_HOUSE               32
-#define ACTION_CHECK_FRONT_DOOR         33
-#define ACTION_TOGGLE_TV                34
-#define ACTION_CALL_DOG                 35
-#define ACTION_WAKE_FROM_ALARM          36
-#define ACTION_PET_DOG                  37
-#define ACTION_WAKE_UP_MORNING          38
-#define ACTION_GO_TO_BED_NIGHT          39
-#define ACTION_EVENT_PHONE_CALL         40
-#define ACTION_EVENT_DOG_FOOD           41
-#define ACTION_EVENT_BOOK_DELIVERY      42
-#define ACTION_EVENT_RECORD_DELIVERY    43
-#define ACTION_EVENT_FOOD_DELIVERY      44
+#define ACTION_EVENT_RECORD_DELIVERY    28
+#define ACTION_EVENT_FOOD_DELIVERY      29
+#define ACTION_EVENT_PHONE_CALL         30
+#define ACTION_EVENT_DOG_FOOD           31
+#define ACTION_EVENT_BOOK_DELIVERY      32
+#define ACTION_GET_SNACK_FROM_FRIDGE    33
+#define ACTION_OPEN_BEDROOM_CLOSET      34
+#define ACTION_GET_DRESSED              35
+#define ACTION_CLEAN_UP                 36
+#define ACTION_TIDY_HOUSE               37
+#define ACTION_CHECK_FRONT_DOOR         38
+#define ACTION_TOGGLE_TV                39
+#define ACTION_CALL_DOG                 40
+#define ACTION_WAKE_FROM_ALARM          41
+#define ACTION_PET_DOG                  42
+#define ACTION_WAKE_UP_MORNING          43
+#define ACTION_GO_TO_BED_NIGHT          44
 
 /* ---- Word IDs (subset used by the parser) ----------------------------
    WORD_NONE (-1) marks "not in dictionary".  The rest are populated
