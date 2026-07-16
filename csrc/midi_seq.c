@@ -142,11 +142,20 @@ unsigned char * p;
         midi_default_velocity = p[1];
         return p + 3;
 }
+/* mh_scat: MIDI header 0x84 -- cache the raw scale byte and its
+   bucketed threshold value.  Ghidra 0x112a4 stores the byte at
+   midi_current_scale_value (0x29a24) and a bucketed odd-integer
+   (5, 7, 9, 11, 13, 15) at midi_scale_bucket (0x29a26).  It does
+   NOT call midi_seq_build_scale_table -- that is invoked from the
+   song-load path elsewhere.
+   TODO: wire the two cached values through to sequencer globals.
+   The current stub is a no-op so we don't corrupt state via the
+   old `mq_bust()`-with-no-arg call that was here previously. */
 static unsigned char *
 mh_scat(p)
 unsigned char * p;
 {
-        mq_bust();
+        (void) p;
         return p + 3;
 }
 static unsigned char *
