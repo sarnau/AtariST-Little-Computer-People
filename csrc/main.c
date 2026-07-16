@@ -240,7 +240,7 @@ char ** argv;
         al_lost();
         sp_reglp();
 
-        /* Ghidra step 25 */  /* sf_sl(); -- disabled to bisect red-screen crash */
+        /* Ghidra step 25 */  sf_sl();                  /* soundeffects_load */
         /* Ghidra step 26 */  dg_ipos();                /* dog_init_position */
         /* Ghidra step 27 */
         /* if (g_lcldd == 0) sp_spud(0, 1, NO); -- disabled */

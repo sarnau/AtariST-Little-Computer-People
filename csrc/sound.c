@@ -160,15 +160,13 @@ sf_sl()
         short           size;
         short *         block;
 
+        /* Ghidra soundeffects_load: for each entry, read the 2-byte
+           size, Malloc(size + 4), store the block pointer in
+           mi_ntLp[index], write size to the first word of the block,
+           then read `size` bytes into block+1.  Terminator is size==0. */
         fhandle = fOpen("sounds.lcp", 0);
         for (index = 0; index < 500; index = index + 1) {
-                unsigned char   sizebuf[2];
-
-                fr_read(fhandle, 2L, sizebuf);
-                /* On-disk size word is big-endian (68k native).  On the
-                   ST the fr_read would splice it into `size` in the
-                   right order; on the host we reassemble explicitly. */
-                size = ((short) sizebuf[0] << 8) | sizebuf[1];
+                fr_read(fhandle, 2L, &size);
                 if (size == 0)
                         break;
                 block = (short *) Malloc((long) (size + 4));
