@@ -37,12 +37,14 @@ short   last_action                     = ACTION_NONE;
 short   g_trac                  = ACTION_NONE;
 
 /* Ghidra's endless_game_loop always sets these via
-   house_get_position_xy() or lcp_create_random() during boot.  Give
-   them safe on-screen defaults so the first sc_ren8 doesn't feed
-   VDI a negative dst rect if we haven't reached those functions
-   yet. */
-short   lcp_x                           = 160;
-short   lcp_y                           = 100;
+   house_get_position_xy() during boot.  We seed them to Ghidra's
+   post-cutscene "resident is inside, past the doorbell" state --
+   cutscene_new_lcp_move_in sets (300, 190) right after the door
+   opens, then walks the resident toward the screen edge.  Using
+   that value lets the AI dispatcher pick up from a valid on-floor
+   position without needing the full cutscene ported. */
+short   lcp_x                           = 300;
+short   lcp_y                           = 190;
 short   g_lcldd                      = 0;
 short   copyprot_check_return           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
 short   game_speed_counter              = 5;
