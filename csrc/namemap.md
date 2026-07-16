@@ -357,3 +357,22 @@ multiple items sharing prefixes not previously flagged.
 | g_txy   | target_y                                         |
 | g_trac  | trigger_action                                   |
 | g_trel  | triggered_event_list                             |
+
+## Fourth-pass renames (extern-symbol collisions from Ghidra ports)
+
+New Ghidra-faithful ports added identifiers that collided with pre-
+existing extern names at Alcyon's 7-char C name / 8-char asm boundary.
+Rename each collision pair so the linker sees distinct `.comm` blocks.
+
+| short   | long                                             |
+|---------|--------------------------------------------------|
+| scrbufA | SCREEN_BUFFER_A                                  |
+| scrbufB | SCREEN_BUFFER_B                                  |
+| bm32or  | bitmask_32bit_or                                 |
+| bm32and | bitmask_32bit_and                                |
+| curPos  | currentPosition                                  |
+| midiEvP | midiEventPtr                                     |
+| midiEvS | midiEventSize                                    |
+| fl_ltpl | file_load_letter_template                        |
+| bshdbuf | body_shape_data_buf                              |
+| hshdbuf | head_shape_data_buf                              |
