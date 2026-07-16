@@ -13,11 +13,15 @@
 /* Animation frame tables consumed by game_tick_and_animate.  Every
    value is an object_tab_mfdb index; game_tick indexes these by a
    small counter to pick which sprite/frame to draw. */
+/* Object-animation frame tables (dumped from Ghidra data segment).
+   The previous port assignments were SCRAMBLED across each other:
+   g_obala had fire[0..1], g_obpha had alarm+phone[0..1], g_obfia had
+   phone[0..3].  Every od_draw of these tables drew the wrong sprite. */
 short   g_obcla[4]     = { 13, 14, 13, 15 };    /* clock_animation @ 0x2B922 */
+short   g_obala[2]     = {  3,  4 };            /* alarm_animation @ 0x2B92A */
+short   g_obpha[4]     = { 23, 22, 23, 24 };    /* phone_animation @ 0x2B92E */
+short   g_obfia[4]     = { 32, 33, 34, 35 };    /* fire_animation  @ 0x2B936 */
 short   g_obdea[3]     = { 51, 50, 49 };        /* dog_eating_animation @ 0x2B954 */
-short   g_obala[2]     = { 32, 33 };            /* alarm_animation @ 0x2B936 */
-short   g_obpha[4]     = {  3,  4, 23, 22 };    /* phone_animation @ 0x2B92A */
-short   g_obfia[4]     = { 23, 22, 23, 24 };    /* fire_animation @ 0x2B92E */
 
 /* Petting-dog sprite frames -- 11-frame array of sprite ids the
    petting animation cycles through (Ghidra object_id_ARRAY_0002b93e
