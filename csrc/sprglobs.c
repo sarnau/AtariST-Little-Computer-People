@@ -159,7 +159,8 @@ short * head_shape_data;
    destination for sprite_lcp_build_all_head's dilation of the raw
    168-byte head frames from the PEx.LCP file. */
 short   hshdbuf[66 * 42];    /* 42 shorts/frame = 84 bytes */
-short   g_hadec       = 0;
+/* Ghidra head_anim_delay_countdown @ 0x2ba2a = 1. */
+short   g_hadec                         = 1;
 
 /* Per-happiness-level head frame base index (into pex_lcp_file). */
 /* Ghidra 0x2BA2C. */

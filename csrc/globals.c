@@ -54,9 +54,11 @@ short   g_aliss               = 0;
 short   g_aqueu[10];
 short   g_apriq[10];
 
-short   g_hatas          = 0;
-short   g_hacur               = 0;
-short   g_hamod                  = 0;
+/* Ghidra head_anim_target_state @ 0x29b98 = 8, head_anim_current @ 0x29b96 = 8,
+   head_anim_mode @ 0x29b9a = -1 (HEAD_ANIM_DISABLED). */
+short   g_hatas                         = 8;
+short   g_hacur                         = 8;
+short   g_hamod                         = HEAD_ANIM_DISABLED;
 short   g_hsfra               = 0;
 long    g_sfret     = 0;
 BOOL16  g_actif       = NO;
@@ -413,8 +415,12 @@ unsigned char   scrbufB[33280];
    { { 0 } } initializers) and referenced from sprender.c's sp_draw.
    sp_imfs writes through those existing arrays -- see sprites.c. */
 
-short   g_cmmin                    = 0;
-short   g_chhou                      = 0;
+/* Ghidra clock_minute @ 0x2B562 = 5, clock_hour @ 0x2B564 = 6.
+   These are the "last-drawn" hand positions.  time_minutes/time_hours
+   start at 0 (BSS), so the first clock_redraw_hands call sees a mismatch
+   and paints the initial 0:00 hands over the pre-drawn 5:06 default. */
+short   g_cmmin                         = 5;
+short   g_chhou                         = 6;
 
 BOOL16  g_sfacf         = NO;
 short   g_sfcur             = 0;
