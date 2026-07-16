@@ -81,25 +81,10 @@ short   carry_body_frame_table[25]      = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
-/* head_sprite_frame_table (Ghidra 0x29C9E, 66 shorts):
-   maps lcp_state -> head-frame index into pex.lcp / head_shape_data
-   for sp_lchu.  Mostly zero -- non-zero at 45/46 (6, 6),
-   48 (-1). */
-short   head_sprite_frame_table[66] = {
-         0,  0,  0,  0,  0,  0,  0,  0,     /*  0..7  */
-         0,  0,  0,  0,  0,  0,  0,  0,     /*  8..15 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 16..23 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 24..31 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 32..39 */
-         0,  0,  0,  0,  0,  6,  6,  0,     /* 40..47 */
-        -1,  0,  0,  0,  0,  0,  0,  0,     /* 48..55 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 56..63 */
-         0,  0                              /* 64..65 */
-};
+/* (Removed dead head_sprite_frame_table[66] -- it was a mis-transcribed
+   duplicate of head_x_offset_per_state and not referenced anywhere.) */
 /* body_y_offset_per_state (Ghidra 0x29F8C, 109 shorts):
-   Y anchor offset per lcp_state.  My earlier port dumped values from
-   0x29CA4 (which turned out to be head_sprite_frame_table) instead
-   of 0x29F8C -- these are the *real* body Y offsets. */
+   Y anchor offset per lcp_state.  Verified against Ghidra dump. */
 short   body_y_offset_per_state[109] = {
         -2, -2, -2, -1, -2, -2, -2, -1,     /*   0..7  */
         -2,  0,  0,  0,  0,  0,  0,  0,     /*   8..15 */
