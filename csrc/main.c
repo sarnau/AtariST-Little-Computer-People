@@ -50,7 +50,7 @@ endless_game_loop()
                 game_speed_counter = 5;
                 for (;;) {
                         game_tick_and_animate(0);
-                        check_for_any_action_triggers();
+                        /* check_for_any_action_triggers(); DIAG */
                 }
         }
 
