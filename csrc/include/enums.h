@@ -140,9 +140,26 @@
 
 /* ---- Head animation modes (see HEAD_ANIM_MODE below for canonical set) */
 
-/* ---- Text color (VDI palette index) ------------------------------------ */
-#define COLOR_black                             1
-#define COLOR_white                             0
+/* ---- color_enum (dumped from Ghidra) --------------------------------
+   Values 0..15 are color_enum indices, NOT VDI palette slots.  The
+   drawing calls pass a color_enum through _vdi_color_table[] to get the
+   underlying VDI palette slot -- Ghidra's table is a permutation, so
+   using the wrong color_enum here produces the wrong on-screen hue. */
+#define COLOR_black                              0
+#define COLOR_olive                              1
+#define COLOR_lt_green                           2
+#define COLOR_pink                               3
+#define COLOR_brown                              4
+#define COLOR_green                              5
+#define COLOR_pink_2                             6
+#define COLOR_yellow                             7
+#define COLOR_blueish_sky                        8
+#define COLOR_lt_brown                           9
+#define COLOR_red                               10
+#define COLOR_grey                              11
+#define COLOR_lt_grey                           12
+#define COLOR_blue                              13
+#define COLOR_white                             14
 
 /* Sat/Sun weekday consts (used by check_time_based_actions). */
 #define NEED_SATISFIED                          0
@@ -309,10 +326,7 @@
 #define XBIOS_Midiws                            12
 #define XBIOS_Dosound                           32      /* run PSG sequence  */
 
-/* ---- Additional colours used by td_nois --------------- */
-#define COLOR_dk_brown                  15
-#define COLOR_red                       2
-#define COLOR_grey                      8
+#define COLOR_dk_brown                          15
 
 /* ---- VDI raster op modes ---------------------------------------------
    Source/destination combining modes for vro_cpyfm.  Names match the

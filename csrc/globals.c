@@ -161,9 +161,16 @@ short * saved_head_sprite_ptr           = (short *) 0;
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
 short   vdihandle                       = 0;
+/* _vdi_color_table (Ghidra vdi_color_table @ 0x29b64): color_enum ->
+   VDI palette-index permutation.  color_enum 0 (black) -> VDI slot 0,
+   color_enum 14 (white) -> VDI slot 13, etc.  Not identity: VDI's
+   default 16-entry palette-index-to-hardware-color assignment differs
+   from the game's color_enum numbering, so text/lines call
+   vst_color/vsl_color/vsf_color through this permutation to end up
+   at the same on-screen hue as Ghidra. */
 short   _vdi_color_table[16]            = {
-        0, 1, 2, 3, 4, 5, 6, 7,
-        8, 9, 10, 11, 12, 13, 14, 15
+        0,  2,  3,  6,  4,  7,  5,  8,
+        9, 10, 11, 14, 12, 15, 13,  1
 };
 
 /* GEM VDI parameter block.  Each trap #2 invocation reads from
