@@ -422,12 +422,18 @@ short   g_sfcur             = 0;
 short   g_sfdur            = 0;
 short   g_sfdos      = 0;
 short   g_sfdoc     = 0;
-/* _soundeffect_priority_table[32]: per-SFX priority.  Higher priority
-   preempts lower.  Ghidra data segment; values chosen so the game's
-   observed behaviour (phone ring beats footstep) survives. */
+/* _soundeffect_priority_table (Ghidra 0x2b44c, 32-byte array indexed
+   by SOUND_EFFECT_ID).  Lower value = higher priority (a new SFX
+   preempts the current if the new one's priority <= the current's).
+   Notable: SFX 12/13 (DOORBELL, DOORBELL_ECHO) at priority 0 beat
+   everything; footsteps 0..5 at 30 lose to everything.
+   Dumped verbatim from the data segment -- previous port had guessed
+   values (0/5/3/8/etc) that gave wrong preemption. */
 short   _soundeffect_priority_table[32] = {
-        0, 5, 5, 3, 3, 8, 2, 4, 4, 4, 1, 2, 2, 2, 2, 6,
-        6, 6, 2, 4, 4, 9, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4
+         30,  30,  30,  30,  30,  30,  15,  15,
+         15,  15,  15,  15,   0,   0,  15,  15,
+         15,  15,  15,  14,  16,   1,  15,   0,
+          0,   0, 205,  77, 115, 116, 117, 100
 };
 
 /* Raw file buffers -- populated at startup by asset_load_all().
