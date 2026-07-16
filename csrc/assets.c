@@ -232,6 +232,12 @@ static unsigned char    pex_lcp_buffer[12000];
 void
 al_locs()
 {
+        /* pex_filename: local equivalent of Ghidra's pex_lcp_ptr @ 0x2a0f8,
+           which points at the static string "pex.lcp" at 0x2a330 and gets
+           mutated in place at index 2 to select the character sheet.  Port
+           uses a stack-local to avoid a mutable global; GEMDOS FAT is
+           case-insensitive so the uppercase / lowercase difference is
+           immaterial (files ship as PE2.LCP..PE6.LCP). */
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
