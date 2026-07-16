@@ -16,6 +16,7 @@
  */
 
 #include "types.h"
+#include "enums.h"
 
 /* endless_game_loop definition (gated back IN for both host and
    Alcyon builds).  main() does NOT call it yet -- we're bisecting
@@ -168,10 +169,10 @@ extern short    g_obdea[];                              /* dog_eating_animation 
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
    K&R externs (empty parens) so cp68 doesn't try to typecheck them. */
 extern short    appl_init();
-extern short    graf_handle();
-extern void     v_opnvwk();
 extern void     v_clsvwk();
 extern void     appl_exit();
+extern void     aes_vdi_jnit();                 /* Ghidra 0x167aa */
+extern void     vdi_init();                     /* Ghidra 0x16680 */
 
 #define Cconws(s)       gemdos(0x09, s)
 #define Cconin()        gemdos(0x01)
@@ -187,26 +188,13 @@ char ** argv;
 
         Cconws("\r\nLCP (Alcyon 4.14)\r\n");
 
-        /* --- Ghidra step 2: aes_vdi_jnit (hand-rolled) --------------- */
-        appl_init();
-        {
-                short wchar, hchar, wbox, hbox, gh;
-                gh = graf_handle(&wchar, &hchar, &wbox, &hbox);
-                vdihandle = gh;
-        }
-        {
-                short work_in[11];
-                short work_out[57];
-                short i;
-                for (i = 0; i < 10; i = i + 1) work_in[i] = 1;
-                work_in[0] = 1;
-                work_in[10] = 2;
-                v_opnvwk(work_in, &vdihandle, work_out);
-        }
-        xbios(6, (long) main_colorpalette);             /* Setpalette */
-        save_physbase = (void *) xbios(2);              /* Physbase */
+        /* --- Ghidra step 2: aes_vdi_jnit (0x167aa) ------------------ */
+        aes_vdi_jnit();
 
-        /* --- Ghidra step 6: setup_screen_buffer ---------------------- */
+        /* --- Ghidra step 5: vdi_init (0x16680) ---------------------- */
+        vdi_init();
+
+        /* --- Ghidra step 6: setup_screen_buffer --------------------- */
         setup_screen_buffer();
         init_bitmask_tables();          /* step 7: bit_revert_table */
 

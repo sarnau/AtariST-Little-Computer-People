@@ -172,11 +172,15 @@ st_titl()
    fully identified). */
 
 extern void     string_print();
+extern void     print_char();
 
 void
 draw_hud_top_strip()
 {
-        string_print(lcp.owner_name, 8, 8, COLOR_black);
+        /* Single-character diagnostic call.  If this crashes, the
+           problem is in print_char / VDI text setup, not string_print
+           iteration. */
+        print_char((short) 'A', (short) 100, (short) 8, (short) COLOR_black);
 }
 
 /* cutscene_new_lcp_move_in_stub: minimal replacement for the doorbell/

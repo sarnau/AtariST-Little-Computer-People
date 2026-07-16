@@ -308,6 +308,86 @@ MFDB *  pdesMFDB;
 
 extern short *  g_dsb;
 
+/* aes_vdi_jnit (Ghidra 0x167aa): AES + palette + physbase snapshot.
+     appl_init();
+     vdi_handle = graf_handle(&gr_hwchar, &gr_hhchar, &gr_hwbox, &gr_hhbox);
+     Setpalette(main_colorpalette);
+     save_physbase = Physbase();
+   The four graf_handle out-parameters (character w/h and box w/h) are
+   AES housekeeping globals; the port doesn't reference them elsewhere,
+   so local storage is fine.  Notably this function does NOT call
+   v_opnvwk -- that's vdi_init's job. */
+
+extern short    appl_init();
+extern short    graf_handle();
+extern short    main_colorpalette[];
+extern void *   save_physbase;
+extern short    vdi_handle;
+
+void
+aes_vdi_jnit()
+{
+        short   gr_hwchar, gr_hhchar, gr_hwbox, gr_hhbox;
+
+        appl_init();
+        vdi_handle = graf_handle(&gr_hwchar, &gr_hhchar,
+                                 &gr_hwbox,  &gr_hhbox);
+        _xbios(XBIOS_Setpalette, (long) main_colorpalette, 0L, 0L);
+        save_physbase = (void *) _xbios(2, 0L, 0L, 0L);  /* XBIOS Physbase */
+}
+
+/* vdi_init (Ghidra 0x16680): open the virtual VDI workstation and
+   erase the screen.  Ghidra flow:
+     vdihandle = vdi_handle;
+     workin[0..9] = 1;  workin[10] = 2;
+     v_opnvwk(workin, &vdihandle, workout);
+     screen_scale_factor = REZ_ST_MEDIUM (=1);
+     if (workout[0] < 601) vdi_erase_screen();
+     else form_alert("must be in low resolution", loop_forever);
+   We skip the resolution guard -- Hatari is always launched at
+   low-res and the alert loop would hang the automated harness. */
+
+extern void     v_opnvwk();
+extern void     v_bar();
+extern void     graf_mouse();
+extern void     vswr_mode();
+extern void     vsf_interior();
+extern void     vsf_style();
+extern void     vsf_color();
+extern short    screen_scale_factor;
+
+#define REZ_ST_MEDIUM   1
+#define M_OFF           256
+
+void
+vdi_init()
+{
+        short   work_in[11];
+        short   work_out[57];
+        short   i;
+        short   r[4];
+
+        vdihandle = vdi_handle;
+        for (i = 0; i < 10; i = i + 1)
+                work_in[i] = 1;
+        work_in[10] = 2;
+        v_opnvwk(work_in, &vdihandle, work_out);
+        screen_scale_factor = REZ_ST_MEDIUM;
+
+        /* vdi_erase_screen: turn off the mouse then fill the whole
+           screen with COLOR_black via v_bar.  Ghidra's version resets
+           vsf_color to COLOR_green_sea at the end; we skip that (no
+           user of the vsf_color state depends on it later). */
+        vswr_mode(vdihandle,   MD_REPLACE);
+        vsf_interior(vdihandle, VSFPATT);
+        vsf_style(vdihandle,   FILL_SOLID);
+        vsf_color(vdihandle,   COLOR_black);
+        r[0] = 0;   r[1] = 0;
+        r[2] = 319; r[3] = 199;
+        graf_mouse(M_OFF, (void *) 0);
+        v_bar(vdihandle, r);
+}
+
 void
 setup_screen_buffer()
 {

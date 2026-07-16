@@ -163,6 +163,7 @@ short * saved_head_sprite_ptr           = (short *) 0;
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
 short   vdihandle                       = 0;
+short   vdi_handle                      = 0;    /* physical from graf_handle */
 /* _vdi_color_table (Ghidra vdi_color_table @ 0x29b64): color_enum ->
    VDI palette-index permutation.  color_enum 0 (black) -> VDI slot 0,
    color_enum 14 (white) -> VDI slot 13, etc.  Not identity: VDI's
@@ -475,11 +476,12 @@ short   g_ptanf              = 0;
 short   last_hz200                      = 0;
 long    last_vbclock                    = 0;
 /* save_physbase: TOS's original Physbase, captured once at boot by
-   aes_vdi_jnit via _xbios(XBIOS_Physbase).  Both page-flip screens
-   in sc_ren8 alternate between this address and an alt buffer; the
-   hardcoded 0x28000 fallback (1MB-machine TOS physbase) is only
-   used if aes_vdi_jnit hasn't run yet -- do NOT rely on it. */
-void *  save_physbase                   = (void *) 0x28000L;
+   aes_vdi_jnit via _xbios(XBIOS_Physbase).  BSS-zero to match Ghidra's
+   binary (the port previously initialised it to 0x28000L which put it
+   in .data with a bogus fallback -- aes_vdi_jnit runs early so the
+   fallback was never read, but matching Ghidra's memory layout keeps
+   any future .data / BSS-boundary bug from being silently absorbed). */
+void *  save_physbase                   = (void *) 0;
 
 /* g_srmfd / MFDB_screen_ptr: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
