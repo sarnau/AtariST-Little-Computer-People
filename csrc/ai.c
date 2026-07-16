@@ -127,21 +127,18 @@ check_for_any_action_triggers()
         short   sickness_skip_probability;
         short   rnd;
         short   index;
-
         /* P1: process any deferred event first */
         if (g_trel[0] != ACTION_NONE) {
                 event = get_event_from_list();
                 execute_event(event);
                 return;
         }
-
         /* P2: alarm clock */
         if (ctrl_a_alarm_pressed_flag != NO) {
                 g_trac = ACTION_WAKE_FROM_ALARM;
                 do_action();
                 return;
         }
-
         /* P3: bathroom */
         if (lcp.bathroom_need != NO) {
                 g_trac = ACTION_USE_TOILET;
@@ -156,7 +153,6 @@ check_for_any_action_triggers()
                 sickness_skip_probability = 66;
         else
                 sickness_skip_probability = 0;
-
         /* P4: thirst */
         if (lcp.thirst_level > 0) {
                 rnd = randomRange(1, 100);
@@ -168,7 +164,6 @@ check_for_any_action_triggers()
                         return;
                 }
         }
-
         /* P5: hunger */
         if (lcp.hunger_level > 0) {
                 rnd = randomRange(1, 100);
@@ -208,7 +203,6 @@ check_for_any_action_triggers()
                 bedtime_triggered_today = YES;
                 return;
         }
-
         /* P10: command queue.  Low-priority (0..3) commands get shifted
            out on every rejected round; high-priority (>=8) fire
            immediately.  Middle-priority items get their priority

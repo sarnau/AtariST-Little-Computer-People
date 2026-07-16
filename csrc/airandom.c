@@ -71,7 +71,15 @@ check_time_based_actions()
                                                 ((hours/2)%3 << 4)]
                    The << 4 (16 shorts per row) matches the 16-entry
                    action tables that follow. */
-                table_pick = *((short *) activity_schedule_table[0] +
+                /* Ghidra: `*(short *)((int)ptr + byte_offset)` -- the
+                   `<<1` and `<<4` values ARE byte offsets, so we cast
+                   the base pointer to `char *` before advancing, then
+                   cast to `short *` for the dereference.  Our older
+                   port had `(short *)ptr + N` which scales N by 2
+                   (short-pointer arithmetic), reading twice as far
+                   into the row and hitting garbage past _schedule_row_0's
+                   8-short bound. */
+                table_pick = *(short *) ((char *) activity_schedule_table[0] +
                         (lcp.activity_level << 1) +
                         (((hours_since_wake / 2) % 3) << 4));
 
