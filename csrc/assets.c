@@ -125,14 +125,27 @@ short *         h_tab;
                         break;
                 offset = offset + 4;
 
+                /* MFDB width MUST be a multiple of 16 -- sp_iniM
+                   computes fd_wdwidth = width / 16 with an integer
+                   truncation.  Passing the raw (unrounded) pixel
+                   width lands on the wrong stride whenever the object
+                   isn't a clean multiple of 16, and vro_cpyfm then
+                   sources the wrong bytes -- the door outlines look
+                   right but the fill pattern is off / smeared.
+                   Ghidra's parse loop does the same round-up before
+                   calling sprite_init_MFDB. */
+                words_per_row = (width + 15) / 16;
                 sp_iniM(0L, &mfdb_tab[count],
-                                 buf + offset, width, height);
+                                 buf + offset,
+                                 (short) (words_per_row * 16), height);
+                /* w_tab keeps the true (unrounded) pixel width so
+                   od_draw's source rectangle is the exact object
+                   size, not the padded MFDB width. */
                 w_tab[count] = width;
                 h_tab[count] = height;
 
-                /* Advance past this record's pixel data: ceil(w/16)
-                   words per row * 4 planes * 2 bytes per word. */
-                words_per_row = (width + 15) / 16;
+                /* Advance past this record's pixel data: words_per_row
+                   * 4 planes * 2 bytes per word. */
                 record_bytes  = (long) height * words_per_row * 4 * 2;
                 offset = offset + record_bytes;
                 count = count + 1;
@@ -271,158 +284,90 @@ long            dest_size_words;
 {
         short           filehandle;
         unsigned char * fbuffer;
-        unsigned char * fbuffer_orig;
         long            body_size;
         long            i;
         long            count;
         unsigned short  word_dict[15];
-        unsigned short  flag;
-        unsigned short  nibble;
-        unsigned short  literal;
         unsigned char   sizebuf[2];
 
-#ifdef __ALCYON__
-        gemdos(9, "  scn.a\r\n");     /* Cconws marker A: entered */
-#endif
         filehandle = file_open(filename, 0);
         fr_read(filehandle, 2L, sizebuf);
-
-        /* File size is big-endian.  Reassemble using the SHORT-cast
-           pattern al_loal uses (it works for body.lcp and PEx.LCP). */
         body_size = ((long) sizebuf[0] << 8) | sizebuf[1];
 
-        /* Read the 30-byte (15-word) dictionary. */
         {
                 unsigned char raw[30];
+                unsigned short hi;
+                unsigned short lo;
                 fr_read(filehandle, 30L, raw);
-                for (i = 0; i < 15; i = i + 1)
-                        word_dict[i] = (unsigned short)
-                                (((short) raw[i * 2] << 8) | raw[i * 2 + 1]);
+                for (i = 0; i < 15; i = i + 1) {
+                        /* Explicit byte-masked casts before OR --
+                           Alcyon C 4.14 sign-extends `raw[j]` in
+                           expressions where the char has bit 7 set,
+                           turning e.g. 0xFF into 0xFFFF and
+                           corrupting any dict entry whose low byte
+                           is >= 0x80 (this shows up as a repeating
+                           horizontal-streak pattern in HOUSE.SCN
+                           because 3 of its 15 dictionary words have
+                           high-bit low bytes). */
+                        hi = (unsigned short) raw[i * 2]     & 0x00FF;
+                        lo = (unsigned short) raw[i * 2 + 1] & 0x00FF;
+                        word_dict[i] = (hi << 8) | lo;
+                }
         }
 
-        /* Read the compressed body.  Total header = 32 bytes, so body
-           length is fileSize - 32.  Allocate + slurp. */
-#ifdef __ALCYON__
-        gemdos(9, "  scn.d dict done\r\n");
-#endif
         body_size = body_size - 32;
         fbuffer = (unsigned char *) _gemdos(GEMDOS_Malloc,
                                             body_size, 0L, 0L);
-        fbuffer_orig = fbuffer;
-#ifdef __ALCYON__
-        gemdos(9, "  scn.e malloc\r\n");
-#endif
         if (fbuffer == (unsigned char *) 0)
                 error_not_enough_memory();
         fr_read(filehandle, body_size, fbuffer);
-#ifdef __ALCYON__
-        gemdos(9, "  scn.f body read\r\n");
-#endif
 
-        /* DIAGNOSTIC: try one write to out_words first.  If this crashes,
-           the pointer or buffer is bad.  If it doesn't, the decode loop
-           is the crash. */
-#ifdef __ALCYON__
-        gemdos(9, "  scn.g try write out_words[0]\r\n");
-#endif
-        out_words[0] = 0x1234;
-#ifdef __ALCYON__
-        gemdos(9, "  scn.h wrote\r\n");
-#endif
-#ifdef __ALCYON__
-        gemdos(9, "  scn.i try write out_words[15999]\r\n");
-#endif
-        out_words[15999] = 0x5678;
-#ifdef __ALCYON__
-        gemdos(9, "  scn.j wrote last word\r\n");
-#endif
-
-        /* Decode.  Same nibble state-machine as fr_reac,
-           just wider symbols. */
-        /* Simple sequential nibble reader: unpack all body bytes into
-           a nibble buffer up front, then walk the nibble stream.
-           Avoids the flag state-machine that c168 mis-compiles. */
+        /* Nibble state-machine decode.  Explicit `b = *src & 0xFF`
+           read isolates the byte value BEFORE any implicit int
+           promotion / sign extension that Alcyon C 4.14 may inject
+           when a signed-char temporary is used in a shift. */
         {
-                unsigned char * np;
-                unsigned char * nbuf;
-                long           bn;
-                long           ni;
-                unsigned short lit;
+                short           readHigh;
+                unsigned short  val;
+                unsigned short  nibble;
+                short           j;
+                unsigned char * src;
+                unsigned short  b;
 
-#ifdef __ALCYON__
-                gemdos(9, "  scn.k unpack nibbles\r\n");
-#endif
-                nbuf = (unsigned char *) _gemdos(GEMDOS_Malloc,
-                                                 body_size * 2L, 0L, 0L);
-                if (nbuf == (unsigned char *) 0)
-                        error_not_enough_memory();
-                np = nbuf;
-                for (bn = 0; bn < body_size; bn = bn + 1) {
-                        *np++ = (fbuffer_orig[bn] >> 4) & 0x0f;
-                        *np++ = fbuffer_orig[bn] & 0x0f;
-                }
-
-#ifdef __ALCYON__
-                gemdos(9, "  scn.l1 decode start\r\n");
-#endif
-                np = nbuf;
-#ifdef __ALCYON__
-                gemdos(9, "  scn.l2 first read np\r\n");
-#endif
-                {
-                        unsigned char first = *np;
-                        char m[8];
-                        m[0] = ' '; m[1] = 'n'; m[2] = '=';
-                        m[3] = '0' + (char)(first / 10);
-                        m[4] = '0' + (char)(first % 10);
-                        m[5] = '\r'; m[6] = '\n'; m[7] = 0;
-#ifdef __ALCYON__
-                        gemdos(9, m);
-#endif
-                }
-#ifdef __ALCYON__
-                gemdos(9, "  scn.l3 read word_dict\r\n");
-#endif
-                {
-                        unsigned short wd = word_dict[1];
-#ifdef __ALCYON__
-                        gemdos(9, "  scn.l4 word_dict[1] ok\r\n");
-#endif
-                        out_words[0] = wd;
-#ifdef __ALCYON__
-                        gemdos(9, "  scn.l5 wrote out_words[0]\r\n");
-#endif
-                }
+                src = fbuffer;
+                readHigh = 1;
                 for (count = 0; count < dest_size_words; count = count + 1) {
-                        unsigned short  n0 = *np;
-                        if (n0 == 0x0F) {
-                                /* Literal: next 4 nibbles compose a 16-bit
-                                   word.  Read them with EXPLICIT sequencing
-                                   -- the older `lit = (lit << 4) | *np++`
-                                   chain gets mis-compiled by Alcyon C 4.14. */
-                                np = np + 1;
-                                lit  = (unsigned short) *np;
-                                np   = np + 1;
-                                lit  = (lit << 4) | (unsigned short) *np;
-                                np   = np + 1;
-                                lit  = (lit << 4) | (unsigned short) *np;
-                                np   = np + 1;
-                                lit  = (lit << 4) | (unsigned short) *np;
-                                np   = np + 1;
-                                out_words[count] = lit;
+                        b = (unsigned short) (*src) & 0x00FF;
+                        if (readHigh) {
+                                val = (b >> 4) & 0x0F;
                         } else {
-                                out_words[count] = word_dict[n0];
-                                np = np + 1;
+                                val = b & 0x0F;
+                                src = src + 1;
+                        }
+                        readHigh = 1 - readHigh;
+                        nibble = val;
+
+                        if (nibble == 0x0F) {
+                                nibble = 0;
+                                for (j = 0; j < 4; j = j + 1) {
+                                        b = (unsigned short) (*src) & 0x00FF;
+                                        if (readHigh) {
+                                                val = (b >> 4) & 0x0F;
+                                        } else {
+                                                val = b & 0x0F;
+                                                src = src + 1;
+                                        }
+                                        readHigh = 1 - readHigh;
+                                        nibble = (nibble << 4) | val;
+                                }
+                                out_words[count] = nibble;
+                        } else {
+                                out_words[count] = word_dict[nibble];
                         }
                 }
-#ifdef __ALCYON__
-                gemdos(9, "  scn.m decode done\r\n");
-#endif
-                _gemdos(GEMDOS_Mfree, (long) nbuf, 0L, 0L);
         }
-
-        _gemdos(GEMDOS_Fclose, filehandle, 0L, 0L);
-        _gemdos(GEMDOS_Mfree,  (long) fbuffer_orig, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, filehandle,     0L, 0L);
+        _gemdos(GEMDOS_Mfree,  (long) fbuffer, 0L, 0L);
 }
 
 /* al_loan: read the NAMES text file into a caller-provided

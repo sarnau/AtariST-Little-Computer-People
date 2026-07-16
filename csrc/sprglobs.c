@@ -28,7 +28,10 @@ short   g_dyy                  = 0;
 short   g_dwanc             = 0;
 short   g_dsid                   = 0;
 short   dog_on_stairs_flag              = 0;
-short   dog_initialized                 = 1;    /* until placed */
+/* dog_initialized: when non-zero sp_spud skips writing sprite slots
+   0/7 (used to hide the dog while off-screen).  Ghidra BSS = 0 --
+   dog is visible from frame one. */
+short   dog_initialized                 = 0;
 
 /* ---- Hardware sprite double-buffer (8 slots) --------------------------- */
 short   g_sepef[8];
@@ -125,7 +128,9 @@ short   g_lsimg[168];    /* 21 rows * 4 words * 2 (image+mask) */
 short   g_lsmas[168];
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
-short   g_dwanf[8];        /* SPRITE_DOG_WALK_1..8 */
+/* g_dwanf (Ghidra dog_walk_anim_frames @ 0x2A0E8): 8 sprite ids the
+   walk cycle rotates through in dog_move_and_animate. */
+short   g_dwanf[8] = { 34, 35, 36, 37, 38, 39, 40, 41 };
 short * dog_sprite_pointers[60];
 short * dog_mask_pointers[60];
 /* g_dfimb / g_dfmab (Ghidra dog_flip_image_buffer / dog_flip_mask_buffer,
@@ -140,9 +145,16 @@ short   g_dfmab[120];
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
    floor_bottom_y_coords[0] = top floor, [1] = middle floor, [2] = bottom. */
-short   floor_bottom_y_coords[3]        = { 77, 140, 202 };
-short   floor_center_y_coords[3]        = { 62, 125, 187 };
-short   staircase_waypoint_coords[6]    = { 0, 100, 0, 161, 0, 200 };
+/* Ghidra-verified: floor 1 (bottom) .. floor 3 (top).  Dumped from
+   0x2A07E (bottom), 0x2A076 (center), 0x2A066 (waypoints). */
+short   floor_bottom_y_coords[3]        = { 202, 140, 77 };
+short   floor_center_y_coords[3]        = { 198, 135, 71 };
+/* Ghidra 0x2A066, actual size = 6 shorts (distance to
+   stair_top_y_threshold @ 0x2A072 is 12 bytes).  The last 2 entries
+   my earlier port added (124, 137) were `stair_top_y_threshold` and
+   `stair_bottom_y_threshold` -- adjacent globals, not part of the
+   waypoint table. */
+short   staircase_waypoint_coords[6]    = { 170, 185, 133, 124, 182, 72 };
 
 short   sub_animation_frame_counter     = 0;
 
@@ -159,28 +171,78 @@ short   hshdbuf[66 * 42];    /* 42 shorts/frame = 84 bytes */
 short   g_hadec       = 0;
 
 /* Per-happiness-level head frame base index (into pex_lcp_file). */
-short   happiness_head_frame_offset[3]  = { 0, 66, 132 };
+/* Ghidra 0x2BA2C. */
+short   happiness_head_frame_offset[3]  = { 44, 0, 22 };
 
-/* Per-PLAYER_STATE horizontal offset for the head anchor. */
-short   head_x_offset_per_state[100];
-
-/* Per-PLAYER_STATE head Y contribution (subtracted from the body top). */
-short   head_height_per_state[100];
-
-/* Neutral head-facing angle per PLAYER_STATE (used by head_animate to
-   pick the "resting" horizontal direction the head drifts toward). */
-short   head_default_angle_per_state[100];
-
-/* 15-entry delta table indexed by (target_frame - current_frame + 7),
-   returning the signed step count between frames.  Value 99 = "no
-   direct path, use default". */
-short   head_movement_delta_table[15]   = {
-        99, 99, -1, -1, -1, -1, -1, 0, 1, 1, 1, 1, 1, 99, 99
+/* Per-PLAYER_STATE horizontal offset for the head anchor.  Ghidra
+   0x29C9E, actual size = 93 shorts (distance to next symbol
+   head_height_per_state @ 0x29D58 is 186 bytes).  The previous
+   [109] port declaration overflowed into adjacent tables, giving
+   wrong offsets for lcp_state 93..108. */
+short   head_x_offset_per_state[93] = {
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  6,
+         6,  0, -1,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0
 };
 
-/* Per-tilt frame-index offset into the 8-frame head sprite row.
-   3 tilts (up / centre / down) * 8 frames each. */
-short   head_tilt_frame_offset[3]       = { 0, 8, 16 };
+/* Per-PLAYER_STATE head Y contribution (subtracted from body top).
+   Ghidra 0x29D58, 93 shorts (distance to head_default_angle_per_state
+   @ 0x29E12). */
+short   head_height_per_state[93] = {
+        21, 21, 21, 21, 21, 21, 21, 21,
+        21, 21, 21, 21, 21, 21, 21, 21,
+        21, 21, 21, 21, 21, 21, 21, 21,
+        21, 21, 18, 18, 18, 18, 17, 17,
+        17, 21, 21, 18, 18, 18, 18, 18,
+        18, 18, 17, 21, 21, 21, 21, 21,
+        21, 21, 21, 20, 21, 21, 21, 21,
+        21, 21, 21, 18, 21, 21, 21, 21,
+         5,  5,  5,  5,  5, 19, 19, 21,
+        21, 21, 21, 21, 21, 21, 21, 20,
+        21, 21, 20, 20, 21, 21, 21, 21,
+        20, 21, 20, 21, 21
+};
+
+/* Neutral head-facing angle per PLAYER_STATE (used by head_animate to
+   pick the "resting" horizontal direction the head drifts toward).
+   Ghidra 0x29E12, 93 shorts (distance to room_position_x_table @
+   0x29ECC).  The previous [109] port declaration read into
+   room_position_x_table for lcp_state 93..108, producing wrong
+   head_sprite_frame values that showed up as broken head phases
+   whenever the character entered a state past 92. */
+short   head_default_angle_per_state[93] = {
+         2,  2,  2,  2,  2,  2,  2,  2,
+         2,  2,  2,  2,  2,  4,  4,  4,
+         4,  2,  2,  2,  2,  0,  0,  0,
+         0,  3,  4,  4,  4,  4,  4,  4,
+         4,  4,  0,  0,  0,  0,  4,  4,
+         4,  4,  4,  0,  0,  0,  2,  2,
+         2,  2,  2,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  4,  4,  4,
+         2,  2,  2,  2,  2,  1,  4,  0,
+         0,  0,  0,  4,  4,  4,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  4,  3,  1
+};
+
+/* 15-entry delta table (Ghidra 0x2BA06). */
+short   head_movement_delta_table[15]   = {
+         1,  1,  1, 99, -1, -1, -1,  0,
+         1,  1,  1, 99, -1, -1, -1
+};
+
+/* Per-tilt frame-index offset (Ghidra 0x2BA24, 3 shorts -- distance
+   to head_anim_delay_countdown @ 0x2BA2A is 6 bytes). */
+short   head_tilt_frame_offset[3]       = { 7, 12, 17 };
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
 short   g_wyx                 = 0;
@@ -192,5 +254,6 @@ short   g_hastl            = 0;
    The middle-floor branch of lcp_calc_floor_waypoint uses these to
    route through the between-floor landing instead of the raw
    staircase_waypoint_coords entries.  Values dumped from Ghidra data. */
-short   stair_top_y_threshold           = 130;
-short   stair_bottom_y_threshold        = 140;
+/* Ghidra 0x2A072 / 0x2A074. */
+short   stair_top_y_threshold           = 124;
+short   stair_bottom_y_threshold        = 137;

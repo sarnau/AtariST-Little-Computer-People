@@ -49,6 +49,20 @@ extern void     dog_calc_walk_path();
 extern void     sp_flih();
 extern void     sp_spud();
 
+/* dog_init_position: Ghidra 0x??.  Place the dog at its startup spot
+   (bottom floor near the food bowl) and NULL-out the two dog sprite
+   slots via sp_spud(SPRITE_UNUSED_0=-1).  The dog becomes visible on
+   the very next sc_ren8 tick once dog_move_and_animate picks a target
+   and calls sp_spud again with a valid walk-cycle sprite id from
+   g_dwanf. */
+void
+dg_ipos()
+{
+        dog_x = 100;
+        dog_y = 195;
+        sp_spud(-1, 1, NO);
+}
+
 /* dog_move_and_animate: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
    equal steps to waypoint) and stair navigation (staircase_waypoint_

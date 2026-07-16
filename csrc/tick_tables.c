@@ -1,0 +1,40 @@
+/*
+ * tick_tables.c -- animation frame tables + state globals for
+ * game_tick_and_animate (see tick.c).  Kept separate from globals.c
+ * so Alcyon C168's fixed-size symbol table doesn't overflow.
+ *
+ * addr: (data-segment tables sourced from Ghidra addresses noted per
+ * variable; state globals track runtime animation counters that the
+ * 1985 binary stores in BSS).
+ */
+
+#include "types.h"
+
+/* Animation frame tables consumed by game_tick_and_animate.  Every
+   value is an object_tab_mfdb index; game_tick indexes these by a
+   small counter to pick which sprite/frame to draw. */
+short   g_obcla[4]     = { 13, 14, 13, 15 };    /* clock_animation @ 0x2B922 */
+short   g_obdea[3]     = { 51, 50, 49 };        /* dog_eating_animation @ 0x2B954 */
+short   g_obala[2]     = { 32, 33 };            /* alarm_animation @ 0x2B936 */
+short   g_obpha[4]     = {  3,  4, 23, 22 };    /* phone_animation @ 0x2B92A */
+short   g_obfia[4]     = { 23, 22, 23, 24 };    /* fire_animation @ 0x2B92E */
+
+/* Petting-dog sprite frames -- 11-frame array of sprite ids the
+   petting animation cycles through (Ghidra object_id_ARRAY_0002b93e
+   @ 0x2B93E). */
+short   g_ptdsi[11]    = { 27, 28, 29, 30, 31, 32, 31, 30, 29, 28, 27 };
+
+/* Carried-object jump table (Ghidra carried_object_id_table @ 0x2B95A):
+   long[10] indexed by lcp_carried_object matching one of {SPRITE_GLASS,
+   SPRITE_GAME_BOX, ...}.  Each entry holds a sprite_id in the low
+   word; high word is always 0 (Ghidra: `long`, not `short`). */
+long    g_cotbl[10]    = { 3, 4, 9, 22, 23, 48, 49, 50, 55, 0 };
+
+/* Frame-state globals for the animation loop.  8-char-safe port names.
+   g_ptanf (petting_anim_frame) already lives in globals.c; the rest
+   are added here to keep globals.c under Alcyon's symbol-table
+   limit. */
+short   g_ptlss                         = 0;    /* petting_last_sprite_slot */
+BOOL16  g_alsts                         = NO;   /* alarm_sound_started */
+short   g_phrc                          = 0;    /* phone_ring_countdown */
+/* g_srsdc (screen_scroll_down_count) lives in globals.c. */

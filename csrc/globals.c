@@ -182,41 +182,40 @@ short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
 void *  g_dscp             = (void *) 0;
 
 /* main_colorpalette[16]: Atari ST 12-bit RGB palette (4 bits per channel).
-   Entries 0..15 map to the 16 screen colours in low-res mode.  Set at
-   startup from the intro; palette_apply_clothing/skin update slots 1
-   and 2; lcp_update_palette_colors updates slot 6 for skin sickness. */
+   Entries 0..15 map to the 16 screen colours in low-res mode.  Values
+   dumped from the 1985 data segment at Ghidra 0x29B44 (via
+   ghidra_scripts/DumpPalette.java).  aes_vdi_jnit loads this via
+   _xbios(XBIOS_Setpalette,main_colorpalette) at boot -- there is no
+   later runtime palette rewrite from this table; slot 0 is the
+   background (black), slot 14 white, etc.  pa_cloc overwrites slots
+   1 and 2 from the primary/secondary clothing tables; slot 6 is
+   overwritten by lcp_update_palette_colors for the sickness skin. */
 short   main_colorpalette[16]           = {
-        0x777, 0x000, 0x700, 0x070,
-        0x007, 0x770, 0x707, 0x077,
-        0x333, 0x744, 0x474, 0x447,
-        0x774, 0x747, 0x477, 0x555
+        0x000, 0x442, 0x265, 0x754,
+        0x310, 0x040, 0x754, 0x760,
+        0x247, 0x631, 0x700, 0x333,
+        0x555, 0x007, 0x777, 0x410
 };
 
-/* g_clcop/secondary[16]: light + dark palette pairs
-   for each CLOTHING_COLOR_ID (0..15).  ST 12-bit RGB (0RGB).  The
-   secondary is typically the primary shifted 1-2 levels darker to
-   provide clothing shading contrast.
-
-   16 slots cover: 0=red, 1=green, 2=blue, 3=yellow, 4=magenta,
-   5=cyan, 6=dark-red, 7=dark-green, 8=dark-blue, 9=orange, 10=purple,
-   11=teal, 12=pink, 13=lime, 14=sky-blue, 15=grey.  Values derived
-   from observed 1985 game screenshots; exact bytes pending a Ghidra
-   data-segment dump. */
+/* g_clcop / g_clcos (Ghidra clothing_color_primary / _secondary):
+   16 pairs of primary + secondary 12-bit RGB shirt colours indexed
+   by CLOTHING_COLOR_ID.  Ported from Ghidra 0x2A2E4 / 0x2A2C4 --
+   the earlier port sized these correctly but the values were
+   observed-from-screenshots guesses (bright primaries + darker
+   secondaries) that don't match the real palette.  The actual 1985
+   values include several duplicate blue primaries (0x006 for slots
+   0..4) so a random clothing pick usually gives the same blue shirt. */
 short   g_clcop[16] = {
-        0x700,  /*  0 red      */  0x070,  /*  1 green    */
-        0x007,  /*  2 blue     */  0x770,  /*  3 yellow   */
-        0x707,  /*  4 magenta  */  0x077,  /*  5 cyan     */
-        0x500,  /*  6 dk red   */  0x050,  /*  7 dk green */
-        0x005,  /*  8 dk blue  */  0x740,  /*  9 orange   */
-        0x505,  /* 10 purple   */  0x055,  /* 11 teal     */
-        0x744,  /* 12 pink     */  0x574,  /* 13 lime     */
-        0x577,  /* 14 sky      */  0x555   /* 15 grey     */
+        0x006, 0x006, 0x006, 0x006,
+        0x006, 0x676, 0x676, 0x500,
+        0x500, 0x735, 0x140, 0x641,
+        0x623, 0x036, 0x242, 0x442
 };
 short   g_clcos[16] = {
-        0x400,  0x040,  0x004,  0x440,
-        0x404,  0x044,  0x300,  0x030,
-        0x003,  0x430,  0x303,  0x033,
-        0x422,  0x352,  0x355,  0x333
+        0x060, 0x760, 0x606, 0x066,
+        0x767, 0x007, 0x700, 0x030,
+        0x767, 0x465, 0x314, 0x255,
+        0x662, 0x406, 0x156, 0x514
 };
 
 /* skin_color_palette[8]: SKIN_COLOR_ID (0..7).  ST 12-bit RGB.
@@ -227,14 +226,8 @@ short   g_clcos[16] = {
    lcp_update_palette_colors and swapped in during the closet-change
    sequence in a_opcbc. */
 short   skin_color_palette[8] = {
-        0x765,  /* 0 pale peach   */
-        0x743,  /* 1 fair         */
-        0x654,  /* 2 light        */
-        0x543,  /* 3 medium light */
-        0x432,  /* 4 medium       */
-        0x532,  /* 5 tan          */
-        0x421,  /* 6 dark         */
-        0x321   /* 7 deep umber   */
+        0x512, 0x742, 0x567, 0x762,
+        0x745, 0x145, 0x160, 0x565
 };
 
 BOOL16  g_molof             = NO;
@@ -252,8 +245,9 @@ short           psg_current_volume      = 15;
 short           psg_default_volume      = 15;
 short           g_mnevi   = 0;
 short           g_mnevc   = 9;
-short           g_mtspb     = 24;
-short           midi_tempo              = 500000;
+/* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; midi_tempo @ 0x298F2 = 120. */
+short           g_mtspb     = 20;
+short           midi_tempo              = 120;
 /* aes_int_out: shared AES/VDI parameter return array (16 shorts wide),
    used here at index 7 to communicate the current tick-per-beat back
    to the interrupt handler. */
@@ -359,7 +353,16 @@ char            g_sfDoB[256];
 void *  g_srlgb                  = (void *) 0;
 void *  save_logbase                    = (void *) 0;
 void *  g_srptr                      = (void *) 0;
-short * g_dsb                 = (short *) 0;
+/* dest_scr_buffer_storage: dedicated 32 KB offscreen buffer where the
+   letter-typing status strip composites, kept separate from the
+   main house buffer.  fill_top_rect_with_background(27) writes rows
+   0..26 here so that the striped-white letter background is ready
+   for the typewriter animation, but this content is NEVER visible
+   until the letter sequence composites it.  Sized 32000+256 to
+   cover a full ST low-res screen plus the +0x7f (=254 byte) offset
+   `g_dsb` is anchored at. */
+short   dest_scr_buffer_storage[16256];
+short * g_dsb = dest_scr_buffer_storage;
 
 /* screen_scale_factor (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
    Multiplier for the 320x200 low-res screen dimensions in
@@ -443,19 +446,20 @@ unsigned short  _record_led_mask_table[7] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
 };
 
-/* g_cmmip / g_chhop tables.
-   6 entries each: first 3 are X offsets, last 3 are Y offsets, indexed
-   by minute/5 (0..5) and hour%12 (0..11).  Values approximate a
-   trigonometric mapping around a 15-pixel-radius circle centred at
-   the clock face (278, 85), matching the observed clock geometry. */
-short   g_cmmip[6] = {
-         0,  14,  14,   0, -14, -14
+/* g_cmmip (Ghidra clock_minute_position @ 0x2B566, 15 shorts):
+   circle-position table for the minute hand.  Indexed by the current
+   minute/5 mod 12 giving one of 12 positions on a small circle around
+   the clock centre; three padding entries at the end.  Values dumped
+   live from Ghidra. */
+short   g_cmmip[15] = {
+         0,   2,   3,   3,   3,   2,   0,  -2,
+        -3,  -3,  -3,  -2,   0,   2,   3
 };
-short   g_chhop[24] = {
-        /* X offsets, 12 entries */
-         0,   5,   9,  11,   9,   5,   0,  -5,  -9, -11,  -9,  -5,
-        /* Y offsets, 12 entries */
-        11,   9,   5,   0,  -5,  -9, -11,  -9,  -5,   0,   5,   9
+/* g_chhop (Ghidra clock_hour_position @ 0x2B584, 15 shorts): same
+   shape for the hour hand, smaller radius (2 vs 3 pixels). */
+short   g_chhop[15] = {
+         0,   1,   2,   2,   2,   1,   0,  -1,
+        -2,  -2,  -2,  -1,   0,   1,   2
 };
 
 BOOL16  game_input_mode_flag            = NO;
@@ -465,7 +469,12 @@ short   g_ptanf              = 0;
 
 short   last_hz200                      = 0;
 long    last_vbclock                    = 0;
-void *  save_physbase                   = (void *) 0x28000L;    /* ST default */
+/* save_physbase: TOS's original Physbase, captured once at boot by
+   aes_vdi_jnit via _xbios(XBIOS_Physbase).  Both page-flip screens
+   in sc_ren8 alternate between this address and an alt buffer; the
+   hardcoded 0x28000 fallback (1MB-machine TOS physbase) is only
+   used if aes_vdi_jnit hasn't run yet -- do NOT rely on it. */
+void *  save_physbase                   = (void *) 0x28000L;
 
 /* g_srmfd / MFDB_screen_ptr: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
@@ -488,17 +497,17 @@ short   g_decou            = 0;
 short   dog_last_target_index           = 0;
 short   g_dseat[3]   = { 42, 43, 44 };
 /* 9 wander destinations for the dog, plus X/Y micro-offsets. */
-short   g_ddipt[9] = {
-        POS_BTM_DOG_BOWL, POS_BTM_STAIR_LANDING, POS_BTM_FRONT_DOOR,
-        POS_BTM_TABLE_LEFT, POS_BTM_TABLE_RIGHT, POS_BTM_FRIDGE,
-        POS_MID_COUCH, POS_MID_BED, POS_TOP_ARMCHAIR
-};
-/* Micro-offsets applied to the destination position when the dog
-   finishes wandering: aligns the sprite's foot to the visual anchor
-   for each of the 9 wander destinations above.  Small (-5..+5 px)
-   corrections; exact values pending a Ghidra data-segment dump. */
-short   g_ddxot[9]      = { 0, -2,  0,  2, -2,  0,  0,  4, -3 };
-short   g_ddyot[9]      = { 0,  0, -1,  0,  0,  0,  1,  0,  0 };
+/* Ghidra dog_destination_position_table @ 0x2B8DE, 10 entries -- the
+   HOUSE_POS index the dog picks as its next wander target.  Values
+   {0, 5, 11, 19, 29, 32, 33, 41, 47, 47} correspond (per HOUSE_POS
+   enum) roughly to bowl / stair landings / doors / table / fridge /
+   couch / armchair.  Last two are duplicated 47 (POS_TOP_ARMCHAIR). */
+short   g_ddipt[10] = { 0, 5, 11, 19, 29, 32, 33, 41, 47, 47 };
+/* Ghidra dog_dest_x_offset_table @ 0x2B906, dog_dest_y_offset_table
+   @ 0x2B8F2 (10 shorts each): per-destination pixel nudges applied
+   after house_get_position_xy returns the anchor for the destination. */
+short   g_ddxot[10]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0 };
+short   g_ddyot[10]     = { 3, 9, 2, 10, 6, 0, 0, 11, 3, 3 };
 
 char *  _command_input_ptr              = (char *) 0;
 short   g_aprio                = 5;
@@ -507,36 +516,19 @@ short   g_aprio                = 5;
 MFDB    g_semfi[8]            = { { 0 } };
 MFDB    g_semfm[8]             = { { 0 } };
 
-/* TV pattern-lines animation: 4 sets of 8-point polyline coordinate
-   pairs, each drawn in the colour picked from g_tpcoi.
-   Values are stand-ins covering the 15x7-pixel TV rectangle at
-   (293, 99)..(308, 106) -- Ghidra data-segment dump would give the
-   exact 1985 layout. */
-short   g_tp0xc[8] = {
-        293, 308, 293, 308, 293, 308, 293, 308
-};
-short   g_tp0yc[8] = {
-         99,  99, 100, 100, 101, 101, 102, 102
-};
-short   g_tp1xc[8] = {
-        293, 308, 293, 308, 293, 308, 293, 308
-};
-short   g_tp1yc[8] = {
-        103, 103, 104, 104, 105, 105, 106, 106
-};
-short   g_tp2xc[8] = {
-        293, 293, 296, 296, 300, 300, 304, 304
-};
-short   g_tp2yc[8] = {
-         99, 106,  99, 106,  99, 106,  99, 106
-};
-short   g_tp3xc[8] = {
-        297, 297, 301, 301, 305, 305, 308, 308
-};
-short   g_tp3yc[8] = {
-         99, 106,  99, 106,  99, 106,  99, 106
-};
-short   g_tpcoi[4]     = { 2, 3, 4, 5 };
+/* TV pattern animation (Ghidra tv_pattern_N_x_coords / _y_coords).
+   Four vertical scanlines drawn inside the TV screen -- each is a
+   constant-X, descending-Y run of 8 points.  Colours picked from
+   tv_pattern_color_indices (10, 5, 7, 13 in the main palette). */
+short   g_tp0xc[8] = { 293, 293, 293, 293, 293, 293, 293, 293 };
+short   g_tp0yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp1xc[8] = { 297, 297, 297, 297, 297, 297, 297, 297 };
+short   g_tp1yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp2xc[8] = { 301, 301, 301, 301, 301, 301, 301, 301 };
+short   g_tp2yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp3xc[8] = { 305, 305, 305, 305, 305, 305, 305, 305 };
+short   g_tp3yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tpcoi[4] = { 10, 5, 7, 13 };
 
 /* ---- NLP parser tables ------------------------------------------------
    Wired in from the reference implementation in lcp/LCP.py, which was
@@ -592,3 +584,7 @@ MFDB            MFDB_dest_screenbase_cards      = { 0 };
 BOOL16  g_dvdog             = NO;
 BOOL16  phone_hangup_flag               = NO;
 BOOL16  g_ptdoa              = NO;
+
+/* (game_tick_and_animate animation tables + frame-state globals live
+   in tick_tables.c -- Alcyon C168's symbol-table overflows if they
+   are added here.) */

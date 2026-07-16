@@ -117,24 +117,18 @@ short *         activity_schedule_table[3] = {
         _schedule_row_0, _schedule_row_1, _schedule_row_2
 };
 
-/* g_rphs[49]: Y offset from floor baseline, indexed
-   by (HOUSE_POS + 1).  Entry 0 is a dummy left over from the original
-   Alcyon C source (probably a "position 0" sentinel).  Some bottom-floor
-   entries are negative to plant the resident's feet below the visible
-   baseline (e.g. front-door threshold).
-   addr: g_rphs at 0x019f2c */
+/* g_rphs[49] (Ghidra room_position_height_table @ 0x29F2A): Y offset
+   from floor baseline, indexed by HOUSE_POS.  Entry 0 is 140 (used
+   as the ground-floor baseline sentinel).  Dumped live from Ghidra;
+   the previous values shifted every entry by one slot. */
 short   g_rphs[49] = {
-        /* dummy[0] */
-          9,
-        /* Floor 3 -- indices 1..16  (HOUSE_POS  0..15) */
-         14,   9,  10,  11,  14,  12,  13,  12,
-         12,  12,   6,  15,  10,  14,   3,   3,
-        /* Floor 2 -- indices 17..32 (HOUSE_POS 16..31) */
-          3,   8,  15,  13,  13,  12,  13,  14,
-         12,   8,  14,  13,  14,  13,   5,   8,
-        /* Floor 1 -- indices 33..48 (HOUSE_POS 32..47) */
-          3,  10,  13,  13,  14,  10,  14,  14,
-         12,  13,   7,  14,  12,  13,   2,  -2
+        140,   9,  14,   9,  10,  11,  14,  12,
+         13,  12,  12,  12,   6,  15,  10,  14,
+          3,   3,   3,   8,  15,  13,  13,  12,
+         13,  14,  12,   8,  14,  13,  14,  13,
+          5,   8,   3,  10,  13,  13,  14,  10,
+         14,  14,  12,  13,   7,  14,  12,  13,
+          2
 };
 
 /* bm32or / bm32and (Ghidra): 32-entry lookup tables

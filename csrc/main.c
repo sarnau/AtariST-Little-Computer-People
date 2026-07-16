@@ -124,6 +124,35 @@ extern void     sp_imfs();              /* Ghidra sprite_init_MFDBs */
 extern void     sp_lbal();              /* Ghidra sprite_lcp_build_all */
 extern void     init_bitmask_tables();  /* fills bm32or/and */
 extern short    cp_main();  /* Ghidra (stubbed to return 1) */
+extern void     pa_cloc();  /* Ghidra palette_apply_clothing_colors */
+extern void     sp_reglp();     /* sprload.c: dog sprite pointer registration */
+extern void     dg_ipos();  /* dog.c */
+extern void *   save_physbase;
+
+/* Object-draw chain (Ghidra main 0x15546, after decompress_scn).
+   Every door/cabinet in HOUSE.SCN has a placeholder rectangle in the
+   pre-compressed art; the real init paints the correct (open or
+   closed) object over each rectangle.  Skipping the chain leaves the
+   placeholders visible as horizontal streaks in the affected rows. */
+extern void     fill_top_rect_with_background();       /* render.c */
+extern void     od_draw();                              /* render.c */
+extern void     sc_drfc();                              /* render.c: food cabinet */
+extern short    lcp_cabinet_open;
+extern short    lcp_front_door_open;
+extern short    lcp_dresser_open;
+extern short    lcp_closet_door_open;
+extern short    lcp_study_door_open;
+extern short    lcp_toilet_door_open;
+extern short    lcp_filing_cabinet_open;
+extern short    lcp_dog_bowl_status;
+extern short    g_obicc, g_obi02;                       /* cabinet cl/op */
+extern short    g_obidf, g_obi06;                       /* door_front */
+extern short    g_obi11, g_obi12;                       /* dresser */
+extern short    g_obidc, g_obi04;                       /* door_closet */
+extern short    g_obids, g_obi08;                       /* door_study */
+extern short    g_obidt, g_obi10;                       /* door_toilet */
+extern short    g_obifc, g_obi14;                       /* filing_cabinet */
+
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
@@ -164,22 +193,46 @@ char ** argv;
                 v_opnvwk(work_in, &vdihandle, work_out);
         }
 
-        /* Palette + asset loads that we do have ported.  Once the
-           real init at Ghidra 0x00015546 lands, main() delegates
-           into it and this block goes away. */
-        {
-                short   i;
-                for (i = 0; i < 16; i = i + 1)
-                        xbios(7, i, main_colorpalette[i]);
-        }
+        /* aes_vdi_jnit tail (Ghidra 0x??): the real init loads the
+           full palette in one Setpalette and snapshots the TOS
+           physbase so sc_ren8 can page-flip between it and the alt
+           buffer.  Both matter for correct on-screen output --
+           without the Physbase snapshot, sc_ren8's page-flip lands
+           on garbage and the house appears wrapped/shifted. */
+        xbios(6, (long) main_colorpalette);             /* XBIOS Setpalette */
+        save_physbase = (void *) xbios(2);              /* XBIOS Physbase */
+
         setup_screen_buffer();          /* Ghidra 0x16576 */
         init_bitmask_tables();
         al_loot();
         al_lost();
+        sp_reglp();                     /* populate dog_sprite_pointers[] etc. */
         al_locs();                      /* body.lcp + PEx.LCP */
         sp_lbal();                      /* Ghidra sprite_lcp_build_all */
         lc_load();                      /* Ghidra lcp_load */
+        dg_ipos();            /* Ghidra: place dog at (100,195) */
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
+
+        /* Post-decompress paint chain from Ghidra main (0x15546).
+           Draws every door/cabinet at its current lcp state on top of
+           the HOUSE.SCN background so the pre-drawn placeholders stop
+           bleeding through as horizontal streaks.  fill_top_rect_with
+           _background(27) paints the top status strip (rows 0..26)
+           with the striped/black separator pattern; g_dsb is set to
+           (short*)(g_srptr - 254) in setup_screen_buffer so the +0x7f
+           word offset resolves to row 0 of the offscreen house. */
+        fill_top_rect_with_background(27);
+
+        od_draw(lcp_cabinet_open       == NO ? g_obicc : g_obi02, 46,  140);
+        od_draw(lcp_front_door_open    == NO ? g_obidf : g_obi06, 294, 151);
+        od_draw(lcp_dresser_open       == NO ? g_obi11 : g_obi12, 97,  115);
+        od_draw(lcp_closet_door_open   == NO ? g_obidc : g_obi04, 75,  87);
+        od_draw(lcp_study_door_open    == NO ? g_obids : g_obi08, 178, 23);
+        od_draw(lcp_toilet_door_open   == NO ? g_obidt : g_obi10, 187, 87);
+        od_draw(lcp_filing_cabinet_open == NO ? g_obifc : g_obi14, 258, 47);
+        sc_drfc();                              /* food cabinet contents */
+
+        pa_cloc();                      /* palette_apply_clothing_colors */
         copyprot_check_return = cp_main();
         sp_imfs();                      /* Ghidra sprite_init_MFDBs */
         endless_game_loop();
