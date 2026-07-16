@@ -54,22 +54,22 @@ short   g_selaf[60];
 short   g_seslm[60];
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
-/* body_sprite_frame_table (Ghidra 0x29BD0, 93 shorts):
+/* body_sprite_frame_table (Ghidra 0x29BB2, 93 shorts):
    maps lcp_state -> body-frame index into body.lcp / body_shape_data.
-   Padded with zeros up to index 99 so out-of-range states are safe. */
-short   body_sprite_frame_table[100] = {
-        22, 21, 13, 14, 15, 16, 17, 18,     /*  0..7  */
-        19, 18, 23, 24, 25, 24, 27, 28,     /*  8..15 */
-        29, 30, 31, 32, 33, 34, 35, 36,     /* 16..23 */
-        37, 27, 38, 39, 40, 41, 42, 43,     /* 24..31 */
-        44, 45, 46, 47, 48, 49, 50, 51,     /* 32..39 */
-        52, 53, 54, 67, 68, 32, 69, 70,     /* 40..47 */
-        71, 72, 73, 74, 75, 76, 77, 78,     /* 48..55 */
-        79, 80, 81, 82, 83, 84, 85, 86,     /* 56..63 */
-        87, 88, 89, 90, 91, 92, 93, 94,     /* 64..71 */
-        95, 96, 97, 26,  5,  8, 55, 56,     /* 72..79 */
-        57, 58, 55, 56, 57, 58, 43, 63,     /* 80..87 */
-        64, 65, 66, 59, 60                  /* 88..92 */
+   Values dumped via ghidra_scripts/DumpTable.java. */
+short   body_sprite_frame_table[93] = {
+         0,  1,  2,  3,  4,  1,  6,  7,     /*  0..7  */
+        43,  9, 10, 11, 12, 20, 21, 22,     /*  8..15 */
+        21, 13, 14, 15, 16, 17, 18, 19,     /* 16..23 */
+        18, 23, 24, 25, 24, 27, 28, 29,     /* 24..31 */
+        30, 31, 32, 33, 34, 35, 36, 37,     /* 32..39 */
+        27, 38, 39, 40, 41, 42, 43, 44,     /* 40..47 */
+        45, 46, 47, 48, 49, 50, 51, 52,     /* 48..55 */
+        53, 54, 67, 68, 32, 69, 70, 71,     /* 56..63 */
+        72, 73, 74, 75, 76, 77, 78, 79,     /* 64..71 */
+        80, 81, 82, 83, 84, 85, 86, 87,     /* 72..79 */
+        88, 89, 90, 91, 92, 93, 94, 95,     /* 80..87 */
+        96, 97, 26,  5,  8                  /* 88..92 */
 };
 /* carry_body_frame_table (Ghidra 0x29C6C, 25 shorts):
    alternate arms-up frames used while carrying an object in
@@ -78,23 +78,40 @@ short   carry_body_frame_table[25]      = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
-/* body_y_offset_per_state (Ghidra 0x29CA4, 93 shorts):
-   Y anchor offset per lcp_state.  Mostly zero -- the exceptions
-   are states 44/45 (+6, dipping into the chair), 47 (-1, mid-step),
-   and 90/91/92 (+21, dying/falling). */
-short   body_y_offset_per_state[100] = {
+/* head_sprite_frame_table (Ghidra 0x29C9E, 66 shorts):
+   maps lcp_state -> head-frame index into pex.lcp / head_shape_data
+   for sp_lchu.  Mostly zero -- non-zero at 45/46 (6, 6),
+   48 (-1). */
+short   head_sprite_frame_table[66] = {
          0,  0,  0,  0,  0,  0,  0,  0,     /*  0..7  */
          0,  0,  0,  0,  0,  0,  0,  0,     /*  8..15 */
          0,  0,  0,  0,  0,  0,  0,  0,     /* 16..23 */
          0,  0,  0,  0,  0,  0,  0,  0,     /* 24..31 */
          0,  0,  0,  0,  0,  0,  0,  0,     /* 32..39 */
-         0,  0,  0,  0,  6,  6,  0, -1,     /* 40..47 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 48..55 */
+         0,  0,  0,  0,  0,  6,  6,  0,     /* 40..47 */
+        -1,  0,  0,  0,  0,  0,  0,  0,     /* 48..55 */
          0,  0,  0,  0,  0,  0,  0,  0,     /* 56..63 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 64..71 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 72..79 */
-         0,  0,  0,  0,  0,  0,  0,  0,     /* 80..87 */
-         0,  0, 21, 21, 21                  /* 88..92 */
+         0,  0                              /* 64..65 */
+};
+/* body_y_offset_per_state (Ghidra 0x29F8C, 109 shorts):
+   Y anchor offset per lcp_state.  My earlier port dumped values from
+   0x29CA4 (which turned out to be head_sprite_frame_table) instead
+   of 0x29F8C -- these are the *real* body Y offsets. */
+short   body_y_offset_per_state[109] = {
+        -2, -2, -2, -1, -2, -2, -2, -1,     /*   0..7  */
+        -2,  0,  0,  0,  0,  0,  0,  0,     /*   8..15 */
+         0,  0,  0,  0,  0,  0,  0,  0,     /*  16..23 */
+         0, -2, -2, -2, -2, -2,  0,  0,     /*  24..31 */
+         0, -2, -2, -2, -2, -2, -2, -2,     /*  32..39 */
+        -2, -2,  0, -6, -6, -6, -2, -6,     /*  40..47 */
+        -6,  2,  1,  7, -7, -5, -5, -5,     /*  48..55 */
+        -5, -5, -4, -1,  0, -2, -2, -2,     /*  56..63 */
+        11, 11, 11, 11, 11, -1, -1, -7,     /*  64..71 */
+        -7, -4, -7, -2, -2, -4, -2, -1,     /*  72..79 */
+        -2, -2,  0,  0, -2, -2, -2, -2,     /*  80..87 */
+        -3, -2, -3, -2, -2,  1,  2,  6,     /*  88..95 */
+        11, 17, 20, 22, 26, 30, 33, 35,     /*  96..103 */
+        46,  1, 11, 26, 35                  /* 104..108 */
 };
 
 short * body_lcp_file;
