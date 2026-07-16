@@ -285,18 +285,11 @@ long            dest_size_words;
         gemdos(9, "  scn.a\r\n");     /* Cconws marker A: entered */
 #endif
         filehandle = file_open(filename, 0);
-#ifdef __ALCYON__
-        gemdos(9, "  scn.b\r\n");     /* B: file opened */
-#endif
         fr_read(filehandle, 2L, sizebuf);
-#ifdef __ALCYON__
-        gemdos(9, "  scn.c\r\n");     /* C: size read */
-#endif
 
-        /* File size is big-endian.  Reassemble explicitly for host
-           portability; on the ST this is a no-op. */
-        body_size = (long) (((unsigned long) sizebuf[0] << 8) |
-                            sizebuf[1]);
+        /* File size is big-endian.  Reassemble using the SHORT-cast
+           pattern al_loal uses (it works for body.lcp and PEx.LCP). */
+        body_size = ((long) sizebuf[0] << 8) | sizebuf[1];
 
         /* Read the 30-byte (15-word) dictionary. */
         {
@@ -304,8 +297,7 @@ long            dest_size_words;
                 fr_read(filehandle, 30L, raw);
                 for (i = 0; i < 15; i = i + 1)
                         word_dict[i] = (unsigned short)
-                                (((unsigned long) raw[i * 2] << 8) |
-                                 raw[i * 2 + 1]);
+                                (((short) raw[i * 2] << 8) | raw[i * 2 + 1]);
         }
 
         /* Read the compressed body.  Total header = 32 bytes, so body
@@ -402,15 +394,24 @@ long            dest_size_words;
 #endif
                 }
                 for (count = 0; count < dest_size_words; count = count + 1) {
-                        if (*np == 0x0f) {
+                        unsigned short  n0 = *np;
+                        if (n0 == 0x0F) {
+                                /* Literal: next 4 nibbles compose a 16-bit
+                                   word.  Read them with EXPLICIT sequencing
+                                   -- the older `lit = (lit << 4) | *np++`
+                                   chain gets mis-compiled by Alcyon C 4.14. */
                                 np = np + 1;
-                                lit = *np++;
-                                lit = (lit << 4) | *np++;
-                                lit = (lit << 4) | *np++;
-                                lit = (lit << 4) | *np++;
+                                lit  = (unsigned short) *np;
+                                np   = np + 1;
+                                lit  = (lit << 4) | (unsigned short) *np;
+                                np   = np + 1;
+                                lit  = (lit << 4) | (unsigned short) *np;
+                                np   = np + 1;
+                                lit  = (lit << 4) | (unsigned short) *np;
+                                np   = np + 1;
                                 out_words[count] = lit;
                         } else {
-                                out_words[count] = word_dict[*np];
+                                out_words[count] = word_dict[n0];
                                 np = np + 1;
                         }
                 }
