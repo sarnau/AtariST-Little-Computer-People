@@ -550,7 +550,11 @@ short   g_tpcoi[4] = { 10, 5, 7, 13 };
 
 unsigned char   g_ewb[10];
 char            _user_input_buffer[32];
-short           _happiness_to_priority[3]        = { 2, 4, 6 };
+/* Ghidra happiniess_to_priority (sic) @ 0x2bf98: {3, 1, 0}.  Used as
+   the base priority for parsed commands -- HAPPY (0) gives priority 3
+   (accepts more), SAD (2) gives 0 (rejects most).  Port previously
+   had guessed {2, 4, 6} which inverted the intended behavior. */
+short           _happiness_to_priority[3]        = { 3, 1, 0 };
 unsigned char   _bitmask_1_2_4_8_10_20_40_80_0[9] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x00
 };
