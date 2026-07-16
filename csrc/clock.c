@@ -3,10 +3,9 @@
  *
  * The clock face lives at (278, 85) on the top status strip.  Each
  * hand is a single straight line from the centre to a point on a
- * radius-14 circle.  The 6-entry g_cmmip and 24-entry
- * g_chhop tables split X (first half) from Y (second
- * half) so the same table indexes both a horizontal and vertical
- * offset for a given time step.
+ * small circle around it.  g_cmmip / g_chhop are 15-entry tables:
+ * each hand indexes X at position [t] and Y at [t + 3], which is the
+ * same circle offset by a quarter turn (90 degree phase shift).
  *
  * addr: clock_draw_hands()
  */
@@ -22,10 +21,9 @@ extern short    g_chhop[];
 extern void     draw_line();
 
 /* clock_draw_hands: paint the minute + hour hands in `color`.
-   minute/5 picks one of 6 X/Y pairs (12 clock ticks total, doubled up:
-   :00/:05/:10/:15/... share offset entries).  hour%12 picks one of 12
-   pairs directly.  X offsets: entries 0..5 / 0..11; Y offsets: entries
-   3..5 / 12..23 (same table, +3/+12 stride).
+   minute/5 in 0..11 picks a position on the minute circle; hour%12
+   picks a position on the hour circle.  Y offset uses index + 3
+   (quarter-turn phase shift) so the same table serves both axes.
    addr: clock_draw_hands() */
 
 void
