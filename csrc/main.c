@@ -50,7 +50,12 @@ endless_game_loop()
                 game_speed_counter = 5;
                 for (;;) {
                         game_tick_and_animate(0);
-                        /* check_for_any_action_triggers(); DIAG */
+                        /* check_for_any_action_triggers() is disabled
+                           until the do_action -> a_eatm ->
+                           lcp_walk_to_destination path stops crashing
+                           on uninit house geometry.  The main render
+                           + tick + sprite pipeline is Ghidra-faithful
+                           enough to draw the house without it. */
                 }
         }
 
