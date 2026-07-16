@@ -63,6 +63,7 @@ extern short            g_mnevi;
 extern short            g_mnevc;
 extern short            g_mtspb;
 extern short            midi_tempo;
+extern short            g_mchcn;
 extern short            aes_int_out[];
 extern long             g_mtcou;
 extern short            midi_direct_write_mode;
@@ -120,27 +121,41 @@ extern void             mq_stap();
    parser advances the pointer past each command, matching the original
    3-byte-per-command stride. */
 
+/* mh_chac: MIDI header 0x80 -- set channel count.
+   Ghidra 0x11246: reads p[2] into g_mchcn (0x298f0) and
+   calls midi_seq_build_scale_table with that same value.  Advances
+   the header pointer by 3 bytes. */
 static unsigned char *
 mh_chac(p)
 unsigned char * p;
 {
-        (void) p;
+        g_mchcn = p[2];
+        mq_bust(g_mchcn);
         return p + 3;
 }
+/* mh_temp: MIDI header 0x81 -- set tempo.
+   Ghidra 0x11264: reads p[1] into midi_tempo (0x298f2), then computes
+   g_mtspb (0x298f4) = 2400 / midi_tempo.  Advances p by ONLY 2 bytes
+   (this command has one payload byte, not two). */
 static unsigned char *
 mh_temp(p)
 unsigned char * p;
 {
-        midi_tempo          = p[1];
-        g_mtspb = p[2];
-        return p + 3;
+        midi_tempo = p[1];
+        g_mtspb    = 2400 / midi_tempo;
+        return p + 2;
 }
+/* mh_volu: MIDI header 0x83 -- volume.
+   Ghidra 0x1129c: pure pointer advance by 2, no side effects.
+   The port previously read p[1] into midi_default_velocity, which
+   the Ghidra binary does NOT do here (any velocity handling lives
+   in the event stream, not the header). */
 static unsigned char *
 mh_volu(p)
 unsigned char * p;
 {
-        midi_default_velocity = p[1];
-        return p + 3;
+        (void) p;
+        return p + 2;
 }
 /* mh_scat: MIDI header 0x84 -- cache the raw scale byte and its
    bucketed threshold value.  Ghidra 0x112a4 stores the byte at

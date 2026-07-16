@@ -252,6 +252,9 @@ short           psg_current_volume      = 15;
 short           psg_default_volume      = 15;
 short           g_mnevi   = 0;
 short           g_mnevc   = 9;
+/* Ghidra g_mchcn @ 0x298F0.  mh_chac (0x11246) writes the
+   header byte here and passes it through midi_seq_build_scale_table. */
+short           g_mchcn      = 0;
 /* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; midi_tempo @ 0x298F2 = 120. */
 short           g_mtspb     = 20;
 short           midi_tempo              = 120;
