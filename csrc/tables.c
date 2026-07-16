@@ -70,41 +70,33 @@ unsigned short  revert_table[256] = {
 /* ---- AI action tables ------------------------------------------------
    Three 16-entry tables of ACTION_ID values picked randomly by
    check_time_based_actions() at the "active" / "moderate" / "relaxed"
-   time-of-day tier.
-   Placeholder values chosen to match observed 1985 game behaviour:
-   morning is high-activity (hello, drink, kitchen), midday is mixed
-   (read, play), evening is low-activity (nod, wander).  Exact values
-   need a data-segment dump from Ghidra to be byte-accurate; the shape
-   of the tables (16 shorts, all ACTION_ID) is verified.
-   addr: g_atact[] at 0x2b8fe,
-         g_atmod[] at 0x2b91e,
-         g_atrel[] at 0x2b93e */
+   time-of-day tier.  Dumped verbatim from Ghidra 0x2a1d0 / 0x2a1f0 /
+   0x2a210 -- the port previously had guessed placeholder values that
+   picked wrong actions and drove the resident to wrong positions.
+
+   Ghidra ACTION_ID values (post-enum-realignment):
+     0 SIT_AND_EXERCISE   1 READ_NEWSPAPER   2 PLAY_COMPUTER
+     5 LISTEN_SONG        7 WRITE_LETTER     8 DANCE
+    10 PACE_NERVOUSLY    12 SLEEP           16 PLAY_A_GAME
+    19 SIT_ON_COUCH_WITH_DOG              20 LIGHT_FIREPLACE
+    23 FEED_DOG          24 HELLO           26 PLAY_WITH_RECORD
+    27 OPEN_UPSTAIRS_CLOSET               30 EVENT_PHONE_CALL(!)
+    36 CLEAN_UP          37 TIDY_HOUSE     38 CHECK_FRONT_DOOR
+    39 TOGGLE_TV         42 PET_DOG */
 
 short   g_atact[16] = {
-        ACTION_HELLO,           ACTION_DRINK,           ACTION_KITCHEN_CABINET,
-        ACTION_READ_NEWSPAPER,  ACTION_PLAY_COMPUTER,   ACTION_PLAY_A_GAME,
-        ACTION_TIDY_HOUSE,      ACTION_WANDER_IDLY,     ACTION_NOD_HEAD,
-        ACTION_CHECK_FRONT_DOOR,ACTION_TOGGLE_TV,       ACTION_PLAY_WITH_RECORD,
-        ACTION_HELLO,           ACTION_PEEK_AROUND,     ACTION_LIGHT_FIREPLACE,
-        ACTION_YAWN_AND_STRETCH
+        27, 36,  2,  7, 37, 19, 30, 23,
+        24,  0,  2, 36, 19, 38,  2, 37
 };
 
 short   g_atmod[16] = {
-        ACTION_READ_NEWSPAPER,  ACTION_PLAY_COMPUTER,   ACTION_PLAY_A_GAME,
-        ACTION_TIDY_HOUSE,      ACTION_WANDER_IDLY,     ACTION_NOD_HEAD,
-        ACTION_TOGGLE_TV,       ACTION_PLAY_WITH_RECORD,ACTION_HELLO,
-        ACTION_PEEK_AROUND,     ACTION_YAWN_AND_STRETCH,ACTION_DRINK,
-        ACTION_KITCHEN_CABINET, ACTION_LIGHT_FIREPLACE, ACTION_WRITE_LETTER,
-        ACTION_PACE_NERVOUSLY
+        24,  8, 38, 39,  5, 26, 30, 39,
+         1, 10, 16, 27,  0, 24,  8, 30
 };
 
 short   g_atrel[16] = {
-        ACTION_YAWN_AND_STRETCH,ACTION_PEEK_AROUND,     ACTION_NOD_HEAD,
-        ACTION_WANDER_IDLY,     ACTION_SIT_ON_COUCH_WITH_DOG,
-        ACTION_TOGGLE_TV,       ACTION_READ_NEWSPAPER,  ACTION_WRITE_LETTER,
-        ACTION_PLAY_WITH_RECORD,ACTION_PEEK_AROUND,     ACTION_HELLO,
-        ACTION_CHECK_FRONT_DOOR,ACTION_LIGHT_FIREPLACE, ACTION_WANDER_IDLY,
-        ACTION_YAWN_AND_STRETCH,ACTION_NOD_HEAD
+         1, 42, 20,  5, 27, 39, 30, 19,
+        24, 12, 19, 42, 38,  6,  1, 39
 };
 
 /* activity_schedule_table[3][8]: 8-entry rows of table-index picks
