@@ -91,7 +91,7 @@ extern long xbios();
    Dsetpath("data") -> vdi_init -> setup_screen_buffer ->
    init_build_bit_revert_table -> count_songs -> lcp_load ->
    show_title_screen_enter_name_and_date -> house.scn open+decompress ->
-   fill_top_rect_with_background(27) -> clock_draw_initial ->
+   fill_top_rect_with_background(27) -> cl_drini ->
    file_load("body.lcp") -> lcp_create_random (if new) ->
    file_load(pex_lcp) -> sprite_lcp_build_all -> load_objects/sprites
    -> soundeffects_load -> dog_init_position -> update_water_level_bar
@@ -134,6 +134,16 @@ extern void *   save_physbase;
 extern void     fill_top_rect_with_background();       /* render.c */
 extern void     od_draw();                              /* render.c */
 extern void     sc_drfc();                              /* render.c: food cabinet */
+extern void     update_water_level_bar();               /* render.c */
+extern void     sc_sdtb();                              /* gfx_prim.c */
+extern void     sc_sdtf();                              /* gfx_prim.c */
+extern void     vsl_color();                            /* VDI */
+extern void     v_pline();                              /* VDI */
+extern short    _vdi_color_table[];
+extern void     cl_drini();                   /* init.c */
+extern void     lcp_create_random();                    /* init.c */
+extern void     cutscene_new_lcp_move_in_stub();        /* init.c */
+extern void     daily_reset_action_flags();             /* calendar.c */
 extern short    lcp_cabinet_open;
 extern short    lcp_front_door_open;
 extern short    lcp_dresser_open;
@@ -149,6 +159,7 @@ extern short    g_obidc, g_obi04;                       /* door_closet */
 extern short    g_obids, g_obi08;                       /* door_study */
 extern short    g_obidt, g_obi10;                       /* door_toilet */
 extern short    g_obifc, g_obi14;                       /* filing_cabinet */
+extern short    g_obdea[];                              /* dog_eating_animation frame table */
 
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
@@ -174,6 +185,7 @@ char ** argv;
 
         Cconws("\r\nLCP (Alcyon 4.14)\r\n");
 
+        /* --- Ghidra step 2: aes_vdi_jnit (hand-rolled) --------------- */
         appl_init();
         {
                 short wchar, hchar, wbox, hbox, gh;
@@ -189,37 +201,64 @@ char ** argv;
                 work_in[10] = 2;
                 v_opnvwk(work_in, &vdihandle, work_out);
         }
+        xbios(6, (long) main_colorpalette);             /* Setpalette */
+        save_physbase = (void *) xbios(2);              /* Physbase */
 
-        /* aes_vdi_jnit tail (Ghidra 0x??): the real init loads the
-           full palette in one Setpalette and snapshots the TOS
-           physbase so sc_ren8 can page-flip between it and the alt
-           buffer.  Both matter for correct on-screen output --
-           without the Physbase snapshot, sc_ren8's page-flip lands
-           on garbage and the house appears wrapped/shifted. */
-        xbios(6, (long) main_colorpalette);             /* XBIOS Setpalette */
-        save_physbase = (void *) xbios(2);              /* XBIOS Physbase */
+        /* --- Ghidra step 6: setup_screen_buffer ---------------------- */
+        setup_screen_buffer();
+        init_bitmask_tables();          /* step 7: bit_revert_table */
 
-        setup_screen_buffer();          /* Ghidra 0x16576 */
-        init_bitmask_tables();
-        al_loot();
-        al_lost();
-        sp_reglp();                     /* populate g_sedim[] / g_sedms[] */
-        al_locs();                      /* body.lcp + PEx.LCP */
-        sp_lbal();                      /* Ghidra sprite_lcp_build_all */
-        lc_load();                      /* Ghidra lcp_load */
-        dg_ipos();            /* Ghidra: place dog at (100,195) */
+        /* --- Ghidra step 9: lcp_load MUST come before decompress ----- */
+        g_lcldd = lc_load();
+
+        /* --- Ghidra steps 11-13: house.scn open + decompress --------- */
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
 
-        /* Post-decompress paint chain from Ghidra main (0x15546).
-           Draws every door/cabinet at its current lcp state on top of
-           the HOUSE.SCN background so the pre-drawn placeholders stop
-           bleeding through as horizontal streaks.  fill_top_rect_with
-           _background(27) paints the top status strip (rows 0..26)
-           with the striped/black separator pattern; g_dsb is set to
-           (short*)(g_srptr - 254) in setup_screen_buffer so the +0x7f
-           word offset resolves to row 0 of the offscreen house. */
+        /* --- Ghidra step 14: clear top strip of the OFFscreen house -- */
         fill_top_rect_with_background(27);
 
+        /* --- Ghidra step 15: clock face background dot + hands ------- */
+        cl_drini();
+
+        /* --- Ghidra steps 16-19: body.lcp + optional lcp_create_random
+               + PEx.LCP.  al_locs wraps body+PEx together, so we sequence
+               lcp_create_random between them by splitting.  Simpler
+               path here: run lcp_create_random FIRST if no save file,
+               so al_locs picks up the correct character_sprite_id when
+               it builds the PEx.LCP filename. */
+        if (g_lcldd == 0)
+                lcp_create_random();
+
+        al_locs();                      /* body.lcp + PEx.LCP */
+
+        /* --- Ghidra step 20: sprite_lcp_build_all -------------------- */
+        sp_lbal();
+
+        /* --- Ghidra steps 21-24: object + sprite tables -------------- */
+        al_loot();
+        al_lost();
+        sp_reglp();                     /* populate g_sedim/g_sedms */
+
+        /* --- Ghidra step 25: soundeffects_load (TODO, not yet ported)  */
+
+        /* --- Ghidra step 26: dog_init_position (position only) ------- */
+        dg_ipos();
+
+        /* --- Ghidra step 28: water tank level bar ------------------- */
+        update_water_level_bar(0);
+
+        /* --- Ghidra steps 29-31: water pipe polyline (147..158,175) - */
+        sc_sdtb();
+        vsl_color(vdihandle, _vdi_color_table[0xb]);
+        {
+                short pts[4];
+                pts[0] = 147; pts[1] = 175;
+                pts[2] = 158; pts[3] = 175;
+                v_pline(vdihandle, 2, pts);
+        }
+        sc_sdtf();
+
+        /* --- Ghidra step 32: door / cabinet object_draws ------------- */
         od_draw(lcp_cabinet_open       == NO ? g_obicc : g_obi02, 46,  140);
         od_draw(lcp_front_door_open    == NO ? g_obidf : g_obi06, 294, 151);
         od_draw(lcp_dresser_open       == NO ? g_obi11 : g_obi12, 97,  115);
@@ -227,11 +266,31 @@ char ** argv;
         od_draw(lcp_study_door_open    == NO ? g_obids : g_obi08, 178, 23);
         od_draw(lcp_toilet_door_open   == NO ? g_obidt : g_obi10, 187, 87);
         od_draw(lcp_filing_cabinet_open == NO ? g_obifc : g_obi14, 258, 47);
-        sc_drfc();                              /* food cabinet contents */
 
-        pa_cloc();                      /* palette_apply_clothing_colors */
+        /* --- Ghidra step 33: dog bowl object based on bowl status ----
+           g_obdea[] maps BOWL_EMPTY/HALF/FULL to their object ids. */
+        od_draw(g_obdea[lcp_dog_bowl_status], 8, 190);
+
+        /* --- Ghidra step 34: food cabinet contents ------------------- */
+        sc_drfc();
+
+        /* --- Ghidra step 35: reset once-per-day flags ---------------- */
+        daily_reset_action_flags();
+
+        /* --- Ghidra step 36: apply LCP clothing palette entries ------ */
+        pa_cloc();
+
+        /* --- Ghidra step 37: copy protection ------------------------- */
         copyprot_check_return = cp_main();
-        sp_imfs();                      /* Ghidra sprite_init_MFDBs */
+
+        /* --- Ghidra step 38: sprite MFDB init ------------------------ */
+        sp_imfs();
+
+        /* --- Ghidra step 39: cutscene (new game only) ---------------- */
+        if (g_lcldd == 0)
+                cutscene_new_lcp_move_in_stub();
+
+        /* --- Ghidra step 40: endless game loop ----------------------- */
         endless_game_loop();
 
         Pterm(0);

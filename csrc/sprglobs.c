@@ -12,12 +12,9 @@
 #include "enums.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
-/* Ghidra BSS = 0.  In the 1985 binary the cutscene sets lcp_state to
-   STATE_STAND_SIDE_VIEW (34) before the AI loop starts.  Since we do
-   not run the cutscene, we seed lcp_state to the standing pose
-   directly; otherwise state 0 = STATE_WALK_FRAME_0 and sp_updb would
-   pick body frame 0 (right-facing walk mid-step). */
-short   lcp_state                       = STATE_STAND_SIDE_VIEW;
+/* Ghidra BSS = 0.  cutscene_new_lcp_move_in_stub sets lcp_state to
+   STATE_STAND_SIDE_VIEW (34) before endless_game_loop starts. */
+short   lcp_state                       = 0;
 short   lcp_facing_direction            = 0;    /* FACING_RIGHT */
 short   g_lcyof        = 0;
 short   g_lcieo              = -1;

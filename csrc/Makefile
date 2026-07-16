@@ -71,6 +71,7 @@ SOURCES         := globals.c \
                    sound.c \
                    tick.c \
                    stubs.c \
+                   init.c \
                    main.c
 
 # ---- Directory layout ----------------------------------------------------
