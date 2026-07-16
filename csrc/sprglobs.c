@@ -128,8 +128,14 @@ short   g_lsmas[168];
 short   g_dwanf[8];        /* SPRITE_DOG_WALK_1..8 */
 short * dog_sprite_pointers[60];
 short * dog_mask_pointers[60];
-short   g_dfimb[64];
-short   g_dfmab[64];
+/* g_dfimb / g_dfmab (Ghidra dog_flip_image_buffer / dog_flip_mask_buffer,
+   240 bytes = 15 rows * 2 word-width * 4 planes * 2 bytes/word).
+   Written by sp_flih when the dog needs a mirrored frame.
+   The original port sized these at 64 shorts (128 bytes), which is
+   half the amount sp_flih actually writes -- the extra 112 bytes
+   spilled into adjacent BSS globals. */
+short   g_dfimb[120];
+short   g_dfmab[120];
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
