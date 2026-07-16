@@ -143,6 +143,8 @@ extern short    _vdi_color_table[];
 extern void     cl_drini();                   /* init.c */
 extern void     lcp_create_random();                    /* init.c */
 extern void     cutscene_new_lcp_move_in_stub();        /* init.c */
+extern void     st_titl();                              /* init.c */
+extern void     draw_hud_top_strip();                   /* init.c */
 extern void     daily_reset_action_flags();             /* calendar.c */
 extern short    lcp_cabinet_open;
 extern short    lcp_front_door_open;
@@ -210,6 +212,9 @@ char ** argv;
 
         /* --- Ghidra step 9: lcp_load MUST come before decompress ----- */
         g_lcldd = lc_load();
+
+        /* --- Ghidra step 10: title screen + name/date/time prompt ---- */
+        st_titl();
 
         /* --- Ghidra steps 11-13: house.scn open + decompress --------- */
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);

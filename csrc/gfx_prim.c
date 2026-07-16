@@ -306,6 +306,8 @@ MFDB *  pdesMFDB;
         sensible to blend on top of.
    addr: setup_screen_buffer() */
 
+extern short *  g_dsb;
+
 void
 setup_screen_buffer()
 {
@@ -315,6 +317,14 @@ setup_screen_buffer()
         buf = (long) scrbufB + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
+        /* Anchor g_dsb so that g_dsb + 0x7f (word offset = 254 bytes)
+           lands at g_srptr row 0.  This matches Ghidra's dest_screenbase_
+           ptr design: fill_top_rect_with_background and print_char both
+           write via `g_dsb + 0x7f`, so they need to hit the game screen
+           for the HUD-strip content (name, clock, water bar) to be
+           visible.  Without this the port's fill/print writes land in
+           a detached BSS buffer that never gets composited. */
+        g_dsb = (short *) ((char *) g_srptr - 254);
         sp_iniM(0x1D00L, &MFDB_screen_ptr, g_srptr,
                          (short) (screen_scale_factor * 0x140),
                          (short) (screen_scale_factor * 200));

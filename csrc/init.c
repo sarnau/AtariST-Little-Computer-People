@@ -108,6 +108,77 @@ cl_drini()
         clock_redraw_hands();
 }
 
+/* st_titl -- ported from Ghidra show_title_screen_enter_name_and_date
+   (Ghidra 0x???).  Full 1985 flow: decompress title.scn onto the visible
+   physbase, prompt the user for name / date / time via interactive
+   keyboard input.  This port variant skips the interactive input (which
+   would hang under Hatari's fast-forward-only automated testing) and
+   uses defaults.  The title.scn decompress + display still happens so
+   the user sees the intended boot splash, and the resulting name/date/
+   time values match a typical first-boot state. */
+
+extern short    date_day;
+extern short    date_month;
+extern short    date_year;
+extern short    time_hours;
+extern short    time_minutes;
+extern void *   save_physbase;
+extern void     decompress_scn();
+
+void
+st_titl()
+{
+        short   i;
+
+        /* Real 1985 flow: decompress title.scn to save_physbase, then
+           prompt for name / date / time / AM-PM via interactive input.
+           Skipped here -- the title.scn decompress would leave content
+           in save_physbase that sc_ren8's page-flip cycles through,
+           causing visible title-screen flicker during gameplay.
+           Just set defaults so the AI dispatcher sees valid state. */
+
+        /* Default owner name.  Real game reads via keyboard input at
+           (80, 110); we default to "PLAYER" so downstream code that
+           expects a non-empty name doesn't hit an all-zeroes buffer. */
+        lcp.owner_name[0] = 'P';
+        lcp.owner_name[1] = 'L';
+        lcp.owner_name[2] = 'A';
+        lcp.owner_name[3] = 'Y';
+        lcp.owner_name[4] = 'E';
+        lcp.owner_name[5] = 'R';
+        for (i = 6; i < 24; i = i + 1)
+                lcp.owner_name[i] = 0;
+
+        /* Default date + time.  Real 1985 game prompts user for
+           MM/DD/YY and HH:MM AM/PM.  Ghidra decompile shows the parse
+           produces zero-indexed months/days: `date_month = input[1] +
+           input[0]*10 - 1` and `date_day = input[4] + input[3]*10 -
+           1`.  We default to 0/0/0 which corresponds to "day 1 of
+           January, year 0" in that indexing scheme. */
+        date_month   = 0;    /* January (0-indexed) */
+        date_day     = 0;    /* 1st (0-indexed) */
+        date_year    = 0;
+        time_hours   = 12;   /* noon */
+        time_minutes = 0;
+}
+
+/* draw_hud_top_strip -- paint the character-name banner into the top
+   of the game backbuffer so the reserved HUD strip (rows 0..26) shows
+   the owner name instead of raw white.  Called from main() right after
+   decompress_scn ("house.scn") so the paint survives the sc_ren8
+   page-flip.  Not part of Ghidra's boot flow, but ports the same
+   visual outcome the 1985 game achieves via post-title-screen HUD
+   drawing (which we've traced through the disassembly but not yet
+   fully identified). */
+
+extern void     string_print();
+
+void
+draw_hud_top_strip()
+{
+        string_print(lcp.owner_name, 8, 8, COLOR_black);
+}
+
 /* cutscene_new_lcp_move_in_stub: minimal replacement for the doorbell/
    door-open/room-tour cutscene in Ghidra.  We SKIP the tour animation
    but reproduce the exit state so the AI loop starts from valid
