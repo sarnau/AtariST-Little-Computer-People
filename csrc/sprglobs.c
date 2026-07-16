@@ -56,8 +56,20 @@ short * g_sedim[60];
 short * g_sedms[60];
 short   g_sedeh[60];
 short   g_sedew[60];
-short   g_selaf[60];
-short   g_seslm[60];
+/* Ghidra sprite_layer_flags @ 0x2b6ee: entries 0,1 = SPRITE_IN_FRONT (1),
+   rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
+   0 and 7 in the hardware layout, per sp_upds). */
+short   g_selaf[60] = { 1, 1 };
+/* Ghidra sprite_slot_map @ 0x2b766: entries 0=3 (LCP body slot), 1=4
+   (LCP head slot), rest=9 (off-screen sentinel). */
+short   g_seslm[60] = {
+        3, 4, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9
+};
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
 /* body_sprite_frame_table (Ghidra 0x29BB2, 93 shorts):
