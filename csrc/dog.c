@@ -38,8 +38,10 @@ extern short    g_seacw[];
 extern short    g_sedeh[];
 extern short    g_sedew[];
 extern short    g_dwanf[];
-extern short *  dog_sprite_pointers[];
-extern short *  dog_mask_pointers[];
+/* g_sedim/g_sedms = PTR_ARRAY_0005a156/0x54016; populated by sp_reglp
+   and used by sp_sprs/sp_ssco/sp_ss02 as well as the dog path. */
+extern short *  g_sedim[];
+extern short *  g_sedms[];
 extern short    g_dfimb[];
 extern short    g_dfmab[];
 extern short    floor_bottom_y_coords[];
@@ -255,10 +257,10 @@ BOOL16  flip_horizontal;
                 return;
 
         if (flip_horizontal != NO) {
-                sp_flih(dog_sprite_pointers[g_seid],
+                sp_flih(g_sedim[g_seid],
                                        (unsigned short *) g_dfimb,
                                        15, 2);
-                sp_flih(dog_mask_pointers[g_seid],
+                sp_flih(g_sedms[g_seid],
                                        (unsigned short *) g_dfmab,
                                        15, 2);
         }
@@ -273,12 +275,12 @@ BOOL16  flip_horizontal;
         g_sepey[7] = dog_y - 17;
 
         if (flip_horizontal == NO) {
-                g_seams[0] = dog_mask_pointers[g_seid];
-                g_seams[7] = dog_mask_pointers[g_seid];
+                g_seams[0] = g_sedms[g_seid];
+                g_seams[7] = g_sedms[g_seid];
                 if (layer_position == 1)
-                        g_seaim[7] = dog_sprite_pointers[g_seid];
+                        g_seaim[7] = g_sedim[g_seid];
                 else
-                        g_seaim[0] = dog_sprite_pointers[g_seid];
+                        g_seaim[0] = g_sedim[g_seid];
         } else {
                 g_seams[0] = g_dfmab;
                 g_seams[7] = g_dfmab;

@@ -131,8 +131,11 @@ short   g_lsmas[168];
 /* g_dwanf (Ghidra dog_walk_anim_frames @ 0x2A0E8): 8 sprite ids the
    walk cycle rotates through in dog_move_and_animate. */
 short   g_dwanf[8] = { 34, 35, 36, 37, 38, 39, 40, 41 };
-short * dog_sprite_pointers[60];
-short * dog_mask_pointers[60];
+/* PTR_ARRAY_0005a156/0x54016 are declared as g_sedim/g_sedms above.
+   sp_reglp populates them; sp_sprs/sp_ssco/sp_ss02/sp_spud all read
+   from the same arrays.  There is no separate "dog only" table -- the
+   original binary has one 60-entry sprite pointer table shared by
+   every registered sprite. */
 /* g_dfimb / g_dfmab (Ghidra dog_flip_image_buffer / dog_flip_mask_buffer,
    240 bytes = 15 rows * 2 word-width * 4 planes * 2 bytes/word).
    Written by sp_flih when the dog needs a mirrored frame.

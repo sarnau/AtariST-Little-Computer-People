@@ -5,7 +5,7 @@
  * asset_load_sprites_table (al_lost -> per-record MFDBs in g_setmt)
  * and again via a second loop that calls spritedata_create_with_mask
  * indexed by sprite_file_index_table[i] so the resulting pointers land
- * at the correct dog_sprite_pointers[sprite_id] slot.  This file
+ * at the correct g_sedim[sprite_id] slot.  This file
  * hosts that second pass (sp_reglp) plus the mask buffer it writes to.
  *
  * addr: spritedata_create_with_mask() @ Ghidra 0x15BDC,
@@ -17,8 +17,8 @@
 #include "types.h"
 
 extern unsigned char    sprites_files[];        /* raw SPRITES file bytes */
-extern short *          dog_sprite_pointers[];  /* PTR_ARRAY_0005a156 */
-extern short *          dog_mask_pointers[];    /* PTR_ARRAY_00054016 */
+extern short *          g_sedim[];              /* PTR_ARRAY_0005a156 (sprite_def_image)  */
+extern short *          g_sedms[];              /* PTR_ARRAY_00054016 (sprite_def_mask)   */
 extern short            g_sedeh[];              /* SHORT_ARRAY_0003cf84 */
 extern short            g_sedew[];              /* SHORT_ARRAY_00053ec2 */
 
@@ -36,7 +36,7 @@ short   sp_fidx[50] = {
 
 /* sp_mbuf: 14 KB shared mask buffer.  sp_regs writes a generated
    transparency mask here parallel to the sprite's image bytes in
-   sprites_files.  dog_mask_pointers[id] then references a slice
+   sprites_files.  g_sedms[id] then references a slice
    here. */
 unsigned char   sp_mbuf[14000];
 
@@ -79,8 +79,8 @@ unsigned short *        maskPtr;
 short                   height;
 short                   width;
 {
-        dog_sprite_pointers[spriteID] = (short *) imgPtr;
-        dog_mask_pointers[spriteID]   = (short *) maskPtr;
+        g_sedim[spriteID] = (short *) imgPtr;
+        g_sedms[spriteID]   = (short *) maskPtr;
         g_sedeh[spriteID]             = height;
         g_sedew[spriteID]             = width;
         sp_genma(imgPtr, maskPtr,

@@ -206,7 +206,7 @@ char ** argv;
         init_bitmask_tables();
         al_loot();
         al_lost();
-        sp_reglp();                     /* populate dog_sprite_pointers[] etc. */
+        sp_reglp();                     /* populate g_sedim[] / g_sedms[] */
         al_locs();                      /* body.lcp + PEx.LCP */
         sp_lbal();                      /* Ghidra sprite_lcp_build_all */
         lc_load();                      /* Ghidra lcp_load */

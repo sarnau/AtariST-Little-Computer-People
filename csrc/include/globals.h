@@ -479,8 +479,8 @@ extern short    g_lsmas[];
 
 /* ---- Dog sprite tables ----------------------------------------------- */
 extern short    g_dwanf[];
-extern short *  dog_sprite_pointers[];
-extern short *  dog_mask_pointers[];
+/* PTR_ARRAY_0005a156/0x54016 are the shared sprite_def_image/sprite_def_mask
+   tables declared as g_sedim/g_sedms elsewhere in this header. */
 extern short    g_dfimb[];
 extern short    g_dfmab[];
 
