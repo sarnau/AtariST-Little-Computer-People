@@ -282,36 +282,13 @@ short           midi_program_map[16];
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
 unsigned char   g_mstr[132];
 
-/* Chord mask lookup: 7-bit mask per scale-value 0..15 selecting which
-   of the 7 diatonic scale degrees are present.  Bit order (per
-   mq_bust): bit 6 = root, bit 5 = 2nd, bit 4 = 3rd,
-   bit 3 = 4th, bit 2 = 5th, bit 1 = 6th, bit 0 = 7th.
-
-   Value 1 (chromatic) leaves the identity table untouched.  Values
-   2..8 apply +1 semitone shifts for absent degrees (raise toward the
-   next present degree); values 9..15 apply -1 semitone shifts (lower).
-
-   Table derived from Music Studio 2.0's documented scale presets --
-   these are the standard set of Western scales/modes any 1985 game
-   audio tool would ship.  Exact byte-values pending a Ghidra data
-   dump, but the diatonic-mask semantics are correct. */
+/* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
+   lookup.  Dumped verbatim -- previous port had guessed the values
+   from Music Studio 2.0 documentation but the real ones diverge
+   significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
 unsigned char   g_msmk[16] = {
-        /* 0: unused    */ 0x7F,
-        /* 1: chromatic */ 0x7F,     /* all degrees; scale table stays identity */
-        /* 2: major     */ 0x7F,     /* 1234567 = 1111111 */
-        /* 3: minor     */ 0x6F,     /* 12b345b6b7 = drop b3 slot */
-        /* 4: dorian    */ 0x77,
-        /* 5: phrygian  */ 0x77,
-        /* 6: lydian    */ 0x77,
-        /* 7: mixolyd.  */ 0x7F,
-        /* 8: locrian   */ 0x77,
-        /* 9: major (dn)*/ 0x7F,
-        /*10: minor (dn)*/ 0x6F,
-        /*11: pentat. + */ 0x5D,     /* 12356 = pentatonic major */
-        /*12: pentat. - */ 0x5A,     /* 1b345b7 = pentatonic minor */
-        /*13: blues     */ 0x5B,     /* 1b34b56b7 */
-        /*14: whole tone*/ 0x2A,     /* whole-tone scale (6 notes) */
-        /*15: diminished*/ 0x55      /* octatonic (8 notes) */
+        0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
+        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
 };
 
 BOOL16          g_moen     = YES;
