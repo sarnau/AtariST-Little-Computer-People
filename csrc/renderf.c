@@ -300,11 +300,19 @@ sc_ren8()
            why the third sc_ren8 iteration crashed in TOS ROM with
            an implausible MFDB pointer).  Compute the same relative
            offset off scrbufA instead. */
-        if (current_screen_mfdb->fd_addr == save_physbase)
-                current_screen_mfdb->fd_addr =
-                        (void *) ((char *) scrbufA + 0x19A);
-        else
+        if (current_screen_mfdb->fd_addr == save_physbase) {
+                /* Alt buffer = the SECOND 32K screen inside scrbufA
+                   (base is 64K = 2 * 32K to fit both).  Both this
+                   address and the compositor's initial address (set
+                   in sp_imfs) are 256-aligned so the shifter's
+                   Physbase register displays exactly what we
+                   composed. */
+                long alt = ((long) scrbufA + 0xFFL) & ~0xFFL;
+                alt = alt + 0x8000L;
+                current_screen_mfdb->fd_addr = (void *) alt;
+        } else {
                 current_screen_mfdb->fd_addr = save_physbase;
+        }
 
         animation_tick_counter = animation_tick_counter + 1;
         last_vbclock = read_vbclock();

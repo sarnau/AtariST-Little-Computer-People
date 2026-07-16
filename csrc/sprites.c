@@ -591,17 +591,13 @@ sp_imfs()
                                  g_seacw[i], g_seach[i]);
         }
         {
-                /* Ghidra: scrbufA + 0xCD.  0xCD = 205 is odd, so
-                   in the 1985 image scrbufA was placed at an odd
-                   address so that + 0xCD landed on an even boundary
-                   suitable for MOVE.L reads/writes.  Our linker puts BSS
-                   on an even boundary, so we round the pointer UP to
-                   the next even byte to reproduce the ORIGINAL parity
-                   -- blkcopy32 (called for the sc_ren8 full-screen
-                   background copy) does MOVE.L (A1),(A0) and traps with
-                   Address Error on odd operands. */
+                /* Compositor screen = scrbufA rounded UP to next 256.
+                   Ghidra uses scrbufA + 0xCD but our linker doesn't
+                   place scrbufA where that offset would be 256-aligned;
+                   see globals.c comment for the port-specific
+                   two-screen layout. */
                 long    buf;
-                buf = ((long) scrbufA + 0xCDL + 1L) & ~1L;
+                buf = ((long) scrbufA + 0xFFL) & ~0xFFL;
                 sp_iniM(0L, &g_srmfd, (void *) buf,
                         (short) (screen_scale_factor * 320),
                         (short) (screen_scale_factor * 200));

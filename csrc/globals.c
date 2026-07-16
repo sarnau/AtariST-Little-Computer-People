@@ -373,15 +373,25 @@ short   screen_scale_factor             = 1;
    buffer instead of another off-screen bitmap. */
 MFDB    MFDB_A                          = { 0 };
 
-/* scrbufA / scrbufB (Ghidra 0x2CCE3 / 0x34953) -- BSS
-   scratch for the two double-buffer compositing screens.
-   setup_screen_buffer() aligns scrbufB + 0x12F up to a 512-
-   byte boundary for MFDB_screen_ptr (the house-scene / background
-   source).  sprite_init_MFDBs() uses scrbufA + 0xCD as the
-   screen_mfdb (aka g_srmfd) compositing target.  Sized generously so
-   the header + align slack + 32000 pixel bytes for the 320x200 ST
-   screen all fit. */
-unsigned char   scrbufA[33280];
+/* scrbufA / scrbufB (Ghidra SCREEN_BUFFER_A / _B) -- BSS scratch
+   for the two double-buffer compositing screens.
+
+   scrbufB (~33 KB): holds the decompressed house.scn background at
+     an aligned offset (setup_screen_buffer rounds scrbufB + 0x12F
+     UP to the next 512-byte boundary).
+
+   scrbufA: PORT-SPECIFIC LAYOUT.  The 1985 code depends on
+     SCREEN_BUFFER_A landing at an odd address so that:
+       + 0xCD  (used by sprite_init_MFDBs)         -> aligned
+       + 0x19A (used by renderf.c page-flip)       -> 256-aligned
+     Neither is guaranteed under our linker.  Instead of trying to
+     reproduce the original binary's linker luck, we size scrbufA
+     large enough (64 KB) to fit TWO independent 256-aligned
+     32 KB screens: one at scrbufA + 0x000 (compositor writes),
+     one at scrbufA + 0x8000 (alt physbase for the page-flip).
+     sprite_init_MFDBs and renderf.c compute both offsets by
+     rounding scrbufA UP to the next 256 boundary. */
+unsigned char   scrbufA[65536];
 unsigned char   scrbufB[33280];
 
 /* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
