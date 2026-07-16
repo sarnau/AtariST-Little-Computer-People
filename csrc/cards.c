@@ -75,7 +75,7 @@ poker_load_card_graphics()
 
         /* Standard face-down back at slot 52. */
         fr_read(fileHandle, 0xc0L, cards_data + 0x1380);
-        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
 
         /* Synthesize the highlight overlay at slot 53: a 4-plane
            pattern with plane 0 blank, plane 1 blank, planes 2 and 3

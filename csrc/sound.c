@@ -179,7 +179,7 @@ sf_sl()
                 *block = size;
                 fr_read(fhandle, (long) size, block + 1);
         }
-        _gemdos(GEMDOS_Fclose, (long) fhandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fhandle, 0L, 0L);
 }
 
 /* DTA layout matches aleisure.c's local typedef; kept lightweight
@@ -224,7 +224,7 @@ char *  filename;
         if (fileHandle >= 0) {
                 fr_read(fileHandle, 10L, temp);
                 fr_read(fileHandle, 20000L, midi_song_buffer);
-                _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+                _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
         }
         mq_inis(midi_song_buffer, g_momap);
 }

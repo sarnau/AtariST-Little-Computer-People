@@ -77,7 +77,7 @@ load_objects()
 
         fileHandle = file_open("objects", 0);
         fr_read(fileHandle, 14000L, objects_file);
-        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
 }
 
 /* load_sprites: read the 14000-byte SPRITES file into sprites_files[].
@@ -90,7 +90,7 @@ load_sprites()
 
         fileHandle = file_open("sprites", 0);
         fr_read(fileHandle, 14000L, sprites_files);
-        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
 }
 
 /* Parse a sequence-of-records buffer (OBJECTS or SPRITES format) into
@@ -188,7 +188,7 @@ long            max_bytes;
         if (total > max_bytes)
                 total = max_bytes;
         fr_read(fileHandle, total, dest_buf);
-        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
         return count;
 }
 
@@ -421,7 +421,7 @@ long            dest_size_words;
                 _gemdos(GEMDOS_Mfree, (long) nbuf, 0L, 0L);
         }
 
-        _gemdos(GEMDOS_Fclose, (long) filehandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, filehandle, 0L, 0L);
         _gemdos(GEMDOS_Mfree,  (long) fbuffer_orig, 0L, 0L);
 }
 
@@ -440,6 +440,6 @@ long            max_bytes;
 
         fileHandle = file_open("names", 0);
         fr_read(fileHandle, max_bytes, dest_buf);
-        _gemdos(GEMDOS_Fclose, (long) fileHandle, 0L, 0L);
+        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
         return max_bytes;
 }

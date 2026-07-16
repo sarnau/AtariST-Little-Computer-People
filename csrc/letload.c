@@ -116,7 +116,7 @@ short           outsize;
                 outbuffer = outbuffer + 1;
         }
 
-        _gemdos(GEMDOS_Fclose, (long) filehandle,    0L, 0L);
+        _gemdos(GEMDOS_Fclose, filehandle,    0L, 0L);
         _gemdos(GEMDOS_Mfree,  (long) fbuffer_orig,  0L, 0L);
 }
 
