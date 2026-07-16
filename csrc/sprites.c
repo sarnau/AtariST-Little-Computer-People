@@ -551,7 +551,7 @@ sp_lchu()
 
 /* sp_imfs (Ghidra): populate the 8 per-slot MFDB pairs
    (image + mask) from the active sprite tables, wire the compositing
-   MFDB (screen_mfdb == g_srmfd) at SCREEN_BUFFER_A + 0xCD, and call
+   MFDB (screen_mfdb == g_srmfd) at scrbufA + 0xCD, and call
    sp_drin.  Also zeroes last_hz200 so the very first sc_ren8
    frame-rate gate sees a 0->N delta and proceeds.
 
@@ -568,7 +568,7 @@ extern short            screen_scale_factor;
 extern MFDB             g_semfi[];
 extern MFDB             g_semfm[];
 extern MFDB             g_srmfd;                /* Ghidra "screen_mfdb" */
-extern unsigned char    SCREEN_BUFFER_A[];
+extern unsigned char    scrbufA[];
 extern short *          g_seaim[];              /* sprite_active_image */
 extern short *          g_seams[];              /* sprite_active_mask */
 extern short            g_seach[];              /* sprite_active_height */
@@ -591,8 +591,8 @@ sp_imfs()
                                  g_seacw[i], g_seach[i]);
         }
         {
-                /* Ghidra: SCREEN_BUFFER_A + 0xCD.  0xCD = 205 is odd, so
-                   in the 1985 image SCREEN_BUFFER_A was placed at an odd
+                /* Ghidra: scrbufA + 0xCD.  0xCD = 205 is odd, so
+                   in the 1985 image scrbufA was placed at an odd
                    address so that + 0xCD landed on an even boundary
                    suitable for MOVE.L reads/writes.  Our linker puts BSS
                    on an even boundary, so we round the pointer UP to
@@ -601,7 +601,7 @@ sp_imfs()
                    background copy) does MOVE.L (A1),(A0) and traps with
                    Address Error on odd operands. */
                 long    buf;
-                buf = ((long) SCREEN_BUFFER_A + 0xCDL + 1L) & ~1L;
+                buf = ((long) scrbufA + 0xCDL + 1L) & ~1L;
                 sp_iniM(0L, &g_srmfd, (void *) buf,
                         (short) (screen_scale_factor * 320),
                         (short) (screen_scale_factor * 200));
@@ -632,7 +632,7 @@ sp_drin()
    predecessor for vertical dilation.
    addr: sp_lcp_build_all_body() */
 
-extern long             bitmask_32bit_or[];
+extern long             bm32or[];
 
 void
 sp_lbbd(src, dest, height)
@@ -656,14 +656,14 @@ short           height;
                 flag = 0;
                 for (bit = 30; bit > 0; bit = bit - 1) {
                         if (flag) {
-                                img = img | bitmask_32bit_or[bit];
-                                if ((bitmask_32bit_or[bit] & mask) == 0L)
+                                img = img | bm32or[bit];
+                                if ((bm32or[bit] & mask) == 0L)
                                         flag = 0;
-                        } else if ((bitmask_32bit_or[bit] & mask) != 0L) {
+                        } else if ((bm32or[bit] & mask) != 0L) {
                                 img = img
-                                      | bitmask_32bit_or[bit - 1]
-                                      | bitmask_32bit_or[bit]
-                                      | bitmask_32bit_or[bit + 1];
+                                      | bm32or[bit - 1]
+                                      | bm32or[bit]
+                                      | bm32or[bit + 1];
                                 flag = 1;
                         }
                 }
@@ -693,7 +693,7 @@ short           height;
    Then the same vertical-OR merge as sp_lbbd.
    addr: sp_lcp_build_all_head() */
 
-extern long             bitmask_32bit_and[];
+extern long             bm32and[];
 
 void
 sp_lbhd(src, dest, height)
@@ -715,14 +715,14 @@ short           height;
                 src = src + 4;
                 bit = 31;
                 while (bit > 0 &&
-                       (bitmask_32bit_or[bit - 1] & img) == 0L) {
-                        mask = bitmask_32bit_and[bit] & mask;
+                       (bm32or[bit - 1] & img) == 0L) {
+                        mask = bm32and[bit] & mask;
                         bit = bit - 1;
                 }
                 bit = 0;
                 while (bit < 31 &&
-                       (bitmask_32bit_or[bit + 1] & img) == 0L) {
-                        mask = bitmask_32bit_and[bit] & mask;
+                       (bm32or[bit + 1] & img) == 0L) {
+                        mask = bm32and[bit] & mask;
                         bit = bit + 1;
                 }
                 dest[0] = (unsigned short) (mask >> 16);

@@ -84,7 +84,7 @@ extern void     show_lcp_sprites();
 extern void     a_opcfc();
 extern void     a_watat();
 extern void     fill_top_rect_with_background();
-extern void     file_load_letter_template();
+extern void     fl_ltpl();
 extern void     print_char();
 extern void     lt_sets();
 extern void     select_random_click_sound();
@@ -386,7 +386,7 @@ a_writl()
         g_lttx = (char *) _gemdos(GEMDOS_Malloc, 0x2900L, 0L, 0L);
         if (g_lttx == (char *) 0)
                 error_not_enough_memory();
-        file_load_letter_template();
+        fl_ltpl();
 
         text_scroll_timer = 9999;
         game_tick_and_animate(2);

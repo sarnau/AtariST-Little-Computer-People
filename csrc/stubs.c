@@ -61,7 +61,7 @@
 /* input_string defined in globals.c */
 
 /* Letter subsystem helpers (letter template + text rendering). */
-/* file_load_letter_template -> letload.c */
+/* fl_ltpl -> letload.c */
 /* print_char                          -> renderx.c */
 /* lt_sets      -> sound.c */
 /* select_random_click_sound           -> sound.c */

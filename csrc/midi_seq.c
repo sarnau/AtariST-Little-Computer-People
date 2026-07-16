@@ -335,11 +335,11 @@ long            position;
    addr: mq_setp() */
 
 void
-mq_setp(currentPosition, maxPosition)
-unsigned char * currentPosition;
+mq_setp(curPos, maxPosition)
+unsigned char * curPos;
 long            maxPosition;
 {
-        midi_seq_position     = currentPosition;
+        midi_seq_position     = curPos;
         g_msmap = (maxPosition == 0) ? -1 : maxPosition;
 
         midi_envelope_data_base = (long) (midi_data_base_ptr - 0x168);
@@ -541,12 +541,12 @@ short   index;
    addr: mq_dise() */
 
 short
-mq_dise(midiEventPtr, midiEventSize, midiChannel)
-unsigned char * midiEventPtr;
-short           midiEventSize;
+mq_dise(midiEvP, midiEvS, midiChannel)
+unsigned char * midiEvP;
+short           midiEvS;
 short           midiChannel;
 {
-        unsigned char * saved_ptr = midiEventPtr;
+        unsigned char * saved_ptr = midiEvP;
         unsigned char   saved_note;
         unsigned char * note_ptr;
         short           channel_idx;
@@ -562,23 +562,23 @@ short           midiChannel;
 
         /* ---- MIDI OUT path ---- */
         if (g_moen != NO) {
-                saved_note = midiEventPtr[1];
+                saved_note = midiEvP[1];
                 if (midiChannel != 0) {
                         short   octave_delta = envelope_val -
                                         ((midiChannel >> 4) & 0xf);
-                        midiEventPtr[1] = (unsigned char)
-                                (midiEventPtr[1] + (short) octave_delta * -12);
+                        midiEvP[1] = (unsigned char)
+                                (midiEvP[1] + (short) octave_delta * -12);
                 }
                 if (midi_direct_write_mode == 1) {
-                        while (midiEventSize != 0) {
-                                mowrit(*midiEventPtr);
-                                midiEventPtr = midiEventPtr + 1;
-                                midiEventSize = midiEventSize - 1;
+                        while (midiEvS != 0) {
+                                mowrit(*midiEvP);
+                                midiEvP = midiEvP + 1;
+                                midiEvS = midiEvS - 1;
                         }
                 } else {
                         _xbios(XBIOS_Midiws,
-                               (long) (midiEventSize - 1),
-                               (long) midiEventPtr, 0L);
+                               (long) (midiEvS - 1),
+                               (long) midiEvP, 0L);
                 }
                 saved_ptr[1] = saved_note;
         }

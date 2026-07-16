@@ -13,7 +13,7 @@
  *   nibble in 0..14  ->  emit compression_tokens[nibble]
  *   nibble == 15     ->  read two more nibbles for a literal 8-bit byte
  *
- * file_load_letter_template: after decompression, g_lttx
+ * fl_ltpl: after decompression, g_lttx
  * is a stream of newline-terminated (well, control-char-terminated)
  * strings.  We walk it exactly 360 times, recording the start of each
  * line into g_ltlp[i] and then skipping past the terminator
@@ -25,7 +25,7 @@
  * We stash the original pointer in fbuffer_orig and free that.  The
  * visible behaviour is unchanged.
  *
- * addr: fr_reac(), file_load_letter_template()
+ * addr: fr_reac(), fl_ltpl()
  */
 
 #include "types.h"
@@ -120,7 +120,7 @@ short           outsize;
         _gemdos(GEMDOS_Mfree,  (long) fbuffer_orig,  0L, 0L);
 }
 
-/* file_load_letter_template: decompress LETTER.TXT into
+/* fl_ltpl: decompress LETTER.TXT into
    g_lttx and populate the 360-entry g_ltlp[]
    line-start table.  Called by a_writl after the buffer
    is allocated.
@@ -129,10 +129,10 @@ short           outsize;
    be multiple consecutive terminators (typical is CR+LF); we skip past
    the whole run before recording the next line's start.
 
-   addr: file_load_letter_template() */
+   addr: fl_ltpl() */
 
 void
-file_load_letter_template()
+fl_ltpl()
 {
         char *  i;
         short   linecount;

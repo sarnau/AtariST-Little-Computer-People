@@ -39,7 +39,7 @@ extern void     vro_cpyfm();
 extern short    screen_scale_factor;
 extern MFDB     MFDB_A;
 extern MFDB     MFDB_screen_ptr;
-extern unsigned char SCREEN_BUFFER_B[];
+extern unsigned char scrbufB[];
 
 /* draw_line: Bresenham-ish line via VDI v_pline in backbuffer, then
    restore frontbuffer draw target.  The 2-point polyline maps directly
@@ -292,7 +292,7 @@ MFDB *  pdesMFDB;
 
      1. Zero MFDB_A.fd_addr so future vro_cpyfm calls that source
         from it read the visible device screen.
-     2. Point g_srptr at SCREEN_BUFFER_B + 0x12F, then align UP to
+     2. Point g_srptr at scrbufB + 0x12F, then align UP to
         the next 512-byte boundary.  The 0x12F offset is a header
         the original code carved out before the aligned buffer; the
         512-byte alignment is stricter than the shifter DMA's 256-
@@ -312,7 +312,7 @@ setup_screen_buffer()
         long    buf;
 
         MFDB_A.fd_addr = (void *) 0;
-        buf = (long) SCREEN_BUFFER_B + 0x12FL;
+        buf = (long) scrbufB + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
         sp_iniM(0x1D00L, &MFDB_screen_ptr, g_srptr,

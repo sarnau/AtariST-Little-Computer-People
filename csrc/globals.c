@@ -116,7 +116,7 @@ short   g_srsdc        = 0;
 short   g_cdibp        = 0;
 
 /* Letter subsystem storage.  g_ltlp[] and _greeting_table are
-   populated at runtime from letter.txt (see file_load_letter_template);
+   populated at runtime from letter.txt (see fl_ltpl);
    NULL entries make lt_tysa a safe no-op on the
    host build until the template loader is ported.  360 slots covers
    the 4 sections × 96 pointers (section 3 uses 72) shape referenced by
@@ -373,16 +373,16 @@ short   screen_scale_factor             = 1;
    buffer instead of another off-screen bitmap. */
 MFDB    MFDB_A                          = { 0 };
 
-/* SCREEN_BUFFER_A / SCREEN_BUFFER_B (Ghidra 0x2CCE3 / 0x34953) -- BSS
+/* scrbufA / scrbufB (Ghidra 0x2CCE3 / 0x34953) -- BSS
    scratch for the two double-buffer compositing screens.
-   setup_screen_buffer() aligns SCREEN_BUFFER_B + 0x12F up to a 512-
+   setup_screen_buffer() aligns scrbufB + 0x12F up to a 512-
    byte boundary for MFDB_screen_ptr (the house-scene / background
-   source).  sprite_init_MFDBs() uses SCREEN_BUFFER_A + 0xCD as the
+   source).  sprite_init_MFDBs() uses scrbufA + 0xCD as the
    screen_mfdb (aka g_srmfd) compositing target.  Sized generously so
    the header + align slack + 32000 pixel bytes for the 320x200 ST
    screen all fit. */
-unsigned char   SCREEN_BUFFER_A[33280];
-unsigned char   SCREEN_BUFFER_B[33280];
+unsigned char   scrbufA[33280];
+unsigned char   scrbufB[33280];
 
 /* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
    per-slot 8-way sprite MFDBs.  Our port already had them under the

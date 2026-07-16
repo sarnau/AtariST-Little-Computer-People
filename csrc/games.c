@@ -175,7 +175,7 @@ ag_main()
 /* wp_main: outer flow verified; per-puzzle parse + fill-in-
    the-blank dispatch is deferred.  Loads 66-line wordpz.txt into
    g_ltlp entries 0..0x41 via the same line-indexing pattern
-   as file_load_letter_template.
+   as fl_ltpl.
    addr: wp_main() */
 
 void

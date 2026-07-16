@@ -137,19 +137,19 @@ short   g_rphs[49] = {
          12,  13,   7,  14,  12,  13,   2,  -2
 };
 
-/* bitmask_32bit_or / bitmask_32bit_and (Ghidra): 32-entry lookup tables
+/* bm32or / bm32and (Ghidra): 32-entry lookup tables
    for single-bit twiddling of a 32-bit sprite word.
-     bitmask_32bit_or[i]  = 1 << i           (used to SET   bit i)
-     bitmask_32bit_and[i] = ~(1 << i)        (used to CLEAR bit i)
+     bm32or[i]  = 1 << i           (used to SET   bit i)
+     bm32and[i] = ~(1 << i)        (used to CLEAR bit i)
    sprite_lcp_build_all_body/head walk `bit` 0..31 and use these to
    compose the dilated 30-bit sprite mask.
    Populated at boot by init_bitmask_tables (Alcyon C doesn't accept
    the 'UL' suffix on hex constants > 0x7FFFFFFF, so we compute the
    entries at runtime rather than ship them as data literals).
-   addr: bitmask_32bit_or, bitmask_32bit_and */
+   addr: bm32or, bm32and */
 
-long    bitmask_32bit_or[32];
-long    bitmask_32bit_and[32];
+long    bm32or[32];
+long    bm32and[32];
 
 void
 init_bitmask_tables()
@@ -159,8 +159,8 @@ init_bitmask_tables()
 
         v = 1L;
         for (i = 0; i < 32; i = i + 1) {
-                bitmask_32bit_or[i]  = v;
-                bitmask_32bit_and[i] = ~v;
+                bm32or[i]  = v;
+                bm32and[i] = ~v;
                 v = v << 1;
         }
 }

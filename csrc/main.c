@@ -117,7 +117,7 @@ extern void     decompress_scn();
 extern void     setup_screen_buffer();  /* Ghidra 0x16576 */
 extern void     sp_imfs();              /* Ghidra sprite_init_MFDBs */
 extern void     sp_lbal();              /* Ghidra sprite_lcp_build_all */
-extern void     init_bitmask_tables();  /* fills bitmask_32bit_or/and */
+extern void     init_bitmask_tables();  /* fills bm32or/and */
 extern short    cp_main();  /* Ghidra (stubbed to return 1) */
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
