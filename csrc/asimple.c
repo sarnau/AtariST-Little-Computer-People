@@ -218,8 +218,7 @@ a_calld()
 {
         short   result;
 
-        house_get_position_xy(43 /* POS_BTM_DOG_FOOD */,
-                              &g_wtx, &g_wty);
+        house_get_position_xy(POS_BTM_DOG_FOOD, &g_wtx, &g_wty);
         result = lcp_walk_to_destination();
         if (result != 0)
                 return;
@@ -227,7 +226,7 @@ a_calld()
         lcp_facing_direction   = FACING_RIGHT;
         g_hatas = 8;
         lcp_wait_head_reach_target();
-        lcp_state = 35 /* STATE_EXERCISE_CROUCH */;
+        lcp_state = STATE_CROUCH_DOWN;
         game_tick_and_animate(5);
         dog_pettable_flag = YES;
 }

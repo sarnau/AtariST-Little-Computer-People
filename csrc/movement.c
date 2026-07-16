@@ -29,7 +29,7 @@ extern short    days_in_month();                /* calendar.c*/
 extern short    g_rpxs[];
 extern short    g_rphs[];
 
-#define POS_BTM_SCREEN_EDGE     47
+#include "enums.h"
 
 /* house_get_position_xy: read out the screen X/Y for a room-position
    index.  X = table[index] << 1 (the source table stores half-pixels).

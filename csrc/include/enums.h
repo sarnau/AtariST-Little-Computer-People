@@ -42,97 +42,103 @@
 #define SPRITE_BEHIND_LCP       (-1)
 #define SPRITE_IN_FRONT         1
 
-/* ---- PLAYER_STATE (subset ported so far) ------------------------------
-   The 0..24 block covers all walk / stair states.  Layout (verified by
-   the wrap tests in lcp_pathfind_one_step):
-     0        STATE_STAND_SIDE_VIEW / IDLE (== facing-right stand)
-     1..7     Walking (frame 3 and 7 trigger footstep)
-     9..12    Stair climb, mid-stair (frame 12 = STATE_STAIR_CLIMB_FRAME_3_STEP)
-     13..16   Stair top-of-stair entry animation
+/* ---- PLAYER_STATE ----------------------------------------------------
+   Dumped verbatim from Ghidra's PLAYER_STATE enum (LCP.PRG loaded).
+     0..7     Walk cycle (frames 3 and 7 trigger footstep)
+     8        STATE_STAND_IDLE (== stand at rest)
+     9..12    Stair climb (frame 12 = FRAME_3_STEP)
+     13..16   Stair top-of-flight entry
      17..20   Stair descend
-     21..24   Stair bottom-of-stair animation
-   Beyond 24 are single-action poses (yawn, phone, read newspaper, etc). */
-#define STATE_STAND_IDLE                        0
-#define STATE_STAND_SIDE_VIEW                   0
-#define STATE_WALK_FRAME_0                      0
-#define STATE_WALK_FRAME_1                      1
-#define STATE_WALK_FRAME_3_STEP                 3
-#define STATE_WALK_FRAME_4                      4
-#define STATE_WALK_FRAME_5                      5
-#define STATE_WALK_FRAME_7_STEP                 7
-#define STATE_STAIR_CLIMB_FRAME_0               9
+     21..24   Stair bottom-of-flight
+     25..90   Single-pose actions.  0x36..0x37 and 0x49..0x4f are unused. */
+#define STATE_WALK_FRAME_0                       0
+#define STATE_WALK_FRAME_1                       1
+#define STATE_WALK_FRAME_2                       2
+#define STATE_WALK_FRAME_3_STEP                  3
+#define STATE_WALK_FRAME_4                       4
+#define STATE_WALK_FRAME_5                       5
+#define STATE_WALK_FRAME_6                       6
+#define STATE_WALK_FRAME_7_STEP                  7
+#define STATE_STAND_IDLE                         8
+#define STATE_STAIR_CLIMB_FRAME_0                9
+#define STATE_STAIR_CLIMB_FRAME_1               10
+#define STATE_STAIR_CLIMB_FRAME_2               11
 #define STATE_STAIR_CLIMB_FRAME_3_STEP          12
 #define STATE_STAIR_TOP_FRAME_0                 13
+#define STATE_STAIR_TOP_FRAME_1                 14
+#define STATE_STAIR_TOP_FRAME_2                 15
 #define STATE_STAIR_TOP_FRAME_3_STEP            16
 #define STATE_STAIR_DESCEND_FRAME_0             17
 #define STATE_STAIR_DESCEND_FRAME_1             18
+#define STATE_STAIR_DESCEND_FRAME_2             19
 #define STATE_STAIR_DESCEND_FRAME_3_STEP        20
 #define STATE_STAIR_BTM_FRAME_0                 21
 #define STATE_STAIR_BTM_FRAME_1                 22
 #define STATE_STAIR_BTM_FRAME_2                 23
 #define STATE_STAIR_BTM_FRAME_3                 24
-#define STATE_YAWN_MOUTH_OPEN                   17      /* aliased with descend */
-#define STATE_YAWN_STRETCH_ARMS                 18      /* aliased with descend */
-#define STATE_STAND_FACING_SCREEN               28
-#define STATE_BEND_DOWN                         29
-#define STATE_REACH_FORWARD                     30
-#define STATE_BEND_AND_REACH                    31
-#define STATE_REACH_INTO_CABINET                32
-#define STATE_CROUCH_DOWN                       34
-#define STATE_EXERCISE_CROUCH                   35
-#define STATE_READ_PAPER_HOLD                   40
-#define STATE_READ_PAPER_TURN_PAGE              41
-#define STATE_PHONE_PICKUP                      74
-#define STATE_PHONE_TALKING                     75
+#define STATE_BEND_AND_REACH                    25
+#define STATE_TYPING_HANDS_DOWN                 26
+#define STATE_TYPING_HANDS_UP                   27
+#define STATE_SITTING_LEAN_BACK                 28
+#define STATE_SITTING_AT_DESK                   29
+#define STATE_SIT_AT_DESK                       29      /* alias */
+#define STATE_BEND_DOWN                         30
+#define STATE_REACH_FORWARD                     31
+#define STATE_PICK_UP_FROM_FLOOR                32
+#define STATE_STAND_FACING_SCREEN               33
+#define STATE_STAND_SIDE_VIEW                   34
+#define STATE_CROUCH_DOWN                       35
+#define STATE_EXERCISE_CROUCH                   35      /* alias for CROUCH_DOWN */
+#define STATE_CARRY_WALK_FRAME_0                36
+#define STATE_CARRY_WALK_FRAME_1                37
+#define STATE_BROWSE_VINYL_IDLE                 38
+#define STATE_BROWSE_VINYL_REACH_LEFT           39
+#define STATE_BROWSE_VINYL_REACH_RIGHT          40
+#define STATE_BROWSE_VINYL_PULL_OUT             41
+#define STATE_STOKE_FIREPLACE                   42
+#define STATE_WRITE_AT_DESK                     43
+#define STATE_TYPE_AT_DESK_LEFT_HAND            44
+#define STATE_TYPE_AT_DESK_RIGHT_HAND           45
+#define STATE_SIT_IN_ARMCHAIR                   46
+#define STATE_READ_PAPER_HOLD                   47
+#define STATE_READ_PAPER_TURN_PAGE              48
+#define STATE_UNDRESS_AT_BED                    49
+#define STATE_LIE_DOWN_GETTING_IN               50
+#define STATE_LIE_DOWN_IN_BED                   51
+#define STATE_SIT_COUCH_UPRIGHT                 52
+#define STATE_SIT_COUCH_PETTING_DOG             53
+/* 54..55 unused */
+#define STATE_PHONE_PICKUP                      56
+#define STATE_PHONE_TALKING                     57
+#define STATE_EXERCISE_ARMS_CENTER              58
+#define STATE_EXERCISE_ARMS_UP                  59
+#define STATE_EXERCISE_ARMS_WIDE                60
+#define STATE_WASH_HANDS_CENTER                 61
+#define STATE_WASH_HANDS_LEFT                   62
+#define STATE_WASH_HANDS_RIGHT                  63
+#define STATE_SHOWER_STAND                      64
+#define STATE_SHOWER_WASH_LEFT                  65
+#define STATE_SHOWER_WASH_RIGHT                 66
+#define STATE_SHOWER_SCRUB_LEFT                 67
+#define STATE_SHOWER_SCRUB_RIGHT                68
+#define STATE_BRUSH_TEETH                       69
+#define STATE_DRINK_FROM_GLASS                  70
+#define STATE_EAT_BITE                          71
+#define STATE_EAT_CHEW                          72
+/* 73..79 unused */
+#define STATE_DANCE_STEP_LEFT                   80
+#define STATE_DANCE_STEP_RIGHT                  81
+#define STATE_YAWN_MOUTH_OPEN                   82
+#define STATE_YAWN_STRETCH_ARMS                 83
+#define STATE_PACE_SHIFT_LEFT                   84
+#define STATE_PACE_SHIFT_RIGHT                  85
+#define STATE_IDLE_SHRUG_START                  86
+#define STATE_IDLE_SHRUG_HOLD                   87
+#define STATE_SLEEP_BREATHE_IN                  88
+#define STATE_SLEEP_BREATHE_OUT                 89
+#define STATE_REACH_INTO_CABINET                90
 
-/* Action-specific states (26+ block).  Values are internally consistent
-   with the body_sprite_frame_table lookup but not visible outside the
-   dispatchers that reference them. */
-#define STATE_SIT_IN_ARMCHAIR                   50
-#define STATE_DRINK_FROM_GLASS                  51
-#define STATE_IDLE_SHRUG_START                  52
-#define STATE_IDLE_SHRUG_HOLD                   53
-#define STATE_PACE_SHIFT_LEFT                   54
-#define STATE_PACE_SHIFT_RIGHT                  55
-#define STATE_SLEEP_BREATHE_IN                  56
-#define STATE_SLEEP_BREATHE_OUT                 57
-#define STATE_UNDRESS_AT_BED                    58
-#define STATE_LIE_DOWN_GETTING_IN               59
-#define STATE_LIE_DOWN_IN_BED                   60
-#define STATE_DANCE_STEP_LEFT                   61
-#define STATE_DANCE_STEP_RIGHT                  62
-#define STATE_EAT_BITE                          63
-#define STATE_EAT_CHEW                          64
-#define STATE_SHOWER_STAND                      65
-#define STATE_SHOWER_SCRUB_LEFT                 66
-#define STATE_SHOWER_SCRUB_RIGHT                67
-#define STATE_SHOWER_WASH_LEFT                  68
-#define STATE_SHOWER_WASH_RIGHT                 69
-#define STATE_BRUSH_TEETH                       70
-#define STATE_WASH_HANDS_CENTER                 71
-#define STATE_WASH_HANDS_LEFT                   72
-#define STATE_WASH_HANDS_RIGHT                  73
-#define STATE_BROWSE_VINYL_REACH_RIGHT          76
-#define STATE_BROWSE_VINYL_IDLE                 77
-#define STATE_BROWSE_VINYL_REACH_LEFT           78
-#define STATE_BROWSE_VINYL_PULL_OUT             79
-#define STATE_SIT_COUCH_UPRIGHT                 80
-#define STATE_SIT_COUCH_PETTING_DOG             81
-#define STATE_EXERCISE_ARMS_CENTER              82
-#define STATE_EXERCISE_ARMS_UP                  83
-#define STATE_EXERCISE_ARMS_WIDE                84
-#define STATE_STOKE_FIREPLACE                   85
-#define STATE_WRITE_AT_DESK                     86
-#define STATE_TYPE_AT_DESK_LEFT_HAND            87
-#define STATE_TYPE_AT_DESK_RIGHT_HAND           88
-#define STATE_PICK_UP_FROM_FLOOR                89
-#define STATE_TYPING_HANDS_DOWN                 90
-#define STATE_TYPING_HANDS_UP                   91
-#define STATE_SITTING_AT_DESK                   92
-#define STATE_SIT_AT_DESK                       92
-
-/* ---- Head animation modes (extra) ------------------------------------ */
-#define HEAD_ANIM_COMPUTER                      5
+/* ---- Head animation modes (see HEAD_ANIM_MODE below for canonical set) */
 
 /* ---- Text color (VDI palette index) ------------------------------------ */
 #define COLOR_black                             1
@@ -141,43 +147,75 @@
 /* Sat/Sun weekday consts (used by check_time_based_actions). */
 #define NEED_SATISFIED                          0
 
-/* ---- Head animation modes / target ------------------------------------ */
-#define HEAD_ANIM_DISABLED              0
-#define HEAD_ANIM_HORIZONTAL_RANGE      12
-#define HEAD_ANIM_WALKING               1
-#define HEAD_ANIM_SHOWER                2
-#define HEAD_ANIM_READING               4
+/* ---- HEAD_ANIM_MODE (dumped from Ghidra) ------------------------------
+   Bit fields inside head_anim_mode (g_hamod):
+     bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
+                 the enum encodes it as value 3 for the "amplitude enabled"
+                 marker; sp_lcha masks with HEAD_MODE_H_AMPLITUDE = 0x07)
+     bit 3       HEAD_ANIM_HORIZONTAL_RANGE (0x08) or 0xC (see sp_lcha)
+     bits 5..6   HEAD_ANIM_VERTICAL_RANGE (0x60)
+     bit 7       HEAD_ANIM_VERTICAL_OVERRIDE (0x80)
+   Composite values (HEAD_ANIM_READING = 0x41, WALKING = 0x42, etc.) mix
+   the bits into ready-made mode selectors. */
+#define HEAD_ANIM_DISABLED              (-1)
+#define HEAD_ANIM_SHOWER                0x02
+#define HEAD_ANIM_HORIZONTAL_AMPLITUDE  0x03
+#define HEAD_ANIM_HORIZONTAL_RANGE      0x0C
+#define HEAD_ANIM_READING               0x41
+#define HEAD_ANIM_WALKING               0x42
+#define HEAD_ANIM_COMPUTER              0x4A
+#define HEAD_ANIM_VERTICAL_RANGE        0x60
+#define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
-/* ---- HOUSE_POS (subset) ----------------------------------------------- */
-#define POS_MID_BEDROOM_WALK            17
-#define POS_TOP_STUDY_DOOR              7
-#define POS_TOP_DANCE_FLOOR             14
-#define POS_MID_BATHROOM_ENTRANCE       25
-#define POS_BTM_KITCHEN_CABINET         34
-#define POS_BTM_DOG_FOOD                43
-#define POS_BTM_FRONT_DOOR              46
-#define POS_TOP_ARMCHAIR                2
-#define POS_MID_BED                     18
-#define POS_MID_TOILET_DOOR             22
-#define POS_BTM_KITCHEN_SINK            36
-#define POS_BTM_WATER_TAP               35
-#define POS_BTM_STOVE                   33
-#define POS_BTM_TABLE_LEFT              37
-#define POS_BTM_TABLE_RIGHT             38
-#define POS_BTM_FRIDGE                  32
-#define POS_BTM_DOG_BOWL                42
-#define POS_MID_SHOWER_DOOR             20
-#define POS_MID_SHOWER_INSIDE           21
-#define POS_MID_BATHROOM_SINK           24
-#define POS_TOP_FILING_CABINET          12
-#define POS_TOP_RECORD_SHELF            13
-#define POS_MID_COUCH                   19
-#define POS_MID_DRESSER                 27
-#define POS_MID_BEDROOM_CLOSET          28
-#define POS_BTM_FIREPLACE_LOGS          45
+/* ---- HOUSE_POS (dumped verbatim from Ghidra HOUSE_POS enum) ----------- */
+#define POS_TOP_LIVING_ROOM              0
+#define POS_TOP_DANCE_FLOOR              1
+#define POS_TOP_ARMCHAIR                 2
+#define POS_TOP_GAME_TABLE               3
+#define POS_TOP_GAME_CHAIR_LEFT          4
+#define POS_TOP_GAME_CHAIR_RIGHT         5
+#define POS_TOP_RECORD_SHELF             6
+#define POS_TOP_STUDY_DOOR               7
+#define POS_TOP_FIREPLACE_LEFT           8
+#define POS_TOP_FIREPLACE_CENTER         9
 #define POS_TOP_DESK_CHAIR              10
-#define POS_TOP_LIVING_ROOM             0
+#define POS_TOP_FIREPLACE_RIGHT         11
+#define POS_TOP_FILING_CABINET          12
+#define POS_TOP_FIREPLACE_HEARTH        13
+#define POS_TOP_GAME_WALK_IN            14
+#define POS_TOP_GAME_WALK_OUT           15
+#define POS_MID_STAIR_LANDING           16
+#define POS_MID_COUCH                   17
+#define POS_MID_BED                     18
+#define POS_MID_BEDROOM_WALK            19
+#define POS_MID_BEDROOM_CLOSET          20
+#define POS_MID_DRESSER                 21
+#define POS_MID_BATHROOM_SINK           22
+#define POS_MID_TOILET_DOOR             23
+#define POS_MID_SHOWER_INSIDE           24
+#define POS_MID_SHOWER_DOOR             25
+#define POS_MID_TOILET                  26
+#define POS_MID_BATHROOM_ENTRANCE       27
+/* 28 unused */
 #define POS_MID_COMPUTER_DESK           29
+#define POS_MID_PIANO                   30
+/* 31 unused */
+/* POS_BTM_STAIR_LANDING = 32, defined below */
+#define POS_BTM_DOG_BOWL                33
+#define POS_BTM_STOVE                   34
+#define POS_BTM_FRIDGE                  35
+#define POS_BTM_KITCHEN_SINK            36
+#define POS_BTM_KITCHEN_CABINET         37
+#define POS_BTM_TABLE_LEFT              38
+#define POS_BTM_TABLE_RIGHT             39
+#define POS_BTM_FRONT_DOOR_INSIDE       40
+#define POS_BTM_WATER_TAP               41
+#define POS_BTM_DINING_AREA             42
+#define POS_BTM_DOG_FOOD                43
+#define POS_BTM_DOG_FOOD_STORE          44
+#define POS_BTM_FIREPLACE_LOGS          45
+#define POS_BTM_FRONT_DOOR              46
+#define POS_BTM_SCREEN_EDGE             47
 
 /* ---- SPRITE_ID (study doors + carried objects) ------------------------ */
 #define SPRITE_DOOR_STUDY_1             0x18
@@ -213,21 +251,30 @@
 #define BOWL_HALF                       1
 #define BOWL_FULL                       2
 
-/* ---- Sound-effect IDs (subset) ---------------------------------------- */
-#define SFX_DOOR_OPEN                   3
-#define SFX_DOOR_CLOSE                  4
-#define SFX_ALARM_CLOCK                 5
-#define SFX_PHONE_RING                  21
-#define SFX_FOOTSTEP_CARPET             10
-#define SFX_FOOTSTEP_WOOD               11
-#define SFX_FOOTSTEP_STAIRS             12
-#define SFX_SNORING                     14
-#define SFX_WATER_RUNNING               15
-#define SFX_TOILET_FLUSH                16
-#define SFX_TOILET_REFILL               17
-#define SFX_TV_CLICK                    18
+/* ---- Sound-effect IDs (dumped from Ghidra SOUND_EFFECT_ID) ------------ */
+#define SFX_FOOTSTEP_STAIRS              0
+#define SFX_FOOTSTEP_CARPET              1
+#define SFX_FOOTSTEP_WOOD                2
+#define SFX_FOOTSTEP_3                   3
+#define SFX_FOOTSTEP_4                   4
+#define SFX_FOOTSTEP_5                   5
+#define SFX_TV_CLICK                     6
+#define SFX_SPEECH                       7
+#define SFX_HEAD_NOD                     8
+#define SFX_GREETING                     9
 #define SFX_CLICK                       10
 #define SFX_TYPEWRITER_KEY              11
+#define SFX_DOORBELL                    12
+#define SFX_DOORBELL_ECHO               13
+#define SFX_DOOR_OPEN                   14
+#define SFX_DOOR_CLOSE                  15
+#define SFX_TOILET_FLUSH                16
+#define SFX_TOILET_REFILL               17
+#define SFX_WATER_RUNNING               18
+#define SFX_WATER_TAP                   19
+#define SFX_ALARM_CLOCK                 20
+#define SFX_PHONE_RING                  21
+#define SFX_SNORING                     22
 
 /* ---- Palette values (12-bit RGB, Atari ST format) --------------------- */
 #define ST_PEACH                        0x743
@@ -279,16 +326,8 @@
 #define FILL_SOLID                      1
 #define VSFPATT            1       /* VDI fill interior=pattern */
 
-/* ---- More SFX IDs --------------------------------------------------- */
-#define SFX_GREETING                    9
-#define SFX_SPEECH                      7
-#define SFX_HEAD_NOD                    8
-#define SFX_WATER_TAP                   13
-#define SFX_DOORBELL                    19
-#define SFX_DOORBELL_ECHO               20
-
 /* Extra HOUSE_POS used by the dog wander logic. */
-#define POS_BTM_STAIR_LANDING           40
+#define POS_BTM_STAIR_LANDING           32      /* Ghidra: 0x20 */
 
 /* ---- Door / furniture state bitfield in lcp.door_states_and_flags ---- */
 #define DSF_FRONT_DOOR                  0x001
