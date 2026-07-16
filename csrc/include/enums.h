@@ -364,6 +364,9 @@
 #define GEMDOS_Fcreate                  0x3C
 #define GEMDOS_Fsfirst                  0x4E
 #define GEMDOS_Fsnext                   0x4F
+#define GEMDOS_Dsetpath                 0x3B    /* set current directory */
+#define BIOS_Setexc                     5       /* install exception vector */
+#define XBIOS_Xbtimer                   31      /* install MFP timer */
 #define GEMDOS_Fgetdta                  0x2F
 #define GEMDOS_Malloc                   0x48
 #define GEMDOS_Mfree                    0x49

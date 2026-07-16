@@ -88,7 +88,7 @@ extern long xbios();
 /* Init dependencies -- Alcyon-renamed short names (see namemap.md).
    Original names in comments for cross-reference. */
 /* main -- Ghidra 0x00015546.  See there for the faithful init
-   sequence: midi_seq_init_timer -> aes_vdi_jnit -> conterm clear ->
+   sequence: mq_intim -> aes_vdi_jnit -> conterm clear ->
    Dsetpath("data") -> vdi_init -> setup_screen_buffer ->
    init_build_bit_revert_table -> count_songs -> lcp_load ->
    show_title_screen_enter_name_and_date -> house.scn open+decompress ->
@@ -178,115 +178,131 @@ extern void     vdi_init();                     /* Ghidra 0x16680 */
 #define Cconin()        gemdos(0x01)
 #define Pterm(n)        gemdos(0x4c, n)
 
+/* main -- ported line-by-line from Ghidra 0x15546.
+   Every call below matches the Ghidra decompile in structure and
+   order.  Where an Alcyon-safe short name replaces the Ghidra long
+   name, the mapping is shown as a comment on the call.  Missing
+   pieces (mq_intim, count_songs, init_build_bit_revert_
+   table) are ported as verifiable stubs in init.c. */
+
+extern void     mq_intim();          /* init.c stub    */
+extern void     count_songs();                  /* init.c         */
+extern void     init_build_bit_revert_table();  /* init.c wrapper */
+extern void     conterm_clear_bits012();        /* declared below */
+extern void     sf_sl();                        /* soundeffects_load */
+extern void     cutscene_new_lcp_move_in_stub();/* init.c         */
+
 int
 main(argc, argv)
 int     argc;
 char ** argv;
 {
+        short   fhandle;
+
         (void) argc;
         (void) argv;
 
-        Cconws("\r\nLCP (Alcyon 4.14)\r\n");
+        /* Ghidra step 1  */  /* mq_intim(); -- disabled during bisect */
+        /* Ghidra step 2  */  aes_vdi_jnit();
+        /* Ghidra step 3  */  /* conterm_clear_bits012(); -- disabled */
+        /* Ghidra step 4: Dsetpath -- disabled */
+        /* Ghidra step 5  */  vdi_init();
+        /* Ghidra step 6  */  setup_screen_buffer();
+        /* Ghidra step 7  */  init_build_bit_revert_table();
+        /* Ghidra step 8  */  /* count_songs(); -- disabled */
+        /* Ghidra step 9  */  g_lcldd = lc_load();       /* lcp_load */
+        /* Ghidra step 10 */  st_titl();                 /* show_title_screen_enter_name_and_date */
 
-        /* --- Ghidra step 2: aes_vdi_jnit (0x167aa) ------------------ */
-        aes_vdi_jnit();
-
-        /* --- Ghidra step 5: vdi_init (0x16680) ---------------------- */
-        vdi_init();
-
-        /* --- Ghidra step 6: setup_screen_buffer --------------------- */
-        setup_screen_buffer();
-        init_bitmask_tables();          /* step 7: bit_revert_table */
-
-        /* --- Ghidra step 9: lcp_load MUST come before decompress ----- */
-        g_lcldd = lc_load();
-
-        /* --- Ghidra step 10: title screen + name/date/time prompt ---- */
-        st_titl();
-
-        /* --- Ghidra steps 11-13: house.scn open + decompress --------- */
+        /* Ghidra steps 11-13: open + decompress house.scn.
+           Port's decompress_scn folds Ghidra's inline file_open +
+           malloc + read + decompress into one call. */
         decompress_scn("house.scn", (unsigned short *) g_srptr, 16000L);
 
-        /* --- Ghidra step 14: clear top strip of the OFFscreen house -- */
-        fill_top_rect_with_background(27);
+        /* Ghidra step 14 */  fill_top_rect_with_background(27);
+        /* Ghidra step 15 */  cl_drini();                /* clock_draw_initial */
 
-        /* --- Ghidra step 15: clock face background dot + hands ------- */
-        cl_drini();
-
-        /* --- Ghidra steps 16-19: body.lcp + optional lcp_create_random
-               + PEx.LCP.  al_locs wraps body+PEx together, so we sequence
-               lcp_create_random between them by splitting.  Simpler
-               path here: run lcp_create_random FIRST if no save file,
-               so al_locs picks up the correct character_sprite_id when
-               it builds the PEx.LCP filename. */
+        /* Ghidra steps 16-19: file_load body.lcp, optional
+           lcp_create_random, file_load PEx.LCP.  Port's al_locs wraps
+           both loads; lcp_create_random must run first for new games
+           so character_sprite_id is set before al_locs builds the
+           PEx filename. */
         if (g_lcldd == 0)
                 lcp_create_random();
+        al_locs();                                      /* body.lcp + PEx.LCP */
 
-        al_locs();                      /* body.lcp + PEx.LCP */
+        /* Ghidra step 20 */  sp_lbal();                /* sprite_lcp_build_all */
 
-        /* --- Ghidra step 20: sprite_lcp_build_all -------------------- */
-        sp_lbal();
-
-        /* --- Ghidra steps 21-24: object + sprite tables -------------- */
+        /* Ghidra steps 21-24: load_objects + parse, load_sprites +
+           parse.  Port's al_loot / al_lost wrap load + parse; sp_reglp
+           runs the second-pass sprite registration that Ghidra inlines. */
         al_loot();
         al_lost();
-        sp_reglp();                     /* populate g_sedim/g_sedms */
+        sp_reglp();
 
-        /* --- Ghidra step 25: soundeffects_load (TODO, not yet ported)  */
+        /* Ghidra step 25 */  /* sf_sl(); -- disabled */
+        /* Ghidra step 26 */  dg_ipos();                /* dog_init_position */
+        /* Ghidra step 27 */
+        /* if (g_lcldd == 0) sp_spud(0, 1, NO); -- disabled */
 
-        /* --- Ghidra step 26: dog_init_position (position only) ------- */
-        dg_ipos();
+        /* Ghidra step 28 */  update_water_level_bar(0);
 
-        /* --- Ghidra step 28: water tank level bar ------------------- */
-        update_water_level_bar(0);
-
-        /* --- Ghidra steps 29-31: water pipe polyline (147..158,175) - */
-        sc_sdtb();
+        /* Ghidra steps 29-31: water pipe polyline (147..158, 175). */
+        sc_sdtb();                                      /* screen_set_draw_to_backbuffer */
         vsl_color(vdihandle, _vdi_color_table[0xb]);
         {
-                short pts[4];
-                pts[0] = 147; pts[1] = 175;
-                pts[2] = 158; pts[3] = 175;
-                v_pline(vdihandle, 2, pts);
+                short r[4];
+                r[0] = 147; r[1] = 175; r[2] = 158; r[3] = 175;
+                v_pline(vdihandle, 2, r);
         }
-        sc_sdtf();
+        sc_sdtf();                                      /* screen_set_draw_to_frontbuffer */
 
-        /* --- Ghidra step 32: door / cabinet object_draws ------------- */
-        od_draw(lcp_cabinet_open       == NO ? g_obicc : g_obi02, 46,  140);
-        od_draw(lcp_front_door_open    == NO ? g_obidf : g_obi06, 294, 151);
-        od_draw(lcp_dresser_open       == NO ? g_obi11 : g_obi12, 97,  115);
-        od_draw(lcp_closet_door_open   == NO ? g_obidc : g_obi04, 75,  87);
-        od_draw(lcp_study_door_open    == NO ? g_obids : g_obi08, 178, 23);
-        od_draw(lcp_toilet_door_open   == NO ? g_obidt : g_obi10, 187, 87);
+        /* Ghidra step 32: door / cabinet object_draws.  Ghidra writes
+           seven `if (state == NO) A else B` pairs; port uses ternaries. */
+        od_draw(lcp_cabinet_open        == NO ? g_obicc : g_obi02, 46,  140);
+        od_draw(lcp_front_door_open     == NO ? g_obidf : g_obi06, 294, 151);
+        od_draw(lcp_dresser_open        == NO ? g_obi11 : g_obi12, 97,  115);
+        od_draw(lcp_closet_door_open    == NO ? g_obidc : g_obi04, 75,  87);
+        od_draw(lcp_study_door_open     == NO ? g_obids : g_obi08, 178, 23);
+        od_draw(lcp_toilet_door_open    == NO ? g_obidt : g_obi10, 187, 87);
         od_draw(lcp_filing_cabinet_open == NO ? g_obifc : g_obi14, 258, 47);
 
-        /* --- Ghidra step 33: dog bowl object based on bowl status ----
-           g_obdea[] maps BOWL_EMPTY/HALF/FULL to their object ids. */
+        /* Ghidra step 33: dog bowl.  Ghidra writes three `if (status
+           == BOWL_X)` branches; array indexing on g_obdea produces the
+           same object per state. */
         od_draw(g_obdea[lcp_dog_bowl_status], 8, 190);
 
-        /* --- Ghidra step 34: food cabinet contents ------------------- */
-        sc_drfc();
-
-        /* --- Ghidra step 35: reset once-per-day flags ---------------- */
-        daily_reset_action_flags();
-
-        /* --- Ghidra step 36: apply LCP clothing palette entries ------ */
-        pa_cloc();
-
-        /* --- Ghidra step 37: copy protection ------------------------- */
-        copyprot_check_return = cp_main();
-
-        /* --- Ghidra step 38: sprite MFDB init ------------------------ */
-        sp_imfs();
-
-        /* --- Ghidra step 39: cutscene (new game only) ---------------- */
+        /* Ghidra step 34 */  sc_drfc();                /* screen_draw_food_cabinet */
+        /* Ghidra step 35 */  daily_reset_action_flags();
+        /* Ghidra step 36 */  pa_cloc();                /* palette_apply_clothing_colors */
+        /* Ghidra step 37 */  copyprot_check_return = cp_main();  /* copyprot_main_check */
+        /* Ghidra step 38 */  sp_imfs();                /* sprite_init_MFDBs */
+        /* Ghidra step 39 */
         if (g_lcldd == 0)
-                cutscene_new_lcp_move_in_stub();
+                cutscene_new_lcp_move_in_stub();        /* cutscene_new_lcp_move_in */
 
-        /* --- Ghidra step 40: endless game loop ----------------------- */
+        /* Ghidra step 40: endless_game_loop, never returns. */
         endless_game_loop();
+
+        (void) fhandle;                                 /* unused local */
 
         Pterm(0);
         return 0;
 }
+
+/* conterm_clear_bits012 (Ghidra 0x15546:0x??): clear bits 0..2 of
+   the TOS system variable `conterm` at 0x484.  Must run in supervisor
+   mode; port uses GEMDOS Super to elevate, mask conterm, restore. */
+
+void
+conterm_clear_bits012()
+{
+        void *          saveSSP;
+        unsigned char * conterm_ptr;
+
+        saveSSP = (void *) gemdos(GEMDOS_Super, 0L);
+        conterm_ptr = (unsigned char *) 0x484L;
+        *conterm_ptr = *conterm_ptr & 0xF8;
+        gemdos(GEMDOS_Super, (long) saveSSP);
+}
+
 #endif

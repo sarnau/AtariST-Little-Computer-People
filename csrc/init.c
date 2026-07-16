@@ -183,6 +183,73 @@ draw_hud_top_strip()
         print_char((short) 'A', (short) 100, (short) 8, (short) COLOR_black);
 }
 
+/* mq_intim (Ghidra 0x11112): install a Timer-A interrupt
+   for the MIDI sequencer.  Real body:
+     midi_tick_prescaler = 100;
+     midi_tick_divider = 4;
+     midi_saved_timer_vector = Bios(Setexc, 0x4d, -1);
+     Xbtimer(0, 5, 0x28, midi_seq_tick_handler);
+   Port stubs this to a no-op because we haven't ported
+   midi_seq_tick_handler yet; the sequencer is guarded by
+   midi_is_playing==NO throughout so nothing calls into it. */
+
+void
+mq_intim()
+{
+        /* TODO: wire real timer install once midi_seq_tick_handler
+           is ported. */
+}
+
+/* count_songs (Ghidra ~0x??): enumerate *.SNG and *.ORG files in the
+   current directory, storing counts in sng_song_file_count /
+   org_song_file_count. */
+
+extern short    sng_song_file_count;
+extern short    org_song_file_count;
+extern long     gemdos();
+
+void
+count_songs()
+{
+        short   result;
+        long    next;
+
+        sng_song_file_count = 0;
+        org_song_file_count = 0;
+        result = (short) gemdos(GEMDOS_Fsfirst, "*.sng", 0L);
+        if (result == 0) {
+                sng_song_file_count = 1;
+                for (;;) {
+                        next = gemdos(GEMDOS_Fsnext);
+                        if (next != 0) break;
+                        sng_song_file_count = sng_song_file_count + 1;
+                }
+        }
+        result = (short) gemdos(GEMDOS_Fsfirst, "*.org", 0L);
+        if (result == 0) {
+                org_song_file_count = 1;
+                for (;;) {
+                        next = gemdos(GEMDOS_Fsnext);
+                        if (next != 0) break;
+                        org_song_file_count = org_song_file_count + 1;
+                }
+        }
+}
+
+/* init_build_bit_revert_table (Ghidra 0x16804): thin wrapper around
+   build_bit_revert_table which fills revert_table[256] with bit-
+   reversed byte values.  Port has revert_table as a static-initialised
+   constant, so this is a no-op semantic-equivalent (the runtime table
+   contents match Ghidra's post-init state).  Kept as a distinct entry
+   point so main() can call it at the exact Ghidra step. */
+
+void
+init_build_bit_revert_table()
+{
+        /* revert_table is already static-init in tables.c.  Ghidra's
+           runtime build produces the same 256 entries.  Nothing to do. */
+}
+
 /* cutscene_new_lcp_move_in_stub: minimal replacement for the doorbell/
    door-open/room-tour cutscene in Ghidra.  We SKIP the tour animation
    but reproduce the exit state so the AI loop starts from valid

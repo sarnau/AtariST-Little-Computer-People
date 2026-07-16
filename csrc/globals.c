@@ -108,7 +108,20 @@ short   g_sfpli          = 0;
 
 BOOL16  g_rbact          = NO;
 char *  midi_song_buffer                = (char *) 0;
-short   org_song_file_count             = 8;
+/* Ghidra sng/org song file counts, set at boot by count_songs().
+   BSS-zero to match Ghidra; port previously had org_song_file_count=8
+   as a guess. */
+short   sng_song_file_count             = 0;
+short   org_song_file_count             = 0;
+/* House scene loader intermediates used by main() during house.scn
+   load.  Ghidra keeps these as BSS globals. */
+short   house_scene_size                = 0;
+void *  scene_data_ptr                  = (void *) 0;
+char    scene_common_data[30];
+/* PEx.LCP filename.  Ghidra pex_lcp_ptr @ 0x2a0f8 points to "pex.lcp"
+   at 0x2a330 and main() mutates index 2 to select the character.
+   Port stores the string as a mutable static char array. */
+char    pex_lcp_ptr[8]                  = "PE0.LCP";
 BOOL16  fire_active_flag                = NO;
 short   fire_duration_countdown         = 0;
 BOOL16  fire_extinguish_flag            = NO;
