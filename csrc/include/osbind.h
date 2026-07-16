@@ -1,103 +1,89 @@
 /*
- * osbind.h -- host stub for Alcyon's <osbind.h>.
+ * osbind.h -- osbind bindings for the port.
  *
- * On the Atari ST, Alcyon C ships an osbind.h with TRAP #13 (BIOS),
- * TRAP #14 (XBIOS), and TRAP #1 (GEMDOS) macros.  Host builds don't
- * have this, so we provide the same names as thin wrappers that stub
- * out the hardware side and forward to plausible host equivalents
- * (e.g. Random -> stdlib rand()).
+ * On the Atari ST, Alcyon C ships an osbind.h with TRAP #1 (GEMDOS),
+ * TRAP #13 (BIOS), and TRAP #14 (XBIOS) macros.  This file mirrors the
+ * subset the port actually uses so we don't need the DK header directly
+ * (which would drag in typedefs that collide with our locally-defined
+ * enums / structs).
  *
- * When building with Alcyon under Hatari, this file is shadowed by
- * the real osbind.h in the Alcyon include path -- do NOT keep any
- * ST-specific behaviour here, only host stand-ins.
+ * Host builds (-DHOST) get separate C functions in savehost.c that
+ * emulate the same call surface through stdio / stdlib.
  */
 
 #ifndef OSBIND_H
 #define OSBIND_H
 
+/* XBIOS trap numbers -- properties of the ABI, not of any shim. */
+#define XBIOS_Setpalette        6
+#define XBIOS_Setscreen         5
+#define XBIOS_Logbase           3
+#define XBIOS_Physbase          2
+#define XBIOS_Random            17
+#define XBIOS_Giaccess          28
+
 #ifdef HOST
 
-#include <stdlib.h>             /* rand(), NULL */
-#include <stdio.h>              /* FILE, fopen, fread, fwrite, fclose */
+#include <stdlib.h>             /* NULL */
 
-/* XBIOS Random() (function 17): returns a 24-bit unsigned random.
-   The stdlib rand() maxes out at RAND_MAX which varies by libc, so we
-   only guarantee the 15 low bits are populated -- rndRng() only
-   consults bits 0..14 anyway. */
-#define Random()        ((long) rand())
+/* Host stubs implemented in savehost.c.  Same names as the target
+   osbind macros so the port source is call-site-identical. */
+extern short    Fopen();
+extern short    Fcreate();
+extern long     Fread();
+extern long     Fwrite();
+extern short    Fclose();
+extern void *   Malloc();
+extern long     Mfree();
+extern void *   Fgetdta();
+extern short    Fsfirst();
+extern short    Fsnext();
+extern short    Cconis();
+extern long     Crawcin();
+extern void *   Super();
+extern short    Dsetpath();
 
-/* GEMDOS trap #1 shim.  Called via the _gemdos(fn, ...) helper the
-   original code uses.  On the host we route Fopen/Fread/Fwrite/Fclose/
-   Fcreate through stdio; unhandled trap numbers become no-ops so a
-   miswritten caller is a compile-time or runtime nuisance, not a crash.
-   The int handle we return is a FILE* cast to short -- fine for the
-   ports we currently need, which don't do handle arithmetic.
-
-   ANSI prototype: K&R default argument promotions turn `short` into
-   `int` on the caller side but leave `long` slots at their full 8-byte
-   width on 64-bit hosts, so mixed short/long args across the ABI
-   without a prototype misalign the register/stack layout.  Prototype
-   at the call site forces the compiler to pass each arg at its
-   declared width. */
-extern long     hst_gem(short fn, long a, long b, long c);
-#define _gemdos hst_gem
-
-/* AES evnt_timer + form_alert stubs. */
+/* AES event / alert stubs. */
 #define evnt_timer(ms, msh)     ((void) 0)
 #define form_alert(def, txt)    (1)
 
-/* XBIOS Giaccess (function 28): read/write YM2149 PSG register.
-   On the host the PSG doesn't exist -- return 0 so audio-reactive
-   code (a_plawr's amp polling) sees silence. */
+/* XBIOS stubs. */
+#define Random()                ((long) rand())
 #define Giaccess(data, reg)     (0L)
-
-/* Palette/screen XBIOS traps.  Host stubs are no-ops (palette /
-   screen buffer manipulation lives in the graphics layer). */
 #define Setpalette(pal)         ((void) (pal))
 #define Setscreen(log,phys,rez) ((void) (log))
 #define Logbase()               ((void *) 0)
+#define Physbase()              ((void *) 0)
+#define Vsync()                 ((void) 0)
+#define Midiws(n, b)            ((void) 0)
+#define Dosound(p)              ((void) (p))
 
-/* Alcyon _xbios(fn, ...) helper used by the 1985 source.  On the host
-   the trap number is used to route to the right macro above.  Only
-   the calls that are actually issued are handled here; anything else
-   returns 0.  This is a compile-time dispatch via ordinary if/else so
-   the compiler folds it into the right XBIOS call at optimisation. */
-#define XBIOS_Setpalette        6
-#define XBIOS_Setscreen         5
-#define XBIOS_Logbase           3
-#define XBIOS_Random            17
-#define XBIOS_Giaccess          28
-
-extern long             hst_xb(short fn, long a, long b, long c);
-#define _xbios          hst_xb
-
-/* VDI (TRAP #2) wrappers.  Under Alcyon C's GEM binding these are C
-   functions that stuff arguments into contrl/intin/ptsin parameter
-   blocks and issue trap #2.  On the host they resolve to no-op K&R
-   stubs in stubs.c -- the sprite pipeline builds its own image
-   buffers, so the graphics wrappers only matter under Hatari. */
-
-/* access(2) is in <unistd.h> on real POSIX but not always visible
-   through <stdio.h>; provide a portable declaration so save.c doesn't
-   need to include <unistd.h> and drag in POSIX-specific decls. */
+/* access(2) is in <unistd.h> on POSIX; declared here so save.c doesn't
+   need to drag POSIX headers in. */
 extern int      access();
 
-/* Everything else surfaces as a compile-time error if a non-random ST
-   call sneaks in during a host build -- caught early rather than
-   silently no-op'd. */
+#else   /* !HOST -- target (Alcyon) build */
+
+/* Alcyon's `gemdos()` (from DK OSBIND.O) is the trap #1 wrapper.
+   Everything below is a thin macro over it, matching the standard
+   OSBIND.H shapes. */
+extern long     gemdos();
+
+#define Fopen(n, m)             ((short) gemdos(0x3D, n, m))
+#define Fcreate(n, a)           ((short) gemdos(0x3C, n, a))
+#define Fread(h, n, b)          ((long)  gemdos(0x3F, h, n, b))
+#define Fwrite(h, n, b)         ((long)  gemdos(0x40, h, n, b))
+#define Fclose(h)               ((short) gemdos(0x3E, h))
+#define Malloc(sz)              ((void *) gemdos(0x48, (long)(sz)))
+#define Mfree(p)                ((long)  gemdos(0x49, (long)(p)))
+#define Fgetdta()               ((void *) gemdos(0x2F))
+#define Fsfirst(p, a)           ((short) gemdos(0x4E, p, a))
+#define Fsnext()                ((short) gemdos(0x4F))
+#define Cconis()                ((short) gemdos(0x0B))
+#define Crawcin()               ((long)  gemdos(0x07))
+#define Super(ssp)              ((void *) gemdos(0x20, (long)(ssp)))
+#define Dsetpath(p)             ((short) gemdos(0x3B, p))
 
 #endif  /* HOST */
-
-/* XBIOS trap numbers -- true across host and target since they're
-   properties of the ST XBIOS calling convention, not of our host shim.
-   Declared outside the HOST block so target builds (and non-HOST
-   subsystems like midi_seq.c) can reference them. */
-#ifndef XBIOS_Setpalette
-#define XBIOS_Setpalette        6
-#define XBIOS_Setscreen         5
-#define XBIOS_Logbase           3
-#define XBIOS_Random            17
-#define XBIOS_Giaccess          28
-#endif
 
 #endif  /* OSBIND_H */

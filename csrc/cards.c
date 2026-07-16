@@ -75,7 +75,7 @@ pk_ldCrd()
 
         /* Standard face-down back at slot 52. */
         fr_read(fhnd, 0xc0L, crd_dat + 0x1380);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
 
         /* Synthesize the highlight overlay at slot 53: a 4-plane
            pattern with plane 0 blank, plane 1 blank, planes 2 and 3

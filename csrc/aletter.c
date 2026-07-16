@@ -383,7 +383,7 @@ a_writl()
         fillTopR(0x1b);
 
         /* Allocate the letter template buffer -- 0x2900 bytes. */
-        g_lttx = (char *) _gemdos(GEMDOS_Malloc, 0x2900L, 0L, 0L);
+        g_lttx = (char *) Malloc(0x2900L);
         if (g_lttx == (char *) 0)
                 er_nomem();
         fl_ltpl();
@@ -476,7 +476,7 @@ a_writl()
         tx_sctm        = 0;
         g_cdibp = 0;
         no_keyin   = NO;
-        _gemdos(GEMDOS_Mfree, (long) g_lttx, 0L, 0L);
+        Mfree(g_lttx);
 
         g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
         g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;

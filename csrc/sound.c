@@ -66,9 +66,9 @@ long    duration;
 void
 sf_so()
 {
-        _xbios(XBIOS_Giaccess, 0L, 0x88L, 0L);
-        _xbios(XBIOS_Giaccess, 0L, 0x89L, 0L);
-        _xbios(XBIOS_Giaccess, 0L, 0x8aL, 0L);
+        Giaccess(0L, 0x88L);
+        Giaccess(0L, 0x89L);
+        Giaccess(0L, 0x8aL);
         g_sfdos  = 0xff;
         g_sfdoc = 0;
         g_sfplf    = NO;
@@ -171,32 +171,21 @@ sf_sl()
                 size = ((short) sizebuf[0] << 8) | sizebuf[1];
                 if (size == 0)
                         break;
-                block = (short *) _gemdos(GEMDOS_Malloc,
-                                          (long) (size + 4), 0L, 0L);
+                block = (short *) Malloc((long) (size + 4));
                 mi_ntLp[index] = (unsigned char *) block;
                 if (block == (short *) 0)
                         er_nomem();
                 *block = size;
                 fr_read(fhandle, (long) size, block + 1);
         }
-        _gemdos(GEMDOS_Fclose, fhandle, 0L, 0L);
+        Fclose(fhandle);
 }
-
-/* DTA layout matches aleisure.c's local typedef; kept lightweight
-   here so we don't have to pull the whole file-directory abstraction in. */
-struct DTA_hdr {
-        char    _reserved[21];
-        char    d_attrib;
-        long    d_time;
-        long    d_length;
-        char    d_fname[14];
-};
 
 void
 sgPlay(filename)
 char *  filename;
 {
-        struct DTA_hdr *dta_ptr;
+        DTA *   dta_ptr;
         short           fhnd;
         unsigned char   temp[10];
 
@@ -209,14 +198,13 @@ char *  filename;
                         ;
         }
         if (mi_sbuf != (char *) 0) {
-                _gemdos(GEMDOS_Mfree, (long) mi_sbuf, 0L, 0L);
+                Mfree(mi_sbuf);
                 mi_sbuf = (char *) 0;
         }
 
-        _gemdos(GEMDOS_Fsfirst, (long) filename, 0L, 0L);
-        dta_ptr = (struct DTA_hdr *) _gemdos(GEMDOS_Fgetdta, 0L, 0L, 0L);
-        mi_sbuf = (char *) _gemdos(GEMDOS_Malloc,
-                                            dta_ptr->d_length, 0L, 0L);
+        Fsfirst(filename, 0L);
+        dta_ptr = (DTA *) Fgetdta();
+        mi_sbuf = (char *) Malloc(dta_ptr->d_length);
         if (mi_sbuf == (char *) 0)
                 er_nomem();
 
@@ -224,7 +212,7 @@ char *  filename;
         if (fhnd >= 0) {
                 fr_read(fhnd, 10L, temp);
                 fr_read(fhnd, 20000L, mi_sbuf);
-                _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+                Fclose(fhnd);
         }
         mq_inis(mi_sbuf, g_momap);
 }

@@ -208,7 +208,7 @@ void *  g_dscp             = (void *) 0;
    Entries 0..15 map to the 16 screen colours in low-res mode.  Values
    dumped from the 1985 data segment at Ghidra 0x29B44 (via
    ghidra_scripts/DumpPalette.java).  aes_init loads this via
-   _xbios(XBIOS_Setpalette,main_pal) at boot -- there is no
+   Setpalette(main_pal) at boot -- there is no
    later runtime palette rewrite from this table; slot 0 is the
    background (black), slot 14 white, etc.  pa_cloc overwrites slots
    1 and 2 from the primary/secondary clothing tables; slot 6 is
@@ -501,7 +501,7 @@ short   g_ptanf              = 0;
 short   last_hz                      = 0;
 long    last_vbc                    = 0;
 /* sv_phb: TOS's original Physbase, captured once at boot by
-   aes_init via _xbios(XBIOS_Physbase).  BSS-zero to match Ghidra's
+   aes_init via Physbase().  BSS-zero to match Ghidra's
    binary (the port previously initialised it to 0x28000L which put it
    in .data with a bogus fallback -- aes_init runs early so the
    fallback was never read, but matching Ghidra's memory layout keeps

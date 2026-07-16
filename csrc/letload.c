@@ -73,9 +73,7 @@ short           outsize;
                    host endian; on the ST the assembly is a no-op. */
                 fsize = ((short) sizebuf[0] << 8) | sizebuf[1];
         }
-        fbuffer = (unsigned char *) _gemdos(GEMDOS_Malloc,
-                                            (long) (fsize - 0x11),
-                                            0L, 0L);
+        fbuffer = (unsigned char *) Malloc((long) (fsize - 0x11));
         fbuffer_orig = fbuffer;
         if (fbuffer == (unsigned char *) 0)
                 er_nomem();
@@ -116,8 +114,8 @@ short           outsize;
                 out_buf = out_buf + 1;
         }
 
-        _gemdos(GEMDOS_Fclose, filehandle,    0L, 0L);
-        _gemdos(GEMDOS_Mfree,  (long) fbuffer_orig,  0L, 0L);
+        Fclose(filehandle);
+        Mfree(fbuffer_orig);
 }
 
 /* fl_ltpl: decompress LETTER.TXT into

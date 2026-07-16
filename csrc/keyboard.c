@@ -60,11 +60,11 @@ getKey()
         short   ret_key;
         short   scancode;
 
-        keycode = _gemdos(GEMDOS_Cconis, 0L, 0L, 0L);
+        keycode = Cconis();
         if (keycode == 0)
                 return KEY_NONE;
 
-        keycode = _gemdos(GEMDOS_Crawcin, 0L, 0L, 0L);
+        keycode = Crawcin();
         ret_key = (short) (keycode & 0xff);
         if (ret_key != 0)
                 return ret_key;

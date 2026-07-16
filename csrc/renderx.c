@@ -64,7 +64,7 @@ pa_cloc()
 
         main_pal[1] = g_clcop[index];
         main_pal[2] = g_clcos[index];
-        _xbios(XBIOS_Setpalette, (long) main_pal, 0L, 0L);
+        Setpalette((long) main_pal);
 }
 
 /* pa_skic: same shape, 8-entry skin table.
@@ -81,7 +81,7 @@ pa_skic()
 
         main_pal[1] = skin_pal[index];
         main_pal[2] = skin_pal[index];
-        _xbios(XBIOS_Setpalette, (long) main_pal, 0L, 0L);
+        Setpalette((long) main_pal);
 }
 
 /* lcp_upal: refresh the sickness tint at palette
@@ -97,7 +97,7 @@ lcp_upal()
                 main_pal[6] = ST_PEACH;
         else
                 main_pal[6] = ST_SICK_GREEN;
-        _xbios(XBIOS_Setpalette, (long) main_pal, 0L, 0L);
+        Setpalette((long) main_pal);
 }
 
 /* td_line: draw the 5-line rabbit-ear antenna on top of
@@ -177,14 +177,13 @@ short   color;
         str[0] = (char) ch;
         str[1] = 0;
 
-        saved_log = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) g_dscp,
-               -1L, -1L);
+        saved_log = (void *) Logbase();
+        Setscreen((long) g_dscp, -1L, -1L);
         vstCol(vdihnd, vdi_colt[color]);
         vswrMd(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);
         vswrMd(vdihnd, MD_REPLACE);
-        _xbios(XBIOS_Setscreen, (long) saved_log, -1L, -1L);
+        Setscreen((long) saved_log, -1L, -1L);
 }
 
 /* rp_anim: sweep the needle back and forth from

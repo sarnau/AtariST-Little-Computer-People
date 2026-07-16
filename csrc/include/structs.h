@@ -142,4 +142,18 @@ typedef struct {
         short   y2;
 } RECT16;
 
+/* DTA -- GEMDOS Disk Transfer Address, the record Fsfirst / Fsnext
+   write to and Fgetdta returns.  Matches the standard TOS/Alcyon
+   layout (see ~/hatari-c/TOOLS/INCLUDE/ostruct.h `_DTA`).  Total 44
+   bytes.  Callers here read `d_length` (song file loader) and
+   `d_fname` (song enumeration). */
+typedef struct {
+        char    d_reserved[21];         /* reserved for GEMDOS */
+        char    d_attrib;               /* file attributes */
+        short   d_time;                 /* packed time */
+        short   d_date;                 /* packed date */
+        long    d_length;               /* file size */
+        char    d_fname[14];            /* filename (8.3 uppercase) */
+} DTA;
+
 #endif  /* STRUCTS_H */

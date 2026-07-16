@@ -17,6 +17,7 @@
 
 #include "types.h"
 #include "enums.h"
+#include <osbind.h>
 
 /* gameLoop definition (gated back IN for both host and
    Alcyon builds).  main() does NOT call it yet -- we're bisecting
@@ -205,7 +206,7 @@ char ** argv;
         /* Ghidra step 1  */  mq_intim();
         /* Ghidra step 2  */  aes_init();
         /* Ghidra step 3  */  ct_clrB();
-        /* Ghidra step 4  */  gemdos(GEMDOS_Dsetpath, "data");
+        /* Ghidra step 4  */  Dsetpath("data");
         /* Ghidra step 5  */  vdi_init();
         /* Ghidra step 6  */  stpScrB();
         /* Ghidra step 7  */  initBRev();
@@ -239,7 +240,7 @@ char ** argv;
         al_lost();
         sp_reglp();
 
-        /* Ghidra step 25 */  sf_sl();                  /* soundeffects_load */
+        /* Ghidra step 25 */  /* sf_sl(); -- disabled to bisect red-screen crash */
         /* Ghidra step 26 */  dg_ipos();                /* dog_init_position */
         /* Ghidra step 27 */
         /* if (g_lcldd == 0) sp_spud(0, 1, NO); -- disabled */
@@ -299,10 +300,10 @@ ct_clrB()
         void *          saveSSP;
         unsigned char * conterm_ptr;
 
-        saveSSP = (void *) gemdos(GEMDOS_Super, 0L);
+        saveSSP = (void *) Super(0L);
         conterm_ptr = (unsigned char *) 0x484L;
         *conterm_ptr = *conterm_ptr & 0xF8;
-        gemdos(GEMDOS_Super, (long) saveSSP);
+        Super(saveSSP);
 }
 
 #endif

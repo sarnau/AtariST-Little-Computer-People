@@ -15,7 +15,7 @@
  *      that fires from the ST's 200 Hz timer.
  *
  *   3. XBIOS/BIOS:  Midiws (send raw MIDI bytes) and Giaccess (PSG
- *      register write).  Both already wired through hst_xb.
+ *      register write).  Both routed via _xbios in osbind.h.
  *
  * File-format provenance: .SNG and .ORG files are direct exports from
  * Activision Music Studio 2.0 (published 1986, Ed Bogas / Audio Light).
@@ -600,9 +600,7 @@ short           midi_ch;
                                 midiEvS = midiEvS - 1;
                         }
                 } else {
-                        _xbios(XBIOS_Midiws,
-                               (long) (midiEvS - 1),
-                               (long) midiEvP, 0L);
+                        Midiws((long) (midiEvS - 1), (long) midiEvP);
                 }
                 saved_ptr[1] = saved_note;
         }
@@ -687,15 +685,11 @@ short           midi_ch;
                 } else {
                         long    mixer_prev;
                         long    combined;
-                        _xbios(XBIOS_Giaccess,
-                               (long) (psg_freq[freq_index] / 0x3c),
-                               0x86L, 0L);
-                        mixer_prev = _xbios(XBIOS_Giaccess, 0L, 7L, 0L);
+                        Giaccess((long) (psg_freq[freq_index] / 0x3c), 0x86L);
+                        mixer_prev = Giaccess(0L, 7L);
                         combined = (long) mixer_bits |
                                    ((long) (noise_mask | 0xc0) & mixer_prev);
-                        _xbios(XBIOS_Giaccess,
-                               (long) (short) (combined >> 16),
-                               (long) (short) combined, 0L);
+                        Giaccess((long) (short) (combined >> 16), (long) (short) combined);
                 }
         }
 
@@ -712,12 +706,8 @@ short           midi_ch;
                         psg_wr((char) period_hi_nibble,
                                            (char) (ret + 1));
                 } else {
-                        _xbios(XBIOS_Giaccess,
-                               (long) (period & 0xff),
-                               (long) (ret + 0x80), 0L);
-                        _xbios(XBIOS_Giaccess,
-                               (long) period_hi_nibble,
-                               (long) (ret + 0x81), 0L);
+                        Giaccess((long) (period & 0xff), (long) (ret + 0x80));
+                        Giaccess((long) period_hi_nibble, (long) (ret + 0x81));
                 }
         }
 

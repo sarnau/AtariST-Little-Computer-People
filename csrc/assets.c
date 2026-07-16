@@ -77,7 +77,7 @@ ldObj()
 
         fhnd = fOpen("objects", 0);
         fr_read(fhnd, 14000L, obj_file);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
 }
 
 /* ldSpr: read the 14000-byte SPRITES file into spr_file[].
@@ -90,7 +90,7 @@ ldSpr()
 
         fhnd = fOpen("sprites", 0);
         fr_read(fhnd, 14000L, spr_file);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
 }
 
 /* Parse a sequence-of-records buffer (OBJECTS or SPRITES format) into
@@ -201,7 +201,7 @@ long            max_b;
         if (total > max_b)
                 total = max_b;
         fr_read(fhnd, total, dest_buf);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
         return count;
 }
 
@@ -322,8 +322,7 @@ long            dst_wds;
         }
 
         body_size = body_size - 32;
-        fbuffer = (unsigned char *) _gemdos(GEMDOS_Malloc,
-                                            body_size, 0L, 0L);
+        fbuffer = (unsigned char *) Malloc(body_size);
         if (fbuffer == (unsigned char *) 0)
                 er_nomem();
         fr_read(filehandle, body_size, fbuffer);
@@ -372,8 +371,8 @@ long            dst_wds;
                         }
                 }
         }
-        _gemdos(GEMDOS_Fclose, filehandle,     0L, 0L);
-        _gemdos(GEMDOS_Mfree,  (long) fbuffer, 0L, 0L);
+        Fclose(filehandle);
+        Mfree(fbuffer);
 }
 
 /* al_loan: read the NAMES text file into a caller-provided
@@ -391,6 +390,6 @@ long            max_b;
 
         fhnd = fOpen("names", 0);
         fr_read(fhnd, max_b, dest_buf);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
         return max_b;
 }

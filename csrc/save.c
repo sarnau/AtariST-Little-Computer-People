@@ -83,7 +83,7 @@ short   rwmode;
 
         retry = 0;
         for (;;) {
-                fhandle = _gemdos(GEMDOS_Fopen, (long) filename, rwmode, 0L);
+                fhandle = Fopen(filename, rwmode);
                 if (fhandle >= 0)
                         return fhandle;
                 retry = retry + 1;
@@ -114,12 +114,12 @@ char *  filename;
                 return;
 
         for (;;) {
-                iVar1 = _gemdos(GEMDOS_Fcreate, (long) filename, 0L, 0L);
+                iVar1 = Fcreate(filename, 0L);
                 if (iVar1 >= 0)
                         break;
                 er_write();
         }
-        _gemdos(GEMDOS_Fclose, iVar1, 0L, 0L);
+        Fclose(iVar1);
 }
 
 /* fr_read: GEMDOS Fread with retry-then-alert error handling.  After
@@ -145,7 +145,7 @@ void *  buffer;
                    the trap read handle = 0 (the high word of the long)
                    and every file was silently being read from stdin
                    with a bogus (huge) count. */
-                err = _gemdos(GEMDOS_Fread, fhnd, count, (long) buffer);
+                err = Fread(fhnd, count, buffer);
                 if (err >= 0)
                         return;
                 retry = retry + 1;
@@ -165,7 +165,7 @@ void *  buffer;
        file_read(fhnd, 2, &temp);
        file_read(fhnd, 2, &size);
        file_read(fhnd, size, buffer);
-       _gemdos(GEMDOS_Fclose, fhnd);
+       Fclose(fhnd);
    addr: fLoad() */
 
 void
@@ -181,7 +181,7 @@ void *  buffer;
         fr_read(fhnd, 2L, &temp);
         fr_read(fhnd, 2L, &size);
         fr_read(fhnd, (long) size, buffer);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
 }
 
 /* lcp_save: create + open + write + close a file, retrying on every
@@ -203,21 +203,20 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
-                filehandle = _gemdos(GEMDOS_Fopen, (long) filename, 1L, 0L);
+                filehandle = Fopen(filename, 1L);
                 if (filehandle >= 0)
                         break;
                 er_write();
         }
 
         for (;;) {
-                lVar1 = _gemdos(GEMDOS_Fwrite, filehandle,
-                                (long) size, (long) addr);
+                lVar1 = Fwrite(filehandle, (long) size, addr);
                 if (lVar1 == (long) size)
                         break;
                 er_write();
         }
 
-        _gemdos(GEMDOS_Fclose, filehandle, 0L, 0L);
+        Fclose(filehandle);
 }
 
 /* lc_load: read 128 bytes from "hyber" into the PLAYER struct, unpack
@@ -232,12 +231,12 @@ lc_load()
 {
         short   fhnd;
 
-        fhnd = _gemdos(GEMDOS_Fopen, (long) "hyber", 0L, 0L);
+        fhnd = Fopen("hyber", 0L);
         if (fhnd < 0)
                 return 0;
 
         fr_read(fhnd, 0x80L, &lcp);
-        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        Fclose(fhnd);
 
         lcp_watr         = lcp.water_level;
         lcp_frdO     = lcp.door_states_and_flags & DSF_FRONT_DOOR;

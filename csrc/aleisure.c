@@ -93,19 +93,11 @@ extern void     mq_inis();
 extern void     pa_cloc();
 extern void     pa_skic();
 extern void     wkFrDr();
-/* hst_gem declared via _gemdos macro in osbind.h */
 extern char     in_str[];         /* not used yet, letter subsystem */
 extern void     lcp_std();
 
 /* Ghidra references. */
 /* g_momap declared in globals.h */
-
-/* DTA (Disk Transfer Address) layout used by GEMDOS Fsfirst/Fsnext.
-   Only d_fname is read by the caller; the rest is padded. */
-typedef struct {
-        char    _reserved[30];
-        char    d_fname[14];
-} DTA;
 
 /* a_lists: pick a random .sng file and start it playing.
    Uses lcp_food as a modulo index (yes, it's a bit hacky; the
@@ -143,10 +135,10 @@ a_lists()
         lcp_recP = YES;
 
         index = rndRng(0, lcp_food - 1) + 1;
-        _gemdos(GEMDOS_Fsfirst, (long) "*.sng", 0L, 0L);
+        Fsfirst("*.sng", 0L);
         while ((index = index - 1) != 0)
-                _gemdos(GEMDOS_Fsnext, 0L, 0L, 0L);
-        dta_ptr = (DTA *) _gemdos(GEMDOS_Fgetdta, 0L, 0L, 0L);
+                Fsnext();
+        dta_ptr = (DTA *) Fgetdta();
         filename = dta_ptr->d_fname;
         for (i = 0; filename[i] != '.'; i = i + 1)
                 ;
@@ -184,7 +176,7 @@ a_playp()
         li_loor();
         lcp_recP = NO;
         if (mi_sbuf != (char *) 0) {
-                _gemdos(GEMDOS_Mfree, (long) mi_sbuf, 0L, 0L);
+                Mfree(mi_sbuf);
                 mi_sbuf = (char *) 0;
         }
 }
@@ -248,10 +240,10 @@ a_plawr()
         gameTick(1);
 
         i = rndRng(1, org_cnt);
-        _gemdos(GEMDOS_Fsfirst, (long) "*.org", 0L, 0L);
+        Fsfirst("*.org", 0L);
         while ((i = i - 1) != 0)
-                _gemdos(GEMDOS_Fsnext, 0L, 0L, 0L);
-        dta_ptr = (DTA *) _gemdos(GEMDOS_Fgetdta, 0L, 0L, 0L);
+                Fsnext();
+        dta_ptr = (DTA *) Fgetdta();
         filename = dta_ptr->d_fname;
         for (i = 0; filename[i] != '.'; i = i + 1)
                 ;
@@ -295,7 +287,7 @@ a_plawr()
         gameTick(0);
 
         if (mi_sbuf != (char *) 0) {
-                _gemdos(GEMDOS_Mfree, (long) mi_sbuf, 0L, 0L);
+                Mfree(mi_sbuf);
                 mi_sbuf = (char *) 0;
         }
         g_rbact = NO;

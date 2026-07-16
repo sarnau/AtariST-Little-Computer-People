@@ -94,10 +94,10 @@ extern void     sp_draw();
 
 /* Read the 200 Hz clock via GEMDOS Super mode.  Matches Ghidra's
    screen_render_8hz shape:
-       saveSSP = _gemdos(Super, 0);
+       saveSSP = Super(0);
        save_hz200 = _hz_200._2_2_;   // low word of _hz_200 (long)
        save_vbclock = _vbclock;
-       _gemdos(Super, saveSSP);
+       Super(saveSSP);
    _hz_200 lives at absolute address $04BA in TOS's low-memory system
    variables (populated by the TOS timer IRQ, no game-side handler
    needed); _vbclock lives at $0462 and is bumped by TOS's VBL IRQ.
@@ -109,9 +109,9 @@ rd_hz()
         void *  saveSSP;
         long    v;
 
-        saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
+        saveSSP = (void *) Super(0L);
         v = *((long *) 0x04BAL);
-        _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
+        Super(saveSSP);
         return (short) (v & 0xFFFFL);
 }
 
@@ -121,9 +121,9 @@ rd_vbc()
         void *  saveSSP;
         long    v;
 
-        saveSSP = (void *) _gemdos(GEMDOS_Super, 0L, 0L, 0L);
+        saveSSP = (void *) Super(0L);
         v = *((long *) 0x0462L);
-        _gemdos(GEMDOS_Super, (long) saveSSP, 0L, 0L);
+        Super(saveSSP);
         return v;
 }
 
@@ -277,9 +277,8 @@ sc_ren8()
         }
         /* --- Page flip --- */
         cur_mf = &g_srmfd;
-        _xbios(XBIOS_Vsync, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen,
-               -1L, (long) cur_mf->fd_addr, -1L);
+        Vsync();
+        Setscreen(-1L, (long) cur_mf->fd_addr, -1L);
 
         if (g_sfacf != NO) {
                 sf_irqp();

@@ -75,8 +75,8 @@ short   color;
 void
 sc_sdtb()
 {
-        g_srlgb = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) g_srptr, -1L, -1L);
+        g_srlgb = (void *) Logbase();
+        Setscreen((long) g_srptr, -1L, -1L);
         vswrMd(vdihnd, MD_REPLACE);
         vsfInt(vdihnd, VSFPATT);
         vsfSty(vdihnd, FILL_SOLID);
@@ -90,7 +90,7 @@ sc_sdtb()
 void
 sc_sdtf()
 {
-        _xbios(XBIOS_Setscreen, (long) g_srlgb, -1L, -1L);
+        Setscreen((long) g_srlgb, -1L, -1L);
 }
 
 /* sc_firw: paint one row (160 bytes = 80 words = 20
@@ -176,8 +176,8 @@ short                   row;
 void
 initVdi()
 {
-        sv_lgb = (void *) _xbios(XBIOS_Logbase, 0L, 0L, 0L);
-        _xbios(XBIOS_Setscreen, (long) g_dscp, -1L, -1L);
+        sv_lgb = (void *) Logbase();
+        Setscreen((long) g_dscp, -1L, -1L);
         vswrMd(vdihnd, MD_REPLACE);
         vsfInt(vdihnd, VSFPATT);
         vsfSty(vdihnd, FILL_SOLID);
@@ -190,7 +190,7 @@ initVdi()
 void
 exitVdi()
 {
-        _xbios(XBIOS_Setscreen, (long) sv_lgb, -1L, -1L);
+        Setscreen((long) sv_lgb, -1L, -1L);
 }
 
 /* drwPixel: single-pixel plot via a degenerate VDI polyline where
@@ -334,8 +334,8 @@ aes_init()
         appl_init();
         vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
                                  &gr_hwbox,  &gr_hhbox);
-        _xbios(XBIOS_Setpalette, (long) main_pal, 0L, 0L);
-        sv_phb = (void *) _xbios(2, 0L, 0L, 0L);  /* XBIOS Physbase */
+        Setpalette((long) main_pal);
+        sv_phb = (void *) Physbase();  /* XBIOS Physbase */
 }
 
 /* vdi_init (Ghidra 0x16680): open the virtual VDI workstation and

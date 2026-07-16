@@ -14,6 +14,7 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
+#include <osbind.h>
 
 extern PLAYER   lcp;
 extern short    lcp_watr;
@@ -216,20 +217,20 @@ cntSong()
 
         sng_cnt = 0;
         org_cnt = 0;
-        result = (short) gemdos(GEMDOS_Fsfirst, "*.sng", 0L);
+        result = (short) Fsfirst("*.sng", 0L);
         if (result == 0) {
                 sng_cnt = 1;
                 for (;;) {
-                        next = gemdos(GEMDOS_Fsnext);
+                        next = Fsnext();
                         if (next != 0) break;
                         sng_cnt = sng_cnt + 1;
                 }
         }
-        result = (short) gemdos(GEMDOS_Fsfirst, "*.org", 0L);
+        result = (short) Fsfirst("*.org", 0L);
         if (result == 0) {
                 org_cnt = 1;
                 for (;;) {
-                        next = gemdos(GEMDOS_Fsnext);
+                        next = Fsnext();
                         if (next != 0) break;
                         org_cnt = org_cnt + 1;
                 }

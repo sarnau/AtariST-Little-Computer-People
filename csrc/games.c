@@ -129,7 +129,7 @@ void *  buffer;
         tx_sctm      = 0;
         no_keyin = NO;
         if (buffer != (void *) 0)
-                _gemdos(GEMDOS_Mfree, (long) buffer, 0L, 0L);
+                Mfree(buffer);
 }
 
 /* Poll-loop skeleton: tick + read key + return true if user quit. */
@@ -156,7 +156,7 @@ void
 ag_main()
 {
         g_agwb =
-                (char *) _gemdos(GEMDOS_Malloc, 10000L, 0L, 0L);
+                (char *) Malloc(10000L);
         if (g_agwb == (char *) 0)
                 er_nomem();
         fr_reac("words",
@@ -185,7 +185,7 @@ wp_main()
         short   line_index;
 
         g_wpdb =
-                (char *) _gemdos(GEMDOS_Malloc, 2000L, 0L, 0L);
+                (char *) Malloc(2000L);
         if (g_wpdb == (char *) 0)
                 er_nomem();
 
@@ -221,7 +221,7 @@ wp_main()
 void
 pk_main()
 {
-        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
+        crd_dat = (short *) Malloc(10400L);
         if (crd_dat == (short *) 0)
                 er_nomem();
         pk_ldCrd();
@@ -256,7 +256,7 @@ pk_wrMn()
         short   j;
         short   k;
 
-        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
+        crd_dat = (short *) Malloc(10400L);
         if (crd_dat == (short *) 0)
                 er_nomem();
         pk_ldCrd();
@@ -307,7 +307,7 @@ pk_wrMn()
 void
 pk_bjMn()
 {
-        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 0x28a0L, 0L, 0L);
+        crd_dat = (short *) Malloc(0x28a0L);
         if (crd_dat == (short *) 0)
                 er_nomem();
         pk_ldCrd();
