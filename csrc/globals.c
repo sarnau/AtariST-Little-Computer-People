@@ -206,14 +206,12 @@ short   main_colorpalette[16]           = {
         0x555, 0x007, 0x777, 0x410
 };
 
-/* g_clcop / g_clcos (Ghidra clothing_color_primary / _secondary):
-   16 pairs of primary + secondary 12-bit RGB shirt colours indexed
-   by CLOTHING_COLOR_ID.  Ported from Ghidra 0x2A2E4 / 0x2A2C4 --
-   the earlier port sized these correctly but the values were
-   observed-from-screenshots guesses (bright primaries + darker
-   secondaries) that don't match the real palette.  The actual 1985
-   values include several duplicate blue primaries (0x006 for slots
-   0..4) so a random clothing pick usually gives the same blue shirt. */
+/* g_clcop / g_clcos (Ghidra clothing_color_primary @ 0x2A2E4 and
+   clothing_color_secondary @ 0x2A2C4): 16 pairs of primary +
+   secondary 12-bit RGB shirt colours indexed by CLOTHING_COLOR_ID.
+   Values dumped verbatim from Ghidra -- note the five duplicate blue
+   primaries (0x006 for slots 0..4) which bias random clothing picks
+   toward the same blue shirt. */
 short   g_clcop[16] = {
         0x006, 0x006, 0x006, 0x006,
         0x006, 0x676, 0x676, 0x500,
@@ -227,13 +225,10 @@ short   g_clcos[16] = {
         0x662, 0x406, 0x156, 0x514
 };
 
-/* skin_color_palette[8]: SKIN_COLOR_ID (0..7).  ST 12-bit RGB.
-   8 skin tones from lightest (0x765 = pale peach) through medium
-   (0x543, 0x432) to darkest (0x321 = deep umber).  Chosen to give a
-   plausible range of resident complexions; exact values pending a
-   Ghidra data-segment dump.  Applied to palette slot 6 via
-   lcp_update_palette_colors and swapped in during the closet-change
-   sequence in a_opcbc. */
+/* skin_color_palette[8] (Ghidra @ 0x2A304): SKIN_COLOR_ID (0..7),
+   ST 12-bit RGB.  Values dumped verbatim from the data segment.
+   Applied to palette slot 6 via lcp_update_palette_colors and
+   swapped in during the closet-change sequence in a_opcbc. */
 short   skin_color_palette[8] = {
         0x512, 0x742, 0x567, 0x762,
         0x745, 0x145, 0x160, 0x565

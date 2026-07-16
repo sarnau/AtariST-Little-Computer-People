@@ -100,11 +100,18 @@ short   g_atrel[16] = {
 };
 
 /* activity_schedule_table[3][8]: 8-entry rows of table-index picks
-   (0=active, 1=moderate, 2=relaxed) keyed by (activity_level, phase).
-   3 rows × 8 columns; row-major so index is [row][level]. */
-static short    _schedule_row_0[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-static short    _schedule_row_1[8] = { 0, 0, 1, 1, 1, 1, 2, 2 };
-static short    _schedule_row_2[8] = { 1, 1, 1, 2, 2, 2, 2, 2 };
+   (0=active, 1=moderate, 2=relaxed) keyed by (phase, activity_level).
+   Dumped verbatim from Ghidra 0x2a230 -- previous port values were
+   placeholders (row 0 all-zeros, row 1/2 monotonic) which forced the
+   AI dispatcher to always pick bucket 0 in the morning slot.
+
+   The 1985 assembler at 0x16260-0x16274 indexes as
+     table_pick = *(activity_schedule_table + hours_bucket*16 + activity_level*2)
+   where hours_bucket = (hours_since_wake / 2) % 3 and activity_level
+   is the LCP's personality-derived 0..7 pace. */
+static short    _schedule_row_0[8] = { 0, 0, 2, 2, 1, 1, 0, 1 };
+static short    _schedule_row_1[8] = { 2, 1, 0, 1, 2, 0, 2, 0 };
+static short    _schedule_row_2[8] = { 1, 2, 1, 0, 0, 2, 1, 2 };
 short *         activity_schedule_table[3] = {
         _schedule_row_0, _schedule_row_1, _schedule_row_2
 };
