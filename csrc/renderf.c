@@ -45,6 +45,7 @@ extern BOOL16   g_sfacf;
 extern short    last_hz200;
 extern long     last_vbclock;
 extern void *   save_physbase;
+extern unsigned char    scrbufA[];
 extern MFDB     g_srmfd;
 extern MFDB     MFDB_screen_ptr;        /* alias with older name */
 extern MFDB *   current_screen_mfdb;
@@ -286,9 +287,22 @@ sc_ren8()
         }
 
         /* Toggle compositing buffer between the physbase we started
-           with and the alternate at 0x2CA00. */
+           with and the alternate.
+
+           Ghidra's screen_render_8hz uses a hardcoded 0x2CA00 as the
+           alt buffer.  In the 1985 binary that literal is
+           SCREEN_BUFFER_A + 0x19A -- a 32 KB region INSIDE the same
+           BSS array that sp_imfs stashes the compositing MFDB at
+           (SCREEN_BUFFER_A + 0xCD).  Our port's linker places scrbufA
+           at a different BSS address, so 0x2CA00 as a literal lands
+           on totally unrelated globals; when blkcopy32 writes 32000
+           bytes there it silently corrupts our own state (which is
+           why the third sc_ren8 iteration crashed in TOS ROM with
+           an implausible MFDB pointer).  Compute the same relative
+           offset off scrbufA instead. */
         if (current_screen_mfdb->fd_addr == save_physbase)
-                current_screen_mfdb->fd_addr = (void *) 0x2ca00L;
+                current_screen_mfdb->fd_addr =
+                        (void *) ((char *) scrbufA + 0x19A);
         else
                 current_screen_mfdb->fd_addr = save_physbase;
 
