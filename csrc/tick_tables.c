@@ -38,7 +38,8 @@ long    g_cotbl[10]    = { 3, 4, 9, 22, 23, 48, 49, 50, 55, 0 };
    g_ptanf (petting_anim_frame) already lives in globals.c; the rest
    are added here to keep globals.c under Alcyon's symbol-table
    limit. */
-short   g_ptlss                         = 0;    /* petting_last_sprite_slot */
+/* Ghidra petting_last_sprite_slot @ 0x2b952 = 27 (0x1b). */
+short   g_ptlss                         = 27;   /* petting_last_sprite_slot */
 BOOL16  g_alsts                         = NO;   /* alarm_sound_started */
 short   g_phrc                          = 0;    /* phone_ring_countdown */
 /* g_srsdc (screen_scroll_down_count) lives in globals.c. */

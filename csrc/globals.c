@@ -235,7 +235,8 @@ short   skin_color_palette[8] = {
 };
 
 BOOL16  g_molof             = NO;
-BOOL16  midi_var_r                      = NO;
+/* Ghidra midi_var_r @ 0x29af2 = 1 (byte).  Port previously had NO. */
+BOOL16  midi_var_r                      = YES;
 short   g_mspha                  = 0;
 unsigned char * midi_data_base_ptr      = (unsigned char *) 0;
 
@@ -243,15 +244,22 @@ unsigned char * midi_data_base_ptr      = (unsigned char *) 0;
 unsigned char * midi_seq_position       = (unsigned char *) 0;
 long            g_msmap   = -1;
 long            midi_envelope_data_base = 0;
-short           midi_velocity           = 100;
-short           midi_default_velocity   = 100;
+/* MIDI/PSG defaults.  Ghidra stores these as BYTES (not shorts) at their
+   addresses; the code accesses them via move.b / cmp.b instructions.
+   Values verified via disassembly at 0x101f4 / 0x10420 / 0x112a8 etc.
+     midi_velocity            @ 0x29a22 = 0x7F (127) -- max MIDI velocity
+     midi_default_velocity    @ 0x29a24 = 0x7F (127)
+     psg_default_volume       @ 0x29a26 = 0x0F (15)  -- max PSG volume
+   Port previously had midi_velocity/default at 100 (guess). */
+short           midi_velocity           = 127;
+short           midi_default_velocity   = 127;
 short           psg_current_volume      = 15;
 short           psg_default_volume      = 15;
 short           g_mnevi   = 0;
 short           g_mnevc   = 9;
-/* Ghidra g_mchcn @ 0x298F0.  mh_chac (0x11246) writes the
-   header byte here and passes it through midi_seq_build_scale_table. */
-short           g_mchcn      = 0;
+/* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
+   writes p[2] here and passes through mq_bust. */
+short           g_mchcn                 = 1;
 /* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; midi_tempo @ 0x298F2 = 120. */
 short           g_mtspb     = 20;
 short           midi_tempo              = 120;
@@ -433,7 +441,10 @@ short   g_setah[64];
 /* MFDB_screen_ptr now defined below with the rest of the frame-timing
    MFDB descriptors. */
 
-short   g_ltlic               = 0;
+/* Ghidra letter_line_count @ 0x2b5a2 = -1 (short).  First frame of
+   rp_anim (record-player needle sweep) skips the draw when g_ltlic
+   is < 0, then decrements to -3, then wraps to 13.  Port had 0. */
+short   g_ltlic                         = -1;
 short   g_ltpac          = 0;
 /* _record_led_mask_table[7]: bit-mask toggles for the 7 VU-meter LEDs. */
 unsigned short  _record_led_mask_table[7] = {
@@ -489,6 +500,12 @@ BOOL16  dog_near_food_bowl              = NO;
 BOOL16  g_deact               = NO;
 short   g_decou            = 0;
 short   dog_last_target_index           = 0;
+/* Ghidra g_dgitx @ 0x2b8f0 = 47.  Used by cutscene at
+   startup to seed the dog's first wander target. */
+short   g_dgitx        = 47;
+/* Ghidra g_dgiyo @ 0x2b904 = 3.  Y micro-nudge applied
+   to the initial dog target position. */
+short   g_dgiyo            = 3;
 short   g_dseat[3]   = { 42, 43, 44 };
 /* 9 wander destinations for the dog, plus X/Y micro-offsets. */
 /* Ghidra dog_destination_position_table @ 0x2B8DE, 10 entries -- the

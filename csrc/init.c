@@ -33,6 +33,7 @@ extern short    g_dyy;
 extern short    dog_on_stairs_flag;
 extern short    dog_idle_countdown;
 extern short    dog_last_target_index;
+extern short    g_dgitx;
 extern short    dog_initialized;
 extern short    intro_sequence_active;
 extern short    g_hatas;
@@ -137,7 +138,7 @@ cutscene_new_lcp_move_in_stub()
         g_dyy                     = 0;
         dog_on_stairs_flag        = NO;
         dog_idle_countdown        = 20;
-        dog_last_target_index     = 0;   /* Ghidra: dog_initial_target_index, not yet ported */
+        dog_last_target_index     = g_dgitx;
         dog_initialized           = NO;
 
         /* Push initial dog sprite (lay-down pose) into the dog slot. */
