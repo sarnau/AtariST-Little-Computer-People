@@ -88,9 +88,9 @@ typedef struct {
 /* PSG_ENVELOPE -- ADSR envelope state for one YM2149 PSG channel.
    Field order matches the 8-byte layout of the ADSR parameter block
    in Activision Music Studio 2.0's .SNG / .ORG files (post-signature
-   body offset 0x00..0x1A3), so psg_copy_envelope_params can memcpy
+   body offset 0x00..0x1A3), so psg_cpE can memcpy
    directly from the file bytes into the runtime struct.  See
-   sound.c:song_play for the full Music Studio file format. */
+   sound.c:sgPlay for the full Music Studio file format. */
 typedef struct {
         char    phase;                  /* ENV_ATTACK..ENV_FADEOUT     */
         char    phase_timer;            /* ticks until next phase step */

@@ -4,7 +4,7 @@
  *             MFDB tables).
  *
  * Formats (all big-endian, all extracted from readFiles.py + Ghidra
- * load_objects / load_sprites decompiles):
+ * ldObj / ldSpr decompiles):
  *
  *   OBJECTS / SPRITES:
  *     Sequence of records, each:
@@ -26,7 +26,7 @@
  *   count * size to get the read length -- that gave the correct
  *   number for OBJECTS/SPRITES-style records but a nonsense-huge
  *   value for BODY.LCP (98 * 16464 = ~1.6 MB) which happened to be
- *   capped by max_bytes at the call site.  Real semantics: the
+ *   capped by max_b at the call site.  Real semantics: the
  *   header's second short IS the total payload byte count.  See
  *   tests/sprite_compose.c for the byte-verified layout.
  *
@@ -34,7 +34,7 @@
  *     Plain ASCII, newline-terminated names, one per line.  10 chars
  *     max per name.  Read as text.
  *
- * addr: load_objects(), load_sprites()
+ * addr: ldObj(), ldSpr()
  *       (parsers + name/BODY/PEx loaders inferred from readFiles.py)
  */
 
@@ -46,51 +46,51 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
-extern unsigned char    objects_file[];
-extern unsigned char    sprites_files[];
+extern unsigned char    obj_file[];
+extern unsigned char    spr_file[];
 extern MFDB     g_obtmt[];
 extern MFDB     g_setmt[];
 extern short    g_obtaw[];
 extern short    g_obtah[];
 extern short    g_setaw[];
 extern short    g_setah[];
-extern short *  pex_lcp_file;                   /* source head sheet */
-extern short *  body_lcp_file;
-extern short *  body_shape_data;
-extern short *  head_shape_data;
+extern short *  pex_ptr;                   /* source head sheet */
+extern short *  body_ptr;
+extern short *  body_shp;
+extern short *  hd_shp;
 extern short    bshdbuf[];
 extern short    hshdbuf[];
 #include <osbind.h>
 
-extern short    file_open();
+extern short    fOpen();
 extern void     fr_read();
 extern void     sp_iniM();
-extern void     error_not_enough_memory();
+extern void     er_nomem();
 
-/* load_objects: read the 14000-byte OBJECTS file into objects_file[].
-   addr: load_objects() */
+/* ldObj: read the 14000-byte OBJECTS file into obj_file[].
+   addr: ldObj() */
 
 void
-load_objects()
+ldObj()
 {
-        short   fileHandle;
+        short   fhnd;
 
-        fileHandle = file_open("objects", 0);
-        fr_read(fileHandle, 14000L, objects_file);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        fhnd = fOpen("objects", 0);
+        fr_read(fhnd, 14000L, obj_file);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
 }
 
-/* load_sprites: read the 14000-byte SPRITES file into sprites_files[].
-   addr: load_sprites() */
+/* ldSpr: read the 14000-byte SPRITES file into spr_file[].
+   addr: ldSpr() */
 
 void
-load_sprites()
+ldSpr()
 {
-        short   fileHandle;
+        short   fhnd;
 
-        fileHandle = file_open("sprites", 0);
-        fr_read(fileHandle, 14000L, sprites_files);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        fhnd = fOpen("sprites", 0);
+        fr_read(fhnd, 14000L, spr_file);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
 }
 
 /* Parse a sequence-of-records buffer (OBJECTS or SPRITES format) into
@@ -99,7 +99,7 @@ load_sprites()
    64th record (table size). */
 
 static short
-parse_records(buf, size, mfdb_tab, w_tab, h_tab)
+prsRec(buf, size, mfdb_tab, w_tab, h_tab)
 unsigned char * buf;
 long            size;
 MFDB *          mfdb_tab;
@@ -158,8 +158,8 @@ short *         h_tab;
 short
 al_loot()
 {
-        load_objects();
-        return parse_records(objects_file, 14000L,
+        ldObj();
+        return prsRec(obj_file, 14000L,
                              g_obtmt,
                              g_obtaw, g_obtah);
 }
@@ -169,8 +169,8 @@ al_loot()
 short
 al_lost()
 {
-        load_sprites();
-        return parse_records(sprites_files, 14000L,
+        ldSpr();
+        return prsRec(spr_file, 14000L,
                              g_setmt,
                              g_setaw, g_setah);
 }
@@ -184,30 +184,30 @@ al_lost()
    addr: (inferred; the 1985 code has one loader per file) */
 
 short
-al_loal(filename, dest_buf, max_bytes)
+al_loal(filename, dest_buf, max_b)
 char *          filename;
 unsigned char * dest_buf;
-long            max_bytes;
+long            max_b;
 {
-        short           fileHandle;
+        short           fhnd;
         unsigned char   header[4];
         short           count;
         long            total;
 
-        fileHandle = file_open(filename, 0);
-        fr_read(fileHandle, 4L, header);
+        fhnd = fOpen(filename, 0);
+        fr_read(fhnd, 4L, header);
         count = ((short) header[0] << 8) | header[1];
         total = ((long)  header[2] << 8) | header[3];
-        if (total > max_bytes)
-                total = max_bytes;
-        fr_read(fileHandle, total, dest_buf);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        if (total > max_b)
+                total = max_b;
+        fr_read(fhnd, total, dest_buf);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
         return count;
 }
 
 /* al_locs: boot-time entry that loads BODY.LCP and
    the PEx.LCP head sheet keyed by the PLAYER's character_sprite_id
-   into their runtime buffers, then wires body_lcp_file and pex_lcp_file
+   into their runtime buffers, then wires body_ptr and pex_ptr
    at those buffers.
 
    Buffers are static (not GEMDOS_Malloc'd) so the load survives to
@@ -226,13 +226,13 @@ long            max_bytes;
    addr: (inferred; the 1985 loader is inlined in the boot path with a
    direct filename-string switch on character_sprite_id) */
 
-static unsigned char    body_lcp_buffer[20000];
-static unsigned char    pex_lcp_buffer[12000];
+static unsigned char    body_buf[20000];
+static unsigned char    pex_buf[12000];
 
 void
 al_locs()
 {
-        /* pex_filename: local equivalent of Ghidra's pex_lcp_ptr @ 0x2a0f8,
+        /* pex_filename: local equivalent of Ghidra's pex_name @ 0x2a0f8,
            which points at the static string "pex.lcp" at 0x2a330 and gets
            mutated in place at index 2 to select the character sheet.  Port
            uses a stack-local to avoid a mutable global; GEMDOS FAT is
@@ -241,10 +241,10 @@ al_locs()
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
-        al_loal("body.lcp", body_lcp_buffer,
-                       (long) sizeof(body_lcp_buffer));
-        body_lcp_file    = (short *) body_lcp_buffer;
-        body_shape_data  = bshdbuf;
+        al_loal("body.lcp", body_buf,
+                       (long) sizeof(body_buf));
+        body_ptr    = (short *) body_buf;
+        body_shp  = bshdbuf;
 
         which = lcp.character_sprite_id;
         if (which < 2 || which > 6)
@@ -259,14 +259,14 @@ al_locs()
         pex_filename[6] = 'P';
         pex_filename[7] = 0;
 
-        al_loal(pex_filename, pex_lcp_buffer,
-                       (long) sizeof(pex_lcp_buffer));
-        pex_lcp_file    = (short *) pex_lcp_buffer;
-        head_shape_data = hshdbuf;
+        al_loal(pex_filename, pex_buf,
+                       (long) sizeof(pex_buf));
+        pex_ptr    = (short *) pex_buf;
+        hd_shp = hshdbuf;
 }
 
-/* decompress_scn: decode a .SCN screen-image file into
-   `out_words` (16-bit output words, dest_size measured in words, not
+/* unScn: decode a .SCN screen-image file into
+   `out_wds` (16-bit output words, dest_size measured in words, not
    bytes).  Same nibble-stream shape as fr_reac, but two
    width differences:
      - Dictionary is 15 *words* (30 bytes) at file offset 2..31,
@@ -283,10 +283,10 @@ al_locs()
    is likely inlined in the intro/setup path) */
 
 void
-decompress_scn(filename, out_words, dest_size_words)
+unScn(filename, out_wds, dst_wds)
 char *          filename;
-unsigned short *out_words;
-long            dest_size_words;
+unsigned short *out_wds;
+long            dst_wds;
 {
         short           filehandle;
         unsigned char * fbuffer;
@@ -296,7 +296,7 @@ long            dest_size_words;
         unsigned short  word_dict[15];
         unsigned char   sizebuf[2];
 
-        filehandle = file_open(filename, 0);
+        filehandle = fOpen(filename, 0);
         fr_read(filehandle, 2L, sizebuf);
         body_size = ((long) sizebuf[0] << 8) | sizebuf[1];
 
@@ -325,7 +325,7 @@ long            dest_size_words;
         fbuffer = (unsigned char *) _gemdos(GEMDOS_Malloc,
                                             body_size, 0L, 0L);
         if (fbuffer == (unsigned char *) 0)
-                error_not_enough_memory();
+                er_nomem();
         fr_read(filehandle, body_size, fbuffer);
 
         /* Nibble state-machine decode.  Explicit `b = *src & 0xFF`
@@ -342,7 +342,7 @@ long            dest_size_words;
 
                 src = fbuffer;
                 readHigh = 1;
-                for (count = 0; count < dest_size_words; count = count + 1) {
+                for (count = 0; count < dst_wds; count = count + 1) {
                         b = (unsigned short) (*src) & 0x00FF;
                         if (readHigh) {
                                 val = (b >> 4) & 0x0F;
@@ -366,9 +366,9 @@ long            dest_size_words;
                                         readHigh = 1 - readHigh;
                                         nibble = (nibble << 4) | val;
                                 }
-                                out_words[count] = nibble;
+                                out_wds[count] = nibble;
                         } else {
-                                out_words[count] = word_dict[nibble];
+                                out_wds[count] = word_dict[nibble];
                         }
                 }
         }
@@ -383,14 +383,14 @@ long            dest_size_words;
    NAMES file on the 1985 disk is 2.6 KB; we read up to that much. */
 
 long
-al_loan(dest_buf, max_bytes)
+al_loan(dest_buf, max_b)
 unsigned char * dest_buf;
-long            max_bytes;
+long            max_b;
 {
-        short   fileHandle;
+        short   fhnd;
 
-        fileHandle = file_open("names", 0);
-        fr_read(fileHandle, max_bytes, dest_buf);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
-        return max_bytes;
+        fhnd = fOpen("names", 0);
+        fr_read(fhnd, max_b, dest_buf);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
+        return max_b;
 }

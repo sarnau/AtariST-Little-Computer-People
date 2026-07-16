@@ -6,17 +6,17 @@
  * once at startup; save happens whenever the resident walks into the
  * study, closes the door, and does the "packing" animation.
  *
- *   create_file()          -- ensures the target exists via GEMDOS Fcreate
+ *   crFile()          -- ensures the target exists via GEMDOS Fcreate
  *   fr_read()            -- retrying GEMDOS Fread with error alert
  *   lcp_save()             -- writes N bytes to a named file (128 in practice)
  *   lc_load()             -- reads 128 bytes and unpacks
  *                            door_states_and_flags into per-door globals
- *   lcp_enter_study_and_save() -- packs runtime state back into the PLAYER
+ *   lcp_std() -- packs runtime state back into the PLAYER
  *                            struct, calls lcp_save, and runs the study
  *                            enter/exit animation.
  *
- * addr: create_file(), fr_read(), lcp_save(), lc_load(),
- *       lcp_enter_study_and_save()
+ * addr: crFile(), fr_read(), lcp_save(), lc_load(),
+ *       lcp_std()
  */
 
 #include "types.h"
@@ -28,32 +28,32 @@
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    lcp_x;
-extern short    lcp_water_level;
+extern short    lcp_watr;
 extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
-extern void     game_tick_and_animate();
-extern short    lcp_front_door_open;
-extern short    lcp_study_door_open;
-extern short    lcp_closet_door_open;
-extern short    lcp_cabinet_open;
-extern short    lcp_dresser_open;
-extern short    lcp_toilet_door_open;
-extern short    lcp_filing_cabinet_open;
-extern short    lcp_dog_bowl_status;
-extern short    lcp_food_count;
-extern short    lcp_record_playing;
-extern short    lcp_tv_on;
+extern void     gameTick();
+extern short    lcp_frdO;
+extern short    studyDrO;
+extern short    lcp_clsO;
+extern short    lcp_cabO;
+extern short    lcp_drsO;
+extern short    lcp_toiO;
+extern short    lcp_flcO;
+extern short    lcp_bwlS;
+extern short    lcp_food;
+extern short    lcp_recP;
+extern short    lcp_tv;
 extern short    g_obids;
 extern short    g_obi07;
 extern short    g_obi08;
-extern void     house_get_position_xy();
+extern void     hs_posXY();
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_selaf[];
 extern short    g_seslm[];
-extern short    randomRange();                  /* random.c */
-extern void     lcp_update_palette_colors();    /* render.c  */
+extern short    rndRng();                  /* random.c */
+extern void     lcp_upal();    /* render.c  */
 #include <osbind.h>
 #include <stdio.h>
 
@@ -62,19 +62,19 @@ extern void     sp_sprs();
 extern void     od_draw();
 extern void     sf_sele();
 extern void     sp_upds();
-extern void     lcp_update_palette_colors();
-extern void     show_lcp_sprites();
-extern short    lcp_walk_to_destination();
-extern short    randomRange();
-extern void     error_unable_to_write();
+extern void     lcp_upal();
+extern void     showLcp();
+extern short    lcp_wkD();
+extern short    rndRng();
+extern void     er_write();
 
-/* file_open: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
+/* fOpen: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
    Same retry-then-alert pattern as fr_read/lcp_save -- three tries
    with a 1-second sleep, then loop with a Retry alert.
-   addr: file_open() */
+   addr: fOpen() */
 
 short
-file_open(filename, rwmode)
+fOpen(filename, rwmode)
 char *  filename;
 short   rwmode;
 {
@@ -95,15 +95,15 @@ short   rwmode;
         }
 }
 
-/* create_file: idempotent GEMDOS Fcreate.  Uses access() to see if the
+/* crFile: idempotent GEMDOS Fcreate.  Uses access() to see if the
    file already exists; if not, keep retrying Fcreate until it succeeds.
    The original quietly Fcloses the temporary handle it opened -- we
    preserve that so the file is closed even in the success path.
 
-   addr: create_file() */
+   addr: crFile() */
 
 void
-create_file(filename)
+crFile(filename)
 char *  filename;
 {
         short   rval;
@@ -117,7 +117,7 @@ char *  filename;
                 iVar1 = _gemdos(GEMDOS_Fcreate, (long) filename, 0L, 0L);
                 if (iVar1 >= 0)
                         break;
-                error_unable_to_write();
+                er_write();
         }
         _gemdos(GEMDOS_Fclose, iVar1, 0L, 0L);
 }
@@ -128,8 +128,8 @@ char *  filename;
    addr: fr_read() */
 
 void
-fr_read(fileHandle, count, buffer)
-short   fileHandle;
+fr_read(fhnd, count, buffer)
+short   fhnd;
 long    count;
 void *  buffer;
 {
@@ -139,13 +139,13 @@ void *  buffer;
         retry = 0;
         for (;;) {
                 /* GEMDOS Fread expects: func(word), handle(word),
-                   count(long), buffer(long).  Pass fileHandle as its
+                   count(long), buffer(long).  Pass fhnd as its
                    NATURAL SHORT type -- the `(long)` cast that used
                    to be here pushed 4 bytes where TOS wanted 2, so
                    the trap read handle = 0 (the high word of the long)
                    and every file was silently being read from stdin
                    with a bogus (huge) count. */
-                err = _gemdos(GEMDOS_Fread, fileHandle, count, (long) buffer);
+                err = _gemdos(GEMDOS_Fread, fhnd, count, (long) buffer);
                 if (err >= 0)
                         return;
                 retry = retry + 1;
@@ -157,35 +157,35 @@ void *  buffer;
         }
 }
 
-/* file_load: open + read header + read payload + close.  The 1985
+/* fLoad: open + read header + read payload + close.  The 1985
    .lcp/.pex files carry a 4-byte header of two shorts -- the first
    short is discarded (temp), the second is the payload byte count.
    Ghidra:
-       fileHandle = file_open(filename, 0);
-       file_read(fileHandle, 2, &temp);
-       file_read(fileHandle, 2, &size);
-       file_read(fileHandle, size, buffer);
-       _gemdos(GEMDOS_Fclose, fileHandle);
-   addr: file_load() */
+       fhnd = fOpen(filename, 0);
+       file_read(fhnd, 2, &temp);
+       file_read(fhnd, 2, &size);
+       file_read(fhnd, size, buffer);
+       _gemdos(GEMDOS_Fclose, fhnd);
+   addr: fLoad() */
 
 void
-file_load(filename, buffer)
+fLoad(filename, buffer)
 char *  filename;
 void *  buffer;
 {
-        short   fileHandle;
+        short   fhnd;
         short   size;
         short   temp;
 
-        fileHandle = file_open(filename, 0);
-        fr_read(fileHandle, 2L, &temp);
-        fr_read(fileHandle, 2L, &size);
-        fr_read(fileHandle, (long) size, buffer);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        fhnd = fOpen(filename, 0);
+        fr_read(fhnd, 2L, &temp);
+        fr_read(fhnd, 2L, &size);
+        fr_read(fhnd, (long) size, buffer);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
 }
 
 /* lcp_save: create + open + write + close a file, retrying on every
-   failure via error_unable_to_write() (which pops a Retry alert).
+   failure via er_write() (which pops a Retry alert).
    Original signature took (filename, size, addr) with size as short --
    preserved verbatim.
 
@@ -200,13 +200,13 @@ void *  addr;
         short   filehandle;
         long    lVar1;
 
-        create_file(filename);
+        crFile(filename);
 
         for (;;) {
                 filehandle = _gemdos(GEMDOS_Fopen, (long) filename, 1L, 0L);
                 if (filehandle >= 0)
                         break;
-                error_unable_to_write();
+                er_write();
         }
 
         for (;;) {
@@ -214,7 +214,7 @@ void *  addr;
                                 (long) size, (long) addr);
                 if (lVar1 == (long) size)
                         break;
-                error_unable_to_write();
+                er_write();
         }
 
         _gemdos(GEMDOS_Fclose, filehandle, 0L, 0L);
@@ -230,33 +230,33 @@ void *  addr;
 short
 lc_load()
 {
-        short   fileHandle;
+        short   fhnd;
 
-        fileHandle = _gemdos(GEMDOS_Fopen, (long) "hyber", 0L, 0L);
-        if (fileHandle < 0)
+        fhnd = _gemdos(GEMDOS_Fopen, (long) "hyber", 0L, 0L);
+        if (fhnd < 0)
                 return 0;
 
-        fr_read(fileHandle, 0x80L, &lcp);
-        _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        fr_read(fhnd, 0x80L, &lcp);
+        _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
 
-        lcp_water_level         = lcp.water_level;
-        lcp_front_door_open     = lcp.door_states_and_flags & DSF_FRONT_DOOR;
-        lcp_dresser_open        = (lcp.door_states_and_flags & DSF_DRESSER)          >> 4;
-        lcp_cabinet_open        = (lcp.door_states_and_flags & DSF_KITCHEN_CABINET)  >> 3;
-        lcp_closet_door_open    = (lcp.door_states_and_flags & DSF_CLOSET_DOOR)      >> 2;
-        lcp_study_door_open     = (lcp.door_states_and_flags & DSF_STUDY_DOOR)       >> 1;
-        lcp_toilet_door_open    = (lcp.door_states_and_flags & DSF_TOILET_DOOR)      >> 5;
-        lcp_filing_cabinet_open = (lcp.door_states_and_flags & DSF_FILING_CABINET)   >> 6;
-        lcp_dog_bowl_status     = (lcp.door_states_and_flags & DSF_DOG_BOWL_MASK)    >> 7;
-        lcp_food_count          = lcp.food_supply;
-        lcp_record_playing      = lcp.record_playing;
-        lcp_tv_on               = lcp.tv_on;
+        lcp_watr         = lcp.water_level;
+        lcp_frdO     = lcp.door_states_and_flags & DSF_FRONT_DOOR;
+        lcp_drsO        = (lcp.door_states_and_flags & DSF_DRESSER)          >> 4;
+        lcp_cabO        = (lcp.door_states_and_flags & DSF_KITCHEN_CABINET)  >> 3;
+        lcp_clsO    = (lcp.door_states_and_flags & DSF_CLOSET_DOOR)      >> 2;
+        studyDrO     = (lcp.door_states_and_flags & DSF_STUDY_DOOR)       >> 1;
+        lcp_toiO    = (lcp.door_states_and_flags & DSF_TOILET_DOOR)      >> 5;
+        lcp_flcO = (lcp.door_states_and_flags & DSF_FILING_CABINET)   >> 6;
+        lcp_bwlS     = (lcp.door_states_and_flags & DSF_DOG_BOWL_MASK)    >> 7;
+        lcp_food          = lcp.food_supply;
+        lcp_recP      = lcp.record_playing;
+        lcp_tv               = lcp.tv_on;
 
-        lcp_update_palette_colors();
+        lcp_upal();
         return 1;
 }
 
-/* lcp_enter_study_and_save: three-phase animation:
+/* lcp_std: three-phase animation:
      1. Study door closes behind the resident (SPRITE_DOOR_STUDY_1).
      2. Optionally write PLAYER -> HYBER (do_save flag).
      3. Study door swings back open (SPRITE_DOOR_STUDY_AJAR ->
@@ -268,10 +268,10 @@ lc_load()
    preserved via the FE00 mask so the delivery event handler's 3-bit
    counter survives the save.
 
-   addr: lcp_enter_study_and_save() */
+   addr: lcp_std() */
 
 void
-lcp_enter_study_and_save(do_save, p_dosnd)
+lcp_std(do_save, p_dosnd)
 BOOL16  do_save;
 BOOL16  p_dosnd;
 {
@@ -290,26 +290,26 @@ BOOL16  p_dosnd;
         if (p_dosnd != NO)
                 sf_sele(SFX_DOOR_CLOSE, 6L);
 
-        game_tick_and_animate(1);
-        counter = randomRange(15, 30);
-        game_tick_and_animate(counter);
+        gameTick(1);
+        counter = rndRng(15, 30);
+        gameTick(counter);
 
         /* Phase 2: repack door state and write HYBER. */
         if (do_save != NO) {
-                lcp.water_level = lcp_water_level;
+                lcp.water_level = lcp_watr;
                 lcp.door_states_and_flags =
-                        lcp_front_door_open |
-                        (lcp_dog_bowl_status     << 7) |
-                        (lcp_filing_cabinet_open << 6) |
-                        (lcp_toilet_door_open    << 5) |
-                        (lcp_dresser_open        << 4) |
-                        (lcp_cabinet_open        << 3) |
-                        (lcp_closet_door_open    << 2) |
-                        (lcp_study_door_open     << 1) |
+                        lcp_frdO |
+                        (lcp_bwlS     << 7) |
+                        (lcp_flcO << 6) |
+                        (lcp_toiO    << 5) |
+                        (lcp_drsO        << 4) |
+                        (lcp_cabO        << 3) |
+                        (lcp_clsO    << 2) |
+                        (studyDrO     << 1) |
                         (lcp.door_states_and_flags & DSF_PRESERVE_UPPER_MASK);
-                lcp.record_playing = lcp_record_playing;
-                lcp.tv_on          = lcp_tv_on;
-                lcp.food_supply    = lcp_food_count;
+                lcp.record_playing = lcp_recP;
+                lcp.tv_on          = lcp_tv;
+                lcp.food_supply    = lcp_food;
                 lcp_save("hyber", 0x80, &lcp);
         }
 
@@ -322,7 +322,7 @@ BOOL16  p_dosnd;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
         od_draw(g_obi07, 178, 23);
         sf_sele(SFX_DOOR_OPEN, 6L);
-        game_tick_and_animate(1);
+        gameTick(1);
 
         /* Phase 3b: door wide open, resident visible. */
         g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
@@ -332,28 +332,28 @@ BOOL16  p_dosnd;
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
         od_draw(g_obi08, 178, 23);
-        show_lcp_sprites();
-        game_tick_and_animate(1);
+        showLcp();
+        gameTick(1);
 
         /* Phase 4: walk resident back to the study door. */
         lcp_x = saved_x;
-        house_get_position_xy(POS_TOP_STUDY_DOOR,
+        hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         g_actif = YES;
-        lcp_walk_to_destination();
+        lcp_wkD();
         g_actif = NO;
 
         /* Phase 5: close door, clear the "study door open" flag. */
-        if (lcp_study_door_open != NO) {
+        if (studyDrO != NO) {
                 g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] =
                         SPRITE_HIDDEN;
                 sp_upds();
-                game_tick_and_animate(0);
+                gameTick(0);
         }
         od_draw(g_obi07, 178, 23);
-        game_tick_and_animate(2);
+        gameTick(2);
         od_draw(g_obids,  178, 23);
         sf_sele(SFX_DOOR_CLOSE, 6L);
-        game_tick_and_animate(2);
-        lcp_study_door_open = NO;
+        gameTick(2);
+        studyDrO = NO;
 }

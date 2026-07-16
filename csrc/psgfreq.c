@@ -7,12 +7,12 @@
  * difference is <1 cent at any tempered tuning.
  */
 
-/* psg_freq_table[132]: YM2149 tone-period LUT for MIDI notes 0..131.
+/* psg_freq[132]: YM2149 tone-period LUT for MIDI notes 0..131.
    period = 2000000 / (16 * midi_note_freq).
    Entries below A#0 (index 0x17=23) are 0 -- flagged as "too low
    to play" by mq_dise, triggering ENV_FADEOUT
    instead of an audible tone. */
-unsigned short  psg_freq_table[132] = {
+unsigned short  psg_freq[132] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0fd2, 

@@ -10,11 +10,11 @@
 #include "types.h"
 #include <osbind.h>             /* Alcyon: Random() macro -> trap #14 */
 
-/* randomRange: return a uniform random integer in [low, high] inclusive.
-   addr: randomRange() */
+/* rndRng: return a uniform random integer in [low, high] inclusive.
+   addr: rndRng() */
 
 short
-randomRange(low, high)
+rndRng(low, high)
 short   low;
 short   high;
 {

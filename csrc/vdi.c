@@ -23,12 +23,12 @@
  *   v_pline         6      polyline draw
  *   v_gtext         8      graphic text
  *   v_bar          11.1    filled bar (sub-op 1 of v_fillarea)
- *   vsl_color      17      set line color
- *   vst_color      22      set text color
- *   vsf_interior   23      set fill interior
- *   vsf_style      24      set fill style
- *   vsf_color      25      set fill color
- *   vswr_mode      32      set writing mode
+ *   vslCol      17      set line color
+ *   vstCol      22      set text color
+ *   vsfInt   23      set fill interior
+ *   vsfSty      24      set fill style
+ *   vsfCol      25      set fill color
+ *   vswrMd      32      set writing mode
  *   vro_cpyfm     109      raster copy (masked blit)
  *
  * The wrappers are one-liners under Alcyon; the actual game-visible
@@ -82,10 +82,10 @@ vdi_call()
 }
 #endif
 
-/* vsl_color: set the line-drawing colour (VDI opcode 17). */
+/* vslCol: set the line-drawing colour (VDI opcode 17). */
 
 void
-vsl_color(handle, color)
+vslCol(handle, color)
 short   handle;
 short   color;
 {
@@ -97,10 +97,10 @@ short   color;
         vdi_call();
 }
 
-/* vst_color: set the text-drawing colour (VDI opcode 22). */
+/* vstCol: set the text-drawing colour (VDI opcode 22). */
 
 void
-vst_color(handle, color)
+vstCol(handle, color)
 short   handle;
 short   color;
 {
@@ -112,10 +112,10 @@ short   color;
         vdi_call();
 }
 
-/* vsf_color: set the fill (interior area) colour (VDI opcode 25). */
+/* vsfCol: set the fill (interior area) colour (VDI opcode 25). */
 
 void
-vsf_color(handle, color)
+vsfCol(handle, color)
 short   handle;
 short   color;
 {
@@ -127,11 +127,11 @@ short   color;
         vdi_call();
 }
 
-/* vsf_interior: set the fill-interior type (0=hollow, 1=solid,
+/* vsfInt: set the fill-interior type (0=hollow, 1=solid,
    2=pattern, 3=hatch, 4=user-defined).  VDI opcode 23. */
 
 void
-vsf_interior(handle, style)
+vsfInt(handle, style)
 short   handle;
 short   style;
 {
@@ -143,11 +143,11 @@ short   style;
         vdi_call();
 }
 
-/* vsf_style: set the fill-style (pattern index within the current
+/* vsfSty: set the fill-style (pattern index within the current
    interior).  VDI opcode 24. */
 
 void
-vsf_style(handle, style)
+vsfSty(handle, style)
 short   handle;
 short   style;
 {
@@ -159,11 +159,11 @@ short   style;
         vdi_call();
 }
 
-/* vswr_mode: set the writing mode (1=replace, 2=transparent,
+/* vswrMd: set the writing mode (1=replace, 2=transparent,
    3=XOR, 4=reverse-transparent).  VDI opcode 32. */
 
 void
-vswr_mode(handle, mode)
+vswrMd(handle, mode)
 short   handle;
 short   mode;
 {
@@ -242,7 +242,7 @@ short * pxy;
         vdi_call();
 }
 
-/* vdi_copy_rect (vro_cpyfm): raster copy with a mode.  VDI opcode 109.
+/* vdi_cpR (vro_cpyfm): raster copy with a mode.  VDI opcode 109.
    Copies from `src` MFDB to `dst` MFDB with the specified raster op
    (S_ONLY=3, NOTS_AND_D=4, S_XOR_D=6, etc.).  The 8-value pxy array
    in ptsin[] specifies source (sx1,sy1,sx2,sy2) and destination
@@ -254,7 +254,7 @@ short * pxy;
    parameter block. */
 
 void
-vdi_copy_rect(handle, mode, src, dst,
+vdi_cpR(handle, mode, src, dst,
               sx1, sy1, sx2, sy2,
               dx1, dy1, dx2, dy2)
 short   handle;

@@ -3,14 +3,14 @@
  *
  * The 1985 parser is a bitmask-based bag-of-words matcher:
  *   1. Uppercase and split the input into whitespace-delimited words
- *      via command_upperstr.
- *   2. For each word, look it up in valid_word_table[] via
- *      check_valid_word_input, which returns a WORD_ID.  Unrecognised
+ *      via cmd_upp.
+ *   2. For each word, look it up in vwd_tab[] via
+ *      chk_vwd, which returns a WORD_ID.  Unrecognised
  *      words nudge the priority up (making the command less likely to
  *      actually fire, since higher = deprioritised).
  *   3. For each recognised WORD_ID, set one bit in the appropriate
  *      position slot of g_ewb[] using the two lookup
- *      tables word__entered_to_position[] (which of the 10 bytes) and
+ *      tables ew2pos[] (which of the 10 bytes) and
  *      g_ew2b[] (which of the 8 bits).
  *   4. Walk g_ew2a[] in order.  Each entry is a per-
  *      position bitmask; a row matches if every bit set in
@@ -18,8 +18,8 @@
  *      i in 0..9.  First match wins.  Table is terminated by a row
  *      whose table[0] byte is 0xff.
  *
- * addr: check_entered_command(), command_upperstr(),
- *       check_valid_word_input(), lcp_toupper()
+ * addr: chk_encm(), cmd_upp(),
+ *       chk_vwd(), lcp_upp()
  */
 
 #include "types.h"
@@ -32,22 +32,22 @@
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    g_aprio;
 extern unsigned char    g_ewb[];
-extern char             _user_input_buffer[];
-extern short            _happiness_to_priority[];
-extern char *           valid_word_table[];
-extern short            word__entered_to_position[];
+extern char             usr_buf[];
+extern short            mood_pri[];
+extern char *           vwd_tab[];
+extern short            ew2pos[];
 extern short            g_ew2b[];
-extern unsigned char    _bitmask_1_2_4_8_10_20_40_80_0[];
+extern unsigned char    bm_lo[];
 extern WORD_TO_ACTION   g_ew2a[];
-extern short    randomRange();                  /* random.c */
-extern short    randomRange();
+extern short    rndRng();                  /* random.c */
+extern short    rndRng();
 
-/* lcp_toupper: single-char ASCII uppercase.  Returns the char unchanged
+/* lcp_upp: single-char ASCII uppercase.  Returns the char unchanged
    if it isn't in [a..z].
-   addr: lcp_toupper() */
+   addr: lcp_upp() */
 
 short
-lcp_toupper(ch)
+lcp_upp(ch)
 short   ch;
 {
         if (ch > 0x60 && ch < 0x7b)
@@ -55,21 +55,21 @@ short   ch;
         return ch;
 }
 
-/* command_upperstr: tokenize + uppercase.  Skips leading non-letters,
+/* cmd_upp: tokenize + uppercase.  Skips leading non-letters,
    then copies an uppercase word into `dest` and returns a pointer to
    the character right after the word (typically the delimiter).
    Returns NULL when no more letters remain in the input.
-   addr: command_upperstr() */
+   addr: cmd_upp() */
 
 char *
-command_upperstr(str, dest)
+cmd_upp(str, dest)
 char *  str;
 char *  dest;
 {
         short   c;
 
         for (;;) {
-                c = lcp_toupper((short) *str);
+                c = lcp_upp((short) *str);
                 if (c == 0)
                         return (char *) 0;
                 if (c > 0x40 && c < 0x5b)
@@ -77,7 +77,7 @@ char *  dest;
                 str = str + 1;
         }
         for (;;) {
-                c = lcp_toupper((short) *str);
+                c = lcp_upp((short) *str);
                 if (!(c > 0x40 && c < 0x5b))
                         break;
                 *dest = (char) c;
@@ -88,15 +88,15 @@ char *  dest;
         return str;
 }
 
-/* check_valid_word_input: look up `word` in the vocabulary table.
+/* chk_vwd: look up `word` in the vocabulary table.
    Returns the (0-indexed) WORD_ID on hit, or WORD_NONE on miss.  The
    dictionary walk stops at the first NULL pointer (table sentinel).
    The 1985 code had a hard cap at index 9998 and stepped the index by
    WORD_PLEASE (=1); preserved verbatim.
-   addr: check_valid_word_input() */
+   addr: chk_vwd() */
 
 short
-check_valid_word_input(word)
+chk_vwd(word)
 char *  word;
 {
         char *  dict_ptr;
@@ -105,7 +105,7 @@ char *  word;
 
         word_index = WORD_NONE + 1;             /* start at 0 */
         while (word_index <= 9998) {
-                dict_ptr = valid_word_table[word_index];
+                dict_ptr = vwd_tab[word_index];
                 if (dict_ptr == (char *) 0)
                         return WORD_NONE;
 
@@ -121,11 +121,11 @@ char *  word;
         return WORD_NONE;
 }
 
-/* check_entered_command: full parse.
-   addr: check_entered_command() */
+/* chk_encm: full parse.
+   addr: chk_encm() */
 
 short
-check_entered_command(str)
+chk_encm(str)
 char *  str;
 {
         short   rnd;
@@ -138,21 +138,21 @@ char *  str;
                 g_ewb[i] = 0;
 
         /* Seed the priority from happiness + a small random nudge. */
-        rnd = randomRange(0, 3);
-        g_aprio = _happiness_to_priority[lcp.happiness] + rnd;
+        rnd = rndRng(0, 3);
+        g_aprio = mood_pri[lcp.happiness] + rnd;
 
         /* Tokenize and mask-accumulate. */
-        while ((str = command_upperstr(str, _user_input_buffer)) !=
+        while ((str = cmd_upp(str, usr_buf)) !=
                (char *) 0) {
-                entered_word = check_valid_word_input(_user_input_buffer);
+                entered_word = chk_vwd(usr_buf);
                 if (entered_word == WORD_NONE) {
                         /* Unrecognised word -- +4 priority penalty. */
                         g_aprio = g_aprio + 4;
                 } else if (entered_word > 0) {
-                        short   pos = word__entered_to_position[entered_word];
+                        short   pos = ew2pos[entered_word];
                         short   bit = g_ew2b[entered_word];
                         g_ewb[pos] |=
-                                _bitmask_1_2_4_8_10_20_40_80_0[bit];
+                                bm_lo[bit];
                 }
         }
 

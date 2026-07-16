@@ -12,14 +12,14 @@
 #include "enums.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
-/* Ghidra BSS = 0.  cutscene_new_lcp_move_in_stub sets lcp_state to
-   STATE_STAND_SIDE_VIEW (34) before endless_game_loop starts. */
-short   lcp_state                       = 0;
-short   lcp_facing_direction            = 0;    /* FACING_RIGHT */
+/* Ghidra BSS = 0.  cs_mvIn sets lcp_st to
+   STATE_STAND_SIDE_VIEW (34) before gameLoop starts. */
+short   lcp_st                       = 0;
+short   lcp_face            = 0;    /* FACING_RIGHT */
 short   g_lcyof        = 0;
 short   g_lcieo              = -1;
 short   g_lssh              = 0;
-short   debug_hide_lcp_offscreen        = 0;
+short   dbg_hide        = 0;
 
 /* ---- Dog --------------------------------------------------------------- */
 short   dog_x                           = 0;
@@ -30,11 +30,11 @@ short   g_dyx                  = 0;
 short   g_dyy                  = 0;
 short   g_dwanc             = 0;
 short   g_dsid                   = 0;
-short   dog_on_stairs_flag              = 0;
-/* dog_initialized: when non-zero sp_spud skips writing sprite slots
+short   dg_stair              = 0;
+/* dg_init: when non-zero sp_spud skips writing sprite slots
    0/7 (used to hide the dog while off-screen).  Ghidra BSS = 0 --
    dog is visible from frame one. */
-short   dog_initialized                 = 0;
+short   dg_init                 = 0;
 
 /* ---- Hardware sprite double-buffer (8 slots) --------------------------- */
 short   g_sepef[8];
@@ -72,10 +72,10 @@ short   g_seslm[60] = {
 };
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
-/* body_sprite_frame_table (Ghidra 0x29BB2, 93 shorts):
-   maps lcp_state -> body-frame index into body.lcp / body_shape_data.
+/* body_frT (Ghidra 0x29BB2, 93 shorts):
+   maps lcp_st -> body-frame index into body.lcp / body_shp.
    Values dumped via ghidra_scripts/DumpTable.java. */
-short   body_sprite_frame_table[93] = {
+short   body_frT[93] = {
          0,  1,  2,  3,  4,  1,  6,  7,     /*  0..7  */
         43,  9, 10, 11, 12, 20, 21, 22,     /*  8..15 */
         21, 13, 14, 15, 16, 17, 18, 19,     /* 16..23 */
@@ -89,18 +89,18 @@ short   body_sprite_frame_table[93] = {
         88, 89, 90, 91, 92, 93, 94, 95,     /* 80..87 */
         96, 97, 26,  5,  8                  /* 88..92 */
 };
-/* carry_body_frame_table (Ghidra 0x29C6C, 25 shorts):
+/* cy_frT (Ghidra 0x29C6C, 25 shorts):
    alternate arms-up frames used while carrying an object in
    walking states 0..24. */
-short   carry_body_frame_table[25]      = {
+short   cy_frT[25]      = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
 /* (Removed dead head_sprite_frame_table[66] -- it was a mis-transcribed
-   duplicate of head_x_offset_per_state and not referenced anywhere.) */
-/* body_y_offset_per_state (Ghidra 0x29F8C, 109 shorts):
-   Y anchor offset per lcp_state.  Verified against Ghidra dump. */
-short   body_y_offset_per_state[109] = {
+   duplicate of hd_xoff and not referenced anywhere.) */
+/* body_yof (Ghidra 0x29F8C, 109 shorts):
+   Y anchor offset per lcp_st.  Verified against Ghidra dump. */
+short   body_yof[109] = {
         -2, -2, -2, -1, -2, -2, -2, -1,     /*   0..7  */
         -2,  0,  0,  0,  0,  0,  0,  0,     /*   8..15 */
          0,  0,  0,  0,  0,  0,  0,  0,     /*  16..23 */
@@ -117,9 +117,9 @@ short   body_y_offset_per_state[109] = {
         46,  1, 11, 26, 35                  /* 104..108 */
 };
 
-short * body_lcp_file;
-short * body_shape_data;
-/* body_shape_data buffer (Ghidra 0x3D23C, 98 * 84 = 8232 bytes):
+short * body_ptr;
+short * body_shp;
+/* body_shp buffer (Ghidra 0x3D23C, 98 * 84 = 8232 bytes):
    destination for sprite_lcp_build_all_body's 30-bit dilation of the
    raw 168-byte body frames.  84 bytes = 21 rows * 2 words per row.
    BSS-resident so it survives to game end without heap traffic. */
@@ -129,7 +129,7 @@ short   g_lsmas[168];
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
 /* g_dwanf (Ghidra dog_walk_anim_frames @ 0x2A0E8): 8 sprite ids the
-   walk cycle rotates through in dog_move_and_animate. */
+   walk cycle rotates through in dg_mvAni. */
 short   g_dwanf[8] = { 34, 35, 36, 37, 38, 39, 40, 41 };
 /* PTR_ARRAY_0005a156/0x54016 are declared as g_sedim/g_sedms above.
    sp_reglp populates them; sp_sprs/sp_ssco/sp_ss02/sp_spud all read
@@ -147,43 +147,43 @@ short   g_dfmab[120];
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
-   floor_bottom_y_coords[0] = top floor, [1] = middle floor, [2] = bottom. */
+   flr_by[0] = top floor, [1] = middle floor, [2] = bottom. */
 /* Ghidra-verified: floor 1 (bottom) .. floor 3 (top).  Dumped from
    0x2A07E (bottom), 0x2A076 (center), 0x2A066 (waypoints). */
-short   floor_bottom_y_coords[3]        = { 202, 140, 77 };
-short   floor_center_y_coords[3]        = { 198, 135, 71 };
+short   flr_by[3]        = { 202, 140, 77 };
+short   flr_cy[3]        = { 198, 135, 71 };
 /* Ghidra 0x2A066, actual size = 6 shorts (distance to
-   stair_top_y_threshold @ 0x2A072 is 12 bytes).  The last 2 entries
-   my earlier port added (124, 137) were `stair_top_y_threshold` and
-   `stair_bottom_y_threshold` -- adjacent globals, not part of the
+   stair_ty @ 0x2A072 is 12 bytes).  The last 2 entries
+   my earlier port added (124, 137) were `stair_ty` and
+   `stair_by` -- adjacent globals, not part of the
    waypoint table. */
-short   staircase_waypoint_coords[6]    = { 170, 185, 133, 124, 182, 72 };
+short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
 
-short   sub_animation_frame_counter     = 0;
+short   subAniC     = 0;
 
 /* ---- Head sprite double-buffer + source pointers ---------------------- */
 short   g_hsbuf[168];        /* 21 rows * 4 words * 2 (image) */
 short   g_hsmas[168];
 short   g_hsmif         = 0;
-short * pex_lcp_file;                   /* filled by asset loader */
-short * head_shape_data;
-/* head_shape_data buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
+short * pex_ptr;                   /* filled by asset loader */
+short * hd_shp;
+/* hd_shp buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
    destination for sprite_lcp_build_all_head's dilation of the raw
    168-byte head frames from the PEx.LCP file. */
 short   hshdbuf[66 * 42];    /* 42 shorts/frame = 84 bytes */
 /* Ghidra head_anim_delay_countdown @ 0x2ba2a = 1. */
 short   g_hadec                         = 1;
 
-/* Per-happiness-level head frame base index (into pex_lcp_file). */
+/* Per-happiness-level head frame base index (into pex_ptr). */
 /* Ghidra 0x2BA2C. */
-short   happiness_head_frame_offset[3]  = { 44, 0, 22 };
+short   mood_hfo[3]  = { 44, 0, 22 };
 
 /* Per-PLAYER_STATE horizontal offset for the head anchor.  Ghidra
    0x29C9E, actual size = 93 shorts (distance to next symbol
-   head_height_per_state @ 0x29D58 is 186 bytes).  The previous
+   hd_hgt @ 0x29D58 is 186 bytes).  The previous
    [109] port declaration overflowed into adjacent tables, giving
-   wrong offsets for lcp_state 93..108. */
-short   head_x_offset_per_state[93] = {
+   wrong offsets for lcp_st 93..108. */
+short   hd_xoff[93] = {
          0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,
@@ -199,9 +199,9 @@ short   head_x_offset_per_state[93] = {
 };
 
 /* Per-PLAYER_STATE head Y contribution (subtracted from body top).
-   Ghidra 0x29D58, 93 shorts (distance to head_default_angle_per_state
+   Ghidra 0x29D58, 93 shorts (distance to hd_dang
    @ 0x29E12). */
-short   head_height_per_state[93] = {
+short   hd_hgt[93] = {
         21, 21, 21, 21, 21, 21, 21, 21,
         21, 21, 21, 21, 21, 21, 21, 21,
         21, 21, 21, 21, 21, 21, 21, 21,
@@ -220,10 +220,10 @@ short   head_height_per_state[93] = {
    pick the "resting" horizontal direction the head drifts toward).
    Ghidra 0x29E12, 93 shorts (distance to room_position_x_table @
    0x29ECC).  The previous [109] port declaration read into
-   room_position_x_table for lcp_state 93..108, producing wrong
+   room_position_x_table for lcp_st 93..108, producing wrong
    head_sprite_frame values that showed up as broken head phases
    whenever the character entered a state past 92. */
-short   head_default_angle_per_state[93] = {
+short   hd_dang[93] = {
          2,  2,  2,  2,  2,  2,  2,  2,
          2,  2,  2,  2,  2,  4,  4,  4,
          4,  2,  2,  2,  2,  0,  0,  0,
@@ -239,25 +239,25 @@ short   head_default_angle_per_state[93] = {
 };
 
 /* 15-entry delta table (Ghidra 0x2BA06). */
-short   head_movement_delta_table[15]   = {
+short   hd_mvd[15]   = {
          1,  1,  1, 99, -1, -1, -1,  0,
          1,  1,  1, 99, -1, -1, -1
 };
 
 /* Per-tilt frame-index offset (Ghidra 0x2BA24, 3 shorts -- distance
    to head_anim_delay_countdown @ 0x2BA2A is 6 bytes). */
-short   head_tilt_frame_offset[3]       = { 7, 12, 17 };
+short   hd_tilt[3]       = { 7, 12, 17 };
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
 short   g_wyx                 = 0;
 short   g_wyy                 = 0;
-short   lcp_on_stairs_flag              = 0;
-BOOL16  footstep_trigger_flag           = 0;
+short   lcp_stR              = 0;
+BOOL16  fs_trg           = 0;
 short   g_hastl            = 0;
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
-   The middle-floor branch of lcp_calc_floor_waypoint uses these to
+   The middle-floor branch of lcp_flwp uses these to
    route through the between-floor landing instead of the raw
-   staircase_waypoint_coords entries.  Values dumped from Ghidra data. */
+   stair_wp entries.  Values dumped from Ghidra data. */
 /* Ghidra 0x2A072 / 0x2A074. */
-short   stair_top_y_threshold           = 124;
-short   stair_bottom_y_threshold        = 137;
+short   stair_ty           = 124;
+short   stair_by        = 137;

@@ -11,7 +11,7 @@
  *   3. Time out any long-running SFX (doorbell -> echo, toilet flush
  *      -> refill), advance dog eating animation.
  *   4. Background copy from house buffer to compositing buffer.
- *      Three modes based on text_scroll_timer sign:
+ *      Three modes based on tx_sctm sign:
  *          <0: partial top-strip copy (letter typewriter panel)
  *          =0: full-screen copy
  *          >0: split copy (letter scroll region + game area)
@@ -22,7 +22,7 @@
  *   7. Play any queued SFX via sf_irqp.
  *   8. Toggle the compositing target for the next frame between the
  *      original physbase and the alternate buffer at 0x2CA00.
- *   9. Bump animation_tick_counter.
+ *   9. Bump ani_cnt.
  *
  * addr: sc_ren8()
  */
@@ -34,34 +34,34 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    animation_tick_counter;
+extern short    ani_cnt;
 extern long     g_sfret;
-extern short    lcp_dog_bowl_status;
-extern short    dog_food_bowl_change;
+extern short    lcp_bwlS;
+extern short    dg_bwlch;
 extern short    g_sfpli;
-extern short    text_scroll_timer;
+extern short    tx_sctm;
 extern void *   g_dscp;
 extern BOOL16   g_sfacf;
-extern short    last_hz200;
-extern long     last_vbclock;
-extern void *   save_physbase;
+extern short    last_hz;
+extern long     last_vbc;
+extern void *   sv_phb;
 extern unsigned char    scrbufA[];
 extern MFDB     g_srmfd;
-extern MFDB     MFDB_screen_ptr;        /* alias with older name */
-extern MFDB *   current_screen_mfdb;
+extern MFDB     mf_scrp;        /* alias with older name */
+extern MFDB *   cur_mf;
 extern short    g_hzlo;
 extern long     _vbclock;
-extern BOOL16   dog_visible;
-extern short    dog_idle_countdown;
-extern BOOL16   dog_near_food_bowl;
+extern BOOL16   dg_vis;
+extern short    dg_idlcd;
+extern BOOL16   dg_nrbwl;
 extern BOOL16   g_deact;
 extern short    g_decou;
-extern short    dog_last_target_index;
+extern short    dg_ltgtI;
 extern short    g_dseat[];
 extern short    g_ddipt[];
 extern short    g_ddxot[];
 extern short    g_ddyot[];
-extern void     house_get_position_xy();
+extern void     hs_posXY();
 extern short    dog_x;
 extern short    dog_y;
 extern short    g_dtx;
@@ -80,16 +80,16 @@ extern short    g_seacx[];
 extern short    g_seacy[];
 extern short    g_seach[];
 extern short    g_seacw[];
-extern short    randomRange();                  /* random.c */
+extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 
-extern short    randomRange();
-extern void     dog_move_and_animate();
+extern short    rndRng();
+extern void     dg_mvAni();
 extern void     sp_spud();
 extern void     sf_so();
 extern void     sf_sele();
 extern void     sf_irqp();
-extern void     blkcopy32();
+extern void     blkcp32();
 extern void     sp_draw();
 
 /* Read the 200 Hz clock via GEMDOS Super mode.  Matches Ghidra's
@@ -104,7 +104,7 @@ extern void     sp_draw();
    Both must be read in supervisor mode. */
 
 static short
-read_hz_200()
+rd_hz()
 {
         void *  saveSSP;
         long    v;
@@ -116,7 +116,7 @@ read_hz_200()
 }
 
 static long
-read_vbclock()
+rd_vbc()
 {
         void *  saveSSP;
         long    v;
@@ -127,35 +127,35 @@ read_vbclock()
         return v;
 }
 
-/* dog_pick_new_wander_target: choose the next dog destination from a
+/* dg_pkTgt: choose the next dog destination from a
    9-entry table.  Extracted from sc_ren8 for readability.
-   The `dog_visible` flag broadens the acceptable-random range to
+   The `dg_vis` flag broadens the acceptable-random range to
    include the food-adjacent positions when the dog is currently
    visible on-screen. */
 
 static void
-dog_pick_new_wander_target()
+dg_pkTgt()
 {
         short   base;
         short   pick;
         short   dest_position;
 
-        base = (dog_visible == NO) ? 0 : 3;
+        base = (dg_vis == NO) ? 0 : 3;
         do {
-                pick = randomRange(base, 8);
-        } while (pick == dog_last_target_index);
+                pick = rndRng(base, 8);
+        } while (pick == dg_ltgtI);
 
         dest_position = g_ddipt[pick];
-        house_get_position_xy(dest_position,
+        hs_posXY(dest_position,
                               &g_dtx, &g_dty);
         g_dty = g_ddyot[pick] + g_dty;
         g_dtx = g_ddxot[pick] + g_dtx;
 
         if (dest_position == POS_BTM_STAIR_LANDING)
-                dog_near_food_bowl = YES;
+                dg_nrbwl = YES;
 
-        dog_last_target_index = pick;
-        dog_idle_countdown    = randomRange(20, 200);
+        dg_ltgtI = pick;
+        dg_idlcd    = rndRng(20, 200);
 }
 
 /* sc_ren8: the frame driver.
@@ -169,56 +169,56 @@ sc_ren8()
         short   index;
 
         /* Frame-rate gate. */
-        save_hz200   = read_hz_200();
-        save_vbclock = read_vbclock();
-        if ((unsigned short) (save_hz200 - last_hz200) <= 24)
+        save_hz200   = rd_hz();
+        save_vbclock = rd_vbc();
+        if ((unsigned short) (save_hz200 - last_hz) <= 24)
                 return;
-        if (save_vbclock == last_vbclock)
+        if (save_vbclock == last_vbc)
                 return;
-        if (last_vbclock + 1 == save_vbclock)
+        if (last_vbc + 1 == save_vbclock)
                 return;
 
-        last_hz200 = save_hz200;
+        last_hz = save_hz200;
 
         /* --- Dog movement + wander AI --- */
-        dog_move_and_animate();
+        dg_mvAni();
 
-        if (dog_idle_countdown < 0 || dog_idle_countdown > 200)
-                dog_idle_countdown = 5;
+        if (dg_idlcd < 0 || dg_idlcd > 200)
+                dg_idlcd = 5;
 
         /* Start eating if the dog is at its bowl. */
         if (g_dtx == 0 && g_dty == 0 &&
-            lcp_dog_bowl_status != BOWL_EMPTY &&
-            dog_near_food_bowl != NO &&
+            lcp_bwlS != BOWL_EMPTY &&
+            dg_nrbwl != NO &&
             g_deact == NO &&
             dog_x < 0x14 && dog_y > 0xa0) {
                 g_deact    = YES;
-                g_decou = randomRange(0x52, 100);
+                g_decou = rndRng(0x52, 100);
         }
 
         /* Idle countdown while waiting for a target. */
         if (g_dtx == 0 && g_dty == 0 &&
-            dog_idle_countdown != 0 && g_deact == NO)
-                dog_idle_countdown = dog_idle_countdown - 1;
+            dg_idlcd != 0 && g_deact == NO)
+                dg_idlcd = dg_idlcd - 1;
 
         if (g_dtx == 0 && g_dty == 0 &&
-            dog_idle_countdown == 0 && g_deact == NO)
-                dog_pick_new_wander_target();
+            dg_idlcd == 0 && g_deact == NO)
+                dg_pkTgt();
 
         /* Eating animation cycle. */
         if (g_deact != NO) {
                 g_decou = g_decou - 1;
                 if (g_decou == 0) {
                         g_deact    = NO;
-                        dog_near_food_bowl   = NO;
-                        dog_food_bowl_change = -1;
+                        dg_nrbwl   = NO;
+                        dg_bwlch = -1;
                 } else {
                         if (g_decou == 60 ||
                             g_decou == 30 ||
                             g_decou == 4)
-                                dog_food_bowl_change = -1;
+                                dg_bwlch = -1;
                         else
-                                dog_food_bowl_change = 0;
+                                dg_bwlch = 0;
                         g_dsid = g_dseat[
                                 g_decou % 3];
                         sp_spud(g_dsid, 1, NO);
@@ -239,26 +239,26 @@ sc_ren8()
         }
 
         /* --- Background copy --- */
-        if (text_scroll_timer < 1) {
-                if (text_scroll_timer < 0) {
+        if (tx_sctm < 1) {
+                if (tx_sctm < 0) {
                         /* Partial (top-strip only). */
-                        blkcopy32(g_dscp,
+                        blkcp32(g_dscp,
                                   g_srmfd.fd_addr, 385);
-                        blkcopy32((char *) MFDB_screen_ptr.fd_addr + 12320,
+                        blkcp32((char *) mf_scrp.fd_addr + 12320,
                                   (char *) g_srmfd.fd_addr + 12320,
                                   615);
                 } else {
                         /* Full-screen. */
-                        blkcopy32(MFDB_screen_ptr.fd_addr,
+                        blkcp32(mf_scrp.fd_addr,
                                   g_srmfd.fd_addr, 1000);
                 }
         } else {
                 /* Split copy for letter scroll. */
-                blkcopy32(g_dscp,
+                blkcp32(g_dscp,
                           g_srmfd.fd_addr, 135);
-                blkcopy32((char *) MFDB_screen_ptr.fd_addr + 4320,
+                blkcp32((char *) mf_scrp.fd_addr + 4320,
                           (char *) g_srmfd.fd_addr + 4320, 865);
-                text_scroll_timer = text_scroll_timer - 1;
+                tx_sctm = tx_sctm - 1;
         }
 
         /* --- Sprite compositing --- */
@@ -276,10 +276,10 @@ sc_ren8()
                         sp_draw(index);
         }
         /* --- Page flip --- */
-        current_screen_mfdb = &g_srmfd;
+        cur_mf = &g_srmfd;
         _xbios(XBIOS_Vsync, 0L, 0L, 0L);
         _xbios(XBIOS_Setscreen,
-               -1L, (long) current_screen_mfdb->fd_addr, -1L);
+               -1L, (long) cur_mf->fd_addr, -1L);
 
         if (g_sfacf != NO) {
                 sf_irqp();
@@ -295,19 +295,19 @@ sc_ren8()
            BSS array that sp_imfs stashes the compositing MFDB at
            (SCREEN_BUFFER_A + 0xCD).  Our port's linker places scrbufA
            at a different BSS address, so 0x2CA00 as a literal lands
-           on totally unrelated globals; when blkcopy32 writes 32000
+           on totally unrelated globals; when blkcp32 writes 32000
            bytes there it silently corrupts our own state (which is
            why the third sc_ren8 iteration crashed in TOS ROM with
            an implausible MFDB pointer).  Compute the same relative
            offset off scrbufA instead. */
-        if (current_screen_mfdb->fd_addr == save_physbase) {
-                long alt = ((long) scrbufA + 0xFFL) & ~0xFFL;
+        if (cur_mf->fd_addr == sv_phb) {
+                long alt = ((long) scrbufA + 0x200L) & ~0x1FFL;
                 alt = alt + 0x8000L;
-                current_screen_mfdb->fd_addr = (void *) alt;
+                cur_mf->fd_addr = (void *) alt;
         } else {
-                current_screen_mfdb->fd_addr = save_physbase;
+                cur_mf->fd_addr = sv_phb;
         }
 
-        animation_tick_counter = animation_tick_counter + 1;
-        last_vbclock = read_vbclock();
+        ani_cnt = ani_cnt + 1;
+        last_vbc = rd_vbc();
 }

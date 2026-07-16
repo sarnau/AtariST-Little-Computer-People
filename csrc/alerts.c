@@ -6,7 +6,7 @@
  * On the host, form_alert is a no-op returning 1, so we'd busy-loop
  * quickly; we terminate the process instead so tests don't hang.
  *
- * addr: error_not_enough_memory(), error_unable_to_write()
+ * addr: er_nomem(), er_write()
  */
 
 #include "types.h"
@@ -17,12 +17,12 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* error_not_enough_memory: infinite loop showing REBOOT alert on the
+/* er_nomem: infinite loop showing REBOOT alert on the
    ST.  On host, print to stderr and exit(1) so tests fail fast.
-   addr: error_not_enough_memory() */
+   addr: er_nomem() */
 
 void
-error_not_enough_memory()
+er_nomem()
 {
 #ifdef HOST
         fprintf(stderr,
@@ -34,15 +34,15 @@ error_not_enough_memory()
 #endif
 }
 
-/* error_unable_to_write: single-shot RETRY alert.  Note the 1985
+/* er_write: single-shot RETRY alert.  Note the 1985
    code doesn't loop on this one -- it fires once and returns to the
    caller, which is expected to retry the file operation itself
-   (lcp_save, create_file).  On host, print and continue so the retry
+   (lcp_save, crFile).  On host, print and continue so the retry
    loop terminates.
-   addr: error_unable_to_write() */
+   addr: er_write() */
 
 void
-error_unable_to_write()
+er_write()
 {
 #ifdef HOST
         fprintf(stderr,

@@ -25,9 +25,9 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern void     game_tick_and_animate();
-extern short    vdihandle;
-extern short    _vdi_color_table[];
+extern void     gameTick();
+extern short    vdihnd;
+extern short    vdi_colt[];
 extern short    g_tp0xc[];
 extern short    g_tp0yc[];
 extern short    g_tp1xc[];
@@ -41,7 +41,7 @@ extern short    g_tpcoi[];
 
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vsl_color();
+extern void     vslCol();
 extern void     v_pline();
 extern void     v_bar();
 
@@ -63,9 +63,9 @@ tv_scrc()
         rect.x2 = 308; rect.y2 = 106;
 
         sc_sdtb();
-        v_bar(vdihandle, &rect.x1);
+        v_bar(vdihnd, &rect.x1);
         sc_sdtf();
-        game_tick_and_animate(1);
+        gameTick(1);
 
         rnd = (unsigned short) Random();
         if ((rnd & 1) == 0)
@@ -102,7 +102,7 @@ tv_boul()
              frame < (short) ((rnd & 0xff) | 0x40);
              frame = frame + 1) {
                 rcolor = (unsigned short) Random();
-                vsl_color(vdihandle, (rcolor & 0xf) | 1);
+                vslCol(vdihnd, (rcolor & 0xf) | 1);
 
                 line_pos[1] = line_pos[1] + dy;
                 line_pos[0] = line_pos[0] + dx;
@@ -110,9 +110,9 @@ tv_boul()
                 pos[1] = line_pos[0];
 
                 sc_sdtb();
-                v_pline(vdihandle, 2, pos);
+                v_pline(vdihnd, 2, pos);
                 sc_sdtf();
-                game_tick_and_animate(0);
+                gameTick(0);
 
                 if (pos[0] == 308) dy = -1;
                 if (pos[0] == 293) dy =  1;
@@ -162,12 +162,12 @@ tv_patl()
                         point[0] = xs[i];
                         point[1] = ys[i];
                         sc_sdtb();
-                        vsl_color(vdihandle,
-                                  _vdi_color_table[
+                        vslCol(vdihnd,
+                                  vdi_colt[
                                     g_tpcoi[pattern]]);
-                        v_pline(vdihandle, 2, point);
+                        v_pline(vdihnd, 2, point);
                         sc_sdtf();
-                        game_tick_and_animate(1);
+                        gameTick(1);
                 }
         }
 }

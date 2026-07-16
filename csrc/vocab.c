@@ -2,7 +2,7 @@
  * vocab.c -- NLP parser data tables.
  *
  * Vocabulary (160 words), position/bit maps, and 33 action-matching
- * rules for the check_entered_command dispatcher.  Ported from the
+ * rules for the chk_encm dispatcher.  Ported from the
  * reference implementation in lcp/LCP.py, which was itself derived
  * from a Ghidra data-segment dump of LCP.PRG.
  *
@@ -10,7 +10,7 @@
  * resolve to concrete ACTION_IDs instead of falling through to
  * ACTION_NONE.
  *
- * addr: valid_word_table[], word__entered_to_position[],
+ * addr: vwd_tab[], ew2pos[],
  *       g_ew2b[], g_ew2a[]
  */
 
@@ -18,7 +18,7 @@
 #include "structs.h"
 
 /* ---- Vocabulary (160 words, from lcp/LCP.py reference) ---- */
-char * valid_word_table[161] = {
+char * vwd_tab[161] = {
     "PLEASE", "DO", "YOU", "LIKE", 
     "ENJOY", "WILL", "WOULD", "PLAY", 
     "PERFORM", "USE", "TRY", "PLAYING", 
@@ -63,7 +63,7 @@ char * valid_word_table[161] = {
     (char *) 0    /* sentinel */
 };
 
-short word__entered_to_position[160] = {
+short ew2pos[160] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 

@@ -16,7 +16,7 @@
 
 #include "types.h"
 
-extern unsigned char    sprites_files[];        /* raw SPRITES file bytes */
+extern unsigned char    spr_file[];        /* raw SPRITES file bytes */
 extern short *          g_sedim[];              /* PTR_ARRAY_0005a156 (sprite_def_image)  */
 extern short *          g_sedms[];              /* PTR_ARRAY_00054016 (sprite_def_mask)   */
 extern short            g_sedeh[];              /* SHORT_ARRAY_0003cf84 */
@@ -36,7 +36,7 @@ short   sp_fidx[50] = {
 
 /* sp_mbuf: 14 KB shared mask buffer.  sp_regs writes a generated
    transparency mask here parallel to the sprite's image bytes in
-   sprites_files.  g_sedms[id] then references a slice
+   spr_file.  g_sedms[id] then references a slice
    here. */
 unsigned char   sp_mbuf[14000];
 
@@ -88,7 +88,7 @@ short                   width;
                  (unsigned short) height);
 }
 
-/* sp_reglp: second-pass registration loop over sprites_files.
+/* sp_reglp: second-pass registration loop over spr_file.
    Mirrors Ghidra main() at 0x1579c..0x15828 exactly.  Called once
    from main() right after al_lost. */
 
@@ -108,10 +108,10 @@ sp_reglp()
         mask_offset = 0;
         count       = 0;
         while (offset < 14000L && count < 50) {
-                height = ((short) sprites_files[offset]     << 8) |
-                                  sprites_files[offset + 1];
-                width  = ((short) sprites_files[offset + 2] << 8) |
-                                  sprites_files[offset + 3];
+                height = ((short) spr_file[offset]     << 8) |
+                                  spr_file[offset + 1];
+                width  = ((short) spr_file[offset + 2] << 8) |
+                                  spr_file[offset + 3];
                 if (height == 0 || width == 0)
                         break;
                 offset = offset + 4;
@@ -121,7 +121,7 @@ sp_reglp()
 
                 id = sp_fidx[count];
                 sp_regs(id,
-                        (unsigned short *) (sprites_files + offset),
+                        (unsigned short *) (spr_file + offset),
                         (unsigned short *) (sp_mbuf       + mask_offset),
                         height,
                         (short) (words_per_row * 16));

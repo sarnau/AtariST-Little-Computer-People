@@ -4,13 +4,13 @@
  * sp_draw is called from sc_ren8 for each of the 8 hardware
  * sprite slots.  It uses the standard Atari ST two-pass masked blit:
  *
- *   Pass 1  vdi_copy_rect(NOTS_AND_D, mask, screen)
+ *   Pass 1  vdi_cpR(NOTS_AND_D, mask, screen)
  *     Punches a transparent hole in the background where the sprite
  *     will go.  The mask has 1-bits where the sprite is opaque, so
  *     inverting it and AND'ing clears the destination pixels only
  *     under the opaque part of the sprite.
  *
- *   Pass 2  vdi_copy_rect(S_XOR_D, image, screen)
+ *   Pass 2  vdi_cpR(S_XOR_D, image, screen)
  *     XOR the sprite image onto the cleared area.  Since we just wrote
  *     zeros there, XOR effectively becomes a copy.
  *
@@ -28,7 +28,7 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    vdihandle;
+extern short    vdihnd;
 extern MFDB     g_srmfd;
 extern MFDB     g_semfi[];
 extern MFDB     g_semfm[];
@@ -38,7 +38,7 @@ extern short *  g_seaim[];
 extern short *  g_seams[];
 extern short    g_seach[];
 extern short    g_seacw[];
-extern void     vdi_copy_rect();
+extern void     vdi_cpR();
 
 /* sp_iniM: populate an MFDB with the ST low-res format
    defaults (device-specific, 4 bitplanes).  The first parameter is
@@ -85,12 +85,12 @@ short   index;
         sp_iniM(0L, &g_semfm[index],
                          g_seams[index],  w, h);
 
-        vdi_copy_rect(vdihandle, NOTS_AND_D,
+        vdi_cpR(vdihnd, NOTS_AND_D,
                       &g_semfm[index], &g_srmfd,
                       0, 0, w - 1, h - 1,
                       x1, y1, x1 + w - 1, y1 + h - 1);
 
-        vdi_copy_rect(vdihandle, S_XOR_D,
+        vdi_cpR(vdihnd, S_XOR_D,
                       &g_semfi[index], &g_srmfd,
                       0, 0, w - 1, h - 1,
                       x1, y1, x1 + w - 1, y1 + h - 1);

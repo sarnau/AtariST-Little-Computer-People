@@ -1,5 +1,5 @@
 /*
- * astubs.c -- placeholder bodies for do_action() handlers not
+ * astubs.c -- placeholder bodies for doAct() handlers not
  *                   yet ported for real.
  *
  * Style: one-line bodies keep this file skimmable; real ports live in
@@ -51,5 +51,5 @@
 /* Delivery event handlers moved to delivery.c:
  *   er_food, er_bood,
  *   er_recd, er_dogf,
- *   event_answer_phone
+ *   ev_ansPh
  */

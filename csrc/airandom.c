@@ -2,7 +2,7 @@
  * airandom.c -- time-of-day / mood-based random action selector.
  *
  * Called as the 11th and lowest-priority tier of the AI decision
- * ladder in check_for_any_action_triggers.  Picks one of three action
+ * ladder in chk_actT.  Picks one of three action
  * tables based on how many hours the resident has been awake, then
  * rolls a random index into that table.  Weekends bias toward the
  * relaxed table; sickness locks it to "sleep".
@@ -12,10 +12,10 @@
  *   g_atmod[16]   -- midday (7..12 h since wake)
  *   g_atrel[16]    -- evening (13..17 h since wake)
  *
- * activity_schedule_table[8][3] is indexed by activity_level and by
+ * sch_tab[8][3] is indexed by activity_level and by
  * (hours_since_wake / 2) % 3 to pick the effective table for the roll.
  *
- * addr: check_time_based_actions()
+ * addr: chk_timA()
  */
 
 #include "types.h"
@@ -25,13 +25,13 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    time_hours;
+extern short    t_hour;
 extern PLAYER   lcp;                            /* the resident LCP */
-extern short    last_action;
-extern short    calc_weekday();
-extern short    randomRange();                  /* random.c */
-extern void     check_for_any_action_triggers();/* ai.c      */
-extern short    randomRange();
+extern short    lastAct;
+extern short    cWkday();
+extern short    rndRng();                  /* random.c */
+extern void     chk_actT();/* ai.c      */
+extern short    rndRng();
 
 /* Weekday enum values used by the weekend-bias branch.  Ghidra's enum
    has SUN=0..SAT=6 but the code only tests for saturday and sunday. */
@@ -39,35 +39,35 @@ extern short    randomRange();
 #define WEEKDAY_SATURDAY        6
 
 /* Three action tables (16 entries each) and the schedule indirection.
-   Values match Ghidra activity_schedule_table[3][8] at 0x2b96e and
+   Values match Ghidra sch_tab[3][8] at 0x2b96e and
    g_atact/moderate/relaxed at 0x2b8fe/0x2b91e/0x2b93e. */
-extern short *  activity_schedule_table[];      /* pointer array */
+extern short *  sch_tab[];      /* pointer array */
 extern short    g_atact[];
 extern short    g_atmod[];
 extern short    g_atrel[];
 
-/* check_time_based_actions: pick a random action for right now.
+/* chk_timA: pick a random action for right now.
    Returns ACTION_NONE if the resident is sleeping and the time-of-day
    branch resolves to bedtime.
-   addr: check_time_based_actions() */
+   addr: chk_timA() */
 
 short
-check_time_based_actions()
+chk_timA()
 {
         short   day;
         short   action_index;
         short   hours_since_wake;
         short   table_pick;
 
-        hours_since_wake = time_hours - lcp.wake_hour;
+        hours_since_wake = t_hour - lcp.wake_hour;
         if (hours_since_wake < 0)
                 hours_since_wake = hours_since_wake + 24;
 
         if (hours_since_wake < 18 && lcp.sickness_level < 2) {
                 /* Indirection through the per-activity_level schedule:
-                   activity_schedule_table[0] holds pointer arrays of
+                   sch_tab[0] holds pointer arrays of
                    short[8], indexed via
-                     activity_schedule_table[0][(activity_level << 1) +
+                     sch_tab[0][(activity_level << 1) +
                                                 ((hours/2)%3 << 4)]
                    The << 4 (16 shorts per row) matches the 16-entry
                    action tables that follow. */
@@ -79,11 +79,11 @@ check_time_based_actions()
                    (short-pointer arithmetic), reading twice as far
                    into the row and hitting garbage past _schedule_row_0's
                    8-short bound. */
-                table_pick = *(short *) ((char *) activity_schedule_table[0] +
+                table_pick = *(short *) ((char *) sch_tab[0] +
                         (lcp.activity_level << 1) +
                         (((hours_since_wake / 2) % 3) << 4));
 
-                day = calc_weekday();
+                day = cWkday();
                 if (table_pick == 0 && day == WEEKDAY_SUNDAY)
                         table_pick = 2;
                 else if (table_pick == 0 && day == WEEKDAY_SATURDAY)
@@ -96,16 +96,16 @@ check_time_based_actions()
            last one (prevents "read newspaper" twice in a row). */
         for (;;) {
                 if (table_pick == 0) {
-                        action_index = randomRange(0, 15);
-                        if (g_atact[action_index] != last_action)
+                        action_index = rndRng(0, 15);
+                        if (g_atact[action_index] != lastAct)
                                 return g_atact[action_index];
                 } else if (table_pick == 1) {
-                        action_index = randomRange(0, 15);
-                        if (g_atmod[action_index] != last_action)
+                        action_index = rndRng(0, 15);
+                        if (g_atmod[action_index] != lastAct)
                                 return g_atmod[action_index];
                 } else if (table_pick == 2) {
-                        action_index = randomRange(0, 15);
-                        if (g_atrel[action_index] != last_action)
+                        action_index = rndRng(0, 15);
+                        if (g_atrel[action_index] != lastAct)
                                 return g_atrel[action_index];
                 } else {
                         /* Sleep bucket -- either bed or nothing. */

@@ -2,9 +2,9 @@
  * games.c -- mini-game entry points + shared setup helpers.
  *
  * Fully-ported helpers:
- *   minigame_setup_screen -- 5-tick pause, top-strip clear, freeze the
+ *   mg_stp -- 5-tick pause, top-strip clear, freeze the
  *                            text scroll pane, disable keyboard input.
- *   play_erase_rect       -- v_bar-based rectangular clear at (x1,y1)-(x2,y2)
+ *   plEr       -- v_bar-based rectangular clear at (x1,y1)-(x2,y2)
  *                            with VDI init/exit brackets.
  *
  * Skeleton-ported game mains:
@@ -12,16 +12,16 @@
  *     1. Allocate the game-specific data buffer via GEMDOS_Malloc
  *        (sizes verified from Ghidra: 10000 for anagram, 2000 for
  *        word puzzle, 10400 for poker/war, 0x28a0 = 10432 for
- *        blackjack).  On OOM, error_not_enough_memory (infinite alert
+ *        blackjack).  On OOM, er_nomem (infinite alert
  *        loop on ST; exit(1) on host).
  *     2. Load the required data file with fr_reac
  *        ("words" for anagram, "wordpz.txt" for word puzzle).  Card
- *        games load their graphics via poker_load_card_graphics.
- *     3. Call minigame_setup_screen.
+ *        games load their graphics via pk_ldCrd.
+ *     3. Call mg_stp.
  *     4. Print the game title.
  *     5. Enter a key-poll loop that terminates on F10.
- *     6. Free the buffer via GEMDOS_Mfree, restore text_scroll_timer,
- *        clear disable_key_input_flag, return.
+ *     6. Free the buffer via GEMDOS_Mfree, restore tx_sctm,
+ *        clear no_keyin, return.
  *
  * The *inner* game logic (word scrambling, poker hand evaluation,
  * card-shuffle algorithms, ~50 subsystem helpers per game) is
@@ -31,9 +31,9 @@
  * out) cleanly returns to the house so the overall port continues
  * to link and run to completion.
  *
- * addr: minigame_setup_screen(), play_erase_rect(),
- *       ag_main(), wp_main(), poker_main(),
- *       poker_war_main(), poker_blackjack_main()
+ * addr: mg_stp(), plEr(),
+ *       ag_main(), wp_main(), pk_main(),
+ *       pk_wrMn(), pk_bjMn()
  */
 
 #include "types.h"
@@ -44,63 +44,63 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern short    g_trel[];
-extern void     game_tick_and_animate();
-extern short    disable_key_input_flag;
-extern short    text_scroll_timer;
+extern void     gameTick();
+extern short    no_keyin;
+extern short    tx_sctm;
 extern char *   g_ltlp[];
-extern short    vdihandle;
+extern short    vdihnd;
 extern char *   g_agwb;
 extern char *   g_wpdb;
-extern short *  cards_data;
+extern short *  crd_dat;
 extern short    g_wpci;
-extern short    _poker_round_count;
-extern BOOL16   poker_quit_flag;
+extern short    pk_round;
+extern BOOL16   pk_quit;
 extern short    g_pcmon;
 extern short    g_ppmon;
 extern short    g_ppppa;
-extern short    poker_draw_discard_flags[];
+extern short    pk_dsc[];
 extern short    g_pcdrp[];
 extern short    g_ppdrp[];
-extern short    randomRange();                  /* random.c */
+extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 
-extern short    get_pressed_key();
-extern void     string_print();
-extern void     fill_top_rect_with_background();
+extern short    getKey();
+extern void     strPr();
+extern void     fillTopR();
 extern void     fr_reac();
-extern void     error_not_enough_memory();
-extern void     init_vdi_and_screen();
-extern void     exit_vdi_and_screen();
+extern void     er_nomem();
+extern void     initVdi();
+extern void     exitVdi();
 extern void     v_bar();
-extern void     poker_load_card_graphics();
+extern void     pk_ldCrd();
 
 /* KEY_F10 already defined in enums.h as 0x144 in our compact encoding. */
 
 /* ---- Real helpers ---------------------------------------------------- */
 
-/* minigame_setup_screen: prep the top status strip for the game menu.
+/* mg_stp: prep the top status strip for the game menu.
    Fills 0x4d = 77 rows (the full text pane) with the house background,
-   then freezes the text-scroll pane (`text_scroll_timer = -1`) and
+   then freezes the text-scroll pane (`tx_sctm = -1`) and
    disables keyboard input from the game-command dispatcher so keys
    don't leak into the parser while a mini-game is running.
-   addr: minigame_setup_screen() */
+   addr: mg_stp() */
 
 void
-minigame_setup_screen()
+mg_stp()
 {
-        game_tick_and_animate(5);
-        fill_top_rect_with_background(0x4d);
-        text_scroll_timer      = -1;
-        disable_key_input_flag = YES;
+        gameTick(5);
+        fillTopR(0x4d);
+        tx_sctm      = -1;
+        no_keyin = YES;
 }
 
-/* play_erase_rect: clear a rectangle via VDI v_bar.  Bracketed by
-   init_vdi_and_screen / exit_vdi_and_screen which are the mini-game-
+/* plEr: clear a rectangle via VDI v_bar.  Bracketed by
+   initVdi / exitVdi which are the mini-game-
    specific VDI setup helpers (deferred stubs for now).
-   addr: play_erase_rect() */
+   addr: plEr() */
 
 void
-play_erase_rect(x1, y1, x2, y2)
+plEr(x1, y1, x2, y2)
 short   x1;
 short   y1;
 short   x2;
@@ -112,9 +112,9 @@ short   y2;
         rect[1] = y1;
         rect[2] = x2;
         rect[3] = y2;
-        init_vdi_and_screen();
-        v_bar(vdihandle, rect);
-        exit_vdi_and_screen();
+        initVdi();
+        v_bar(vdihnd, rect);
+        exitVdi();
 }
 
 /* ---- Mini-game skeletons -------------------------------------------- */
@@ -123,11 +123,11 @@ short   y2;
    game's data buffer if allocated, re-enable keyboard input. */
 
 static void
-game_cleanup(buffer)
+gameCln(buffer)
 void *  buffer;
 {
-        text_scroll_timer      = 0;
-        disable_key_input_flag = NO;
+        tx_sctm      = 0;
+        no_keyin = NO;
         if (buffer != (void *) 0)
                 _gemdos(GEMDOS_Mfree, (long) buffer, 0L, 0L);
 }
@@ -135,12 +135,12 @@ void *  buffer;
 /* Poll-loop skeleton: tick + read key + return true if user quit. */
 
 static short
-game_poll_wait_for_quit()
+gamePlWQ()
 {
         short   key;
         for (;;) {
-                key = get_pressed_key();
-                game_tick_and_animate(0);
+                key = getKey();
+                gameTick(0);
                 if (key == KEY_F10)
                         return 1;
                 if (g_trel[0] != ACTION_NONE)
@@ -158,17 +158,17 @@ ag_main()
         g_agwb =
                 (char *) _gemdos(GEMDOS_Malloc, 10000L, 0L, 0L);
         if (g_agwb == (char *) 0)
-                error_not_enough_memory();
+                er_nomem();
         fr_reac("words",
                              (unsigned char *) g_agwb,
                              10000);
 
-        minigame_setup_screen();
-        string_print("***ANAGRAMS***", 5, 8, COLOR_black);
+        mg_stp();
+        strPr("***ANAGRAMS***", 5, 8, COLOR_black);
         /* anagram_show_intro_text, anagram_select_and_scramble_word,
            the guess/clue loop -- deferred. */
-        game_poll_wait_for_quit();
-        game_cleanup(g_agwb);
+        gamePlWQ();
+        gameCln(g_agwb);
         g_agwb = (char *) 0;
 }
 
@@ -187,9 +187,9 @@ wp_main()
         g_wpdb =
                 (char *) _gemdos(GEMDOS_Malloc, 2000L, 0L, 0L);
         if (g_wpdb == (char *) 0)
-                error_not_enough_memory();
+                er_nomem();
 
-        minigame_setup_screen();
+        mg_stp();
         fr_reac("wordpz.txt",
                              (unsigned char *) g_wpdb,
                              1536);
@@ -207,47 +207,47 @@ wp_main()
         }
 
         g_wpci = 0;
-        string_print("**WORD PUZZLE #  **", 8, 8, COLOR_black);
+        strPr("**WORD PUZZLE #  **", 8, 8, COLOR_black);
         /* The per-puzzle "choose then solve" loop -- deferred. */
-        game_poll_wait_for_quit();
-        game_cleanup(g_wpdb);
+        gamePlWQ();
+        gameCln(g_wpdb);
         g_wpdb = (char *) 0;
 }
 
-/* poker_main: outer flow verified; 5-card-draw round logic (ante, deal,
+/* pk_main: outer flow verified; 5-card-draw round logic (ante, deal,
    draw, showdown, computer AI) is deferred.
-   addr: poker_main() */
+   addr: pk_main() */
 
 void
-poker_main()
+pk_main()
 {
-        cards_data = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
-        if (cards_data == (short *) 0)
-                error_not_enough_memory();
-        poker_load_card_graphics();
-        minigame_setup_screen();
+        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
 
-        _poker_round_count    = 0;
-        poker_quit_flag       = NO;
+        pk_round    = 0;
+        pk_quit       = NO;
         g_pcmon  = 400;
         g_ppmon    = 400;
         g_ppppa      = 0;
 
-        string_print("***POKER***", 5, 8, COLOR_black);
+        strPr("***POKER***", 5, 8, COLOR_black);
         /* Round loop with ante/deal/bet/draw/showdown phases -- deferred. */
-        game_poll_wait_for_quit();
-        game_cleanup(cards_data);
-        cards_data = (short *) 0;
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
 }
 
-/* poker_war_main: outer flow verified; card-shuffling is real (52-card
+/* pk_wrMn: outer flow verified; card-shuffling is real (52-card
    deck initialized 0..51, then 400 random-swap iterations, then split
    into two 26-card piles).  The head-to-head reveal + score-tracking
    loop is deferred.
-   addr: poker_war_main() */
+   addr: pk_wrMn() */
 
 void
-poker_war_main()
+pk_wrMn()
 {
         short   input_key;
         short   card_index;
@@ -256,11 +256,11 @@ poker_war_main()
         short   j;
         short   k;
 
-        cards_data = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
-        if (cards_data == (short *) 0)
-                error_not_enough_memory();
-        poker_load_card_graphics();
-        minigame_setup_screen();
+        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 10400L, 0L, 0L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
 
         g_pcmon = 26;
         g_ppmon   = 26;
@@ -268,57 +268,57 @@ poker_war_main()
 
         /* Deck initialization: 52 cards indexed 0..51. */
         for (i = 0; i < 52; i = i + 1)
-                poker_draw_discard_flags[i] = i;
+                pk_dsc[i] = i;
 
         /* Fisher-Yates-lite shuffle: 400 random-pair swaps.  Sufficient
            over a 52-element array to fully randomise the deck. */
         j = 400;
         while (j != 0) {
-                input_key = randomRange(0, 51);
+                input_key = rndRng(0, 51);
                 do {
-                        card_index = randomRange(0, 51);
+                        card_index = rndRng(0, 51);
                 } while (input_key == card_index);
-                temp = poker_draw_discard_flags[card_index];
-                poker_draw_discard_flags[card_index] =
-                        poker_draw_discard_flags[input_key];
-                poker_draw_discard_flags[input_key] = temp;
+                temp = pk_dsc[card_index];
+                pk_dsc[card_index] =
+                        pk_dsc[input_key];
+                pk_dsc[input_key] = temp;
                 j = j - 1;
         }
 
         /* Split the shuffled deck into two 26-card piles. */
         k = 0;
         for (i = 0; i < 52; i = i + 2) {
-                g_pcdrp[k] = poker_draw_discard_flags[i];
-                g_ppdrp[k]   = poker_draw_discard_flags[i + 1];
+                g_pcdrp[k] = pk_dsc[i];
+                g_ppdrp[k]   = pk_dsc[i + 1];
                 k = k + 1;
         }
 
-        string_print("***WAR***", 5, 8, COLOR_black);
+        strPr("***WAR***", 5, 8, COLOR_black);
         /* Reveal/compare loop -- deferred. */
-        game_poll_wait_for_quit();
-        game_cleanup(cards_data);
-        cards_data = (short *) 0;
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
 }
 
-/* poker_blackjack_main: outer flow verified; hit/stand/double logic
+/* pk_bjMn: outer flow verified; hit/stand/double logic
    and dealer AI are deferred.
-   addr: poker_blackjack_main() */
+   addr: pk_bjMn() */
 
 void
-poker_blackjack_main()
+pk_bjMn()
 {
-        cards_data = (short *) _gemdos(GEMDOS_Malloc, 0x28a0L, 0L, 0L);
-        if (cards_data == (short *) 0)
-                error_not_enough_memory();
-        poker_load_card_graphics();
-        minigame_setup_screen();
+        crd_dat = (short *) _gemdos(GEMDOS_Malloc, 0x28a0L, 0L, 0L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
 
         g_pcmon = 400;
         g_ppmon   = 400;
 
-        string_print("***BLACKJACK***", 5, 8, COLOR_black);
+        strPr("***BLACKJACK***", 5, 8, COLOR_black);
         /* Round loop with bet/deal/hit/stand/dealer/settle -- deferred. */
-        game_poll_wait_for_quit();
-        game_cleanup(cards_data);
-        cards_data = (short *) 0;
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
 }

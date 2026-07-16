@@ -5,12 +5,12 @@
  * fr_reac: nibble-based token decoder.  The on-disk file
  * format is:
  *   +0    short   uncompressed_size + 0x11 header bytes
- *   +2    byte    compression_tokens[15]  (15 most common bytes)
+ *   +2    byte    comp_tok[15]  (15 most common bytes)
  *   +17   ...     compressed body
  *
  * Body decode: read 4 bits at a time (high nibble of each byte first,
  * then the low nibble; state kept in `flag`).  For each nibble:
- *   nibble in 0..14  ->  emit compression_tokens[nibble]
+ *   nibble in 0..14  ->  emit comp_tok[nibble]
  *   nibble == 15     ->  read two more nibbles for a literal 8-bit byte
  *
  * fl_ltpl: after decompression, g_lttx
@@ -36,21 +36,21 @@
        symbol table that overflows on the full globals.h. */
 extern char *   g_lttx;
 extern char *   g_ltlp[];
-extern unsigned char compression_tokens[];
+extern unsigned char comp_tok[];
 #include <osbind.h>
 
 extern void     fr_read();
-extern short    file_open();
-extern void     error_not_enough_memory();
+extern short    fOpen();
+extern void     er_nomem();
 
-/* fr_reac: decode a token-compressed file into outbuffer.
+/* fr_reac: decode a token-compressed file into out_buf.
    outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
    addr: fr_reac() */
 
 void
-fr_reac(filename, outbuffer, outsize)
+fr_reac(filename, out_buf, outsize)
 char *          filename;
-unsigned char * outbuffer;
+unsigned char * out_buf;
 short           outsize;
 {
         short           filehandle;
@@ -66,7 +66,7 @@ short           outsize;
         {
                 unsigned char   sizebuf[2];
 
-                filehandle = file_open(filename, 0);
+                filehandle = fOpen(filename, 0);
                 fr_read(filehandle, 2L, sizebuf);
                 /* On-disk size word is big-endian (68k native).
                    Reassemble explicitly so the loader works on any
@@ -78,9 +78,9 @@ short           outsize;
                                             0L, 0L);
         fbuffer_orig = fbuffer;
         if (fbuffer == (unsigned char *) 0)
-                error_not_enough_memory();
+                er_nomem();
 
-        fr_read(filehandle, 0xfL, compression_tokens);
+        fr_read(filehandle, 0xfL, comp_tok);
         fr_read(filehandle, (long) (fsize - 0x11), fbuffer);
 
         flag = 1;
@@ -109,11 +109,11 @@ short           outsize;
                                 nibble = ((common_word & 0xf) | (nibble << 4));
                                 flag = (flag == 0) ? 1 : 0;
                         }
-                        *outbuffer = (unsigned char) nibble;
+                        *out_buf = (unsigned char) nibble;
                 } else {
-                        *outbuffer = compression_tokens[nibble];
+                        *out_buf = comp_tok[nibble];
                 }
-                outbuffer = outbuffer + 1;
+                out_buf = out_buf + 1;
         }
 
         _gemdos(GEMDOS_Fclose, filehandle,    0L, 0L);

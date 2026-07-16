@@ -24,7 +24,7 @@
    parameter slot).  Force a proper ANSI prototype so fr_read's
    `_gemdos(GEMDOS_Fread, handle, count, buf)` call passes arguments in
    the correct sizes.  On the ST side, TRAP #1 handles the ABI directly. */
-long host_gemdos_trap(short fn, long a, long b, long c);
+long hst_gem(short fn, long a, long b, long c);
 
 /* Simple handle table so we can pass a small int back to caller and
    fish out the underlying FILE * on each subsequent call. */
@@ -32,7 +32,7 @@ long host_gemdos_trap(short fn, long a, long b, long c);
 static FILE *   host_handles[MAX_HOST_HANDLES];
 
 static short
-alloc_handle(fp)
+al_hnd(fp)
 FILE *  fp;
 {
         short   i;
@@ -46,11 +46,11 @@ FILE *  fp;
         return -1;
 }
 
-/* host_gemdos_trap: variadic wrapper so we can dispatch on function
+/* hst_gem: variadic wrapper so we can dispatch on function
    number.  Called from save.c via the _gemdos macro. */
 
 long
-host_gemdos_trap(short fn, long a, long b, long c)
+hst_gem(short fn, long a, long b, long c)
 {
         FILE *          fp;
         char *          path;
@@ -63,14 +63,14 @@ host_gemdos_trap(short fn, long a, long b, long c)
                 fp = fopen(path, b ? "wb" : "rb");
                 if (fp == NULL)
                         return -1;
-                return alloc_handle(fp);
+                return al_hnd(fp);
 
         case GEMDOS_Fcreate:
                 path = (char *) a;
                 fp = fopen(path, "wb");
                 if (fp == NULL)
                         return -1;
-                return alloc_handle(fp);
+                return al_hnd(fp);
 
         case GEMDOS_Fread:
                 handle = (short) a;
@@ -134,7 +134,7 @@ host_gemdos_trap(short fn, long a, long b, long c)
    0.  Called via the _xbios macro in osbind.h. */
 
 long
-host_xbios_trap(short fn, long a, long b, long c)
+hst_xb(short fn, long a, long b, long c)
 {
         (void) b;
         (void) c;

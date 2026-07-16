@@ -1,6 +1,6 @@
 /*
  * tick_tables.c -- animation frame tables + state globals for
- * game_tick_and_animate (see tick.c).  Kept separate from globals.c
+ * gameTick (see tick.c).  Kept separate from globals.c
  * so Alcyon C168's fixed-size symbol table doesn't overflow.
  *
  * addr: (data-segment tables sourced from Ghidra addresses noted per
@@ -10,7 +10,7 @@
 
 #include "types.h"
 
-/* Animation frame tables consumed by game_tick_and_animate.  Every
+/* Animation frame tables consumed by gameTick.  Every
    value is an object_tab_mfdb index; game_tick indexes these by a
    small counter to pick which sprite/frame to draw. */
 /* Object-animation frame tables (dumped from Ghidra data segment).

@@ -142,7 +142,7 @@
 
 /* ---- color_enum (dumped from Ghidra) --------------------------------
    Values 0..15 are color_enum indices, NOT VDI palette slots.  The
-   drawing calls pass a color_enum through _vdi_color_table[] to get the
+   drawing calls pass a color_enum through vdi_colt[] to get the
    underlying VDI palette slot -- Ghidra's table is a permutation, so
    using the wrong color_enum here produces the wrong on-screen hue. */
 #define COLOR_black                              0
@@ -161,7 +161,7 @@
 #define COLOR_blue                              13
 #define COLOR_white                             14
 
-/* Sat/Sun weekday consts (used by check_time_based_actions). */
+/* Sat/Sun weekday consts (used by chk_timA). */
 #define NEED_SATISFIED                          0
 
 /* ---- HEAD_ANIM_MODE (dumped from Ghidra) ------------------------------

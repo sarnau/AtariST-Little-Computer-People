@@ -25,18 +25,18 @@ extern short    g_hamod;
 extern short    g_hsfra;
 extern short    g_wtx;
 extern short    g_wty;
-extern short    PLAYER_STATE_ARRAY[];
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
-extern short    lcp_tv_on;
-extern short    lcp_on_stairs_flag;
-extern short    get_floor_number_from_y();
-extern short    lcp_state;
-extern short    lcp_facing_direction;
-extern short    floor_center_y_coords[];
-extern short    randomRange();                  /* random.c */
-extern short    randomRange();
-extern short    lcp_walk_to_destination();
+extern short    pst_arr[];
+extern void     lcp_hwt();
+extern void     gameTick();
+extern short    lcp_tv;
+extern short    lcp_stR;
+extern short    getFlrY();
+extern short    lcp_st;
+extern short    lcp_face;
+extern short    flr_cy[];
+extern short    rndRng();                  /* random.c */
+extern short    rndRng();
+extern short    lcp_wkD();
 extern void     sf_sele();
 extern void     tt_on();
 extern void     tt_off();
@@ -47,17 +47,17 @@ extern void     tt_off();
 void
 a_wandi()
 {
-        PLAYER_STATE_ARRAY[0]  = STATE_IDLE_SHRUG_START;
-        PLAYER_STATE_ARRAY[1]  = STATE_IDLE_SHRUG_HOLD;
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_SIDE_VIEW;
+        pst_arr[0]  = STATE_IDLE_SHRUG_START;
+        pst_arr[1]  = STATE_IDLE_SHRUG_HOLD;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
-        lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(2);
-        lcp_state = PLAYER_STATE_ARRAY[1]; game_tick_and_animate(5);
-        lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(2);
-        lcp_state = STATE_STAND_SIDE_VIEW; game_tick_and_animate(0);
+        lcp_st = pst_arr[0]; gameTick(2);
+        lcp_st = pst_arr[1]; gameTick(5);
+        lcp_st = pst_arr[0]; gameTick(2);
+        lcp_st = STATE_STAND_SIDE_VIEW; gameTick(0);
 }
 
 /* a_peeka: 6-tick look-away with head frame 2.
@@ -70,18 +70,18 @@ a_peeka()
 
         g_hatas = 8;
         g_hamod         = HEAD_ANIM_DISABLED;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         saved_frame            = g_hsfra;
         g_hatas = HEAD_ANIM_DISABLED;
         g_hacur      = HEAD_ANIM_DISABLED;
         g_hsfra      = 2;
-        game_tick_and_animate(6);
+        gameTick(6);
 
         g_hatas = 8;
         g_hacur      = 8;
         g_hsfra      = saved_frame;
-        game_tick_and_animate(0);
+        gameTick(0);
 }
 
 /* a_pacen: 15-frame side-shift alternation.
@@ -92,19 +92,19 @@ a_pacen()
 {
         short   i;
 
-        PLAYER_STATE_ARRAY[0]  = STATE_PACE_SHIFT_LEFT;
-        PLAYER_STATE_ARRAY[1]  = STATE_PACE_SHIFT_RIGHT;
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_SIDE_VIEW;
+        pst_arr[0]  = STATE_PACE_SHIFT_LEFT;
+        pst_arr[1]  = STATE_PACE_SHIFT_RIGHT;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         for (i = 0; i < 15; i = i + 1) {
-                lcp_state = PLAYER_STATE_ARRAY[i & 1];
-                game_tick_and_animate(1);
+                lcp_st = pst_arr[i & 1];
+                gameTick(1);
         }
-        lcp_state = STATE_STAND_SIDE_VIEW;
-        game_tick_and_animate(0);
+        lcp_st = STATE_STAND_SIDE_VIEW;
+        gameTick(0);
 }
 
 /* a_toggt: flip the TV state.  Both tt_on and tt_off
@@ -114,7 +114,7 @@ a_pacen()
 void
 a_toggt()
 {
-        if (lcp_tv_on == NO)
+        if (lcp_tv == NO)
                 tt_on();
         else
                 tt_off();
@@ -133,41 +133,41 @@ short   value;
         short   i;
         short   floor;
 
-        PLAYER_STATE_ARRAY[0] = STATE_SLEEP_BREATHE_IN;
-        PLAYER_STATE_ARRAY[1] = STATE_SLEEP_BREATHE_OUT;
+        pst_arr[0] = STATE_SLEEP_BREATHE_IN;
+        pst_arr[1] = STATE_SLEEP_BREATHE_OUT;
 
-        if (lcp_on_stairs_flag != NO)
+        if (lcp_stR != NO)
                 return;
 
         if (value == -1) {
                 g_wtx = lcp_x;
-                floor = get_floor_number_from_y(lcp_y);
-                g_wty = floor_center_y_coords[floor - 1];
-                if (lcp_walk_to_destination() != 0)
+                floor = getFlrY(lcp_y);
+                g_wty = flr_cy[floor - 1];
+                if (lcp_wkD() != 0)
                         return;
-                lcp_facing_direction   = FACING_RIGHT;
-                lcp_state              = STATE_STAND_SIDE_VIEW;
+                lcp_face   = FACING_RIGHT;
+                lcp_st              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;
-                lcp_wait_head_reach_target();
+                lcp_hwt();
         }
 
-        duration = randomRange(7, 15);
+        duration = rndRng(7, 15);
         if (value != -1)
                 duration = value;
 
         i = 0;
         while (i < duration &&
                g_trel[0] == ACTION_NONE) {
-                lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(1);
-                lcp_state = PLAYER_STATE_ARRAY[1]; game_tick_and_animate(0);
+                lcp_st = pst_arr[0]; gameTick(1);
+                lcp_st = pst_arr[1]; gameTick(0);
                 sf_sele(SFX_SNORING, 3L);
-                game_tick_and_animate(1);
-                lcp_state = PLAYER_STATE_ARRAY[0]; game_tick_and_animate(1);
+                gameTick(1);
+                lcp_st = pst_arr[0]; gameTick(1);
                 i = i + 1;
         }
 
         if (value == -1) {
-                lcp_state = STATE_STAND_SIDE_VIEW;
-                game_tick_and_animate(0);
+                lcp_st = STATE_STAND_SIDE_VIEW;
+                gameTick(0);
         }
 }

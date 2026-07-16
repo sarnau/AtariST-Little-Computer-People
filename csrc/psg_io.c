@@ -7,8 +7,8 @@
  * below so the compilable-on-host promise holds without any observable
  * audio effect.
  *
- * addr: mowrit(), psg_copy_envelope_params(),
- *       psg_write_register(), psg_set_mixer()
+ * addr: mowrit(), psg_cpE(),
+ *       psg_wr(), psg_mix()
  */
 
 #include "types.h"
@@ -49,17 +49,17 @@ char    byte;
         midi = byte;
 }
 
-/* psg_copy_envelope_params: 8-byte memcpy from an ADSR parameter block
+/* psg_cpE: 8-byte memcpy from an ADSR parameter block
    in the .SNG file to a PSG_ENVELOPE struct.  The 1985 code implements
    this inline rather than calling libc memcpy(3), which makes sense
    given Alcyon's minimal runtime -- the 8-byte block is small enough
    that the unrolled loop is comparable in size to a memcpy call.
    Preserved verbatim.
 
-   addr: psg_copy_envelope_params() */
+   addr: psg_cpE() */
 
 void
-psg_copy_envelope_params(src, dest, count)
+psg_cpE(src, dest, count)
 unsigned char * src;
 unsigned char * dest;
 short           count;
@@ -72,7 +72,7 @@ short           count;
         }
 }
 
-/* psg_write_register: write to a YM2149 register.
+/* psg_wr: write to a YM2149 register.
 
    ST quirk: the 1985 source has the argument order swapped relative
    to typical documentation -- `reg` is the register number, `val` is
@@ -82,10 +82,10 @@ short           count;
    in a two-stage sequence, so the apparent swap is actually correct
    for the hardware.
 
-   addr: psg_write_register() */
+   addr: psg_wr() */
 
 void
-psg_write_register(reg, val)
+psg_wr(reg, val)
 char    reg;
 char    val;
 {
@@ -93,7 +93,7 @@ char    val;
         giwrite  = (unsigned char) reg;
 }
 
-/* psg_set_mixer: read-modify-write on YM2149 mixer register 7.
+/* psg_mix: read-modify-write on YM2149 mixer register 7.
    Selects register 7 by writing to giselect, reads the current value
    back through giselect (the register acts as both write-address and
    read-data), then applies (or_mask | (and_mask & current)) and
@@ -105,10 +105,10 @@ char    val;
    host this collapses to a scratch-byte read that returns whatever was
    written last, matching the ST behaviour.
 
-   addr: psg_set_mixer() */
+   addr: psg_mix() */
 
 void
-psg_set_mixer(or_mask, and_mask)
+psg_mix(or_mask, and_mask)
 char    or_mask;
 char    and_mask;
 {

@@ -22,7 +22,7 @@
 
 /* XBIOS Random() (function 17): returns a 24-bit unsigned random.
    The stdlib rand() maxes out at RAND_MAX which varies by libc, so we
-   only guarantee the 15 low bits are populated -- randomRange() only
+   only guarantee the 15 low bits are populated -- rndRng() only
    consults bits 0..14 anyway. */
 #define Random()        ((long) rand())
 
@@ -39,8 +39,8 @@
    without a prototype misalign the register/stack layout.  Prototype
    at the call site forces the compiler to pass each arg at its
    declared width. */
-extern long     host_gemdos_trap(short fn, long a, long b, long c);
-#define _gemdos host_gemdos_trap
+extern long     hst_gem(short fn, long a, long b, long c);
+#define _gemdos hst_gem
 
 /* AES evnt_timer + form_alert stubs. */
 #define evnt_timer(ms, msh)     ((void) 0)
@@ -68,8 +68,8 @@ extern long     host_gemdos_trap(short fn, long a, long b, long c);
 #define XBIOS_Random            17
 #define XBIOS_Giaccess          28
 
-extern long             host_xbios_trap(short fn, long a, long b, long c);
-#define _xbios          host_xbios_trap
+extern long             hst_xb(short fn, long a, long b, long c);
+#define _xbios          hst_xb
 
 /* VDI (TRAP #2) wrappers.  Under Alcyon C's GEM binding these are C
    functions that stuff arguments into contrl/intin/ptsin parameter

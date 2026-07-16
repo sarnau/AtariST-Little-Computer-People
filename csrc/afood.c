@@ -26,27 +26,27 @@ extern short    g_hsfra;
 extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
-extern short    PLAYER_STATE_ARRAY[];
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
-extern short    lcp_dog_bowl_status;
+extern short    pst_arr[];
+extern void     lcp_hwt();
+extern void     gameTick();
+extern short    lcp_bwlS;
 extern short    g_obiso;
 extern short    g_obisa[];
 extern short    g_obi15;
 extern short    g_obi16;
 extern short    g_obi17;
-extern short    dog_food_bowl_change;
-extern void     house_get_position_xy();
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern short    dg_bwlch;
+extern void     hs_posXY();
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_selaf[];
 extern short    g_seslm[];
-extern short    randomRange();                  /* random.c */
-extern short    randomRange();
-extern short    lcp_walk_to_destination();
+extern short    rndRng();                  /* random.c */
+extern short    rndRng();
+extern short    lcp_wkD();
 extern void     sp_ssco();
 extern void     sp_ss02();
 extern void     sp_sprs();
@@ -57,7 +57,7 @@ extern void     a_opecc();
 extern void     a_opecf();
 extern void     a_kitcc();
 extern void     sc_drfc();
-extern void     lcp_check_recovery();
+extern void     lcp_rcov();
 
 /* a_eatm: pot from cabinet -> stove (with cooking animation)
    -> table setting; ends with a kitchen_cabinet call to actually eat.
@@ -70,27 +70,27 @@ a_eatm()
         short   counter;
         short   pick;
 
-        house_get_position_xy(POS_BTM_KITCHEN_CABINET,
+        hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
-        result = lcp_walk_to_destination();
+        result = lcp_wkD();
         if (result != 0)
                 return;
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
-        lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
-        lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-        lcp_state = STATE_STAND_FACING_SCREEN; game_tick_and_animate(0);
+        lcp_st = STATE_BEND_DOWN;    gameTick(1);
+        lcp_st = STATE_REACH_FORWARD;gameTick(2);
+        lcp_st = STATE_STAND_FACING_SCREEN; gameTick(0);
 
         /* Pot from cabinet to stove */
         sp_ssco(SPRITE_COOKING_POT);
-        house_get_position_xy(POS_BTM_STOVE,
+        hs_posXY(POS_BTM_STOVE,
                               &g_wtx, &g_wty);
         g_actif = YES;
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         sp_upds();
@@ -99,15 +99,15 @@ a_eatm()
         g_sepex[g_seslm[SPRITE_COOKING_POT]] = 11;
         g_sepey[g_seslm[SPRITE_COOKING_POT]] = 172;
 
-        lcp_facing_direction = FACING_LEFT;
-        lcp_state            = STATE_BEND_AND_REACH;
+        lcp_face = FACING_LEFT;
+        lcp_st            = STATE_BEND_AND_REACH;
 
         /* 30..50 tick cooking animation, rotating stove frames. */
-        counter = randomRange(30, 50);
+        counter = rndRng(30, 50);
         while (counter != 0) {
-                pick = randomRange(0, 2);
+                pick = rndRng(0, 2);
                 od_draw(g_obisa[pick], 6, 172);
-                game_tick_and_animate(1);
+                gameTick(1);
                 counter = counter - 1;
         }
         od_draw(g_obiso, 6, 172);
@@ -117,14 +117,14 @@ a_eatm()
         sp_ssco(SPRITE_55);
 
         /* Back to cabinet, then chain into kitchen_cabinet to eat. */
-        house_get_position_xy(POS_BTM_KITCHEN_CABINET,
+        hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
         g_actif = YES;
-        lcp_walk_to_destination();
+        lcp_wkD();
         g_selaf[SPRITE_55] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
-        game_tick_and_animate(0);
+        gameTick(0);
         a_kitcc();
         g_actif = NO;
 }
@@ -144,49 +144,49 @@ a_kitcc()
         unsigned short  food_count;
         short           roll;
 
-        PLAYER_STATE_ARRAY[0] = STATE_EAT_BITE;
-        PLAYER_STATE_ARRAY[1] = STATE_EAT_CHEW;
+        pst_arr[0] = STATE_EAT_BITE;
+        pst_arr[1] = STATE_EAT_CHEW;
         g_actif = YES;
 
-        house_get_position_xy(POS_BTM_KITCHEN_CABINET,
+        hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
+        lcp_wkD();
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         a_opecc(0);
 
         food_count = (lcp.door_states_and_flags >> 9) & 7;
         if (food_count == 0) {
-                game_tick_and_animate(2);
+                gameTick(2);
                 g_actif = NO;
                 return;
         }
 
         /* Take one package: decrement the 3-bit food-count nibble. */
-        lcp_state = STATE_REACH_INTO_CABINET;
-        game_tick_and_animate(3);
+        lcp_st = STATE_REACH_INTO_CABINET;
+        gameTick(3);
         lcp.door_states_and_flags =
                 (lcp.door_states_and_flags & ~DSF_FOOD_MASK) |
                 ((food_count - 1) * 0x200);
         sc_drfc();
-        lcp_state = STATE_STAND_FACING_SCREEN;
-        game_tick_and_animate(2);
+        lcp_st = STATE_STAND_FACING_SCREEN;
+        gameTick(2);
 
-        roll = randomRange(0, 100);
+        roll = rndRng(0, 100);
         if (lcp.initiative_threshold < roll)
                 a_opecc(1);
 
         sp_ssco(SPRITE_FOOD_PACKAGE);
-        house_get_position_xy(POS_BTM_KITCHEN_CABINET,
+        hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
-        house_get_position_xy(POS_BTM_KITCHEN_SINK,
+        lcp_wkD();
+        hs_posXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         /* Drop a table setting sprite in the foreground. */
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
@@ -194,54 +194,54 @@ a_kitcc()
         g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
         g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
 
-        house_get_position_xy(POS_BTM_TABLE_RIGHT,
+        hs_posXY(POS_BTM_TABLE_RIGHT,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
-        house_get_position_xy(POS_BTM_TABLE_LEFT,
+        lcp_wkD();
+        hs_posXY(POS_BTM_TABLE_LEFT,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         g_hamod       = HEAD_ANIM_DISABLED;
-        lcp_state            = STATE_STAND_SIDE_VIEW;
-        lcp_facing_direction = FACING_RIGHT;
+        lcp_st            = STATE_STAND_SIDE_VIEW;
+        lcp_face = FACING_RIGHT;
         sp_ss02(SPRITE_FOOD_PACKAGE);
         g_hatas = 8;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         saved_head_frame = g_hsfra;
-        lcp_state        = PLAYER_STATE_ARRAY[0];
+        lcp_st        = pst_arr[0];
         lcp_y = lcp_y + 8;
         lcp_x = lcp_x + 6;
-        eat_cycles       = randomRange(10, 20);
+        eat_cycles       = rndRng(10, 20);
         g_hatas = HEAD_ANIM_DISABLED;
         g_hacur      = HEAD_ANIM_DISABLED;
-        game_tick_and_animate(0);
+        gameTick(0);
         g_lcyof = NO;
         g_sepex[g_seslm[SPRITE_FOOD_PACKAGE]] =
                 g_sepex[g_seslm[SPRITE_FOOD_PACKAGE]] + 3;
         g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] =
                 g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] - 4;
-        game_tick_and_animate(0);
+        gameTick(0);
 
         while (eat_cycles > 0) {
-                lcp_state = PLAYER_STATE_ARRAY[1];
-                game_tick_and_animate(2);
+                lcp_st = pst_arr[1];
+                gameTick(2);
                 g_hsfra = 0;
-                chew_delay = randomRange(1, 2);
-                game_tick_and_animate(chew_delay);
-                lcp_state = PLAYER_STATE_ARRAY[0];
+                chew_delay = rndRng(1, 2);
+                gameTick(chew_delay);
+                lcp_st = pst_arr[0];
                 g_hsfra = saved_head_frame;
-                game_tick_and_animate(0);
+                gameTick(0);
 
-                inner = randomRange(4, 8);
+                inner = rndRng(4, 8);
                 while (inner > 0 &&
                        g_trel[0] == ACTION_NONE) {
-                        chew_delay = randomRange(1, 2);
-                        game_tick_and_animate(chew_delay);
+                        chew_delay = rndRng(1, 2);
+                        gameTick(chew_delay);
                         g_hsfra = 1;
-                        game_tick_and_animate(0);
+                        gameTick(0);
                         g_hsfra = 2;
-                        game_tick_and_animate(0);
+                        gameTick(0);
                         inner = inner - 1;
                 }
                 g_hsfra = saved_head_frame;
@@ -254,16 +254,16 @@ a_kitcc()
         sp_ssco(SPRITE_FOOD_PACKAGE);
         lcp_y = lcp_y - 8;
         lcp_x = lcp_x - 6;
-        lcp_state = STATE_STAND_SIDE_VIEW;
-        lcp_wait_head_reach_target();
-        game_tick_and_animate(0);
+        lcp_st = STATE_STAND_SIDE_VIEW;
+        lcp_hwt();
+        gameTick(0);
 
-        house_get_position_xy(POS_BTM_TABLE_RIGHT,
+        hs_posXY(POS_BTM_TABLE_RIGHT,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
-        house_get_position_xy(POS_BTM_KITCHEN_SINK,
+        lcp_wkD();
+        hs_posXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         sp_upds();
@@ -271,15 +271,15 @@ a_kitcc()
         sp_upds();
         g_lcyof = NO;
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
-        game_tick_and_animate(4);
+        lcp_hwt();
+        gameTick(4);
 
         lcp.hunger_level   = NEED_SATISFIED;
         lcp.bathroom_timer = lcp.bathroom_timer_max;
-        lcp_check_recovery();
+        lcp_rcov();
         g_actif = NO;
 }
 
@@ -295,77 +295,77 @@ short   value;
         short   result;
 
         if (value == 0) {
-                house_get_position_xy(POS_BTM_FRIDGE,
+                hs_posXY(POS_BTM_FRIDGE,
                                       &g_wtx, &g_wty);
-                result = lcp_walk_to_destination();
+                result = lcp_wkD();
                 if (result != 0)
                         return;
 
-                lcp_facing_direction   = FACING_RIGHT;
-                lcp_state              = STATE_STAND_FACING_SCREEN;
+                lcp_face   = FACING_RIGHT;
+                lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-                lcp_wait_head_reach_target();
+                lcp_hwt();
 
-                lcp_facing_direction = FACING_LEFT;
-                lcp_state            = STATE_REACH_INTO_CABINET;
+                lcp_face = FACING_LEFT;
+                lcp_st            = STATE_REACH_INTO_CABINET;
                 od_draw(g_obi15, 24, 153);
-                game_tick_and_animate(1);
+                gameTick(1);
                 od_draw(g_obi16, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
-                game_tick_and_animate(1);
+                gameTick(1);
                 od_draw(g_obi17, 24, 153);
-                game_tick_and_animate(1);
+                gameTick(1);
 
-                lcp_facing_direction = FACING_RIGHT;
-                lcp_state = STATE_STAND_FACING_SCREEN;
-                game_tick_and_animate(2);
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_STAND_FACING_SCREEN;
+                gameTick(2);
 
-                lcp_facing_direction = FACING_LEFT;
-                lcp_state = STATE_REACH_INTO_CABINET;
-                game_tick_and_animate(3);
+                lcp_face = FACING_LEFT;
+                lcp_st = STATE_REACH_INTO_CABINET;
+                gameTick(3);
 
-                lcp_facing_direction = FACING_RIGHT;
-                lcp_state = STATE_STAND_FACING_SCREEN;
-                game_tick_and_animate(2);
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_STAND_FACING_SCREEN;
+                gameTick(2);
 
                 od_draw(g_obi16, 24, 153);
-                game_tick_and_animate(1);
+                gameTick(1);
                 od_draw(g_obi15, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
-                game_tick_and_animate(1);
+                gameTick(1);
 
                 sp_ssco(SPRITE_FOOD_PACKAGE);
         }
 
         /* Package -> dog bowl (fill it). */
-        house_get_position_xy(POS_BTM_DOG_BOWL,
+        hs_posXY(POS_BTM_DOG_BOWL,
                               &g_wtx, &g_wty);
         g_actif = YES;
-        lcp_walk_to_destination();
+        lcp_wkD();
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         g_selaf[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
-        lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
-        lcp_state = STATE_REACH_FORWARD;game_tick_and_animate(2);
-        lcp_state = STATE_BEND_DOWN;    game_tick_and_animate(1);
+        lcp_st = STATE_BEND_DOWN;    gameTick(1);
+        lcp_st = STATE_REACH_FORWARD;gameTick(2);
+        lcp_st = STATE_BEND_DOWN;    gameTick(1);
 
-        dog_food_bowl_change = 1;
-        lcp_dog_bowl_status  = BOWL_FULL;
-        lcp_state = STATE_STAND_FACING_SCREEN;
-        game_tick_and_animate(0);
+        dg_bwlch = 1;
+        lcp_bwlS  = BOWL_FULL;
+        lcp_st = STATE_STAND_FACING_SCREEN;
+        gameTick(0);
 
         /* Package back to fridge. */
         sp_ssco(SPRITE_FOOD_PACKAGE);
-        house_get_position_xy(POS_BTM_FRIDGE,
+        hs_posXY(POS_BTM_FRIDGE,
                               &g_wtx, &g_wty);
         g_actif = YES;
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         g_selaf[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
         sp_upds();
@@ -383,9 +383,9 @@ a_gesff()
 {
         short   result;
 
-        house_get_position_xy(POS_BTM_FRIDGE,
+        hs_posXY(POS_BTM_FRIDGE,
                               &g_wtx, &g_wty);
-        result = lcp_walk_to_destination();
+        result = lcp_wkD();
         if (result == 0)
                 a_opecf();
 }

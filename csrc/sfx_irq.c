@@ -12,7 +12,7 @@
  *                             fire XBIOS Dosound, arm the countdown
  *
  * Playback is gated three ways:
- *   1. midi_is_playing -- MIDI takes exclusive PSG when running.
+ *   1. mi_play -- MIDI takes exclusive PSG when running.
  *   2. g_sfplf -- if another SFX is currently on,
  *      only preempt if the new one has higher priority (lower value).
  *   3. g_sfcup tracks the priority of whatever's
@@ -33,19 +33,19 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern long     g_sfret;
-extern BOOL16   midi_is_playing;
+extern BOOL16   mi_play;
 extern short    g_sfplf;
 extern short    g_sfpli;
 extern short            g_sfcup;
 extern short            g_sfddh;
 extern short            g_sfddl;
 extern long             g_sfHz2;
-extern unsigned char *  midi_note_length_params[];
+extern unsigned char *  mi_ntLp[];
 extern char             g_sfDoB[];
 extern BOOL16   g_sfacf;
 extern short    g_sfcur;
 extern short    g_sfdur;
-extern short    _soundeffect_priority_table[];
+extern short    sf_pri[];
 extern short    g_hzlo;
 #include <osbind.h>
 
@@ -69,7 +69,7 @@ short   lo;
    host builds g_hzlo is 0 so the read is a no-op. */
 
 static short
-read_hz_200()
+rd_hz()
 {
         void *  saveSSP;
         short   lo;
@@ -94,10 +94,10 @@ sf_irqp()
         long            raw_ticks;
 
         /* MIDI has exclusive PSG access. */
-        if (midi_is_playing != NO)
+        if (mi_play != NO)
                 return;
 
-        new_priority = _soundeffect_priority_table[g_sfcur];
+        new_priority = sf_pri[g_sfcur];
 
         /* If something's already playing, only interrupt for a strictly
            higher-priority effect (lower priority number). */
@@ -113,7 +113,7 @@ sf_irqp()
              +0..1     size (short): number of bytes that follow
              +2..N     Dosound register-command stream
              (trailer) last 4 bytes = duration high/low words */
-        effectPtr = midi_note_length_params[g_sfcur];
+        effectPtr = mi_ntLp[g_sfcur];
         size      = *(short *) effectPtr;
         effectPtr = effectPtr + 2;
 
@@ -149,7 +149,7 @@ sf_irqp()
         /* Snapshot the 200 Hz counter for the countdown loop and
            compute the remaining ticks in game 8Hz units (Dosound
            envelope time / 25 = game ticks, since 200 Hz / 25 = 8 Hz). */
-        g_sfHz2 = (long) (unsigned short) read_hz_200();
+        g_sfHz2 = (long) (unsigned short) rd_hz();
         raw_ticks = concat22(g_sfddh,
                              g_sfddl);
         g_sfret = raw_ticks / 25L;

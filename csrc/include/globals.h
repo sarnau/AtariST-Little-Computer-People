@@ -16,51 +16,51 @@
 #include "structs.h"
 
 /* ---- Timing ------------------------------------------------------------ */
-extern short    animation_tick_counter;         /* 8Hz frame counter */
-extern short    game_seconds_counter;           /* 0..59 game-seconds  */
+extern short    ani_cnt;         /* 8Hz frame counter */
+extern short    g_secs;           /* 0..59 game-seconds  */
 
 /* ---- Clock ------------------------------------------------------------- */
-extern short    time_minutes;
-extern short    time_hours;
+extern short    t_min;
+extern short    t_hour;
 extern short    date_day;
-extern short    date_month;
-extern short    date_year;
+extern short    dt_mon;
+extern short    dt_year;
 
 /* ---- Character --------------------------------------------------------- */
 extern PLAYER   lcp;                            /* the resident LCP */
 
 /* ---- Event queue / flags ---------------------------------------------- */
-extern BOOL16   phone_answered_flag;
-extern BOOL16   phone_call_active_flag;
-extern BOOL16   intro_sequence_active;
+extern BOOL16   ph_ans;
+extern BOOL16   ph_call;
+extern BOOL16   introSeq;
 
-/* ---- Once-per-day action triggers (cleared by daily_reset_action_flags) */
-extern BOOL16   lunch_meal_triggered_today;
-extern BOOL16   dinner_meal_triggered_today;
-extern BOOL16   morning_wakeup_triggered_today;
-extern BOOL16   bedtime_triggered_today;
+/* ---- Once-per-day action triggers (cleared by daily_rs) */
+extern BOOL16   lunT_trg;
+extern BOOL16   dinT_trg;
+extern BOOL16   wkT_trg;
+extern BOOL16   bedT_trg;
 
 /* ---- Calendar table (defined in calendar.c) --------------------------- */
-extern short    days_per_month[];
+extern short    days_pmo[];
 
 /* ---- Deferred event queue (defined in events.c) ----------------------- */
 extern short    g_trel[];
-extern BOOL16   in_execute_event_routine_flag;
+extern BOOL16   in_evrt;
 
 /* ---- Command / AI state ----------------------------------------------- */
-extern short    last_action;
+extern short    lastAct;
 extern short    g_trac;
 
 /* ---- LCP position and world state ------------------------------------- */
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_lcldd;
-extern short    copyprot_check_return;
-extern short    game_speed_counter;
+extern short    cprot_r;
+extern short    g_spdc;
 
 /* ---- Alarm / water state --------------------------------------------- */
-extern BOOL16   ctrl_a_alarm_pressed_flag;
-extern short    lcp_water_level;
+extern BOOL16   alarm_p;
+extern short    lcp_watr;
 
 /* ---- Command queue (populated by keyboard input) --------------------- */
 extern short    g_aliss;
@@ -74,34 +74,34 @@ extern short    g_hamod;
 extern short    g_hsfra;
 extern long     g_sfret;
 extern BOOL16   g_actif;
-extern BOOL16   dog_pettable_flag;
+extern BOOL16   dg_petok;
 extern short    g_wtx;
 extern short    g_wty;
-extern short    PLAYER_STATE_ARRAY[];
+extern short    pst_arr[];
 
-/* ---- Time-of-day globals used by check_for_any_action_triggers ------- */
+/* ---- Time-of-day globals used by chk_actT ------- */
 /* (these are aliased into the PLAYER struct: lcp.lunch_hour etc.
    Nothing to declare here.) */
 
 /* ---- Cross-file helpers ---------------------------------------------- */
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
+extern void     lcp_hwt();
+extern void     gameTick();
 extern void     a_getd();
 
 /* ---- Door / furniture runtime unpacked flags (mirror of the packed
    bit-field in lcp.door_states_and_flags; unpacked at load time and
    repacked at save time). --------------------------------------------- */
-extern short    lcp_front_door_open;
-extern short    lcp_study_door_open;
-extern short    lcp_closet_door_open;
-extern short    lcp_cabinet_open;
-extern short    lcp_dresser_open;
-extern short    lcp_toilet_door_open;
-extern short    lcp_filing_cabinet_open;
-extern short    lcp_dog_bowl_status;
-extern short    lcp_food_count;
-extern short    lcp_record_playing;
-extern short    lcp_tv_on;
+extern short    lcp_frdO;
+extern short    studyDrO;
+extern short    lcp_clsO;
+extern short    lcp_cabO;
+extern short    lcp_drsO;
+extern short    lcp_toiO;
+extern short    lcp_flcO;
+extern short    lcp_bwlS;
+extern short    lcp_food;
+extern short    lcp_recP;
+extern short    lcp_tv;
 
 /* ---- Object IDs for door art (indexes into _object_images[]) --------- */
 extern short    g_obids;
@@ -123,20 +123,20 @@ extern short    g_obi15;
 extern short    g_obi16;
 extern short    g_obi17;
 
-extern BOOL16   midi_is_playing;
-extern short    dog_food_bowl_change;
+extern BOOL16   mi_play;
+extern short    dg_bwlch;
 extern short    g_sfplf;
 extern short    g_sfpli;
 
 /* ---- Leisure / music / fire globals ---------------------------------- */
 extern BOOL16   g_rbact;
-extern char *   midi_song_buffer;
-extern short    org_song_file_count;
-extern BOOL16   fire_active_flag;
-extern short    fire_duration_countdown;
-extern BOOL16   fire_extinguish_flag;
-extern short    disable_key_input_flag;
-extern short    text_scroll_timer;
+extern char *   mi_sbuf;
+extern short    org_cnt;
+extern BOOL16   fire_act;
+extern short    fire_dur;
+extern BOOL16   fire_ext;
+extern short    no_keyin;
+extern short    tx_sctm;
 extern short    g_srsdc;
 extern short    g_cdibp;
 
@@ -144,10 +144,10 @@ extern short    g_cdibp;
 extern char *   g_lttx;
 extern char *   g_ltlp[];
 extern char *   g_ltg[];
-extern char *   month_name_table[];
+extern char *   mo_names[];
 extern short    g_ltcwt[];
 extern char     g_ltscb[];
-extern unsigned char compression_tokens[];
+extern unsigned char comp_tok[];
 
 /* ---- Object IDs for closet + fireplace art --------------------------- */
 extern short    g_obidc;
@@ -164,12 +164,12 @@ extern short    g_obi12;
 extern short    g_obibg;
 
 /* ---- Saved LCP body/head pointers for hide/show ---------------------- */
-extern short *  saved_body_sprite_ptr;
-extern short *  saved_head_sprite_ptr;
+extern short *  sv_bodyP;
+extern short *  sv_headP;
 
 /* ---- VDI handle + color table (populated at graphics init) ----------- */
-extern short    vdihandle;
-extern short    _vdi_color_table[];
+extern short    vdihnd;
+extern short    vdi_colt[];
 
 /* ---- VDI parameter block ------------------------------------------- */
 /* Shared per-call scratch arrays that every VDI wrapper stuffs before
@@ -185,43 +185,43 @@ extern short *  vdipb[];
 extern void *   g_dscp;
 
 /* ---- Palette state --------------------------------------------------- */
-extern short    main_colorpalette[];
+extern short    main_pal[];
 extern short    g_clcop[];
 extern short    g_clcos[];
-extern short    skin_color_palette[];
+extern short    skin_pal[];
 
 /* ---- MIDI sequencer state -------------------------------------------- */
 extern BOOL16   g_molof;
-extern BOOL16   midi_var_r;
+extern BOOL16   mi_varR;
 extern short    g_mspha;
-extern unsigned char *  midi_data_base_ptr;
+extern unsigned char *  mi_dbase;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-extern unsigned char *  midi_seq_position;
+extern unsigned char *  mi_sqpos;
 extern long             g_msmap;
-extern long             midi_envelope_data_base;
-extern short            midi_velocity;
-extern short            midi_default_velocity;
-extern short            psg_current_volume;
-extern short            psg_default_volume;
+extern long             mi_env;
+extern short            mi_vel;
+extern short            mi_dvel;
+extern short            psg_cvol;
+extern short            psg_dvol;
 extern short            g_mnevi;
 extern short            g_mnevc;
 extern short            g_mtspb;
-extern short            midi_tempo;
-extern short            aes_int_out[];
+extern short            mi_temp;
+extern short            aes_intO[];
 
 extern long             g_mtcou;
-extern short            midi_direct_write_mode;
+extern short            mi_dwrm;
 extern short            g_mtdiv;
 extern short            g_mtpre;
 extern short            g_medu;
-extern short            midi_next_event_tick;
-extern short            midi_last_processed_tick;
+extern short            mi_nxTk;
+extern short            mi_lpTk;
 extern BOOL16           g_msmsa;
 
-extern unsigned char    midi_channel_map[];
+extern unsigned char    mi_chmap[];
 extern short            g_mcpro[];
-extern short            midi_program_map[];
+extern short            mi_pgmap[];
 extern unsigned char    g_mstr[];
 extern unsigned char    g_msmk[];
 extern BOOL16           g_moen;
@@ -229,13 +229,13 @@ extern unsigned char    g_meve[];
 extern long             g_momap;
 
 /* ---- PSG channel state ---------------------------------------------- */
-extern BOOL16           psg_output_enabled;
-extern BOOL16           psg_notes_active;
-extern unsigned char    psg_channel_notes[];
+extern BOOL16           psg_out;
+extern BOOL16           psg_ntAc;
+extern unsigned char    psg_chNt[];
 extern PSG_ENVELOPE     psg_envelope[];
-extern unsigned short   psg_freq_table[];
+extern unsigned short   psg_freq[];
 
-extern short            envelope_val;                   /* transpose base */
+extern short            env_val;                   /* transpose base */
 extern char             g_mnlol;
 extern char             g_mnhil;
 extern short            g_mccha;
@@ -245,12 +245,12 @@ extern short            g_sfcup;
 extern short            g_sfddh;
 extern short            g_sfddl;
 extern long             g_sfHz2;
-extern unsigned char *  midi_note_length_params[];
+extern unsigned char *  mi_ntLp[];
 extern char             g_sfDoB[];
 
 /* ---- Screen buffer state -------------------------------------------- */
 extern void *   g_srlgb;
-extern void *   save_logbase;
+extern void *   sv_lgb;
 extern void *   g_srptr;
 extern short *  g_dsb;
 
@@ -264,11 +264,11 @@ extern short    g_sfcur;
 extern short    g_sfdur;
 extern short    g_sfdos;
 extern short    g_sfdoc;
-extern short    _soundeffect_priority_table[];
+extern short    sf_pri[];
 
 /* ---- Object / sprite backing storage (populated by asset loaders) --- */
-extern unsigned char    objects_file[];
-extern unsigned char    sprites_files[];
+extern unsigned char    obj_file[];
+extern unsigned char    spr_file[];
 extern MFDB     g_obtmt[];
 extern MFDB     g_setmt[];
 extern short    g_obtaw[];
@@ -279,32 +279,32 @@ extern short    g_setah[];
 /* Legacy pointer form retained for od_draw / render.c callers that
    walk the mfdb table by index arithmetic. */
 extern void *   g_otmfd;
-/* MFDB_screen_ptr now declared with the frame-timing MFDBs below. */
+/* mf_scrp now declared with the frame-timing MFDBs below. */
 
 /* ---- Record player / letter needle state (packed inside letter subsys) */
 extern short    g_ltlic;
 extern short    g_ltpac;
-extern unsigned short   _record_led_mask_table[];
+extern unsigned short   rec_ledt[];
 
 /* ---- Clock hand endpoint tables ------------------------------------- */
 extern short    g_cmmip[];
 extern short    g_chhop[];
 
 /* ---- Keyboard / command input --------------------------------------- */
-extern BOOL16   game_input_mode_flag;
+extern BOOL16   g_inpmd;
 extern char     g_cdinb[];
-extern BOOL16   food_delivery_available;
+extern BOOL16   food_dlv;
 extern short    g_ptanf;
 
 /* ---- Frame-timing counters ------------------------------------------ */
-extern short    last_hz200;
-extern long     last_vbclock;
-extern void *   save_physbase;
+extern short    last_hz;
+extern long     last_vbc;
+extern void *   sv_phb;
 
 /* ---- Screen MFDB descriptors ---------------------------------------- */
 extern MFDB     g_srmfd;
-extern MFDB     MFDB_screen_ptr;        /* alias with older name */
-extern MFDB *   current_screen_mfdb;
+extern MFDB     mf_scrp;        /* alias with older name */
+extern MFDB *   cur_mf;
 
 /* ---- 200 Hz + VBL clock (host-side we roll these ourselves) --------- */
 extern short    g_hzhi;
@@ -312,19 +312,19 @@ extern short    g_hzlo;
 extern long     _vbclock;
 
 /* ---- Dog wander behaviour ------------------------------------------- */
-extern BOOL16   dog_visible;
-extern short    dog_idle_countdown;
-extern BOOL16   dog_near_food_bowl;
+extern BOOL16   dg_vis;
+extern short    dg_idlcd;
+extern BOOL16   dg_nrbwl;
 extern BOOL16   g_deact;
 extern short    g_decou;
-extern short    dog_last_target_index;
+extern short    dg_ltgtI;
 extern short    g_dseat[];
 extern short    g_ddipt[];
 extern short    g_ddxot[];
 extern short    g_ddyot[];
 
 /* ---- Command parser state ------------------------------------------- */
-extern char *   _command_input_ptr;
+extern char *   cmd_inp;
 extern short    g_aprio;
 
 /* ---- Sprite MFDB arrays (one per hardware slot) --------------------- */
@@ -344,92 +344,92 @@ extern short    g_tpcoi[];
 
 /* ---- NLP parser tables (populated at runtime from vocabulary data)  */
 extern unsigned char    g_ewb[];
-extern char             _user_input_buffer[];
-extern short            _happiness_to_priority[];
-extern char *           valid_word_table[];
-extern short            word__entered_to_position[];
+extern char             usr_buf[];
+extern short            mood_pri[];
+extern char *           vwd_tab[];
+extern short            ew2pos[];
 extern short            g_ew2b[];
-extern unsigned char    _bitmask_1_2_4_8_10_20_40_80_0[];
+extern unsigned char    bm_lo[];
 extern WORD_TO_ACTION   g_ew2a[];
 
 /* ---- Mini-game state -------------------------------------------------- */
 extern char *   g_agwb;
 extern char *   g_wpdb;
-extern short *  cards_data;
+extern short *  crd_dat;
 
 extern short    g_wpci;
 extern short    g_agclc;
 extern short    g_aggun;
 extern short    g_agacu;
-extern short    _anagram_clue_used_this_round;
+extern short    ag_clue;
 extern short    g_agwol;
 extern char     g_aginb[];
 extern char     g_agorw[];
 extern char     g_agscw[];
 extern char *   g_agwgm[];
 
-extern short    _poker_round_count;
-extern BOOL16   poker_quit_flag;
+extern short    pk_round;
+extern BOOL16   pk_quit;
 extern short    g_pcmon;
 extern short    g_ppmon;
 extern short    g_ppppa;
 extern short    g_pcbet;
 extern short    g_ppbet;
-extern short    poker_game_phase;
-extern short    poker_draw_discard_flags[];
+extern short    pk_phase;
+extern short    pk_dsc[];
 extern short    g_pcdrp[];
 extern short    g_ppdrp[];
 
 /* Card graphics: 54 MFDB descriptors covering 52 card faces + 1 shared
-   back + 1 highlight overlay pattern, all sharing cards_data as their
-   pixel storage.  MFDB_dest_screenbase_cards is a screen-buffer MFDB
+   back + 1 highlight overlay pattern, all sharing crd_dat as their
+   pixel storage.  mf_scb_c is a screen-buffer MFDB
    sized to the mini-game display area (320x77). */
-extern MFDB     cards_MFDB_blocks[];
-extern MFDB     MFDB_dest_screenbase_cards;
+extern MFDB     crd_mfdb[];
+extern MFDB     mf_scb_c;
 
 /* ---- Delivery / phone / petting flags -------------------------------- */
 extern BOOL16   g_dvdog;
-extern BOOL16   phone_hangup_flag;
+extern BOOL16   ph_hu;
 extern BOOL16   g_ptdoa;
 
 /* ---- Sprite head pipeline (defined in sprglobs.c) --------------- */
 extern short    g_hsbuf[];
 extern short    g_hsmas[];
 extern short    g_hsmif;
-extern short *  pex_lcp_file;                   /* source head sheet */
-extern short *  head_shape_data;                /* source head masks */
-extern short    happiness_head_frame_offset[];
-extern short    head_x_offset_per_state[];
-extern short    head_height_per_state[];
-extern short    head_default_angle_per_state[];
-extern short    head_movement_delta_table[];
-extern short    head_tilt_frame_offset[];
+extern short *  pex_ptr;                   /* source head sheet */
+extern short *  hd_shp;                /* source head masks */
+extern short    mood_hfo[];
+extern short    hd_xoff[];
+extern short    hd_hgt[];
+extern short    hd_dang[];
+extern short    hd_mvd[];
+extern short    hd_tilt[];
 extern short    g_hadec;
 
 /* ---- Bit-reverse LUT used by sp_lcpf / sp_flih - */
-extern unsigned short   revert_table[];
+extern unsigned short   rev_tab[];
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
 extern short    g_wyx;
 extern short    g_wyy;
-extern short    lcp_on_stairs_flag;
-extern BOOL16   footstep_trigger_flag;
+extern short    lcp_stR;
+extern BOOL16   fs_trg;
 extern short    g_hastl;
-extern short    stair_top_y_threshold;
-extern short    stair_bottom_y_threshold;
+extern short    stair_ty;
+extern short    stair_by;
 
 /* ---- Utility functions (implemented in movement.c etc) ---------------- */
-extern void     house_get_position_xy();
-extern short    get_floor_number_from_y();
-extern short    calc_weekday();
+extern void     hs_posXY();
+extern short    getFlrY();
+extern short    cWkday();
 
 /* ---- LCP animation state (defined in globals.c) ----------------------- */
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
 extern short    g_lcieo;
 extern short    g_lssh;
-extern short    debug_hide_lcp_offscreen;
+extern short    dbg_hide;
 
 /* ---- Dog state -------------------------------------------------------- */
 extern short    dog_x;
@@ -440,8 +440,8 @@ extern short    g_dyx;
 extern short    g_dyy;
 extern short    g_dwanc;
 extern short    g_dsid;
-extern short    dog_on_stairs_flag;
-extern short    dog_initialized;
+extern short    dg_stair;
+extern short    dg_init;
 
 /* ---- Hardware sprite double-buffer (8 slots) -------------------------- */
 extern short    g_sepef[];
@@ -467,13 +467,13 @@ extern short    g_selaf[];
 extern short    g_seslm[];
 
 /* ---- Body / carry frame tables (indexed by PLAYER_STATE) -------------- */
-extern short    body_sprite_frame_table[];
-extern short    carry_body_frame_table[];
-extern short    body_y_offset_per_state[];
+extern short    body_frT[];
+extern short    cy_frT[];
+extern short    body_yof[];
 
 /* ---- LCP body / head buffers and file pointers ------------------------ */
-extern short *  body_lcp_file;
-extern short *  body_shape_data;
+extern short *  body_ptr;
+extern short *  body_shp;
 extern short    g_lsimg[];
 extern short    g_lsmas[];
 
@@ -485,24 +485,24 @@ extern short    g_dfimb[];
 extern short    g_dfmab[];
 
 /* ---- Floor geometry (used by pathfinding) ---------------------------- */
-extern short    floor_bottom_y_coords[];
-extern short    floor_center_y_coords[];
-extern short    staircase_waypoint_coords[];
+extern short    flr_by[];
+extern short    flr_cy[];
+extern short    stair_wp[];
 
 /* ---- Tick-loop counters ----------------------------------------------- */
-extern short    sub_animation_frame_counter;
-extern short    animation_tick_counter;
+extern short    subAniC;
+extern short    ani_cnt;
 
 /* ---- Externals implemented in other TUs (subset used by sim.c) -------- */
-extern short    randomRange();                  /* random.c */
-extern void     lcp_become_sick();              /* health.c  */
-extern void     lcp_update_palette_colors();    /* render.c  */
-extern void     daily_reset_action_flags();     /* ai.c      */
-extern short    days_in_month();                /* calendar.c*/
-extern void     put_event_to_list();            /* ai.c      */
-extern short    get_event_from_list();          /* events.c  */
-extern void     execute_event();                /* ai.c      */
-extern void     check_for_any_action_triggers();/* ai.c      */
-extern void     do_action();                    /* actions.c */
+extern short    rndRng();                  /* random.c */
+extern void     lcp_sick();              /* health.c  */
+extern void     lcp_upal();    /* render.c  */
+extern void     daily_rs();     /* ai.c      */
+extern short    daysInMo();                /* calendar.c*/
+extern void     putEv();            /* ai.c      */
+extern short    getEv();          /* events.c  */
+extern void     execEv();                /* ai.c      */
+extern void     chk_actT();/* ai.c      */
+extern void     doAct();                    /* actions.c */
 
 #endif  /* GLOBALS_H */

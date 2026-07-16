@@ -13,12 +13,12 @@
  *   slot 7   dog (in-front-of-LCP layer)
  *
  * All positioning is anchored to the resident's feet (lcp_x, lcp_y);
- * per-frame Y offsets come from body_y_offset_per_state[].
+ * per-frame Y offsets come from body_yof[].
  *
  * addr: sp_updb(), sp_lchu(),
  *       sp_ssco/right(),
  *       update_carried_object_sprite() (carry branch of
- *       game_tick_and_animate)
+ *       gameTick)
  */
 
 #include "types.h"
@@ -34,25 +34,25 @@ extern short    lcp_y;
 extern short    g_hatas;
 extern short    g_hacur;
 extern short    g_hsfra;
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
-extern short *  saved_body_sprite_ptr;
-extern short *  saved_head_sprite_ptr;
+extern void     lcp_hwt();
+extern void     gameTick();
+extern short *  sv_bodyP;
+extern short *  sv_headP;
 extern short    g_hsbuf[];
 extern short    g_hsmas[];
 extern short    g_hsmif;
-extern short *  pex_lcp_file;                   /* source head sheet */
-extern short *  head_shape_data;                /* source head masks */
-extern short    happiness_head_frame_offset[];
-extern short    head_x_offset_per_state[];
-extern short    head_height_per_state[];
-extern unsigned short   revert_table[];
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern short *  pex_ptr;                   /* source head sheet */
+extern short *  hd_shp;                /* source head masks */
+extern short    mood_hfo[];
+extern short    hd_xoff[];
+extern short    hd_hgt[];
+extern unsigned short   rev_tab[];
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
 extern short    g_lcieo;
 extern short    g_lssh;
-extern short    debug_hide_lcp_offscreen;
+extern short    dbg_hide;
 extern short    g_sepef[];
 extern short *  g_sepim[];
 extern short *  g_sepms[];
@@ -72,11 +72,11 @@ extern short    g_sedeh[];
 extern short    g_sedew[];
 extern short    g_selaf[];
 extern short    g_seslm[];
-extern short    body_sprite_frame_table[];
-extern short    carry_body_frame_table[];
-extern short    body_y_offset_per_state[];
-extern short *  body_lcp_file;
-extern short *  body_shape_data;
+extern short    body_frT[];
+extern short    cy_frT[];
+extern short    body_yof[];
+extern short *  body_ptr;
+extern short *  body_shp;
 extern short    g_lsimg[];
 extern short    g_lsmas[];
 /* Forward-decls -- Alcyon skips these silently; modern clang under
@@ -85,9 +85,9 @@ extern void     sp_lcha();
 extern void     sp_lcpf();
 extern void     sp_upds();
 
-/* sp_updb: select the body pose for the current lcp_state and
+/* sp_updb: select the body pose for the current lcp_st and
    drop it into slot 3.  When carrying an object during a walking state
-   (< 25), uses the alternate arms-up frames from carry_body_frame_table.
+   (< 25), uses the alternate arms-up frames from cy_frT.
    Positioning: X = lcp_x - 4 (right) or lcp_x - 14 (left);
    Y = lcp_y + body_y_offset[state] - 21.
 
@@ -102,29 +102,29 @@ sp_updb()
         while (g_sepef[3] == YES)
                 ;
 
-        frame = body_sprite_frame_table[lcp_state];
-        if (g_lcyof != NO && lcp_state < 25)
-                frame = carry_body_frame_table[lcp_state];
+        frame = body_frT[lcp_st];
+        if (g_lcyof != NO && lcp_st < 25)
+                frame = cy_frT[lcp_st];
 
-        /* Ghidra `body_lcp_file + frame` / `body_shape_data + frame`
+        /* Ghidra `body_ptr + frame` / `body_shp + frame`
            is shorthand for `+ frame * stride`: 168 bytes per body
            frame in body.lcp (SOURCE), 84 bytes per frame in
-           body_shape_data (DEST).  The decompile collapses the
+           body_shp (DEST).  The decompile collapses the
            multiplication into type-based scaling; the disassembly
            at Ghidra 0x2669a (`muls.w #0x54, D0`) confirms *84. */
-        sp_lcpf((short *) ((char *) body_lcp_file    + (long) frame * 168L),
-                (short *) ((char *) body_shape_data  + (long) frame *  84L),
+        sp_lcpf((short *) ((char *) body_ptr    + (long) frame * 168L),
+                (short *) ((char *) body_shp  + (long) frame *  84L),
                 (short *) g_lsimg,
                 (short *) g_lsmas,
-                2, 21, lcp_facing_direction, 1);
+                2, 21, lcp_face, 1);
 
-        if (lcp_facing_direction == FACING_RIGHT)
+        if (lcp_face == FACING_RIGHT)
                 g_seacx[3] = lcp_x - 4;
         else
                 g_seacx[3] = lcp_x - 14;
 
-        g_seacy[3] = lcp_y + body_y_offset_per_state[lcp_state] - 21;
-        if (debug_hide_lcp_offscreen != NO)
+        g_seacy[3] = lcp_y + body_yof[lcp_st] - 21;
+        if (dbg_hide != NO)
                 g_seacy[3] = 300;
 
         g_sepeh[3] = 21;
@@ -183,41 +183,41 @@ short   g_seix;
         g_seacw[slot]  = g_sedew[g_seix];
 }
 
-/* lcp_wait_head_reach_target: spin ticking the animation loop until the
+/* lcp_hwt: spin ticking the animation loop until the
    head's current direction matches its target.
-   addr: lcp_wait_head_reach_target() */
+   addr: lcp_hwt() */
 
 void
-lcp_wait_head_reach_target()
+lcp_hwt()
 {
         while (g_hacur != g_hatas)
-                game_tick_and_animate(0);
+                gameTick(0);
 }
 
-/* hide_lcp_sprites: stash slot 3 (body) and slot 4 (head) active image
+/* hideLcp: stash slot 3 (body) and slot 4 (head) active image
    pointers, nil them out, and raise the hidden flag so the sprite
    update pipeline knows to keep them cleared.  Used during the closet /
    toilet / front-door "resident enters an enclosed sprite" sequences.
-   addr: hide_lcp_sprites() */
+   addr: hideLcp() */
 
 void
-hide_lcp_sprites()
+hideLcp()
 {
-        saved_body_sprite_ptr  = g_seaim[3];
-        saved_head_sprite_ptr  = g_seaim[4];
+        sv_bodyP  = g_seaim[3];
+        sv_headP  = g_seaim[4];
         g_seaim[3] = NULL;
         g_seaim[4] = NULL;
         g_lssh     = YES;
 }
 
-/* show_lcp_sprites: restore the pointers hide_lcp_sprites() stashed.
-   addr: show_lcp_sprites() */
+/* showLcp: restore the pointers hideLcp() stashed.
+   addr: showLcp() */
 
 void
-show_lcp_sprites()
+showLcp()
 {
-        g_seaim[3] = saved_body_sprite_ptr;
-        g_seaim[4] = saved_head_sprite_ptr;
+        g_seaim[3] = sv_bodyP;
+        g_seaim[4] = sv_headP;
         g_lssh     = NO;
 }
 
@@ -246,7 +246,7 @@ short   g_seix;
 
 /* sp_lcpf: expand a 2-word (32-pixel)-wide LCP source frame into
    a 4-word (64-pixel)-wide destination row, with optional horizontal
-   mirror.  flipVertical selects whether the sprite content sits in the
+   mirror.  flipV selects whether the sprite content sits in the
    left half of the destination row (padding on the right) or the right
    half (padding on the left), so a right-facing frame's 32 pixels land
    at the same screen X as a left-facing one after body_sprite_frame_
@@ -257,15 +257,15 @@ short   g_seix;
 
 void
 sp_lcpf(srcImg, srcMask, destImg, destMask,
-                width, height, flipHorizontal, flipVertical)
+                width, height, flipH, flipV)
 short * srcImg;
 short * srcMask;
 short * destImg;
 short * destMask;
 short   width;
 short   height;
-short   flipHorizontal;
-short   flipVertical;
+short   flipH;
+short   flipV;
 {
         unsigned short  uVar1;
         unsigned short  mask;
@@ -274,11 +274,11 @@ short   flipVertical;
         short           y;
         int             iVar3;
 
-        if (flipHorizontal == 0) {
+        if (flipH == 0) {
                 for (y = 0; y < height; y = y + 1) {
                         for (x = 0; x < width; x = x + 1) {
                                 psVar2 = destImg;
-                                if (flipVertical == 0) {
+                                if (flipV == 0) {
                                         destImg[0] = 0;
                                         destImg[1] = srcImg[0];
                                         destImg[2] = srcImg[1];
@@ -308,12 +308,12 @@ short   flipVertical;
                         psVar2 = destImg;
 
                         iVar3 = (width - 1) - x;
-                        mask  = revert_table[(unsigned char) (srcImg[iVar3 + iVar3] >> 8)] |
-                                revert_table[(unsigned char) (srcImg[iVar3 + iVar3])] << 8;
-                        uVar1 = revert_table[(unsigned char) (srcImg[iVar3 + iVar3 + 1] >> 8)] |
-                                revert_table[(unsigned char) (srcImg[iVar3 + iVar3 + 1])] << 8;
+                        mask  = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3] >> 8)] |
+                                rev_tab[(unsigned char) (srcImg[iVar3 + iVar3])] << 8;
+                        uVar1 = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1] >> 8)] |
+                                rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1])] << 8;
 
-                        if (flipVertical == 0) {
+                        if (flipV == 0) {
                                 destImg[0] = 0;
                                 destImg[1] = mask;
                                 destImg[2] = uVar1;
@@ -326,8 +326,8 @@ short   flipVertical;
                         destImg[0] = 0;
                         destImg    = psVar2 + 4;
 
-                        mask = revert_table[(unsigned char) (srcMask[(width - 1) - x] >> 8)] |
-                               revert_table[(unsigned char) (srcMask[(width - 1) - x])] << 8;
+                        mask = rev_tab[(unsigned char) (srcMask[(width - 1) - x] >> 8)] |
+                               rev_tab[(unsigned char) (srcMask[(width - 1) - x])] << 8;
                         destMask[0] = mask;
                         destMask[1] = mask;
                         destMask[2] = mask;
@@ -345,11 +345,11 @@ short   flipVertical;
    addr: sp_flih() */
 
 void
-sp_flih(source, dest, pixelHeight, wordsWidth)
+sp_flih(source, dest, pixH, wdWidth)
 unsigned short *        source;
 unsigned short *        dest;
-short                   pixelHeight;
-short                   wordsWidth;
+short                   pixH;
+short                   wdWidth;
 {
         unsigned short *        img_ptr;
         unsigned short          v;
@@ -357,19 +357,19 @@ short                   wordsWidth;
         short                   x;
         short                   y;
 
-        for (y = 0; y < pixelHeight; y = y + 1) {
-                for (x = 0; x < wordsWidth; x = x + 1) {
-                        img_ptr = source + (((wordsWidth - 1) - x) << 2);
+        for (y = 0; y < pixH; y = y + 1) {
+                for (x = 0; x < wdWidth; x = x + 1) {
+                        img_ptr = source + (((wdWidth - 1) - x) << 2);
                         for (planeIndex = 0; planeIndex < 4;
                              planeIndex = planeIndex + 1) {
                                 v = *img_ptr;
                                 img_ptr = img_ptr + 1;
-                                *dest = (revert_table[v & 0xff] << 8) |
-                                         revert_table[(v >> 8) & 0xff];
+                                *dest = (rev_tab[v & 0xff] << 8) |
+                                         rev_tab[(v >> 8) & 0xff];
                                 dest = dest + 1;
                         }
                 }
-                source = source + (wordsWidth << 2);
+                source = source + (wdWidth << 2);
         }
 }
 
@@ -514,28 +514,28 @@ sp_lchu()
         while (g_sepef[4] == YES)
                 ;
 
-        headIndex = happiness_head_frame_offset[lcp.happiness] +
+        headIndex = mood_hfo[lcp.happiness] +
                     (g_hsfra & 0x7f);
 
         /* Same stride-scaling shape as sp_updb -- 168 bytes per head
-           frame in PEx.LCP, 84 bytes per frame in head_shape_data. */
-        sp_lcpf((short *) ((char *) pex_lcp_file    + (long) headIndex * 168L),
-                (short *) ((char *) head_shape_data + (long) headIndex *  84L),
+           frame in PEx.LCP, 84 bytes per frame in hd_shp. */
+        sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * 168L),
+                (short *) ((char *) hd_shp + (long) headIndex *  84L),
                 g_hsbuf, g_hsmas,
                 2, 21, g_hsmif, 0);
 
         if (g_hsmif == NO)
-                g_seacx[4] = lcp_x + head_x_offset_per_state[lcp_state] - 4;
+                g_seacx[4] = lcp_x + hd_xoff[lcp_st] - 4;
         else
-                g_seacx[4] = lcp_x + head_x_offset_per_state[lcp_state] - 14;
+                g_seacx[4] = lcp_x + hd_xoff[lcp_st] - 14;
 
-        g_seacy[4] = (lcp_y + body_y_offset_per_state[lcp_state]) -
-                             (head_height_per_state[lcp_state] + 21);
-        if (debug_hide_lcp_offscreen != NO)
+        g_seacy[4] = (lcp_y + body_yof[lcp_st]) -
+                             (hd_hgt[lcp_st] + 21);
+        if (dbg_hide != NO)
                 g_seacy[4] = 300;
 
         if (g_lcyof != NO &&
-            lcp_state > 12 && lcp_state < 17)
+            lcp_st > 12 && lcp_st < 17)
                 g_seacy[4] = g_seacy[4] + 1;
 
         g_sepeh[4] = 21;
@@ -552,19 +552,19 @@ sp_lchu()
 /* sp_imfs (Ghidra): populate the 8 per-slot MFDB pairs
    (image + mask) from the active sprite tables, wire the compositing
    MFDB (screen_mfdb == g_srmfd) at scrbufA + 0xCD, and call
-   sp_drin.  Also zeroes last_hz200 so the very first sc_ren8
+   sp_drin.  Also zeroes last_hz so the very first sc_ren8
    frame-rate gate sees a 0->N delta and proceeds.
 
-   Note on the offset 0xCD: same shape as setup_screen_buffer's 0x12F,
+   Note on the offset 0xCD: same shape as stpScrB's 0x12F,
    just a different header size, and NOT rounded up here (unlike
-   setup_screen_buffer's align-up-to-512).  The 1985 code left this
+   stpScrB's align-up-to-512).  The 1985 code left this
    compositing target unaligned; VDI raster ops don't require it and
    the shifter is pointed elsewhere via the page-flip in sc_ren8.
 
    addr: sp_imfs() */
 
-extern short            last_hz200;
-extern short            screen_scale_factor;
+extern short            last_hz;
+extern short            scr_scal;
 extern MFDB             g_semfi[];
 extern MFDB             g_semfm[];
 extern MFDB             g_srmfd;                /* Ghidra "screen_mfdb" */
@@ -581,7 +581,7 @@ sp_imfs()
 {
         short   i;
 
-        last_hz200 = 0;
+        last_hz = 0;
         for (i = 0; i < 8; i = i + 1) {
                 sp_iniM(0L, &g_semfi[i],
                                  (void *) g_seaim[i],
@@ -591,16 +591,28 @@ sp_imfs()
                                  g_seacw[i], g_seach[i]);
         }
         {
-                /* Compositor screen = scrbufA rounded UP to next 256.
-                   Ghidra uses scrbufA + 0xCD but our linker doesn't
-                   place scrbufA where that offset would be 256-aligned;
-                   see globals.c comment for the port-specific
-                   two-screen layout. */
+                /* Compositor screen = scrbufA rounded UP to next 512.
+
+                   PORT DIVERGENCE FROM GHIDRA.  Raw disasm at 0x25110
+                   is `move.l #0x2ca66, -(SP); andi.l #-0x200, (SP)` --
+                   an align-DOWN of the compile-time constant
+                   `SCREEN_BUFFER_A + 0xCD`.  That works in the 1985
+                   binary only because SCREEN_BUFFER_A landed at
+                   0x2c999 (low 9 bits = 0x199), which happens to make
+                   (SCREEN_BUFFER_A + 0xCD) & ~0x1FF round UP to
+                   0x2ca00 (still inside the buffer).  Our linker
+                   places scrbufA elsewhere; a literal
+                   `((long)scrbufA + 0xCD) & ~0x1FF` can round DOWN
+                   to an address BEFORE scrbufA.  So we use the
+                   safer align-UP pattern from stpScrB
+                   (0x165ae/0x165b4).  Result: same shape (a 512-
+                   aligned screen inside scrbufA), non-literal instr
+                   sequence. */
                 long    buf;
-                buf = ((long) scrbufA + 0xFFL) & ~0xFFL;
+                buf = ((long) scrbufA + 0x200L) & ~0x1FFL;
                 sp_iniM(0L, &g_srmfd, (void *) buf,
-                        (short) (screen_scale_factor * 320),
-                        (short) (screen_scale_factor * 200));
+                        (short) (scr_scal * 320),
+                        (short) (scr_scal * 200));
         }
         sp_drin();
 }
@@ -738,8 +750,8 @@ short           height;
 /* sp_lbal (Ghidra sprite_lcp_build_all):
    dispatcher.  Iterate 98 body frames (168 source bytes each ->
    84 dest bytes each) then 66 head frames, calling sp_lbbd /
-   sp_lbhd.  Sources come from body_lcp_file / pex_lcp_file loaded
-   by file_load; destinations are the BSS arrays body_shape_data_buf
+   sp_lbhd.  Sources come from body_ptr / pex_ptr loaded
+   by fLoad; destinations are the BSS arrays body_shape_data_buf
    / head_shape_data_buf we allocate in sprglobs.c.
    addr: sp_lcp_build_all() */
 
@@ -751,21 +763,21 @@ sp_lbal()
         char *  dst_ptr;
 
         /* Precompute walking pointers instead of the more obvious
-           `body_lcp_file + index * 168` per iteration -- the Alcyon
+           `body_ptr + index * 168` per iteration -- the Alcyon
            codegen for the (short * ) + (int * short) expression
            crashed on the very first iteration in testing; walking
            two char* accumulators is byte-for-byte equivalent and
            compiles cleanly. */
-        src_ptr = (char *) body_lcp_file;
-        dst_ptr = (char *) body_shape_data;
+        src_ptr = (char *) body_ptr;
+        dst_ptr = (char *) body_shp;
         for (index = 0; index < 98; index = index + 1) {
                 sp_lbbd((unsigned short *) src_ptr,
                         (unsigned short *) dst_ptr, 21);
                 src_ptr = src_ptr + 168;
                 dst_ptr = dst_ptr + 84;
         }
-        src_ptr = (char *) pex_lcp_file;
-        dst_ptr = (char *) head_shape_data;
+        src_ptr = (char *) pex_ptr;
+        dst_ptr = (char *) hd_shp;
         for (index = 0; index < 66; index = index + 1) {
                 sp_lbhd((unsigned short *) src_ptr,
                         (unsigned short *) dst_ptr, 21);

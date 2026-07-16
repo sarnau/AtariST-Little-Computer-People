@@ -11,7 +11,7 @@
  * The animation picks a new random target every 2..9 game frames when
  * the current position has caught up.  g_hamod acts as both a
  * per-state bit-mask (which movements are allowed) and a partial
- * override (fixed target values).  head_movement_delta_table[] gives
+ * override (fixed target values).  hd_mvd[] gives
  * the signed step to take between horizontal frames.
  *
  * addr: sp_lcha()
@@ -29,16 +29,16 @@ extern short    g_hacur;
 extern short    g_hamod;
 extern short    g_hsfra;
 extern short    g_hsmif;
-extern short    head_default_angle_per_state[];
-extern short    head_movement_delta_table[];
-extern short    head_tilt_frame_offset[];
+extern short    hd_dang[];
+extern short    hd_mvd[];
+extern short    hd_tilt[];
 extern short    g_hadec;
-extern short    lcp_state;
-extern short    lcp_facing_direction;
-extern short    randomRange();                  /* random.c */
+extern short    lcp_st;
+extern short    lcp_face;
+extern short    rndRng();                  /* random.c */
 #include <osbind.h>             /* Random() */
 
-extern short    randomRange();
+extern short    rndRng();
 
 /* Bit-fields inside g_hamod.  These are distinct from the
    HEAD_ANIM_* target-state constants in enums.h that share the Ghidra
@@ -72,7 +72,7 @@ sp_lcha()
 
         /* Pick a fresh target.  Coin-flip between a vertical-only
            adjustment and a horizontal one. */
-        g_hadec = randomRange(2, 9);
+        g_hadec = rndRng(2, 9);
         random_val = (unsigned short) Random();
 
         if ((random_val & 0x10) != 0) {
@@ -114,8 +114,8 @@ sp_lcha()
                 random_seed = -random_seed;
         }
 
-        random_seed = (random_seed + head_default_angle_per_state[lcp_state]) & 7;
-        if (lcp_facing_direction == FACING_LEFT)
+        random_seed = (random_seed + hd_dang[lcp_st]) & 7;
+        if (lcp_face == FACING_LEFT)
                 random_seed = (8 - random_seed) & 7;
         g_hatas = random_seed | (g_hatas & 0x18);
 
@@ -128,13 +128,13 @@ apply_current:
                 else if (current_pos < 0)
                         g_hacur = g_hacur - 8;
 
-                target_frame = head_movement_delta_table[
+                target_frame = hd_mvd[
                         ((g_hatas & 7) -
                          (g_hacur & 7)) + 7];
                 if (target_frame == 99) {
-                        target_frame = head_movement_delta_table[
-                                (((lcp_facing_direction * 4 +
-                                   head_default_angle_per_state[lcp_state]) & 7) -
+                        target_frame = hd_mvd[
+                                (((lcp_face * 4 +
+                                   hd_dang[lcp_st]) & 7) -
                                  (g_hacur & 7)) + 7];
                 }
                 if (target_frame == 99)
@@ -148,12 +148,12 @@ apply_current:
                 anim_mode = g_hacur & 7;
                 if (anim_mode < 5) {
                         g_hsfra = anim_mode +
-                                head_tilt_frame_offset[
+                                hd_tilt[
                                         (g_hacur & 0x18) >> 3];
                         g_hsmif = NO;
                 } else {
                         g_hsfra = (8 - anim_mode) +
-                                head_tilt_frame_offset[
+                                hd_tilt[
                                         (g_hacur & 0x18) >> 3];
                         g_hsmif = YES;
                 }

@@ -15,16 +15,16 @@
  *      that fires from the ST's 200 Hz timer.
  *
  *   3. XBIOS/BIOS:  Midiws (send raw MIDI bytes) and Giaccess (PSG
- *      register write).  Both already wired through host_xbios_trap.
+ *      register write).  Both already wired through hst_xb.
  *
  * File-format provenance: .SNG and .ORG files are direct exports from
  * Activision Music Studio 2.0 (published 1986, Ed Bogas / Audio Light).
- * song_play strips a leading 10-byte Music Studio signature
+ * sgPlay strips a leading 10-byte Music Studio signature
  * (`\xCD` + "Mstudio" + `\xCD\x02`) before handing the rest of the file
  * to us; the layout below is offsets *inside the stripped body*, i.e.
- * inside the buffer song_play allocates.
+ * inside the buffer sgPlay allocates.
  *
- * Stripped-body layout (relative to midi_data_base_ptr = start + 0x1FE):
+ * Stripped-body layout (relative to mi_dbase = start + 0x1FE):
  *
  *   body + 0x000..0x1A3    Music Studio config header:
  *                            +0x00..0x05  section tag "Blocks"
@@ -35,7 +35,7 @@
  *   body + 0x1A4..0x1FD    90-byte channel + program-change map
  *                          (15 logical channels x 2 bytes each; parsed
  *                          by mq_pacm at p - 90)
- *   body + 0x1FE           MIDI event stream (this is midi_data_base_ptr)
+ *   body + 0x1FE           MIDI event stream (this is mi_dbase)
  *
  * addr: mq_inis(), mq_parh(),
  *       mq_resp(), mq_skip(),
@@ -49,52 +49,52 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern BOOL16   midi_is_playing;
+extern BOOL16   mi_play;
 extern short    g_mspha;
-extern unsigned char *  midi_data_base_ptr;
-extern unsigned char *  midi_seq_position;
+extern unsigned char *  mi_dbase;
+extern unsigned char *  mi_sqpos;
 extern long             g_msmap;
-extern long             midi_envelope_data_base;
-extern short            midi_velocity;
-extern short            midi_default_velocity;
-extern short            psg_current_volume;
-extern short            psg_default_volume;
+extern long             mi_env;
+extern short            mi_vel;
+extern short            mi_dvel;
+extern short            psg_cvol;
+extern short            psg_dvol;
 extern short            g_mnevi;
 extern short            g_mnevc;
 extern short            g_mtspb;
-extern short            midi_tempo;
+extern short            mi_temp;
 extern short            g_mchcn;
-extern short            aes_int_out[];
+extern short            aes_intO[];
 extern long             g_mtcou;
-extern short            midi_direct_write_mode;
+extern short            mi_dwrm;
 extern short            g_mtdiv;
 extern short            g_mtpre;
 extern short            g_medu;
-extern short            midi_next_event_tick;
-extern short            midi_last_processed_tick;
+extern short            mi_nxTk;
+extern short            mi_lpTk;
 extern BOOL16           g_msmsa;
-extern unsigned char    midi_channel_map[];
+extern unsigned char    mi_chmap[];
 extern short            g_mcpro[];
-extern short            midi_program_map[];
+extern short            mi_pgmap[];
 extern unsigned char    g_mstr[];
 extern unsigned char    g_msmk[];
 extern BOOL16           g_moen;
 extern unsigned char    g_meve[];
-extern BOOL16           psg_output_enabled;
-extern BOOL16           psg_notes_active;
-extern unsigned char    psg_channel_notes[];
+extern BOOL16           psg_out;
+extern BOOL16           psg_ntAc;
+extern unsigned char    psg_chNt[];
 extern PSG_ENVELOPE     psg_envelope[];
-extern unsigned short   psg_freq_table[];
-extern short            envelope_val;                   /* transpose base */
+extern unsigned short   psg_freq[];
+extern short            env_val;                   /* transpose base */
 extern char             g_mnlol;
 extern char             g_mnhil;
 extern short            g_mccha;
 #include <osbind.h>
 
 extern void             mowrit();
-extern void             psg_copy_envelope_params();
-extern void             psg_write_register();
-extern void             psg_set_mixer();
+extern void             psg_cpE();
+extern void             psg_wr();
+extern void             psg_mix();
 extern short            mq_dise();
 
 /* Forward decls for the file's own functions -- our K&R style would
@@ -134,20 +134,20 @@ unsigned char * p;
         return p + 3;
 }
 /* mh_temp: MIDI header 0x81 -- set tempo.
-   Ghidra 0x11264: reads p[1] into midi_tempo (0x298f2), then computes
-   g_mtspb (0x298f4) = 2400 / midi_tempo.  Advances p by ONLY 2 bytes
+   Ghidra 0x11264: reads p[1] into mi_temp (0x298f2), then computes
+   g_mtspb (0x298f4) = 2400 / mi_temp.  Advances p by ONLY 2 bytes
    (this command has one payload byte, not two). */
 static unsigned char *
 mh_temp(p)
 unsigned char * p;
 {
-        midi_tempo = p[1];
-        g_mtspb    = 2400 / midi_tempo;
+        mi_temp = p[1];
+        g_mtspb    = 2400 / mi_temp;
         return p + 2;
 }
 /* mh_volu: MIDI header 0x83 -- volume.
    Ghidra 0x1129c: pure pointer advance by 2, no side effects.
-   The port previously read p[1] into midi_default_velocity, which
+   The port previously read p[1] into mi_dvel, which
    the Ghidra binary does NOT do here (any velocity handling lives
    in the event stream, not the header). */
 static unsigned char *
@@ -184,11 +184,11 @@ unsigned char * p;
    song already playing, signals the current one to stop (the audio
    driver picks up the SEQ_PHASE_SONG_ENDING transition on its next
    interrupt) and returns without starting the new song -- the caller
-   is expected to spin until midi_is_playing goes false, then call
+   is expected to spin until mi_play goes false, then call
    again.
 
    When idle, walks the full startup sequence:
-     1. Position midi_data_base_ptr at buffer + 0x1FE, the start of
+     1. Position mi_dbase at buffer + 0x1FE, the start of
         the MIDI event stream (which puts the 90-byte channel-map
         block + 360-byte envelope-parameter block behind it).
      2. Parse the song header configuration (tempo, channel count,
@@ -203,29 +203,29 @@ unsigned char * p;
    addr: mq_inis() */
 
 void
-mq_inis(param_1, maxPosition)
+mq_inis(param_1, maxPos)
 unsigned char * param_1;
-long            maxPosition;
+long            maxPos;
 {
         unsigned char * current_position;
 
-        if (midi_is_playing != NO) {
+        if (mi_play != NO) {
                 g_mspha = SEQ_PHASE_SONG_ENDING;
                 return;
         }
 
-        midi_data_base_ptr = param_1 + 0x1fe;
-        mq_parh(midi_data_base_ptr);
+        mi_dbase = param_1 + 0x1fe;
+        mq_parh(mi_dbase);
         mq_resp();
-        current_position = mq_skip(midi_data_base_ptr,
-                                                 maxPosition);
-        mq_setp(current_position, maxPosition);
+        current_position = mq_skip(mi_dbase,
+                                                 maxPos);
+        mq_setp(current_position, maxPos);
         mq_stap();
-        midi_is_playing = YES;
+        mi_play = YES;
 }
 
 /* mq_parh: walk the song configuration commands.  The
-   header runs from midi_data_base_ptr until the first 0xFF byte;
+   header runs from mi_dbase until the first 0xFF byte;
    commands come in three flavours: config commands (0x80/0x81/0x83/
    0x84) that update sequencer state, program-change events (0xC0),
    and note-event stride skips (any byte in range 0x01..0x7F, treated
@@ -307,7 +307,7 @@ mq_resp()
         for (channel = 0; channel < 16; channel = channel + 1) {
                 for (ch_index = 1; ch_index < 16;
                      ch_index = ch_index + 1) {
-                        if ((midi_channel_map[ch_index] & 0xf) == channel) {
+                        if ((mi_chmap[ch_index] & 0xf) == channel) {
                                 g_mcpro[ch_index] = -1;
                                 mq_sepc(ch_index);
                                 break;
@@ -350,7 +350,7 @@ long            position;
 /* mq_setp: stash the read cursor + end-of-song marker,
    initialise the per-song audio-driver state (envelope base, velocity,
    PSG volume, event queue depth), and publish the tick-per-beat to
-   the interrupt handler via aes_int_out[7].
+   the interrupt handler via aes_intO[7].
 
    The envelope base is exactly 360 bytes (0x168) behind the MIDI data
    base, matching the ADSR parameter block layout described at the top
@@ -359,19 +359,19 @@ long            position;
    addr: mq_setp() */
 
 void
-mq_setp(curPos, maxPosition)
+mq_setp(curPos, maxPos)
 unsigned char * curPos;
-long            maxPosition;
+long            maxPos;
 {
-        midi_seq_position     = curPos;
-        g_msmap = (maxPosition == 0) ? -1 : maxPosition;
+        mi_sqpos     = curPos;
+        g_msmap = (maxPos == 0) ? -1 : maxPos;
 
-        midi_envelope_data_base = (long) (midi_data_base_ptr - 0x168);
-        midi_velocity           = midi_default_velocity;
-        psg_current_volume      = psg_default_volume;
+        mi_env = (long) (mi_dbase - 0x168);
+        mi_vel           = mi_dvel;
+        psg_cvol      = psg_dvol;
         g_mnevi   = 0;
         g_mnevc   = 9;
-        aes_int_out[7]          = g_mtspb;
+        aes_intO[7]          = g_mtspb;
 }
 
 /* mq_stap: initialise timer counters + arm the
@@ -381,7 +381,7 @@ long            maxPosition;
    time before the first event fires -- enough for the caller's
    walk-into-the-dance-floor animation to catch up.
 
-   midi_direct_write_mode = 0 selects the "route MIDI bytes through
+   mi_dwrm = 0 selects the "route MIDI bytes through
    XBIOS Midiws" path (as opposed to the direct-write ACIA register
    path used by a few speed-critical hot loops).
 
@@ -391,18 +391,18 @@ void
 mq_stap()
 {
         g_mtcou       = 0;
-        midi_direct_write_mode  = 0;
+        mi_dwrm  = 0;
         g_mtdiv       = 100;
         g_mtpre     = 100;
         g_medu     = 100;
-        midi_next_event_tick    = 100;
-        midi_last_processed_tick= 100;
+        mi_nxTk    = 100;
+        mi_lpTk= 100;
         g_msmsa   = YES;
         g_mspha          = SEQ_PHASE_PARSE_NEXT_EVENT;
 }
 
 /* mq_pacm: unpack the 30-byte channel/program map
-   block sitting 90 bytes before midi_data_base_ptr.  The block is
+   block sitting 90 bytes before mi_dbase.  The block is
    laid out as:
      bytes  0..14  MIDI channel assignment for logical channels 1..15
      bytes 15..29  MIDI program number for each logical channel 1..15
@@ -419,8 +419,8 @@ unsigned char * p;
         short   i;
 
         for (i = 1; i < 16; i = i + 1) {
-                midi_channel_map[i] = p[i - 1]  - 1;
-                midi_program_map[i] = p[i + 14] - 1;
+                mi_chmap[i] = p[i - 1]  - 1;
+                mi_pgmap[i] = p[i + 14] - 1;
         }
 }
 
@@ -490,7 +490,7 @@ short   value;
    byte 0xCn) for logical channel `index`.  Only fires if the logical
    channel's currently-cached program differs from the newly-mapped
    one AND MIDI output is enabled.  Note that current-program is keyed
-   by the *physical* channel (via midi_channel_map & 0x0f) so multiple
+   by the *physical* channel (via mi_chmap & 0x0f) so multiple
    logical channels sharing a physical MIDI channel only get one
    Program Change per song load.
 
@@ -506,15 +506,15 @@ short   index;
 {
         short   physical;
 
-        physical = midi_channel_map[index] & 0xf;
-        if (g_mcpro[physical] == midi_program_map[index])
+        physical = mi_chmap[index] & 0xf;
+        if (g_mcpro[physical] == mi_pgmap[index])
                 return;
         if (g_moen == NO)
                 return;
 
-        g_meve[0] = (midi_channel_map[index] & 0xf) | 0xc0;
-        g_meve[1] = (unsigned char) midi_program_map[index];
-        g_mcpro[physical] = midi_program_map[index];
+        g_meve[0] = (mi_chmap[index] & 0xf) | 0xc0;
+        g_meve[1] = (unsigned char) mi_pgmap[index];
+        g_mcpro[physical] = mi_pgmap[index];
         mq_dise(g_meve, (short) 2, (short) 0);
 }
 
@@ -527,10 +527,10 @@ short   index;
    the same event can go to one, both, or neither.
 
    MIDI OUT path:
-     Apply an octave transposition (envelope_val - upper-nibble-of-
-     midiChannel) * -12 semitones to the note byte, then either
+     Apply an octave transposition (env_val - upper-nibble-of-
+     midi_ch) * -12 semitones to the note byte, then either
      stream the bytes one-at-a-time through mowrit (when
-     midi_direct_write_mode is 1, used by speed-critical hot loops)
+     mi_dwrm is 1, used by speed-critical hot loops)
      or hand the whole event to Midiws.  The note byte is restored
      to its original value after the write so the PSG path below sees
      the untransposed note.
@@ -546,17 +546,17 @@ short   index;
        3. Guard against notes outside [g_mnlol,
           g_mnhil].
        4. memcpy 8 bytes of ADSR envelope parameters from the .SNG
-          block at midi_envelope_data_base + (channel-1)*8 into the
+          block at mi_env + (channel-1)*8 into the
           chosen channel's envelope struct.
        5. Compute the frequency-table octave offset: (2 - attack_
           duration.high_nibble) * 12 semitones.
        6. Write PSG tone period + mixer + noise-mask via either the
-          direct psg_write_register path or the XBIOS Giaccess path.
+          direct psg_wr path or the XBIOS Giaccess path.
        7. If the resulting note is below the freq table's lowest
           playable entry (< 0x17), enter ENV_FADEOUT instead of the
           normal ENV_ATTACK.
-       8. Wire the new state: max_volume from psg_current_volume,
-          phase_timer=1, psg_notes_active=YES.
+       8. Wire the new state: max_volume from psg_cvol,
+          phase_timer=1, psg_ntAc=YES.
 
    Returns 1 on a successful dispatch, 0 on a non-Note-On event that
    the PSG path can't handle (falls through to MIDI OUT only), or 0
@@ -565,10 +565,10 @@ short   index;
    addr: mq_dise() */
 
 short
-mq_dise(midiEvP, midiEvS, midiChannel)
+mq_dise(midiEvP, midiEvS, midi_ch)
 unsigned char * midiEvP;
 short           midiEvS;
-short           midiChannel;
+short           midi_ch;
 {
         unsigned char * saved_ptr = midiEvP;
         unsigned char   saved_note;
@@ -587,13 +587,13 @@ short           midiChannel;
         /* ---- MIDI OUT path ---- */
         if (g_moen != NO) {
                 saved_note = midiEvP[1];
-                if (midiChannel != 0) {
-                        short   octave_delta = envelope_val -
-                                        ((midiChannel >> 4) & 0xf);
+                if (midi_ch != 0) {
+                        short   octave_delta = env_val -
+                                        ((midi_ch >> 4) & 0xf);
                         midiEvP[1] = (unsigned char)
                                 (midiEvP[1] + (short) octave_delta * -12);
                 }
-                if (midi_direct_write_mode == 1) {
+                if (mi_dwrm == 1) {
                         while (midiEvS != 0) {
                                 mowrit(*midiEvP);
                                 midiEvP = midiEvP + 1;
@@ -608,7 +608,7 @@ short           midiChannel;
         }
 
         /* ---- PSG path ---- */
-        if (psg_output_enabled == NO)
+        if (psg_out == NO)
                 return 1;
 
         note_ptr = saved_ptr + 1;
@@ -619,12 +619,12 @@ short           midiChannel;
         if (saved_ptr[2] == 0) {
                 for (channel_idx = 0; channel_idx < 3;
                      channel_idx = channel_idx + 1) {
-                        if (psg_channel_notes[channel_idx] == *note_ptr)
+                        if (psg_chNt[channel_idx] == *note_ptr)
                                 break;
                 }
                 if (channel_idx >= 3)
                         return 0;
-                psg_channel_notes[channel_idx] = 0;
+                psg_chNt[channel_idx] = 0;
                 psg_envelope[channel_idx].phase       = ENV_RELEASE;
                 psg_envelope[channel_idx].phase_timer = 0;
                 return 1;
@@ -632,7 +632,7 @@ short           midiChannel;
 
         /* ---- Note-On: pick a channel ---- */
         for (chosen = 0; chosen < 3; chosen = chosen + 1) {
-                if (psg_channel_notes[chosen] == 0)
+                if (psg_chNt[chosen] == 0)
                         break;
         }
         if (chosen == 3) {
@@ -654,8 +654,8 @@ short           midiChannel;
         envelope_phase = ENV_ATTACK;
 
         /* Copy 8 bytes of ADSR params from the .SNG envelope block. */
-        psg_copy_envelope_params(
-                (unsigned char *) (midi_envelope_data_base +
+        psg_cpE(
+                (unsigned char *) (mi_env +
                         (long) (g_mccha - 1) * 8),
                 (unsigned char *) &psg_envelope[chosen].attack_start_vol,
                 8);
@@ -679,16 +679,16 @@ short           midiChannel;
                 freq_index = (unsigned short)
                         ((short) cVar4 + (short) (char) *note_ptr);
 
-                if (midi_direct_write_mode == 1) {
-                        psg_write_register((char) (psg_freq_table[freq_index] / 0x3c),
+                if (mi_dwrm == 1) {
+                        psg_wr((char) (psg_freq[freq_index] / 0x3c),
                                            (char) 6);
-                        psg_set_mixer((char) mixer_bits,
+                        psg_mix((char) mixer_bits,
                                       (unsigned char) noise_mask | 0xc0);
                 } else {
                         long    mixer_prev;
                         long    combined;
                         _xbios(XBIOS_Giaccess,
-                               (long) (psg_freq_table[freq_index] / 0x3c),
+                               (long) (psg_freq[freq_index] / 0x3c),
                                0x86L, 0L);
                         mixer_prev = _xbios(XBIOS_Giaccess, 0L, 7L, 0L);
                         combined = (long) mixer_bits |
@@ -704,12 +704,12 @@ short           midiChannel;
         if ((short) ((short) cVar4 + (short) (char) *note_ptr) < 0x17) {
                 envelope_phase = ENV_FADEOUT;
         } else {
-                period = psg_freq_table[freq_index];
+                period = psg_freq[freq_index];
                 period_hi_nibble = (period >> 8) & 0xf;
-                if (midi_direct_write_mode == 1) {
-                        psg_write_register((char) period,
+                if (mi_dwrm == 1) {
+                        psg_wr((char) period,
                                            (char) ret);
-                        psg_write_register((char) period_hi_nibble,
+                        psg_wr((char) period_hi_nibble,
                                            (char) (ret + 1));
                 } else {
                         _xbios(XBIOS_Giaccess,
@@ -721,12 +721,12 @@ short           midiChannel;
                 }
         }
 
-        psg_channel_notes[chosen] = *note_ptr;
+        psg_chNt[chosen] = *note_ptr;
         if (envelope_phase == ENV_FADEOUT)
                 psg_envelope[chosen].current_volume = 0;
-        psg_envelope[chosen].max_volume  = (unsigned char) psg_current_volume;
+        psg_envelope[chosen].max_volume  = (unsigned char) psg_cvol;
         psg_envelope[chosen].phase_timer = 1;
-        psg_notes_active                 = YES;
+        psg_ntAc                 = YES;
         psg_envelope[chosen].phase       = (char) envelope_phase;
 
         return 1;

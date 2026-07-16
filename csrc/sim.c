@@ -1,10 +1,10 @@
 /*
- * sim.c -- game-clock and needs simulation (game_simulate_one_second).
+ * sim.c -- game-clock and needs simulation (gameSim1).
  *
  * Called every 8 animation frames (~1 game-second).  Advances thirst,
  * hunger, sickness, bathroom, mood, and the wall clock; triggers a
  * random daytime phone call.  All logic is verified against the Ghidra
- * decompile of game_simulate_one_second at addr 0x??? in LCP.PRG (see
+ * decompile of gameSim1 at addr 0x??? in LCP.PRG (see
  * plate comment for exhaustive per-field notes).
  */
 
@@ -15,24 +15,24 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern short    animation_tick_counter;
-extern short    game_seconds_counter;           /* 0..59 game-seconds  */
-extern short    time_minutes;
-extern short    time_hours;
+extern short    ani_cnt;
+extern short    g_secs;           /* 0..59 game-seconds  */
+extern short    t_min;
+extern short    t_hour;
 extern short    date_day;
-extern short    date_month;
-extern short    date_year;
+extern short    dt_mon;
+extern short    dt_year;
 extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   phone_answered_flag;
-extern BOOL16   phone_call_active_flag;
-extern BOOL16   intro_sequence_active;
-extern short    randomRange();                  /* random.c */
-extern void     lcp_become_sick();              /* health.c  */
-extern void     lcp_update_palette_colors();    /* render.c  */
-extern void     daily_reset_action_flags();     /* ai.c      */
-extern short    days_in_month();                /* calendar.c*/
-extern void     put_event_to_list();            /* ai.c      */
-/* game_simulate_one_second: called every 8 animation frames (~1 game-second).
+extern BOOL16   ph_ans;
+extern BOOL16   ph_call;
+extern BOOL16   introSeq;
+extern short    rndRng();                  /* random.c */
+extern void     lcp_sick();              /* health.c  */
+extern void     lcp_upal();    /* render.c  */
+extern void     daily_rs();     /* ai.c      */
+extern short    daysInMo();                /* calendar.c*/
+extern void     putEv();            /* ai.c      */
+/* gameSim1: called every 8 animation frames (~1 game-second).
    Updates all time-dependent PLAYER state:
      Thirst: thirst_timer-- each minute. At 0 -> thirst_level++ (max 3, then sickness)
      Hunger: hunger_timer-- each minute. At 0 -> hunger_level++ (max 3, then sickness)
@@ -47,22 +47,22 @@ extern void     put_event_to_list();            /* ai.c      */
                 (0 or 2). Overridden by sickness.
      Clock: seconds->minutes->hours->days->months->years with proper calendar.
 
-   addr: game_simulate_one_second() */
+   addr: gameSim1() */
 
 void
-game_simulate_one_second()
+gameSim1()
 {
         short   random_val;
         short   days_this_month;
 
-        if ((animation_tick_counter & 7) != 0)
+        if ((ani_cnt & 7) != 0)
                 return;
 
-        game_seconds_counter = game_seconds_counter + 1;
-        if (game_seconds_counter != 60)
+        g_secs = g_secs + 1;
+        if (g_secs != 60)
                 return;
 
-        game_seconds_counter = 0;
+        g_secs = 0;
 
         /* Thirst tick */
         lcp.thirst_timer = lcp.thirst_timer - 1;
@@ -71,7 +71,7 @@ game_simulate_one_second()
                 if (lcp.thirst_level < 3)
                         lcp.thirst_level = lcp.thirst_level + NEED_MILD;
                 else
-                        lcp_become_sick();
+                        lcp_sick();
         }
 
         /* Hunger tick */
@@ -81,7 +81,7 @@ game_simulate_one_second()
                 if (lcp.hunger_level < 3)
                         lcp.hunger_level = lcp.hunger_level + NEED_MILD;
                 else
-                        lcp_become_sick();
+                        lcp_sick();
         }
 
         /* Sickness progression / recovery */
@@ -91,7 +91,7 @@ game_simulate_one_second()
                         lcp.sickness_level = lcp.sickness_level +
                                              lcp.sickness_direction;
                         if (lcp.sickness_level == SICKNESS_HEALTHY)
-                                lcp_update_palette_colors();
+                                lcp_upal();
                         if (lcp.sickness_level > 1)
                                 lcp.happiness = MOOD_SAD;
                         if (lcp.sickness_direction == DIR_IMPROVING)
@@ -109,22 +109,22 @@ game_simulate_one_second()
         }
 
         /* Random daytime phone call: 2% per second, 08:00-21:59 only */
-        if (time_hours > 7 && time_hours < 22) {
-                random_val = randomRange(0, 100);
+        if (t_hour > 7 && t_hour < 22) {
+                random_val = rndRng(0, 100);
                 if (random_val < 2 &&
-                    phone_answered_flag == NO &&
-                    intro_sequence_active == NO) {
-                        phone_call_active_flag = YES;
-                        put_event_to_list(ACTION_EVENT_PHONE_CALL);
+                    ph_ans == NO &&
+                    introSeq == NO) {
+                        ph_call = YES;
+                        putEv(ACTION_EVENT_PHONE_CALL);
                 }
         }
 
         /* Clock advance: minute */
-        time_minutes = time_minutes + 1;
-        if (time_minutes != 60)
+        t_min = t_min + 1;
+        if (t_min != 60)
                 return;
 
-        time_minutes = 0;
+        t_min = 0;
 
         /* Happiness mood cycle -- suppressed while sick unless already sad.
            The three-entry lookup table happiness_initial_countdown /
@@ -152,22 +152,22 @@ game_simulate_one_second()
         }
 
         /* Clock advance: hour */
-        time_hours = time_hours + 1;
-        if (time_hours != 24)
+        t_hour = t_hour + 1;
+        if (t_hour != 24)
                 return;
 
-        time_hours = 0;
-        daily_reset_action_flags();
+        t_hour = 0;
+        daily_rs();
 
         /* Calendar advance: day / month / year */
-        days_this_month = days_in_month(date_month, date_year);
+        days_this_month = daysInMo(dt_mon, dt_year);
         date_day = date_day + 1;
         if (days_this_month == date_day) {
                 date_day = 0;
-                date_month = date_month + 1;
-                if (date_month == 12) {
-                        date_month = 0;
-                        date_year = date_year + 1;
+                dt_mon = dt_mon + 1;
+                if (dt_mon == 12) {
+                        dt_mon = 0;
+                        dt_year = dt_year + 1;
                 }
         }
 }

@@ -20,19 +20,19 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   midi_is_playing;
+extern BOOL16   mi_play;
 extern short    g_sfplf;
-extern char *   midi_song_buffer;
+extern char *   mi_sbuf;
 extern BOOL16   g_molof;
-extern BOOL16   midi_var_r;
+extern BOOL16   mi_varR;
 extern long             g_momap;
-extern unsigned char *  midi_note_length_params[];
+extern unsigned char *  mi_ntLp[];
 extern BOOL16   g_sfacf;
 extern short    g_sfcur;
 extern short    g_sfdur;
 extern short    g_sfdos;
 extern short    g_sfdoc;
-extern short    _soundeffect_priority_table[];
+extern short    sf_pri[];
 #include <osbind.h>
 
 /* g_momap declared in globals.h */
@@ -50,8 +50,8 @@ short   sound_id;
 long    duration;
 {
         if (g_sfacf == NO ||
-            _soundeffect_priority_table[sound_id] <=
-            _soundeffect_priority_table[g_sfcur]) {
+            sf_pri[sound_id] <=
+            sf_pri[g_sfcur]) {
                 g_sfcur     = sound_id;
                 g_sfdur    = (short) duration;
                 g_sfacf = YES;
@@ -88,7 +88,7 @@ void p_dobls() { sf_sele(SFX_DOORBELL,  4L); }
 
 /* Small SFX wrappers used by the write-letter routine.  Both are
    1-line trampolines into sf_sele with per-effect duration.
-   addr: lt_sets(), select_random_click_sound() */
+   addr: lt_sets(), sfClick() */
 
 void
 lt_sets()
@@ -97,12 +97,12 @@ lt_sets()
 }
 
 void
-select_random_click_sound()
+sfClick()
 {
         sf_sele(SFX_CLICK, 2L);
 }
 
-/* song_play: load and start a .sng / .org song file from disk.
+/* sgPlay: load and start a .sng / .org song file from disk.
    1. If a song is already playing, wait for it to end.
    2. Free any previously-allocated buffer.
    3. Use GEMDOS Fsfirst to fetch the file's DTA (d_length gives size).
@@ -129,12 +129,12 @@ select_random_click_sound()
    MIDI keyboards (CZ-101, CT-6000).  The .ORG extension on some
    LCP files is cosmetic -- same format, likely renamed during disk
    mastering for the game's category system.
-   addr: song_play() */
+   addr: sgPlay() */
 
 extern void     mq_inis();
-extern short    file_open();
+extern short    fOpen();
 extern void     fr_read();
-extern void     error_not_enough_memory();
+extern void     er_nomem();
 
 /* sf_sl: load the SOUNDS.LCP sound-effect data file.
    Format: a sequence of records, each `{size:short, dosound_bytes[size]}`,
@@ -143,11 +143,11 @@ extern void     error_not_enough_memory();
 
    Each SFX gets its own GEMDOS_Malloc'd block laid out as:
      [0..1]     size (repeated inside the block so sf_irqp
-                can read it back via `*(short *)midi_note_length_params[id]`)
+                can read it back via `*(short *)mi_ntLp[id]`)
      [2..2+N]   Dosound register-command stream, ending in a 4-byte
                 duration trailer that sf_irqp reads as
                 the SFX's playback length
-   The pointer is stashed in midi_note_length_params[id] where the
+   The pointer is stashed in mi_ntLp[id] where the
    dispatch layer picks it up.
 
    addr: sf_sl() */
@@ -160,7 +160,7 @@ sf_sl()
         short           size;
         short *         block;
 
-        fhandle = file_open("sounds.lcp", 0);
+        fhandle = fOpen("sounds.lcp", 0);
         for (index = 0; index < 500; index = index + 1) {
                 unsigned char   sizebuf[2];
 
@@ -173,9 +173,9 @@ sf_sl()
                         break;
                 block = (short *) _gemdos(GEMDOS_Malloc,
                                           (long) (size + 4), 0L, 0L);
-                midi_note_length_params[index] = (unsigned char *) block;
+                mi_ntLp[index] = (unsigned char *) block;
                 if (block == (short *) 0)
-                        error_not_enough_memory();
+                        er_nomem();
                 *block = size;
                 fr_read(fhandle, (long) size, block + 1);
         }
@@ -193,38 +193,38 @@ struct DTA_hdr {
 };
 
 void
-song_play(filename)
+sgPlay(filename)
 char *  filename;
 {
         struct DTA_hdr *dta_ptr;
-        short           fileHandle;
+        short           fhnd;
         unsigned char   temp[10];
 
         g_molof = YES;
-        midi_var_r          = YES;
+        mi_varR          = YES;
 
-        if (midi_is_playing != NO) {
-                mq_inis(midi_song_buffer, g_momap);
-                while (midi_is_playing != NO)
+        if (mi_play != NO) {
+                mq_inis(mi_sbuf, g_momap);
+                while (mi_play != NO)
                         ;
         }
-        if (midi_song_buffer != (char *) 0) {
-                _gemdos(GEMDOS_Mfree, (long) midi_song_buffer, 0L, 0L);
-                midi_song_buffer = (char *) 0;
+        if (mi_sbuf != (char *) 0) {
+                _gemdos(GEMDOS_Mfree, (long) mi_sbuf, 0L, 0L);
+                mi_sbuf = (char *) 0;
         }
 
         _gemdos(GEMDOS_Fsfirst, (long) filename, 0L, 0L);
         dta_ptr = (struct DTA_hdr *) _gemdos(GEMDOS_Fgetdta, 0L, 0L, 0L);
-        midi_song_buffer = (char *) _gemdos(GEMDOS_Malloc,
+        mi_sbuf = (char *) _gemdos(GEMDOS_Malloc,
                                             dta_ptr->d_length, 0L, 0L);
-        if (midi_song_buffer == (char *) 0)
-                error_not_enough_memory();
+        if (mi_sbuf == (char *) 0)
+                er_nomem();
 
-        fileHandle = file_open(filename, 0);
-        if (fileHandle >= 0) {
-                fr_read(fileHandle, 10L, temp);
-                fr_read(fileHandle, 20000L, midi_song_buffer);
-                _gemdos(GEMDOS_Fclose, fileHandle, 0L, 0L);
+        fhnd = fOpen(filename, 0);
+        if (fhnd >= 0) {
+                fr_read(fhnd, 10L, temp);
+                fr_read(fhnd, 20000L, mi_sbuf);
+                _gemdos(GEMDOS_Fclose, fhnd, 0L, 0L);
         }
-        mq_inis(midi_song_buffer, g_momap);
+        mq_inis(mi_sbuf, g_momap);
 }

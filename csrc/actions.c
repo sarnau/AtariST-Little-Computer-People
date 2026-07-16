@@ -1,14 +1,14 @@
 /*
- * actions.c -- do_action() dispatcher (45 cases).
+ * actions.c -- doAct() dispatcher (45 cases).
  *
- * Called from check_for_any_action_triggers() with a resolved ACTION_ID
- * already in g_trac.  Snapshots g_trac into last_action
+ * Called from chk_actT() with a resolved ACTION_ID
+ * already in g_trac.  Snapshots g_trac into lastAct
  * (used by the AI to avoid picking the same action twice in a row),
  * clears the trigger, waking the resident first if asleep, then
  * switches to the per-action handler.  All 45 handlers live in
  * separate .c files (or, until ported, astubs.c).
  *
- * addr: do_action()
+ * addr: doAct()
  */
 
 #include "types.h"
@@ -19,11 +19,11 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern PLAYER   lcp;                            /* the resident LCP */
-extern short    last_action;
+extern short    lastAct;
 extern short    g_trac;
 extern void     a_getd();
-extern void     check_for_any_action_triggers();/* ai.c      */
-extern void     do_action();                    /* actions.c */
+extern void     chk_actT();/* ai.c      */
+extern void     doAct();                    /* actions.c */
 /* Forward-declarations for every action_ handler.  Real ports live in
    action_*.c; unported ones share stub bodies in astubs.c. */
 extern void     a_sitae();
@@ -66,16 +66,16 @@ extern void     a_petd();
 extern void     a_wakum();
 extern void     a_gotbn();
 
-/* do_action: dispatch g_trac to its handler.
-   addr: do_action() */
+/* doAct: dispatch g_trac to its handler.
+   addr: doAct() */
 
 void
-do_action()
+doAct()
 {
         short   action_number;
 
         action_number = g_trac;
-        last_action   = g_trac;
+        lastAct   = g_trac;
         g_trac = ACTION_NONE;
 
         if (lcp.is_sleeping != NO)

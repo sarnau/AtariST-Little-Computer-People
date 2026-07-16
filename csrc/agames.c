@@ -13,7 +13,7 @@
  *   a_plaag    -- Filing cabinet -> game box -> table.
  *                            Prompts the user with a 5-game menu
  *                            (Anagrams / War / Poker / Blackjack /
- *                            Word Puzzles) via string_print + text
+ *                            Word Puzzles) via strPr + text
  *                            scroll pane, then hands off to the
  *                            picked game's main() and cleans up.
  *
@@ -27,7 +27,7 @@
        For the monolithic "everything" view see
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
-extern BOOL16   intro_sequence_active;
+extern BOOL16   introSeq;
 extern short    g_trel[];
 extern short    lcp_x;
 extern short    lcp_y;
@@ -36,41 +36,41 @@ extern short    g_hamod;
 extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
-extern short    PLAYER_STATE_ARRAY[];
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
-extern short    lcp_filing_cabinet_open;
-extern short    disable_key_input_flag;
-extern short    text_scroll_timer;
+extern short    pst_arr[];
+extern void     lcp_hwt();
+extern void     gameTick();
+extern short    lcp_flcO;
+extern short    no_keyin;
+extern short    tx_sctm;
 extern short    g_obi13;
 extern short    g_obi14;
-extern BOOL16   dog_visible;
-extern short    dog_idle_countdown;
-extern void     house_get_position_xy();
-extern short    get_floor_number_from_y();
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern BOOL16   dg_vis;
+extern short    dg_idlcd;
+extern void     hs_posXY();
+extern short    getFlrY();
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_selaf[];
 extern short    g_seslm[];
-extern short    floor_center_y_coords[];
-extern short    randomRange();                  /* random.c */
+extern short    flr_cy[];
+extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 
-extern short    randomRange();
-extern short    lcp_walk_to_destination();
-extern short    get_pressed_key();
-extern void     select_random_click_sound();
+extern short    rndRng();
+extern short    lcp_wkD();
+extern short    getKey();
+extern void     sfClick();
 extern void     tv_scrc();
-extern void     string_print();
+extern void     strPr();
 extern void     sp_ssco();
 extern void     sp_ss02();
 extern void     sp_sprs();
 extern void     sp_upds();
 extern void     od_draw();
-extern void     fill_top_rect_with_background();
+extern void     fillTopR();
 extern void     a_watat();
 extern void     a_opcfc();
 extern void     a_sleep();
@@ -80,13 +80,13 @@ extern void     a_wandi();
    port them for real; for now they're stubs in stubs.c that return
    immediately. */
 extern void     ag_main();
-extern void     poker_war_main();
-extern void     poker_main();
-extern void     poker_blackjack_main();
+extern void     pk_wrMn();
+extern void     pk_main();
+extern void     pk_bjMn();
 extern void     wp_main();
 
 /* a_playc: sit and type.  The 3 state constants in
-   PLAYER_STATE_ARRAY are the two typing poses plus the resting
+   pst_arr are the two typing poses plus the resting
    sit-at-desk pose used between keystrokes and during the "clear
    screen" mini-animation.
    addr: a_playc() */
@@ -101,20 +101,20 @@ a_playc()
         unsigned short  type_counter;
         short           is_even_frame;
 
-        PLAYER_STATE_ARRAY[0] = STATE_TYPING_HANDS_DOWN;
-        PLAYER_STATE_ARRAY[1] = STATE_TYPING_HANDS_UP;
-        PLAYER_STATE_ARRAY[2] = STATE_SITTING_AT_DESK;
+        pst_arr[0] = STATE_TYPING_HANDS_DOWN;
+        pst_arr[1] = STATE_TYPING_HANDS_UP;
+        pst_arr[2] = STATE_SITTING_AT_DESK;
 
-        house_get_position_xy(POS_MID_COMPUTER_DESK,
+        hs_posXY(POS_MID_COMPUTER_DESK,
                               &g_wtx, &g_wty);
-        walk_result = lcp_walk_to_destination();
+        walk_result = lcp_wkD();
         if (walk_result != 0)
                 return;
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
         g_hamod = HEAD_ANIM_COMPUTER;
 
         /* First XBIOS Random call is discarded, matching the 1985
@@ -122,57 +122,57 @@ a_playc()
         (void) Random();
         random_seed = (unsigned short) Random();
 
-        lcp_state = PLAYER_STATE_ARRAY[2];
-        game_tick_and_animate(25);
+        lcp_st = pst_arr[2];
+        gameTick(25);
 
         type_counter = 0;
         while ((short) type_counter <
                (short) ((random_seed & 0x1ff) | 0x80) &&
-               intro_sequence_active == NO &&
+               introSeq == NO &&
                g_trel[0] == ACTION_NONE) {
                 random_duration = (unsigned short) Random();
                 is_even_frame   = ((type_counter & 1) == 0);
 
                 if (is_even_frame) {
-                        lcp_facing_direction = FACING_RIGHT;
-                        lcp_state = PLAYER_STATE_ARRAY[1];
+                        lcp_face = FACING_RIGHT;
+                        lcp_st = pst_arr[1];
                 } else {
                         random_anim = (unsigned short) Random();
-                        lcp_facing_direction = (random_anim & 2) >> 1;
-                        lcp_state = PLAYER_STATE_ARRAY[0];
-                        select_random_click_sound();
+                        lcp_face = (random_anim & 2) >> 1;
+                        lcp_st = pst_arr[0];
+                        sfClick();
                 }
                 /* The 1985 code flips `is_even_frame` here, so the
                    even/odd branches actually swap for the tick call. */
                 is_even_frame = !is_even_frame;
                 if (is_even_frame)
-                        game_tick_and_animate(0);
+                        gameTick(0);
                 else
-                        game_tick_and_animate(random_duration & 3);
+                        gameTick(random_duration & 3);
 
                 /* Rare "clear the screen" gesture: pause typing, look
                    up, blank the display, look back down. */
                 random_duration = (unsigned short) Random();
                 if ((random_duration & 0x7f) < 3 && is_even_frame) {
                         g_hamod         = HEAD_ANIM_DISABLED;
-                        lcp_state              = PLAYER_STATE_ARRAY[2];
+                        lcp_st              = pst_arr[2];
                         g_hatas = 10;
-                        lcp_facing_direction   = FACING_RIGHT;
-                        lcp_wait_head_reach_target();
+                        lcp_face   = FACING_RIGHT;
+                        lcp_hwt();
                         tv_scrc();
-                        game_tick_and_animate(5);
+                        gameTick(5);
                         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-                        lcp_wait_head_reach_target();
+                        lcp_hwt();
                         g_hamod = HEAD_ANIM_COMPUTER;
                 }
 
                 type_counter = type_counter + 1;
         }
 
-        lcp_state            = STATE_STAND_FACING_SCREEN;
-        lcp_facing_direction = FACING_RIGHT;
+        lcp_st            = STATE_STAND_FACING_SCREEN;
+        lcp_face = FACING_RIGHT;
         g_hamod       = HEAD_ANIM_DISABLED;
-        game_tick_and_animate(5);
+        gameTick(5);
 }
 
 /* a_plaag: main menu -> pick -> game -> cleanup.
@@ -190,7 +190,7 @@ a_playc()
       set the game up (SPRITE_TABLE_SETTING), sit down (STATE_EAT_BITE
       pose), and hand off to the picked game's main().
    5. On return, walk everything back to the filing cabinet, close it,
-      clear dog_visible.
+      clear dg_vis.
 
    addr: a_plaag() */
 
@@ -203,99 +203,99 @@ a_plaag()
         short   keycode;
         short   game_running;
 
-        dog_visible        = YES;
-        dog_idle_countdown = 1;
+        dg_vis        = YES;
+        dg_idlcd = 1;
 
-        house_get_position_xy(POS_TOP_FILING_CABINET,
+        hs_posXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
-        walk_result = lcp_walk_to_destination();
+        walk_result = lcp_wkD();
         if (walk_result != 0)
                 return;
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         /* Open the filing cabinet if it isn't already. */
-        if (lcp_filing_cabinet_open == NO) {
-                lcp_state = STATE_BEND_DOWN;
-                game_tick_and_animate(1);
-                lcp_state = STATE_REACH_FORWARD;
+        if (lcp_flcO == NO) {
+                lcp_st = STATE_BEND_DOWN;
+                gameTick(1);
+                lcp_st = STATE_REACH_FORWARD;
                 od_draw(g_obi13, 258, 47);
-                game_tick_and_animate(2);
-                lcp_state = STATE_PICK_UP_FROM_FLOOR;
+                gameTick(2);
+                lcp_st = STATE_PICK_UP_FROM_FLOOR;
                 od_draw(g_obi14, 258, 47);
-                game_tick_and_animate(2);
-                lcp_filing_cabinet_open = YES;
-                lcp_state = STATE_BEND_DOWN;
-                game_tick_and_animate(1);
-                lcp_state = STATE_STAND_FACING_SCREEN;
-                game_tick_and_animate(1);
+                gameTick(2);
+                lcp_flcO = YES;
+                lcp_st = STATE_BEND_DOWN;
+                gameTick(1);
+                lcp_st = STATE_STAND_FACING_SCREEN;
+                gameTick(1);
         }
 
         /* Draw the menu. */
-        lcp_state              = STATE_STAND_SIDE_VIEW;
+        lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
-        lcp_wait_head_reach_target();
-        game_tick_and_animate(5);
-        fill_top_rect_with_background(0x1b);
-        text_scroll_timer      = 300;
-        disable_key_input_flag = YES;
-        string_print("What game do you want to play?", 5,  8, COLOR_black);
-        string_print("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
-        string_print("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
+        lcp_hwt();
+        gameTick(5);
+        fillTopR(0x1b);
+        tx_sctm      = 300;
+        no_keyin = YES;
+        strPr("What game do you want to play?", 5,  8, COLOR_black);
+        strPr("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
+        strPr("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
 
         keycode      = 0;
         game_running = NO;
 
         /* Menu poll loop -- keep at it until either a valid digit is
            pressed or the menu times out to a yawn animation. */
-        while (text_scroll_timer != 0 || game_running == NO) {
+        while (tx_sctm != 0 || game_running == NO) {
                 if (keycode > '0' && keycode < '6') {
-                        text_scroll_timer      = 0;
-                        lcp_facing_direction   = FACING_RIGHT;
-                        lcp_state              = STATE_STAND_FACING_SCREEN;
+                        tx_sctm      = 0;
+                        lcp_face   = FACING_RIGHT;
+                        lcp_st              = STATE_STAND_FACING_SCREEN;
                         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-                        lcp_wait_head_reach_target();
+                        lcp_hwt();
 
                         a_watat();
-                        lcp_state = STATE_STAND_SIDE_VIEW;
+                        lcp_st = STATE_STAND_SIDE_VIEW;
                         sp_ssco(SPRITE_GAME_BOX);
-                        game_tick_and_animate(0);
+                        gameTick(0);
 
-                        house_get_position_xy(POS_BTM_KITCHEN_SINK,
+                        hs_posXY(POS_BTM_KITCHEN_SINK,
                                               &g_wtx,
                                               &g_wty);
                         g_wty = g_wty + 6;
                         g_wtx = g_wtx + 2;
                         g_actif = YES;
-                        lcp_walk_to_destination();
+                        lcp_wkD();
 
                         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
                         sp_sprs(SPRITE_TABLE_SETTING);
                         g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
                         g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
 
-                        house_get_position_xy(POS_BTM_TABLE_RIGHT,
+                        hs_posXY(POS_BTM_TABLE_RIGHT,
                                               &g_wtx,
                                               &g_wty);
-                        lcp_walk_to_destination();
-                        house_get_position_xy(POS_BTM_TABLE_LEFT,
+                        lcp_wkD();
+                        hs_posXY(POS_BTM_TABLE_LEFT,
                                               &g_wtx,
                                               &g_wty);
-                        lcp_walk_to_destination();
+                        lcp_wkD();
 
-                        lcp_state            = STATE_STAND_SIDE_VIEW;
-                        lcp_facing_direction = FACING_RIGHT;
+                        lcp_st            = STATE_STAND_SIDE_VIEW;
+                        lcp_face = FACING_RIGHT;
                         sp_ss02(SPRITE_GAME_BOX);
                         g_hatas = 8;
-                        lcp_wait_head_reach_target();
+                        lcp_hwt();
 
-                        lcp_state = STATE_EAT_BITE;
+                        lcp_st = STATE_EAT_BITE;
                         lcp_y = lcp_y + 8;
                         lcp_x = lcp_x + 6;
-                        game_tick_and_animate(0);
+                        gameTick(0);
                         g_lcyof = NO;
 
                         /* Nudge the head sprite over so the game
@@ -304,14 +304,14 @@ a_plaag()
                                 g_sepex[g_seslm[4]] + 3;
                         g_sepey[g_seslm[4]] =
                                 g_sepey[g_seslm[4]] - 4;
-                        game_tick_and_animate(0);
+                        gameTick(0);
 
                         /* Dispatch. */
                         switch (keycode) {
                         case '1': ag_main();         break;
-                        case '2': poker_war_main();       break;
-                        case '3': poker_main();           break;
-                        case '4': poker_blackjack_main(); break;
+                        case '2': pk_wrMn();       break;
+                        case '3': pk_main();           break;
+                        case '4': pk_bjMn(); break;
                         case '5': wp_main();     break;
                         }
 
@@ -320,86 +320,86 @@ a_plaag()
                         sp_ssco(SPRITE_GAME_BOX);
                         lcp_y = lcp_y - 8;
                         lcp_x = lcp_x - 6;
-                        lcp_state = STATE_STAND_SIDE_VIEW;
-                        game_tick_and_animate(0);
+                        lcp_st = STATE_STAND_SIDE_VIEW;
+                        gameTick(0);
 
-                        house_get_position_xy(POS_BTM_TABLE_RIGHT,
+                        hs_posXY(POS_BTM_TABLE_RIGHT,
                                               &g_wtx,
                                               &g_wty);
-                        lcp_walk_to_destination();
-                        house_get_position_xy(POS_BTM_KITCHEN_SINK,
+                        lcp_wkD();
+                        hs_posXY(POS_BTM_KITCHEN_SINK,
                                               &g_wtx,
                                               &g_wty);
                         g_wty = g_wty + 5;
-                        lcp_walk_to_destination();
+                        lcp_wkD();
 
                         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
                         sp_upds();
 
-                        house_get_position_xy(POS_TOP_FILING_CABINET,
+                        hs_posXY(POS_TOP_FILING_CABINET,
                                               &g_wtx,
                                               &g_wty);
-                        lcp_walk_to_destination();
+                        lcp_wkD();
 
-                        lcp_facing_direction   = FACING_RIGHT;
-                        lcp_state              = STATE_STAND_FACING_SCREEN;
+                        lcp_face   = FACING_RIGHT;
+                        lcp_st              = STATE_STAND_FACING_SCREEN;
                         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                         g_selaf[4] = SPRITE_HIDDEN;
                         sp_upds();
                         g_lcyof = NO;
-                        lcp_wait_head_reach_target();
+                        lcp_hwt();
                         a_opcfc();
                         g_actif = NO;
-                        dog_visible = NO;
+                        dg_vis = NO;
                         return;
                 }
 
-                keycode = get_pressed_key();
-                game_tick_and_animate(0);
-                if (text_scroll_timer > 0x31 || game_running != NO)
+                keycode = getKey();
+                gameTick(0);
+                if (tx_sctm > 0x31 || game_running != NO)
                         continue;
 
                 /* Menu timed out -- yawn and idle for a bit. */
-                text_scroll_timer = 250;
+                tx_sctm = 250;
                 selected_game    = 8;
                 g_wtx    = lcp_x;
-                walk_result      = get_floor_number_from_y(lcp_y);
-                g_wty    = floor_center_y_coords[walk_result - 1];
+                walk_result      = getFlrY(lcp_y);
+                g_wty    = flr_cy[walk_result - 1];
                 g_actif = YES;
-                lcp_walk_to_destination();
+                lcp_wkD();
                 g_actif = NO;
 
-                lcp_facing_direction   = FACING_RIGHT;
-                lcp_state              = STATE_STAND_SIDE_VIEW;
+                lcp_face   = FACING_RIGHT;
+                lcp_st              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;
-                lcp_wait_head_reach_target();
+                lcp_hwt();
 
                 do {
                         walk_result = selected_game - 1;
                         if (selected_game == 0)
                                 break;
                         a_sleep(1);
-                        counter = randomRange(0, 2);
-                        game_tick_and_animate(counter);
-                        keycode = get_pressed_key();
+                        counter = rndRng(0, 2);
+                        gameTick(counter);
+                        keycode = getKey();
                         selected_game = walk_result;
                 } while (keycode < '1' || keycode > '5');
 
-                lcp_state = STATE_STAND_SIDE_VIEW;
-                game_tick_and_animate(0);
-                house_get_position_xy(POS_TOP_FILING_CABINET,
+                lcp_st = STATE_STAND_SIDE_VIEW;
+                gameTick(0);
+                hs_posXY(POS_TOP_FILING_CABINET,
                                       &g_wtx, &g_wty);
                 g_actif = YES;
-                lcp_walk_to_destination();
+                lcp_wkD();
                 g_actif = NO;
 
-                lcp_state              = STATE_STAND_SIDE_VIEW;
+                lcp_st              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;
-                lcp_wait_head_reach_target();
+                lcp_hwt();
                 game_running = YES;
         }
 
         a_wandi();
-        disable_key_input_flag = NO;
-        dog_visible = NO;
+        no_keyin = NO;
+        dg_vis = NO;
 }

@@ -4,7 +4,7 @@
  * The resident walks to the filing cabinet, grabs paper, moves to the
  * desk, and types a procedurally-assembled letter:
  *
- *   Date line       -- month_name_table[date_month] date_day, 1900+date_year
+ *   Date line       -- mo_names[dt_mon] date_day, 1900+dt_year
  *   Salutation      -- "Dear <owner_name>,"
  *   2..4 paragraphs -- picked from 4 topic sections in shuffled order.
  *                      Each section has 3 lines (opening / middle /
@@ -40,8 +40,8 @@
        include/globals.h.  Alcyon C 4.14 has a fixed-size
        symbol table that overflows on the full globals.h. */
 extern short    date_day;
-extern short    date_month;
-extern short    date_year;
+extern short    dt_mon;
+extern short    dt_year;
 extern PLAYER   lcp;                            /* the resident LCP */
 extern short    lcp_x;
 extern short    lcp_y;
@@ -50,46 +50,46 @@ extern short    g_hamod;
 extern BOOL16   g_actif;
 extern short    g_wtx;
 extern short    g_wty;
-extern void     lcp_wait_head_reach_target();
-extern void     game_tick_and_animate();
-extern short    lcp_record_playing;
-extern short    disable_key_input_flag;
-extern short    text_scroll_timer;
+extern void     lcp_hwt();
+extern void     gameTick();
+extern short    lcp_recP;
+extern short    no_keyin;
+extern short    tx_sctm;
 extern short    g_srsdc;
 extern short    g_cdibp;
 extern char *   g_lttx;
 extern char *   g_ltlp[];
 extern char *   g_ltg[];
-extern char *   month_name_table[];
+extern char *   mo_names[];
 extern short    g_ltcwt[];
 extern char     g_ltscb[];
-extern void     house_get_position_xy();
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern void     hs_posXY();
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_sepex[];
 extern short    g_sepey[];
 extern short    g_selaf[];
 extern short    g_seslm[];
-extern short    randomRange();                  /* random.c */
+extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 #include <stdio.h>              /* sprintf */
 
-extern short    randomRange();
-extern short    lcp_walk_to_destination();
+extern short    rndRng();
+extern short    lcp_wkD();
 extern void     sp_sprs();
 extern void     sp_upds();
 extern void     sf_sele();
-extern void     hide_lcp_sprites();
-extern void     show_lcp_sprites();
+extern void     hideLcp();
+extern void     showLcp();
 extern void     a_opcfc();
 extern void     a_watat();
-extern void     fill_top_rect_with_background();
+extern void     fillTopR();
 extern void     fl_ltpl();
-extern void     print_char();
+extern void     prCh();
 extern void     lt_sets();
-extern void     select_random_click_sound();
-extern void     error_not_enough_memory();
-extern char     input_string[];
+extern void     sfClick();
+extern void     er_nomem();
+extern char     in_str[];
 
 /* Forward-declare the two helpers + a_playp so calls before
    the definitions still resolve under -Werror. */
@@ -99,7 +99,7 @@ extern void     a_playp();
 
 /* lt_tyca: emit one character.  On CR (< space),
    scrolls the text pane down; otherwise plays a random click and blits
-   the char via print_char, then swaps in the appropriate width sprite
+   the char via prCh, then swaps in the appropriate width sprite
    from g_ltcwt[] based on current buffer position.
 
    addr: lt_tyca() */
@@ -112,18 +112,18 @@ short   ch;
         short   i;
 
         if (ch < ' ') {                 /* control char, treated as CR */
-                lcp_state = STATE_TYPE_AT_DESK_LEFT_HAND;
-                game_tick_and_animate(0);
-                pick = randomRange(0, 5);
+                lcp_st = STATE_TYPE_AT_DESK_LEFT_HAND;
+                gameTick(0);
+                pick = rndRng(0, 5);
                 if (pick == 0) {
-                        lcp_state = STATE_TYPE_AT_DESK_RIGHT_HAND;
-                        game_tick_and_animate(0);
-                        lcp_state = STATE_TYPE_AT_DESK_LEFT_HAND;
-                        game_tick_and_animate(0);
+                        lcp_st = STATE_TYPE_AT_DESK_RIGHT_HAND;
+                        gameTick(0);
+                        lcp_st = STATE_TYPE_AT_DESK_LEFT_HAND;
+                        gameTick(0);
                 }
-                lcp_facing_direction = FACING_RIGHT;
-                lcp_state = STATE_WRITE_AT_DESK;
-                game_tick_and_animate(0);
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_WRITE_AT_DESK;
+                gameTick(0);
 
                 g_srsdc = 4;
                 g_cdibp = 0;
@@ -149,32 +149,32 @@ short   ch;
                 g_sepex[g_seslm[g_ltcwt[i]]] = 211;
                 g_sepey[g_seslm[g_ltcwt[i]]] =  44;
                 lt_sets();
-                game_tick_and_animate(6);
+                gameTick(6);
                 return;
         }
 
         /* Printable char. */
         if (ch == ' ') {
-                lcp_facing_direction = FACING_RIGHT;
-                lcp_state = STATE_TYPE_AT_DESK_LEFT_HAND;
-                game_tick_and_animate(0);
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_TYPE_AT_DESK_LEFT_HAND;
+                gameTick(0);
         } else {
-                lcp_facing_direction = randomRange(0, 1);
-                lcp_state = STATE_TYPE_AT_DESK_LEFT_HAND;
-                game_tick_and_animate(0);
-                pick = randomRange(0, 5);
+                lcp_face = rndRng(0, 1);
+                lcp_st = STATE_TYPE_AT_DESK_LEFT_HAND;
+                gameTick(0);
+                pick = rndRng(0, 5);
                 if (pick == 0) {
-                        lcp_state = STATE_TYPE_AT_DESK_RIGHT_HAND;
-                        game_tick_and_animate(0);
-                        lcp_state = STATE_TYPE_AT_DESK_LEFT_HAND;
-                        game_tick_and_animate(0);
+                        lcp_st = STATE_TYPE_AT_DESK_RIGHT_HAND;
+                        gameTick(0);
+                        lcp_st = STATE_TYPE_AT_DESK_LEFT_HAND;
+                        gameTick(0);
                 }
         }
-        lcp_facing_direction = FACING_RIGHT;
-        lcp_state = STATE_WRITE_AT_DESK;
-        select_random_click_sound();
-        game_tick_and_animate(0);
-        print_char(ch, g_cdibp << 3, 23, COLOR_black);
+        lcp_face = FACING_RIGHT;
+        lcp_st = STATE_WRITE_AT_DESK;
+        sfClick();
+        gameTick(0);
+        prCh(ch, g_cdibp << 3, 23, COLOR_black);
         g_cdibp = g_cdibp + 1;
 
         g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
@@ -194,10 +194,10 @@ short   ch;
         g_sepey[g_seslm[g_ltcwt[i]]] =  44;
 
         /* 1/21 chance of a short pause between keystrokes. */
-        pick = randomRange(0, 20);
+        pick = rndRng(0, 20);
         if (pick == 0) {
-                pick = randomRange(0, 3);
-                game_tick_and_animate(pick);
+                pick = rndRng(0, 3);
+                gameTick(pick);
         }
 }
 
@@ -278,16 +278,16 @@ short   val;
    walk out.
 
    Letter structure (each template section spans 96 short entries):
-     paragraph_count   = randomRange(2, 4)
+     paragraph_count   = rndRng(2, 4)
      for i in 0..paragraph_count-1:
        section_id      = section_order[i]           (0..3, shuffled)
        template_index  = section_id * 96
        if section_id == 3:      last section, 6 alternates
-           template_index += randomRange(0, 5) * 12
+           template_index += rndRng(0, 5) * 12
        elif sickness == 0:      healthy, use happiness row
-           template_index += randomRange(0, 1) * 48 + happiness * 12
+           template_index += rndRng(0, 1) * 48 + happiness * 12
        else:                    sick, use dedicated sick row
-           template_index += randomRange(0, 1) * 48 + 36
+           template_index += rndRng(0, 1) * 48 + 36
        type 3 lines from that subsection at offsets +0..3, +4..7, +8..11
 
    addr: a_writl() */
@@ -310,36 +310,36 @@ a_writl()
         short   walk_result;
         short   full_year;
 
-        if (lcp_record_playing != NO)
+        if (lcp_recP != NO)
                 a_playp();
 
-        house_get_position_xy(POS_TOP_FILING_CABINET,
+        hs_posXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
-        result = lcp_walk_to_destination();
+        result = lcp_wkD();
         if (result != 0)
                 return;
 
-        lcp_facing_direction   = FACING_RIGHT;
-        lcp_state              = STATE_STAND_FACING_SCREEN;
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         a_watat();
-        walk_result = randomRange(0, 100);
+        walk_result = rndRng(0, 100);
         if (lcp.initiative_threshold < walk_result)
                 a_opcfc();
 
-        house_get_position_xy(POS_TOP_STUDY_DOOR,
+        hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        result = lcp_walk_to_destination();
+        result = lcp_wkD();
         if (result != 0)
                 return;
 
-        house_get_position_xy(POS_TOP_STUDY_DOOR,
+        hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         g_wtx = g_wtx - 10;
         g_wty = g_wty +  3;
-        result = lcp_walk_to_destination();
+        result = lcp_wkD();
         if (result != 0)
                 return;
 
@@ -355,21 +355,21 @@ a_writl()
         g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
         g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
 
-        house_get_position_xy(POS_TOP_DESK_CHAIR,
+        hs_posXY(POS_TOP_DESK_CHAIR,
                               &g_wtx, &g_wty);
         g_wty = g_wty -  4;
         g_wtx = g_wtx - 14;
-        lcp_walk_to_destination();
+        lcp_wkD();
 
-        lcp_state              = STATE_STAND_SIDE_VIEW;
-        lcp_facing_direction   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_SIDE_VIEW;
+        lcp_face   = FACING_RIGHT;
         g_hatas = 8;
-        lcp_wait_head_reach_target();
+        lcp_hwt();
 
         lcp_x = lcp_x + 5;
         lcp_y = lcp_y + 6;
-        lcp_state = STATE_WRITE_AT_DESK;
-        game_tick_and_animate(1);
+        lcp_st = STATE_WRITE_AT_DESK;
+        gameTick(1);
 
         g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
         sp_upds();
@@ -379,57 +379,57 @@ a_writl()
         g_sepey[g_seslm[SPRITE_TYPING_1]] =  44;
 
         g_hamod         = HEAD_ANIM_READING;
-        disable_key_input_flag = YES;
-        fill_top_rect_with_background(0x1b);
+        no_keyin = YES;
+        fillTopR(0x1b);
 
         /* Allocate the letter template buffer -- 0x2900 bytes. */
         g_lttx = (char *) _gemdos(GEMDOS_Malloc, 0x2900L, 0L, 0L);
         if (g_lttx == (char *) 0)
-                error_not_enough_memory();
+                er_nomem();
         fl_ltpl();
 
-        text_scroll_timer = 9999;
-        game_tick_and_animate(2);
+        tx_sctm = 9999;
+        gameTick(2);
 
         /* --- Date + salutation --- */
-        full_year = date_year + 1900;
-        sprintf(input_string, "%s %d, %4d",
-                month_name_table[date_month],
+        full_year = dt_year + 1900;
+        sprintf(in_str, "%s %d, %4d",
+                mo_names[dt_mon],
                 date_day + 1, full_year);
         g_cdibp = 0;
-        lt_tysa(input_string, -12);
+        lt_tysa(in_str, -12);
         lt_tyca('\r');
 
-        sprintf(input_string, "Dear %s,", lcp.owner_name);
-        lt_tysa(input_string, 0);
+        sprintf(in_str, "Dear %s,", lcp.owner_name);
+        lt_tysa(in_str, 0);
         lt_tyca('\r');
 
         /* --- Shuffle the 4 section indices via 16 random swaps. --- */
         for (i = 0; i < 4; i = i + 1)
                 section_order[i] = i;
         for (i = 0; i < 16; i = i + 1) {
-                swap_a = randomRange(0, 3);
-                swap_b = randomRange(0, 3);
+                swap_a = rndRng(0, 3);
+                swap_b = rndRng(0, 3);
                 swap_temp = section_order[swap_a];
                 section_order[swap_a] = section_order[swap_b];
                 section_order[swap_b] = swap_temp;
         }
 
         /* --- Body: 2..4 paragraphs from the shuffled sections. --- */
-        paragraph_count = randomRange(2, 4);
+        paragraph_count = rndRng(2, 4);
         for (i = 0; i < paragraph_count; i = i + 1) {
                 section_id     = section_order[i];
                 template_index = section_id * 0x60;
                 if (section_id == 3) {
-                        walk_result = randomRange(0, 5);
+                        walk_result = rndRng(0, 5);
                         template_index = walk_result * 0xc + template_index;
                 } else if (lcp.sickness_level < 1) {
-                        walk_result = randomRange(0, 1);
+                        walk_result = rndRng(0, 1);
                         template_index = lcp.happiness * 0xc +
                                          walk_result * 0x30 +
                                          template_index;
                 } else {
-                        walk_result = randomRange(0, 1);
+                        walk_result = rndRng(0, 1);
                         template_index = walk_result * 0x30 + 0x24 +
                                          template_index;
                 }
@@ -440,21 +440,21 @@ a_writl()
                         line_spacing = -5;
                 else
                         line_spacing =  2;
-                walk_result = randomRange(0, 3);
+                walk_result = rndRng(0, 3);
                 cursor_y = lt_tysa(
                         g_ltlp[template_index + walk_result],
                         line_spacing);
                 char_test = (cursor_y != '-');
 
                 /* Middle line */
-                walk_result = randomRange(0, 3);
+                walk_result = rndRng(0, 3);
                 cursor_y = lt_tysa(
                         g_ltlp[template_index + walk_result + 4],
                         char_test);
                 char_test = (cursor_y != '-');
 
                 /* Ending line */
-                walk_result = randomRange(0, 3);
+                walk_result = rndRng(0, 3);
                 lt_tysa(
                         g_ltlp[template_index + walk_result + 8],
                         char_test);
@@ -463,19 +463,19 @@ a_writl()
         /* --- Sign-off. --- */
         lt_tyca('\r');
         line_spacing = -8;
-        walk_result = randomRange(0, 3);
+        walk_result = rndRng(0, 3);
         lt_tysa(
                 g_ltg[walk_result], line_spacing);
         lt_tyca('\r');
 
-        sprintf(input_string, "%s", lcp.character_name);
-        lt_tysa(input_string, -10);
-        game_tick_and_animate(60);
+        sprintf(in_str, "%s", lcp.character_name);
+        lt_tysa(in_str, -10);
+        gameTick(60);
 
         /* --- Cleanup: free buffer, hide typing sprites, walk out. --- */
-        text_scroll_timer        = 0;
+        tx_sctm        = 0;
         g_cdibp = 0;
-        disable_key_input_flag   = NO;
+        no_keyin   = NO;
         _gemdos(GEMDOS_Mfree, (long) g_lttx, 0L, 0L);
 
         g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
@@ -487,22 +487,22 @@ a_writl()
         sp_sprs(SPRITE_TYPING_2);
         g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
         g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
-        game_tick_and_animate(4);
+        gameTick(4);
 
-        lcp_state      = STATE_STAND_SIDE_VIEW;
+        lcp_st      = STATE_STAND_SIDE_VIEW;
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_y = lcp_y - 6;
-        game_tick_and_animate(0);
+        gameTick(0);
         g_actif = YES;
 
-        house_get_position_xy(POS_TOP_STUDY_DOOR,
+        hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         g_wtx = g_wtx - 10;
         g_wty = g_wty +  3;
-        lcp_walk_to_destination();
-        house_get_position_xy(POS_TOP_STUDY_DOOR,
+        lcp_wkD();
+        hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        lcp_walk_to_destination();
+        lcp_wkD();
 
         g_selaf[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
         g_selaf[SPRITE_TYPING_1]   = SPRITE_HIDDEN;

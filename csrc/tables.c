@@ -12,7 +12,7 @@
 
 /* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
    Table value gets left-shifted by 1 at the call site to yield the
-   full-pixel X (see house_get_position_xy).
+   full-pixel X (see hs_posXY).
    addr: g_rpxs at 0x019eb2 */
 short   g_rpxs[48] = {
         /* Floor 3 -- top       0..15 */
@@ -26,13 +26,13 @@ short   g_rpxs[48] = {
          67,  70, 106, 110, 123, 132, 147, 140
 };
 
-/* revert_table[256]: 8-bit bit-reversal LUT used to mirror sprites
+/* rev_tab[256]: 8-bit bit-reversal LUT used to mirror sprites
    horizontally.  Entry i has the bits of i in reversed order (bit 0 <->
    bit 7).  This is a standard textbook table; in the original binary
    it's generated at startup, but hard-coding it keeps everything static
    here and matches Alcyon's habit of shipping data-heavy tables.
-   addr: revert_table[] */
-unsigned short  revert_table[256] = {
+   addr: rev_tab[] */
+unsigned short  rev_tab[256] = {
         0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0,
         0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
         0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8,
@@ -69,7 +69,7 @@ unsigned short  revert_table[256] = {
 
 /* ---- AI action tables ------------------------------------------------
    Three 16-entry tables of ACTION_ID values picked randomly by
-   check_time_based_actions() at the "active" / "moderate" / "relaxed"
+   chk_timA() at the "active" / "moderate" / "relaxed"
    time-of-day tier.  Dumped verbatim from Ghidra 0x2a1d0 / 0x2a1f0 /
    0x2a210 -- the port previously had guessed placeholder values that
    picked wrong actions and drove the resident to wrong positions.
@@ -99,21 +99,24 @@ short   g_atrel[16] = {
         24, 12, 19, 42, 38,  6,  1, 39
 };
 
-/* activity_schedule_table[3][8]: 8-entry rows of table-index picks
+/* sch_tab[3][8]: 8-entry rows of table-index picks
    (0=active, 1=moderate, 2=relaxed) keyed by (phase, activity_level).
    Dumped verbatim from Ghidra 0x2a230 -- previous port values were
    placeholders (row 0 all-zeros, row 1/2 monotonic) which forced the
    AI dispatcher to always pick bucket 0 in the morning slot.
 
    The 1985 assembler at 0x16260-0x16274 indexes as
-     table_pick = *(activity_schedule_table + hours_bucket*16 + activity_level*2)
+     table_pick = *(sch_tab + hours_bucket*16 + activity_level*2)
    where hours_bucket = (hours_since_wake / 2) % 3 and activity_level
    is the LCP's personality-derived 0..7 pace. */
-static short    _schedule_row_0[8] = { 0, 0, 2, 2, 1, 1, 0, 1 };
-static short    _schedule_row_1[8] = { 2, 1, 0, 1, 2, 0, 2, 0 };
-static short    _schedule_row_2[8] = { 1, 2, 1, 0, 0, 2, 1, 2 };
-short *         activity_schedule_table[3] = {
-        _schedule_row_0, _schedule_row_1, _schedule_row_2
+/* Names shortened to keep first 8 chars unique after Alcyon's
+   as68 8-char symbol truncation (all three previously collapsed
+   to `_schedul` and aliased the same storage). */
+static short    schr0[8] = { 0, 0, 2, 2, 1, 1, 0, 1 };
+static short    schr1[8] = { 2, 1, 0, 1, 2, 0, 2, 0 };
+static short    schr2[8] = { 1, 2, 1, 0, 0, 2, 1, 2 };
+short *         sch_tab[3] = {
+        schr0, schr1, schr2
 };
 
 /* g_rphs[49] (Ghidra room_position_height_table @ 0x29F2A): Y offset
@@ -136,7 +139,7 @@ short   g_rphs[49] = {
      bm32and[i] = ~(1 << i)        (used to CLEAR bit i)
    sprite_lcp_build_all_body/head walk `bit` 0..31 and use these to
    compose the dilated 30-bit sprite mask.
-   Populated at boot by init_bitmask_tables (Alcyon C doesn't accept
+   Populated at boot by initBM (Alcyon C doesn't accept
    the 'UL' suffix on hex constants > 0x7FFFFFFF, so we compute the
    entries at runtime rather than ship them as data literals).
    addr: bm32or, bm32and */
@@ -145,7 +148,7 @@ long    bm32or[32];
 long    bm32and[32];
 
 void
-init_bitmask_tables()
+initBM()
 {
         short   i;
         long    v;

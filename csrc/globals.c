@@ -11,44 +11,44 @@
 #include "structs.h"
 #include "enums.h"
 
-short   animation_tick_counter  = 0;
-short   game_seconds_counter    = 0;
+short   ani_cnt  = 0;
+short   g_secs    = 0;
 
-short   time_minutes            = 0;
-short   time_hours              = 0;
+short   t_min            = 0;
+short   t_hour              = 0;
 short   date_day                = 0;
-short   date_month              = 0;
-short   date_year               = 0;
+short   dt_mon              = 0;
+short   dt_year               = 0;
 
 PLAYER  lcp;
 
-BOOL16  phone_answered_flag     = NO;
-BOOL16  phone_call_active_flag  = NO;
-BOOL16  intro_sequence_active   = NO;
+BOOL16  ph_ans     = NO;
+BOOL16  ph_call  = NO;
+BOOL16  introSeq   = NO;
 
-BOOL16  lunch_meal_triggered_today      = NO;
-BOOL16  dinner_meal_triggered_today     = NO;
-BOOL16  morning_wakeup_triggered_today  = NO;
-BOOL16  bedtime_triggered_today         = NO;
+BOOL16  lunT_trg      = NO;
+BOOL16  dinT_trg     = NO;
+BOOL16  wkT_trg  = NO;
+BOOL16  bedT_trg         = NO;
 
-BOOL16  in_execute_event_routine_flag   = NO;
+BOOL16  in_evrt   = NO;
 
-short   last_action                     = ACTION_NONE;
+short   lastAct                     = ACTION_NONE;
 short   g_trac                  = ACTION_NONE;
 
-/* Ghidra's endless_game_loop always sets these via
-   house_get_position_xy() during boot.  Ghidra keeps both in BSS;
+/* Ghidra's gameLoop always sets these via
+   hs_posXY() during boot.  Ghidra keeps both in BSS;
    the cutscene sets them.  Port matches by leaving them at 0 -- the
-   cutscene stub in init.c writes (300, 190) before endless_game_loop
+   cutscene stub in init.c writes (300, 190) before gameLoop
    runs. */
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
 short   g_lcldd                      = 0;
-short   copyprot_check_return           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
-short   game_speed_counter              = 5;
+short   cprot_r           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
+short   g_spdc              = 5;
 
-BOOL16  ctrl_a_alarm_pressed_flag       = NO;
-short   lcp_water_level                 = 7;
+BOOL16  alarm_p       = NO;
+short   lcp_watr                 = 7;
 
 short   g_aliss               = 0;
 short   g_aqueu[10];
@@ -62,22 +62,22 @@ short   g_hamod                         = HEAD_ANIM_DISABLED;
 short   g_hsfra               = 0;
 long    g_sfret     = 0;
 BOOL16  g_actif       = NO;
-BOOL16  dog_pettable_flag               = NO;
+BOOL16  dg_petok               = NO;
 short   g_wtx                   = 0;
 short   g_wty                   = 0;
-short   PLAYER_STATE_ARRAY[4];
+short   pst_arr[4];
 
-short   lcp_front_door_open             = 0;
-short   lcp_study_door_open             = 0;
-short   lcp_closet_door_open            = 0;
-short   lcp_cabinet_open                = 0;
-short   lcp_dresser_open                = 0;
-short   lcp_toilet_door_open            = 0;
-short   lcp_filing_cabinet_open         = 0;
-short   lcp_dog_bowl_status             = 1;
-short   lcp_food_count                  = 4;
-short   lcp_record_playing              = 0;
-short   lcp_tv_on                       = 0;
+short   lcp_frdO             = 0;
+short   studyDrO             = 0;
+short   lcp_clsO            = 0;
+short   lcp_cabO                = 0;
+short   lcp_drsO                = 0;
+short   lcp_toiO            = 0;
+short   lcp_flcO         = 0;
+short   lcp_bwlS             = 1;
+short   lcp_food                  = 4;
+short   lcp_recP              = 0;
+short   lcp_tv                       = 0;
 
 /* Object-ID slots -- populated at load time in the real game from the
    OBJECTS file; nonzero defaults let render.c blit *something* even
@@ -101,32 +101,32 @@ short   g_obi15         = 16;
 short   g_obi16         = 17;
 short   g_obi17         = 18;
 
-BOOL16  midi_is_playing                 = NO;
-short   dog_food_bowl_change            = 0;
+BOOL16  mi_play                 = NO;
+short   dg_bwlch            = 0;
 short   g_sfplf        = NO;
 short   g_sfpli          = 0;
 
 BOOL16  g_rbact          = NO;
-char *  midi_song_buffer                = (char *) 0;
-/* Ghidra sng/org song file counts, set at boot by count_songs().
-   BSS-zero to match Ghidra; port previously had org_song_file_count=8
+char *  mi_sbuf                = (char *) 0;
+/* Ghidra sng/org song file counts, set at boot by cntSong().
+   BSS-zero to match Ghidra; port previously had org_cnt=8
    as a guess. */
-short   sng_song_file_count             = 0;
-short   org_song_file_count             = 0;
+short   sng_cnt             = 0;
+short   org_cnt             = 0;
 /* House scene loader intermediates used by main() during house.scn
    load.  Ghidra keeps these as BSS globals. */
-short   house_scene_size                = 0;
-void *  scene_data_ptr                  = (void *) 0;
-char    scene_common_data[30];
-/* PEx.LCP filename.  Ghidra pex_lcp_ptr @ 0x2a0f8 points to "pex.lcp"
+short   hs_size                = 0;
+void *  scn_dat                  = (void *) 0;
+char    scn_cmn[30];
+/* PEx.LCP filename.  Ghidra pex_name @ 0x2a0f8 points to "pex.lcp"
    at 0x2a330 and main() mutates index 2 to select the character.
    Port stores the string as a mutable static char array. */
-char    pex_lcp_ptr[8]                  = "PE0.LCP";
-BOOL16  fire_active_flag                = NO;
-short   fire_duration_countdown         = 0;
-BOOL16  fire_extinguish_flag            = NO;
-short   disable_key_input_flag          = NO;
-short   text_scroll_timer               = 0;
+char    pex_name[8]                  = "PE0.LCP";
+BOOL16  fire_act                = NO;
+short   fire_dur         = 0;
+BOOL16  fire_ext            = NO;
+short   no_keyin          = NO;
+short   tx_sctm               = 0;
 short   g_srsdc        = 0;
 short   g_cdibp        = 0;
 
@@ -139,7 +139,7 @@ short   g_cdibp        = 0;
 char *  g_lttx              = (char *) 0;
 char *  g_ltlp[512]            = { (char *) 0 };
 char *  g_ltg[8]        = { (char *) 0 };
-char *  month_name_table[12] = {
+char *  mo_names[12] = {
         "January", "February", "March",     "April",
         "May",     "June",     "July",      "August",
         "September","October", "November",  "December"
@@ -151,11 +151,11 @@ short   g_ltcwt[4]      = {
         SPRITE_TYPING_3, SPRITE_TYPING_4
 };
 char    g_ltscb[64];
-char    input_string[256];
-/* compression_tokens[15]: the 15 most common byte values in the
+char    in_str[256];
+/* comp_tok[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
-unsigned char   compression_tokens[15];
+unsigned char   comp_tok[15];
 
 short   g_obidc    = 28;
 short   g_obi03    = 29;
@@ -170,21 +170,21 @@ short   g_obido        = 11;
 short   g_obi12        = 12;
 short   g_obibg            = 44;
 
-short * saved_body_sprite_ptr           = (short *) 0;
-short * saved_head_sprite_ptr           = (short *) 0;
+short * sv_bodyP           = (short *) 0;
+short * sv_headP           = (short *) 0;
 
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
-short   vdihandle                       = 0;
-short   vdi_handle                      = 0;    /* physical from graf_handle */
-/* _vdi_color_table (Ghidra vdi_color_table @ 0x29b64): color_enum ->
+short   vdihnd                       = 0;
+short   vdi_hnd                      = 0;    /* physical from graf_handle */
+/* vdi_colt (Ghidra vdi_color_table @ 0x29b64): color_enum ->
    VDI palette-index permutation.  color_enum 0 (black) -> VDI slot 0,
    color_enum 14 (white) -> VDI slot 13, etc.  Not identity: VDI's
    default 16-entry palette-index-to-hardware-color assignment differs
    from the game's color_enum numbering, so text/lines call
-   vst_color/vsl_color/vsf_color through this permutation to end up
+   vstCol/vslCol/vsfCol through this permutation to end up
    at the same on-screen hue as Ghidra. */
-short   _vdi_color_table[16]            = {
+short   vdi_colt[16]            = {
         0,  2,  3,  6,  4,  7,  5,  8,
         9, 10, 11, 14, 12, 15, 13,  1
 };
@@ -204,16 +204,16 @@ short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
 
 void *  g_dscp             = (void *) 0;
 
-/* main_colorpalette[16]: Atari ST 12-bit RGB palette (4 bits per channel).
+/* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.  Values
    dumped from the 1985 data segment at Ghidra 0x29B44 (via
-   ghidra_scripts/DumpPalette.java).  aes_vdi_jnit loads this via
-   _xbios(XBIOS_Setpalette,main_colorpalette) at boot -- there is no
+   ghidra_scripts/DumpPalette.java).  aes_init loads this via
+   _xbios(XBIOS_Setpalette,main_pal) at boot -- there is no
    later runtime palette rewrite from this table; slot 0 is the
    background (black), slot 14 white, etc.  pa_cloc overwrites slots
    1 and 2 from the primary/secondary clothing tables; slot 6 is
-   overwritten by lcp_update_palette_colors for the sickness skin. */
-short   main_colorpalette[16]           = {
+   overwritten by lcp_upal for the sickness skin. */
+short   main_pal[16]           = {
         0x000, 0x442, 0x265, 0x754,
         0x310, 0x040, 0x754, 0x760,
         0x247, 0x631, 0x700, 0x333,
@@ -239,64 +239,64 @@ short   g_clcos[16] = {
         0x662, 0x406, 0x156, 0x514
 };
 
-/* skin_color_palette[8] (Ghidra @ 0x2A304): SKIN_COLOR_ID (0..7),
+/* skin_pal[8] (Ghidra @ 0x2A304): SKIN_COLOR_ID (0..7),
    ST 12-bit RGB.  Values dumped verbatim from the data segment.
-   Applied to palette slot 6 via lcp_update_palette_colors and
+   Applied to palette slot 6 via lcp_upal and
    swapped in during the closet-change sequence in a_opcbc. */
-short   skin_color_palette[8] = {
+short   skin_pal[8] = {
         0x512, 0x742, 0x567, 0x762,
         0x745, 0x145, 0x160, 0x565
 };
 
 BOOL16  g_molof             = NO;
-/* Ghidra midi_var_r @ 0x29af2 = 1 (byte).  Port previously had NO. */
-BOOL16  midi_var_r                      = YES;
+/* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO. */
+BOOL16  mi_varR                      = YES;
 short   g_mspha                  = 0;
-unsigned char * midi_data_base_ptr      = (unsigned char *) 0;
+unsigned char * mi_dbase      = (unsigned char *) 0;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * midi_seq_position       = (unsigned char *) 0;
+unsigned char * mi_sqpos       = (unsigned char *) 0;
 long            g_msmap   = -1;
-long            midi_envelope_data_base = 0;
+long            mi_env = 0;
 /* MIDI/PSG defaults.  Ghidra stores these as BYTES (not shorts) at their
    addresses; the code accesses them via move.b / cmp.b instructions.
    Values verified via disassembly at 0x101f4 / 0x10420 / 0x112a8 etc.
-     midi_velocity            @ 0x29a22 = 0x7F (127) -- max MIDI velocity
-     midi_default_velocity    @ 0x29a24 = 0x7F (127)
-     psg_default_volume       @ 0x29a26 = 0x0F (15)  -- max PSG volume
-   Port previously had midi_velocity/default at 100 (guess). */
-short           midi_velocity           = 127;
-short           midi_default_velocity   = 127;
-short           psg_current_volume      = 15;
-short           psg_default_volume      = 15;
+     mi_vel            @ 0x29a22 = 0x7F (127) -- max MIDI velocity
+     mi_dvel    @ 0x29a24 = 0x7F (127)
+     psg_dvol       @ 0x29a26 = 0x0F (15)  -- max PSG volume
+   Port previously had mi_vel/default at 100 (guess). */
+short           mi_vel           = 127;
+short           mi_dvel   = 127;
+short           psg_cvol      = 15;
+short           psg_dvol      = 15;
 short           g_mnevi   = 0;
 short           g_mnevc   = 9;
 /* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
    writes p[2] here and passes through mq_bust. */
 short           g_mchcn                 = 1;
-/* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; midi_tempo @ 0x298F2 = 120. */
+/* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; mi_temp @ 0x298F2 = 120. */
 short           g_mtspb     = 20;
-short           midi_tempo              = 120;
-/* aes_int_out: shared AES/VDI parameter return array (16 shorts wide),
+short           mi_temp              = 120;
+/* aes_intO: shared AES/VDI parameter return array (16 shorts wide),
    used here at index 7 to communicate the current tick-per-beat back
    to the interrupt handler. */
-short           aes_int_out[16];
+short           aes_intO[16];
 
 long            g_mtcou       = 0;
-short           midi_direct_write_mode  = 0;
+short           mi_dwrm  = 0;
 short           g_mtdiv       = 100;
 short           g_mtpre     = 100;
 short           g_medu     = 100;
-short           midi_next_event_tick    = 100;
-short           midi_last_processed_tick= 100;
+short           mi_nxTk    = 100;
+short           mi_lpTk= 100;
 BOOL16          g_msmsa   = NO;
 
 /* Per-logical-channel maps.  Populated from the 90-byte channel-map
    block that precedes the header events; mq_resp
    iterates over them at song start. */
-unsigned char   midi_channel_map[16];
+unsigned char   mi_chmap[16];
 short           g_mcpro[16];
-short           midi_program_map[16];
+short           mi_pgmap[16];
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
    0..131 (C-1..G9).  Populated by mq_bust at song
@@ -316,7 +316,7 @@ unsigned char   g_msmk[16] = {
 BOOL16          g_moen     = YES;
 unsigned char   g_meve[4];
 
-/* g_momap: the "maxPosition" argument passed to
+/* g_momap: the "maxPos" argument passed to
    mq_inis at song start.  0 means "no explicit end-of-song
    offset -- let the sequencer walk the event stream to its natural
    terminator" (in which case mq_setp stores -1 into
@@ -326,17 +326,17 @@ unsigned char   g_meve[4];
 long            g_momap  = 0;
 
 /* ---- PSG channel state ---------------------------------------------- */
-BOOL16          psg_output_enabled              = YES;
-BOOL16          psg_notes_active                = NO;
-unsigned char   psg_channel_notes[3];           /* current MIDI note per PSG channel A/B/C */
+BOOL16          psg_out              = YES;
+BOOL16          psg_ntAc                = NO;
+unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psg_envelope[3];
 
-/* psg_freq_table[132] -- populated in psgfreq.c from first
+/* psg_freq[132] -- populated in psgfreq.c from first
    principles (YM2149 formula: period = 2000000 / (16 * midi_freq)).
    Definition lives in its own TU so the ~1KB of table data doesn't
    clutter globals.c. */
 
-short           envelope_val            = 5;    /* octave-5 baseline */
+short           env_val            = 5;    /* octave-5 baseline */
 char            g_mnlol      = 0x17; /* A#0 */
 char           g_mnhil       = 0x7f; /* MIDI max         */
 short           g_mccha    = 1;
@@ -350,31 +350,39 @@ long            g_sfHz2               = 0;
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from the SOUNDS.LCP file.
    32 slots covers the current SFX_* enum range. */
-unsigned char * midi_note_length_params[32];
+/* Ghidra mi_ntLp @ 0x53f7a: 26 pointers (104 bytes to
+   next symbol).  sf_sl loops up to 500 iterations breaking on size==0,
+   so the array should be sized for the max number of entries in
+   SOUNDS.LCP; 64 gives plenty of headroom. */
+unsigned char * mi_ntLp[64];
 /* Working buffer for the currently-playing Dosound sequence, copied
-   from midi_note_length_params[g_sfcur] each time a new
+   from mi_ntLp[g_sfcur] each time a new
    effect starts. */
 char            g_sfDoB[256];
 
 void *  g_srlgb                  = (void *) 0;
-void *  save_logbase                    = (void *) 0;
+void *  sv_lgb                    = (void *) 0;
 void *  g_srptr                      = (void *) 0;
-/* dest_scr_buffer_storage: dedicated 32 KB offscreen buffer where the
+/* dsb_stor: dedicated 32 KB offscreen buffer where the
    letter-typing status strip composites, kept separate from the
-   main house buffer.  fill_top_rect_with_background(27) writes rows
+   main house buffer.  fillTopR(27) writes rows
    0..26 here so that the striped-white letter background is ready
-   for the typewriter animation, but this content is NEVER visible
-   until the letter sequence composites it.  Sized 32000+256 to
-   cover a full ST low-res screen plus the +0x7f (=254 byte) offset
-   `g_dsb` is anchored at. */
-short   dest_scr_buffer_storage[16256];
-short * g_dsb = dest_scr_buffer_storage;
+   for the typewriter animation; screen_render_8hz blkcp32's the
+   content into the compositor screen when the letter overlay is
+   active.
+   Sized 32000 (one ST low-res screen) + 512 (worst-case align-up
+   slack from `(base + 0x200) & ~0x1FF`, verified via raw disasm of
+   fillTopR at 0x1686c) + margin.  g_dsb is
+   set to the ALIGNED start in stpScrB -- do not
+   initialise it here. */
+short   dsb_stor[17408];
+short * g_dsb = (short *) 0;
 
-/* screen_scale_factor (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
+/* scr_scal (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
    Multiplier for the 320x200 low-res screen dimensions in
    sprite_init_MFDB, matching the shape of the 1985 code even though
    the value is a constant. */
-short   screen_scale_factor             = 1;
+short   scr_scal             = 1;
 
 /* MFDB_A (Ghidra 0x2C82A) -- source MFDB for VDI raster copies.
    fd_addr = NULL is the VDI convention for "device screen", so
@@ -385,21 +393,25 @@ MFDB    MFDB_A                          = { 0 };
 /* scrbufA / scrbufB (Ghidra SCREEN_BUFFER_A / _B) -- BSS scratch
    for the two double-buffer compositing screens.
 
-   scrbufB (~33 KB): holds the decompressed house.scn background at
-     an aligned offset (setup_screen_buffer rounds scrbufB + 0x12F
-     UP to the next 512-byte boundary).
+   All four screen-pointer sites (stpScrB,
+   fillTopR, sprite_init_MFDBs,
+   screen_render_8hz alt) use the same align-up pattern:
+        aligned = (base + 0x200) & ~0x1FF        (verified via raw
+   disasm at 0x16576 / 0x1686c / 0x25116).  Ghidra's decompiler
+   folds the compile-time-known base + 0x200 into bogus literal
+   offsets ("+0x12F", "+0x7F", "+0xCD", "0x2CA00") which the port
+   MUST NOT reproduce -- our BSS placement is different.
 
-   scrbufA: PORT-SPECIFIC LAYOUT.  The 1985 code depends on
-     SCREEN_BUFFER_A landing at an odd address so that:
-       + 0xCD  (used by sprite_init_MFDBs)         -> aligned
-       + 0x19A (used by renderf.c page-flip)       -> 256-aligned
-     Neither is guaranteed under our linker.  Instead of trying to
-     reproduce the original binary's linker luck, we size scrbufA
-     large enough (64 KB) to fit TWO independent 256-aligned
-     32 KB screens: one at scrbufA + 0x000 (compositor writes),
-     one at scrbufA + 0x8000 (alt physbase for the page-flip).
-     sprite_init_MFDBs and renderf.c compute both offsets by
-     rounding scrbufA UP to the next 256 boundary. */
+   scrbufB (~33 KB): holds the decompressed house.scn background.
+     Uses one aligned screen at (scrbufB + 0x200) & ~0x1FF.
+     Worst-case shift = 512 bytes, so size >= 32000 + 512 = 32512.
+
+   scrbufA (64 KB): holds TWO 32 KB screens for the sprite
+     compositor and the alt page-flip target.
+       compositor = (scrbufA + 0x200) & ~0x1FF   (sp_imfs)
+       alt        = compositor + 0x8000          (renderf.c)
+     Worst-case footprint = 512 (align) + 0x8000 (alt offset)
+     + 32000 (alt screen) = 65280 bytes; scrbufA[65536] fits. */
 unsigned char   scrbufA[65536];
 unsigned char   scrbufB[33280];
 
@@ -410,8 +422,8 @@ unsigned char   scrbufB[33280];
    sp_imfs writes through those existing arrays -- see sprites.c. */
 
 /* Ghidra clock_minute @ 0x2B562 = 5, clock_hour @ 0x2B564 = 6.
-   These are the "last-drawn" hand positions.  time_minutes/time_hours
-   start at 0 (BSS), so the first clock_redraw_hands call sees a mismatch
+   These are the "last-drawn" hand positions.  t_min/t_hour
+   start at 0 (BSS), so the first cl_redrH call sees a mismatch
    and paints the initial 0:00 hands over the pre-drawn 5:06 default. */
 short   g_cmmin                         = 5;
 short   g_chhou                         = 6;
@@ -421,14 +433,14 @@ short   g_sfcur             = 0;
 short   g_sfdur            = 0;
 short   g_sfdos      = 0;
 short   g_sfdoc     = 0;
-/* _soundeffect_priority_table (Ghidra 0x2b44c, 32-byte array indexed
+/* sf_pri (Ghidra 0x2b44c, 32-byte array indexed
    by SOUND_EFFECT_ID).  Lower value = higher priority (a new SFX
    preempts the current if the new one's priority <= the current's).
    Notable: SFX 12/13 (DOORBELL, DOORBELL_ECHO) at priority 0 beat
    everything; footsteps 0..5 at 30 lose to everything.
    Dumped verbatim from the data segment -- previous port had guessed
    values (0/5/3/8/etc) that gave wrong preemption. */
-short   _soundeffect_priority_table[32] = {
+short   sf_pri[32] = {
          30,  30,  30,  30,  30,  30,  15,  15,
          15,  15,  15,  15,   0,   0,  15,  15,
          15,  15,  15,  14,  16,   1,  15,   0,
@@ -437,9 +449,9 @@ short   _soundeffect_priority_table[32] = {
 
 /* Raw file buffers -- populated at startup by asset_load_all().
    OBJECTS and SPRITES both size at 14000 bytes per Ghidra
-   load_objects / load_sprites decompiles. */
-unsigned char   objects_file[14000];
-unsigned char   sprites_files[14000];
+   ldObj / ldSpr decompiles. */
+unsigned char   obj_file[14000];
+unsigned char   spr_file[14000];
 
 /* Per-record MFDB tables + dimensions.  Sized to comfortably cover
    the 50 or so records in each file (spritedata_index_table in the
@@ -452,7 +464,7 @@ short   g_obtaw[64];
 short   g_obtah[64];
 short   g_setaw[64];
 short   g_setah[64];
-/* MFDB_screen_ptr now defined below with the rest of the frame-timing
+/* mf_scrp now defined below with the rest of the frame-timing
    MFDB descriptors. */
 
 /* Ghidra letter_line_count @ 0x2b5a2 = -1 (short).  First frame of
@@ -460,8 +472,8 @@ short   g_setah[64];
    is < 0, then decrements to -3, then wraps to 13.  Port had 0. */
 short   g_ltlic                         = -1;
 short   g_ltpac          = 0;
-/* _record_led_mask_table[7]: bit-mask toggles for the 7 VU-meter LEDs. */
-unsigned short  _record_led_mask_table[7] = {
+/* rec_ledt[7]: bit-mask toggles for the 7 VU-meter LEDs. */
+unsigned short  rec_ledt[7] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
 };
 
@@ -481,26 +493,26 @@ short   g_chhop[15] = {
         -2,  -2,  -2,  -1,   0,   1,   2
 };
 
-BOOL16  game_input_mode_flag            = NO;
+BOOL16  g_inpmd            = NO;
 char    g_cdinb[64];
-BOOL16  food_delivery_available         = NO;
+BOOL16  food_dlv         = NO;
 short   g_ptanf              = 0;
 
-short   last_hz200                      = 0;
-long    last_vbclock                    = 0;
-/* save_physbase: TOS's original Physbase, captured once at boot by
-   aes_vdi_jnit via _xbios(XBIOS_Physbase).  BSS-zero to match Ghidra's
+short   last_hz                      = 0;
+long    last_vbc                    = 0;
+/* sv_phb: TOS's original Physbase, captured once at boot by
+   aes_init via _xbios(XBIOS_Physbase).  BSS-zero to match Ghidra's
    binary (the port previously initialised it to 0x28000L which put it
-   in .data with a bogus fallback -- aes_vdi_jnit runs early so the
+   in .data with a bogus fallback -- aes_init runs early so the
    fallback was never read, but matching Ghidra's memory layout keeps
    any future .data / BSS-boundary bug from being silently absorbed). */
-void *  save_physbase                   = (void *) 0;
+void *  sv_phb                   = (void *) 0;
 
-/* g_srmfd / MFDB_screen_ptr: the compositing target and the current
+/* g_srmfd / mf_scrp: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
 MFDB    g_srmfd                     = { 0 };
-MFDB    MFDB_screen_ptr                 = { 0 };
-MFDB *  current_screen_mfdb             = (MFDB *) 0;
+MFDB    mf_scrp                 = { 0 };
+MFDB *  cur_mf             = (MFDB *) 0;
 
 /* 200 Hz clock hi/lo halves.  The ST reads this atomically via a
    supervisor-mode long read at 0x4BA; we split the halves here so a
@@ -509,12 +521,12 @@ short   g_hzhi                      = 0;
 short   g_hzlo                      = 0;
 long    _vbclock                        = 0;
 
-BOOL16  dog_visible                     = NO;
-short   dog_idle_countdown              = 0;
-BOOL16  dog_near_food_bowl              = NO;
+BOOL16  dg_vis                     = NO;
+short   dg_idlcd              = 0;
+BOOL16  dg_nrbwl              = NO;
 BOOL16  g_deact               = NO;
 short   g_decou            = 0;
-short   dog_last_target_index           = 0;
+short   dg_ltgtI           = 0;
 /* Ghidra g_dgitx @ 0x2b8f0 = 47.  Used by cutscene at
    startup to seed the dog's first wander target. */
 short   g_dgitx        = 47;
@@ -531,11 +543,11 @@ short   g_dseat[3]   = { 42, 43, 44 };
 short   g_ddipt[10] = { 0, 5, 11, 19, 29, 32, 33, 41, 47, 47 };
 /* Ghidra dog_dest_x_offset_table @ 0x2B906, dog_dest_y_offset_table
    @ 0x2B8F2 (10 shorts each): per-destination pixel nudges applied
-   after house_get_position_xy returns the anchor for the destination. */
+   after hs_posXY returns the anchor for the destination. */
 short   g_ddxot[10]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0 };
 short   g_ddyot[10]     = { 3, 9, 2, 10, 6, 0, 0, 11, 3, 3 };
 
-char *  _command_input_ptr              = (char *) 0;
+char *  cmd_inp              = (char *) 0;
 short   g_aprio                = 5;
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
@@ -564,26 +576,26 @@ short   g_tpcoi[4] = { 10, 5, 7, 13 };
    test for verification that "please play a game" now matches. */
 
 unsigned char   g_ewb[10];
-char            _user_input_buffer[32];
+char            usr_buf[32];
 /* Ghidra happiniess_to_priority (sic) @ 0x2bf98: {3, 1, 0}.  Used as
    the base priority for parsed commands -- HAPPY (0) gives priority 3
    (accepts more), SAD (2) gives 0 (rejects most).  Port previously
    had guessed {2, 4, 6} which inverted the intended behavior. */
-short           _happiness_to_priority[3]        = { 3, 1, 0 };
-unsigned char   _bitmask_1_2_4_8_10_20_40_80_0[9] = {
+short           mood_pri[3]        = { 3, 1, 0 };
+unsigned char   bm_lo[9] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x00
 };
 
 /* ---- Mini-game storage ----------------------------------------------- */
 char *          g_agwb            = (char *) 0;
 char *          g_wpdb         = (char *) 0;
-short *         cards_data                      = (short *) 0;
+short *         crd_dat                      = (short *) 0;
 
 short           g_wpci       = 0;
 short           g_agclc              = 0;
 short           g_aggun            = 1;
 short           g_agacu          = 0;
-short           _anagram_clue_used_this_round   = 0;
+short           ag_clue   = 0;
 short           g_agwol             = 0;
 char            g_aginb[12];
 char            g_agorw[12];
@@ -594,27 +606,27 @@ char *          g_agwgm[3] = {
         "Sorry, wrong guess."
 };
 
-short           _poker_round_count              = 0;
-BOOL16          poker_quit_flag                 = NO;
+short           pk_round              = 0;
+BOOL16          pk_quit                 = NO;
 short           g_pcmon            = 400;
 short           g_ppmon              = 400;
 short           g_ppppa                = 0;
 short           g_pcbet              = 0;
 short           g_ppbet                = 0;
-short           poker_game_phase                = 0;
-short           poker_draw_discard_flags[52];
+short           pk_phase                = 0;
+short           pk_dsc[52];
 short           g_pcdrp[26];
 short           g_ppdrp[26];
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
-   overlay.  All share cards_data as their bitmap backing. */
-MFDB            cards_MFDB_blocks[54]           = { { 0 } };
-MFDB            MFDB_dest_screenbase_cards      = { 0 };
+   overlay.  All share crd_dat as their bitmap backing. */
+MFDB            crd_mfdb[54]           = { { 0 } };
+MFDB            mf_scb_c      = { 0 };
 
 BOOL16  g_dvdog             = NO;
-BOOL16  phone_hangup_flag               = NO;
+BOOL16  ph_hu               = NO;
 BOOL16  g_ptdoa              = NO;
 
-/* (game_tick_and_animate animation tables + frame-state globals live
+/* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they
    are added here.) */
