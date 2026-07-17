@@ -172,14 +172,13 @@ extern short    vdihnd;
 extern short    vdi_colt[];
 
 /* ---- VDI parameter block ------------------------------------------- */
-/* Shared per-call scratch arrays that every VDI wrapper stuffs before
-   calling the trap #2 dispatcher.  Sized to the GEM VDI ABI maxima. */
+/* Shared per-call scratch arrays used by the VDI wrappers.  Defined
+   by the linked Alcyon gemlib (vdibind.a). */
 extern short    contrl[];
 extern short    intin[];
 extern short    ptsin[];
 extern short    intout[];
 extern short    ptsout[];
-extern short *  vdipb[];
 
 /* ---- Screen buffer pointers ------------------------------------------ */
 extern void *   g_dscp;

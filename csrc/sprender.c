@@ -4,13 +4,13 @@
  * sp_draw is called from sc_ren8 for each of the 8 hardware
  * sprite slots.  It uses the standard Atari ST two-pass masked blit:
  *
- *   Pass 1  vdi_cpR(NOTS_AND_D, mask, screen)
+ *   Pass 1  vro_cpyfm(NOTS_AND_D, mask, screen)
  *     Punches a transparent hole in the background where the sprite
  *     will go.  The mask has 1-bits where the sprite is opaque, so
  *     inverting it and AND'ing clears the destination pixels only
  *     under the opaque part of the sprite.
  *
- *   Pass 2  vdi_cpR(S_XOR_D, image, screen)
+ *   Pass 2  vro_cpyfm(S_XOR_D, image, screen)
  *     XOR the sprite image onto the cleared area.  Since we just wrote
  *     zeros there, XOR effectively becomes a copy.
  *
@@ -38,7 +38,7 @@ extern short *  g_seaim[];
 extern short *  g_seams[];
 extern short    g_seach[];
 extern short    g_seacw[];
-extern void     vdi_cpR();
+extern void     vro_cpyfm();
 
 /* sp_iniM: populate an MFDB with the ST low-res format
    defaults (device-specific, 4 bitplanes).  The first parameter is
@@ -85,13 +85,16 @@ short   index;
         sp_iniM(0L, &g_semfm[index],
                          g_seams[index],  w, h);
 
-        vdi_cpR(vdihnd, NOTS_AND_D,
-                      &g_semfm[index], &g_srmfd,
-                      0, 0, w - 1, h - 1,
-                      x1, y1, x1 + w - 1, y1 + h - 1);
-
-        vdi_cpR(vdihnd, S_XOR_D,
-                      &g_semfi[index], &g_srmfd,
-                      0, 0, w - 1, h - 1,
-                      x1, y1, x1 + w - 1, y1 + h - 1);
+        {
+                short   pxy[8];
+                pxy[0] = 0;      pxy[1] = 0;
+                pxy[2] = w - 1;  pxy[3] = h - 1;
+                pxy[4] = x1;     pxy[5] = y1;
+                pxy[6] = x1 + w - 1;
+                pxy[7] = y1 + h - 1;
+                vro_cpyfm(vdihnd, NOTS_AND_D, pxy,
+                          &g_semfm[index], &g_srmfd);
+                vro_cpyfm(vdihnd, S_XOR_D, pxy,
+                          &g_semfi[index], &g_srmfd);
+        }
 }

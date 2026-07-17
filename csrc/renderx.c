@@ -3,7 +3,7 @@
  *
  * Split from render.c to keep the file digest manageable.  Everything
  * here is a real port of a Ghidra-verified function; the underlying
- * VDI/XBIOS traps (Setpalette, Setscreen, Logbase, vstCol, vswrMd,
+ * VDI/XBIOS traps (Setpalette, Setscreen, Logbase, vst_color, vswr_mode,
  * v_gtext) fall through to host stubs in osbind.h / stubs.c when
  * building without the ST hardware.
  *
@@ -41,8 +41,8 @@ extern short    rndRng();
 extern void     drwLine();
 extern void     blkcp32();
 extern void     sc_firw();
-extern void     vstCol();
-extern void     vswrMd();
+extern void     vst_color();
+extern void     vswr_mode();
 extern void     v_gtext();
 extern void     drwPixel();
 extern void     prCh();
@@ -157,7 +157,7 @@ sc_sctd()
 }
 
 /* prCh: render one character via VDI.  Sets the log-base to the
-   back-buffer, calls vstCol to set the current text ink, switches
+   back-buffer, calls vst_color to set the current text ink, switches
    to MD_TRANS (transparent overlay), calls v_gtext to blit, then
    restores MD_REPLACE and the original log-base.  The Setscreen calls
    pass (void*)-1 for phys and rez which the trap treats as "leave
@@ -179,10 +179,10 @@ short   color;
 
         saved_log = (void *) Logbase();
         Setscreen(g_dscp, (void *)-1L, -1);
-        vstCol(vdihnd, vdi_colt[color]);
-        vswrMd(vdihnd, MD_TRANS);
+        vst_color(vdihnd, vdi_colt[color]);
+        vswr_mode(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);
-        vswrMd(vdihnd, MD_REPLACE);
+        vswr_mode(vdihnd, MD_REPLACE);
         Setscreen(saved_log, (void *)-1L, -1);
 }
 

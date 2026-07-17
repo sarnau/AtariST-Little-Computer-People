@@ -182,25 +182,24 @@ short   vdi_hnd                      = 0;    /* physical from graf_handle */
    color_enum 14 (white) -> VDI slot 13, etc.  Not identity: VDI's
    default 16-entry palette-index-to-hardware-color assignment differs
    from the game's color_enum numbering, so text/lines call
-   vstCol/vslCol/vsfCol through this permutation to end up
+   vst_color/vsl_color/vsf_color through this permutation to end up
    at the same on-screen hue as Ghidra. */
 short   vdi_colt[16]            = {
         0,  2,  3,  6,  4,  7,  5,  8,
         9, 10, 11, 14, 12, 15, 13,  1
 };
 
-/* GEM VDI parameter block.  Each trap #2 invocation reads from
-   contrl[]/intin[]/ptsin[] and writes results to intout[]/ptsout[].
-   vdipb[] holds pointers to those 5 arrays -- Alcyon's trap glue
-   consults it via the address in D1 on trap entry.
-   Sizes match the GEM VDI ABI maxima; smaller calls just leave the
-   tail unused. */
+/* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
+   defines these in vdi.o, but the pre-compiled Atari DK vdibind.a we
+   link against does NOT pull vdi.o in with its contrl definitions in
+   a way lo68 recognises for our wrapper callsites -- so the app has
+   to supply the storage.  Every VDI wrapper in vdibind.a stuffs
+   these arrays before firing trap #2. */
 short   contrl[12];
 short   intin[128];
 short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
-short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
 
 /* v_opnvwk in/out arrays.  Ghidra: workin at 0x47ea8 (11 shorts),
    work_out at 0x4d218 (57 shorts).  Both are globals in the ROM, not

@@ -3,8 +3,8 @@
  *
  * These sit above the raw VDI/XBIOS traps but below the compositing
  * pipeline in render.c.  Each function is a real port of a Ghidra-
- * verified routine; the underlying VDI wrappers (vslCol, v_pline,
- * vswrMd, vsfCol, vsfInt, vsfSty) are extern stubs in
+ * verified routine; the underlying VDI wrappers (vsl_color, v_pline,
+ * vswr_mode, vsf_color, vsf_interior, vsf_style) are extern stubs in
  * stubs.c that map to the real trap #2 dispatch under Alcyon.
  *
  * addr: drwLine(), sc_sdtb(),
@@ -27,12 +27,12 @@ extern void *   sv_lgb;
 extern void *   g_srptr;
 #include <osbind.h>
 
-extern void     vslCol();
+extern void     vsl_color();
 extern void     v_pline();
-extern void     vswrMd();
-extern void     vsfInt();
-extern void     vsfSty();
-extern void     vsfCol();
+extern void     vswr_mode();
+extern void     vsf_interior();
+extern void     vsf_style();
+extern void     vsf_color();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
 extern void     vro_cpyfm();
@@ -57,7 +57,7 @@ short   color;
         short   pts[4];
 
         sc_sdtb();
-        vslCol(vdihnd, vdi_colt[color]);
+        vsl_color(vdihnd, vdi_colt[color]);
         pts[0] = x1;
         pts[1] = y1;
         pts[2] = x2;
@@ -77,10 +77,10 @@ sc_sdtb()
 {
         g_srlgb = (void *) Logbase();
         Setscreen(g_srptr, (void *)-1L, -1);
-        vswrMd(vdihnd, MD_REPLACE);
-        vsfInt(vdihnd, VSFPATT);
-        vsfSty(vdihnd, FILL_SOLID);
-        vsfCol(vdihnd, COLOR_black);
+        vswr_mode(vdihnd, MD_REPLACE);
+        vsf_interior(vdihnd, VSFPATT);
+        vsf_style(vdihnd, FILL_SOLID);
+        vsf_color(vdihnd, COLOR_black);
 }
 
 /* sc_sdtf: restore the log-base pointer stashed
@@ -178,10 +178,10 @@ initVdi()
 {
         sv_lgb = (void *) Logbase();
         Setscreen(g_dscp, (void *)-1L, -1);
-        vswrMd(vdihnd, MD_REPLACE);
-        vsfInt(vdihnd, VSFPATT);
-        vsfSty(vdihnd, FILL_SOLID);
-        vsfCol(vdihnd, vdi_colt[0xc]);
+        vswr_mode(vdihnd, MD_REPLACE);
+        vsf_interior(vdihnd, VSFPATT);
+        vsf_style(vdihnd, FILL_SOLID);
+        vsf_color(vdihnd, vdi_colt[0xc]);
 }
 
 /* exitVdi: restore the pre-mini-game log-base.
@@ -214,7 +214,7 @@ short   color;
         short   pts[4];
 
         sc_sdtb();
-        vslCol(vdihnd, vdi_colt[color]);
+        vsl_color(vdihnd, vdi_colt[color]);
         pts[0] = x;
         pts[1] = y;
         pts[2] = x;
@@ -341,10 +341,10 @@ aes_init()
 extern void     v_opnvwk();
 extern void     v_bar();
 extern void     graf_mouse();
-extern void     vswrMd();
-extern void     vsfInt();
-extern void     vsfSty();
-extern void     vsfCol();
+extern void     vswr_mode();
+extern void     vsf_interior();
+extern void     vsf_style();
+extern void     vsf_color();
 extern void     form_alert();
 extern short    scr_scal;
 extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */
@@ -356,7 +356,7 @@ extern short    work_out[];      /* ROM global at 0x4d218 (57 shorts) */
 
 /* vdi_erase_screen (Ghidra 0x166fe): turn off the mouse then fill the
    whole screen with COLOR_black via v_bar.  Rectangle extents depend
-   on scr_scal (low/medium: 319x199, high: 639x399).  Trailing vsfCol
+   on scr_scal (low/medium: 319x199, high: 639x399).  Trailing vsf_color
    restores the default fill colour to palette slot 1 (Ghidra labels
    COLOR_green_sea; port's color_enum names slot 1 as COLOR_olive --
    naming discrepancy only, byte value is 1). */
@@ -366,10 +366,10 @@ vdi_erase_screen()
 {
         short   r[4];
 
-        vswrMd(vdihnd, MD_REPLACE);
-        vsfInt(vdihnd, VSFPATT);
-        vsfSty(vdihnd, FILL_SOLID);
-        vsfCol(vdihnd, COLOR_black);
+        vswr_mode(vdihnd, MD_REPLACE);
+        vsf_interior(vdihnd, VSFPATT);
+        vsf_style(vdihnd, FILL_SOLID);
+        vsf_color(vdihnd, COLOR_black);
         r[0] = 0;
         r[1] = 0;
         if (scr_scal == REZ_ST_HIGH) {
@@ -381,7 +381,7 @@ vdi_erase_screen()
         }
         graf_mouse(M_OFF, (void *) 0);
         v_bar(vdihnd, r);
-        vsfCol(vdihnd, 1);
+        vsf_color(vdihnd, 1);
 }
 
 /* vdi_init (Ghidra 0x16680): open the virtual VDI workstation, verify

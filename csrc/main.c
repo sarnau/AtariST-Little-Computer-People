@@ -139,7 +139,7 @@ extern void     sc_drfc();                              /* render.c: food cabine
 extern void     updWtLv();               /* render.c */
 extern void     sc_sdtb();                              /* gfx_prim.c */
 extern void     sc_sdtf();                              /* gfx_prim.c */
-extern void     vslCol();                            /* VDI */
+extern void     vsl_color();                            /* VDI */
 extern void     v_pline();                              /* VDI */
 extern short    vdi_colt[];
 extern void     cl_drini();                   /* init.c */
@@ -249,7 +249,7 @@ char ** argv;
 
         /* Ghidra steps 29-31: water pipe polyline (147..158, 175). */
         sc_sdtb();                                      /* screen_set_draw_to_backbuffer */
-        vslCol(vdihnd, vdi_colt[0xb]);
+        vsl_color(vdihnd, vdi_colt[0xb]);
         {
                 short r[4];
                 r[0] = 147; r[1] = 175; r[2] = 158; r[3] = 175;

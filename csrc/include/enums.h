@@ -339,8 +339,8 @@
 
 /* ---- VDI fill styles ------------------------------------------------
    Match Ghidra's vdi_erase_screen at 0x166fe / screen_set_draw_to_backbuffer:
-     vsfInt(vdihnd, 2)   -- interior = PATTERN
-     vsfSty(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
+     vsf_interior(vdihnd, 2)   -- interior = PATTERN
+     vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
    Numeric values must match the ROM byte-for-byte. */
 #define FILL_SOLID                      8
 #define VSFPATT                         2

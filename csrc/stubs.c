@@ -46,8 +46,8 @@
 /* drwLine, sc_sdtb/frontbuffer,
    sc_firw, blkcp32 -> gfx_prim.c */
 
-/* vslCol, v_pline, vstCol, vswrMd, v_gtext, vsfInt,
-   vsfSty, vsfCol, vdi_cpR -> vdi.c */
+/* vsl_color, v_pline, vst_color, vswr_mode, v_gtext, vsf_interior,
+   vsf_style, vsf_color, vro_cpyfm -> vdi.c */
 
 /* sc_firs, sc_firb -> gfx_prim.c */
 

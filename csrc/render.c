@@ -52,7 +52,7 @@ extern void     td_line();
 extern void     li_lool();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vslCol();
+extern void     vsl_color();
 extern void     v_pline();
 extern void     sc_firw();
 
@@ -80,12 +80,12 @@ cl_redrH()
 }
 
 /* od_draw: blit a pre-loaded background object at (x, y) via
-   vdi_cpR (VRO copy S_ONLY = replace, no transparency).  Each
+   vro_cpyfm (VRO copy S_ONLY = replace, no transparency).  Each
    object has its width/height stored in g_obtaw/height[] and
    its MFDB source rect in g_otmfd offset by g_oiidx.
    addr: od_draw() */
 
-extern void     vdi_cpR();
+extern void     vro_cpyfm();
 
 void
 od_draw(g_oiidx, x, y)
@@ -98,16 +98,20 @@ short   y;
            which treats g_oiidx as a byte offset instead of an array
            index -- MFDB is 18 bytes so all non-zero object IDs
            landed misaligned and VDI got junk width/height. */
-        vdi_cpR(
-                vdihnd, S_ONLY,
-                &((MFDB *) g_otmfd)[g_oiidx],
-                &mf_scrp,
-                0, 0,
-                g_obtaw[g_oiidx]  - 1,
-                g_obtah[g_oiidx] - 1,
-                x, y,
-                x + g_obtaw[g_oiidx]  - 1,
-                y + g_obtah[g_oiidx] - 1);
+        {
+                short   pxy[8];
+                pxy[0] = 0;
+                pxy[1] = 0;
+                pxy[2] = g_obtaw[g_oiidx] - 1;
+                pxy[3] = g_obtah[g_oiidx] - 1;
+                pxy[4] = x;
+                pxy[5] = y;
+                pxy[6] = x + g_obtaw[g_oiidx] - 1;
+                pxy[7] = y + g_obtah[g_oiidx] - 1;
+                vro_cpyfm(vdihnd, S_ONLY, pxy,
+                          &((MFDB *) g_otmfd)[g_oiidx],
+                          &mf_scrp);
+        }
 }
 
 /* fillTopR: clear the top text strip (rows 0
@@ -257,7 +261,7 @@ short   val;
                 while (y != 0) {
                         rect.y1 = 174 - (y - 1);
                         rect.y2 = rect.y1;
-                        vslCol(vdihnd, vdi_colt[0xd]);
+                        vsl_color(vdihnd, vdi_colt[0xd]);
                         v_pline(vdihnd, 2, &rect.x1);
                         y = y - 1;
                 }
@@ -269,7 +273,7 @@ short   val;
                 while (y < 10) {
                         rect.y1 = 174 - y;
                         rect.y2 = rect.y1;
-                        vslCol(vdihnd, vdi_colt[0xc]);
+                        vsl_color(vdihnd, vdi_colt[0xc]);
                         v_pline(vdihnd, 2, &rect.x1);
                         y = y + 1;
                 }
@@ -283,7 +287,7 @@ short   val;
                         rect.y1 = 174 - (lcp_watr - 1);
                         rect.y2 = rect.y1;
                         sc_sdtb();
-                        vslCol(vdihnd, vdi_colt[0xc]);
+                        vsl_color(vdihnd, vdi_colt[0xc]);
                         v_pline(vdihnd, 2, &rect.x1);
                         sc_sdtf();
                         gameTick(4);
@@ -300,7 +304,7 @@ short   val;
                 lcp_watr = lcp_watr + 1;
                 rect.y2 = rect.y1;
                 sc_sdtb();
-                vslCol(vdihnd, vdi_colt[0xd]);
+                vsl_color(vdihnd, vdi_colt[0xd]);
                 v_pline(vdihnd, 2, &rect.x1);
                 sc_sdtf();
                 val = val - 1;

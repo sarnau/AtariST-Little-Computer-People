@@ -41,7 +41,7 @@ extern short    g_tpcoi[];
 
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vslCol();
+extern void     vsl_color();
 extern void     v_pline();
 extern void     v_bar();
 
@@ -102,7 +102,7 @@ tv_boul()
              frame < (short) ((rnd & 0xff) | 0x40);
              frame = frame + 1) {
                 rcolor = (unsigned short) Random();
-                vslCol(vdihnd, (rcolor & 0xf) | 1);
+                vsl_color(vdihnd, (rcolor & 0xf) | 1);
 
                 line_pos[1] = line_pos[1] + dy;
                 line_pos[0] = line_pos[0] + dx;
@@ -162,7 +162,7 @@ tv_patl()
                         point[0] = xs[i];
                         point[1] = ys[i];
                         sc_sdtb();
-                        vslCol(vdihnd,
+                        vsl_color(vdihnd,
                                   vdi_colt[
                                     g_tpcoi[pattern]]);
                         v_pline(vdihnd, 2, point);
