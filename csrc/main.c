@@ -209,6 +209,12 @@ char ** argv;
         /* Ghidra step 5  */  vdi_init();
         /* Ghidra step 6  */  stpScrB();
         /* Ghidra step 7  */  initBRev();
+        /* Port-specific: fill bm32or/bm32and at runtime.  The ROM ships
+           these as static const long[32] tables in DATA, but Alcyon C
+           doesn't accept the `UL` suffix on hex constants > 0x7FFFFFFF
+           so we compute them at runtime instead.  Must run before
+           sp_lbal (step 20) which reads bm32or in its dilation loop. */
+                              initBM();
         /* Ghidra step 8  */  cntSong();
         /* Ghidra step 9  */  g_lcldd = lc_load();       /* lcp_load */
         /* Ghidra step 10 */  st_titl();                 /* show_title_screen_enter_name_and_date */
