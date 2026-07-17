@@ -600,7 +600,7 @@ short           midi_ch;
                                 midiEvS = midiEvS - 1;
                         }
                 } else {
-                        Midiws((long) (midiEvS - 1), (long) midiEvP);
+                        Midiws(midiEvS - 1, midiEvP);
                 }
                 saved_ptr[1] = saved_note;
         }
@@ -685,11 +685,11 @@ short           midi_ch;
                 } else {
                         long    mixer_prev;
                         long    combined;
-                        Giaccess((long) (psg_freq[freq_index] / 0x3c), 0x86L);
-                        mixer_prev = Giaccess(0L, 7L);
+                        Giaccess((psg_freq[freq_index] / 0x3c), 0x86);
+                        mixer_prev = Giaccess(0, 7);
                         combined = (long) mixer_bits |
                                    ((long) (noise_mask | 0xc0) & mixer_prev);
-                        Giaccess((long) (short) (combined >> 16), (long) (short) combined);
+                        Giaccess((combined >> 16), combined);
                 }
         }
 
@@ -706,8 +706,8 @@ short           midi_ch;
                         psg_wr((char) period_hi_nibble,
                                            (char) (ret + 1));
                 } else {
-                        Giaccess((long) (period & 0xff), (long) (ret + 0x80));
-                        Giaccess((long) period_hi_nibble, (long) (ret + 0x81));
+                        Giaccess((period & 0xff), (ret + 0x80));
+                        Giaccess(period_hi_nibble, (ret + 0x81));
                 }
         }
 

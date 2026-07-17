@@ -143,7 +143,7 @@ sf_irqp()
 
         /* Hand the sequence to the XBIOS Dosound player.  Runs from
            the VBL interrupt on the ST; no-op on the host. */
-        Dosound((long) g_sfDoB);
+        Dosound(g_sfDoB);
 
         /* Snapshot the 200 Hz counter for the countdown loop and
            compute the remaining ticks in game 8Hz units (Dosound

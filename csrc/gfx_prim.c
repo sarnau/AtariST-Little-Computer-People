@@ -76,7 +76,7 @@ void
 sc_sdtb()
 {
         g_srlgb = (void *) Logbase();
-        Setscreen((long) g_srptr, -1L, -1L);
+        Setscreen(g_srptr, (void *)-1L, -1);
         vswrMd(vdihnd, MD_REPLACE);
         vsfInt(vdihnd, VSFPATT);
         vsfSty(vdihnd, FILL_SOLID);
@@ -90,7 +90,7 @@ sc_sdtb()
 void
 sc_sdtf()
 {
-        Setscreen((long) g_srlgb, -1L, -1L);
+        Setscreen(g_srlgb, (void *)-1L, -1);
 }
 
 /* sc_firw: paint one row (160 bytes = 80 words = 20
@@ -177,7 +177,7 @@ void
 initVdi()
 {
         sv_lgb = (void *) Logbase();
-        Setscreen((long) g_dscp, -1L, -1L);
+        Setscreen(g_dscp, (void *)-1L, -1);
         vswrMd(vdihnd, MD_REPLACE);
         vsfInt(vdihnd, VSFPATT);
         vsfSty(vdihnd, FILL_SOLID);
@@ -190,7 +190,7 @@ initVdi()
 void
 exitVdi()
 {
-        Setscreen((long) sv_lgb, -1L, -1L);
+        Setscreen(sv_lgb, (void *)-1L, -1);
 }
 
 /* drwPixel: single-pixel plot via a degenerate VDI polyline where
@@ -334,7 +334,7 @@ aes_init()
         appl_init();
         vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
                                  &gr_hwbox,  &gr_hhbox);
-        Setpalette((long) main_pal);
+        Setpalette(main_pal);
         sv_phb = (void *) Physbase();  /* XBIOS Physbase */
 }
 

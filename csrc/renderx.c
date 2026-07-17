@@ -64,7 +64,7 @@ pa_cloc()
 
         main_pal[1] = g_clcop[index];
         main_pal[2] = g_clcos[index];
-        Setpalette((long) main_pal);
+        Setpalette(main_pal);
 }
 
 /* pa_skic: same shape, 8-entry skin table.
@@ -81,7 +81,7 @@ pa_skic()
 
         main_pal[1] = skin_pal[index];
         main_pal[2] = skin_pal[index];
-        Setpalette((long) main_pal);
+        Setpalette(main_pal);
 }
 
 /* lcp_upal: refresh the sickness tint at palette
@@ -97,7 +97,7 @@ lcp_upal()
                 main_pal[6] = ST_PEACH;
         else
                 main_pal[6] = ST_SICK_GREEN;
-        Setpalette((long) main_pal);
+        Setpalette(main_pal);
 }
 
 /* td_line: draw the 5-line rabbit-ear antenna on top of
@@ -178,12 +178,12 @@ short   color;
         str[1] = 0;
 
         saved_log = (void *) Logbase();
-        Setscreen((long) g_dscp, -1L, -1L);
+        Setscreen(g_dscp, (void *)-1L, -1);
         vstCol(vdihnd, vdi_colt[color]);
         vswrMd(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);
         vswrMd(vdihnd, MD_REPLACE);
-        Setscreen((long) saved_log, -1L, -1L);
+        Setscreen(saved_log, (void *)-1L, -1);
 }
 
 /* rp_anim: sweep the needle back and forth from
