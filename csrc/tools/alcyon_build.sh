@@ -42,8 +42,9 @@ for base in $TO_BUILD; do
     [ -f "$src" ] || { echo "  SKIP: $base"; missed=$((missed + 1)); continue; }
     stem="${base%.c}"
 
-    # cp68: preprocess
-    "$ALCYON_BIN/cp68" -P -D__ALCYON__ -I "$ALCYON_INC" -I "$CSRC/include" \
+    # cp68: preprocess (extra flags via ALCYON_CPPFLAGS, e.g. -DFOO=1)
+    "$ALCYON_BIN/cp68" -P -D__ALCYON__ ${ALCYON_CPPFLAGS:-} \
+        -I "$ALCYON_INC" -I "$CSRC/include" \
         "$src" "$WORK/$stem.i" > /dev/null 2>&1 || {
         echo "  MISS $base (cp68)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;
     }

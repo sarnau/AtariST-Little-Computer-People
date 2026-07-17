@@ -267,4 +267,15 @@ cs_mvIn()
         sp_spud(SPRITE_DOG_LAY_DOWN, -1, YES);
 
         introSeq     = NO;
+
+#ifdef TEST_ACTIONS
+        /* Temporary: enqueue a series of test events to exercise every
+           ported AI action & delivery event at startup.  Runs before
+           gameLoop, so chk_actT drains them one at a time.  Guarded by
+           -DTEST_ACTIONS in the temporary test build. */
+        {
+                extern void putEv();
+                putEv(TEST_ACTIONS);
+        }
+#endif
 }
