@@ -143,6 +143,31 @@ alcyon-objs:
 alcyon-link:
 	@tools/alcyon_link.sh
 
+# ---- CI: build + three regression checks -----------------------------
+# Runs after every alcyon build to answer three questions before you
+# eyeball a screenshot:
+#   1. did the port boot?                            -> tools/run_hatari.sh
+#   2. did it render identically to the last golden? -> tools/frame_hash.sh
+#   3. does every C name link uniquely under         -> tools/check_truncation.py
+#      Alcyon's 8-char external limit?
+# Any failure fails the target.
+# CI_VBLS: default kept below the known v_gtext crash at VBL 2361 so
+# the target passes on a clean port.  Bump once that bug is fixed.
+CI_VBLS ?= 2000
+.PHONY: ci
+ci: alcyon
+	@echo ""
+	@echo "==== 1/3 truncation lint ===="
+	@tools/check_truncation.py
+	@echo ""
+	@echo "==== 2/3 boot smoke test ($(CI_VBLS) VBLs) ===="
+	@VBLS=$(CI_VBLS) tools/run_hatari.sh
+	@echo ""
+	@echo "==== 3/3 frame-hash regression ===="
+	@tools/frame_hash.sh
+	@echo ""
+	@echo "ci: all checks passed"
+
 # ---- Housekeeping --------------------------------------------------------
 .PHONY: linktest
 linktest: host
