@@ -256,6 +256,78 @@ initBRev()
         bldBRev();
 }
 
+/* a_chfd (Ghidra action_check_front_door): resident walks to the front
+   door, opens it if closed, briefly stands aside (dog sprite fills the
+   doorway) for `wait_ticks` frames, walks back to look outside, then
+   randomly closes the door based on the initiative-threshold roll.
+   Used from cs_mvIn's tour and by future doorbell events. */
+
+extern void     hideLcp();
+extern void     showLcp();
+extern void     hs_posXY();
+extern short    lcp_wkD();
+extern void     lcp_hwt();
+extern void     a_opcfd();
+extern void     sp_updb();
+extern void     sp_upds();
+extern short    rndRng();
+extern short    g_wtx, g_wty, g_actif, lcp_frdO;
+extern short *  g_selaf;
+extern short *  g_seslm;
+extern short *  g_sepex;
+extern short *  g_sepey;
+
+void
+a_chfd(wait_ticks)
+short   wait_ticks;
+{
+        short   result;
+
+        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
+        result = lcp_wkD();
+        if (result != 0)
+                return;
+
+        lcp_face = FACING_RIGHT;
+        lcp_st   = STATE_STAND_FACING_SCREEN;
+        g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+        lcp_hwt();
+        if (lcp_frdO == NO)
+                a_opcfd(0);
+
+        g_actif = YES;
+        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
+        g_wtx = g_wtx - 10;
+        lcp_wkD();
+        g_selaf[0x15] = SPRITE_IN_FRONT;
+        sp_updb(SPRITE_DOG_SIT);
+        g_sepex[g_seslm[0x15]] = 294;
+        g_sepey[g_seslm[0x15]] = 151;
+        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
+        lcp_wkD();
+        hideLcp();
+        gameTick(wait_ticks);
+        showLcp();
+        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
+        g_wtx = g_wtx - 10;
+        lcp_wkD();
+        g_selaf[0x15] = SPRITE_HIDDEN;
+        sp_upds();
+
+        result = rndRng(0, 100);
+        if (lcp.initiative_threshold < result) {
+                g_actif = YES;
+                hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
+                lcp_wkD();
+                lcp_face = FACING_RIGHT;
+                lcp_st   = STATE_STAND_FACING_SCREEN;
+                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+                lcp_hwt();
+                a_opcfd(1);
+        }
+        g_actif = NO;
+}
+
 /* cs_mvIn: Ghidra cutscene_new_lcp_move_in.  Full "resident moves into
    the house" cutscene played once for a brand-new save: rings the
    doorbell twice, opens the front door, walks the resident on screen
