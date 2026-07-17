@@ -69,20 +69,23 @@ extern int      access();
    OSBIND.H shapes. */
 extern long     gemdos();
 
-#define Fopen(n, m)             ((short) gemdos(0x3D, n, m))
-#define Fcreate(n, a)           ((short) gemdos(0x3C, n, a))
-#define Fread(h, n, b)          ((long)  gemdos(0x3F, h, n, b))
-#define Fwrite(h, n, b)         ((long)  gemdos(0x40, h, n, b))
-#define Fclose(h)               ((short) gemdos(0x3E, h))
+/* GEMDOS: each macro casts args to their declared trap-ABI types
+   (WORD=short, VOIDP/LONG=long) so callers can pass anything
+   convertible and the trap handler reads correct byte sizes. */
+#define Fopen(n, m)             ((short) gemdos(0x3D, (long)(n),  (short)(m)))
+#define Fcreate(n, a)           ((short) gemdos(0x3C, (long)(n),  (short)(a)))
+#define Fread(h, n, b)          ((long)  gemdos(0x3F, (short)(h), (long)(n),  (long)(b)))
+#define Fwrite(h, n, b)         ((long)  gemdos(0x40, (short)(h), (long)(n),  (long)(b)))
+#define Fclose(h)               ((short) gemdos(0x3E, (short)(h)))
 #define Malloc(sz)              ((void *) gemdos(0x48, (long)(sz)))
 #define Mfree(p)                ((long)  gemdos(0x49, (long)(p)))
 #define Fgetdta()               ((void *) gemdos(0x2F))
-#define Fsfirst(p, a)           ((short) gemdos(0x4E, p, a))
+#define Fsfirst(p, a)           ((short) gemdos(0x4E, (long)(p),  (short)(a)))
 #define Fsnext()                ((short) gemdos(0x4F))
 #define Cconis()                ((short) gemdos(0x0B))
 #define Crawcin()               ((long)  gemdos(0x07))
 #define Super(ssp)              ((void *) gemdos(0x20, (long)(ssp)))
-#define Dsetpath(p)             ((short) gemdos(0x3B, p))
+#define Dsetpath(p)             ((short) gemdos(0x3B, (long)(p)))
 
 #endif  /* HOST */
 
