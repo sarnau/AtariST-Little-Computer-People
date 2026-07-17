@@ -604,6 +604,20 @@ a_cleau()
                         return;
                 lcp_face = FACING_RIGHT;
                 lcp_st            = STATE_STAND_FACING_SCREEN;
+                /* Ghidra decompile shows `sVar2 = 4;
+                   lcp_wait_head_reach_target(sVar2);` here, unlike
+                   every other a_cleau branch that decompiles as a
+                   plain no-arg call.  Raw disasm at 0x1e9a0:
+                     move.w g_hatas, D0
+                     add.w  #-0xc, D0
+                     jsr    lcp_hwt (0x2568a)
+                   lcp_hwt (verified via disasm) is void: it just does
+                   `while (g_hacur != g_hatas) gameTick(0);` and never
+                   reads D0.  The ADD is a dead compiler artifact --
+                   probably a leftover of a `g_hatas -= 8;` that the
+                   compiler elided when it saw g_hatas wasn't read
+                   after.  Port matches ROM behaviour with a plain
+                   call. */
                 lcp_hwt();
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
