@@ -278,4 +278,14 @@ cs_mvIn()
                 putEv(TEST_ACTIONS);
         }
 #endif
+
+#ifdef TEST_KEY
+        /* Temporary: invoke the keyboard dispatcher with a single
+           keycode to exercise the Ctrl-letter / cursor / printable
+           paths.  Guarded by -DTEST_KEY=$code in the test build. */
+        {
+                extern void deal_kc();
+                deal_kc(TEST_KEY);
+        }
+#endif
 }
