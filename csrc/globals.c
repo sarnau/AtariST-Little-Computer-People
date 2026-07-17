@@ -202,6 +202,13 @@ short   intout[128];
 short   ptsout[128];
 short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
 
+/* v_opnvwk in/out arrays.  Ghidra: workin at 0x47ea8 (11 shorts),
+   work_out at 0x4d218 (57 shorts).  Both are globals in the ROM, not
+   stack locals -- vdi_init only allocates 6 bytes on the stack
+   (link.w A6,-0x6 at 0x16680), enough for the loop counter only. */
+short   workin[11];
+short   work_out[57];
+
 void *  g_dscp             = (void *) 0;
 
 /* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).

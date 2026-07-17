@@ -338,17 +338,6 @@ aes_init()
         sv_phb = (void *) Physbase();  /* XBIOS Physbase */
 }
 
-/* vdi_init (Ghidra 0x16680): open the virtual VDI workstation and
-   erase the screen.  Ghidra flow:
-     vdihnd = vdi_hnd;
-     workin[0..9] = 1;  workin[10] = 2;
-     v_opnvwk(workin, &vdihnd, workout);
-     scr_scal = REZ_ST_MEDIUM (=1);
-     if (workout[0] < 601) vdi_erase_screen();
-     else form_alert("must be in low resolution", loop_forever);
-   We skip the resolution guard -- Hatari is always launched at
-   low-res and the alert loop would hang the automated harness. */
-
 extern void     v_opnvwk();
 extern void     v_bar();
 extern void     graf_mouse();
@@ -356,38 +345,68 @@ extern void     vswrMd();
 extern void     vsfInt();
 extern void     vsfSty();
 extern void     vsfCol();
+extern void     form_alert();
 extern short    scr_scal;
+extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */
+extern short    work_out[];      /* ROM global at 0x4d218 (57 shorts) */
 
 #define REZ_ST_MEDIUM   1
+#define REZ_ST_HIGH     2
 #define M_OFF           256
+
+/* vdi_erase_screen (Ghidra 0x166fe): turn off the mouse then fill the
+   whole screen with COLOR_black via v_bar.  Rectangle extents depend
+   on scr_scal (low/medium: 319x199, high: 639x399).  Trailing vsfCol
+   restores the default fill colour to palette slot 1 (Ghidra labels
+   COLOR_green_sea; port's color_enum names slot 1 as COLOR_olive --
+   naming discrepancy only, byte value is 1). */
+
+void
+vdi_erase_screen()
+{
+        short   r[4];
+
+        vswrMd(vdihnd, MD_REPLACE);
+        vsfInt(vdihnd, VSFPATT);
+        vsfSty(vdihnd, FILL_SOLID);
+        vsfCol(vdihnd, COLOR_black);
+        r[0] = 0;
+        r[1] = 0;
+        if (scr_scal == REZ_ST_HIGH) {
+                r[2] = 639;
+                r[3] = 399;
+        } else {
+                r[2] = 319;
+                r[3] = 199;
+        }
+        graf_mouse(M_OFF, (void *) 0);
+        v_bar(vdihnd, r);
+        vsfCol(vdihnd, 1);
+}
+
+/* vdi_init (Ghidra 0x16680): open the virtual VDI workstation, verify
+   ST-low or ST-medium resolution, and clear the screen.  Ghidra flow
+   preserved byte-for-byte, including the form_alert reboot-loop when
+   the resolution query returns >= 601 pixels wide (mono ST-high). */
 
 void
 vdi_init()
 {
-        short   work_in[11];
-        short   work_out[57];
         short   i;
-        short   r[4];
 
         vdihnd = vdi_hnd;
         for (i = 0; i < 10; i = i + 1)
-                work_in[i] = 1;
-        work_in[10] = 2;
-        v_opnvwk(work_in, &vdihnd, work_out);
+                workin[i] = 1;
+        workin[10] = 2;
+        v_opnvwk(workin, &vdihnd, work_out);
         scr_scal = REZ_ST_MEDIUM;
-
-        /* vdi_erase_screen: turn off the mouse then fill the whole
-           screen with COLOR_black via v_bar.  Ghidra's version resets
-           vsfCol to COLOR_green_sea at the end; we skip that (no
-           user of the vsfCol state depends on it later). */
-        vswrMd(vdihnd,   MD_REPLACE);
-        vsfInt(vdihnd, VSFPATT);
-        vsfSty(vdihnd,   FILL_SOLID);
-        vsfCol(vdihnd,   COLOR_black);
-        r[0] = 0;   r[1] = 0;
-        r[2] = 319; r[3] = 199;
-        graf_mouse(M_OFF, (void *) 0);
-        v_bar(vdihnd, r);
+        if (work_out[0] < 601) {
+                vdi_erase_screen();
+                return;
+        }
+        for (;;)
+                form_alert(0,
+                        "[1][Must be in|low resolution.][REBOOT]");
 }
 
 void

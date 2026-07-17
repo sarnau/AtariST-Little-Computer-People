@@ -241,6 +241,7 @@
 #define SPRITE_FOOD_PACKAGE             9
 #define SPRITE_BOOK                     0x31
 #define SPRITE_VINYL_CARRY              0x32
+#define SPRITE_SUITCASE                 48      /* 0x30, carried in cs_mvIn */
 #define SPRITE_GLASS                    3
 #define SPRITE_DOOR_ANIM_1              0x0d
 #define SPRITE_DOOR_ANIM_2              0x0e
@@ -336,9 +337,13 @@
 #define NOTS_AND_D                      4       /* (NOT src) AND dest    */
 #define S_XOR_D                         6       /* source XOR dest       */
 
-/* ---- VDI fill styles ------------------------------------------------ */
-#define FILL_SOLID                      1
-#define VSFPATT            1       /* VDI fill interior=pattern */
+/* ---- VDI fill styles ------------------------------------------------
+   Match Ghidra's vdi_erase_screen at 0x166fe / screen_set_draw_to_backbuffer:
+     vsfInt(vdihnd, 2)   -- interior = PATTERN
+     vsfSty(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
+   Numeric values must match the ROM byte-for-byte. */
+#define FILL_SOLID                      8
+#define VSFPATT                         2
 
 /* Extra HOUSE_POS used by the dog wander logic. */
 #define POS_BTM_STAIR_LANDING           32      /* Ghidra: 0x20 */
