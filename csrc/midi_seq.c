@@ -157,20 +157,34 @@ unsigned char * p;
         (void) p;
         return p + 2;
 }
-/* mh_scat: MIDI header 0x84 -- cache the raw scale byte and its
-   bucketed threshold value.  Ghidra 0x112a4 stores the byte at
-   midi_current_scale_value (0x29a24) and a bucketed odd-integer
-   (5, 7, 9, 11, 13, 15) at midi_scale_bucket (0x29a26).  It does
-   NOT call midi_seq_build_scale_table -- that is invoked from the
-   song-load path elsewhere.
-   TODO: wire the two cached values through to sequencer globals.
-   The current stub is a no-op so we don't corrupt state via the
-   old `mq_bust()`-with-no-arg call that was here previously. */
+/* mh_scat: MIDI header 0x84 -- cache the raw velocity byte + bucketed
+   PSG-volume threshold.  Ghidra decompile at 0x112a4 names these
+   "midi_current_scale_value" and "midi_scale_bucket" respectively but
+   the port already had them as mi_dvel (0x29a24) and psg_dvol
+   (0x29a26) from their consumer-side usage in mq_setp
+   (mi_vel <- mi_dvel; psg_cvol <- psg_dvol).  Same addresses, more
+   descriptive names.
+
+   Raw disasm (0x112a4..0x1131e): sets mi_dvel = p[2], then a chained
+   `cmpi.b` / `bge` ladder against 0x17/0x27/0x37/0x57/0x67/-0x80
+   picks psg_dvol from {5, 7, 9, 11, 13, [15]}.  The final #-0x80
+   branch is DEAD in the ROM (signed compare vs -128 is trivially
+   true for every byte), so psg_dvol is never assigned 15 through
+   this path -- values >= 0x67 leave the old bucket untouched.  Port
+   replicates the ROM byte-for-byte, including the unreachable
+   15-branch omission. */
 static unsigned char *
 mh_scat(p)
 unsigned char * p;
 {
-        (void) p;
+        mi_dvel = p[2];
+        if      (mi_dvel < 0x17) psg_dvol = 5;
+        else if (mi_dvel < 0x27) psg_dvol = 7;
+        else if (mi_dvel < 0x37) psg_dvol = 9;
+        else if (mi_dvel < 0x57) psg_dvol = 11;
+        else if (mi_dvel < 0x67) psg_dvol = 13;
+        /* mi_dvel >= 0x67: ROM's `cmpi.b #-0x80; bge` is a dead
+           branch; psg_dvol is left unchanged. */
         return p + 3;
 }
 static unsigned char *
