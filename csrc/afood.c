@@ -161,8 +161,9 @@ a_kitcc()
 
         food_count = (lcp.door_states_and_flags >> 9) & 7;
         if (food_count == 0) {
+                /* Ghidra leaves action_interruptible_flag YES here --
+                   only the eat-branch resets it to NO at its end. */
                 gameTick(2);
-                g_actif = NO;
                 return;
         }
 
@@ -236,6 +237,11 @@ a_kitcc()
                 inner = rndRng(4, 8);
                 while (inner > 0 &&
                        g_trel[0] == ACTION_NONE) {
+                        /* Ghidra restores g_hsfra at each inner-cond
+                           check (comma-op side effect), so every inner
+                           iteration ticks with saved_head_frame first,
+                           then flips to 1 then 2 for the chew frames. */
+                        g_hsfra = saved_head_frame;
                         chew_delay = rndRng(1, 2);
                         gameTick(chew_delay);
                         g_hsfra = 1;

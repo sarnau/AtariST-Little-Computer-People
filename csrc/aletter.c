@@ -220,11 +220,6 @@ short   val;
         short   i;
         BOOL16  word_wrap_needed;
 
-        /* Guard against unloaded template slots.  Without letter.txt
-           the pointers are NULL; treat as "print nothing, return 0". */
-        if (str == (char *) 0)
-                return 0;
-
         /* Emit leading spaces. */
         if (val < 0 || g_cdibp > 0) {
                 if (val < 0)
