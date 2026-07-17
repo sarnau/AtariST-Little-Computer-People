@@ -151,9 +151,12 @@ alcyon-link:
 #   3. does every C name link uniquely under         -> tools/check_truncation.py
 #      Alcyon's 8-char external limit?
 # Any failure fails the target.
-# CI_VBLS: default kept below the known v_gtext crash at VBL 2361 so
-# the target passes on a clean port.  Bump once that bug is fixed.
-CI_VBLS ?= 2000
+# CI_VBLS: 15000 VBLs runs cleanly on the current tip -- the previous
+# v_gtext crash at VBL 2361 was resolved incidentally by the initBRev
+# fix (rev_tab was BSS-zero, sprite mirroring smeared garbage into
+# BSS regions that overlapped TOS's font table pointers).  Bump higher
+# if you want more coverage; a 30000-VBL run also runs clean.
+CI_VBLS ?= 15000
 .PHONY: ci
 ci: alcyon
 	@echo ""

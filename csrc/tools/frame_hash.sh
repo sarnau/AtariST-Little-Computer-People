@@ -33,7 +33,8 @@ OUT="$TOOLS/frame_hash.txt"
 AVI=/tmp/lcp_frame_hash.avi
 FRAMES=/tmp/lcp_frame_hash_frames
 
-VBLS=${VBLS:-2000}     # below the v_gtext-crash threshold at VBL 2361
+VBLS=${VBLS:-2000}     # small default for fast CI; the v_gtext threshold
+                       # this used to dodge was resolved by the initBRev fix
 FPS_SAMPLE=${FPS_SAMPLE:-1}
 FPS_MAX=${FPS_MAX:-40}
 

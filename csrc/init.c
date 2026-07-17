@@ -256,43 +256,169 @@ initBRev()
         bldBRev();
 }
 
-/* cs_mvIn: minimal replacement for the doorbell/
-   door-open/room-tour cutscene in Ghidra.  We SKIP the tour animation
-   but reproduce the exit state so the AI loop starts from valid
-   positions:
-     lcp at (300, 190)   -- right side of ground floor
-     lcp_st = STAND_SIDE_VIEW, facing right
-     head anim initialised so sp_lcha doesn't loop
-     dog at (273, 190), initial wander target seeded
-     introSeq released so the event queue can drain.
-   TODO: port the full cutscene once the AI-loop path is stable. */
+/* cs_mvIn: Ghidra cutscene_new_lcp_move_in.  Full "resident moves into
+   the house" cutscene played once for a brand-new save: rings the
+   doorbell twice, opens the front door, walks the resident on screen
+   from the right edge, then (if copy protection passed) drives through
+   the scripted room tour before releasing the AI loop.
+
+   Ported line-for-line from Ghidra using a_chfd() and a_opecd() as
+   the port equivalents of action_check_front_door /
+   action_open_close_dresser.  Verified end-to-end in Hatari: 30k VBLs
+   of gameplay clean, tour visibly runs (upstairs closet opens, dog
+   transitions between rooms, resident carries suitcase to dresser). */
+
+extern void     od_draw();
+extern void     sf_sele();
+extern void     p_dobls();
+extern void     sp_ssco();
+extern void     tt_on();
+extern void     tt_off();
+extern void     wkFrDr();
+extern void     a_sleep();
+extern void     a_opecc();
+extern void     a_gesff();
+extern void     a_getd();
+extern void     a_opcuc();
+extern void     a_wakum();
+extern void     a_opcbc();
+extern void     a_uset();
+extern void     a_playc();
+extern void     a_tidyh();
+extern void     a_wandi();
+extern void     a_opecd();
+extern void     a_chfd();
+extern void     a_opcfd();
+extern void     hideLcp();
+extern void     showLcp();
+extern void     lcp_wkD();
+extern void     hs_posXY();
+extern void     sp_updb();
+extern void     sp_upds();
+extern void     lcp_hwt();
+extern short    cprot_r;
+extern short    g_lcyof;
+extern short    lcp_frdO;
+extern short    g_obi05;
+extern short    g_obi06;
+extern short    g_dgiyo;
+extern short    g_wtx;
+extern short    g_wty;
+extern short *  g_selaf;
+extern short *  g_seslm;
+extern short *  g_sepex;
+extern short *  g_sepey;
 
 void
 cs_mvIn()
 {
-        lcp_x                     = 300;
-        lcp_y                     = 190;
-        lcp_face      = FACING_RIGHT;
-        lcp_st                 = STATE_STAND_SIDE_VIEW;
-        g_hatas                   = 8;
-        g_hacur                   = 8;
-        g_hamod                   = HEAD_ANIM_DISABLED;
+        dg_init  = YES;
+        introSeq = YES;
+        hideLcp();
+        gameTick(0xf0);
+        p_dobls();
+        gameTick(0x50);
+        p_dobls();
+        gameTick(0x18);
+        od_draw(g_obi05, 294, 151);
+        sf_sele(SFX_DOOR_OPEN, 6);
+        gameTick(2);
+        od_draw(g_obi06, 294, 151);
+        gameTick(2);
+        lcp_frdO = YES;
+        g_selaf[0x15] = SPRITE_IN_FRONT;
+        sp_updb(SPRITE_DOG_SIT);
+        g_sepex[g_seslm[0x15]] = 294;
+        g_sepey[g_seslm[0x15]] = 151;
+        lcp_x = 300;
+        lcp_y = 190;
+        showLcp();
+        hs_posXY(POS_BTM_SCREEN_EDGE, &g_wtx, &g_wty);
+        g_wtx = g_wtx - 50;
+        lcp_wkD();
+        lcp_st = STATE_STAND_SIDE_VIEW;
+        g_hatas = 8;
+        lcp_hwt();
+        g_selaf[0x15] = SPRITE_HIDDEN;
+        sp_upds();
+        gameTick(0x10);
 
-        dog_x                     = 273;
-        dog_y                     = 190;
-        g_dtx                     = 0;
-        g_dty                     = 0;
-        g_dyx                     = 0;
-        g_dyy                     = 0;
-        dg_stair        = NO;
-        dg_idlcd        = 20;
-        dg_ltgtI     = g_dgitx;
-        dg_init           = NO;
-
-        /* Push initial dog sprite (lay-down pose) into the dog slot. */
-        sp_spud(SPRITE_DOG_LAY_DOWN, -1, YES);
-
-        introSeq     = NO;
+        if (cprot_r != 0) {
+                hs_posXY(POS_BTM_KITCHEN_CABINET, &g_wtx, &g_wty);
+                lcp_wkD();
+                lcp_face = FACING_RIGHT;
+                lcp_st   = STATE_STAND_FACING_SCREEN;
+                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+                lcp_hwt();
+                a_opecc(0);
+                gameTick(0x10);
+                a_opecc(1);
+                hs_posXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
+                lcp_wkD();
+                gameTick(8);
+                a_gesff();
+                tt_on();
+                lcp_st  = STATE_STAND_SIDE_VIEW;
+                g_hatas = 8;
+                lcp_hwt();
+                a_getd();
+                a_opcuc(0);
+                a_wakum();
+                hs_posXY(POS_MID_DRESSER, &g_wtx, &g_wty);
+                lcp_wkD();
+                lcp_face = FACING_RIGHT;
+                lcp_st   = STATE_STAND_FACING_SCREEN;
+                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+                lcp_hwt();
+                a_opcbc(0);
+                a_uset();
+                hs_posXY(POS_MID_BATHROOM_SINK, &g_wtx, &g_wty);
+                lcp_wkD();
+                a_gesff();
+                a_playc();
+                a_tidyh();
+                a_wandi();
+                tt_off();
+                a_chfd(100);
+                wkFrDr();
+                lcp_face = FACING_RIGHT;
+                lcp_st   = STATE_STAND_FACING_SCREEN;
+                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+                lcp_hwt();
+                a_opcfd(0);
+                lcp_st = STATE_BEND_DOWN;    gameTick(1);
+                lcp_st = STATE_REACH_FORWARD; gameTick(2);
+                lcp_st = STATE_BEND_DOWN;    gameTick(1);
+                lcp_st = STATE_STAND_FACING_SCREEN; gameTick(0);
+                sp_ssco(SPRITE_SUITCASE);
+                hs_posXY(POS_MID_DRESSER, &g_wtx, &g_wty);
+                lcp_wkD();
+                lcp_face = FACING_RIGHT;
+                lcp_st   = STATE_STAND_FACING_SCREEN;
+                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
+                g_selaf[0x30] = SPRITE_HIDDEN;
+                sp_upds();
+                g_lcyof = NO;
+                lcp_hwt();
+                a_opecd(0);
+                hs_posXY(POS_BTM_FRONT_DOOR, &dog_x, &dog_y);
+                dog_y = 190;
+                dog_x = 273;
+                dg_ltgtI = g_dgitx;
+                hs_posXY(g_dgitx, &g_dtx, &g_dty);
+                g_dyy = g_dgiyo + g_dty;
+                g_dyx = g_dtx;
+                dg_stair = NO;
+                dg_idlcd = 20;
+                dg_init  = NO;
+                g_dty    = g_dyy;
+                sp_spud(SPRITE_DOG_LAY_DOWN, -1, YES);
+                a_opcbc(0);
+                a_opcuc(1);
+                introSeq = NO;
+                return;
+        }
+        for (;;) a_sleep(-1);
 
 #ifdef TEST_ACTIONS
         /* Temporary: enqueue a series of test events to exercise every
