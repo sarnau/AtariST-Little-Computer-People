@@ -163,27 +163,6 @@ st_titl()
         t_min = 0;
 }
 
-/* drwHud -- paint the character-name banner into the top
-   of the game backbuffer so the reserved HUD strip (rows 0..26) shows
-   the owner name instead of raw white.  Called from main() right after
-   unScn ("house.scn") so the paint survives the sc_ren8
-   page-flip.  Not part of Ghidra's boot flow, but ports the same
-   visual outcome the 1985 game achieves via post-title-screen HUD
-   drawing (which we've traced through the disassembly but not yet
-   fully identified). */
-
-extern void     strPr();
-extern void     prCh();
-
-void
-drwHud()
-{
-        /* Single-character diagnostic call.  If this crashes, the
-           problem is in prCh / VDI text setup, not strPr
-           iteration. */
-        prCh((short) 'A', (short) 100, (short) 8, (short) COLOR_black);
-}
-
 /* mq_intim (Ghidra 0x11112): install a Timer-A interrupt
    for the MIDI sequencer.  Real body:
      midi_tick_prescaler = 100;

@@ -146,7 +146,6 @@ extern void     cl_drini();                   /* init.c */
 extern void     lcp_crnd();                    /* init.c */
 extern void     cs_mvIn();        /* init.c */
 extern void     st_titl();                              /* init.c */
-extern void     drwHud();                   /* init.c */
 extern void     daily_rs();             /* calendar.c */
 extern short    lcp_cabO;
 extern short    lcp_frdO;
