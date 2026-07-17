@@ -216,18 +216,44 @@ cntSong()
         }
 }
 
-/* initBRev (Ghidra 0x16804): thin wrapper around
-   build_bit_revert_table which fills rev_tab[256] with bit-
-   reversed byte values.  Port has rev_tab as a static-initialised
-   constant, so this is a no-op semantic-equivalent (the runtime table
-   contents match Ghidra's post-init state).  Kept as a distinct entry
-   point so main() can call it at the exact Ghidra step. */
+/* bldBRev (Ghidra 0x1680e, build_bit_revert_table): fill rev_tab[256]
+   with bit-reversed byte values.  For each i in 0..255 and each bit
+   position j in 0..7, if the j-th "high-first" bit (bm_msb_lsb[j]) is
+   set in i, OR in the j-th "low-first" bit (bm_lsb_msb[j]).  Result:
+   rev_tab[i] has the bits of i in reversed order. */
+
+extern unsigned short   rev_tab[];
+extern unsigned short   bm_msb_lsb[];
+extern unsigned short   bm_lsb_msb[];
+
+void
+bldBRev()
+{
+        unsigned short  v;
+        short           j;
+        unsigned short  i;
+        unsigned short *ptr;
+
+        ptr = rev_tab;
+        for (i = 0; (short) i < 0x100; i = i + 1) {
+                v = 0;
+                for (j = 0; j < 8; j = j + 1) {
+                        if ((bm_msb_lsb[j] & i) != 0)
+                                v = bm_lsb_msb[j] | v;
+                }
+                *ptr = v;
+                ptr = ptr + 1;
+        }
+}
+
+/* initBRev (Ghidra 0x16804, init_build_bit_revert_table): thin wrapper
+   -- just calls bldBRev.  Kept as a distinct entry point so main()
+   can call it at the exact Ghidra boot step. */
 
 void
 initBRev()
 {
-        /* rev_tab is already static-init in tables.c.  Ghidra's
-           runtime build produces the same 256 entries.  Nothing to do. */
+        bldBRev();
 }
 
 /* cs_mvIn: minimal replacement for the doorbell/
