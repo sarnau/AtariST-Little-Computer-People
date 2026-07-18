@@ -25,7 +25,7 @@ Exit codes:
 
 import os, re, subprocess, sys
 
-LIMIT = int(os.environ.get('LIMIT', '22'))
+LIMIT = int(os.environ.get('LIMIT', '19'))
 SRC   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def read_defines():
