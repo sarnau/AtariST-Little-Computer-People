@@ -81,9 +81,9 @@ a_takes()
         while (count != 0) {
                 pick = rndRng(0, 1);
                 if (pick == 0) {
-                        lcp_st = STATE_SHOWER_SCRUB_LEFT;  gameTick(2);
+                        lcp_st = 67 /* STATE_SHOWER_SCRUB_LEFT -- Alcyon macro-name collision */;  gameTick(2);
                         lcp_st = STATE_SHOWER_SCRUB_RIGHT; gameTick(2);
-                        lcp_st = STATE_SHOWER_SCRUB_LEFT;  gameTick(2);
+                        lcp_st = 67 /* STATE_SHOWER_SCRUB_LEFT -- Alcyon macro-name collision */;  gameTick(2);
                         lcp_st = STATE_SHOWER_SCRUB_RIGHT; gameTick(2);
                         lcp_st = STATE_SHOWER_STAND;       gameTick(4);
                 } else {

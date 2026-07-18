@@ -207,8 +207,8 @@ a_plawr()
         unsigned char   prev_a, prev_b, prev_c;
         short           i;
 
-        pst_arr[0] = STATE_BROWSE_VINYL_REACH_RIGHT;
-        pst_arr[1] = STATE_BROWSE_VINYL_IDLE;
+        pst_arr[0] = 40 /* STATE_BROWSE_VINYL_REACH_RIGHT -- Alcyon macro-name collision */;
+        pst_arr[1] = 38 /* STATE_BROWSE_VINYL_IDLE -- Alcyon macro-name collision */;
         pst_arr[2] = 39 /* STATE_BROWSE_VINYL_REACH_LEFT -- Alcyon macro-name collision */;
         pst_arr[3] = STATE_BROWSE_VINYL_PULL_OUT;
 
@@ -232,7 +232,7 @@ a_plawr()
         lcp_hwt();
         gameTick(4);
 
-        lcp_st = STATE_BROWSE_VINYL_REACH_RIGHT;
+        lcp_st = 40 /* STATE_BROWSE_VINYL_REACH_RIGHT -- Alcyon macro-name collision */;
         g_selaf[SPRITE_VINYL_RECORD] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_VINYL_RECORD);
         g_sepex[g_seslm[SPRITE_VINYL_RECORD]] = 146;
