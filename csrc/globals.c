@@ -650,6 +650,27 @@ short           pk_dsc[52];
 short           g_pcdrp[26];
 short           g_ppdrp[26];
 
+/* War/Blackjack per-round face-down "war" cards.  Sized 52 so the
+   deepest possible recursion (all cards ending up here) still fits.
+   CARD_NONE sentinel terminates.  g_pchc counts the number of prior
+   war rounds this hand (indexes further into the arrays). */
+short           pk_pwc[52];             /* poker_player_war_cards */
+short           pk_cwc[52];             /* poker_computer_war_cards */
+short           g_pchc            = 0;  /* poker_computer_hand_cards */
+
+BOOL16          moff_f              = NO;
+
+/* Card display positions -- 5 slots per row.  Row A = computer (top),
+   Row B = player (bottom).  TODO: extract exact values from Ghidra
+   memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c (5 shorts each).
+   Placeholders are ordered left-to-right at 15-px width; final
+   values needed before pk_drcs will render at the right screen
+   coordinates. */
+short           crd_xa[5]         = { 70, 87, 104, 121, 138 };
+short           crd_ya[5]         = { 10, 10, 10, 10, 10 };
+short           crd_xb[5]         = { 70, 87, 104, 121, 138 };
+short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
+
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share crd_dat as their bitmap backing. */
 MFDB            crd_mfdb[54]           = { { 0 } };

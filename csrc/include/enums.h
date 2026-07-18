@@ -334,6 +334,14 @@
    GEM VDI header. */
 #define ALL_WHITE                       0       /* dest set to all 1s     */
 #define S_ONLY                          3       /* replace dest w/ source */
+
+/* Card game constants -- CARD_TYPE values 0..51 are the 52 face cards
+   (index into crd_mfdb).  CARD_BACK selects the shared face-down back
+   MFDB.  CARD_NONE is the sentinel used by war/blackjack to mark
+   empty slots in the war-cards arrays and to signal end-of-hand from
+   pk_rmch when the source pile is empty. */
+#define CARD_BACK                       52
+#define CARD_NONE                       0xff
 #define NOTS_AND_D                      4       /* (NOT src) AND dest    */
 #define S_XOR_D                         6       /* source XOR dest       */
 

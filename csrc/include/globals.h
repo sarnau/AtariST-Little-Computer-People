@@ -381,6 +381,14 @@ extern short    pk_phase;
 extern short    pk_dsc[];
 extern short    g_pcdrp[];
 extern short    g_ppdrp[];
+extern short    pk_pwc[];
+extern short    pk_cwc[];
+extern short    g_pchc;
+extern BOOL16   moff_f;
+extern short    crd_xa[];
+extern short    crd_ya[];
+extern short    crd_xb[];
+extern short    crd_yb[];
 
 /* Card graphics: 54 MFDB descriptors covering 52 card faces + 1 shared
    back + 1 highlight overlay pattern, all sharing crd_dat as their

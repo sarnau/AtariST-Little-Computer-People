@@ -853,3 +853,237 @@ pk_bjMn()
         gameCln(crd_dat);
         crd_dat = (short *) 0;
 }
+
+/* ---- Poker/War/Blackjack shared helpers ---------------------------- */
+
+extern short    g_pcmon;
+extern short    g_ppmon;
+extern short    g_ppppa;
+extern short    g_pchc;
+extern short    pk_pwc[];
+extern short    pk_cwc[];
+extern MFDB     crd_mfdb[];
+extern MFDB     mf_scb_c;
+extern short    crd_xa[];
+extern short    crd_ya[];
+extern short    crd_xb[];
+extern short    crd_yb[];
+extern void     vdi_cprt();
+extern void     moff();
+extern short    ph_ans;  /* dummy pull-in to satisfy per-file extern block */
+
+/* pk_pmsg: print a green status message in the bottom info bar
+   (5,71)..(319,75) after clearing the strip.
+   addr: poker_print_message() */
+
+void
+pk_pmsg(str)
+char *  str;
+{
+        plEr(5, 63, 319, 75);
+        strPr(str, 5, 71, COLOR_green);
+}
+
+/* pk_awp: display computer money count in the top-left panel.
+   Ghidra hand-formats a 3-digit decimal (space-padded on leading
+   zeros) into a fixed 12-byte stack buffer, laying the digit bytes
+   at positions 0/1/2 with '\0' at position 3 and using positions
+   4/6/8 as scratch for the quotient/remainder pass.  Preserved
+   verbatim so the port stays byte-comparable.
+   addr: poker_award_pot() */
+
+void
+pk_awp()
+{
+        char    str[12];
+
+        plEr(5, 10, 31, 20);
+        str[3] = '\0';
+        str[8] = (char)((int) g_pcmon / 100);
+        str[0] = str[8] + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (char)((int)(g_pcmon % 100) / 10);
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = (char)((int)(g_pcmon % 100) % 10);
+        str[2] = str[4] + '0';
+        strPr(str, 5, 18, COLOR_black);
+}
+
+/* pk_dppm: display player money count in the bottom-left panel.
+   Same three-digit-with-space-padding shape as pk_awp.
+   addr: poker_display_player_money() */
+
+void
+pk_dppm()
+{
+        char    str[12];
+
+        plEr(5, 50, 31, 60);
+        str[3] = '\0';
+        str[8] = (char)((int) g_ppmon / 100);
+        str[0] = str[8] + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (char)((int)(g_ppmon % 100) / 10);
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = (char)((int)(g_ppmon % 100) % 10);
+        str[2] = str[4] + '0';
+        strPr(str, 5, 58, COLOR_black);
+}
+
+/* pk_dpot: display the pot amount in the middle panel.
+   addr: poker_display_pot() */
+
+void
+pk_dpot()
+{
+        char    str[14];
+
+        plEr(31, 30, 57, 40);
+        str[3] = '\0';
+        str[8] = (char)((int) g_ppppa / 100);
+        str[0] = str[8] + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (char)((int)(g_ppppa % 100) / 10);
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = (char)((int)(g_ppppa % 100) % 10);
+        str[2] = str[4] + '0';
+        strPr(str, 31, 38, COLOR_black);
+}
+
+/* pk_rmch: pop a card off the top of `pile`; shift the remaining
+   `*count-1` entries down one slot.  Returns CARD_NONE if the pile
+   was already empty.  Used by war/blackjack to draw from each
+   player's draw pile.
+   addr: poker_remove_card_from_hand() */
+
+short
+pk_rmch(pile, count)
+short * pile;
+short * count;
+{
+        short   card;
+        short   n;
+        short   i;
+
+        if (*count == 0)
+                return CARD_NONE;
+        card    = *pile;
+        n       = *count;
+        *count  = n - 1;
+        if ((short)(n - 1) != 0) {
+                for (i = 0; i < 51; i = i + 1)
+                        pile[i] = pile[i + 1];
+        }
+        return card;
+}
+
+/* pk_actd: append `val` at position pile[*idx] and increment idx.
+   Used to push captured cards back to the winner's draw pile after
+   a round resolves.
+   addr: poker_add_card_to_discard() */
+
+void
+pk_actd(pile, idx, val)
+short * pile;
+short * idx;
+short   val;
+{
+        pile[*idx] = val;
+        *idx = *idx + 1;
+}
+
+/* pk_annr: transfer the pot to the round winner one chip per tick
+   (winner=0 -> computer, winner=1 -> player).  Zeros the pot when
+   done.  Animated so the running total ticks up on screen.
+   addr: poker_ante_and_new_round() */
+
+void
+pk_annr(winner)
+short   winner;
+{
+        while (g_ppppa != 0) {
+                if (winner == 0) {
+                        g_pcmon = g_pcmon + 1;
+                        g_ppppa = g_ppppa - 1;
+                        pk_awp();
+                        pk_dpot();
+                        gameTick(0);
+                } else {
+                        g_ppmon = g_ppmon + 1;
+                        g_ppppa = g_ppppa - 1;
+                        pk_dppm();
+                        pk_dpot();
+                        gameTick(0);
+                }
+        }
+        g_ppppa = 0;
+}
+
+/* pk_inph: wait for one of the caller-supplied F-keys (a/b/c),
+   digit keys 1..5, or auto-timeout.  Returns codes 1..8 for
+   a/b/c/1/2/3/4/5 respectively, or -1 on inactivity timeout.
+   Handles the ambient event pump via mg_wkev between polls.
+   addr: poker_input_handler() */
+
+short
+pk_inph(a, b, c)
+short   a;
+short   b;
+short   c;
+{
+        short   ch;
+
+        for (;;) {
+                gameTick(0);
+                ch = mg_wkev();
+                if (ch == a) return 1;
+                if (ch == b) return 2;
+                if (ch == c) return 3;
+                if (ch == 0x31) return 4;         /* '1' */
+                if (ch == 0x32) return 5;         /* '2' */
+                if (ch == 0x33) return 6;         /* '3' */
+                if (ch == 0x34) return 7;         /* '4' */
+                if (ch == 0x35) return 8;         /* '5' */
+                if (mg_tofl != NO)
+                        return -1;
+        }
+}
+
+/* pk_drcs: blit one card sprite at slot `xi` of row `yi`.
+   card=CARD_BACK selects the shared face-down back MFDB
+   (crd_mfdb[52]); face cards 0..51 index directly.  15x23-pixel
+   card artwork.
+   addr: poker_draw_card_sprite() */
+
+void
+pk_drcs(card, xi, yi)
+short   card;
+short   xi;
+short   yi;
+{
+        short   x;
+        short   y;
+
+        if (yi == 0) {
+                x = crd_xa[xi];
+                y = crd_ya[xi];
+        } else {
+                x = crd_xb[xi];
+                y = crd_yb[xi];
+        }
+        vdi_cprt(vdihnd, S_ONLY, &crd_mfdb[card], &mf_scb_c,
+                              0, 0, 15, 23,
+                              x, y, x + 15, y + 23);
+}

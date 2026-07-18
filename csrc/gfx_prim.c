@@ -466,3 +466,43 @@ rst_vsth()
         short   ta, tb, tc, td;
         vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
 }
+
+/* vdi_cprt: VDI raster-copy wrapper.  Packs the (src rect, dst rect)
+   pair into an 8-short pxy array and dispatches vro_cpyfm.  Used by
+   the mini-game card renderer.
+   addr: vdi_copy_rect() */
+
+void
+vdi_cprt(handle, mode, srcMFDB, dstMFDB, x1a, y1a, x2a, y2a,
+                                              x1b, y1b, x2b, y2b)
+short   handle;
+short   mode;
+MFDB *  srcMFDB;
+MFDB *  dstMFDB;
+short   x1a, y1a, x2a, y2a;
+short   x1b, y1b, x2b, y2b;
+{
+        short   pts[8];
+        pts[0] = x1a; pts[1] = y1a; pts[2] = x2a; pts[3] = y2a;
+        pts[4] = x1b; pts[5] = y1b; pts[6] = x2b; pts[7] = y2b;
+        vro_cpyfm(handle, mode, pts, srcMFDB, dstMFDB);
+}
+
+/* moff: idempotent AES mouse hide.  Called before mini-game
+   rendering so the GEM cursor doesn't leak onto the card sprites.
+   moff_f prevents the second call from re-issuing M_OFF (cheap
+   guard; AES tolerates repeated M_OFF but the guard preserves the
+   original Ghidra semantics).
+   addr: mouse_off() */
+
+extern MFDB     mf_scb_c;
+extern BOOL16   moff_f;
+
+void
+moff()
+{
+        if (moff_f == NO) {
+                graf_mouse(M_OFF, (void *) 0);
+                moff_f = YES;
+        }
+}
