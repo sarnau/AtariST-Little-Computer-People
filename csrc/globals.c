@@ -695,6 +695,43 @@ char            pk_bm[]   = "I'll bet 00.  ";
 char            pk_rm[]   = "I'll raise 00.";
 char            pk_tcm[]  = "I'll take 0 cards.";
 
+/* Blackjack per-hand state.
+   pk_psh[]  -- 3rd hand slot used when the player elects to split
+                two matching down-cards (post-deal, both aces or
+                two of the same rank).  CARD_NONE-terminated.
+   pk_pcc / pk_ccc / pk_pscc -- remaining-hits counters (start at
+                CARD_BJ_MAX = 3 for standard "up to 5 cards" rule;
+                each hit decrements by CARD_BJ_STEP = 1; stop at
+                CARD_BJ_STOP = 0).
+   pk_wpr    -- saved bet during split-hand bookkeeping (Ghidra
+                calls it poker_war_player_score).
+   pk_wrf / pk_wcs  -- split-hand round-active flags (Ghidra:
+                _poker_war_round / _poker_war_computer_score).
+   pk_c1bj / pk_c2bj -- first / second hand natural-blackjack
+                achieved this round (used to skip the hit loop).
+                Ghidra reused _poker_computer_card_count /
+                _poker_card_deck_index for these.
+   pk_bs1 / pk_bs2  -- first / second hand busted flag.  Ghidra
+                reused _poker_computer_hand_value_lo / _hi.
+   pk_cscore / pk_pscore -- computer-picked / player-picked score
+                once the double-value-with-ace picker resolves.
+                Ghidra reused poker_display_x_offset and
+                midi_dma_start_lo.
+*/
+short           pk_psh[5];      /* player_split_hand */
+short           pk_pcc     = 0; /* player_card_count       */
+short           pk_ccc     = 0; /* computer_card_count     */
+short           pk_pscc    = 0; /* player_split_card_count */
+short           pk_wpr     = 0; /* saved bet across split  */
+BOOL16          pk_wrf     = NO;
+BOOL16          pk_wcs     = NO;
+BOOL16          pk_c1bj    = NO;
+BOOL16          pk_c2bj    = NO;
+BOOL16          pk_bs1     = NO;
+BOOL16          pk_bs2     = NO;
+short           pk_cscore  = 0;
+short           pk_pscore  = 0;
+
 /* Card display positions -- 5 slots per row, extracted from Ghidra
    memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns

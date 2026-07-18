@@ -31,14 +31,14 @@ fi
 BASE=0x13c14
 # Re-derive with `python3 tools/find_syms.py _lcp_x ...` after link-layout
 # changes (adding globals, new .c files, or growing existing code).
-LCP_X=$((BASE + 0x164e6))
-LCP_Y=$((BASE + 0x164e8))
-G_WTX=$((BASE + 0x16506))
-G_WTY=$((BASE + 0x16508))
-LCP_ST=$((BASE + 0x17a96))
-G_WYX=$((BASE + 0x17ff2))
-G_WYY=$((BASE + 0x17ff4))
-LCP_STR=$((BASE + 0x17ff6))
+LCP_X=$((BASE + 0x16e18))
+LCP_Y=$((BASE + 0x16e1a))
+G_WTX=$((BASE + 0x16e38))
+G_WTY=$((BASE + 0x16e3a))
+LCP_ST=$((BASE + 0x183e0))
+G_WYX=$((BASE + 0x1893c))
+G_WYY=$((BASE + 0x1893e))
+LCP_STR=$((BASE + 0x18940))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -119,10 +119,10 @@ blocks = re.split(r'CPU breakpoint condition\(s\) matched \d+ times', log)[1:]
 
 samples = []
 for b in blocks:
-    lx  = re.search(r'0002A0FA: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wt  = re.search(r'0002A11A: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'0002B6AA: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'0002BC06: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    lx  = re.search(r'0002AA2C: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wt  = re.search(r'0002AA4C: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(r'0002BFF4: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(r'0002C550: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),

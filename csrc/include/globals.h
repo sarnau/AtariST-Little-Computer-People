@@ -409,6 +409,19 @@ extern BOOL16   pk_pass;
 extern char     pk_bm[];
 extern char     pk_rm[];
 extern char     pk_tcm[];
+extern short    pk_psh[];
+extern short    pk_pcc;
+extern short    pk_ccc;
+extern short    pk_pscc;
+extern short    pk_wpr;
+extern BOOL16   pk_wrf;
+extern BOOL16   pk_wcs;
+extern BOOL16   pk_c1bj;
+extern BOOL16   pk_c2bj;
+extern BOOL16   pk_bs1;
+extern BOOL16   pk_bs2;
+extern short    pk_cscore;
+extern short    pk_pscore;
 
 /* Card graphics: 54 MFDB descriptors covering 52 card faces + 1 shared
    back + 1 highlight overlay pattern, all sharing crd_dat as their

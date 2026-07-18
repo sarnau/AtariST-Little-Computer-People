@@ -346,6 +346,16 @@
    coloured card used to clear a slot when the player selects a
    card for discard (shown while the replacement is animating in). */
 #define CARD_HIGHLIGHT                  53
+
+/* Blackjack hit-counter constants.  Ghidra shows these as
+   CARD_HEART_10 / _QUEEN / _KING because the 1985 source aliased
+   three unrelated ROM constants onto card-name symbols; the actual
+   values encode the "at most 5 total cards, so at most 3 hits per
+   hand" rule.  ROM addresses documented in
+   ghidra_scripts/read_blackjack_constants.java. */
+#define CARD_BJ_MAX                     3       /* Ghidra: CARD_HEART_10 */
+#define CARD_BJ_STEP                    1       /* Ghidra: CARD_HEART_QUEEN */
+#define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
 #define NOTS_AND_D                      4       /* (NOT src) AND dest    */
 #define S_XOR_D                         6       /* source XOR dest       */
 
