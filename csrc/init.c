@@ -324,8 +324,12 @@ name_done:
 }
 #endif   /* SKIP_TITLE */
 
-/* Forward decl for the timer handler installed by mq_intim. */
+/* Forward decl for the timer handler installed by mq_intim.
+   mqisr is the asm wrapper (mq_hlpr.s) around the C mq_tick;
+   it save/restores scratch registers and RTEs.  Xbtimer needs the
+   wrapper because K&R C returns via RTS. */
 extern void     mq_tick();
+extern void     mqisr();
 extern void     mq_advs();      /* midi_seq_advance_sequencer (skeleton) */
 extern void     psg_upEn();     /* psg_process_envelopes    (skeleton) */
 extern BOOL16   psg_ntAc;
@@ -366,8 +370,7 @@ mq_intim()
         g_mtpre = 100;
         g_mtdiv = 4;
         mi_svtv = bios(BIOS_Setexc, 0x4d, -1L);
-        /* Xbtimer install deferred until the asm wrapper lands
-           (see comment above).  Nothing calls mq_tick until then. */
+        xbios(31, 0, 5, 0x28, (long) mqisr);
 }
 
 /* cntSong (Ghidra ~0x??): enumerate *.SNG and *.ORG files in the

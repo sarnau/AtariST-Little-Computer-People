@@ -41,6 +41,16 @@ if [ ! -f gemstart.o ] || [ "$DK_TOOLS/gemstart.s" -nt gemstart.o ]; then
     }
 fi
 
+# 1b. Assemble the interrupt-wrapper stub (mq_hlpr.s) that lets
+#     Xbtimer(31, ...) install the C mq_tick handler.
+if [ ! -f mq_hlpr.o ] || [ "$DK_TOOLS/mq_hlpr.s" -nt mq_hlpr.o ]; then
+    cp -f "$DK_TOOLS/mq_hlpr.s" mq_hlpr.s
+    "$ALCYON_BIN/as68" -l -u mq_hlpr.s > /dev/null 2>&1 || {
+        echo "FAILED: mq_hlpr assembly"
+        exit 1
+    }
+fi
+
 # 2. Copy DK libraries locally.
 cp -f "$ATARI_DK/OSBIND.O"   osbind.o
 cp -f "$ATARI_DK/AESBIND"    aesbind.a
