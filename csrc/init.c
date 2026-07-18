@@ -109,14 +109,22 @@ cl_drini()
         cl_redrH();
 }
 
-/* st_titl -- ported from Ghidra show_title_screen_enter_name_and_date
-   (Ghidra 0x???).  Full 1985 flow: decompress title.scn onto the visible
-   physbase, prompt the user for name / date / time via interactive
-   keyboard input.  This port variant skips the interactive input (which
-   would hang under Hatari's fast-forward-only automated testing) and
-   uses defaults.  The title.scn decompress + display still happens so
-   the user sees the intended boot splash, and the resulting name/date/
-   time values match a typical first-boot state. */
+/* st_titl -- full port of Ghidra show_title_screen_enter_name_and_date
+   (Ghidra 0x16de6).  Decompresses title.scn to the visible physbase,
+   then walks four interactive input phases:
+     1. NAME -- up to 18 uppercased chars, cursor-left backspace,
+                     Enter finishes early (min 1 char)
+     2. DATE -- MM/DD/YY, re-prompt on invalid month/day
+     3. TIME -- HH:MM, re-prompt on hours == 0 or > 12 or minutes > 59
+     4. AM/PM -- adjusts t_hour to 24-hour internal representation
+   Ends with a 1-second evnt_timer pause before returning.
+
+   Build-time switch:
+     -DSKIP_TITLE=1    ->  keep the pre-existing PLAYER/noon/0-0-0
+                                 defaults path, no visual + no getKey blocking.
+                                 Used by frame_hash / test_stairs etc. that
+                                 must run under Hatari's --fast-forward.
+     default           ->  full 1985 behaviour (visual + interactive) */
 
 extern short    date_day;
 extern short    dt_mon;
@@ -125,22 +133,21 @@ extern short    t_hour;
 extern short    t_min;
 extern void *   sv_phb;
 extern void     unScn();
+extern char     in_str[];
+extern void     prCh();
+extern void     drwBar();
+extern void     strPr();
+extern short    getKey();
+extern short    lcp_upp();
+extern short    daysInMo();
+extern void     draw_text_input_cursor_8x8();
+extern void     string_input();
 
+#ifdef SKIP_TITLE
 void
 st_titl()
 {
         short   i;
-
-        /* Real 1985 flow: decompress title.scn to sv_phb, then
-           prompt for name / date / time / AM-PM via interactive input.
-           Skipped here -- the title.scn decompress would leave content
-           in sv_phb that sc_ren8's page-flip cycles through,
-           causing visible title-screen flicker during gameplay.
-           Just set defaults so the AI dispatcher sees valid state. */
-
-        /* Default owner name.  Real game reads via keyboard input at
-           (80, 110); we default to "PLAYER" so downstream code that
-           expects a non-empty name doesn't hit an all-zeroes buffer. */
         lcp.owner_name[0] = 'P';
         lcp.owner_name[1] = 'L';
         lcp.owner_name[2] = 'A';
@@ -149,19 +156,170 @@ st_titl()
         lcp.owner_name[5] = 'R';
         for (i = 6; i < 24; i = i + 1)
                 lcp.owner_name[i] = 0;
-
-        /* Default date + time.  Real 1985 game prompts user for
-           MM/DD/YY and HH:MM AM/PM.  Ghidra decompile shows the parse
-           produces zero-indexed months/days: `dt_mon = input[1] +
-           input[0]*10 - 1` and `date_day = input[4] + input[3]*10 -
-           1`.  We default to 0/0/0 which corresponds to "day 1 of
-           January, year 0" in that indexing scheme. */
-        dt_mon   = 0;    /* January (0-indexed) */
-        date_day     = 0;    /* 1st (0-indexed) */
-        dt_year    = 0;
-        t_hour   = 12;   /* noon */
-        t_min = 0;
+        dt_mon   = 0;
+        date_day = 0;
+        dt_year  = 0;
+        t_hour   = 12;
+        t_min    = 0;
 }
+#else
+
+/* draw_text_input_cursor_8x8: paint an 8x8 solid rect at (x, y-7)..
+   (x+7, y).  Called alternately with COLOR_dk_brown (erase) and the
+   text colour (rewrite) to blink the cursor between characters.
+   addr: draw_text_input_cursor_8x8() */
+
+void
+draw_text_input_cursor_8x8(x, y, color)
+short   x;
+short   y;
+short   color;
+{
+        drwBar(x, y - 7, x + 7, y, color);
+}
+
+/* string_input: read `val` digits into in_str[] with a blinking
+   cursor.  Only digits 0..9 are accepted; cursor-left erases the
+   most recent digit.  The (i % 3 == 2) skip-past-separator pattern
+   keeps the '/' in "MM/DD/YY" or ':' in "HH:MM" from being
+   overwritten during input.  Digits are stored as raw 0..9 values
+   (ch - 0x30) in in_str[], matching Ghidra's post-parse arithmetic
+   in st_titl (date/time decoded as tens*10 + ones).
+   addr: string_input() */
+
+void
+string_input(x, y, str, val, color)
+short   x;
+short   y;
+char *  str;
+short   val;
+short   color;
+{
+        short   ch;
+        short   i;
+        short   next;
+
+        drwBar(x, y - 7, x + val * 8, y, COLOR_dk_brown);
+        strPr(str, x, y, color);
+        i = 0;
+        do {
+                do {
+                        for (;;) {
+                                ch = getKey();
+                                if (ch != KEY_CURSOR_LEFT || i < 1)
+                                        break;
+                                next = i - 1;
+                                if ((short)(i - 1) % 3 == 2)
+                                        next = i - 2;
+                                i = next;
+                                draw_text_input_cursor_8x8(
+                                             x + i * 8, y, COLOR_dk_brown);
+                                prCh((short) str[i],
+                                                 x + i * 8, y, color);
+                        }
+                } while ((short) ch < '0' || '9' < (short) ch);
+                draw_text_input_cursor_8x8(x + i * 8, y, COLOR_dk_brown);
+                prCh(ch, x + i * 8, y, color);
+                in_str[i] = (char) ch - 0x30;
+                next = i + 1;
+                if ((short)(i + 1) % 3 == 2)
+                        next = i + 2;
+                i = next;
+        } while (i < val);
+}
+
+void
+st_titl()
+{
+        short   ch;
+        short   parsed;
+        short   ilen;
+        short   xpos;
+        short   pmc;   /* AM/PM char to display */
+
+        /* Decompress title.scn straight to visible physbase.  Port's
+           unScn folds Ghidra's inline fOpen + Malloc + read +
+           decompress + Mfree into one call. */
+        unScn("title.scn", (unsigned short *) sv_phb, 16000L);
+
+        /* NAME phase. */
+        strPr("NAME: ------------------", 80, 110, COLOR_lt_brown);
+        xpos = 0;
+        do {
+                do {
+                        for (;;) {
+                                ch = getKey();
+                                if (ch != KEY_CURSOR_LEFT || xpos <= 0)
+                                        break;
+                                xpos = xpos - 1;
+                                draw_text_input_cursor_8x8(
+                                             xpos * 8 + 128, 110, COLOR_dk_brown);
+                                prCh('-', xpos * 8 + 0x80, 110,
+                                                 COLOR_lt_brown);
+                        }
+                        if (ch == KEY_CTRL_M && xpos > 0)
+                                goto name_done;
+                        ch = lcp_upp(ch);
+                } while (ch < 0x20);
+                lcp.owner_name[xpos] = (char) ch;
+                draw_text_input_cursor_8x8(xpos * 8 + 0x80, 110,
+                                                                          COLOR_dk_brown);
+                prCh(ch, xpos * 8 + 0x80, 110, COLOR_lt_brown);
+                xpos = xpos + 1;
+        } while (xpos != 0x12);
+name_done:
+        lcp.owner_name[xpos] = '\0';
+        for (ilen = xpos; ilen < 18; ilen = ilen + 1)
+                draw_text_input_cursor_8x8(ilen * 8 + 128, 110,
+                                                                          COLOR_dk_brown);
+
+        /* DATE phase. */
+        strPr("ENTER DATE:", 80, 122, COLOR_lt_brown);
+        do {
+                do {
+                        string_input(176, 122, "MM/DD/YY", 8,
+                                                    COLOR_lt_brown);
+                        dt_mon   = (short) in_str[1] + in_str[0] * 10 - 1;
+                        date_day = (short) in_str[4] + in_str[3] * 10 - 1;
+                        dt_year  = (short) in_str[7] + in_str[6] * 10;
+                } while (dt_mon < 0);
+        } while (dt_mon > 0xb || date_day < 0 ||
+                 (parsed = daysInMo(dt_mon, dt_year),
+                  parsed <= date_day));
+
+        /* TIME phase. */
+        strPr("ENTER TIME:", 80, 134, COLOR_lt_brown);
+        do {
+                do {
+                        string_input(176, 134, "HH:MM", 5,
+                                                    COLOR_lt_brown);
+                        t_hour = (short) in_str[1] + in_str[0] * 10;
+                        t_min  = (short) in_str[4] + in_str[3] * 10;
+                } while (t_hour == 0);
+        } while (t_hour > 12 || t_min > 59);
+
+        /* AM/PM phase. */
+        strPr("AM OR PM: -M", 80, 146, COLOR_lt_brown);
+        for (;;) {
+                ch = getKey();
+                if (ch == 'A' || ch == 'a') {
+                        pmc = 'A';
+                        if (t_hour == 12)
+                                t_hour = 0;
+                        break;
+                }
+                if (ch == 'P' || ch == 'p') {
+                        pmc = 'P';
+                        if (t_hour != 12)
+                                t_hour = t_hour + 12;
+                        break;
+                }
+        }
+        draw_text_input_cursor_8x8(160, 146, COLOR_dk_brown);
+        prCh(pmc, 160, 146, COLOR_lt_brown);
+        evnt_timer(1000, 0);
+}
+#endif   /* SKIP_TITLE */
 
 /* mq_intim (Ghidra 0x11112): install a Timer-A interrupt
    for the MIDI sequencer.  Real body:

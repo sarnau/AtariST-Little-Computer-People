@@ -506,3 +506,28 @@ moff()
                 moff_f = YES;
         }
 }
+
+/* drwBar: solid-fill rectangle at (x1,y1)-(x2,y2) in `color`.
+   Same shape as plEr (initVdi/v_bar/exitVdi bracket) but takes an
+   explicit fill colour rather than using the fixed palette-0xC
+   preset.  Used by the title-screen name/date/time input area
+   which erases with COLOR_dk_brown before printing each field.
+   addr: draw_bar_color() */
+
+void
+drwBar(x1, y1, x2, y2, color)
+short   x1;
+short   y1;
+short   x2;
+short   y2;
+short   color;
+{
+        short   r[4];
+        r[0] = x1; r[1] = y1;
+        r[2] = x2; r[3] = y2;
+        initVdi();
+        vsf_color(vdihnd, vdi_colt[color]);
+        v_bar(vdihnd, r);
+        vsf_color(vdihnd, vdi_colt[0xc]);
+        exitVdi();
+}

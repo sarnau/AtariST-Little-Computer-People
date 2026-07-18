@@ -40,6 +40,15 @@ FPS_MAX=${FPS_MAX:-40}
 
 MODE=${1:-check}
 
+# Rebuild with SKIP_TITLE=1 so the interactive title screen doesn't
+# hang under --fast-forward.  Skip when NO_REBUILD is set (e.g. by a
+# CI job that already ran the build step).
+if [ -z "${NO_REBUILD:-}" ]; then
+    ALCYON_CPPFLAGS="-DSKIP_TITLE=1" "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
+        && "$TOOLS/alcyon_link.sh" >/dev/null 2>&1 \
+        || { echo "SETUP: rebuild for tests failed" >&2; exit 2; }
+fi
+
 command -v ffmpeg >/dev/null || { echo "SETUP: ffmpeg not installed" >&2; exit 2; }
 command -v md5    >/dev/null || command -v md5sum >/dev/null \
     || { echo "SETUP: no md5/md5sum" >&2; exit 2; }

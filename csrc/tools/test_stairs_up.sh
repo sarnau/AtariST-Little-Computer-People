@@ -23,6 +23,12 @@ TOS=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari\ ST/Atari\ TOS\ Images/TOS104US
 GAME=$HOME/hatari-c/GAME
 PRG=$CSRC/build/alcyon/LCP.PRG
 
+if [ -z "${NO_REBUILD:-}" ]; then
+    ALCYON_CPPFLAGS="-DSKIP_TITLE=1" "$CSRC/tools/alcyon_build.sh" >/dev/null 2>&1 \
+        && "$CSRC/tools/alcyon_link.sh" >/dev/null 2>&1 \
+        || { echo "SETUP: rebuild for tests failed" >&2; exit 2; }
+fi
+
 if [ ! -f "$PRG" ]; then
     echo "SETUP: LCP.PRG not found at $PRG (build first: make alcyon)" >&2
     exit 2
@@ -31,14 +37,14 @@ fi
 BASE=0x13c14
 # Re-derive with `python3 tools/find_syms.py _lcp_x ...` after link-layout
 # changes (adding globals, new .c files, or growing existing code).
-LCP_X=$((BASE + 0x18fe2))
-LCP_Y=$((BASE + 0x18fe4))
-G_WTX=$((BASE + 0x19002))
-G_WTY=$((BASE + 0x19004))
-LCP_ST=$((BASE + 0x1a840))
-G_WYX=$((BASE + 0x1ad9c))
-G_WYY=$((BASE + 0x1ad9e))
-LCP_STR=$((BASE + 0x1ada0))
+LCP_X=$((BASE + 0x1904e))
+LCP_Y=$((BASE + 0x19050))
+G_WTX=$((BASE + 0x1906e))
+G_WTY=$((BASE + 0x19070))
+LCP_ST=$((BASE + 0x1a8ac))
+G_WYX=$((BASE + 0x1ae08))
+G_WYY=$((BASE + 0x1ae0a))
+LCP_STR=$((BASE + 0x1ae0c))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -119,10 +125,10 @@ blocks = re.split(r'CPU breakpoint condition\(s\) matched \d+ times', log)[1:]
 
 samples = []
 for b in blocks:
-    lx  = re.search(r'0002CBF6: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wt  = re.search(r'0002CC16: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'0002E454: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'0002E9B0: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    lx  = re.search(r'0002CC62: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wt  = re.search(r'0002CC82: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(r'0002E4C0: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(r'0002EA1C: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),
