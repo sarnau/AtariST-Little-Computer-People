@@ -86,21 +86,33 @@ typedef struct {
 } PLAYER;
 
 /* PSG_ENVELOPE -- ADSR envelope state for one YM2149 PSG channel.
-   Field order matches the 8-byte layout of the ADSR parameter block
-   in Activision Music Studio 2.0's .SNG / .ORG files (post-signature
-   body offset 0x00..0x1A3), so psg_cpE can memcpy
-   directly from the file bytes into the runtime struct.  See
-   sound.c:sgPlay for the full Music Studio file format. */
+   14-byte runtime layout matching Ghidra's psg_envelope struct
+   (`muls.w #0xe` at 0x115c0 confirms sizeof = 0xe = 14).  The 8-byte
+   on-disk ADSR parameter block from Activision Music Studio 2.0's
+   .SNG / .ORG files maps onto offsets 1..8 (attack_start_vol
+   through release_duration), so psg_cpE can memcpy directly into
+   the runtime struct from an 8-byte source buffer without touching
+   the phase / ramp_direction / phase_timer / current_volume /
+   max_volume fields that live outside the on-disk window.
+
+   Field offsets are hand-controlled with explicit byte padding
+   because Alcyon C 4.14 doesn't guarantee any specific alignment
+   for `short`s within structs (usually 2-byte, but the ROM's
+   0xe total confirms no padding between offset 9 and offset 10). */
 typedef struct {
-        char    phase;                  /* ENV_ATTACK..ENV_FADEOUT     */
-        char    phase_timer;            /* ticks until next phase step */
-        unsigned char attack_start_vol; /* starting volume (0..15)     */
-        unsigned char attack_duration;  /* attack length in ticks      */
-        unsigned char decay_duration;   /* decay length                */
-        unsigned char sustain_level;    /* sustain volume level        */
-        unsigned char release_duration; /* release length              */
-        unsigned char current_volume;   /* live PSG volume for channel */
-        unsigned char max_volume;       /* velocity-derived ceiling    */
+        char            phase;                  /* off 0  ENV_ATTACK..    */
+        unsigned char   attack_start_vol;       /* off 1  volume 0..15    */
+        unsigned char   attack_duration;        /* off 2  attack ticks    */
+        unsigned char   attack_target_vol;      /* off 3  peak volume     */
+        unsigned char   decay_duration;         /* off 4                  */
+        unsigned char   decay_target_vol;       /* off 5                  */
+        unsigned char   sustain_duration;       /* off 6                  */
+        unsigned char   sustain_target_vol;     /* off 7                  */
+        unsigned char   release_duration;       /* off 8                  */
+        char            ramp_direction;         /* off 9  +1 or -1        */
+        short           phase_timer;            /* off 10 ticks until step*/
+        unsigned char   current_volume;         /* off 12 live PSG volume */
+        unsigned char   max_volume;             /* off 13 vel-derived cap */
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
