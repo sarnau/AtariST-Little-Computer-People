@@ -237,6 +237,13 @@ extern short            mi_evi;
 extern long             mi_lstk[];
 extern short            mi_evcn;
 extern unsigned char    mi_nOS[];
+extern short            psg_rmpD[];
+extern short            psg_rmpA[];
+extern short            mi_evrt[];
+extern short            mi_evtt[];
+extern short            mi_evst[];
+extern short            mi_evrl[];
+extern unsigned char    psg_rot[];
 
 extern unsigned char    mi_chmap[];
 extern short            g_mcpro[];

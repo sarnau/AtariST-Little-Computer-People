@@ -57,14 +57,14 @@ BASE=0x13c14
 # Symbol offsets -- re-derive after any BSS/DATA/TEXT drift with:
 #   python3 tools/find_syms.py _lcp_x _lcp_y _g_wtx _g_wty _lcp_st \
 #                                                    _g_wyx _g_wyy _lcp_stR
-LCP_X=$((BASE + 0x19b24))
-LCP_Y=$((BASE + 0x19b26))
-G_WTX=$((BASE + 0x19b44))
-G_WTY=$((BASE + 0x19b46))
-LCP_ST=$((BASE + 0x1b3e8))
-G_WYX=$((BASE + 0x1b944))
-G_WYY=$((BASE + 0x1b946))
-LCP_STR=$((BASE + 0x1b948))
+LCP_X=$((BASE + 0x1a876))
+LCP_Y=$((BASE + 0x1a878))
+G_WTX=$((BASE + 0x1a896))
+G_WTY=$((BASE + 0x1a898))
+LCP_ST=$((BASE + 0x1c1d2))
+G_WYX=$((BASE + 0x1c72e))
+G_WYY=$((BASE + 0x1c730))
+LCP_STR=$((BASE + 0x1c732))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -152,10 +152,10 @@ blocks = re.split(r'CPU breakpoint condition\(s\) matched \d+ times', log)[1:]
 
 samples = []
 for b in blocks:
-    lx  = re.search(r'0002D738: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wt  = re.search(r'0002D758: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'0002EFFC: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'0002F558: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    lx  = re.search(r'0002E48A: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wt  = re.search(r'0002E4AA: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(r'0002FDE6: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(r'00030342: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),

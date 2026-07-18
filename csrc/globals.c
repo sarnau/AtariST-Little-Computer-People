@@ -355,6 +355,54 @@ short           mi_evcn         = 0;
 /* Per-MIDI-note bookkeeping (128 possible notes -- one byte each). */
 unsigned char   mi_nOS[128];
 
+/* ---- PSG envelope processor state -----------------------------------
+   Bresenham-style integer ramp accumulator + delta, per channel.
+   Every psg_upEn tick, accum += delta; whenever accum > 360 (0x168),
+   current_volume steps by ramp_direction and accum -= 360.  This
+   fractional accumulation lets the 50 Hz envelope produce
+   sub-tick-precision volume ramps without floating point.
+
+   All 4 envelope tables (rate/time/sustain/release) are 16 shorts
+   each, addressed by the low nibble of the ADSR bytes.
+   psg_rot is the {0x88, 0x89, 0x8a} amp-register-with-write-bit
+   for the 3 PSG channels; the assembly subtracts 0x80 back off
+   before the actual psg_wr call. */
+short           psg_rmpD[3];      /* ramp_delta   */
+short           psg_rmpA[3];      /* ramp_accum   */
+
+/* Ghidra midi_envelope_rate_table @0x2986c.  32-byte table indexed
+   by phase_timer (already loaded from an ADSR duration byte). */
+short           mi_evrt[16] = {
+             0,  360,  180,  120,   85,   72,   60,   45,
+            30,   20,   15,   12,   10,    8,    6,    4
+};
+
+/* midi_envelope_time_table @0x2988c.  Reload value for phase_timer
+   when transitioning between ADSR phases. */
+short           mi_evtt[16] = {
+             0,    1,    2,    3,    4,    5,    6,    8,
+            12,   18,   24,   30,   36,   45,   60,   90
+};
+
+/* midi_envelope_release_table @0x298ac.  Applied to ramp_delta
+   during the sustain->release transition. */
+short           mi_evrl[16] = {
+             0,    1,    2,    4,    8,   18,   24,   40,
+            45,   60,   72,   90,  120,  180,  360, 30000
+};
+
+/* midi_envelope_sustain_table @0x298cc.  Reload for phase_timer
+   during the sustain->release transition. */
+short           mi_evst[16] = {
+             0,  360,  180,   90,   45,   20,   15,    9,
+             8,    6,    5,    4,    3,    2,    1,    0
+};
+
+/* psg_register_offset_table @0x2985c.  Amp registers 8/9/10 with
+   the PSG "write" bit (0x80) pre-set.  psg_upEn subtracts 0x80
+   before calling psg_wr to recover the raw register number. */
+unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
+
 /* Per-logical-channel maps.  Populated from the 90-byte channel-map
    block that precedes the header events; mq_resp
    iterates over them at song start. */
