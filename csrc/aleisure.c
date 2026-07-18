@@ -453,9 +453,9 @@ a_sitae()
         unsigned short  duration;
         unsigned short  i;
 
-        pst_arr[0] = STATE_EXERCISE_ARMS_CENTER;
-        pst_arr[1] = STATE_EXERCISE_ARMS_UP;
-        pst_arr[2] = STATE_EXERCISE_ARMS_CENTER;
+        pst_arr[0] = 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */;
+        pst_arr[1] = 59 /* STATE_EXERCISE_ARMS_UP -- Alcyon macro-name collision */;
+        pst_arr[2] = 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */;
         pst_arr[3] = STATE_EXERCISE_ARMS_WIDE;
 
         hs_posXY(POS_MID_COUCH,
@@ -475,7 +475,7 @@ a_sitae()
         while (i < ((duration & 0x7f) | 8) &&
                g_trel[0] == ACTION_NONE) {
                 lcp_st = pst_arr[i & 3];
-                if (lcp_st == STATE_EXERCISE_ARMS_CENTER)
+                if (lcp_st == 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */)
                         gameTick(0);
                 else
                         gameTick(3);
