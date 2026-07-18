@@ -660,15 +660,13 @@ short           g_pchc            = 0;  /* poker_computer_hand_cards */
 
 BOOL16          moff_f              = NO;
 
-/* Card display positions -- 5 slots per row.  Row A = computer (top),
-   Row B = player (bottom).  TODO: extract exact values from Ghidra
-   memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c (5 shorts each).
-   Placeholders are ordered left-to-right at 15-px width; final
-   values needed before pk_drcs will render at the right screen
-   coordinates. */
-short           crd_xa[5]         = { 70, 87, 104, 121, 138 };
-short           crd_ya[5]         = { 10, 10, 10, 10, 10 };
-short           crd_xb[5]         = { 70, 87, 104, 121, 138 };
+/* Card display positions -- 5 slots per row, extracted from Ghidra
+   memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
+   (y=11 top strip), Row B = player (y=37 middle strip).  X columns
+   are spaced 28 pixels apart (15-px card + 13-px gutter). */
+short           crd_xa[5]         = { 70, 98, 126, 154, 182 };
+short           crd_ya[5]         = { 11, 11, 11, 11, 11 };
+short           crd_xb[5]         = { 70, 98, 126, 154, 182 };
 short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
