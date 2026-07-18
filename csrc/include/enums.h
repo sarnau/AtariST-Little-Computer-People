@@ -342,6 +342,10 @@
    pk_rmch when the source pile is empty. */
 #define CARD_BACK                       52
 #define CARD_NONE                       0xff
+/* Card empty background: the 53rd MFDB slot, an all-background
+   coloured card used to clear a slot when the player selects a
+   card for discard (shown while the replacement is animating in). */
+#define CARD_HIGHLIGHT                  53
 #define NOTS_AND_D                      4       /* (NOT src) AND dest    */
 #define S_XOR_D                         6       /* source XOR dest       */
 

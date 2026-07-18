@@ -660,6 +660,41 @@ short           g_pchc            = 0;  /* poker_computer_hand_cards */
 
 BOOL16          moff_f              = NO;
 
+/* Poker (5-card draw) working state.  Every field is per-hand: reset
+   at the start of each round in pk_ante / pk_evhs / pk_show. */
+short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
+short           pk_ph[5];           /* player_hand */
+short           pk_hrf[5];          /* hand_rank_flags   -- which cards
+                                       form computer's pair/trip/etc */
+short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
+                                       of computer hand (used as kicker
+                                       scratch by pk_show) */
+short           pk_phrf[5];         /* player_hand_rank_flags */
+short           pk_phsf[5];         /* player_hand_suit_flags */
+short           pk_chrk    = 0;     /* computer_hand_rank
+                                       0=high,1=pair,2=two-pair,3=trips,
+                                       4=straight,5=flush,6=full,7=four,
+                                       8=straight-flush,9=royal */
+short           pk_phrk    = 0;     /* player_hand_rank */
+short           pk_dslot   = 0;     /* winner (0=comp, 1=player) */
+short           pk_sel[5];          /* card_selected -- 1 = discard */
+short           pk_disc    = 0;     /* discard_count */
+short           pk_dpile[52];       /* discard_pile of already-seen cards */
+short           pk_dpos    = 0;     /* deck_position -- reused as
+                                       raise amount / draw counter */
+short           pk_phv     = 0;     /* player_hand_value -- saved bet */
+short           pk_bet     = 0;     /* current bet accumulator (shared) */
+BOOL16          pk_bluff   = NO;    /* computer intends to bluff */
+BOOL16          pk_pass    = NO;    /* computer passed on the bet loop */
+
+/* Editable poker prompts.  pk_bm / pk_rm have single-space digit
+   slots at fixed offsets; pk_tcm's card count digit + trailing
+   period/'s.' get patched in by pk_cdrw.  Buffer widths sized so
+   the biggest overwrite (a 2-digit prefix like "20") still fits. */
+char            pk_bm[]   = "I'll bet 00.  ";
+char            pk_rm[]   = "I'll raise 00.";
+char            pk_tcm[]  = "I'll take 0 cards.";
+
 /* Card display positions -- 5 slots per row, extracted from Ghidra
    memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns

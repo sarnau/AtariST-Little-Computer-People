@@ -389,6 +389,26 @@ extern short    crd_xa[];
 extern short    crd_ya[];
 extern short    crd_xb[];
 extern short    crd_yb[];
+extern short    pk_ch[];
+extern short    pk_ph[];
+extern short    pk_hrf[];
+extern short    pk_hsf[];
+extern short    pk_phrf[];
+extern short    pk_phsf[];
+extern short    pk_chrk;
+extern short    pk_phrk;
+extern short    pk_dslot;
+extern short    pk_sel[];
+extern short    pk_disc;
+extern short    pk_dpile[];
+extern short    pk_dpos;
+extern short    pk_phv;
+extern short    pk_bet;
+extern BOOL16   pk_bluff;
+extern BOOL16   pk_pass;
+extern char     pk_bm[];
+extern char     pk_rm[];
+extern char     pk_tcm[];
 
 /* Card graphics: 54 MFDB descriptors covering 52 card faces + 1 shared
    back + 1 highlight overlay pattern, all sharing crd_dat as their
