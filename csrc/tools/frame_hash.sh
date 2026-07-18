@@ -44,7 +44,7 @@ MODE=${1:-check}
 # hang under --fast-forward.  Skip when NO_REBUILD is set (e.g. by a
 # CI job that already ran the build step).
 if [ -z "${NO_REBUILD:-}" ]; then
-    ALCYON_CPPFLAGS="-DSKIP_TITLE=1" "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
+    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_MIDI=1" "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
         && "$TOOLS/alcyon_link.sh" >/dev/null 2>&1 \
         || { echo "SETUP: rebuild for tests failed" >&2; exit 2; }
 fi

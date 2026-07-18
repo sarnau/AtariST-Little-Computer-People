@@ -304,6 +304,7 @@
 
 /* ---- MIDI sequencer phase ------------------------------------------- */
 #define SEQ_PHASE_IDLE                          0
+#define SEQ_PHASE_WAIT_NOTE_EXPIRE              0
 #define SEQ_PHASE_PARSE_NEXT_EVENT              1
 #define SEQ_PHASE_SONG_ENDING                   2
 

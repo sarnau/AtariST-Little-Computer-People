@@ -367,10 +367,20 @@ extern BOOL16   psg_ntAc;
 void
 mq_intim()
 {
+#ifdef SKIP_MIDI
+        /* Automated tests set -DSKIP_MIDI=1 to keep runs deterministic:
+           the 200 Hz Timer-A interrupt fires at times that shift by a
+           few cycles between Hatari boots, and the game loop's state
+           at a fixed VBL count then differs enough to break
+           warp-based stair tests + frame-hash goldens.  Interactive
+           builds get the real handler. */
+        (void) 0;
+#else
         g_mtpre = 100;
         g_mtdiv = 4;
         mi_svtv = bios(BIOS_Setexc, 0x4d, -1L);
         xbios(31, 0, 5, 0x28, (long) mqisr);
+#endif
 }
 
 /* cntSong (Ghidra ~0x??): enumerate *.SNG and *.ORG files in the

@@ -309,6 +309,52 @@ BOOL16          g_msmsa   = NO;
 short           mi_rlock                = 0;
 long            mi_svtv                    = 0;
 
+/* ---- MIDI sequencer parse state -----------------------------------
+   The sequencer walks a 3-byte-per-event compact stream inside
+   mi_sqpos..mi_seqE.  Per-event scratch (event-type flag, note-on
+   trigger, current note/channel, note-length params) is unpacked
+   into a set of byte / short globals below, then handed to
+   queue-note-event / send-note-off / send-program-change to reach
+   the mq_dise dispatcher.
+
+   mi_ndt is the 32-entry duration lookup indexed by byte1[0..4] of
+   each note event; values pulled from ROM 0x298f6 (21 real
+   entries, rest are zero). */
+
+unsigned char * mi_seqE      = (unsigned char *) 0;
+unsigned char * mi_dptr      = (unsigned char *) 0;
+char            mi_evTf         = 0;
+char            mi_nnOn        = 0;
+char            mi_lasT         = 0;
+char            mi_nnOf         = 0;
+char            mi_ccha         = 0;
+char            mi_cnot         = 0;
+char            mi_nmof         = 0;
+char            mi_nlpA         = 0;
+short           mi_nlp0         = 0;
+BOOL16          mi_slop         = NO;
+
+short           mi_ndt[32] = {
+           0,    2,    2,    3,    4,    5,    6,    8,
+           9,   12,   16,   18,   24,   32,   36,   48,
+          64,   72,   96,  128,  144,    0,    0,    0,
+           0,    0,    0,    0,    0,    0,    0,    0
+};
+
+/* Event queue -- 3 shorts per active note: {duration, note|flags,
+   physical MIDI channel byte}.  Max 60 slots -> 20 concurrent
+   notes. */
+short           mi_evq[60];
+short           mi_evi          = 0;
+
+/* Loop stack -- {return_addr, remaining_count} pairs.  Max 24
+   nested loops (48 entries + 2 slack). */
+long            mi_lstk[50];
+short           mi_evcn         = 0;
+
+/* Per-MIDI-note bookkeeping (128 possible notes -- one byte each). */
+unsigned char   mi_nOS[128];
+
 /* Per-logical-channel maps.  Populated from the 90-byte channel-map
    block that precedes the header events; mq_resp
    iterates over them at song start. */
