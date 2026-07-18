@@ -178,15 +178,28 @@ short * sv_headP           = (short *) 0;
 short   vdihnd                       = 0;
 short   vdi_hnd                      = 0;    /* physical from graf_handle */
 /* vdi_colt (Ghidra vdi_color_table @ 0x29b64): color_enum ->
-   VDI palette-index permutation.  color_enum 0 (black) -> VDI slot 0,
-   color_enum 14 (white) -> VDI slot 13, etc.  Not identity: VDI's
-   default 16-entry palette-index-to-hardware-color assignment differs
-   from the game's color_enum numbering, so text/lines call
-   vst_color/vsl_color/vsf_color through this permutation to end up
-   at the same on-screen hue as Ghidra. */
+   VDI-color permutation.
+
+   The 1985 code assumed TOS's default ST-low VDI-color-to-palette-
+   slot permutation ({0,15,1,2,4,6,3,5,7,8,9,10,12,14,11,13}), so
+   the ROM's vdi_colt was chosen to cancel that permutation and put
+   color_enum N into the palette slot the game named N.  For
+   example, color_enum 13 (blue) -> ROM vdi_colt[13] = 15 -> TOS
+   remaps VDI 15 -> palette 13 = 0x007 (blue).
+
+   Our VDI stack (Alcyon DK vdibind.a + Hatari) does NOT install that
+   permutation.  VDI color N passes straight through as palette-slot
+   N.  With the ROM's permutation still in place, color_enum 13 (blue)
+   ended up in palette 15 (which is dark brown 0x410) -- caught first
+   as the "water tank renders brown" report.
+
+   Fix: identity mapping.  With VDI-color == palette-slot, and
+   main_pal already installed with the correct RGBs, every drawing
+   call now lands in the right hue.  Verified visually against the
+   water tank (color_enum 13 -> palette 13 = 0x007 = blue). */
 short   vdi_colt[16]            = {
-        0,  2,  3,  6,  4,  7,  5,  8,
-        9, 10, 11, 14, 12, 15, 13,  1
+        0,  1,  2,  3,  4,  5,  6,  7,
+        8,  9, 10, 11, 12, 13, 14, 15
 };
 
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
