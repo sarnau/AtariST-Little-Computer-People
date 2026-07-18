@@ -505,7 +505,7 @@ lcp_path()
                                                 lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER);
-                                        if (lcp_st == STATE_STAIR_DESCEND_FRAME_1)
+                                        if (lcp_st == 18) /* STATE_STAIR_DESCEND_FRAME_1 -- Alcyon macro-name collision */
                                                 fs_trg = YES;
                                 } else if (lcp_y < 161) {
                                         /* Lower flight, going down-right */
@@ -528,7 +528,7 @@ lcp_path()
                                                 lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(10);
-                                        if (lcp_st == STATE_STAIR_DESCEND_FRAME_1)
+                                        if (lcp_st == 18) /* STATE_STAIR_DESCEND_FRAME_1 -- Alcyon macro-name collision */
                                                 fs_trg = YES;
                                 }
                         } else {
@@ -545,8 +545,8 @@ lcp_path()
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
                                         }
-                                        if (lcp_st == STATE_STAIR_BTM_FRAME_1 ||
-                                            lcp_st == STATE_STAIR_BTM_FRAME_2)
+                                        if (lcp_st == 22 || /* STATE_STAIR_BTM_FRAME_1 -- Alcyon macro-name collision */
+                                            lcp_st == 23) /* STATE_STAIR_BTM_FRAME_2 -- Alcyon macro-name collision */
                                                 lcp_y = lcp_y + 2;
                                         if (lcp_st == STATE_STAIR_BTM_FRAME_3)
                                                 fs_trg = YES;

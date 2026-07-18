@@ -209,7 +209,7 @@ a_plawr()
 
         pst_arr[0] = STATE_BROWSE_VINYL_REACH_RIGHT;
         pst_arr[1] = STATE_BROWSE_VINYL_IDLE;
-        pst_arr[2] = STATE_BROWSE_VINYL_REACH_LEFT;
+        pst_arr[2] = 39 /* STATE_BROWSE_VINYL_REACH_LEFT -- Alcyon macro-name collision */;
         pst_arr[3] = STATE_BROWSE_VINYL_PULL_OUT;
 
         prev_a = prev_b = prev_c = 0;
