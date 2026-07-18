@@ -112,13 +112,13 @@ short   ch;
         short   i;
 
         if (ch < ' ') {                 /* control char, treated as CR */
-                lcp_st = 44 /* STATE_TYPE_AT_DESK_LEFT_HAND -- Alcyon macro-name collision */;
+                lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
                 pick = rndRng(0, 5);
                 if (pick == 0) {
-                        lcp_st = STATE_TYPE_AT_DESK_RIGHT_HAND;
+                        lcp_st = STATE_DESK_TYPE_R;
                         gameTick(0);
-                        lcp_st = 44 /* STATE_TYPE_AT_DESK_LEFT_HAND -- Alcyon macro-name collision */;
+                        lcp_st = STATE_DESK_TYPE_L;
                         gameTick(0);
                 }
                 lcp_face = FACING_RIGHT;
@@ -156,17 +156,17 @@ short   ch;
         /* Printable char. */
         if (ch == ' ') {
                 lcp_face = FACING_RIGHT;
-                lcp_st = 44 /* STATE_TYPE_AT_DESK_LEFT_HAND -- Alcyon macro-name collision */;
+                lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
         } else {
                 lcp_face = rndRng(0, 1);
-                lcp_st = 44 /* STATE_TYPE_AT_DESK_LEFT_HAND -- Alcyon macro-name collision */;
+                lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
                 pick = rndRng(0, 5);
                 if (pick == 0) {
-                        lcp_st = STATE_TYPE_AT_DESK_RIGHT_HAND;
+                        lcp_st = STATE_DESK_TYPE_R;
                         gameTick(0);
-                        lcp_st = 44 /* STATE_TYPE_AT_DESK_LEFT_HAND -- Alcyon macro-name collision */;
+                        lcp_st = STATE_DESK_TYPE_L;
                         gameTick(0);
                 }
         }

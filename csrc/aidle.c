@@ -133,8 +133,8 @@ short   value;
         short   i;
         short   floor;
 
-        pst_arr[0] = 88 /* STATE_SLEEP_BREATHE_IN -- Alcyon macro-name collision */;
-        pst_arr[1] = STATE_SLEEP_BREATHE_OUT;
+        pst_arr[0] = STATE_SLP_BREATHE_I;
+        pst_arr[1] = STATE_SLP_BREATHE_O;
 
         if (lcp_stR != NO)
                 return;

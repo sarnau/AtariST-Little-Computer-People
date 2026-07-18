@@ -101,8 +101,8 @@ a_playc()
         unsigned short  type_counter;
         short           is_even_frame;
 
-        pst_arr[0] = 26 /* STATE_TYPING_HANDS_DOWN -- Alcyon macro-name collision */;
-        pst_arr[1] = STATE_TYPING_HANDS_UP;
+        pst_arr[0] = STATE_HANDS_DOWN;
+        pst_arr[1] = STATE_HANDS_UP;
         pst_arr[2] = STATE_SITTING_AT_DESK;
 
         hs_posXY(POS_MID_COMPUTER_DESK,

@@ -81,16 +81,16 @@ a_takes()
         while (count != 0) {
                 pick = rndRng(0, 1);
                 if (pick == 0) {
-                        lcp_st = 67 /* STATE_SHOWER_SCRUB_LEFT -- Alcyon macro-name collision */;  gameTick(2);
-                        lcp_st = STATE_SHOWER_SCRUB_RIGHT; gameTick(2);
-                        lcp_st = 67 /* STATE_SHOWER_SCRUB_LEFT -- Alcyon macro-name collision */;  gameTick(2);
-                        lcp_st = STATE_SHOWER_SCRUB_RIGHT; gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
                         lcp_st = STATE_SHOWER_STAND;       gameTick(4);
                 } else {
-                        lcp_st = STATE_SHOWER_WASH_LEFT;   gameTick(2);
-                        lcp_st = STATE_SHOWER_WASH_RIGHT;  gameTick(2);
-                        lcp_st = STATE_SHOWER_WASH_LEFT;   gameTick(2);
-                        lcp_st = STATE_SHOWER_WASH_RIGHT;  gameTick(2);
+                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
+                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
+                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
+                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
                         lcp_st = STATE_SHOWER_STAND;       gameTick(4);
                 }
                 count = count - 1;

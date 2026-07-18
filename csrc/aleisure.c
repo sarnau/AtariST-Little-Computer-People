@@ -207,10 +207,10 @@ a_plawr()
         unsigned char   prev_a, prev_b, prev_c;
         short           i;
 
-        pst_arr[0] = 40 /* STATE_BROWSE_VINYL_REACH_RIGHT -- Alcyon macro-name collision */;
-        pst_arr[1] = 38 /* STATE_BROWSE_VINYL_IDLE -- Alcyon macro-name collision */;
-        pst_arr[2] = 39 /* STATE_BROWSE_VINYL_REACH_LEFT -- Alcyon macro-name collision */;
-        pst_arr[3] = STATE_BROWSE_VINYL_PULL_OUT;
+        pst_arr[0] = STATE_VINYL_REACH_R;
+        pst_arr[1] = STATE_VINYL_IDLE;
+        pst_arr[2] = STATE_VINYL_REACH_L;
+        pst_arr[3] = STATE_VINYL_PULL_OUT;
 
         prev_a = prev_b = prev_c = 0;
         g_actif = YES;
@@ -232,7 +232,7 @@ a_plawr()
         lcp_hwt();
         gameTick(4);
 
-        lcp_st = 40 /* STATE_BROWSE_VINYL_REACH_RIGHT -- Alcyon macro-name collision */;
+        lcp_st = STATE_VINYL_REACH_R;
         g_selaf[SPRITE_VINYL_RECORD] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_VINYL_RECORD);
         g_sepex[g_seslm[SPRITE_VINYL_RECORD]] = 146;
@@ -453,10 +453,10 @@ a_sitae()
         unsigned short  duration;
         unsigned short  i;
 
-        pst_arr[0] = 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */;
-        pst_arr[1] = 59 /* STATE_EXERCISE_ARMS_UP -- Alcyon macro-name collision */;
-        pst_arr[2] = 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */;
-        pst_arr[3] = STATE_EXERCISE_ARMS_WIDE;
+        pst_arr[0] = STATE_EX_ARMS_CTR;
+        pst_arr[1] = STATE_EX_ARMS_UP;
+        pst_arr[2] = STATE_EX_ARMS_CTR;
+        pst_arr[3] = STATE_EX_ARMS_WIDE;
 
         hs_posXY(POS_MID_COUCH,
                               &g_wtx, &g_wty);
@@ -475,7 +475,7 @@ a_sitae()
         while (i < ((duration & 0x7f) | 8) &&
                g_trel[0] == ACTION_NONE) {
                 lcp_st = pst_arr[i & 3];
-                if (lcp_st == 58 /* STATE_EXERCISE_ARMS_CENTER -- Alcyon macro-name collision */)
+                if (lcp_st == STATE_EX_ARMS_CTR)
                         gameTick(0);
                 else
                         gameTick(3);

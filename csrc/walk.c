@@ -274,7 +274,7 @@ stairCyc()
 {
         lcp_st = lcp_st + STATE_WALK_FRAME_1;
         if (lcp_st > 12)
-                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
+                lcp_st = 9;  /* STATE_STR_CLIMB_F0 -- Alcyon macro-name collision */
 }
 
 /* Nested-if helper: set head_anim_target if it isn't already `target`. */
@@ -388,7 +388,7 @@ lcp_path()
                         if (lcp_y == 161) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
+                                lcp_st = 9;  /* STATE_STR_CLIMB_F0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_LEFT;
                                 lcp_x = lcp_x - 6;
                                 lcp_y = lcp_y - 2;
@@ -396,7 +396,7 @@ lcp_path()
                         } else if (lcp_y == 100) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
+                                lcp_st = 9;  /* STATE_STR_CLIMB_F0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_x = lcp_x + 3;
                                 lcp_y = lcp_y - 2;
@@ -410,14 +410,14 @@ lcp_path()
                                         lcp_face = FACING_RIGHT;
                                         lcp_y = lcp_y - 1;
                                         next_x = lcp_x;
-                                        if (lcp_st != STATE_STAIR_CLIMB_FRAME_3_STEP) {
+                                        if (lcp_st != STATE_STR_CLIMB_F3S) {
                                                 next_x = lcp_x + 1;
                                                 if (next_x != g_wyx)
                                                         next_x = lcp_x + 2;
                                         }
                                         lcp_x = next_x;
                                         stairCyc();
-                                        if (lcp_st == STATE_STAIR_CLIMB_FRAME_3_STEP)
+                                        if (lcp_st == STATE_STR_CLIMB_F3S)
                                                 fs_trg = YES;
                                         setHTgt(10);
                                 } else if (lcp_y < 161) {
@@ -427,14 +427,14 @@ lcp_path()
                                         lcp_face = FACING_LEFT;
                                         lcp_y = lcp_y - 1;
                                         next_x = lcp_x;
-                                        if (lcp_st != STATE_STAIR_CLIMB_FRAME_3_STEP) {
+                                        if (lcp_st != STATE_STR_CLIMB_F3S) {
                                                 next_x = lcp_x - 1;
                                                 if (next_x != g_wyx)
                                                         next_x = lcp_x - 2;
                                         }
                                         lcp_x = next_x;
                                         stairCyc();
-                                        if (lcp_st == STATE_STAIR_CLIMB_FRAME_3_STEP)
+                                        if (lcp_st == STATE_STR_CLIMB_F3S)
                                                 fs_trg = YES;
                                         setHTgt(HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER);
                                 }
@@ -445,18 +445,18 @@ lcp_path()
                                         sp_upds();
                                 }
                                 if (lcp_st < 13 || lcp_st > 16) {
-                                        lcp_st = 13; /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
+                                        lcp_st = 13; /* STATE_STR_TOP_F0 -- Alcyon macro-name collision */
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                         if (lcp_st > 16) {
-                                                lcp_st = 13; /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
+                                                lcp_st = 13; /* STATE_STR_TOP_F0 -- Alcyon macro-name collision */
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
                                         }
-                                        if (lcp_st == STATE_STAIR_TOP_FRAME_3_STEP ||
-                                            lcp_st == 13) /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
+                                        if (lcp_st == STATE_STR_TOP_F3S ||
+                                            lcp_st == 13) /* STATE_STR_TOP_F0 -- Alcyon macro-name collision */
                                                 lcp_y = lcp_y - 2;
-                                        if (lcp_st == STATE_STAIR_TOP_FRAME_3_STEP)
+                                        if (lcp_st == STATE_STR_TOP_F3S)
                                                 fs_trg = YES;
                                 }
                                 setHTgt(HEAD_ANIM_HORIZONTAL_RANGE);
@@ -467,7 +467,7 @@ lcp_path()
                                 sp_ssco(g_lcieo);
 
                         if (lcp_y == 161) {
-                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
+                                lcp_st = 21; /* STATE_STR_BTM_F0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_y = 165;
                                 lcp_x = lcp_x + 6;
@@ -475,7 +475,7 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                         } else if (lcp_y == 100) {
-                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
+                                lcp_st = 21; /* STATE_STR_BTM_F0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_y = 102;
                                 lcp_x = lcp_x - 2;
@@ -491,7 +491,7 @@ lcp_path()
                                         lcp_face = FACING_LEFT;
                                         lcp_y = lcp_y + 1;
                                         next_x = lcp_x;
-                                        if (lcp_st != STATE_STAIR_DESCEND_FRAME_3_STEP) {
+                                        if (lcp_st != STATE_STR_DESC_F3S) {
                                                 next_x = lcp_x - 1;
                                                 if (next_x != g_wyx)
                                                         next_x = lcp_x - 2;
@@ -500,12 +500,12 @@ lcp_path()
                                         if (lcp_st < 21 && lcp_st > 16) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                                 if (lcp_st > 20)
-                                                        lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
+                                                        lcp_st = 17; /* STATE_STR_DESC_F0 -- Alcyon macro-name collision */
                                         } else {
-                                                lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
+                                                lcp_st = 17; /* STATE_STR_DESC_F0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER);
-                                        if (lcp_st == 18) /* STATE_STAIR_DESCEND_FRAME_1 -- Alcyon macro-name collision */
+                                        if (lcp_st == 18) /* STATE_STR_DESC_F1 -- Alcyon macro-name collision */
                                                 fs_trg = YES;
                                 } else if (lcp_y < 161) {
                                         /* Lower flight, going down-right */
@@ -514,7 +514,7 @@ lcp_path()
                                         lcp_face = FACING_RIGHT;
                                         lcp_y = lcp_y + 1;
                                         next_x = lcp_x;
-                                        if (lcp_st != STATE_STAIR_DESCEND_FRAME_3_STEP) {
+                                        if (lcp_st != STATE_STR_DESC_F3S) {
                                                 next_x = lcp_x + 1;
                                                 if (next_x != g_wyx)
                                                         next_x = lcp_x + 2;
@@ -523,12 +523,12 @@ lcp_path()
                                         if (lcp_st < 21 && lcp_st > 16) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                                 if (lcp_st > 20)
-                                                        lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
+                                                        lcp_st = 17; /* STATE_STR_DESC_F0 -- Alcyon macro-name collision */
                                         } else {
-                                                lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
+                                                lcp_st = 17; /* STATE_STR_DESC_F0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(10);
-                                        if (lcp_st == 18) /* STATE_STAIR_DESCEND_FRAME_1 -- Alcyon macro-name collision */
+                                        if (lcp_st == 18) /* STATE_STR_DESC_F1 -- Alcyon macro-name collision */
                                                 fs_trg = YES;
                                 }
                         } else {
@@ -536,19 +536,19 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                                 if (lcp_st < 21 || lcp_st > 24) {
-                                        lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
+                                        lcp_st = 21; /* STATE_STR_BTM_F0 -- Alcyon macro-name collision */
                                         lcp_x = lcp_x + 2;
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                         if (lcp_st > 24) {
-                                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
+                                                lcp_st = 21; /* STATE_STR_BTM_F0 -- Alcyon macro-name collision */
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
                                         }
-                                        if (lcp_st == 22 || /* STATE_STAIR_BTM_FRAME_1 -- Alcyon macro-name collision */
-                                            lcp_st == 23) /* STATE_STAIR_BTM_FRAME_2 -- Alcyon macro-name collision */
+                                        if (lcp_st == 22 || /* STATE_STR_BTM_F1 -- Alcyon macro-name collision */
+                                            lcp_st == 23) /* STATE_STR_BTM_F2 -- Alcyon macro-name collision */
                                                 lcp_y = lcp_y + 2;
-                                        if (lcp_st == STATE_STAIR_BTM_FRAME_3)
+                                        if (lcp_st == STATE_STR_BTM_F3)
                                                 fs_trg = YES;
                                 }
                                 setHTgt(8);
