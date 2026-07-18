@@ -363,9 +363,12 @@ extern short    g_agacu;
 extern short    ag_clue;
 extern short    g_agwol;
 extern char     g_aginb[];
-extern char     g_agorw[];
+extern char *   g_agorw;
 extern char     g_agscw[];
 extern char *   g_agwgm[];
+extern char *   g_aggpr[];
+extern BOOL16   mg_tofl;
+extern short    sv_vqta[];
 
 extern short    pk_round;
 extern BOOL16   pk_quit;

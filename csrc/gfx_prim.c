@@ -33,6 +33,9 @@ extern short    vswr_mode();
 extern short    vsf_interior();
 extern short    vsf_style();
 extern short    vsf_color();
+extern void     vqt_attributes();
+extern short    vst_height();
+extern short    sv_vqta[];
 extern void     sc_sdtb();
 extern void     sc_sdtf();
 extern void     vro_cpyfm();
@@ -439,4 +442,27 @@ stpScrB()
                          (short) (scr_scal * 0x140),
                          (short) (scr_scal * 200));
         cpyScr(vdihnd, &mf_scrp);
+}
+
+/* vst_h20: save current VDI text attributes into sv_vqta and set
+   text height to 20 pixels (mini-game title / answer render).
+   addr: vdi_save_and_set_text_height_20() */
+
+void
+vst_h20()
+{
+        short   ta, tb, tc, td;
+        vqt_attributes(vdihnd, sv_vqta);
+        vst_height(vdihnd, 20, &td, &tc, &tb, &ta);
+}
+
+/* rst_vsth: restore VDI text height from the saved attribute block
+   (sv_vqta[7] is the cell-height slot).
+   addr: reset_vst_height() */
+
+void
+rst_vsth()
+{
+        short   ta, tb, tc, td;
+        vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
 }

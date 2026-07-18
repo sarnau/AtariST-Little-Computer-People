@@ -604,13 +604,39 @@ short           g_agacu          = 0;
 short           ag_clue   = 0;
 short           g_agwol             = 0;
 char            g_aginb[12];
-char            g_agorw[12];
+/* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
+   set by ag_ssw when a word is picked.  Ghidra treats it as char *. */
+char *          g_agorw           = (char *) 0;
 char            g_agscw[12];
 char *          g_agwgm[3] = {
         "Nope, try again!",
         "Not quite...",
         "Sorry, wrong guess."
 };
+
+/* anagram_guess_prompt_strings: shown per attempt (0..8 -> "Guess #1?"..
+   "Guess #9?").  Rendered by ag_sgp at (166, 57). */
+char *          g_aggpr[9] = {
+        "Guess #1?",
+        "Guess #2?",
+        "Guess #3?",
+        "Guess #4?",
+        "Guess #5?",
+        "Guess #6?",
+        "Guess #7?",
+        "Guess #8?",
+        "Guess #9?"
+};
+
+/* Mini-game shared state.
+   mg_tofl: set YES by mg_wkev when the 7200-frame (~15 min) idle
+            timeout fires; games check it to distinguish "user pressed
+            F10" from "we auto-quit due to inactivity".
+   sv_vqta: 10-short buffer holding the pre-mini-game VDI text
+            attributes so rst_vsth can restore them after temporarily
+            switching to 20-pixel height for the title/answer render. */
+BOOL16          mg_tofl                    = NO;
+short           sv_vqta[10];
 
 short           pk_round              = 0;
 BOOL16          pk_quit                 = NO;

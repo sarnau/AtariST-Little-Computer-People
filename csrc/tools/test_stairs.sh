@@ -48,17 +48,17 @@ fi
 # `find_base.sh` helper if the layout changes.
 BASE=0x13c14
 
-# Symbol offsets — extract with tools/extract_syms.py after rebuild:
-#   python3 tools/extract_syms.py build/alcyon/LCP.PRG | grep -E \
-#     "_lcp_x$|_lcp_y$|_lcp_st$|_lcp_fac|_g_wtx|_g_wty|_g_wyx|_g_wyy|_lcp_stR"
-LCP_X=$((BASE + 0x11b88))
-LCP_Y=$((BASE + 0x11b8a))
-G_WTX=$((BASE + 0x11ba8))
-G_WTY=$((BASE + 0x11baa))
-LCP_ST=$((BASE + 0x13042))
-G_WYX=$((BASE + 0x1359e))
-G_WYY=$((BASE + 0x135a0))
-LCP_STR=$((BASE + 0x135a2))
+# Symbol offsets -- re-derive after any BSS/DATA/TEXT drift with:
+#   python3 tools/find_syms.py _lcp_x _lcp_y _g_wtx _g_wty _lcp_st \
+#                                                    _g_wyx _g_wyy _lcp_stR
+LCP_X=$((BASE + 0x129c4))
+LCP_Y=$((BASE + 0x129c6))
+G_WTX=$((BASE + 0x129e4))
+G_WTY=$((BASE + 0x129e6))
+LCP_ST=$((BASE + 0x13f02))
+G_WYX=$((BASE + 0x1445e))
+G_WYY=$((BASE + 0x14460))
+LCP_STR=$((BASE + 0x14462))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -146,10 +146,10 @@ blocks = re.split(r'CPU breakpoint condition\(s\) matched \d+ times', log)[1:]
 
 samples = []
 for b in blocks:
-    lx  = re.search(r'0002579C: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wt  = re.search(r'000257BC: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'00026C56: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'000271B2: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    lx  = re.search(r'000265D8: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wt  = re.search(r'000265F8: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(r'00027B16: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(r'00028072: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),
