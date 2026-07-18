@@ -735,3 +735,112 @@ short           midi_ch;
 
         return 1;
 }
+
+/* ---- Timer-A interrupt dispatch ---------------------------------- */
+
+extern short    mi_rlock;
+
+/* mq_tick: 200 Hz Timer-A interrupt handler.  Runs the master tick
+   counter, then dispatches to one of two sub-state-machines:
+
+     * g_msmsa (sequencer_active) == YES:
+         - decrement g_mtpre (prescaler) and g_mtdiv (divider)
+         - if divider != 0 and prescaler <= 0 and no reentrancy,
+           call mq_advs() to advance the sequencer state machine
+     * else if psg_ntAc (psg_notes_active) == YES:
+         - decrement g_mtdiv (divider)
+         - on divider==0 wrap, call psg_upEn() to step envelopes,
+           reload divider = 4
+
+   Reentrancy guard: mi_rlock prevents nested dispatch if the
+   handler somehow gets called from within itself (unusual on the
+   ST, but the 1985 source has it and we mirror it).
+
+   Interrupt acknowledgement: MFP ISRA bit 5 (Timer-A pending)
+   must be cleared before RTE or the interrupt re-fires
+   immediately, unbounded-recursing the stack into a bus error.
+   Xbtimer's C-function wrapper does NOT auto-clear -- the
+   1985 handler does it explicitly, and so must we.  Writing 0
+   to a bit in $FFFA0F clears it (writes are "1 = set, 0 = clear"
+   for MFP ISR registers).
+
+   addr: midi_seq_tick_handler() */
+
+void
+mq_tick()
+{
+        g_mtcou = g_mtcou + 1;
+
+        if (g_msmsa != NO) {
+                g_mtpre = g_mtpre - 1;
+                g_mtdiv = g_mtdiv - 1;
+                if (g_mtdiv != 0) {
+                        if ((g_mtpre == 0 || g_mtpre < 0) &&
+                            mi_dwrm < 1 && mi_rlock != 1) {
+                                mi_dwrm = mi_dwrm + 1;
+                                mq_advs();
+                                mi_dwrm = mi_dwrm - 1;
+                        }
+                        goto ack;
+                }
+        } else if (psg_ntAc == NO ||
+                            (g_mtdiv = g_mtdiv - 1, g_mtdiv != 0)) {
+                goto ack;
+        }
+
+        g_mtdiv = 4;
+        if (mi_rlock != 1) {
+                mi_rlock = mi_rlock + 1;
+                psg_upEn();
+                mi_rlock = mi_rlock - 1;
+        }
+
+ack:
+        /* Acknowledge Timer-A by clearing ISRA bit 5. */
+        *((unsigned char *) 0xfffa0fL) =
+                *((unsigned char *) 0xfffa0fL) & (unsigned char) 0xdf;
+}
+
+/* mq_advs: SKELETON of the sequencer state-machine advance.  Ghidra
+   0x111b0 dispatches on g_mspha (SEQ_PHASE_WAIT_NOTE_EXPIRE /
+   PARSE_NEXT_EVENT / SONG_ENDING) to walk the event stream.  Full
+   port requires midi_seq_parse_events (164 instructions +
+   read_note_duration/queue_note_event/push_loop/pop_loop helpers)
+   plus midi_seq_expire_notes and midi_seq_send_note_off.
+
+   For now the skeleton immediately transitions to SONG_ENDING so
+   any song that gets started via mq_inis cleanly shuts back down.
+   This keeps timer state consistent while the parse-events port
+   is pending, and makes the "sequencer never plays a note" failure
+   mode graceful (as opposed to hanging with the timer alive
+   forever).
+
+   addr: midi_seq_advance_sequencer() */
+
+void
+mq_advs()
+{
+        g_mspha        = SEQ_PHASE_SONG_ENDING;
+        g_msmsa        = NO;
+        psg_ntAc       = NO;
+        mi_play        = NO;
+        g_mtpre        = 100;
+}
+
+/* psg_upEn: SKELETON of the PSG envelope step function.  Ghidra
+   0x1234c is 891 instructions of ADSR envelope math per channel
+   (attack->decay->sustain->release plus fadeout).  Deferred to a
+   follow-up commit -- porting it needs the full envelope struct
+   layout locked down first.
+
+   For now this is a no-op so mq_tick has something safe to call.
+   No audio path currently reaches here (g_msmsa transitions
+   straight to SONG_ENDING in the skeleton mq_advs above).
+
+   addr: psg_process_envelopes() */
+
+void
+psg_upEn()
+{
+        /* Envelope-step port pending -- see mq_advs comment. */
+}

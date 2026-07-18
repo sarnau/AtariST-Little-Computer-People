@@ -217,6 +217,8 @@ extern short            g_medu;
 extern short            mi_nxTk;
 extern short            mi_lpTk;
 extern BOOL16           g_msmsa;
+extern short            mi_rlock;
+extern long             mi_svtv;
 
 extern unsigned char    mi_chmap[];
 extern short            g_mcpro[];

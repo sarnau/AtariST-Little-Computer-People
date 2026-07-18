@@ -297,6 +297,18 @@ short           mi_nxTk    = 100;
 short           mi_lpTk= 100;
 BOOL16          g_msmsa   = NO;
 
+/* Timer-A interrupt state.
+   mi_rlock -- reentrancy guard so the tick handler doesn't recurse
+                        into the sequencer if a game-code path (e.g. a UI
+                        response) triggers another timer event before the
+                        first handler completes.
+   mi_svtv  -- previous Timer-A vector, saved so cs_mvIn's shutdown
+                        path can restore it (currently we install for the
+                        lifetime of the process, but the slot is here
+                        for future symmetry with the ROM's teardown). */
+short           mi_rlock                = 0;
+long            mi_svtv                    = 0;
+
 /* Per-logical-channel maps.  Populated from the 90-byte channel-map
    block that precedes the header events; mq_resp
    iterates over them at song start. */

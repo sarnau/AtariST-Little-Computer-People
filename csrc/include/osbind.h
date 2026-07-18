@@ -57,6 +57,9 @@ extern short    Dsetpath();
 #define Vsync()                 ((void) 0)
 #define Midiws(n, b)            ((void) 0)
 #define Dosound(p)              ((void) (p))
+/* Host builds don't run the MIDI timer, so these are no-ops. */
+extern long     bios();
+extern long     xbios();
 
 /* access(2) is in <unistd.h> on POSIX; declared here so save.c doesn't
    need to drag POSIX headers in. */
@@ -66,8 +69,13 @@ extern int      access();
 
 /* Alcyon's `gemdos()` (from DK OSBIND.O) is the trap #1 wrapper.
    Everything below is a thin macro over it, matching the standard
-   OSBIND.H shapes. */
+   OSBIND.H shapes.  The trap #13 (`bios`) and trap #14 (`xbios`)
+   wrappers are declared here so the port can call them directly
+   for calls the Alcyon system osbind.h doesn't macro-wrap
+   (specifically Setexc + Xbtimer used by mq_intim). */
 extern long     gemdos();
+extern long     bios();
+extern long     xbios();
 
 /* GEMDOS: each macro casts args to their declared trap-ABI types
    (WORD=short, VOIDP/LONG=long) so callers can pass anything

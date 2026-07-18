@@ -45,6 +45,9 @@ extern short    rndRng();
 extern void     drwLine();
 extern void     cl_redrH();
 extern void     sp_spud();
+extern short    g_mtpre;
+extern short    g_mtdiv;
+extern long     mi_svtv;
 
 /* lcp_crnd (Ghidra 0x169D8): populate a fresh PLAYER struct
    for a new game.  The 1985 code also picks a random name from the
@@ -321,21 +324,50 @@ name_done:
 }
 #endif   /* SKIP_TITLE */
 
-/* mq_intim (Ghidra 0x11112): install a Timer-A interrupt
-   for the MIDI sequencer.  Real body:
-     midi_tick_prescaler = 100;
-     midi_tick_divider = 4;
-     midi_saved_timer_vector = Bios(Setexc, 0x4d, -1);
-     Xbtimer(0, 5, 0x28, midi_seq_tick_handler);
-   Port stubs this to a no-op because we haven't ported
-   midi_seq_tick_handler yet; the sequencer is guarded by
-   mi_play==NO throughout so nothing calls into it. */
+/* Forward decl for the timer handler installed by mq_intim. */
+extern void     mq_tick();
+extern void     mq_advs();      /* midi_seq_advance_sequencer (skeleton) */
+extern void     psg_upEn();     /* psg_process_envelopes    (skeleton) */
+extern BOOL16   psg_ntAc;
+
+/* mq_intim (Ghidra 0x11112): install the Timer-A interrupt for the
+   MIDI sequencer.  Ghidra body:
+     midi_tick_prescaler   = 100
+     midi_tick_divider     = 4
+     midi_saved_timer_vect = Bios(Setexc, 0x4d, -1)   (query only)
+     Xbtimer(0, 5, 0x28, midi_seq_tick_handler)
+
+   Port status: partially ported.  The tick counter, prescaler,
+   divider, and vector-save are done here.  The Xbtimer install is
+   NOT done yet because it needs an assembly wrapper -- a K&R C
+   function returns via RTS, but MFP interrupt handlers must return
+   via RTE, so passing mq_tick directly to Xbtimer causes the CPU
+   to pop the wrong stack frame and jump to garbage.  Fix requires
+   a small .s file with:
+       _mq_tick_asm:
+             movem.l  D0-D2/A0-A2, -(SP)
+             jsr      _mq_tick
+             movem.l  (SP)+, D0-D2/A0-A2
+             rte
+   and passing `_mq_tick_asm` to Xbtimer instead.  Deferred to a
+   follow-up commit; verified by isolating the crash to exactly
+   the xbios(31, ...) call.
+
+   The `bios(Setexc, 0x4d, -1)` query is safe on its own (no side
+   effects), so it stays.  The mq_tick / mq_advs / psg_upEn C
+   bodies are in place -- once the asm wrapper lands, they'll
+   start driving the sequencer.
+
+   addr: mq_intim() */
 
 void
 mq_intim()
 {
-        /* TODO: wire real timer install once midi_seq_tick_handler
-           is ported. */
+        g_mtpre = 100;
+        g_mtdiv = 4;
+        mi_svtv = bios(BIOS_Setexc, 0x4d, -1L);
+        /* Xbtimer install deferred until the asm wrapper lands
+           (see comment above).  Nothing calls mq_tick until then. */
 }
 
 /* cntSong (Ghidra ~0x??): enumerate *.SNG and *.ORG files in the
