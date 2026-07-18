@@ -709,29 +709,48 @@ validate:
         goto new_word;
 }
 
-/* wp_main: outer flow verified; per-puzzle parse + fill-in-
-   the-blank dispatch is deferred.  Loads 66-line wordpz.txt into
-   g_ltlp entries 0..0x41 via the same line-indexing pattern
-   as fl_ltpl.
-   addr: wp_main() */
+/* Forward declarations: word-puzzle helpers live after the poker
+   helper block and per-file extern additions further down. */
+extern void     wp_shwm();
+extern void     wp_rtmp();
+extern void     wp_solv();
+extern char     wp_ans[][12];
+extern short    wp_blk;
+extern char *   wp_prm[];
+extern char *   wp_succ[];
+extern char *   wp_fail[];
+extern short    lcp_upp();
+extern char     in_str[];
+
+/* wp_main: WORD PUZZLE main loop.
+   Loads wordpz.txt into a 2000-byte buffer, indexes 66 line
+   pointers (33 puzzles x {template, solution}) via the same
+   ordinal-scan pattern used by fl_ltpl for letter-writing.
+   Displays the numeric puzzle selector; F1 next, F2 prev
+   (wraps 0..0x20), F5 solve, F10 quit.  Per-puzzle: parses the
+   template to count '@' blanks and seed wp_ans[i][0] with the
+   character following each '@' (used by the render/scan logic
+   below), renders, and waits for the next key.
+   Preserves the two Ghidra gotos (LAB_000177ac = next-puzzle,
+   LAB_0001797c = cleanup) verbatim.
+   addr: wp_main() (== word_puzzle_main) */
 
 void
 wp_main()
 {
+        short   key;
         char *  parse_ptr;
         short   line_index;
+        char    cur;
 
-        g_wpdb =
-                (char *) Malloc(2000L);
+        g_wpdb = (char *) Malloc(2000L);
         if (g_wpdb == (char *) 0)
                 er_nomem();
-
         mg_stp();
         fr_reac("wordpz.txt",
-                             (unsigned char *) g_wpdb,
-                             1536);
+                             (unsigned char *) g_wpdb, 1536);
 
-        /* Index the 66 lines (33 puzzles * 2 lines each). */
+        /* Index the 66 lines. */
         parse_ptr = g_wpdb;
         for (line_index = 0; line_index < 0x42;
              line_index = line_index + 1) {
@@ -745,10 +764,70 @@ wp_main()
 
         g_wpci = 0;
         strPr("**WORD PUZZLE #  **", 8, 8, COLOR_black);
-        /* The per-puzzle "choose then solve" loop -- deferred. */
-        gamePlWQ();
-        gameCln(g_wpdb);
+
+next_puzzle:
+        for (;;) {
+                strPr("Choose the puzzle",   8,  16, COLOR_black);
+                strPr("you wish to solve.",  8,  24, COLOR_black);
+                strPr("F1 Next, F5 Solve", 176,  8, COLOR_red);
+                strPr("F2 Last, F10 Quit", 176, 16, COLOR_red);
+                plEr(128,  0, 143,  8);
+                plEr(  0, 50, 319, 69);
+
+                /* Scan the template: count '@' blanks and seed the
+                   player-answer buffer with the character following
+                   each '@' (typically the punctuation the answer will
+                   sit against, so the render pass has an anchor). */
+                parse_ptr = g_ltlp[g_wpci + g_wpci];
+                wp_blk = 0;
+                for (;;) {
+                        cur = *parse_ptr;
+                        parse_ptr = parse_ptr + 1;
+                        if (cur < ' ') break;
+                        if (cur == '@') {
+                                wp_ans[wp_blk][0] = *parse_ptr;
+                                wp_ans[wp_blk][1] = '\0';
+                                wp_blk = wp_blk + 1;
+                        }
+                }
+
+                plEr(128, 0, 135, 8);
+                sprintf(in_str, "%2d", g_wpci + 1);
+                strPr(in_str, 128, 8, COLOR_black);
+                wp_rtmp();
+
+                for (;;) {
+                        gameTick(0);
+                        key = mg_wkev();
+                        if (key == KEY_F1)
+                                break;
+                        if (key == KEY_F2) {
+                                g_wpci = g_wpci - 1;
+                                if (g_wpci < 0)
+                                        g_wpci = 0x20;
+                                goto next_puzzle;
+                        }
+                        if (key == KEY_F5) {
+                                wp_solv();
+                                if (mg_tofl != NO)
+                                        goto cleanup;
+                                gameTick(0x28);
+                                goto next_puzzle;
+                        }
+                        if (key == KEY_F10)
+                                goto cleanup;
+                }
+                g_wpci = g_wpci + 1;
+                if (0x20 < g_wpci)
+                        g_wpci = 0;
+        }
+
+cleanup:
+        no_keyin = NO;
+        tx_sctm  = 0;
+        Mfree(g_wpdb);
         g_wpdb = (char *) 0;
+        return;
 }
 
 /* Forward declaration for the showdown routine, used by pk_main. */
@@ -3393,4 +3472,206 @@ cleanup:
         no_keyin = NO;
         Mfree(crd_dat);
         moff();
+}
+
+/* ---- Word Puzzle helpers ------------------------------------------- */
+
+/* wp_shwm: word-puzzle status message.  Clears the bottom prompt
+   strip and prints `msg` in green at (8, 58).
+   addr: word_puzzle_show_status_message() */
+
+void
+wp_shwm(msg)
+char *  msg;
+{
+        plEr(0, 50, 319, 59);
+        strPr(msg, 8, 58, COLOR_green);
+}
+
+/* wp_rtmp: render the current puzzle template with player answers
+   substituted in place of '@' markers.  Walks the template one
+   character at a time:
+    - literal chars accumulated into an in-buffer word until the
+      next space; then, if the word overruns column 0x26, wraps
+      to the next row; otherwise prints char-by-char at (col*8, y)
+      in blue.
+    - '@' pulls the next wp_ans[i] string, wraps if needed, prints,
+      then advances the cursor by its length.  The character
+      immediately after '@' (already stashed at wp_ans[i][0] by
+      the caller during parse) is treated as trailing punctuation
+      and printed alongside, then column bumps past it.
+   Preserves Ghidra's cursor_x = 1, cursor_y = 0x28 (40) start
+   position for byte-comparable output.
+   addr: word_puzzle_render_template_with_answers() */
+
+void
+wp_rtmp()
+{
+        short   ch;
+        char *  ap;             /* answer_ptr / scratch */
+        short   wlen;
+        short   ci;             /* char_index within an in-buffer word */
+        short   cy;
+        short   cx;
+        short   ai;             /* answer_index -> which wp_ans[] to use */
+        char    cur;
+        char *  tp;             /* template_ptr */
+
+        plEr(0, 31, 319, 49);
+        cx = 1;
+        ai = 0;
+        cy = 0x28;
+        tp = g_ltlp[g_wpci + g_wpci];
+        for (;;) {
+                for (;;) {
+                        for (;;) {
+                                ap  = tp;
+                                cur = *ap;
+                                tp  = ap + 1;
+                                if (cur < ' ')
+                                        return;
+                                if (cur != ' ') break;
+                                if (1 < cx)
+                                        cx = cx + 1;
+                        }
+                        if (cur == '@') break;
+                        wlen = 1;
+                        in_str[0] = cur;
+                        for (ap = tp; wlen < 0x10 && ' ' < *ap;
+                             ap = ap + 1) {
+                                in_str[wlen] = *ap;
+                                wlen = wlen + 1;
+                        }
+                        if (0x26 < (short)(wlen + cx)) {
+                                cx = 1;
+                                cy = cy + 8;
+                        }
+                        for (ci = 0; tp = ap, ci < wlen; ci = ci + 1) {
+                                prCh((short) in_str[ci],
+                                                cx << 3, cy, COLOR_blue);
+                                cx = cx + 1;
+                        }
+                }
+                for (wlen = 0;
+                     wlen < 0xc && ' ' < wp_ans[ai][wlen];
+                     wlen = wlen + 1) ;
+                if (0x27 < (short)(wlen + cx)) {
+                        cx = 1;
+                        cy = cy + 8;
+                }
+                strPr(wp_ans[ai], cx << 3, cy, COLOR_blue);
+                cx = wlen + cx;
+                ai = ai + 1;
+                ch = (short) ap[2];
+                if (ch < 0x20)
+                        return;
+                tp = ap + 2;
+                if (ch < 0x41) {
+                        prCh(ch, cx * 8, cy, COLOR_blue);
+                        cx = cx + 1;
+                        tp = ap + 3;
+                }
+        }
+}
+
+/* wp_solv: solve phase.  For each of wp_blk blanks:
+    - clear the input strip
+    - pick a prompt string: word 0 -> random from wp_prm[0..4],
+      later words -> wp_prm[word_index + 4]
+    - keyboard loop: A-Z (uppercased via lcp_upp), max 10 chars;
+      cursor-left erases; Enter confirms; F10 quits early
+   After all blanks entered, walks the solution line (odd index of
+   the current puzzle's line pair), comparing token-by-token with
+   the player's answers.  On success: renders + shows a random
+   wp_succ message.  On any mismatch: same but wp_fail.
+   Preserves Ghidra's LAB_00017c4a (failure exit) as a labeled
+   goto so the byte-for-byte control flow matches the 1985 source.
+   addr: word_puzzle_solve_phase() */
+
+void
+wp_solv()
+{
+        short   ch;
+        short   ri;
+        char *  psp;            /* player_answer_ptr / scratch */
+        char *  slp;            /* solution_line_ptr */
+        short   wi;
+        short   ilen;
+        short   cwi;            /* current_word_index */
+        char    pci;            /* player_char_iter */
+        char *  scp;            /* scan_ptr */
+        char    sci;            /* solution_char_iter */
+
+        plEr(0, 10, 175, 26);
+        plEr(176, 0, 319,  8);
+        plEr(176, 8, 248, 18);
+        cwi = 0;
+        do {
+                plEr(0, 60, 319, 69);
+                if (cwi == 0)
+                        wi = rndRng(0, 4);
+                else
+                        wi = cwi + 4;
+                wp_shwm(wp_prm[wi]);
+                ilen = 0;
+                for (;;) {
+                        gameTick(0);
+                        ch = mg_wkev();
+                        if (ch == KEY_F10)
+                                return;
+                        if (ch == KEY_CTRL_M)
+                                break;
+                        if (ch == KEY_CURSOR_LEFT && 0 < ilen) {
+                                ilen = ilen - 1;
+                                wp_ans[cwi][ilen] = '\0';
+                                plEr(ilen * 8 + 8, 60,
+                                                  ilen * 8 + 16, 68);
+                        } else if (ilen < 10 && 0x40 < ch) {
+                                ri = lcp_upp(ch);
+                                wp_ans[cwi][ilen] = (char) ri;
+                                ilen = ilen + 1;
+                                wp_ans[cwi][ilen] = '\0';
+                                strPr(wp_ans[cwi], 8, 68, COLOR_white);
+                        }
+                }
+                wp_ans[cwi][ilen] = '\0';
+                gameTick(8);
+                cwi = cwi + 1;
+                plEr(0, 60, 319, 69);
+        } while (cwi < wp_blk);
+
+        slp = g_ltlp[g_wpci + g_wpci + 1];
+        wi  = 0;
+        for (;;) {
+                scp = slp;
+                if (wp_blk <= wi) {
+                        wp_rtmp();
+                        gameTick(8);
+                        ri = rndRng(0, 5);
+                        wp_shwm(wp_succ[ri]);
+                        return;
+                }
+                do {
+                        slp = scp;
+                        scp = slp + 1;
+                } while (*slp < '!');
+                psp = wp_ans[wi];
+                for (;;) {
+                        sci = *slp;
+                        slp = slp + 1;
+                        if (sci < '!') break;
+                        pci = *psp;
+                        psp = psp + 1;
+                        if (pci != sci)
+                                goto fail;
+                }
+                if (*psp != '\0')
+                        break;
+                wi = wi + 1;
+        }
+fail:
+        wp_rtmp();
+        gameTick(8);
+        ri = rndRng(0, 5);
+        wp_shwm(wp_fail[ri]);
 }

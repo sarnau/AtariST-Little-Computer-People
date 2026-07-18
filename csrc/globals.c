@@ -732,6 +732,52 @@ BOOL16          pk_bs2     = NO;
 short           pk_cscore  = 0;
 short           pk_pscore  = 0;
 
+/* Word Puzzle state.
+   wp_ans[i][12]  -- player's typed answer for blank i.  Max 10
+                     chars + terminator + 1 slack byte.
+   wp_blk         -- count of blanks in the current puzzle (== rows
+                     of wp_ans[] actually in use).
+   The 3 flavor-text pointer arrays hold string literals shown to
+   the player during solve_phase.  Placeholder text below is close
+   in spirit to the 1985 originals; final wording lives at fixed
+   ROM addresses that ghidra_scripts/read_wordpuzzle_strings.java
+   dumps.  Swap in verbatim in a follow-up when convenient. */
+char            wp_ans[10][12];
+short           wp_blk    = 0;
+
+char *          wp_prm[12] = {
+        "What's the first word?",
+        "Type a word.",
+        "How about a word?",
+        "Give me a word.",
+        "Type any word.",
+        "Now another word.",
+        "Another word.",
+        "And another.",
+        "One more word.",
+        "Type the next word.",
+        "Keep going -- another word.",
+        "One last word."
+};
+
+char *          wp_succ[6] = {
+        "You solved it!!",
+        "Great job!!",
+        "Well done!!",
+        "You got it right!!",
+        "Perfect!!",
+        "That's the answer!!"
+};
+
+char *          wp_fail[6] = {
+        "Sorry, that's wrong.",
+        "Nope, try again.",
+        "Not quite.",
+        "That's not it.",
+        "Wrong answer.",
+        "Better luck next time."
+};
+
 /* Card display positions -- 5 slots per row, extracted from Ghidra
    memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns

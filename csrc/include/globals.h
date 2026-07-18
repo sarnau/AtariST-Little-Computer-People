@@ -422,6 +422,11 @@ extern BOOL16   pk_bs1;
 extern BOOL16   pk_bs2;
 extern short    pk_cscore;
 extern short    pk_pscore;
+extern char     wp_ans[][12];
+extern short    wp_blk;
+extern char *   wp_prm[];
+extern char *   wp_succ[];
+extern char *   wp_fail[];
 
 /* Card graphics: 54 MFDB descriptors covering 52 card faces + 1 shared
    back + 1 highlight overlay pattern, all sharing crd_dat as their
