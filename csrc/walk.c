@@ -274,7 +274,7 @@ stairCyc()
 {
         lcp_st = lcp_st + STATE_WALK_FRAME_1;
         if (lcp_st > 12)
-                lcp_st = STATE_STAIR_CLIMB_FRAME_0;
+                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
 }
 
 /* Nested-if helper: set head_anim_target if it isn't already `target`. */
@@ -388,7 +388,7 @@ lcp_path()
                         if (lcp_y == 161) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STAIR_CLIMB_FRAME_0;
+                                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_LEFT;
                                 lcp_x = lcp_x - 6;
                                 lcp_y = lcp_y - 2;
@@ -396,7 +396,7 @@ lcp_path()
                         } else if (lcp_y == 100) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STAIR_CLIMB_FRAME_0;
+                                lcp_st = 9;  /* STATE_STAIR_CLIMB_FRAME_0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_x = lcp_x + 3;
                                 lcp_y = lcp_y - 2;
@@ -445,16 +445,16 @@ lcp_path()
                                         sp_upds();
                                 }
                                 if (lcp_st < 13 || lcp_st > 16) {
-                                        lcp_st = STATE_STAIR_TOP_FRAME_0;
+                                        lcp_st = 13; /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                         if (lcp_st > 16) {
-                                                lcp_st = STATE_STAIR_TOP_FRAME_0;
+                                                lcp_st = 13; /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
                                         }
                                         if (lcp_st == STATE_STAIR_TOP_FRAME_3_STEP ||
-                                            lcp_st == STATE_STAIR_TOP_FRAME_0)
+                                            lcp_st == 13) /* STATE_STAIR_TOP_FRAME_0 -- Alcyon macro-name collision */
                                                 lcp_y = lcp_y - 2;
                                         if (lcp_st == STATE_STAIR_TOP_FRAME_3_STEP)
                                                 fs_trg = YES;
@@ -467,7 +467,7 @@ lcp_path()
                                 sp_ssco(g_lcieo);
 
                         if (lcp_y == 161) {
-                                lcp_st = STATE_STAIR_BTM_FRAME_0;
+                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_y = 165;
                                 lcp_x = lcp_x + 6;
@@ -475,7 +475,7 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                         } else if (lcp_y == 100) {
-                                lcp_st = STATE_STAIR_BTM_FRAME_0;
+                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
                                 lcp_face = FACING_RIGHT;
                                 lcp_y = 102;
                                 lcp_x = lcp_x - 2;
@@ -500,9 +500,9 @@ lcp_path()
                                         if (lcp_st < 21 && lcp_st > 16) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                                 if (lcp_st > 20)
-                                                        lcp_st = STATE_STAIR_DESCEND_FRAME_0;
+                                                        lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         } else {
-                                                lcp_st = STATE_STAIR_DESCEND_FRAME_0;
+                                                lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER);
                                         if (lcp_st == STATE_STAIR_DESCEND_FRAME_1)
@@ -523,9 +523,9 @@ lcp_path()
                                         if (lcp_st < 21 && lcp_st > 16) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                                 if (lcp_st > 20)
-                                                        lcp_st = STATE_STAIR_DESCEND_FRAME_0;
+                                                        lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         } else {
-                                                lcp_st = STATE_STAIR_DESCEND_FRAME_0;
+                                                lcp_st = 17; /* STATE_STAIR_DESCEND_FRAME_0 -- Alcyon macro-name collision */
                                         }
                                         setHTgt(10);
                                         if (lcp_st == STATE_STAIR_DESCEND_FRAME_1)
@@ -536,12 +536,12 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                                 if (lcp_st < 21 || lcp_st > 24) {
-                                        lcp_st = STATE_STAIR_BTM_FRAME_0;
+                                        lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
                                         lcp_x = lcp_x + 2;
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
                                         if (lcp_st > 24) {
-                                                lcp_st = STATE_STAIR_BTM_FRAME_0;
+                                                lcp_st = 21; /* STATE_STAIR_BTM_FRAME_0 -- Alcyon macro-name collision */
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
                                         }
