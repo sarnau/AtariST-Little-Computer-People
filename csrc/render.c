@@ -52,7 +52,7 @@ extern void     td_line();
 extern void     li_lool();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vsl_color();
+extern short    vsl_color();
 extern void     v_pline();
 extern void     sc_firw();
 

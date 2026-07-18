@@ -41,7 +41,7 @@ extern short    g_tpcoi[];
 
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vsl_color();
+extern short    vsl_color();
 extern void     v_pline();
 extern void     v_bar();
 

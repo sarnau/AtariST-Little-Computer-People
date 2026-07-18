@@ -27,12 +27,12 @@ extern void *   sv_lgb;
 extern void *   g_srptr;
 #include <osbind.h>
 
-extern void     vsl_color();
+extern short    vsl_color();
 extern void     v_pline();
-extern void     vswr_mode();
-extern void     vsf_interior();
-extern void     vsf_style();
-extern void     vsf_color();
+extern short    vswr_mode();
+extern short    vsf_interior();
+extern short    vsf_style();
+extern short    vsf_color();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
 extern void     vro_cpyfm();
@@ -341,10 +341,10 @@ aes_init()
 extern void     v_opnvwk();
 extern void     v_bar();
 extern void     graf_mouse();
-extern void     vswr_mode();
-extern void     vsf_interior();
-extern void     vsf_style();
-extern void     vsf_color();
+extern short    vswr_mode();
+extern short    vsf_interior();
+extern short    vsf_style();
+extern short    vsf_color();
 extern void     form_alert();
 extern short    scr_scal;
 extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */

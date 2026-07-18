@@ -139,7 +139,7 @@ extern void     sc_drfc();                              /* render.c: food cabine
 extern void     updWtLv();               /* render.c */
 extern void     sc_sdtb();                              /* gfx_prim.c */
 extern void     sc_sdtf();                              /* gfx_prim.c */
-extern void     vsl_color();                            /* VDI */
+extern short    vsl_color();                            /* VDI */
 extern void     v_pline();                              /* VDI */
 extern short    vdi_colt[];
 extern void     cl_drini();                   /* init.c */
