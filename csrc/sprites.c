@@ -308,10 +308,16 @@ short   flipV;
                         psVar2 = destImg;
 
                         iVar3 = (width - 1) - x;
-                        mask  = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3] >> 8)] |
-                                rev_tab[(unsigned char) (srcImg[iVar3 + iVar3])] << 8;
-                        uVar1 = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1] >> 8)] |
-                                rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1])] << 8;
+                        /* Alcyon C 4.14 miscompiles `(unsigned char) x`:
+                           it emits `ext.w` which sign-extends the low byte,
+                           so a byte >= 0x80 becomes a negative rev_tab
+                           index and reads garbage before the table.
+                           `& 0xff` forces unsigned semantics through bit-
+                           masking, which the compiler emits correctly. */
+                        mask  = rev_tab[(srcImg[iVar3 + iVar3] >> 8) & 0xff] |
+                                rev_tab[srcImg[iVar3 + iVar3] & 0xff] << 8;
+                        uVar1 = rev_tab[(srcImg[iVar3 + iVar3 + 1] >> 8) & 0xff] |
+                                rev_tab[srcImg[iVar3 + iVar3 + 1] & 0xff] << 8;
 
                         if (flipV == 0) {
                                 destImg[0] = 0;
@@ -326,8 +332,8 @@ short   flipV;
                         destImg[0] = 0;
                         destImg    = psVar2 + 4;
 
-                        mask = rev_tab[(unsigned char) (srcMask[(width - 1) - x] >> 8)] |
-                               rev_tab[(unsigned char) (srcMask[(width - 1) - x])] << 8;
+                        mask = rev_tab[(srcMask[(width - 1) - x] >> 8) & 0xff] |
+                               rev_tab[srcMask[(width - 1) - x] & 0xff] << 8;
                         destMask[0] = mask;
                         destMask[1] = mask;
                         destMask[2] = mask;
