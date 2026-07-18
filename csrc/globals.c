@@ -738,44 +738,43 @@ short           pk_pscore  = 0;
    wp_blk         -- count of blanks in the current puzzle (== rows
                      of wp_ans[] actually in use).
    The 3 flavor-text pointer arrays hold string literals shown to
-   the player during solve_phase.  Placeholder text below is close
-   in spirit to the 1985 originals; final wording lives at fixed
-   ROM addresses that ghidra_scripts/read_wordpuzzle_strings.java
-   dumps.  Swap in verbatim in a follow-up when convenient. */
+   the player during solve_phase, extracted verbatim from ROM via
+   the Ghidra HTTP /read_memory endpoint:
+      wp_prm  @ 0x2a46c   9 entries (0..4 random first-word, 5..8
+                                                        for word slots 2..5)
+      wp_succ @ 0x2a490   6 entries, random on solve
+      wp_fail @ 0x2a4a8   6 entries, random on wrong answer  */
 char            wp_ans[10][12];
 short           wp_blk    = 0;
 
-char *          wp_prm[12] = {
-        "What's the first word?",
-        "Type a word.",
-        "How about a word?",
-        "Give me a word.",
-        "Type any word.",
-        "Now another word.",
-        "Another word.",
-        "And another.",
-        "One more word.",
-        "Type the next word.",
-        "Keep going -- another word.",
-        "One last word."
+char *          wp_prm[9] = {
+        "OK, what's the first word?",
+        "Good luck! What's the first word?",
+        "Alright. Type in the first word.",
+        "This won't be easy! First word first.",
+        "Here we go. What's the first word?",
+        "What's the second word?",
+        "What's the third word?",
+        "What's the fourth word?",
+        "What's the fifth word?"
 };
 
 char *          wp_succ[6] = {
-        "You solved it!!",
-        "Great job!!",
-        "Well done!!",
-        "You got it right!!",
-        "Perfect!!",
-        "That's the answer!!"
+        "You got it!!",
+        "Good going. That's right!",
+        "Congratulations. That's it!",
+        "I don't believe it!! You're right!",
+        "You're pretty good. That's right!",
+        "You got that one. How about another?"
 };
 
 char *          wp_fail[6] = {
-        "Sorry, that's wrong.",
-        "Nope, try again.",
-        "Not quite.",
-        "That's not it.",
-        "Wrong answer.",
-        "Better luck next time."
+        "Too bad. You missed it.",
+        "Better luck next time.",
+        "Good try, but that's the wrong answer.",
+        "That's not it. How about another try?",
+        "Nope.",
+        "Not quite."
 };
 
 /* Card display positions -- 5 slots per row, extracted from Ghidra

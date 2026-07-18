@@ -35,10 +35,10 @@ LCP_X=$((BASE + 0x18fe2))
 LCP_Y=$((BASE + 0x18fe4))
 G_WTX=$((BASE + 0x19002))
 G_WTY=$((BASE + 0x19004))
-LCP_ST=$((BASE + 0x1a79a))
-G_WYX=$((BASE + 0x1acf6))
-G_WYY=$((BASE + 0x1acf8))
-LCP_STR=$((BASE + 0x1acfa))
+LCP_ST=$((BASE + 0x1a840))
+G_WYX=$((BASE + 0x1ad9c))
+G_WYY=$((BASE + 0x1ad9e))
+LCP_STR=$((BASE + 0x1ada0))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -121,8 +121,8 @@ samples = []
 for b in blocks:
     lx  = re.search(r'0002CBF6: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     wt  = re.search(r'0002CC16: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'0002E3AE: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'0002E90A: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(r'0002E454: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(r'0002E9B0: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),
