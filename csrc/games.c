@@ -2821,7 +2821,10 @@ char *  prompt;
                 if (mg_tofl != NO)
                         return -1;
                 if (res == 2) {
-                        pk_pmsg("OK, you stand.");
+                        pk_pmsg(" ");   /* s__0002b422 verified via
+                                          Ghidra HTTP /read_memory:
+                                          the F3-stand path just
+                                          blanks the message strip. */
                         return 0;
                 }
                 if (res == 1) {

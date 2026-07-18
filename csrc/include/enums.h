@@ -349,10 +349,17 @@
 
 /* Blackjack hit-counter constants.  Ghidra shows these as
    CARD_HEART_10 / _QUEEN / _KING because the 1985 source aliased
-   three unrelated ROM constants onto card-name symbols; the actual
-   values encode the "at most 5 total cards, so at most 3 hits per
-   hand" rule.  ROM addresses documented in
-   ghidra_scripts/read_blackjack_constants.java. */
+   three unrelated ROM constants onto card-name symbols; the values
+   encode the "at most 5 total cards, so at most 3 hits per hand"
+   rule.  Verified against the ORIGINAL disassembly:
+      poker_blackjack_main  0x1c492 / 0x1c49a
+        move.w #0x3, (0x501a6)  ; poker_player_card_count = 3
+        move.w #0x3, (0x50240)  ; poker_player_split_card_count = 3
+      poker_blackjack_round 0x1d3be / 0x1d51c
+        subq.w #0x1, (A1)         ; card_count -= 1
+      poker_blackjack_round 0x1d5e4
+        tst.w (A0); bne 0x1d600   ; loop while != 0
+   Confirms MAX=3, STEP=1, STOP=0 as ported. */
 #define CARD_BJ_MAX                     3       /* Ghidra: CARD_HEART_10 */
 #define CARD_BJ_STEP                    1       /* Ghidra: CARD_HEART_QUEEN */
 #define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
