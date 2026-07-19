@@ -18,6 +18,26 @@
 #include "types.h"
 #include "enums.h"
 #include <osbind.h>
+#include "ai.h"
+#include "aidle.h"
+#include "assets.h"
+#include "calendar.h"
+#include "dog.h"
+#include "gfx_prim.h"
+#include "globals.h"
+#include "init.h"
+#include "main.h"
+#include "movement.h"
+#include "render.h"
+#include "renderx.h"
+#include "save.h"
+#include "sound.h"
+#include "sprites.h"
+#include "sprload.h"
+#include "stubs.h"
+#include "tables.h"
+#include "tick.h"
+#include "tick_tables.h"
 
 /* gameLoop definition (gated back IN for both host and
    Alcyon builds).  main() does NOT call it yet -- we're bisecting
@@ -26,20 +46,9 @@
    canary. */
 
 #include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_lcldd;
-extern short    cprot_r;
-extern short    g_spdc;
-extern void     gameTick();
-extern void     hs_posXY();
-extern void     chk_actT();
-extern void     a_sleep();
-extern void     lcp_std();
 
 #define POS_TOP_STUDY_DOOR      7
 
-extern void     chk_actT();
 
 void
 gameLoop()
@@ -82,9 +91,6 @@ long _stksize = 65536L;
    for a key, then exits cleanly.  Excluded from the host build so
    tests can supply their own main(). */
 
-extern long gemdos();
-extern long bios();
-extern long xbios();
 
 /* Init dependencies -- Alcyon-renamed short names (see namemap.md).
    Original names in comments for cross-reference. */
@@ -109,67 +115,19 @@ extern long xbios();
    correspond to an original Ghidra call, or be marked as diagnostic
    scaffolding to remove. */
 
-extern short    main_pal[];
-extern void *   g_srptr;
-extern short    vdihnd;
-extern short    al_loot();      /* asset_load_objects_table */
-extern short    al_lost();      /* asset_load_sprites_table */
-extern void     al_locs();      /* asset_load_character_sheets */
-extern void     sf_sl();        /* soundeffects_load */
-extern short    lc_load();      /* lcp_load */
-extern void     unScn();
-extern void     stpScrB();  /* Ghidra 0x16576 */
-extern void     sp_imfs();              /* Ghidra sprite_init_MFDBs */
-extern void     sp_lbal();              /* Ghidra sprite_lcp_build_all */
-extern void     initBM();  /* fills bm32or/and */
-extern short    cp_main();  /* Ghidra (stubbed to return 1) */
-extern void     pa_cloc();  /* Ghidra palette_apply_clothing_colors */
-extern void     sp_reglp();     /* sprload.c: dog sprite pointer registration */
-extern void     dg_ipos();  /* dog.c */
-extern void *   sv_phb;
 
 /* Object-draw chain (Ghidra main 0x15546, after unScn).
    Every door/cabinet in HOUSE.SCN has a placeholder rectangle in the
    pre-compressed art; the real init paints the correct (open or
    closed) object over each rectangle.  Skipping the chain leaves the
    placeholders visible as horizontal streaks in the affected rows. */
-extern void     fillTopR();       /* render.c */
-extern void     od_draw();                              /* render.c */
-extern void     sc_drfc();                              /* render.c: food cabinet */
-extern void     updWtLv();               /* render.c */
-extern void     sc_sdtb();                              /* gfx_prim.c */
-extern void     sc_sdtf();                              /* gfx_prim.c */
 #include <vdibind.h>            /* vsl_color, v_pline, v_clsvwk, ... */
-extern short    vdi_colt[];
-extern void     cl_drini();                   /* init.c */
-extern void     lcp_crnd();                    /* init.c */
-extern void     cs_mvIn();        /* init.c */
-extern void     st_titl();                              /* init.c */
-extern void     daily_rs();             /* calendar.c */
-extern short    lcp_cabO;
-extern short    lcp_frdO;
-extern short    lcp_drsO;
-extern short    lcp_clsO;
-extern short    studyDrO;
-extern short    lcp_toiO;
-extern short    lcp_flcO;
-extern short    lcp_bwlS;
-extern short    g_obicc, g_obi02;                       /* cabinet cl/op */
-extern short    g_obidf, g_obi06;                       /* door_front */
-extern short    g_obi11, g_obi12;                       /* dresser */
-extern short    g_obidc, g_obi04;                       /* door_closet */
-extern short    g_obids, g_obi08;                       /* door_study */
-extern short    g_obidt, g_obi10;                       /* door_toilet */
-extern short    g_obifc, g_obi14;                       /* filing_cabinet */
-extern short    g_obdea[];                              /* dog_eating_animation frame table */
 
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
    K&R externs (empty parens) so cp68 doesn't try to typecheck them. */
 #include <gembind.h>              /* appl_init, appl_exit, ... */
-extern void     aes_init();                 /* Ghidra 0x167aa */
-extern void     vdi_init();                     /* Ghidra 0x16680 */
 
 /* main -- ported line-by-line from Ghidra 0x15546.
    Every call below matches the Ghidra decompile in structure and
@@ -178,12 +136,6 @@ extern void     vdi_init();                     /* Ghidra 0x16680 */
    pieces (mq_intim, cntSong, init_build_bit_revert_
    table) are ported as verifiable stubs in init.c. */
 
-extern void     mq_intim();          /* init.c stub    */
-extern void     cntSong();                  /* init.c         */
-extern void     initBRev();  /* init.c wrapper */
-extern void     ct_clrB();        /* declared below */
-extern void     sf_sl();                        /* soundeffects_load */
-extern void     cs_mvIn();/* init.c         */
 
 int
 main(argc, argv)

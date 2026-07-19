@@ -16,34 +16,13 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   mi_play;
-extern BOOL16   g_rbact;
-extern short    vdihnd;
-extern short    vdi_colt[];
-extern void *   g_dscp;
-extern short    main_pal[];
-extern short    g_clcop[];
-extern short    g_clcos[];
-extern short    skin_pal[];
-extern short    g_ltlic;
-extern short    g_ltpac;
-extern unsigned short   rec_ledt[];
-extern short    rndRng();                  /* random.c */
-extern void     lcp_upal();    /* render.c  */
 #include <osbind.h>
 
-extern short    rndRng();
-extern void     drwLine();
-extern void     blkcp32();
-extern void     sc_firw();
 #include <vdibind.h>
-extern void     drwPixel();
-extern void     prCh();
+#include "gfx_prim.h"
+#include "globals.h"
+#include "random.h"
+#include "renderx.h"
 
 /* pa_cloc: pick a random or player-configured
    CLOTHING_COLOR_ID (0..15) and load its primary/secondary colours

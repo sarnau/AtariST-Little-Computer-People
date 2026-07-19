@@ -15,12 +15,10 @@
  */
 
 #include "types.h"
+#include "globals.h"
+#include "sprglobs.h"
+#include "sprload.h"
 
-extern unsigned char    spr_file[];        /* raw SPRITES file bytes */
-extern short *          g_sedim[];              /* PTR_ARRAY_0005a156 (sprite_def_image)  */
-extern short *          g_sedms[];              /* PTR_ARRAY_00054016 (sprite_def_mask)   */
-extern short            g_sedeh[];              /* SHORT_ARRAY_0003cf84 */
-extern short            g_sedew[];              /* SHORT_ARRAY_00053ec2 */
 
 /* sp_fidx (Ghidra sprite_file_index_table @ 0x2A084, 50 shorts):
    file-record index -> sprite_id slot to store its pointers in. */

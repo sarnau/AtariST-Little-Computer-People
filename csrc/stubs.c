@@ -9,6 +9,7 @@
  */
 
 #include "types.h"
+#include "stubs.h"
 
 /* cp_main -- INTENTIONAL non-fidelity vs Ghidra copyprot_main_check.
    The ROM's routine is not portable to Hatari and never will be:

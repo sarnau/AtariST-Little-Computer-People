@@ -29,19 +29,12 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern void *   g_dscp;
-extern short *  crd_dat;
-extern MFDB     crd_mfdb[];
-extern MFDB     mf_scb_c;
 #include <osbind.h>
+#include "cards.h"
+#include "globals.h"
+#include "save.h"
+#include "sprender.h"
 
-extern short    fOpen();
-extern void     fr_read();
-extern void     sp_iniM();
 
 /* pk_ldCrd: read 53 card bitmaps from disk into
    crd_dat, synthesise the 54th highlight pattern, then wire all 54

@@ -11,40 +11,18 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hamod;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    g_sfplf;
-extern short    g_sfpli;
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>             /* Random() */
+#include "abathrm.h"
+#include "events.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_sprs();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     sf_so();
-extern void     sp_ssco();
 
 /* a_takes: enter the shower cubicle, randomly alternate
    scrub / wash blocks for 20..25 cycles, exit.  Head-anim mode gets a

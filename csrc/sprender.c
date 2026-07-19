@@ -24,21 +24,10 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    vdihnd;
-extern MFDB     g_srmfd;
-extern MFDB     g_semfi[];
-extern MFDB     g_semfm[];
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short *  g_seaim[];
-extern short *  g_seams[];
-extern short    g_seach[];
-extern short    g_seacw[];
 #include <vdibind.h>
+#include "globals.h"
+#include "sprender.h"
+#include "sprglobs.h"
 
 /* sp_iniM: populate an MFDB with the ST low-res format
    defaults (device-specific, 4 bitplanes).  The first parameter is

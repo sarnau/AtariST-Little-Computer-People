@@ -1,3 +1,4 @@
+#include "savehost.h"
 /*
  * savehost.c -- HOST-only osbind stubs.
  *

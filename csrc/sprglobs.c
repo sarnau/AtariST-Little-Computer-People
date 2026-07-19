@@ -10,6 +10,7 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
+#include "sprglobs.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
 /* Ghidra BSS = 0.  cs_mvIn sets lcp_st to

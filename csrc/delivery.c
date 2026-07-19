@@ -26,63 +26,19 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   ph_ans;
-extern BOOL16   ph_call;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern short    g_hsfra;
-extern long     g_sfret;
-extern BOOL16   g_actif;
-extern BOOL16   dg_petok;
-extern short    g_wtx;
-extern short    g_wty;
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_frdO;
-extern short    lcp_cabO;
-extern short    lcp_bwlS;
-extern short    lcp_food;
-extern short    g_obidf;
-extern short    g_obi05;
-extern short    g_obi06;
-extern short    g_obicc;
-extern short    g_obico;
-extern short    g_obi02;
-extern short    g_obipc;
-extern BOOL16   g_dvdog;
-extern BOOL16   ph_hu;
-extern BOOL16   g_ptdoa;
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_selaf[];
-extern short    rndRng();                  /* random.c */
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_ssco();
-extern void     sp_ss02();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     od_draw();
-extern void     a_feedd();
-extern void     a_gesff();
-extern void     a_calld();
-extern void     p_sftvc();
-extern void     p_sfgrt();
-extern void     p_sfspe();
-extern void     p_sfhnd();
-extern void     sc_drfc();
+#include "afood.h"
+#include "asimple.h"
+#include "delivery.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
-extern void     a_opcfd();
-extern void     a_opecc();
 
 /* wkFrDr: tiny helper used by all four delivery events.
    addr: wkFrDr() */

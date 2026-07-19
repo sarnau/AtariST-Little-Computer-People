@@ -24,66 +24,15 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hsfra;
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short *  sv_bodyP;
-extern short *  sv_headP;
-extern short    g_hsbuf[];
-extern short    g_hsmas[];
-extern short    g_hsmif;
-extern short *  pex_ptr;                   /* source head sheet */
-extern short *  hd_shp;                /* source head masks */
-extern short    mood_hfo[];
-extern short    hd_xoff[];
-extern short    hd_hgt[];
-extern unsigned short   rev_tab[];
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_lcieo;
-extern short    g_lssh;
-extern short    dbg_hide;
-extern short    g_sepef[];
-extern short *  g_sepim[];
-extern short *  g_sepms[];
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_sepeh[];
-extern short    g_sepew[];
-extern short *  g_seaim[];
-extern short *  g_seams[];
-extern short    g_seacx[];
-extern short    g_seacy[];
-extern short    g_seach[];
-extern short    g_seacw[];
-extern short *  g_sedim[];
-extern short *  g_sedms[];
-extern short    g_sedeh[];
-extern short    g_sedew[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    body_frT[];
-extern short    cy_frT[];
-extern short    body_yof[];
-extern short *  body_ptr;
-extern short *  body_shp;
-extern short    g_lsimg[];
-extern short    g_lsmas[];
+#include "globals.h"
+#include "sprender.h"
+#include "sprglobs.h"
+#include "sprhead.h"
+#include "sprites.h"
+#include "tables.h"
+#include "tick.h"
 /* Forward-decls -- Alcyon skips these silently; modern clang under
    -Werror -std=c89 does not. */
-extern void     sp_lcha();
-extern void     sp_lcpf();
-extern void     sp_upds();
 
 /* sp_updb: select the body pose for the current lcp_st and
    drop it into slot 3.  When carrying an object during a walking state
@@ -569,18 +518,6 @@ sp_lchu()
 
    addr: sp_imfs() */
 
-extern short            last_hz;
-extern short            scr_scal;
-extern MFDB             g_semfi[];
-extern MFDB             g_semfm[];
-extern MFDB             g_srmfd;                /* Ghidra "screen_mfdb" */
-extern unsigned char    scrbufA[];
-extern short *          g_seaim[];              /* sprite_active_image */
-extern short *          g_seams[];              /* sprite_active_mask */
-extern short            g_seach[];              /* sprite_active_height */
-extern short            g_seacw[];              /* sprite_active_width */
-extern void             sp_iniM();
-extern void             sp_drin();
 
 void
 sp_imfs()
@@ -646,7 +583,6 @@ sp_drin()
    predecessor for vertical dilation.
    addr: sp_lcp_build_all_body() */
 
-extern long             bm32or[];
 
 void
 sp_lbbd(src, dest, height)
@@ -707,7 +643,6 @@ short           height;
    Then the same vertical-OR merge as sp_lbbd.
    addr: sp_lcp_build_all_head() */
 
-extern long             bm32and[];
 
 void
 sp_lbhd(src, dest, height)

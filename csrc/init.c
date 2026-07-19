@@ -15,39 +15,33 @@
 #include "structs.h"
 #include "enums.h"
 #include <osbind.h>
+#include "adoors.h"
+#include "afood.h"
+#include "agames.h"
+#include "ahouse.h"
+#include "aidle.h"
+#include "aleisure.h"
+#include "assets.h"
+#include "calendar.h"
+#include "delivery.h"
+#include "dog.h"
+#include "events.h"
+#include "gfx_prim.h"
+#include "globals.h"
+#include "init.h"
+#include "keyboard.h"
+#include "midi_seq.h"
+#include "movement.h"
+#include "parser.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tables.h"
+#include "walk.h"
 
-extern PLAYER   lcp;
-extern short    lcp_watr;
-extern short    lcp_recP;
-extern short    lcp_tv;
-extern short    lcp_food;
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    dog_x;
-extern short    dog_y;
-extern short    g_dtx;
-extern short    g_dty;
-extern short    g_dyx;
-extern short    g_dyy;
-extern short    dg_stair;
-extern short    dg_idlcd;
-extern short    dg_ltgtI;
-extern short    g_dgitx;
-extern short    dg_init;
-extern short    introSeq;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-
-extern short    rndRng();
-extern void     drwLine();
-extern void     cl_redrH();
-extern void     sp_spud();
-extern short    g_mtpre;
-extern short    g_mtdiv;
-extern long     mi_svtv;
 
 /* lcp_crnd (Ghidra 0x169D8): populate a fresh PLAYER struct
    for a new game.  The 1985 code also picks a random name from the
@@ -129,23 +123,6 @@ cl_drini()
                                  must run under Hatari's --fast-forward.
      default           ->  full 1985 behaviour (visual + interactive) */
 
-extern short    date_day;
-extern short    dt_mon;
-extern short    dt_year;
-extern short    t_hour;
-extern short    t_min;
-extern void *   sv_phb;
-extern void *   g_dscp;
-extern void     unScn();
-extern char     in_str[];
-extern void     prCh();
-extern void     drwBar();
-extern void     strPr();
-extern short    getKey();
-extern short    lcp_upp();
-extern short    daysInMo();
-extern void     draw_text_input_cursor_8x8();
-extern void     string_input();
 
 #ifdef SKIP_TITLE
 void
@@ -338,10 +315,6 @@ name_done:
    / move dn,sr) that Alcyon C cannot emit, and terminates in `rte`,
    so it must live in assembly.  Installed directly via Xbtimer -- no
    C wrapper needed. */
-extern void     mq_tick();
-extern void     mq_advs();      /* midi_seq_advance_sequencer */
-extern void     psg_upEn();     /* psg_process_envelopes */
-extern BOOL16   psg_ntAc;
 
 /* mq_intim (Ghidra 0x11112): install the Timer-A interrupt for the
    MIDI sequencer.  Ghidra body:
@@ -375,9 +348,6 @@ mq_intim()
    current directory, storing counts in sng_cnt /
    org_cnt. */
 
-extern short    sng_cnt;
-extern short    org_cnt;
-extern long     gemdos();
 
 void
 cntSong()
@@ -413,9 +383,6 @@ cntSong()
    set in i, OR in the j-th "low-first" bit (bm_lsb_msb[j]).  Result:
    rev_tab[i] has the bits of i in reversed order. */
 
-extern unsigned short   rev_tab[];
-extern unsigned short   bm_msb_lsb[];
-extern unsigned short   bm_lsb_msb[];
 
 void
 bldBRev()
@@ -453,20 +420,6 @@ initBRev()
    randomly closes the door based on the initiative-threshold roll.
    Used from cs_mvIn's tour and by future doorbell events. */
 
-extern void     hideLcp();
-extern void     showLcp();
-extern void     hs_posXY();
-extern short    lcp_wkD();
-extern void     lcp_hwt();
-extern void     a_opcfd();
-extern void     sp_updb();
-extern void     sp_upds();
-extern short    rndRng();
-extern short    g_wtx, g_wty, g_actif, lcp_frdO;
-extern short *  g_selaf;
-extern short *  g_seslm;
-extern short *  g_sepex;
-extern short *  g_sepey;
 
 void
 a_chfd(wait_ticks)
@@ -531,46 +484,6 @@ short   wait_ticks;
    of gameplay clean, tour visibly runs (upstairs closet opens, dog
    transitions between rooms, resident carries suitcase to dresser). */
 
-extern void     od_draw();
-extern void     sf_sele();
-extern void     p_dobls();
-extern void     sp_ssco();
-extern void     tt_on();
-extern void     tt_off();
-extern void     wkFrDr();
-extern void     a_sleep();
-extern void     a_opecc();
-extern void     a_gesff();
-extern void     a_getd();
-extern void     a_opcuc();
-extern void     a_wakum();
-extern void     a_opcbc();
-extern void     a_uset();
-extern void     a_playc();
-extern void     a_tidyh();
-extern void     a_wandi();
-extern void     a_opecd();
-extern void     a_chfd();
-extern void     a_opcfd();
-extern void     hideLcp();
-extern void     showLcp();
-extern void     lcp_wkD();
-extern void     hs_posXY();
-extern void     sp_updb();
-extern void     sp_upds();
-extern void     lcp_hwt();
-extern short    cprot_r;
-extern short    g_lcyof;
-extern short    lcp_frdO;
-extern short    g_obi05;
-extern short    g_obi06;
-extern short    g_dgiyo;
-extern short    g_wtx;
-extern short    g_wty;
-extern short *  g_selaf;
-extern short *  g_seslm;
-extern short *  g_sepex;
-extern short *  g_sepey;
 
 void
 cs_mvIn()
@@ -685,7 +598,6 @@ cs_mvIn()
                    soon as gameLoop takes over.  Guarded by
                    -DTEST_ACTIONS=<id> in the test build. */
                 {
-                        extern void putEv();
                         putEv(TEST_ACTIONS);
                 }
 #endif
@@ -695,7 +607,6 @@ cs_mvIn()
                    paths.  Guarded by -DTEST_KEY=<code> in the test
                    build. */
                 {
-                        extern void deal_kc();
                         deal_kc(TEST_KEY);
                 }
 #endif

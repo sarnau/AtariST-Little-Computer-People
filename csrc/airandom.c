@@ -21,17 +21,12 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    t_hour;
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lastAct;
-extern short    cWkday();
-extern short    rndRng();                  /* random.c */
-extern void     chk_actT();/* ai.c      */
-extern short    rndRng();
+#include "ai.h"
+#include "airandom.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "tables.h"
 
 /* Weekday enum values used by the weekend-bias branch.  Ghidra's enum
    has SUN=0..SAT=6 but the code only tests for saturday and sunday. */
@@ -41,10 +36,6 @@ extern short    rndRng();
 /* Three action tables (16 entries each) and the schedule indirection.
    Values match Ghidra sch_tab[3][8] at 0x2b96e and
    g_atact/moderate/relaxed at 0x2b8fe/0x2b91e/0x2b93e. */
-extern short *  sch_tab[];      /* pointer array */
-extern short    g_atact[];
-extern short    g_atmod[];
-extern short    g_atrel[];
 
 /* chk_timA: pick a random action for right now.
    Returns ACTION_NONE if the resident is sleeping and the time-of-day

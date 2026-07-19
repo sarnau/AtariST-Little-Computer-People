@@ -30,67 +30,18 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    ani_cnt;
-extern long     g_sfret;
-extern short    lcp_bwlS;
-extern short    dg_bwlch;
-extern short    g_sfpli;
-extern short    tx_sctm;
-extern void *   g_dscp;
-extern BOOL16   g_sfacf;
-extern short    last_hz;
-extern long     last_vbc;
-extern void *   sv_phb;
-extern unsigned char    scrbufA[];
-extern MFDB     g_srmfd;
-extern MFDB     mf_scrp;        /* alias with older name */
-extern MFDB *   cur_mf;
-extern short    g_hzlo;
-extern long     _vbclock;
-extern BOOL16   dg_vis;
-extern short    dg_idlcd;
-extern BOOL16   dg_nrbwl;
-extern BOOL16   g_deact;
-extern short    g_decou;
-extern short    dg_ltgtI;
-extern short    g_dseat[];
-extern short    g_ddipt[];
-extern short    g_ddxot[];
-extern short    g_ddyot[];
-extern void     hs_posXY();
-extern short    dog_x;
-extern short    dog_y;
-extern short    g_dtx;
-extern short    g_dty;
-extern short    g_dsid;
-extern short    g_sepef[];
-extern short *  g_sepim[];
-extern short *  g_sepms[];
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_sepeh[];
-extern short    g_sepew[];
-extern short *  g_seaim[];
-extern short *  g_seams[];
-extern short    g_seacx[];
-extern short    g_seacy[];
-extern short    g_seach[];
-extern short    g_seacw[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>
+#include "dog.h"
+#include "gfx_prim.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "renderf.h"
+#include "sfx_irq.h"
+#include "sound.h"
+#include "sprender.h"
+#include "sprglobs.h"
 
-extern short    rndRng();
-extern void     dg_mvAni();
-extern void     sp_spud();
-extern void     sf_so();
-extern void     sf_sele();
-extern void     sf_irqp();
-extern void     blkcp32();
-extern void     sp_draw();
 
 /* Read the 200 Hz clock via GEMDOS Super mode.  Matches Ghidra's
    screen_render_8hz shape:

@@ -16,6 +16,7 @@
 
 #include "types.h"
 #include "structs.h"
+#include "vocab.h"
 
 /* ---- Vocabulary (160 words, from lcp/LCP.py reference) ---- */
 char * vwd_tab[161] = {

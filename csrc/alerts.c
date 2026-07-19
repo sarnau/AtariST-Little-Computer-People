@@ -11,6 +11,7 @@
 
 #include "types.h"
 #include <osbind.h>
+#include "alerts.h"
 
 #ifdef HOST
 #include <stdlib.h>             /* exit */

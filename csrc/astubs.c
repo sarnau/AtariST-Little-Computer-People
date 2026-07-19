@@ -1,3 +1,4 @@
+#include "astubs.h"
 /*
  * astubs.c -- placeholder for doAct() handlers not yet ported.
  *

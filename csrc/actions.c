@@ -14,57 +14,19 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lastAct;
-extern short    g_trac;
-extern void     a_getd();
-extern void     chk_actT();/* ai.c      */
-extern void     doAct();                    /* actions.c */
+#include "abathrm.h"
+#include "actions.h"
+#include "afood.h"
+#include "agames.h"
+#include "ahouse.h"
+#include "ai.h"
+#include "aidle.h"
+#include "aleisure.h"
+#include "aletter.h"
+#include "asimple.h"
+#include "globals.h"
 /* Forward-declarations for every action_ handler.  Real ports live in
    action_*.c; unported ones share stub bodies in astubs.c. */
-extern void     a_sitae();
-extern void     a_readn();
-extern void     a_playc();
-extern void     a_washh();
-extern void     a_gioob();
-extern void     a_lists();
-extern void     a_playp();
-extern void     a_writl();
-extern void     a_dance();
-extern void     a_yawas();
-extern void     a_pacen();
-extern void     a_wandi();
-extern void     a_sleep();
-extern void     a_drink();
-extern void     a_nodh();
-extern void     a_peeka();
-extern void     a_plaag();
-extern void     a_brust();
-extern void     a_kitcc();
-extern void     a_socwd();
-extern void     a_lighf();
-extern void     a_uset();
-extern void     a_takes();
-extern void     a_feedd();
-extern void     a_hello();
-extern void     a_eatm();
-extern void     a_plawr();
-extern void     a_opcuc();
-extern void     a_gesff();
-extern void     a_opcbc();
-extern void     a_cleau();
-extern void     a_tidyh();
-extern void     a_chefd();
-extern void     a_toggt();
-extern void     a_calld();
-extern void     a_wakfa();
-extern void     a_petd();
-extern void     a_wakum();
-extern void     a_gotbn();
 
 /* doAct: dispatch g_trac to its handler.
    addr: doAct() */

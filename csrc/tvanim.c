@@ -21,35 +21,19 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern void     gameTick();
-extern short    vdihnd;
-extern short    vdi_colt[];
-extern short    g_tp0xc[];
-extern short    g_tp0yc[];
-extern short    g_tp1xc[];
-extern short    g_tp1yc[];
-extern short    g_tp2xc[];
-extern short    g_tp2yc[];
-extern short    g_tp3xc[];
-extern short    g_tp3yc[];
-extern short    g_tpcoi[];
 #include <osbind.h>
 
-extern void     sc_sdtb();
-extern void     sc_sdtf();
 #include <vdibind.h>
+#include "gfx_prim.h"
+#include "globals.h"
+#include "tick.h"
+#include "tvanim.h"
 
 /* tv_scrc: blank the TV area with a filled rectangle,
    then dispatch to one of the two programs via a coin flip on
    XBIOS Random.
    addr: tv_scrc() */
 
-extern void     tv_boul();
-extern void     tv_patl();
 
 void
 tv_scrc()

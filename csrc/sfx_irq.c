@@ -28,28 +28,11 @@
 
 #include "types.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern long     g_sfret;
-extern BOOL16   mi_play;
-extern short    g_sfplf;
-extern short    g_sfpli;
-extern short            g_sfcup;
-extern short            g_sfddh;
-extern short            g_sfddl;
-extern long             g_sfHz2;
-extern unsigned char *  mi_ntLp[];
-extern char             g_sfDoB[];
-extern BOOL16   g_sfacf;
-extern short    g_sfcur;
-extern short    g_sfdur;
-extern short    sf_pri[];
-extern short    g_hzlo;
 #include <osbind.h>
+#include "globals.h"
+#include "sfx_irq.h"
+#include "sound.h"
 
-extern void     sf_so();
 
 /* CONCAT22: pack two 16-bit shorts into a 32-bit long, high-word
    first.  Ghidra emits this as a macro; we express it as a small

@@ -31,68 +31,19 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
+#include "globals.h"
+#include "keyboard.h"
+#include "render.h"
+#include "renderf.h"
+#include "renderx.h"
+#include "sim.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprhead.h"
+#include "sprites.h"
+#include "tick.h"
+#include "tick_tables.h"
 
-/* --- per-file extern block (auto-generated for Alcyon). */
-extern short    ani_cnt;
-extern short    lcp_x, lcp_y;
-extern short    lcp_face;
-extern short    lcp_st;
-extern short    lcp_bwlS;
-extern short    g_lcyof;                        /* lcp_carrying_object_flag */
-extern short    g_lcieo;                        /* lcp_carried_object */
-extern short    lcp_recP;
-extern short    lcp_tv;
-extern BOOL16   ph_call;
-extern BOOL16   ph_hu;
-extern short    g_phrc;
-extern BOOL16   alarm_p;
-extern BOOL16   g_alsts;
-extern BOOL16   fire_act;
-extern short    fire_dur;
-extern BOOL16   fire_ext;
-extern BOOL16   g_ptdoa;                        /* petting_dog_active */
-extern short    g_ptanf;
-extern short    g_ptlss;
-extern short    dg_bwlch;
-extern short    tx_sctm;
-extern short    g_srsdc;
-extern short    g_cdibp;
-extern BOOL16   no_keyin;
-extern BOOL16   introSeq;
-extern BOOL16   g_inpmd;
-extern short    subAniC;
-extern short    g_sepex[], g_sepey[];
-extern short    g_seacw[];
-extern short    g_selaf[];                      /* sprite_layer_flags */
-extern short    g_seslm[];                      /* sprite_slot_map */
-extern short    g_sfacf;                        /* soundeffect_active_flag */
-extern short    g_sfpli;                        /* soundeffect_playing_id */
-extern short    g_obcla[];                      /* clock_animation[4] */
-extern short    g_obdea[];                      /* dog_eating_animation[3] */
-extern short    g_obala[];                      /* alarm_animation[2] */
-extern short    g_obpha[];                      /* phone_animation[4] */
-extern short    g_obfia[];                      /* fire_animation[4] */
-extern short    g_ptdsi[];                      /* petting sprite ids[11] */
-extern long     g_cotbl[];                      /* carried_object_id_table[10] */
-extern short    g_obifo;                        /* object_id_fireplace_off */
-
-extern void     sp_updb();
-extern void     sp_lcha();
-extern void     sp_lchu();
-extern void     sc_ren8();
-extern void     cl_redrH();
-extern void     od_draw();
-extern void     gameSim1();
-extern void     sf_sele();                      /* soundeffect_select */
-extern void     sf_so();                        /* soundeffects_off */
-extern void     sp_sprs();                      /* spritedata_select */
-extern void     sp_upds();                      /* sprite_update_slots */
-extern void     rp_anim();                      /* record_player_animate_needle */
-extern void     td_nois();                      /* tv_draw_static_noise */
-extern void     fillTopR();
-extern void     sc_sctd();                      /* screen_scroll_text_down */
-extern short    getKey();
-extern void     deal_kc();
 
 /* Object ids referenced by gameTick as bare literals in
    the Ghidra disassembly (no port-side global covers them).  The

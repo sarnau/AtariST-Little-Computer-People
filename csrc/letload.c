@@ -30,18 +30,12 @@
 
 #include "types.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern char *   g_lttx;
-extern char *   g_ltlp[];
-extern unsigned char comp_tok[];
 #include <osbind.h>
+#include "alerts.h"
+#include "globals.h"
+#include "letload.h"
+#include "save.h"
 
-extern void     fr_read();
-extern short    fOpen();
-extern void     er_nomem();
 
 /* fr_reac: decode a token-compressed file into out_buf.
    outsize is the *uncompressed* byte count (10496 for LETTER.TXT).

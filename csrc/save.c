@@ -22,51 +22,22 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lcp_x;
-extern short    lcp_watr;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern void     gameTick();
-extern short    lcp_frdO;
-extern short    studyDrO;
-extern short    lcp_clsO;
-extern short    lcp_cabO;
-extern short    lcp_drsO;
-extern short    lcp_toiO;
-extern short    lcp_flcO;
-extern short    lcp_bwlS;
-extern short    lcp_food;
-extern short    lcp_recP;
-extern short    lcp_tv;
-extern short    g_obids;
-extern short    g_obi07;
-extern short    g_obi08;
-extern void     hs_posXY();
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
-extern void     lcp_upal();    /* render.c  */
 #include <osbind.h>
 #include <stdio.h>
+#include "alerts.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "save.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
 /* Externals resolved elsewhere. */
-extern void     sp_sprs();
-extern void     od_draw();
-extern void     sf_sele();
-extern void     sp_upds();
-extern void     lcp_upal();
-extern void     showLcp();
-extern short    lcp_wkD();
-extern short    rndRng();
-extern void     er_write();
 
 /* fOpen: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
    Same retry-then-alert pattern as fr_read/lcp_save -- three tries

@@ -39,91 +39,32 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_trel[];
-extern void     gameTick();
-extern short    no_keyin;
-extern short    tx_sctm;
-extern char *   g_ltlp[];
-extern short    vdihnd;
-extern char *   g_agwb;
-extern char *   g_wpdb;
-extern short *  crd_dat;
-extern short    g_wpci;
-extern short    pk_round;
-extern BOOL16   pk_quit;
-extern short    g_pcmon;
-extern short    g_ppmon;
-extern short    g_ppppa;
-extern short    pk_dsc[];
-extern short    g_pcdrp[];
-extern short    g_ppdrp[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 
-extern short    getKey();
-extern void     strPr();
-extern void     fillTopR();
-extern void     fr_reac();
-extern void     er_nomem();
-extern void     initVdi();
-extern void     exitVdi();
 #include <vdibind.h>
-extern void     pk_ldCrd();
+#include "ahouse.h"
+#include "ai.h"
+#include "aidle.h"
+#include "alerts.h"
+#include "asimple.h"
+#include "cards.h"
+#include "events.h"
+#include "games.h"
+#include "gfx_prim.h"
+#include "globals.h"
+#include "keyboard.h"
+#include "letload.h"
+#include "movement.h"
+#include "parser.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
 /* Anagram-subsystem globals + shared mini-game plumbing. */
-extern char *   g_agorw;
-extern char     g_agscw[];
-extern char     g_aginb[];
-extern char *   g_agwgm[];
-extern char *   g_aggpr[];
-extern short    g_agclc;
-extern short    g_aggun;
-extern short    g_agacu;
-extern short    ag_clue;
-extern short    g_agwol;
-extern BOOL16   mg_tofl;
-extern PLAYER   lcp;
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_hatas;
-extern BOOL16   g_actif;
-extern BOOL16   g_lcyof;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    g_wtwl;                                 /* lcp_water_level */
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern void     hs_posXY();
-extern short    lcp_wkD();
-extern void     lcp_hwt();
-extern void     sp_upds();
-extern void     sp_sprs();
-extern void     sp_ssco();
-extern void     sp_ss02();
-extern void     a_wakfa();
-extern void     a_uset();
-extern void     a_drink();
-extern short    getEv();
-extern void     execEv();
-extern void     deal_kc();
-extern void     prCh();
-extern void     vst_h20();
-extern void     rst_vsth();
-extern BOOL16   alarm_p;                                /* ctrl_a_alarm_pressed_flag */
-extern void     a_peeka();
-extern short    g_hsfra;
-extern short    g_hamod;
-extern short    pk_pwc[];
-extern short    pk_cwc[];
-extern short    g_pchc;
 
 /* KEY_F10 already defined in enums.h as 0x144 in our compact encoding. */
 
@@ -711,16 +652,6 @@ validate:
 
 /* Forward declarations: word-puzzle helpers live after the poker
    helper block and per-file extern additions further down. */
-extern void     wp_shwm();
-extern void     wp_rtmp();
-extern void     wp_solv();
-extern char     wp_ans[][12];
-extern short    wp_blk;
-extern char *   wp_prm[];
-extern char *   wp_succ[];
-extern char *   wp_fail[];
-extern short    lcp_upp();
-extern char     in_str[];
 
 /* wp_main: WORD PUZZLE main loop.
    Loads wordpz.txt into a 2000-byte buffer, indexes 66 line
@@ -1162,41 +1093,6 @@ pk_wrMn()
 
 /* ---- Poker/War/Blackjack shared helpers ---------------------------- */
 
-extern short    g_pcmon;
-extern short    g_ppmon;
-extern short    g_ppppa;
-extern short    g_pchc;
-extern short    pk_pwc[];
-extern short    pk_cwc[];
-extern MFDB     crd_mfdb[];
-extern MFDB     mf_scb_c;
-extern short    crd_xa[];
-extern short    crd_ya[];
-extern short    crd_xb[];
-extern short    crd_yb[];
-extern short    pk_ch[];
-extern short    pk_ph[];
-extern short    pk_hrf[];
-extern short    pk_hsf[];
-extern short    pk_phrf[];
-extern short    pk_phsf[];
-extern short    pk_chrk;
-extern short    pk_phrk;
-extern short    pk_dslot;
-extern short    pk_sel[];
-extern short    pk_disc;
-extern short    pk_dpile[];
-extern short    pk_dpos;
-extern short    pk_phv;
-extern short    pk_bet;
-extern BOOL16   pk_bluff;
-extern BOOL16   pk_pass;
-extern char     pk_bm[];
-extern char     pk_rm[];
-extern char     pk_tcm[];
-extern void     vdi_cprt();
-extern void     moff();
-extern short    ph_ans;  /* dummy pull-in to satisfy per-file extern block */
 
 /* pk_pmsg: print a green status message in the bottom info bar
    (5,71)..(319,75) after clearing the strip.
@@ -2514,22 +2410,6 @@ cleanup:
 
 /* ---- Blackjack helpers --------------------------------------------- */
 
-extern short    pk_psh[];
-extern short    pk_pcc;
-extern short    pk_ccc;
-extern short    pk_pscc;
-extern short    pk_wpr;
-extern BOOL16   pk_wrf;
-extern BOOL16   pk_wcs;
-extern BOOL16   pk_c1bj;
-extern BOOL16   pk_c2bj;
-extern BOOL16   pk_bs1;
-extern BOOL16   pk_bs2;
-extern short    pk_cscore;
-extern short    pk_pscore;
-extern short    g_pcbet;
-extern short    g_ppbet;
-extern short    pk_phase;
 
 /* pk_dbhi: display bet with highlight.  Selector 1 -> render
    pk_bet_computer at (31, 51); anything else -> pk_bet_player.

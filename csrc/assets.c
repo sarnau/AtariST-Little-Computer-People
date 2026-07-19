@@ -41,31 +41,14 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern unsigned char    obj_file[];
-extern unsigned char    spr_file[];
-extern MFDB     g_obtmt[];
-extern MFDB     g_setmt[];
-extern short    g_obtaw[];
-extern short    g_obtah[];
-extern short    g_setaw[];
-extern short    g_setah[];
-extern short *  pex_ptr;                   /* source head sheet */
-extern short *  body_ptr;
-extern short *  body_shp;
-extern short *  hd_shp;
-extern short    bshdbuf[];
-extern short    hshdbuf[];
 #include <osbind.h>
+#include "alerts.h"
+#include "assets.h"
+#include "globals.h"
+#include "save.h"
+#include "sprender.h"
+#include "sprglobs.h"
 
-extern short    fOpen();
-extern void     fr_read();
-extern void     sp_iniM();
-extern void     er_nomem();
 
 /* ldObj: read the 14000-byte OBJECTS file into obj_file[].
    addr: ldObj() */

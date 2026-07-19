@@ -14,36 +14,14 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_hatas;
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_clsO;
-extern short    lcp_drsO;
-extern short    lcp_toiO;
-extern short    lcp_flcO;
-extern short    g_obidt;
-extern short    g_obi09;
-extern short    g_obi15;
-extern short    g_obi16;
-extern short    g_obi17;
-extern short    g_obidc;
-extern short    g_obi03;
-extern short    g_obifc;
-extern short    g_obi13;
-extern short    g_obi14;
-extern short    g_obi11;
-extern short    g_obido;
-extern short    g_obi12;
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    rndRng();                  /* random.c */
-extern short    rndRng();
-extern void     sf_sele();
-extern void     od_draw();
+#include "adoors.h"
+#include "globals.h"
+#include "random.h"
+#include "render.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
 
 /* a_clotd: 2-frame close animation.
    addr: a_clotd() */

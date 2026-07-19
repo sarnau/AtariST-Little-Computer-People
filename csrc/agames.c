@@ -23,67 +23,29 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern BOOL16   introSeq;
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hamod;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_flcO;
-extern short    no_keyin;
-extern short    tx_sctm;
-extern short    g_obi13;
-extern short    g_obi14;
-extern BOOL16   dg_vis;
-extern short    dg_idlcd;
-extern void     hs_posXY();
-extern short    getFlrY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    flr_cy[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>
+#include "adoors.h"
+#include "agames.h"
+#include "aidle.h"
+#include "events.h"
+#include "games.h"
+#include "globals.h"
+#include "keyboard.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "tvanim.h"
+#include "walk.h"
 
-extern short    rndRng();
-extern short    lcp_wkD();
-extern short    getKey();
-extern void     sfClick();
-extern void     tv_scrc();
-extern void     strPr();
-extern void     sp_ssco();
-extern void     sp_ss02();
-extern void     sp_sprs();
-extern void     sp_upds();
-extern void     od_draw();
-extern void     fillTopR();
-extern void     a_watat();
-extern void     a_opcfc();
-extern void     a_sleep();
-extern void     a_wandi();
 
 /* Mini-game entry points.  Each lives in its own games/*.c when we
    port them for real; for now they're stubs in stubs.c that return
    immediately. */
-extern void     ag_main();
-extern void     pk_wrMn();
-extern void     pk_main();
-extern void     pk_bjMn();
-extern void     wp_main();
 
 /* a_playc: sit and type.  The 3 state constants in
    pst_arr are the two typing poses plus the resting

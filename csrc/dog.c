@@ -12,44 +12,14 @@
 
 #include "types.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    lcp_y;
-extern short    getFlrY();
-extern short    lcp_st;
-extern short    dog_x;
-extern short    dog_y;
-extern short    g_dtx;
-extern short    g_dty;
-extern short    g_dyx;
-extern short    g_dyy;
-extern short    g_dwanc;
-extern short    g_dsid;
-extern short    dg_stair;
-extern short    dg_init;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short *  g_seaim[];
-extern short *  g_seams[];
-extern short    g_seach[];
-extern short    g_seacw[];
-extern short    g_sedeh[];
-extern short    g_sedew[];
-extern short    g_dwanf[];
+#include "dog.h"
+#include "globals.h"
+#include "movement.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "walk.h"
 /* g_sedim/g_sedms = PTR_ARRAY_0005a156/0x54016; populated by sp_reglp
    and used by sp_sprs/sp_ssco/sp_ss02 as well as the dog path. */
-extern short *  g_sedim[];
-extern short *  g_sedms[];
-extern short    g_dfimb[];
-extern short    g_dfmab[];
-extern short    flr_by[];
-extern short    flr_cy[];
-extern short    stair_wp[];
-extern void     dg_wkPth();
-extern void     sp_flih();
-extern void     sp_spud();
 
 /* dog_init_position: Ghidra 0x??.  Place the dog at its startup spot
    (bottom floor near the food bowl) and NULL-out the two dog sprite

@@ -20,25 +20,12 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern short    g_hsfra;
-extern short    g_hsmif;
-extern short    hd_dang[];
-extern short    hd_mvd[];
-extern short    hd_tilt[];
-extern short    g_hadec;
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>             /* Random() */
+#include "globals.h"
+#include "random.h"
+#include "sprglobs.h"
+#include "sprhead.h"
 
-extern short    rndRng();
 
 /* Bit-fields inside g_hamod.  These are distinct from the
    HEAD_ANIM_* target-state constants in enums.h that share the Ghidra

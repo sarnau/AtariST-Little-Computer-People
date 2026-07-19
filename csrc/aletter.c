@@ -34,67 +34,27 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    date_day;
-extern short    dt_mon;
-extern short    dt_year;
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hamod;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_recP;
-extern short    no_keyin;
-extern short    tx_sctm;
-extern short    g_srsdc;
-extern short    g_cdibp;
-extern char *   g_lttx;
-extern char *   g_ltlp[];
-extern char *   g_ltg[];
-extern char *   mo_names[];
-extern short    g_ltcwt[];
-extern char     g_ltscb[];
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>
 #include <stdio.h>              /* sprintf */
+#include "adoors.h"
+#include "aleisure.h"
+#include "alerts.h"
+#include "aletter.h"
+#include "globals.h"
+#include "letload.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_sprs();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     hideLcp();
-extern void     showLcp();
-extern void     a_opcfc();
-extern void     a_watat();
-extern void     fillTopR();
-extern void     fl_ltpl();
-extern void     prCh();
-extern void     lt_sets();
-extern void     sfClick();
-extern void     er_nomem();
-extern char     in_str[];
 
 /* Forward-declare the two helpers + a_playp so calls before
    the definitions still resolve under -Werror. */
-extern void     lt_tyca();
-extern short    lt_tysa();
-extern void     a_playp();
 
 /* lt_tyca: emit one character.  On CR (< space),
    scrolls the text pane down; otherwise plays a random click and blits

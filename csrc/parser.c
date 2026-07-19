@@ -25,22 +25,10 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    g_aprio;
-extern unsigned char    g_ewb[];
-extern char             usr_buf[];
-extern short            mood_pri[];
-extern char *           vwd_tab[];
-extern short            ew2pos[];
-extern short            g_ew2b[];
-extern unsigned char    bm_lo[];
-extern WORD_TO_ACTION   g_ew2a[];
-extern short    rndRng();                  /* random.c */
-extern short    rndRng();
+#include "globals.h"
+#include "parser.h"
+#include "random.h"
+#include "vocab.h"
 
 /* lcp_upp: single-char ASCII uppercase.  Returns the char unchanged
    if it isn't in [a..z].

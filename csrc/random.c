@@ -9,6 +9,7 @@
 
 #include "types.h"
 #include <osbind.h>             /* Alcyon: Random() macro -> trap #14 */
+#include "random.h"
 
 /* rndRng: return a uniform random integer in [low, high] inclusive.
    addr: rndRng() */

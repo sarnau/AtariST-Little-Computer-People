@@ -16,85 +16,27 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   introSeq;
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hamod;
-extern BOOL16   g_actif;
-extern BOOL16   dg_petok;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_frdO;
-extern short    studyDrO;
-extern short    lcp_clsO;
-extern short    lcp_cabO;
-extern short    lcp_drsO;
-extern short    lcp_toiO;
-extern short    lcp_flcO;
-extern short    lcp_food;
-extern short    lcp_recP;
-extern short    g_obids;
-extern short    g_obi07;
-extern short    g_obi08;
-extern BOOL16   mi_play;
-extern BOOL16   g_rbact;
-extern char *   mi_sbuf;
-extern short    org_cnt;
-extern BOOL16   fire_act;
-extern short    fire_dur;
-extern short    g_obidc;
-extern short    g_obi03;
-extern short    g_obi04;
-extern long             g_momap;
-extern BOOL16   g_ptdoa;
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
-extern void     doAct();                    /* actions.c */
 #include <osbind.h>
+#include "actions.h"
+#include "adoors.h"
+#include "ahouse.h"
+#include "aleisure.h"
+#include "asimple.h"
+#include "delivery.h"
+#include "events.h"
+#include "globals.h"
+#include "midi_seq.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "save.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_sprs();
-extern void     sp_ssco();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     od_draw();
-extern void     a_opcfd();
-extern void     a_opcfc();
-extern void     a_opecc();
-extern void     a_opecd();
-extern void     a_clotd();
-extern void     a_clocd();
-extern void     a_watat();
-extern void     a_calld();
-extern void     a_playp();
-extern void     hideLcp();
-extern void     showLcp();
-extern void     li_loor();
-extern void     sgPlay();
-extern void     mq_inis();
-extern void     pa_cloc();
-extern void     pa_skic();
-extern void     wkFrDr();
-extern char     in_str[];         /* not used yet, letter subsystem */
-extern void     lcp_std();
 
 /* Ghidra references. */
 /* g_momap declared in globals.h */

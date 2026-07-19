@@ -11,27 +11,13 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    ani_cnt;
-extern short    g_secs;           /* 0..59 game-seconds  */
-extern short    t_min;
-extern short    t_hour;
-extern short    date_day;
-extern short    dt_mon;
-extern short    dt_year;
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   ph_ans;
-extern BOOL16   ph_call;
-extern BOOL16   introSeq;
-extern short    rndRng();                  /* random.c */
-extern void     lcp_sick();              /* health.c  */
-extern void     lcp_upal();    /* render.c  */
-extern void     daily_rs();     /* ai.c      */
-extern short    daysInMo();                /* calendar.c*/
-extern void     putEv();            /* ai.c      */
+#include "calendar.h"
+#include "events.h"
+#include "globals.h"
+#include "health.h"
+#include "random.h"
+#include "renderx.h"
+#include "sim.h"
 /* gameSim1: called every 8 animation frames (~1 game-second).
    Updates all time-dependent PLAYER state:
      Thirst: thirst_timer-- each minute. At 0 -> thirst_level++ (max 3, then sickness)

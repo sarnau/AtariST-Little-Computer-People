@@ -16,44 +16,18 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    t_min;
-extern short    t_hour;
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    lcp_watr;
-extern short    g_wtx;
-extern short    g_wty;
-extern void     gameTick();
-extern short    lcp_cabO;
-extern short    lcp_tv;
-extern short    g_obi02;
-extern short    g_obibg;
-extern short    vdihnd;
-extern short    vdi_colt[];
-extern void *   g_dscp;
-extern short *  g_dsb;
-extern short    g_cmmin;
-extern short    g_chhou;
-extern short    g_obtaw[];
-extern short    g_obtah[];
-extern void *   g_otmfd;
-extern MFDB     mf_scrp;        /* alias with older name */
-extern void     hs_posXY();
-extern short    rndRng();                  /* random.c */
-extern void     lcp_upal();    /* render.c  */
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sf_sele();
-extern void     p_sftvc();
-extern void     td_line();
-extern void     li_lool();
-extern void     sc_sdtb();
-extern void     sc_sdtf();
 #include <vdibind.h>
-extern void     sc_firw();
+#include "ahouse.h"
+#include "clock.h"
+#include "gfx_prim.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "renderx.h"
+#include "sound.h"
+#include "tick.h"
+#include "walk.h"
 
 /* lcp_upal -> renderx.c */
 
@@ -65,7 +39,6 @@ extern void     sc_firw();
    clock hasn't advanced yet.
    addr: cl_redrH() */
 
-extern void     cl_drwH();
 
 void
 cl_redrH()
@@ -119,8 +92,6 @@ short   y;
    form a separator.
    addr: fillTopR() */
 
-extern void     sc_firs();
-extern void     sc_firb();
 
 void
 fillTopR(max_y)

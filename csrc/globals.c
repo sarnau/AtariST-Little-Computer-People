@@ -10,6 +10,7 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
+#include "globals.h"
 
 short   ani_cnt  = 0;
 short   g_secs    = 0;

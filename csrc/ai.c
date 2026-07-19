@@ -15,41 +15,16 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    t_hour;
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   lunT_trg;
-extern BOOL16   dinT_trg;
-extern BOOL16   wkT_trg;
-extern BOOL16   bedT_trg;
-extern short    g_trel[];
-extern BOOL16   in_evrt;
-extern short    lastAct;
-extern short    g_trac;
-extern BOOL16   alarm_p;
-extern short    lcp_watr;
-extern short    g_aliss;
-extern short    g_aqueu[];
-extern short    g_apriq[];
-extern void     a_getd();
-extern char     g_cdinb[];
-extern char *   cmd_inp;
-extern short    g_aprio;
-extern short    rndRng();                  /* random.c */
-extern short    getEv();          /* events.c  */
-extern void     execEv();                /* ai.c      */
-extern void     chk_actT();/* ai.c      */
-extern void     doAct();                    /* actions.c */
+#include "actions.h"
+#include "ahouse.h"
+#include "ai.h"
+#include "airandom.h"
+#include "delivery.h"
+#include "events.h"
+#include "globals.h"
+#include "parser.h"
+#include "random.h"
 /* Forward-declared handlers (real ports arrive later, one .c per group). */
-extern void     a_gioob();
-extern void     er_recd();
-extern void     er_food();
-extern void     er_bood();
-extern void     er_dogf();
-extern void     ev_ansPh();
 
 /* execEv: dispatch a single deferred event to its handler.
    Guards against recursion via in_evrt and forces
@@ -96,9 +71,6 @@ short   event;
 /* ---- 9-priority AI decision engine ------------------------------------- */
 
 /* Externals implemented elsewhere (or stubbed). */
-extern void     doAct();
-extern short    chk_timA();
-extern short    rndRng();
 
 /* Command-queue globals filled from typed input.  Priority is bumped
    every rejected round until it crosses the 8 threshold, at which point
@@ -259,7 +231,6 @@ chk_actT()
 
    addr: prsCmd() */
 
-extern short    chk_encm();
 
 void
 prsCmd()

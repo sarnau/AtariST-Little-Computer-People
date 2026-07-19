@@ -12,13 +12,9 @@
 
 #include "types.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_cmmip[];
-extern short    g_chhop[];
-extern void     drwLine();
+#include "clock.h"
+#include "gfx_prim.h"
+#include "globals.h"
 
 /* cl_drwH: paint the minute + hour hands in `color`.
    minute/5 in 0..11 picks a position on the minute circle; hour%12

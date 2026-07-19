@@ -11,53 +11,20 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern short    g_hsfra;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_bwlS;
-extern short    g_obiso;
-extern short    g_obisa[];
-extern short    g_obi15;
-extern short    g_obi16;
-extern short    g_obi17;
-extern short    dg_bwlch;
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_ssco();
-extern void     sp_ss02();
-extern void     sp_sprs();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     od_draw();
-extern void     a_opecc();
-extern void     a_opecf();
-extern void     a_kitcc();
-extern void     sc_drfc();
-extern void     lcp_rcov();
+#include "adoors.h"
+#include "afood.h"
+#include "delivery.h"
+#include "events.h"
+#include "globals.h"
+#include "health.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
 /* a_eatm: pot from cabinet -> stove (with cooking animation)
    -> table setting; ends with a kitchen_cabinet call to actually eat.

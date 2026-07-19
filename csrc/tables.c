@@ -9,6 +9,7 @@
 
 #include "types.h"
 #include "enums.h"
+#include "tables.h"
 
 /* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
    Table value gets left-shifted by 1 at the call site to yield the

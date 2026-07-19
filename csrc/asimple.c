@@ -11,37 +11,17 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern BOOL16   introSeq;
-extern short    g_trel[];
-extern BOOL16   alarm_p;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern short    g_hsfra;
-extern long     g_sfret;
-extern BOOL16   g_actif;
-extern BOOL16   dg_petok;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    rndRng();                  /* random.c */
-extern void     doAct();                    /* actions.c */
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     p_sftvc();
-extern void     p_sfgrt();
-extern void     p_sfspe();
-extern void     p_sfhnd();
-extern void     sf_so();
+#include "actions.h"
+#include "asimple.h"
+#include "events.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
 /* a_wakfa: Ctrl+A path.  Walks to the bedroom alarm,
    faces right, silences the alarm and clears the pressed flag.
@@ -181,7 +161,6 @@ a_nodh()
    100..200 frames (10 during intro) or until a new event queues.
    addr: a_petd() */
 
-extern void a_calld();
 
 void
 a_petd()

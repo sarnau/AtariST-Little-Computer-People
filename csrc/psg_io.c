@@ -14,6 +14,7 @@
 #include "types.h"
 #include "structs.h"
 #include "st_io.h"
+#include "psg_io.h"
 
 #ifdef HOST
 /* Host scratch bytes -- each hardware register aliases one of these

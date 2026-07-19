@@ -12,66 +12,25 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   introSeq;
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern BOOL16   alarm_p;
-extern short    lcp_watr;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern BOOL16   g_actif;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern void     a_getd();
-extern short    lcp_toiO;
-extern short    lcp_recP;
-extern short    g_obidt;
-extern short    g_obi09;
-extern short    g_obi10;
-extern BOOL16   mi_play;
-extern void     hs_posXY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    g_lcyof;
-extern short    g_sepex[];
-extern short    g_sepey[];
-extern short    g_selaf[];
-extern short    g_seslm[];
-extern short    rndRng();                  /* random.c */
 #include <osbind.h>             /* Random() */
+#include "abathrm.h"
+#include "adoors.h"
+#include "afood.h"
+#include "ahouse.h"
+#include "aleisure.h"
+#include "asimple.h"
+#include "events.h"
+#include "globals.h"
+#include "health.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sp_ssco();
-extern void     sp_sprs();
-extern void     sp_upds();
-extern void     sf_sele();
-extern void     od_draw();
-extern void     tt_on();
-extern void     tt_off();
-extern void     updWtLv();
-extern void     lcp_rcov();
-extern void     a_driwa();
-extern void     a_lists();
-extern void     a_wakfa();
-extern void     a_takes();
-extern void     a_brust();
-extern void     a_opcbc();
-extern void     a_eatm();
-extern void     a_clotd();
-extern void     a_kitcc();
-extern void     hideLcp();
-extern void     showLcp();
 
 /* a_readn: armchair + TV + 200-frame reading loop.
    addr: a_readn() */

@@ -19,32 +19,15 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   ph_ans;
-extern BOOL16   ph_call;
-extern BOOL16   alarm_p;
-extern short    lcp_watr;
-extern BOOL16   dg_petok;
-extern short    g_srsdc;
-extern short    g_cdibp;
-extern BOOL16   g_inpmd;
-extern char     g_cdinb[];
-extern BOOL16   food_dlv;
-extern short    g_ptanf;
-extern BOOL16   g_ptdoa;
-extern void     putEv();            /* ai.c      */
 #include <osbind.h>
+#include "ai.h"
+#include "events.h"
+#include "globals.h"
+#include "keyboard.h"
+#include "render.h"
+#include "renderx.h"
+#include "sound.h"
 
-extern void     putEv();
-extern void     p_dobls();
-extern void     prsCmd();
-extern void     sf_sele();
-extern void     updWtLv();
-extern void     prCh();
 
 /* getKey: poll BIOS for the next keycode.  Returns KEY_NONE
    (-1) when the buffer is empty.  When the ASCII byte is 0 we consult

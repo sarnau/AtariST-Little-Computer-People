@@ -15,25 +15,12 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern PLAYER   lcp;                            /* the resident LCP */
-extern BOOL16   mi_play;
-extern short    g_sfplf;
-extern char *   mi_sbuf;
-extern BOOL16   g_molof;
-extern BOOL16   mi_varR;
-extern long             g_momap;
-extern unsigned char *  mi_ntLp[];
-extern BOOL16   g_sfacf;
-extern short    g_sfcur;
-extern short    g_sfdur;
-extern short    g_sfdos;
-extern short    g_sfdoc;
-extern short    sf_pri[];
 #include <osbind.h>
+#include "alerts.h"
+#include "globals.h"
+#include "midi_seq.h"
+#include "save.h"
+#include "sound.h"
 
 /* g_momap declared in globals.h */
 
@@ -131,10 +118,6 @@ sfClick()
    mastering for the game's category system.
    addr: sgPlay() */
 
-extern void     mq_inis();
-extern short    fOpen();
-extern void     fr_read();
-extern void     er_nomem();
 
 /* sf_sl: load the SOUNDS.LCP sound-effect data file.
    Format: a sequence of records, each `{size:short, dosound_bytes[size]}`,

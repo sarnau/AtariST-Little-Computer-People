@@ -15,26 +15,12 @@
 #include "types.h"
 #include "enums.h"
 #include "structs.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    vdihnd;
-extern short    vdi_colt[];
-extern void *   g_dscp;
-extern void *   g_srlgb;
-extern void *   sv_lgb;
-extern void *   g_srptr;
 #include <osbind.h>
 
 #include <vdibind.h>            /* v_pline, vsl_color, vsf_*, vst_*, vswr_mode, ... */
-extern short    sv_vqta[];
-extern void     sc_sdtb();
-extern void     sc_sdtf();
-extern short    scr_scal;
-extern MFDB     MFDB_A;
-extern MFDB     mf_scrp;
-extern unsigned char scrbufB[];
+#include "gfx_prim.h"
+#include "globals.h"
+#include "sprender.h"
 
 /* drwLine: Bresenham-ish line via VDI v_pline in backbuffer, then
    restore frontbuffer draw target.  The 2-point polyline maps directly
@@ -259,7 +245,6 @@ short   count;
 /* sprite_init_MFDB (Ghidra 0x16612) is already ported as sp_iniM in
    sprender.c -- we call it from stpScrB below rather than
    duplicating the body here. */
-extern void     sp_iniM();
 
 /* cpyScr (Ghidra 0x164FA): raster-copy the current physbase
    screen into the memory buffer described by pdesMFDB.  Source is
@@ -308,9 +293,6 @@ MFDB *  pdesMFDB;
         sensible to blend on top of.
    addr: stpScrB() */
 
-extern short *  g_dsb;
-extern void *   g_dscp;
-extern short    dsb_stor[];
 
 /* aes_init (Ghidra 0x167aa): AES + palette + physbase snapshot.
      appl_init();
@@ -323,9 +305,6 @@ extern short    dsb_stor[];
    v_opnvwk -- that's vdi_init's job. */
 
 #include <gembind.h>            /* appl_init, graf_handle, graf_mouse, form_alert */
-extern short    main_pal[];
-extern void *   sv_phb;
-extern short    vdi_hnd;
 
 void
 aes_init()
@@ -339,9 +318,6 @@ aes_init()
         sv_phb = (void *) Physbase();  /* XBIOS Physbase */
 }
 
-extern short    scr_scal;
-extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */
-extern short    work_out[];      /* ROM global at 0x4d218 (57 shorts) */
 
 #define REZ_ST_MEDIUM   1
 #define REZ_ST_HIGH     2
@@ -485,8 +461,6 @@ short   x1b, y1b, x2b, y2b;
    original Ghidra semantics).
    addr: mouse_off() */
 
-extern MFDB     mf_scb_c;
-extern BOOL16   moff_f;
 
 void
 moff()

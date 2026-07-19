@@ -12,34 +12,17 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern short    g_trel[];
-extern short    lcp_x;
-extern short    lcp_y;
-extern short    g_hatas;
-extern short    g_hacur;
-extern short    g_hamod;
-extern short    g_hsfra;
-extern short    g_wtx;
-extern short    g_wty;
-extern short    pst_arr[];
-extern void     lcp_hwt();
-extern void     gameTick();
-extern short    lcp_tv;
-extern short    lcp_stR;
-extern short    getFlrY();
-extern short    lcp_st;
-extern short    lcp_face;
-extern short    flr_cy[];
-extern short    rndRng();                  /* random.c */
-extern short    rndRng();
-extern short    lcp_wkD();
-extern void     sf_sele();
-extern void     tt_on();
-extern void     tt_off();
+#include "aidle.h"
+#include "events.h"
+#include "globals.h"
+#include "movement.h"
+#include "random.h"
+#include "render.h"
+#include "sound.h"
+#include "sprglobs.h"
+#include "sprites.h"
+#include "tick.h"
+#include "walk.h"
 
 /* a_wandi: two-state shrug idle.
    addr: a_wandi() */

@@ -45,91 +45,18 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-/* --- per-file extern block (auto-generated for Alcyon).
-       For the monolithic "everything" view see
-       include/globals.h.  Alcyon C 4.14 has a fixed-size
-       symbol table that overflows on the full globals.h. */
-extern BOOL16   mi_play;
-extern short    g_mspha;
-extern unsigned char *  mi_dbase;
-extern unsigned char *  mi_sqpos;
-extern long             g_msmap;
-extern long             mi_env;
-extern short            mi_vel;
-extern short            mi_dvel;
-extern short            psg_cvol;
-extern short            psg_dvol;
-extern short            g_mnevi;
-extern short            g_mnevc;
-extern short            g_mtspb;
-extern short            mi_temp;
-extern short            g_mchcn;
-extern short            aes_intO[];
-extern long             g_mtcou;
-extern short            mi_dwrm;
-extern short            g_mtdiv;
-extern short            g_mtpre;
-extern short            g_medu;
-extern short            mi_nxTk;
-extern short            mi_lpTk;
-extern BOOL16           g_msmsa;
-extern unsigned char    mi_chmap[];
-extern short            g_mcpro[];
-extern short            mi_pgmap[];
-extern unsigned char    g_mstr[];
-extern unsigned char    g_msmk[];
-extern BOOL16           g_moen;
-extern unsigned char    g_meve[];
-extern BOOL16           psg_out;
-extern BOOL16           psg_ntAc;
-extern unsigned char    psg_chNt[];
-extern PSG_ENVELOPE     psg_envelope[];
-extern unsigned short   psg_freq[];
-extern short            env_val;                   /* transpose base */
-extern char             g_mnlol;
-extern char             g_mnhil;
-extern short            g_mccha;
 #include <osbind.h>
+#include "globals.h"
+#include "midi_seq.h"
+#include "psg_io.h"
+#include "psgfreq.h"
 
-extern void             mowrit();
-extern void             psg_cpE();
-extern void             psg_wr();
-extern void             psg_mix();
-extern short            mq_dise();
 
 /* Forward decls for the file's own functions -- our K&R style would
    normally rely on default-int declarations, but Clang under -Werror
    complains about the mixed short/long signatures below. */
-extern void             mq_parh();
-extern void             mq_pacm();
-extern void             mq_resp();
-extern void             mq_sepc();
-extern void             mq_bust();
-extern unsigned char *  mq_skip();
-extern void             mq_setp();
 
 /* Sequencer parse state -- see globals.c comment block. */
-extern unsigned char *  mi_seqE;
-extern unsigned char *  mi_dptr;
-extern char             mi_evTf;
-extern char             mi_nnOn;
-extern char             mi_lasT;
-extern char             mi_nnOf;
-extern char             mi_ccha;
-extern char             mi_cnot;
-extern char             mi_nmof;
-extern char             mi_nlpA;
-extern short            mi_nlp0;
-extern BOOL16           mi_slop;
-extern BOOL16           mi_varR;
-extern short            mi_ndt[];
-extern short            mi_evq[];
-extern short            mi_evi;
-extern long             mi_lstk[];
-extern short            mi_evcn;
-extern unsigned char    mi_nOS[];
-extern short            aes_intO[];
-extern void             mq_stap();
 
 /* Header-command handlers.  mq_parh dispatches to these
    by matching the command byte against 0x80/0x81/0x83/0x84/0xC0/0xFF.
@@ -764,18 +691,8 @@ short           midi_ch;
    privileged move-sr instructions that Alcyon C 4.14 can't emit,
    and terminates in `rte` (not `rts`) so it's installed by Xbtimer
    directly, without a C wrapper. */
-extern void     mq_tick();
 
 /* Forward declarations for the sequencer helpers ported below. */
-extern void             mq_rdur();
-extern void             mq_qnne();
-extern void             mq_pshl();
-extern unsigned char *  mq_popl();
-extern void             mq_snof();
-extern void             mq_spgm();
-extern short            mq_rmev();
-extern void             mq_expN();
-extern short            mq_pars();
 
 /* mq_advs: full sequencer state-machine advance.  Runs from mq_tick
    when the prescaler expires.  Ghidra 0x111b0.
@@ -839,13 +756,6 @@ mq_advs()
         }
 }
 
-extern short            psg_rmpD[];
-extern short            psg_rmpA[];
-extern short            mi_evrt[];
-extern short            mi_evtt[];
-extern short            mi_evst[];
-extern short            mi_evrl[];
-extern unsigned char    psg_rot[];
 
 /* psg_upEn: PSG software ADSR envelope processor.  Called at 50 Hz
    from mq_tick.  Steps each of the 3 PSG channels through its

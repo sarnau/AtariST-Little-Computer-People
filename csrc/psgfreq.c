@@ -1,3 +1,4 @@
+#include "psgfreq.h"
 /*
  * psgfreq.c -- YM2149 tone-period LUT.
  *

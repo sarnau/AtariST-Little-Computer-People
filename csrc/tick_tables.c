@@ -9,6 +9,7 @@
  */
 
 #include "types.h"
+#include "tick_tables.h"
 
 /* Animation frame tables consumed by gameTick.  Every
    value is an object_tab_mfdb index; game_tick indexes these by a
