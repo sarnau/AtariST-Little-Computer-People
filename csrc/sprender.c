@@ -25,6 +25,7 @@
 #include "structs.h"
 #include "enums.h"
 #include <vdibind.h>
+#include <obdefs.h>
 #include "globals.h"
 #include "sprender.h"
 #include "sprglobs.h"

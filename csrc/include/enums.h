@@ -302,10 +302,6 @@
 #define ST_PEACH                        0x743
 #define ST_SICK_GREEN                   0x363
 
-/* ---- VDI mode ------------------------------------------------------- */
-#define MD_TRANS                        2
-#define MD_REPLACE                      1
-
 /* ---- MIDI sequencer phase ------------------------------------------- */
 #define SEQ_PHASE_IDLE                          0
 #define SEQ_PHASE_WAIT_NOTE_EXPIRE              0
@@ -329,12 +325,6 @@
 #define ENV_FADEOUT                             5
 
 #define COLOR_dk_brown                          15
-
-/* ---- VDI raster op modes ---------------------------------------------
-   Source/destination combining modes for vro_cpyfm.  Names match the
-   GEM VDI header. */
-#define ALL_WHITE                       0       /* dest set to all 1s     */
-#define S_ONLY                          3       /* replace dest w/ source */
 
 /* Card game constants -- CARD_TYPE values 0..51 are the 52 face cards
    (index into crd_mfdb).  CARD_BACK selects the shared face-down back
@@ -364,8 +354,6 @@
 #define CARD_BJ_MAX                     3       /* Ghidra: CARD_HEART_10 */
 #define CARD_BJ_STEP                    1       /* Ghidra: CARD_HEART_QUEEN */
 #define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
-#define NOTS_AND_D                      4       /* (NOT src) AND dest    */
-#define S_XOR_D                         6       /* source XOR dest       */
 
 /* ---- VDI fill styles ------------------------------------------------
    Match Ghidra's vdi_erase_screen at 0x166fe / screen_set_draw_to_backbuffer:
@@ -391,24 +379,9 @@
 #define DSF_FOOD_MASK                   0xE00
 #define DSF_PRESERVE_UPPER_MASK         0xFE00
 
-/* ---- GEMDOS trap numbers (subset used by save.c) --------------------- */
-#define GEMDOS_Fopen                    0x3D
-#define GEMDOS_Fclose                   0x3E
-#define GEMDOS_Fread                    0x3F
-#define GEMDOS_Fwrite                   0x40
-#define GEMDOS_Fcreate                  0x3C
-#define GEMDOS_Fsfirst                  0x4E
-#define GEMDOS_Fsnext                   0x4F
-#define GEMDOS_Dsetpath                 0x3B    /* set current directory */
-#define BIOS_Setexc                     5       /* install exception vector */
-#define XBIOS_Xbtimer                   31      /* install MFP timer */
-#define GEMDOS_Fgetdta                  0x2F
-#define GEMDOS_Malloc                   0x48
-#define GEMDOS_Mfree                    0x49
-#define GEMDOS_Cconis                   0x0B    /* console status */
-#define GEMDOS_Crawcin                  0x07    /* raw char input */
-#define GEMDOS_Super                    0x20    /* supervisor mode */
-#define XBIOS_Vsync                     37      /* wait for vertical retrace */
+/* GEMDOS/BIOS/XBIOS trap numbers are all in <osbind.h>; the port only
+   calls the wrapper macros (Fopen, Malloc, Setexc, Xbtimer, ...), so
+   no numeric constants are needed here. */
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
    The 1985 code uses a keycode_enum where Ctrl+X maps to X-'@' (i.e.

@@ -19,6 +19,7 @@
 #include <osbind.h>
 
 #include <vdibind.h>
+#include <obdefs.h>
 #include "gfx_prim.h"
 #include "globals.h"
 #include "random.h"

@@ -17,6 +17,7 @@
 #include "structs.h"
 #include "enums.h"
 #include <vdibind.h>
+#include <obdefs.h>
 #include "ahouse.h"
 #include "clock.h"
 #include "gfx_prim.h"

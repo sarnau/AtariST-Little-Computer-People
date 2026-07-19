@@ -42,6 +42,7 @@
 #include <osbind.h>
 
 #include <vdibind.h>
+#include <obdefs.h>
 #include "ahouse.h"
 #include "ai.h"
 #include "aidle.h"
