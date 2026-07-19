@@ -26,7 +26,7 @@ extern short lastAct;
 extern short g_trac;
 extern short lcp_x;
 extern short lcp_y;
-extern short g_lcldd;
+extern BOOL16 g_lcldd;
 extern short cprot_r;
 extern short g_spdc;
 extern BOOL16 alarm_p;

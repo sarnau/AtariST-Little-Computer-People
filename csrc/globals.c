@@ -44,7 +44,7 @@ short   g_trac                  = ACTION_NONE;
    runs. */
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
-short   g_lcldd                      = 0;
+BOOL16  g_lcldd                      = 0;
 short   cprot_r           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
 short   g_spdc              = 5;
 
