@@ -137,16 +137,18 @@ fl_ltpl()
         for (linecount = 0; linecount < 360; linecount = linecount + 1) {
                 g_ltlp[linecount] = i;
 
-                /* Advance past the line body -- anything with a
-                   printable byte value.  0x21 = '!' matches the
-                   original comparison (> 31 means >= 32; the loop
-                   pre-increments once so we walk at least one byte). */
+                /* Advance past the line body.  Ghidra's compare is a
+                   signed-char > 31 (any byte 0x80+ counts as terminator
+                   under signed extension); the loop pre-increments once
+                   so we walk at least one byte.  LETTER.TXT ships pure
+                   7-bit ASCII, so signed vs unsigned is equivalent for
+                   the shipped data, but match Ghidra literally. */
                 do {
                         i = i + 1;
-                } while ((unsigned char) *i > 31);
+                } while (*i > 31);
 
                 /* Skip the terminator run. */
-                while ((unsigned char) *i < ' ')
+                while (*i < ' ')
                         i = i + 1;
         }
 }
