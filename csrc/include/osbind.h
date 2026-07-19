@@ -95,6 +95,16 @@ extern long     xbios();
 #define Super(ssp)              ((void *) gemdos(0x20, (long)(ssp)))
 #define Dsetpath(p)             ((short) gemdos(0x3B, (long)(p)))
 
+/* BIOS #5 -- Setexc(vector, handler): install/query an exception vector.
+   Passing handler = -1 queries the current vector without installing. */
+#define Setexc(v, h)            ((long) bios(5, (short)(v), (long)(h)))
+
+/* XBIOS #31 -- Xbtimer(timer, ctrl_reg, data_reg, vector): install an
+   MFP timer handler.  timer 0 = Timer-A, 1 = Timer-B, 2 = Timer-C,
+   3 = Timer-D; ctrl/data are the initial MFP prescaler and data
+   register values.  Used by mq_intim to install the Timer-A ISR. */
+#define Xbtimer(t, c, d, v)     ((long) xbios(31, (short)(t), (short)(c), (short)(d), (long)(v)))
+
 #endif  /* HOST */
 
 #endif  /* OSBIND_H */

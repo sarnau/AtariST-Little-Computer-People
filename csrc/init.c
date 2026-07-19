@@ -366,8 +366,8 @@ mq_intim()
 #else
         g_mtpre = 100;
         g_mtdiv = 4;
-        mi_svtv = bios(BIOS_Setexc, 0x4d, -1L);
-        xbios(31, 0, 5, 0x28, (long) mq_tick);
+        mi_svtv = Setexc(0x4d, -1L);
+        Xbtimer(0, 5, 0x28, (long) mq_tick);
 #endif
 }
 
