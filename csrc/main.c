@@ -139,8 +139,7 @@ extern void     sc_drfc();                              /* render.c: food cabine
 extern void     updWtLv();               /* render.c */
 extern void     sc_sdtb();                              /* gfx_prim.c */
 extern void     sc_sdtf();                              /* gfx_prim.c */
-extern short    vsl_color();                            /* VDI */
-extern void     v_pline();                              /* VDI */
+#include <vdibind.h>            /* vsl_color, v_pline, v_clsvwk, ... */
 extern short    vdi_colt[];
 extern void     cl_drini();                   /* init.c */
 extern void     lcp_crnd();                    /* init.c */
@@ -169,7 +168,6 @@ extern short    g_obdea[];                              /* dog_eating_animation 
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
    K&R externs (empty parens) so cp68 doesn't try to typecheck them. */
 #include <gembind.h>              /* appl_init, appl_exit, ... */
-extern void     v_clsvwk();
 extern void     aes_init();                 /* Ghidra 0x167aa */
 extern void     vdi_init();                     /* Ghidra 0x16680 */
 

@@ -38,7 +38,7 @@ extern short *  g_seaim[];
 extern short *  g_seams[];
 extern short    g_seach[];
 extern short    g_seacw[];
-extern void     vro_cpyfm();
+#include <vdibind.h>
 
 /* sp_iniM: populate an MFDB with the ST low-res format
    defaults (device-specific, 4 bitplanes).  The first parameter is

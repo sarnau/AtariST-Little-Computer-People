@@ -41,9 +41,7 @@ extern short    rndRng();
 extern void     drwLine();
 extern void     blkcp32();
 extern void     sc_firw();
-extern short    vst_color();
-extern short    vswr_mode();
-extern void     v_gtext();
+#include <vdibind.h>
 extern void     drwPixel();
 extern void     prCh();
 

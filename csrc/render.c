@@ -52,8 +52,7 @@ extern void     td_line();
 extern void     li_lool();
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern short    vsl_color();
-extern void     v_pline();
+#include <vdibind.h>
 extern void     sc_firw();
 
 /* lcp_upal -> renderx.c */
@@ -85,7 +84,6 @@ cl_redrH()
    its MFDB source rect in g_otmfd offset by g_oiidx.
    addr: od_draw() */
 
-extern void     vro_cpyfm();
 
 void
 od_draw(g_oiidx, x, y)

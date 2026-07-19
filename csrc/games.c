@@ -71,7 +71,7 @@ extern void     fr_reac();
 extern void     er_nomem();
 extern void     initVdi();
 extern void     exitVdi();
-extern void     v_bar();
+#include <vdibind.h>
 extern void     pk_ldCrd();
 
 /* Anagram-subsystem globals + shared mini-game plumbing. */

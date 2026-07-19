@@ -41,9 +41,7 @@ extern short    g_tpcoi[];
 
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern short    vsl_color();
-extern void     v_pline();
-extern void     v_bar();
+#include <vdibind.h>
 
 /* tv_scrc: blank the TV area with a filled rectangle,
    then dispatch to one of the two programs via a coin flip on

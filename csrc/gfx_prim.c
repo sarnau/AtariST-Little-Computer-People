@@ -27,18 +27,10 @@ extern void *   sv_lgb;
 extern void *   g_srptr;
 #include <osbind.h>
 
-extern short    vsl_color();
-extern void     v_pline();
-extern short    vswr_mode();
-extern short    vsf_interior();
-extern short    vsf_style();
-extern short    vsf_color();
-extern void     vqt_attributes();
-extern short    vst_height();
+#include <vdibind.h>            /* v_pline, vsl_color, vsf_*, vst_*, vswr_mode, ... */
 extern short    sv_vqta[];
 extern void     sc_sdtb();
 extern void     sc_sdtf();
-extern void     vro_cpyfm();
 extern short    scr_scal;
 extern MFDB     MFDB_A;
 extern MFDB     mf_scrp;
@@ -347,12 +339,6 @@ aes_init()
         sv_phb = (void *) Physbase();  /* XBIOS Physbase */
 }
 
-extern void     v_opnvwk();
-extern void     v_bar();
-extern short    vswr_mode();
-extern short    vsf_interior();
-extern short    vsf_style();
-extern short    vsf_color();
 extern short    scr_scal;
 extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */
 extern short    work_out[];      /* ROM global at 0x4d218 (57 shorts) */
