@@ -47,8 +47,6 @@
 
 #include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
 
-#define POS_TOP_STUDY_DOOR      7
-
 
 void
 gameLoop()
