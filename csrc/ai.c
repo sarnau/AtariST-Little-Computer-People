@@ -164,13 +164,25 @@ chk_actT()
                         return;
                 }
         }
-        /* P5: hunger */
+        /* P5: hunger.
+           Ghidra fires KITCHEN_CABINET when hunger > 0 AND rnd > skip AND
+             ( (sick   AND food_slots > 0) OR
+               (healthy AND lastAct != ACTION_KITCHEN_CABINET) )
+           The `sick AND food > 0` disjunct is what lets a sick resident
+           chain multiple KITCHEN_CABINET visits.  The port previously
+           had a boolean shape that OR-ed food_slots with healthy and
+           only guarded lastAct at the outer AND, which meant a sick
+           resident whose lastAct was already KITCHEN_CABINET would
+           bounce out even with food available.  See Ghidra's
+           check_for_any_action_triggers hunger branch (inverted skip
+           form) for the exact boolean shape. */
         if (lcp.hunger_level > 0) {
                 rnd = rndRng(1, 100);
                 if (rnd > sickness_skip_probability &&
-                    !(lcp.sickness_level != SICKNESS_HEALTHY &&
-                      ((lcp.door_states_and_flags >> 9) & 7) == 0) &&
-                    lastAct != ACTION_KITCHEN_CABINET) {
+                    ((lcp.sickness_level != SICKNESS_HEALTHY &&
+                      ((lcp.door_states_and_flags >> 9) & 7) > 0) ||
+                     (lcp.sickness_level == SICKNESS_HEALTHY &&
+                      lastAct != ACTION_KITCHEN_CABINET))) {
                         g_trac = ACTION_KITCHEN_CABINET;
                         doAct();
                         lastAct = ACTION_KITCHEN_CABINET;

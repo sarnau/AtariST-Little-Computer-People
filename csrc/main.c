@@ -247,8 +247,18 @@ char ** argv;
 
         /* Ghidra step 25 */  sf_sl();                  /* soundeffects_load */
         /* Ghidra step 26 */  dg_ipos();                /* dog_init_position */
-        /* Ghidra step 27 */
-        /* if (g_lcldd == 0) sp_spud(0, 1, NO); -- disabled */
+        /* Ghidra step 27: clear dog sprite slots before cs_mvIn.  Ghidra
+           passes `~SPRITE_UNUSED_0` (=-1) as g_seid so sp_spud's
+           `if (g_seid < 0) return;` early-exit fires -- the only
+           observable effect is g_seaim[0] = g_seaim[7] = NULL at the
+           top.  The port had this call disabled with the wrong
+           constant (0 instead of -1) -- verified at ROM 0x15846-1584e
+           via /read_memory:
+               3f 3c 00 01    move.w #1,  -(sp)   ; layer_p = 1
+               3f 3c ff ff    move.w #-1, -(sp)   ; g_seid  = -1
+               4e b9 ...      jsr sp_spud         ; flipH already 0 on stack */
+        if (g_lcldd == 0)
+                sp_spud(-1, 1, NO);
 
         /* Ghidra step 28 */  updWtLv(0);
 

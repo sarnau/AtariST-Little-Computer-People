@@ -117,7 +117,7 @@ psnr_avg=$(echo "$psnr_line" | sed -E 's/.*average:([0-9.]+).*/\1/' | head -1)
 # Filter out the harmless boot-time warning at $41fffe/PC=$fc0174.
 # TOS always writes past the top of the reserved area during its
 # ram-size probe; Hatari flags it but it isn't a real crash.
-n_be=$(grep 'Bus Error' "$LOG" 2>/dev/null | grep -v 'PC=\$fc0174' | wc -l | tr -d ' ')
+n_be=$(grep 'Bus Error' "$LOG" 2>/dev/null | grep -v fc0174 | wc -l | tr -d ' ')
 n_be=${n_be:-0}
 
 # ---- report + verdict -------------------------------------------
