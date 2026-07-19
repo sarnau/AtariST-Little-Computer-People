@@ -135,6 +135,7 @@ extern short    dt_year;
 extern short    t_hour;
 extern short    t_min;
 extern void *   sv_phb;
+extern void *   g_dscp;
 extern void     unScn();
 extern char     in_str[];
 extern void     prCh();
@@ -239,6 +240,14 @@ st_titl()
         short   ilen;
         short   xpos;
         short   pmc;   /* AM/PM char to display */
+
+        /* Ghidra's first statement: dest_screenbase_ptr = save_physbase.
+           Required so prCh's Setscreen(g_dscp, ...) redirects VDI text
+           output at visible physbase instead of the dsb_stor letter
+           buffer stpScrB left g_dscp pointing at.  Missing this was a
+           port literal-audit hole -- text on the title screen was
+           silently going to the offscreen letter buffer. */
+        g_dscp = sv_phb;
 
         /* Decompress title.scn straight to visible physbase.  Port's
            unScn folds Ghidra's inline fOpen + Malloc + read +
