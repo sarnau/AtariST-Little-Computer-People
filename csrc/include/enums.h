@@ -328,10 +328,6 @@
 #define ENV_RELEASE                             4
 #define ENV_FADEOUT                             5
 
-/* ---- XBIOS Midiws (function 12): send raw MIDI bytes to the MIDI OUT port. */
-#define XBIOS_Midiws                            12
-#define XBIOS_Dosound                           32      /* run PSG sequence  */
-
 #define COLOR_dk_brown                          15
 
 /* ---- VDI raster op modes ---------------------------------------------
