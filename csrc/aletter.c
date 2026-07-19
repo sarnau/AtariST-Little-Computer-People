@@ -21,12 +21,11 @@
  * at 40 columns (0x27 threshold) and inserts a carriage return when
  * a word would overflow.
  *
- * The letter template pointers (g_ltlp[], letter_greeting_
- * table[]) live in globals.c initialised to NULL.  file_load_letter_
- * template() -- still stubbed -- would populate them from letter.txt
- * on the ST disk.  Until that lands, lt_tysa()
- * detects the NULL pointer and returns immediately, so the outer
- * animation still runs but no text is typed.
+ * The letter template pointers live in globals.c: g_ltlp[] is filled
+ * at runtime by fl_ltpl() (letload.c) from the 360-line LETTER.TXT
+ * template; g_ltg[4] is a static array of the four sign-off strings
+ * ("Sincerely," / "Cordially," / "Yours Truly," / "Love,") that the
+ * ROM stores as compile-time DATA literals.
  *
  * addr: a_writl(), lt_tysa(),
  *       lt_tyca()

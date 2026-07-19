@@ -138,7 +138,20 @@ short   g_cdibp        = 0;
    a_writl. */
 char *  g_lttx              = (char *) 0;
 char *  g_ltlp[512]            = { (char *) 0 };
-char *  g_ltg[8]        = { (char *) 0 };
+/* g_ltg[4]: the four letter sign-offs picked at random by
+   a_writl (`letter_type_string_animated(g_ltg[rndRng(0,3)], -8)` at
+   the greeting slot).  Byte-for-byte the ROM's DATA layout at 0x2b671
+   (verified via /read_memory): "Sincerely,\0Cordially,\0Yours
+   Truly,\0Love,\0".  Previously left NULL because a stub loader was
+   assumed to populate it from LETTER.TXT -- but the ROM's
+   file_load_letter_template only walks 360 template lines and the
+   sign-offs are static C string literals compiled into DATA. */
+char *  g_ltg[4]        = {
+        "Sincerely,",
+        "Cordially,",
+        "Yours Truly,",
+        "Love,"
+};
 char *  mo_names[12] = {
         "January", "February", "March",     "April",
         "May",     "June",     "July",      "August",
