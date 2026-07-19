@@ -89,8 +89,12 @@
 #define STATE_STAND_SIDE_VIEW                   34
 #define STATE_CROUCH_DOWN                       35
 #define STATE_EXERCISE_CROUCH                   35      /* alias for CROUCH_DOWN */
-#define STATE_CARRY_WALK_FRAME_0                36
-#define STATE_CARRY_WALK_FRAME_1                37
+/* cp68's macro-name lookup table truncates identifiers to 22 chars.
+   STATE_CARRY_WALK_FRAME_0 and _1 both truncate to STATE_CARRY_WALK_FRAME
+   and silently collide (cp68 emits `redefining STATE_CARRY_WALK_FRAME`).
+   Use the shorter F0 / F1 convention matching STATE_STR_CLIMB_F0 etc. */
+#define STATE_CARRY_WALK_F0                     36
+#define STATE_CARRY_WALK_F1                     37
 #define STATE_VINYL_IDLE                 38
 #define STATE_VINYL_REACH_L           39
 #define STATE_VINYL_REACH_R          40
