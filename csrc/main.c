@@ -25,7 +25,7 @@
    whether merely LINKING with these transitive refs breaks the
    canary. */
 
-extern long     gemdos();       /* used for Cconws markers */
+#include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
 extern short    lcp_x;
 extern short    lcp_y;
 extern short    g_lcldd;
@@ -168,15 +168,10 @@ extern short    g_obdea[];                              /* dog_eating_animation 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
    K&R externs (empty parens) so cp68 doesn't try to typecheck them. */
-extern short    appl_init();
+#include <gembind.h>              /* appl_init, appl_exit, ... */
 extern void     v_clsvwk();
-extern void     appl_exit();
 extern void     aes_init();                 /* Ghidra 0x167aa */
 extern void     vdi_init();                     /* Ghidra 0x16680 */
-
-#define Cconws(s)       gemdos(0x09, s)
-#define Cconin()        gemdos(0x01)
-#define Pterm(n)        gemdos(0x4c, n)
 
 /* main -- ported line-by-line from Ghidra 0x15546.
    Every call below matches the Ghidra decompile in structure and

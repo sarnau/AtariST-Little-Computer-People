@@ -330,8 +330,7 @@ extern short    dsb_stor[];
    so local storage is fine.  Notably this function does NOT call
    v_opnvwk -- that's vdi_init's job. */
 
-extern short    appl_init();
-extern short    graf_handle();
+#include <gembind.h>            /* appl_init, graf_handle, graf_mouse, form_alert */
 extern short    main_pal[];
 extern void *   sv_phb;
 extern short    vdi_hnd;
@@ -350,12 +349,10 @@ aes_init()
 
 extern void     v_opnvwk();
 extern void     v_bar();
-extern void     graf_mouse();
 extern short    vswr_mode();
 extern short    vsf_interior();
 extern short    vsf_style();
 extern short    vsf_color();
-extern void     form_alert();
 extern short    scr_scal;
 extern short    workin[];        /* ROM global at 0x47ea8 (11 shorts) */
 extern short    work_out[];      /* ROM global at 0x4d218 (57 shorts) */

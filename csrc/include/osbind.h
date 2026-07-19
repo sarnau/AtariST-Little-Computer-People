@@ -90,8 +90,11 @@ extern long     xbios();
 #define Fgetdta()               ((void *) gemdos(0x2F))
 #define Fsfirst(p, a)           ((short) gemdos(0x4E, (long)(p),  (short)(a)))
 #define Fsnext()                ((short) gemdos(0x4F))
+#define Cconin()                ((long)  gemdos(0x01))
+#define Cconws(s)               ((short) gemdos(0x09, (long)(s)))
 #define Cconis()                ((short) gemdos(0x0B))
 #define Crawcin()               ((long)  gemdos(0x07))
+#define Pterm(rc)               ((void)  gemdos(0x4C, (short)(rc)))
 #define Super(ssp)              ((void *) gemdos(0x20, (long)(ssp)))
 #define Dsetpath(p)             ((short) gemdos(0x3B, (long)(p)))
 
