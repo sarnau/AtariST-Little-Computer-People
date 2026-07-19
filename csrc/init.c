@@ -691,28 +691,27 @@ cs_mvIn()
                 a_opcbc(0);
                 a_opcuc(1);
                 introSeq = NO;
+
+#ifdef TEST_ACTIONS
+                /* Enqueue one test event so chk_actT dispatches it as
+                   soon as gameLoop takes over.  Guarded by
+                   -DTEST_ACTIONS=<id> in the test build. */
+                {
+                        extern void putEv();
+                        putEv(TEST_ACTIONS);
+                }
+#endif
+#ifdef TEST_KEY
+                /* Invoke the keyboard dispatcher with a single keycode
+                   to exercise the Ctrl-letter / cursor / printable
+                   paths.  Guarded by -DTEST_KEY=<code> in the test
+                   build. */
+                {
+                        extern void deal_kc();
+                        deal_kc(TEST_KEY);
+                }
+#endif
                 return;
         }
         for (;;) a_sleep(-1);
-
-#ifdef TEST_ACTIONS
-        /* Temporary: enqueue a series of test events to exercise every
-           ported AI action & delivery event at startup.  Runs before
-           gameLoop, so chk_actT drains them one at a time.  Guarded by
-           -DTEST_ACTIONS in the temporary test build. */
-        {
-                extern void putEv();
-                putEv(TEST_ACTIONS);
-        }
-#endif
-
-#ifdef TEST_KEY
-        /* Temporary: invoke the keyboard dispatcher with a single
-           keycode to exercise the Ctrl-letter / cursor / printable
-           paths.  Guarded by -DTEST_KEY=$code in the test build. */
-        {
-                extern void deal_kc();
-                deal_kc(TEST_KEY);
-        }
-#endif
 }
