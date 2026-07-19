@@ -759,69 +759,12 @@ short           midi_ch;
 }
 
 /* ---- Timer-A interrupt dispatch ---------------------------------- */
-
-extern short    mi_rlock;
-
-/* mq_tick: 200 Hz Timer-A interrupt handler.  Runs the master tick
-   counter, then dispatches to one of two sub-state-machines:
-
-     * g_msmsa (sequencer_active) == YES:
-         - decrement g_mtpre (prescaler) and g_mtdiv (divider)
-         - if divider != 0 and prescaler <= 0 and no reentrancy,
-           call mq_advs() to advance the sequencer state machine
-     * else if psg_ntAc (psg_notes_active) == YES:
-         - decrement g_mtdiv (divider)
-         - on divider==0 wrap, call psg_upEn() to step envelopes,
-           reload divider = 4
-
-   Reentrancy guard: mi_rlock prevents nested dispatch if the
-   handler somehow gets called from within itself (unusual on the
-   ST, but the 1985 source has it and we mirror it).
-
-   Interrupt acknowledgement: MFP ISRA bit 5 (Timer-A pending)
-   must be cleared before RTE or the interrupt re-fires
-   immediately, unbounded-recursing the stack into a bus error.
-   Xbtimer's C-function wrapper does NOT auto-clear -- the
-   1985 handler does it explicitly, and so must we.  Writing 0
-   to a bit in $FFFA0F clears it (writes are "1 = set, 0 = clear"
-   for MFP ISR registers).
-
-   addr: midi_seq_tick_handler() */
-
-void
-mq_tick()
-{
-        g_mtcou = g_mtcou + 1;
-
-        if (g_msmsa != NO) {
-                g_mtpre = g_mtpre - 1;
-                g_mtdiv = g_mtdiv - 1;
-                if (g_mtdiv != 0) {
-                        if ((g_mtpre == 0 || g_mtpre < 0) &&
-                            mi_dwrm < 1 && mi_rlock != 1) {
-                                mi_dwrm = mi_dwrm + 1;
-                                mq_advs();
-                                mi_dwrm = mi_dwrm - 1;
-                        }
-                        goto ack;
-                }
-        } else if (psg_ntAc == NO ||
-                            (g_mtdiv = g_mtdiv - 1, g_mtdiv != 0)) {
-                goto ack;
-        }
-
-        g_mtdiv = 4;
-        if (mi_rlock != 1) {
-                mi_rlock = mi_rlock + 1;
-                psg_upEn();
-                mi_rlock = mi_rlock - 1;
-        }
-
-ack:
-        /* Acknowledge Timer-A by clearing ISRA bit 5. */
-        *((unsigned char *) 0xfffa0fL) =
-                *((unsigned char *) 0xfffa0fL) & (unsigned char) 0xdf;
-}
+/* mq_tick lives in csrc/tools/dk/mq_tick.s -- byte-faithful port of
+   Ghidra 0x1219a.  It's assembly because the ROM version uses
+   privileged move-sr instructions that Alcyon C 4.14 can't emit,
+   and terminates in `rte` (not `rts`) so it's installed by Xbtimer
+   directly, without a C wrapper. */
+extern void     mq_tick();
 
 /* Forward declarations for the sequencer helpers ported below. */
 extern void             mq_rdur();

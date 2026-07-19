@@ -41,12 +41,16 @@ if [ ! -f gemstart.o ] || [ "$DK_TOOLS/gemstart.s" -nt gemstart.o ]; then
     }
 fi
 
-# 1b. Assemble the interrupt-wrapper stub (mq_hlpr.s) that lets
-#     Xbtimer(31, ...) install the C mq_tick handler.
-if [ ! -f mq_hlpr.o ] || [ "$DK_TOOLS/mq_hlpr.s" -nt mq_hlpr.o ]; then
-    cp -f "$DK_TOOLS/mq_hlpr.s" mq_hlpr.s
-    "$ALCYON_BIN/as68" -l -u mq_hlpr.s > /dev/null 2>&1 || {
-        echo "FAILED: mq_hlpr assembly"
+# 1b. Assemble mq_tick.s -- the MFP Timer-A ISR, byte-faithful port of
+#     Ghidra 0x1219a.  Assembly required: uses privileged
+#     `move sr,dn` instructions (raise IPL to 7 on entry, lower to 5
+#     during sub-calls) that Alcyon C 4.14 can't emit, and ends with
+#     `rte`.  Installed directly by Xbtimer -- no C wrapper needed.
+if [ ! -f mq_tick.o ] || [ "$DK_TOOLS/mq_tick.s" -nt mq_tick.o ]; then
+    rm -f mq_hlpr.o mq_hlpr.s          # stale from earlier port scheme
+    cp -f "$DK_TOOLS/mq_tick.s" mq_tick.s
+    "$ALCYON_BIN/as68" -l -u mq_tick.s > /dev/null 2>&1 || {
+        echo "FAILED: mq_tick assembly"
         exit 1
     }
 fi

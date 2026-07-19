@@ -333,14 +333,14 @@ name_done:
 }
 #endif   /* SKIP_TITLE */
 
-/* Forward decl for the timer handler installed by mq_intim.
-   mqisr is the asm wrapper (mq_hlpr.s) around the C mq_tick;
-   it save/restores scratch registers and RTEs.  Xbtimer needs the
-   wrapper because K&R C returns via RTS. */
+/* mq_tick is the asm ISR (mq_tick.s) -- byte-faithful port of Ghidra
+   0x1219a.  It has SR-manipulation instructions (privileged move sr,dn
+   / move dn,sr) that Alcyon C cannot emit, and terminates in `rte`,
+   so it must live in assembly.  Installed directly via Xbtimer -- no
+   C wrapper needed. */
 extern void     mq_tick();
-extern void     mqisr();
-extern void     mq_advs();      /* midi_seq_advance_sequencer (skeleton) */
-extern void     psg_upEn();     /* psg_process_envelopes    (skeleton) */
+extern void     mq_advs();      /* midi_seq_advance_sequencer */
+extern void     psg_upEn();     /* psg_process_envelopes */
 extern BOOL16   psg_ntAc;
 
 /* mq_intim (Ghidra 0x11112): install the Timer-A interrupt for the
@@ -349,27 +349,6 @@ extern BOOL16   psg_ntAc;
      midi_tick_divider     = 4
      midi_saved_timer_vect = Bios(Setexc, 0x4d, -1)   (query only)
      Xbtimer(0, 5, 0x28, midi_seq_tick_handler)
-
-   Port status: partially ported.  The tick counter, prescaler,
-   divider, and vector-save are done here.  The Xbtimer install is
-   NOT done yet because it needs an assembly wrapper -- a K&R C
-   function returns via RTS, but MFP interrupt handlers must return
-   via RTE, so passing mq_tick directly to Xbtimer causes the CPU
-   to pop the wrong stack frame and jump to garbage.  Fix requires
-   a small .s file with:
-       _mq_tick_asm:
-             movem.l  D0-D2/A0-A2, -(SP)
-             jsr      _mq_tick
-             movem.l  (SP)+, D0-D2/A0-A2
-             rte
-   and passing `_mq_tick_asm` to Xbtimer instead.  Deferred to a
-   follow-up commit; verified by isolating the crash to exactly
-   the xbios(31, ...) call.
-
-   The `bios(Setexc, 0x4d, -1)` query is safe on its own (no side
-   effects), so it stays.  The mq_tick / mq_advs / psg_upEn C
-   bodies are in place -- once the asm wrapper lands, they'll
-   start driving the sequencer.
 
    addr: mq_intim() */
 
@@ -388,7 +367,7 @@ mq_intim()
         g_mtpre = 100;
         g_mtdiv = 4;
         mi_svtv = bios(BIOS_Setexc, 0x4d, -1L);
-        xbios(31, 0, 5, 0x28, (long) mqisr);
+        xbios(31, 0, 5, 0x28, (long) mq_tick);
 #endif
 }
 
