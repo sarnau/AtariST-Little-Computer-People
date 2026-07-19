@@ -250,9 +250,7 @@ short   val;
         RECT16  rect;
 
         rect.x1 = 146;
-        rect.y1 = 174;
         rect.x2 = 159;
-        rect.y2 = 174;
 
         if (val == 0) {
                 /* Draw filled portion (colour 0x0D). */

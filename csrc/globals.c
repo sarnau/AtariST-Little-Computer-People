@@ -178,28 +178,23 @@ short * sv_headP           = (short *) 0;
 short   vdihnd                       = 0;
 short   vdi_hnd                      = 0;    /* physical from graf_handle */
 /* vdi_colt (Ghidra vdi_color_table @ 0x29b64): color_enum ->
-   VDI-color permutation.
+   VDI-color permutation.  ROM data at 0x29b64 (verified via
+   /read_memory) is {0,2,3,6,4,7,5,8,9,10,11,14,12,15,13,1} -- exactly
+   TOS's default ST-low permutation from VDI-index to palette-slot.
+   The game names its own colours by palette slot (see main_pal) and
+   calls vsl_color(vdi_colt[color_enum]) so that after TOS's
+   permutation the pen lands on palette slot `color_enum`.
 
-   The 1985 code assumed TOS's default ST-low VDI-color-to-palette-
-   slot permutation ({0,15,1,2,4,6,3,5,7,8,9,10,12,14,11,13}), so
-   the ROM's vdi_colt was chosen to cancel that permutation and put
-   color_enum N into the palette slot the game named N.  For
-   example, color_enum 13 (blue) -> ROM vdi_colt[13] = 15 -> TOS
-   remaps VDI 15 -> palette 13 = 0x007 (blue).
-
-   Our VDI stack (Alcyon DK vdibind.a + Hatari) does NOT install that
-   permutation.  VDI color N passes straight through as palette-slot
-   N.  With the ROM's permutation still in place, color_enum 13 (blue)
-   ended up in palette 15 (which is dark brown 0x410) -- caught first
-   as the "water tank renders brown" report.
-
-   Fix: identity mapping.  With VDI-color == palette-slot, and
-   main_pal already installed with the correct RGBs, every drawing
-   call now lands in the right hue.  Verified visually against the
-   water tank (color_enum 13 -> palette 13 = 0x007 = blue). */
+   Byte-for-byte match to ROM.  With a properly-opened VDI workstation
+   (LCP.PRG launched directly from the GEM desktop / Hatari --auto),
+   TOS applies its default permutation and color_enum 13 (blue) ->
+   vdi_colt[13] = 15 -> palette 13 = main_pal[13] = 0x007 blue.
+   Launching via COMMAND.PRG leaves the workstation in a state that
+   collapses vsl_color's colour arg into pen 15 (dark brown 0x410)
+   regardless of index -- see the sc_sdtb comment. */
 short   vdi_colt[16]            = {
-        0,  1,  2,  3,  4,  5,  6,  7,
-        8,  9, 10, 11, 12, 13, 14, 15
+        0,  2,  3,  6,  4,  7,  5,  8,
+        9, 10, 11, 14, 12, 15, 13,  1
 };
 
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)

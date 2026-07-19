@@ -73,7 +73,14 @@ short   color;
    log-base pointer; Setscreen redirects VDI output to g_srptr (the
    off-screen buffer).  Also resets the VDI fill mode to solid black so
    subsequent fill calls have a well-known state.
-   addr: sc_sdtb() */
+   addr: sc_sdtb()
+
+   Launcher note: if LCP is launched via COMMAND.PRG (the Atari shell),
+   the shell's own workstation state doesn't survive our Setscreen
+   here and vsl_color silently falls back to pen 15 (dark brown) --
+   see the "water tank draws brown" report.  Launching LCP.PRG
+   directly from the GEM desktop (or a launcher that gives us a
+   fresh VDI workstation) avoids the issue. */
 
 void
 sc_sdtb()
