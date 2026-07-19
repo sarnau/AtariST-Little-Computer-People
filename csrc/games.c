@@ -310,11 +310,11 @@ mg_wkev()
         /* Drain any keys the game accidentally left in the buffer. */
         do {
                 key = getKey();
-        } while (key != 0);
+        } while (key != KEY_NONE);
 
         for (;;) {
                 key = getKey();
-                if (key != 0) {
+                if (key != KEY_NONE) {
                         if (key == KEY_CTRL_A_ALARM  ||
                             key == KEY_CTRL_B_BOOK    ||
                             key == KEY_CTRL_C_CALL     ||

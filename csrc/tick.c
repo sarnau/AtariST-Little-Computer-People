@@ -260,7 +260,7 @@ short   counter;
                                 if (no_keyin == NO &&
                                     introSeq == NO) {
                                         key = getKey();
-                                        if (key != 0) {
+                                        if (key != KEY_NONE) {
                                                 if (key != KEY_CTRL_W_WATER &&
                                                     key != KEY_CTRL_B_BOOK &&
                                                     key != KEY_CTRL_R_RECORD &&
@@ -279,7 +279,7 @@ short   counter;
                                         }
                                 } else if (g_inpmd != NO) {
                                         key = getKey();
-                                        if (key != 0)
+                                        if (key != KEY_NONE)
                                                 deal_kc(key);
                                 }
                         } else {
