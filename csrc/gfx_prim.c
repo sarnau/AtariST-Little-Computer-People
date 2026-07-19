@@ -67,7 +67,7 @@ sc_sdtb()
         g_srlgb = (void *) Logbase();
         Setscreen(g_srptr, (void *)-1L, -1);
         vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, VSFPATT);
+        vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
         vsf_color(vdihnd, COLOR_black);
 }
@@ -168,7 +168,7 @@ initVdi()
         sv_lgb = (void *) Logbase();
         Setscreen(g_dscp, (void *)-1L, -1);
         vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, VSFPATT);
+        vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
         vsf_color(vdihnd, vdi_colt[0xc]);
 }
@@ -337,7 +337,7 @@ vdi_erase_screen()
         short   r[4];
 
         vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, VSFPATT);
+        vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
         vsf_color(vdihnd, COLOR_black);
         r[0] = 0;

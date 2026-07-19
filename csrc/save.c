@@ -255,7 +255,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_1);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] =  23;
-        od_draw(g_obids, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_CLOSED, 178, 23);
 
         if (p_dosnd != NO)
                 sf_sele(SFX_DOOR_CLOSE, 6L);
@@ -290,7 +290,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_AJAR);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        od_draw(g_obi07, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_OPEN_1, 178, 23);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
@@ -301,7 +301,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_WIDE_OPEN);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
-        od_draw(g_obi08, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_OPEN_2, 178, 23);
         showLcp();
         gameTick(1);
 
@@ -320,9 +320,9 @@ BOOL16  p_dosnd;
                 sp_upds();
                 gameTick(0);
         }
-        od_draw(g_obi07, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_OPEN_1, 178, 23);
         gameTick(2);
-        od_draw(g_obids,  178, 23);
+        od_draw(OBJ_DOOR_STUDY_CLOSED,  178, 23);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         studyDrO = NO;

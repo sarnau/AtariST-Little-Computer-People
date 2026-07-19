@@ -191,12 +191,12 @@ sc_drfc()
                 return;
 
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
-        od_draw(g_obi02, 46, 140);
+        od_draw(OBJ_CABINET_OPEN_2, 46, 140);
 
-        if (cabinet_content > 0) od_draw(g_obibg, 50, 159);
-        if (cabinet_content > 1) od_draw(g_obibg, 58, 159);
-        if (cabinet_content > 2) od_draw(g_obibg, 50, 151);
-        if (cabinet_content > 3) od_draw(g_obibg, 58, 151);
+        if (cabinet_content > 0) od_draw(OBJ_CABINET_ITEM, 50, 159);
+        if (cabinet_content > 1) od_draw(OBJ_CABINET_ITEM, 58, 159);
+        if (cabinet_content > 2) od_draw(OBJ_CABINET_ITEM, 50, 151);
+        if (cabinet_content > 3) od_draw(OBJ_CABINET_ITEM, 58, 151);
 }
 
 /* ---- Water tank level bar (VDI polylines) ---------------------------- */

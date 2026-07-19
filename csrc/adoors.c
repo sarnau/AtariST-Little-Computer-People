@@ -37,9 +37,9 @@ a_clotd()
         lcp_face = FACING_LEFT;
         lcp_st = STATE_BEND_AND_REACH;
         gameTick(2);
-        od_draw(g_obi09, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_OPEN_1, 187, 87);
         gameTick(2);
-        od_draw(g_obidt, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_CLOSED, 187, 87);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         lcp_toiO = NO;
@@ -63,9 +63,9 @@ a_clocd()
         lcp_face = FACING_LEFT;
         lcp_st = STATE_BEND_AND_REACH;
         gameTick(2);
-        od_draw(g_obi03, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_OPEN_1, 75, 87);
         gameTick(2);
-        od_draw(g_obidc, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_CLOSED, 75, 87);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         lcp_clsO = NO;
@@ -90,12 +90,12 @@ a_opecf()
 
         lcp_face = FACING_LEFT;
         lcp_st = STATE_REACH_INTO_CABINET;
-        od_draw(g_obi15, 24, 153);
+        od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
         gameTick(1);
-        od_draw(g_obi16, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
-        od_draw(g_obi17, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_2, 24, 153);
         gameTick(1);
 
         lcp_face = FACING_RIGHT;
@@ -110,9 +110,9 @@ a_opecf()
         lcp_st = STATE_STAND_FACING_SCREEN;
         gameTick(8);
 
-        od_draw(g_obi16, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
         gameTick(1);
-        od_draw(g_obi15, 24, 153);
+        od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
         sf_sele(SFX_DOOR_OPEN, 6L);   /* verbatim */
         gameTick(1);
 }
@@ -130,10 +130,10 @@ a_opcfc()
         lcp_st = STATE_REACH_FORWARD;     gameTick(2);
         lcp_st = STATE_PICK_UP_FROM_FLOOR;gameTick(2);
         lcp_st = STATE_REACH_FORWARD;
-        od_draw(g_obi13, 258, 47);
+        od_draw(OBJ_FILING_CAB_OPEN_1, 258, 47);
         gameTick(1);
         lcp_st = STATE_BEND_DOWN;
-        od_draw(g_obifc, 258, 47);
+        od_draw(OBJ_FILING_CABINET_CLOSED, 258, 47);
         gameTick(1);
         lcp_flcO = NO;
         lcp_st = STATE_STAND_FACING_SCREEN;
@@ -154,9 +154,9 @@ short   oc_stat;
                 lcp_drsO = YES;
                 lcp_st = STATE_BEND_DOWN;    gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(g_obido, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_1, 97, 115);
                 gameTick(2);
-                od_draw(g_obi12, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_2, 97, 115);
                 gameTick(2);
         } else {
                 if (lcp_drsO == NO)
@@ -164,9 +164,9 @@ short   oc_stat;
                 lcp_drsO = NO;
                 lcp_st = STATE_BEND_DOWN;    gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(g_obido, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_1, 97, 115);
                 gameTick(2);
-                od_draw(g_obi11, 97, 115);
+                od_draw(OBJ_DRESSER_CLOSED, 97, 115);
                 gameTick(2);
         }
         lcp_st = STATE_STAND_FACING_SCREEN;
@@ -189,10 +189,10 @@ a_watat()
         if (lcp_flcO == NO) {
                 lcp_flcO = YES;
                 lcp_st = STATE_REACH_FORWARD;
-                od_draw(g_obi13, 258, 47);
+                od_draw(OBJ_FILING_CAB_OPEN_1, 258, 47);
                 gameTick(2);
                 lcp_st = STATE_PICK_UP_FROM_FLOOR;
-                od_draw(g_obi14, 258, 47);
+                od_draw(OBJ_FILING_CAB_OPEN_2, 258, 47);
                 gameTick(2);
         } else {
                 lcp_st = STATE_REACH_FORWARD;

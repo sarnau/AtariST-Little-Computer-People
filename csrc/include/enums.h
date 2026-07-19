@@ -17,6 +17,10 @@
 #define NEED_MODERATE           2
 #define NEED_SEVERE             3
 
+/* ---- Hunger
+------------------------------------------------------- */
+#define NEED_SATISFIED                          0
+
 /* ---- Sickness ---------------------------------------------------------- */
 #define SICKNESS_HEALTHY        0
 #define SICKNESS_MILD           1
@@ -164,9 +168,7 @@
 #define COLOR_lt_grey                           12
 #define COLOR_blue                              13
 #define COLOR_white                             14
-
-/* Sat/Sun weekday consts (used by chk_timA). */
-#define NEED_SATISFIED                          0
+#define COLOR_dk_brown                          15
 
 /* ---- HEAD_ANIM_MODE (dumped from Ghidra) ------------------------------
    Bit fields inside head_anim_mode (g_hamod):
@@ -221,7 +223,7 @@
 #define POS_MID_COMPUTER_DESK           29
 #define POS_MID_PIANO                   30
 /* 31 unused */
-/* POS_BTM_STAIR_LANDING = 32, defined below */
+#define POS_BTM_STAIR_LANDING           32
 #define POS_BTM_DOG_BOWL                33
 #define POS_BTM_STOVE                   34
 #define POS_BTM_FRIDGE                  35
@@ -239,34 +241,123 @@
 #define POS_BTM_SCREEN_EDGE             47
 
 /* ---- SPRITE_ID (study doors + carried objects) ------------------------ */
-#define SPRITE_DOOR_STUDY_1             0x18
-#define SPRITE_DOOR_STUDY_AJAR          0x19
-#define SPRITE_DOOR_STUDY_WIDE_OPEN     0x1a
-#define SPRITE_FOOD_PACKAGE             9
-#define SPRITE_BOOK                     0x31
-#define SPRITE_VINYL_CARRY              0x32
-#define SPRITE_SUITCASE                 48      /* 0x30, carried in cs_mvIn */
-#define SPRITE_GLASS                    3
+#define SPRITE_GLASS                    0x03
+#define SPRITE_GAME_BOX                 0x04       /* also mini-game box */
+#define SPRITE_STUDY_DOOR_FRAME         0x06       /* also used as toothbrush */
+#define SPRITE_VINYL_RECORD             0x07
+#define SPRITE_TYPEWRITER               0x08
+#define SPRITE_FOOD_PACKAGE             0x09
+#define SPRITE_TABLE_SETTING            0x0c
 #define SPRITE_DOOR_ANIM_1              0x0d
 #define SPRITE_DOOR_ANIM_2              0x0e
 #define SPRITE_DOOR_ANIM_3              0x0f
-#define SPRITE_COOKING_POT              0x17
-#define SPRITE_TABLE_SETTING            0x0c
-#define SPRITE_STUDY_DOOR_FRAME         6       /* also used as toothbrush */
-#define SPRITE_55                       55
-#define SPRITE_VINYL_RECORD             7
-#define SPRITE_READING_1                0x2d
-#define SPRITE_DOG_SIT                  0x15
-#define SPRITE_FIREWOOD                 0x16
+#define SPRITE_CLOSET_LCP_INSIDE        0x10
 #define SPRITE_CLOSET_WIDE_OPEN         0x12
 #define SPRITE_CLOSET_AJAR              0x11
-#define SPRITE_CLOSET_LCP_INSIDE        0x10
-#define SPRITE_TYPEWRITER               8
+#define SPRITE_DOG_SIT                  0x15
+#define SPRITE_FIREWOOD                 0x16
+#define SPRITE_COOKING_POT              0x17
+#define SPRITE_DOOR_STUDY_1             0x18
+#define SPRITE_DOOR_STUDY_AJAR          0x19
+#define SPRITE_DOOR_STUDY_WIDE_OPEN     0x1a
+/* Head-pat / petting-dog hand animation frames.
+   Consumed by g_ptdsi[11] in tick_tables.c. */
+#define SPRITE_PET_HAND_1               0x1b
+#define SPRITE_PET_HAND_2               0x1c
+#define SPRITE_PET_HAND_3               0x1d
+#define SPRITE_PET_HAND_4               0x1e
+#define SPRITE_PET_HAND_5               0x1f
+#define SPRITE_PET_HAND_6               0x20
+#define SPRITE_DOG_LAY_DOWN             0x21
+/* cp68 truncates identifiers to 22 chars.  SPRITE_DOG_WALK_RIGHT_N is
+   23 chars and all 9 collide on truncation -- use SPRITE_DOG_WLK_RN.
+   Ghidra's sprite_id enum skips _R6 (frames are 1..5, 7..9) -- the
+   walk cycle is 8 frames but the ROM naming is not sequential.  Last
+   walk frame is _R9 at 0x29; 0x2a is SPRITE_DOG_EATING_1. */
+#define SPRITE_DOG_WLK_R1               0x22
+#define SPRITE_DOG_WLK_R2               0x23
+#define SPRITE_DOG_WLK_R3               0x24
+#define SPRITE_DOG_WLK_R4               0x25
+#define SPRITE_DOG_WLK_R5               0x26
+#define SPRITE_DOG_WLK_R7               0x27
+#define SPRITE_DOG_WLK_R8               0x28
+#define SPRITE_DOG_WLK_R9               0x29
+#define SPRITE_DOG_EATING_1             0x2a
+#define SPRITE_DOG_EATING_2             0x2b
+#define SPRITE_DOG_EATING_3             0x2c
+#define SPRITE_READING_1                0x2d
+#define SPRITE_READING_2                0x2e
+#define SPRITE_READING_3                0x2f
+#define SPRITE_SUITCASE                 0x30   /* carried in cs_mvIn */
+#define SPRITE_BOOK                     0x31
+#define SPRITE_VINYL_CARRY              0x32
 #define SPRITE_TYPING_1                 0x33
 #define SPRITE_TYPING_2                 0x34
 #define SPRITE_TYPING_3                 0x35
 #define SPRITE_TYPING_4                 0x36
-#define SPRITE_GAME_BOX                 4       /* also mini-game box */
+#define SPRITE_COOKED_MEAL              0x37   /* carried stove -> cabinet after cooking */
+
+/* ---- object_id (Ghidra) -- asset table indices for od_draw() ---------
+   Dumped verbatim from Ghidra's object_id enum (LCP.PRG loaded).  These
+   are the fixed compile-time indices passed as the first argument to
+   od_draw().  cp68's 22-char macro-name limit forces the OBJ_ prefix
+   (vs. the full OBJECT_ID_ Ghidra name); values are byte-faithful. */
+#define OBJ_FILING_CABINET_CLOSED               0
+#define OBJ_FILING_CAB_OPEN_1                   1       /* filing_cabinet_open_1 */
+#define OBJ_FILING_CAB_OPEN_2                   2       /* filing_cabinet_open_2 */
+#define OBJ_ALARM_1                             3
+#define OBJ_ALARM_2                             4
+#define OBJ_STOVE_1                             5
+#define OBJ_STOVE_2                             6
+#define OBJ_STOVE_3                             7
+#define OBJ_STOVE_4                             8
+#define OBJ_STOVE_5                             9
+#define OBJ_DRESSER_CLOSED                     10
+#define OBJ_DRESSER_OPEN_1                     11
+#define OBJ_DRESSER_OPEN_2                     12
+#define OBJ_CLOCK_1                            13
+#define OBJ_CLOCK_2                            14
+#define OBJ_CLOCK_3                            15
+#define OBJ_FRIDGE_CLOSED                      16
+#define OBJ_FRIDGE_OPEN_1                      17
+#define OBJ_FRIDGE_OPEN_2                      18
+#define OBJ_CABINET_CLOSED                     19
+#define OBJ_CABINET_OPEN_1                     20
+#define OBJ_CABINET_OPEN_2                     21
+#define OBJ_PHONE_1                            22
+#define OBJ_PHONE_2                            23
+#define OBJ_PHONE_3                            24
+#define OBJ_DOOR_TOILET_CLOSED                 25
+#define OBJ_DOOR_TOILET_OPEN_1                 26
+#define OBJ_DOOR_TOILET_OPEN_2                 27
+#define OBJ_DOOR_CLOSET_CLOSED                 28
+#define OBJ_DOOR_CLOSET_OPEN_1                 29
+#define OBJ_DOOR_CLOSET_OPEN_2                 30
+#define OBJ_FIRE_OFF                           31
+#define OBJ_FIRE_1                             32
+#define OBJ_FIRE_2                             33
+#define OBJ_FIRE_3                             34
+#define OBJ_FIRE_4                             35
+#define OBJ_DOOR_FRONT_CLOSED                  36
+#define OBJ_DOOR_FRONT_OPEN_1                  37
+#define OBJ_DOOR_FRONT_OPEN_2                  38
+#define OBJ_MEDICINE_CLOSED                    39
+#define OBJ_MEDICINE_OPEN_1                    40
+#define OBJ_MEDICINE_OPEN_2                    41
+#define OBJ_STOVE_OFF                          42
+#define OBJ_STOVE_ON_1                         43
+#define OBJ_STOVE_ON_2                         44
+#define OBJ_STOVE_ON_3                         45
+#define OBJ_DOOR_STUDY_CLOSED                  46
+#define OBJ_DOOR_STUDY_OPEN_1                  47
+#define OBJ_DOOR_STUDY_OPEN_2                  48
+#define OBJ_DOG_FOOD_BOWL_1                    49
+#define OBJ_DOG_FOOD_BOWL_2                    50
+#define OBJ_DOG_FOOD_BOWL_3                    51
+#define OBJ_PHONE_CALL                         52
+#define OBJ_CABINET_ITEM                       53   /* food-pip in open kitchen cabinet */
+#define OBJ_WHITE_BLUE                         54
+#define OBJ_TYPEWRITER                         55
 
 /* ---- Dog bowl state --------------------------------------------------- */
 #define BOWL_EMPTY                      0
@@ -324,19 +415,74 @@
 #define ENV_RELEASE                             4
 #define ENV_FADEOUT                             5
 
-#define COLOR_dk_brown                          15
-
 /* Card game constants -- CARD_TYPE values 0..51 are the 52 face cards
    (index into crd_mfdb).  CARD_BACK selects the shared face-down back
    MFDB.  CARD_NONE is the sentinel used by war/blackjack to mark
    empty slots in the war-cards arrays and to signal end-of-hand from
-   pk_rmch when the source pile is empty. */
+   pk_rmch when the source pile is empty.
+   Verbatim from Ghidra's `card_type` enum: KING..ACE within each suit
+   (KING = 0 within suit, ACE = 12 within suit; Hearts/Spades/Diamonds/
+   Clubs stride by 13). */
+#define CARD_HEART_KING                  0
+#define CARD_HEART_QUEEN                 1
+#define CARD_HEART_JACK                  2
+#define CARD_HEART_10                    3
+#define CARD_HEART_9                     4
+#define CARD_HEART_8                     5
+#define CARD_HEART_7                     6
+#define CARD_HEART_6                     7
+#define CARD_HEART_5                     8
+#define CARD_HEART_4                     9
+#define CARD_HEART_3                    10
+#define CARD_HEART_2                    11
+#define CARD_HEART_ACE                  12
+#define CARD_SPADE_KING                 13
+#define CARD_SPADE_QUEEN                14
+#define CARD_SPADE_JACK                 15
+#define CARD_SPADE_10                   16
+#define CARD_SPADE_9                    17
+#define CARD_SPADE_8                    18
+#define CARD_SPADE_7                    19
+#define CARD_SPADE_6                    20
+#define CARD_SPADE_5                    21
+#define CARD_SPADE_4                    22
+#define CARD_SPADE_3                    23
+#define CARD_SPADE_2                    24
+#define CARD_SPADE_ACE                  25
+#define CARD_DIAMOND_KING               26
+#define CARD_DIAMOND_QUEEN              27
+#define CARD_DIAMOND_JACK               28
+#define CARD_DIAMOND_10                 29
+#define CARD_DIAMOND_9                  30
+#define CARD_DIAMOND_8                  31
+#define CARD_DIAMOND_7                  32
+#define CARD_DIAMOND_6                  33
+#define CARD_DIAMOND_5                  34
+#define CARD_DIAMOND_4                  35
+#define CARD_DIAMOND_3                  36
+#define CARD_DIAMOND_2                  37
+#define CARD_DIAMOND_ACE                38
+#define CARD_CLUB_KING                  39
+#define CARD_CLUB_QUEEN                 40
+#define CARD_CLUB_JACK                  41
+#define CARD_CLUB_10                    42
+#define CARD_CLUB_9                     43
+#define CARD_CLUB_8                     44
+#define CARD_CLUB_7                     45
+#define CARD_CLUB_6                     46
+#define CARD_CLUB_5                     47
+#define CARD_CLUB_4                     48
+#define CARD_CLUB_3                     49
+#define CARD_CLUB_2                     50
+#define CARD_CLUB_ACE                   51
 #define CARD_BACK                       52
-#define CARD_NONE                       0xff
-/* Card empty background: the 53rd MFDB slot, an all-background
-   coloured card used to clear a slot when the player selects a
-   card for discard (shown while the replacement is animating in). */
+/* Ghidra: CARD_HIGHLIGHT.  The 53rd MFDB slot -- an all-background
+   coloured card used to clear a slot when the player selects a card
+   for discard (shown while the replacement is animating in). */
 #define CARD_HIGHLIGHT                  53
+/* Ghidra: CARD_NONE = -1 (signed short sentinel used across war /
+   blackjack / poker hand arrays for "empty slot" and end-of-pile). */
+#define CARD_NONE                       (-1)
 
 /* Blackjack hit-counter constants.  Ghidra shows these as
    CARD_HEART_10 / _QUEEN / _KING because the 1985 source aliased
@@ -361,10 +507,6 @@
      vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
    Numeric values must match the ROM byte-for-byte. */
 #define FILL_SOLID                      8
-#define VSFPATT                         2
-
-/* Extra HOUSE_POS used by the dog wander logic. */
-#define POS_BTM_STAIR_LANDING           32      /* Ghidra: 0x20 */
 
 /* ---- Door / furniture state bitfield in lcp.door_states_and_flags ---- */
 #define DSF_FRONT_DOOR                  0x001
@@ -378,10 +520,6 @@
 #define DSF_FOOD_COUNT_MASK             0xE00
 #define DSF_FOOD_MASK                   0xE00
 #define DSF_PRESERVE_UPPER_MASK         0xFE00
-
-/* GEMDOS/BIOS/XBIOS trap numbers are all in <osbind.h>; the port only
-   calls the wrapper macros (Fopen, Malloc, Setexc, Xbtimer, ...), so
-   no numeric constants are needed here. */
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
    The 1985 code uses a keycode_enum where Ctrl+X maps to X-'@' (i.e.
@@ -412,10 +550,6 @@
 #define KEY_CTRL_P_PATTING              0x10
 #define KEY_CTRL_R_RECORD               0x12
 #define KEY_CTRL_W_WATER                0x17
-
-/* ---- SPRITE_ID (subset for dog) --------------------------------------- */
-#define SPRITE_DOG_LAY_DOWN             0x21
-#define SPRITE_DOG_WALK_RIGHT_9         0x2a
 
 /* ---- ACTION_ID (dumped verbatim from Ghidra) --------------------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions

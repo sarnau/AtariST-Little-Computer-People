@@ -217,13 +217,13 @@ char ** argv;
 
         /* Ghidra step 32: door / cabinet object_draws.  Ghidra writes
            seven `if (state == NO) A else B` pairs; port uses ternaries. */
-        od_draw(lcp_cabO        == NO ? g_obicc : g_obi02, 46,  140);
-        od_draw(lcp_frdO     == NO ? g_obidf : g_obi06, 294, 151);
-        od_draw(lcp_drsO        == NO ? g_obi11 : g_obi12, 97,  115);
-        od_draw(lcp_clsO    == NO ? g_obidc : g_obi04, 75,  87);
-        od_draw(studyDrO     == NO ? g_obids : g_obi08, 178, 23);
-        od_draw(lcp_toiO    == NO ? g_obidt : g_obi10, 187, 87);
-        od_draw(lcp_flcO == NO ? g_obifc : g_obi14, 258, 47);
+        od_draw(lcp_cabO        == NO ? OBJ_CABINET_CLOSED : OBJ_CABINET_OPEN_2, 46,  140);
+        od_draw(lcp_frdO     == NO ? OBJ_DOOR_FRONT_CLOSED : OBJ_DOOR_FRONT_OPEN_2, 294, 151);
+        od_draw(lcp_drsO        == NO ? OBJ_DRESSER_CLOSED : OBJ_DRESSER_OPEN_2, 97,  115);
+        od_draw(lcp_clsO    == NO ? OBJ_DOOR_CLOSET_CLOSED : OBJ_DOOR_CLOSET_OPEN_2, 75,  87);
+        od_draw(studyDrO     == NO ? OBJ_DOOR_STUDY_CLOSED : OBJ_DOOR_STUDY_OPEN_2, 178, 23);
+        od_draw(lcp_toiO    == NO ? OBJ_DOOR_TOILET_CLOSED : OBJ_DOOR_TOILET_OPEN_2, 187, 87);
+        od_draw(lcp_flcO == NO ? OBJ_FILING_CABINET_CLOSED : OBJ_FILING_CAB_OPEN_2, 258, 47);
 
         /* Ghidra step 33: dog bowl.  Ghidra writes three `if (status
            == BOWL_X)` branches; array indexing on g_obdea produces the

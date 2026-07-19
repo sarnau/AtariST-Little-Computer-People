@@ -45,12 +45,6 @@
 #include "tick_tables.h"
 
 
-/* Object ids referenced by gameTick as bare literals in
-   the Ghidra disassembly (no port-side global covers them).  The
-   values come from the OBJECTS-file record indices for the phone and
-   the fire-off sprites. */
-#define OBJ_PHONE_2             23      /* Ghidra literal 0x17 */
-
 /* Carried-object per-frame Y offset (Ghidra 0x257c6..0x258b0 jump
    table).  Every listed sprite id uses -20; the default is "no update". */
 static short
@@ -58,15 +52,15 @@ cy_yoff(id)
 short   id;
 {
         switch (id) {
-        case 3:                 /* SPRITE_GLASS        */
-        case 4:                 /* SPRITE_GAME_BOX     */
-        case 9:                 /* SPRITE_FOOD_PACKAGE */
-        case 22:                /* SPRITE_FIREWOOD     */
-        case 23:                /* SPRITE_COOKING_POT  */
-        case 48:                /* SPRITE_SUITCASE     */
-        case 49:                /* SPRITE_BOOK         */
-        case 50:                /* SPRITE_VINYL_CARRY  */
-        case 55:                /* SPRITE_55           */
+        case SPRITE_GLASS:
+        case SPRITE_GAME_BOX:
+        case SPRITE_FOOD_PACKAGE:
+        case SPRITE_FIREWOOD:
+        case SPRITE_COOKING_POT:
+        case SPRITE_SUITCASE:
+        case SPRITE_BOOK:
+        case SPRITE_VINYL_CARRY:
+        case SPRITE_COOKED_MEAL:
                 return -20;
         }
         return 0x7fff;
@@ -154,7 +148,7 @@ short   counter;
                         if (fire_ext != NO) {
                                 fire_ext = NO;
                                 fire_act = NO;
-                                od_draw(g_obifo, 257, 170);
+                                od_draw(OBJ_FIRE_OFF, 257, 170);
                         }
 
                         /* Alarm clock SFX + animation. */

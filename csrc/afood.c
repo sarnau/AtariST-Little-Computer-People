@@ -77,18 +77,18 @@ a_eatm()
                 gameTick(1);
                 counter = counter - 1;
         }
-        od_draw(g_obiso, 6, 172);
+        od_draw(OBJ_STOVE_OFF, 6, 172);
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         sp_upds();
-        sp_ssco(SPRITE_55);
+        sp_ssco(SPRITE_COOKED_MEAL);
 
         /* Back to cabinet, then chain into kitchen_cabinet to eat. */
         hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
         g_actif = YES;
         lcp_wkD();
-        g_selaf[SPRITE_55] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_COOKED_MEAL] = SPRITE_HIDDEN;
         sp_upds();
         g_lcyof = NO;
         gameTick(0);
@@ -281,12 +281,12 @@ short   value;
 
                 lcp_face = FACING_LEFT;
                 lcp_st            = STATE_REACH_INTO_CABINET;
-                od_draw(g_obi15, 24, 153);
+                od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
                 gameTick(1);
-                od_draw(g_obi16, 24, 153);
+                od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(1);
-                od_draw(g_obi17, 24, 153);
+                od_draw(OBJ_FRIDGE_OPEN_2, 24, 153);
                 gameTick(1);
 
                 lcp_face = FACING_RIGHT;
@@ -301,9 +301,9 @@ short   value;
                 lcp_st = STATE_STAND_FACING_SCREEN;
                 gameTick(2);
 
-                od_draw(g_obi16, 24, 153);
+                od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
                 gameTick(1);
-                od_draw(g_obi15, 24, 153);
+                od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(1);
 

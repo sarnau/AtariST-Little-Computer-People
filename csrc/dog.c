@@ -149,7 +149,7 @@ dg_mvAni()
                                 if (dog_y < 100) {
                                         h_flip = NO;
                                         dog_y = dog_y - 1;
-                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WLK_R9) {
                                                 next_x = dog_x + 1;
                                                 if (next_x != g_dyx)
                                                         next_x = dog_x + 2;
@@ -157,7 +157,7 @@ dg_mvAni()
                                 } else if (dog_y < 0xa1) {
                                         h_flip = YES;
                                         dog_y = dog_y - 1;
-                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WLK_R9) {
                                                 next_x = dog_x - 1;
                                                 if (next_x != g_dyx)
                                                         next_x = dog_x - 2;
@@ -182,7 +182,7 @@ dg_mvAni()
                                 if (dog_y < 100) {
                                         h_flip = YES;
                                         dog_y = dog_y + 1;
-                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WLK_R9) {
                                                 next_x = dog_x - 1;
                                                 if (next_x != g_dyx)
                                                         next_x = dog_x - 2;
@@ -190,7 +190,7 @@ dg_mvAni()
                                 } else if (dog_y < 161) {
                                         h_flip = NO;
                                         dog_y = dog_y + 1;
-                                        if (g_dsid != SPRITE_DOG_WALK_RIGHT_9) {
+                                        if (g_dsid != SPRITE_DOG_WLK_R9) {
                                                 next_x = dog_x + 1;
                                                 if (next_x != g_dyx)
                                                         next_x = dog_x + 2;

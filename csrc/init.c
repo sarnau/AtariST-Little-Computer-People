@@ -129,6 +129,13 @@ void
 st_titl()
 {
         short   i;
+        /* Match the non-skip path's first statement: prime g_dscp so
+           subsequent prCh->Setscreen(g_dscp,-1,-1) doesn't clobber
+           logbase with NULL and trigger the v_gtext $fd330c fault.
+           Without this, any prCh call before the first fillTopR()
+           crashes TOS's v_gtext -- see the 5-min real-time run log. */
+        g_dscp = sv_phb;
+
         lcp.owner_name[0] = 'P';
         lcp.owner_name[1] = 'L';
         lcp.owner_name[2] = 'A';
@@ -496,10 +503,10 @@ cs_mvIn()
         gameTick(0x50);
         p_dobls();
         gameTick(0x18);
-        od_draw(g_obi05, 294, 151);
+        od_draw(OBJ_DOOR_FRONT_OPEN_1, 294, 151);
         sf_sele(SFX_DOOR_OPEN, 6);
         gameTick(2);
-        od_draw(g_obi06, 294, 151);
+        od_draw(OBJ_DOOR_FRONT_OPEN_2, 294, 151);
         gameTick(2);
         lcp_frdO = YES;
         g_selaf[0x15] = SPRITE_IN_FRONT;

@@ -131,7 +131,12 @@ short   g_lsmas[168];
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
 /* g_dwanf (Ghidra dog_walk_anim_frames @ 0x2A0E8): 8 sprite ids the
    walk cycle rotates through in dg_mvAni. */
-short   g_dwanf[8] = { 34, 35, 36, 37, 38, 39, 40, 41 };
+short   g_dwanf[8] = {
+        SPRITE_DOG_WLK_R1, SPRITE_DOG_WLK_R2,
+        SPRITE_DOG_WLK_R3, SPRITE_DOG_WLK_R4,
+        SPRITE_DOG_WLK_R5, SPRITE_DOG_WLK_R7,
+        SPRITE_DOG_WLK_R8, SPRITE_DOG_WLK_R9
+};
 /* PTR_ARRAY_0005a156/0x54016 are declared as g_sedim/g_sedms above.
    sp_reglp populates them; sp_sprs/sp_ssco/sp_ss02/sp_spud all read
    from the same arrays.  There is no separate "dog only" table -- the

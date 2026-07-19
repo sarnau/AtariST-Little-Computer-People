@@ -80,27 +80,12 @@ short   lcp_food                  = 4;
 short   lcp_recP              = 0;
 short   lcp_tv                       = 0;
 
-/* Object-ID slots -- populated at load time in the real game from the
-   OBJECTS file; nonzero defaults let render.c blit *something* even
-   before the file is loaded. */
-short   g_obids     = 46;
-short   g_obi07     = 47;
-short   g_obi08     = 48;
-short   g_obidf     = 36;
-short   g_obi05     = 37;
-short   g_obi06     = 38;
-short   g_obicc        = 19;
-short   g_obico        = 20;
-short   g_obi02        = 21;
-short   g_obipc            = 40;
-short   g_obidt    = 25;
-short   g_obi09    = 26;
-short   g_obi10    = 27;
-short   g_obiso             = 22;
-short   g_obisa[3]    = { 23, 24, 25 };
-short   g_obi15         = 16;
-short   g_obi16         = 17;
-short   g_obi17         = 18;
+/* g_obisa: stove-on animation frame IDs, indexed at runtime by
+   a_eatm's `pick = rndRng(0,2)` cooking loop.  Ghidra ROM has an
+   array of three shorts at 0x2b4b6; port keeps the array shape for
+   variable-indexed access.  All other object slots are now inlined
+   as OBJ_* constants at their call sites. */
+short   g_obisa[3]    = { OBJ_STOVE_ON_1, OBJ_STOVE_ON_2, OBJ_STOVE_ON_3 };
 
 BOOL16  mi_play                 = NO;
 short   dg_bwlch            = 0;
@@ -170,19 +155,6 @@ char    in_str[256];
    compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
 unsigned char   comp_tok[15];
-
-short   g_obidc    = 28;
-short   g_obi03    = 29;
-short   g_obi04    = 30;
-short   g_obifo         = 31;
-short   g_obifa[4] = { 32, 33, 34, 35 };
-short   g_obifc = 0;
-short   g_obi13 = 1;
-short   g_obi14 = 2;
-short   g_obi11        = 10;
-short   g_obido        = 11;
-short   g_obi12        = 12;
-short   g_obibg            = 44;
 
 short * sv_bodyP           = (short *) 0;
 short * sv_headP           = (short *) 0;
@@ -661,20 +633,27 @@ BOOL16  dg_nrbwl              = NO;
 BOOL16  g_deact               = NO;
 short   g_decou            = 0;
 short   dg_ltgtI           = 0;
-/* Ghidra g_dgitx @ 0x2b8f0 = 47.  Used by cutscene at
-   startup to seed the dog's first wander target. */
-short   g_dgitx        = 47;
+/* Ghidra g_dgitx @ 0x2b8f0 = POS_BTM_SCREEN_EDGE.  Used by cutscene
+   at startup to seed the dog's first wander target -- the dog walks
+   in from the bottom-screen edge. */
+short   g_dgitx        = POS_BTM_SCREEN_EDGE;
 /* Ghidra g_dgiyo @ 0x2b904 = 3.  Y micro-nudge applied
    to the initial dog target position. */
 short   g_dgiyo            = 3;
-short   g_dseat[3]   = { 42, 43, 44 };
-/* 9 wander destinations for the dog, plus X/Y micro-offsets. */
-/* Ghidra dog_destination_position_table @ 0x2B8DE, 10 entries -- the
-   HOUSE_POS index the dog picks as its next wander target.  Values
-   {0, 5, 11, 19, 29, 32, 33, 41, 47, 47} correspond (per HOUSE_POS
-   enum) roughly to bowl / stair landings / doors / table / fridge /
-   couch / armchair.  Last two are duplicated 47 (POS_TOP_ARMCHAIR). */
-short   g_ddipt[10] = { 0, 5, 11, 19, 29, 32, 33, 41, 47, 47 };
+short   g_dseat[3]   = {
+        SPRITE_DOG_EATING_1, SPRITE_DOG_EATING_2, SPRITE_DOG_EATING_3
+};
+/* Ghidra dog_destination_position_table @ 0x2B8DE, 10 HOUSE_POS
+   entries the dog picks (via rndRng) as its next wander target.
+   Last two duplicate POS_BTM_SCREEN_EDGE so it's picked with 2x
+   probability -- the dog favours wandering off-screen. */
+short   g_ddipt[10] = {
+        POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
+        POS_TOP_FIREPLACE_RIGHT,   POS_MID_BEDROOM_WALK,
+        POS_MID_COMPUTER_DESK,     POS_BTM_STAIR_LANDING,
+        POS_BTM_DOG_BOWL,          POS_BTM_WATER_TAP,
+        POS_BTM_SCREEN_EDGE,       POS_BTM_SCREEN_EDGE
+};
 /* Ghidra dog_dest_x_offset_table @ 0x2B906, dog_dest_y_offset_table
    @ 0x2B8F2 (10 shorts each): per-destination pixel nudges applied
    after hs_posXY returns the anchor for the destination. */
