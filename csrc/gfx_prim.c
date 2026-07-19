@@ -191,8 +191,9 @@ exitVdi()
    Used by rp_anim for the needle sweep pixels
    and by the mini-games' cursor + score indicators.
 
-   addr: drwPixel() (in the graphics-primitives cluster; exact
-   ROM offset not captured here) */
+   addr: Ghidra `draw_pixel` at 0x00023930 (called by rp_anim as
+   `_draw_pixel`; identical shape/instruction count to drwLine per
+   Ghidra's function-similarity index). */
 
 void
 drwPixel(x, y, color)

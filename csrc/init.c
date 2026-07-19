@@ -351,9 +351,10 @@ mq_intim()
 #endif
 }
 
-/* cntSong (Ghidra ~0x??): enumerate *.SNG and *.ORG files in the
-   current directory, storing counts in sng_cnt /
-   org_cnt. */
+/* cntSong: enumerate *.SNG and *.ORG files in the current
+   directory, storing counts in sng_cnt / org_cnt.
+   addr: Ghidra `count_songs` (called from main at step 8 of the boot
+   sequence documented above main() at ROM 0x15546). */
 
 
 void

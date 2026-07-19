@@ -12,7 +12,8 @@
  * (cprot_r) is set once during startup and is treated as
  * an ordinary flag from here.
  *
- * addr: gameLoop()
+ * addr: Ghidra `endless_game_loop` (called from the tail of main at
+ * ROM 0x15546).
  */
 
 #include "types.h"
@@ -39,11 +40,9 @@
 #include "tick.h"
 #include "tick_tables.h"
 
-/* gameLoop definition (gated back IN for both host and
-   Alcyon builds).  main() does NOT call it yet -- we're bisecting
-   what part of the archive triggers the pre-main crash by seeing
-   whether merely LINKING with these transitive refs breaks the
-   canary. */
+/* gameLoop -- verified against Ghidra `endless_game_loop`.
+   main() calls it as the final step (Ghidra step 40), matching the
+   Ghidra decompile's structure and control flow one-for-one. */
 
 #include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
 
@@ -248,9 +247,14 @@ char ** argv;
         return 0;
 }
 
-/* ct_clrB (Ghidra 0x15546:0x??): clear bits 0..2 of
-   the TOS system variable `conterm` at 0x484.  Must run in supervisor
-   mode; port uses GEMDOS Super to elevate, mask conterm, restore. */
+/* ct_clrB: clear bits 0..2 of the TOS system variable `conterm` at
+   0x484.  Must run in supervisor mode; port uses GEMDOS Super to
+   elevate, mask conterm, restore.
+   addr: port-side helper -- no Ghidra counterpart function.  The
+   1985 code inlines this 4-instruction Super/conterm/Super sequence
+   at the top of main (ROM 0x15546, immediately after aes_vdi_jnit
+   and before Dsetpath("data")).  Extracted here so main()'s step-3
+   call site stays a single named entry. */
 
 void
 ct_clrB()

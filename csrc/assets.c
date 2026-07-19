@@ -136,7 +136,12 @@ short *         h_tab;
         return count;
 }
 
-/* al_loot: read OBJECTS, then unpack the records. */
+/* al_loot: read OBJECTS, then unpack the records.
+   addr: port-side helper -- no Ghidra counterpart function.  The
+   1985 code inlines this pair as `ldObj();` followed by a 56-iter
+   parse loop in Ghidra's main (ROM 0x15546, "Load object images"
+   comment).  Wrapped here so main()'s call site stays a single
+   named entry. */
 
 short
 al_loot()
@@ -147,7 +152,12 @@ al_loot()
                              g_obtaw, g_obtah);
 }
 
-/* al_lost: read SPRITES, then unpack the records. */
+/* al_lost: read SPRITES, then unpack the records.
+   addr: port-side helper -- no Ghidra counterpart function.  The
+   1985 code inlines this pair as `load_sprites();` followed by a
+   50-iter spritedata_create_with_mask loop in Ghidra's main (ROM
+   0x15546, "Load sprite images" comment).  Wrapped here so main()'s
+   call site stays a single named entry. */
 
 short
 al_lost()
@@ -164,7 +174,11 @@ al_lost()
      +2..3  total (short, big-endian) -- total payload bytes
                     (== count * 168 for the 16x21 LCP sprites)
    Returns the number of frames.
-   addr: (inferred; the 1985 code has one loader per file) */
+   addr: port-side helper -- no Ghidra counterpart function.  The
+   1985 code has one loader per file inlined in main (ROM 0x15546):
+   `fLoad("body.lcp", body_lcp_file)` and `fLoad(pex_lcp_ptr,
+   pex_lcp_file)` are back-to-back after `cl_drini()`.  Factored
+   here so callers share a single named entry. */
 
 short
 al_loal(filename, dest_buf, max_b)
@@ -206,8 +220,12 @@ long            max_b;
    outside that range are clamped to 2 so the loader never wanders off
    a random string ("PE1.LCP" doesn't exist in the shipped disk).
 
-   addr: (inferred; the 1985 loader is inlined in the boot path with a
-   direct filename-string switch on character_sprite_id) */
+   addr: port-side helper -- no Ghidra counterpart function.  The
+   1985 code inlines both loads in main (ROM 0x15546): after
+   `fLoad("body.lcp", body_lcp_file)`, it mutates `pex_lcp_ptr[2]`
+   from '0'+character_sprite_id then calls `fLoad(pex_lcp_ptr,
+   pex_lcp_file)`.  Wrapped here so main()'s call site stays a
+   single named entry. */
 
 static unsigned char    body_buf[20000];
 static unsigned char    pex_buf[12000];
@@ -262,8 +280,14 @@ al_locs()
    HOUSE.SCN and TITLE.SCN are the two 320x200 4-plane screen images
    that the 1985 game boots from (house background and title splash).
 
-   addr: (inferred from Python decompressImageFile; the 1985 loader
-   is likely inlined in the intro/setup path) */
+   addr: nibble-decode inner loop == Ghidra `decompress_scn` (called
+   from main at ROM 0x15546 immediately after the fOpen+Malloc+
+   fr_read sequence for house.scn).  The port's unScn additionally
+   wraps the fOpen / dictionary-read / Malloc / fr_read / Mfree /
+   Fclose sequence that Ghidra inlines around the decompress_scn
+   call.  Data-flow and control-flow of the decoder match Ghidra
+   one-for-one (word-dictionary of 15 entries, 0xF escape, 4-nibble
+   literal read). */
 
 void
 unScn(filename, out_wds, dst_wds)
