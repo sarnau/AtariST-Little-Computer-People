@@ -389,6 +389,13 @@ handlers.)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
+| `copyprot_check_return`            | `cprot_r`    |
+| `game_speed_counter`               | `g_spdc`     |
+
+### (subsystem line placeholder — do not remove)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
 | `main_colorpalette`                | `main_pal`   |
 | `skin_color_palette`               | `skin_pal`   |
 | `month_name_table`                 | `mo_names`   |
