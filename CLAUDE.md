@@ -123,6 +123,24 @@ Struct name/field syncing uses the same HTTP mechanism via
   Hatari cache / TOS ROM / `~/hatari-c/GAME/` state issue rather
   than a code regression.  Worth 30 min to nail down before it
   masks a real regression.
+  *(Update 2026-07-21: resolved.  Root cause was tv_boul / tv_patl
+  calling v_pline with count=2 but only initialising 1 point of the
+  buffer; the second polyline endpoint was read from stack garbage,
+  which corrupted the compositor over minutes and produced the
+  earlier bus-error cascade.  Ghidra now shows the real short[4]
+  buffer layouts; both fixed in commit 12e572f.  Long-run test now
+  passes for 36000 VBLs / 10 real minutes.)*
+- **`test_stairs.sh` / `test_stairs_up.sh` are broken by design.**
+  They write `lcp_x` / `lcp_y` / `g_wtx` / `g_wty` into memory and
+  expect the AI to walk the resident from the warped position to the
+  injected target.  But `chk_actT` picks actions from an internal
+  priority ladder; each action carries its own hardcoded walk
+  destination and never reads the externally-set `g_wtx` /
+  `g_wty`.  Warp timing (VBL 1500 vs 15000) is irrelevant.  To fix
+  properly, add a `#ifdef TEST_STAIRS` hook in `cs_mvIn` that
+  directly calls `lcp_wkD()` with the target -- same shape as
+  `TEST_ACTIONS`.  Task #33 ("Fix player sliding through floor on
+  stairs") was verified via manual play, not this harness.
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
   documented in `csrc/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).
