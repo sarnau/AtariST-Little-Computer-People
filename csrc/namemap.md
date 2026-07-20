@@ -334,7 +334,6 @@ multiple items sharing prefixes not previously flagged.
 | g_mstr  | midi_scale_transpose_table                       |
 | od_draw | object_draw                                      |
 | g_oiidx | object_index                                     |
-| g_otmfd | object_tab_mfdb                                  |
 | p_dosnd | play_door_sound                                  |
 | p_dobls | play_doorbell_sound                              |
 | p_sfgrt | play_soundeffect_greeting                        |

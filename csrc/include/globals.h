@@ -193,7 +193,6 @@ extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];
 extern MFDB g_setmt[];
-extern void* g_otmfd;
 extern short g_obtaw[];
 extern short g_obtah[];
 extern short g_setaw[];

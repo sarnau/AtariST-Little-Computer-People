@@ -574,7 +574,6 @@ unsigned char   spr_file[14000];
 MFDB    g_obtmt[64];
 MFDB    g_setmt[64];
 
-void *  g_otmfd                 = g_obtmt;
 short   g_obtaw[64];
 short   g_obtah[64];
 short   g_setaw[64];

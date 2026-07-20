@@ -55,7 +55,7 @@ cl_redrH()
 /* od_draw: blit a pre-loaded background object at (x, y) via
    vro_cpyfm (VRO copy S_ONLY = replace, no transparency).  Each
    object has its width/height stored in g_obtaw/height[] and
-   its MFDB source rect in g_otmfd offset by g_oiidx.
+   its MFDB source rect in g_obtmt indexed by g_oiidx.
    addr: od_draw() */
 
 
@@ -66,10 +66,11 @@ short   x;
 short   y;
 {
         /* Ghidra: `object_tab_mfdb + object_index` (MFDB* pointer
-           arithmetic).  Our port had `(char*)g_otmfd + g_oiidx`
-           which treats g_oiidx as a byte offset instead of an array
+           arithmetic).  An earlier port used `(char*)g_otmfd + g_oiidx`
+           which treated g_oiidx as a byte offset instead of an array
            index -- MFDB is 18 bytes so all non-zero object IDs
-           landed misaligned and VDI got junk width/height. */
+           landed misaligned and VDI got junk width/height.  Fixed by
+           indexing directly into the typed MFDB[] array. */
         {
                 short   pxy[8];
                 pxy[0] = 0;
@@ -81,7 +82,7 @@ short   y;
                 pxy[6] = x + g_obtaw[g_oiidx] - 1;
                 pxy[7] = y + g_obtah[g_oiidx] - 1;
                 vro_cpyfm(vdihnd, S_ONLY, pxy,
-                          &((MFDB *) g_otmfd)[g_oiidx],
+                          &g_obtmt[g_oiidx],
                           &mf_scrp);
         }
 }
