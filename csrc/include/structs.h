@@ -116,17 +116,18 @@ typedef struct {
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
-   `table[10]` is a per-position bitmask: for each of the 10 position
-   slots, all bits that must be present in the accumulated
-   g_ewb[] before this entry matches.  A sentinel entry
-   with `table[0] == 0xff` terminates the table.  `priority_offset`
-   nudges the action's queue priority up or down; `action` is the
-   ACTION_ID to fire (stored as char to save 1 byte per row -- the
-   1985 code cared about ROM footprint). */
+   12-byte layout confirmed against Ghidra (auto-generated labels at
+   enteredword_to_action[0] show action @ +10, priorityOffset @ +11,
+   struct size 12).  `table[10]` is a per-position bitmask: for each
+   of the 10 position slots, all bits that must be present in the
+   accumulated g_ewb[] before this entry matches.  A sentinel entry
+   with `table[0] == 0xff` terminates the table.  `action` is the
+   ACTION_ID to fire; `priority_offset` nudges the action's queue
+   priority up or down.  Both are single bytes. */
 typedef struct {
         unsigned char   table[10];
-        short           priority_offset;
         char            action;
+        char            priority_offset;
 } WORD_TO_ACTION;
 
 /* MFDB -- VDI memory form definition block.  Passed as source or
