@@ -48,19 +48,23 @@ if not os.path.exists(SYMS):
     print(f"ERROR: {SYMS} missing (run ~/ghidra_scripts/list_data_symbols.java)",
           file=sys.stderr)
     sys.exit(1)
-sym_addr = {}
+sym_addr = {}       # bom-stripped-key -> (addr, actual-name-including-bom)
 with open(SYMS) as f:
     for line in f:
         parts = line.strip().split("\t")
         if len(parts) == 2:
-            name = parts[1].lstrip("﻿")          # strip BOM
-            sym_addr.setdefault(name, parts[0])
+            actual = parts[1]
+            key    = actual.lstrip("﻿")          # strip BOM to build the lookup key
+            sym_addr.setdefault(key, (parts[0], actual))
 
 rows, missing = [], []
 for g, p in pairs:
     key = g if g in sym_addr else g.lstrip("_")
     if key in sym_addr:
-        rows.append((sym_addr[key], key, p))
+        addr, actual = sym_addr[key]
+        # emit the actual Ghidra name (with any BOM prefix intact) so the
+        # RenameLcpGlobals safety check matches byte-for-byte.
+        rows.append((addr, actual, p))
     else:
         missing.append(g)
 
