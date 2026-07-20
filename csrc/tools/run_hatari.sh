@@ -67,9 +67,13 @@ else
         > "$LOG" 2>&1
 fi
 
-n_be=$(grep -c 'Bus Error' "$LOG" 2>/dev/null); n_be=${n_be:-0}
-first_pc=$(grep 'Bus Error' "$LOG" | head -1 | sed 's/.*PC=\$\([0-9a-f]*\).*/\1/')
-uniq_pcs=$(grep 'Bus Error' "$LOG" | sed 's/.*PC=\$\([0-9a-f]*\).*/\1/' | sort -u | tr '\n' ' ')
+# Filter out $fc0174 -- TOS 1.04's boot-time RAM-size probe deliberately
+# triggers a bus error at that PC to detect the top of RAM; it's not a
+# real crash and fires on every boot regardless of the loaded program.
+n_be=$(grep 'Bus Error' "$LOG" 2>/dev/null | grep -v fc0174 | wc -l | tr -d ' ')
+n_be=${n_be:-0}
+first_pc=$(grep 'Bus Error' "$LOG" | grep -v fc0174 | head -1 | sed 's/.*PC=\$\([0-9a-f]*\).*/\1/')
+uniq_pcs=$(grep 'Bus Error' "$LOG" | grep -v fc0174 | sed 's/.*PC=\$\([0-9a-f]*\).*/\1/' | sort -u | tr '\n' ' ')
 exited=$(grep -o 'program 0x[0-9a-f]* exit' "$LOG" | head -1)
 
 echo "==== HATARI SMOKE TEST ===="
