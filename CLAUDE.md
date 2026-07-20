@@ -130,17 +130,21 @@ Struct name/field syncing uses the same HTTP mechanism via
   earlier bus-error cascade.  Ghidra now shows the real short[4]
   buffer layouts; both fixed in commit 12e572f.  Long-run test now
   passes for 36000 VBLs / 10 real minutes.)*
-- **`test_stairs.sh` / `test_stairs_up.sh` are broken by design.**
-  They write `lcp_x` / `lcp_y` / `g_wtx` / `g_wty` into memory and
-  expect the AI to walk the resident from the warped position to the
-  injected target.  But `chk_actT` picks actions from an internal
-  priority ladder; each action carries its own hardcoded walk
-  destination and never reads the externally-set `g_wtx` /
-  `g_wty`.  Warp timing (VBL 1500 vs 15000) is irrelevant.  To fix
-  properly, add a `#ifdef TEST_STAIRS` hook in `cs_mvIn` that
-  directly calls `lcp_wkD()` with the target -- same shape as
-  `TEST_ACTIONS`.  Task #33 ("Fix player sliding through floor on
-  stairs") was verified via manual play, not this harness.
+- **`test_stairs.sh` / `test_stairs_up.sh` still fail on harness
+  plumbing.**  The test-side design flaw is fixed: a `#ifdef
+  TEST_STAIRS=1|2` hook in `cs_mvIn` (init.c) now directly warps +
+  calls `lcp_wkD()`, bypassing the AI action ladder that would
+  otherwise ignore the injected `g_wtx` / `g_wty`.  What remains
+  broken is the sample-address lookup:
+  `tools/find_syms.py` reports DATA offsets that drift by ~88 bytes
+  from the actual link layout (specifically for symbols in .o files
+  that come after globals.o alphabetically -- sprglobs.o, tick.o,
+  tvanim.o, vocab.o, walk.o).  Same-invocation math: BASE derived
+  from `_lcp_x` disagrees with BASE derived from `_lcp_st` by 0x58.
+  Root cause not diagnosed; likely a per-.o padding / alignment
+  contribution missing from find_syms's `acc_d` accumulator.
+  Task #33 ("Fix player sliding through floor on stairs") was
+  verified via manual play, not this harness.
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
   documented in `csrc/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).

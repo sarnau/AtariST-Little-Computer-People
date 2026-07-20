@@ -618,6 +618,26 @@ cs_mvIn()
                         deal_kc(TEST_KEY);
                 }
 #endif
+#ifdef TEST_STAIRS
+                /* Force a stair traversal.  The AI ladder in chk_actT
+                   never reads externally-set g_wtx/g_wty, so a
+                   memory-poke test can't drive one; call lcp_wkD
+                   directly.
+                     TEST_STAIRS=1 -> descend attic to bottom floor
+                     TEST_STAIRS=2 -> ascend bottom floor to attic  */
+                {
+#if TEST_STAIRS == 1
+                        lcp_x = 182; lcp_y = 72;
+                        g_wtx = 300; g_wty = 195;
+#else
+                        lcp_x = 170; lcp_y = 185;
+                        g_wtx = 300; g_wty = 45;
+#endif
+                        g_wyx = 0; g_wyy = 0;
+                        lcp_stR = NO;
+                        lcp_wkD();
+                }
+#endif
                 return;
         }
         for (;;) a_sleep(-1);

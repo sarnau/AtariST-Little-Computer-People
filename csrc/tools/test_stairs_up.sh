@@ -24,7 +24,8 @@ GAME=$HOME/hatari-c/GAME
 PRG=$CSRC/build/alcyon/LCP.PRG
 
 if [ -z "${NO_REBUILD:-}" ]; then
-    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_MIDI=1" "$CSRC/tools/alcyon_build.sh" >/dev/null 2>&1 \
+    ALCYON_CPPFLAGS="-DTEST_STAIRS=2 -DSKIP_TITLE=1 -DSKIP_MIDI=1" \
+        FILES=init.c "$CSRC/tools/alcyon_build.sh" >/dev/null 2>&1 \
         && "$CSRC/tools/alcyon_link.sh" >/dev/null 2>&1 \
         || { echo "SETUP: rebuild for tests failed" >&2; exit 2; }
 fi
@@ -35,16 +36,19 @@ if [ ! -f "$PRG" ]; then
 fi
 
 BASE=0x13c14
-# Re-derive with `python3 tools/find_syms.py _lcp_x ...` after link-layout
-# changes (adding globals, new .c files, or growing existing code).
-LCP_X=$((BASE + 0x1a8e4))
-LCP_Y=$((BASE + 0x1a8e6))
-G_WTX=$((BASE + 0x1a904))
-G_WTY=$((BASE + 0x1a906))
-LCP_ST=$((BASE + 0x1c208))
-G_WYX=$((BASE + 0x1c764))
-G_WYY=$((BASE + 0x1c766))
-LCP_STR=$((BASE + 0x1c768))
+# Derive symbol offsets from the just-built .o files -- see
+# test_stairs.sh for rationale.
+_syms=$(python3 "$CSRC/tools/find_syms.py" \
+        _lcp_x _lcp_y _g_wtx _g_wty _lcp_st _g_wyx _g_wyy _lcp_stR)
+_off() { echo "$_syms" | awk -v s="_$1" '$1==s { print $3 }' | sed 's/base+//'; }
+LCP_X=$((BASE + $(_off lcp_x)))
+LCP_Y=$((BASE + $(_off lcp_y)))
+G_WTX=$((BASE + $(_off g_wtx)))
+G_WTY=$((BASE + $(_off g_wty)))
+LCP_ST=$((BASE + $(_off lcp_st)))
+G_WYX=$((BASE + $(_off g_wyx)))
+G_WYY=$((BASE + $(_off g_wyy)))
+LCP_STR=$((BASE + $(_off lcp_stR)))
 
 printf -v LCP_X_H '%x'  $LCP_X
 printf -v LCP_Y_H '%x'  $LCP_Y
@@ -68,23 +72,8 @@ SAMPLES="1520 1600 1750 1900 2100 2300 2500 2700 2900 3100 3300 3600 4000 5000"
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
 
-cat > "$WORKDIR/warp.dbg" <<EOF
-w \$$LCP_X_H \$00
-w \$$(printf '%x' $((LCP_X + 1))) \$aa
-w \$$LCP_Y_H \$00
-w \$$(printf '%x' $((LCP_Y + 1))) \$b9
-w \$$G_WTX_H \$01
-w \$$(printf '%x' $((G_WTX + 1))) \$2c
-w \$$G_WTY_H \$00
-w \$$(printf '%x' $((G_WTY + 1))) \$2d
-w \$$G_WYX_H \$00
-w \$$(printf '%x' $((G_WYX + 1))) \$00
-w \$$G_WYY_H \$00
-w \$$(printf '%x' $((G_WYY + 1))) \$00
-w \$$STR_H   \$00
-w \$$(printf '%x' $((LCP_STR + 1))) \$00
-c
-EOF
+# Warp + lcp_wkD is done in-C via the TEST_STAIRS=2 hook in cs_mvIn
+# (init.c).  Sampling only from here.
 
 cat > "$WORKDIR/sample.dbg" <<EOF
 m \$$LCP_X_H-\$$(printf '%x' $((LCP_X + 4)))
@@ -95,7 +84,6 @@ c
 EOF
 
 {
-    echo "b VBL > $INIT_VBL :once :file $WORKDIR/warp.dbg"
     for v in $SAMPLES; do
         echo "b VBL > $v :once :file $WORKDIR/sample.dbg"
     done
@@ -117,18 +105,30 @@ HPID=$!
 sleep 40
 kill $HPID 2>/dev/null; wait $HPID 2>/dev/null
 
+LCP_X_H_UP=$(printf '%08X' $LCP_X)
+G_WTX_H_UP=$(printf '%08X' $G_WTX)
+LCP_ST_H_UP=$(printf '%08X' $LCP_ST)
+G_WYX_H_UP=$(printf '%08X' $G_WYX)
+
+LCP_X_ADDR=$LCP_X_H_UP G_WTX_ADDR=$G_WTX_H_UP \
+LCP_ST_ADDR=$LCP_ST_H_UP G_WYX_ADDR=$G_WYX_H_UP \
 python3 - "$WORKDIR/hatari.log" <<'PY'
-import re, sys
+import os, re, sys
 
 log = open(sys.argv[1]).read()
 blocks = re.split(r'CPU breakpoint condition\(s\) matched \d+ times', log)[1:]
 
+LX = os.environ['LCP_X_ADDR']
+WT = os.environ['G_WTX_ADDR']
+ST = os.environ['LCP_ST_ADDR']
+WY = os.environ['G_WYX_ADDR']
+
 samples = []
 for b in blocks:
-    lx  = re.search(r'0002E4F8: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wt  = re.search(r'0002E518: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    st  = re.search(r'0002FE1C: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
-    wy  = re.search(r'00030378: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    lx  = re.search(LX + r': ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wt  = re.search(WT + r': ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    st  = re.search(ST + r': ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
+    wy  = re.search(WY + r': ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})', b)
     if lx and wt and st and wy:
         samples.append({
             'lx':  int(lx.group(1)+lx.group(2), 16),
@@ -208,4 +208,9 @@ else
     echo "==== STAIR ASCENT TEST ===="
     echo "VERDICT:     FAIL"
 fi
+
+# Rebuild init.c without TEST_STAIRS so subsequent runs use a
+# clean binary.
+FILES=init.c "$CSRC/tools/alcyon_build.sh" > /dev/null 2>&1
+
 exit $rc
