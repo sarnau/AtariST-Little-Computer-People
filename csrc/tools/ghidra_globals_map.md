@@ -129,7 +129,8 @@ handlers.)
 
 | Ghidra                              | Port         |
 |-------------------------------------|--------------|
-| `soundeffect_playing_flag`          | `g_sfacf`    |
+| `soundeffect_active_flag`           | `g_sfacf`    |
+| `soundeffect_playing_flag`          | `g_sfplf`    |
 | `soundeffect_current`               | `g_sfcur`    |
 | `soundeffect_current_priority`      | `g_sfcup`    |
 | `soundeffect_playing_id`            | `g_sfpli`    |
@@ -166,7 +167,8 @@ handlers.)
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
 | `vdihandle`                        | `vdihnd`     |
-| `screen_mfdb` (backbuffer)         | `mf_scrp`    |
+| `screen_mfdb` (compositing target) | `g_srmfd`    |
+| `MFDB_screen_ptr` (source screen)  | `mf_scrp`    |
 | `screen_scale_factor`              | `scr_scal`   |
 
 ### Dog AI
@@ -417,6 +419,155 @@ sampling more decompilations.  Priority modules to sample next:
 (`comp_tok`, `in_str`, `cmd_inp`), `csrc/letload.c`
 (`g_ltcwt`, `g_ltscb`), `csrc/render.c` (compositor `tx_sctm`,
 `scr_scal`, `MFDB_A`, `scrbufA`/`scrbufB`).
+
+### Batch 3 additions
+
+Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
+`fillTopR`, `od_draw`, `dg_wkPth`, `dg_mvAni`, `mq_parh`, `psg_wr`,
+`psg_mix`, `psg_cpE`, `psg_upEn`, `mowrit`.
+
+### Screen buffers / render targets
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `SCREEN_BUFFER_A`                  | `scrbufA`    |
+| `SCREEN_BUFFER_B`                  | `scrbufB`    |
+| `screen_ptr`                       | `g_srptr`    |
+| `screen_logbase`                   | `g_srlgb`    |
+| `screen_scroll_down_count`         | `g_srsdc`    |
+| `dest_screenbase_ptr`              | `g_dscp`     |
+| `current_screen_mfdb`              | `cur_mf`     |
+| `MFDB_dest_screenbase_cards`       | `mf_scb_c`   |
+
+### LCP sprite render (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `body_lcp_file`                    | `body_ptr`   |
+| `lcp_sprite_img`                   | `g_lsimg`    |
+| `lcp_sprite_mask`                  | `g_lsmas`    |
+| `lcp_carrying_object_flag`         | `g_lcyof`    |
+| `lcp_sprites_hidden`               | `g_lssh`     |
+| `lcp_dog_bowl_status`              | `lcp_bwlS`   |
+| `carry_body_frame_table`           | `cy_frT`     |
+
+### Dog waypoint / floor (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `dog_waypoint_x`                   | `g_dyx`      |
+| `dog_waypoint_y`                   | `g_dyy`      |
+| `floor_bottom_y_coords`            | `flr_by`     |
+| `floor_center_y_coords`            | `flr_cy`     |
+
+### MIDI sequencer (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `midi_channel_count`               | `g_mchcn`    |
+| `midi_current_channel`             | `mi_ccha`    |
+| `midi_current_program`             | `g_mcpro`    |
+| `midi_current_note`                | `mi_cnot`    |
+| `midi_data_ptr`                    | `mi_dptr`    |
+| `midi_data_base_ptr`               | `mi_dbase`   |
+| `midi_default_velocity`            | `mi_dvel`    |
+| `midi_velocity`                    | `mi_vel`     |
+| `midi_tempo`                       | `mi_temp`    |
+| `midi_note_duration_table`         | `mi_ndt`     |
+| `midi_var_r`                       | `mi_varR`    |
+| `midi_saved_timer_vector`          | `mi_svtv`    |
+| `midi_song_buffer`                 | `mi_sbuf`    |
+| `midi_song_loop_flag`              | `mi_slop`    |
+| `midi_seq_position`                | `mi_sqpos`   |
+| `midi_note_event_queue`            | `mi_evq`     |
+| `midi_note_event_count`            | `g_mnevc`    |
+| `midi_note_on_flag`                | `mi_nnOn`    |
+| `midi_note_off_flag`               | `mi_nnOf`    |
+| `midi_note_mode_flags`             | `mi_nmof`    |
+| `midi_note_hi_limit`               | `g_mnhil`    |
+| `midi_note_lo_limit`               | `g_mnlol`    |
+| `midi_output_enabled`              | `g_moen`     |
+| `midi_program_map`                 | `mi_pgmap`   |
+| `midi_channel_map`                 | `mi_chmap`   |
+| `midi_scale_mask_table`            | `g_msmk`     |
+| `midi_scale_transpose_table`       | `g_mstr`     |
+| `midi_event_type_flag`             | `mi_evTf`    |
+| `midi_loop_stack`                  | `mi_lstk`    |
+| `midi_event`                       | `g_meve`     |
+
+### PSG (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `psg_channel_notes`                | `psg_chNt`   |
+| `psg_default_volume`               | `psg_dvol`   |
+| `psg_output_enabled`               | `psg_out`    |
+
+### Sound effects (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `soundeffect_dosound_status`       | `g_sfdos`    |
+| `soundeffect_dosound_control`      | `g_sfdoc`    |
+
+### Poker (extra)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `poker_bet_message`                | `pk_bm`      |
+
+## Batch 3 conflicts / ambiguities noted
+
+- `MFDB_screen_ptr` (Ghidra) appears to be the port's `mf_scrp`, based
+  on `blkcp32` argument order in `sc_ren8` vs `renderf.c`. Existing
+  row `screen_mfdb -> mf_scrp` looks reversed: my read is
+  `screen_mfdb -> g_srmfd` and `MFDB_screen_ptr -> mf_scrp`.
+  Left existing row alone per task instructions.
+- `soundeffect_active_flag` (0x54010) is referenced by `sc_ren8` for
+  the post-render play flag reset; port uses `g_sfacf` there.
+  Existing row maps `soundeffect_playing_flag -> g_sfacf`, which
+  looks like the wrong pairing (`playing_flag` is at 0x5a2ca and
+  probably matches port `g_sfplf`). Not touched.
+- Poker `pk_bs1 / pk_bs2 / pk_c1bj / pk_c2bj / pk_wcs / pk_wpr /
+  pk_wrf / pk_dsc / pk_phrk / g_ppppa` still unresolved -- Ghidra
+  has no matching-shaped long names in symbol dump; needs a
+  decompile of the poker/blackjack game function (function names
+  are not preserved in Ghidra either -- no `poker_main`/
+  `poker_blackjack_main`/`wp_intr` symbols were found).
+- Word puzzle: `wp_*` shorts (`wp_blk/prm/succ/fail`) are already
+  mapped; `word_puzzle_player_answers` and
+  `word_puzzle_current_index / _data_buffer / _blank_count` are
+  mapped; no additional port shorts remain.
+- Ghidra `midi_ticks_per_beat`, `midi_seq_max_position`,
+  `midi_envelope_data_base`, `midi_duration_scale`,
+  `midi_noteon_state`, `midi_dma_start_lo`, `midi_channel_volume`
+  seen but port shorts (`g_mtpre`, `mi_evi`, `mi_env`, `mi_evrl`,
+  `mi_evrt`, `mi_evst`, `mi_evtt`, `mi_evcn`, `mi_lasT`, `mi_nOS`,
+  `mi_nlp0`, `mi_nlpA`, `mi_seqE`) not confidently pairable from
+  name alone -- needs decompile of `mq_advs` / `mq_tick` internals.
+- Ghidra `poker_computer_hand_value_lo/hi`, `poker_card_deck_index`,
+  `poker_pot_amount`, `poker_display_x_offset`, `poker_round_count`,
+  `poker_card_back_mfdb`, `poker_draw_discard_flags` seen but port
+  shorts uncertain.
+
+### Port shorts still unpaired (candidates for future decompile passes)
+
+- Music Studio / MIDI: `g_ewb`, `g_molof`, `g_msmap`, `mi_nOS`,
+  `mi_nlp0`, `mi_nlpA`, `mi_lasT`, `mi_seqE`, `mi_evi`, `mi_evrl`,
+  `mi_evrt`, `mi_evst`, `mi_evtt`, `mi_evcn`, `mi_env`, `mg_tofl`,
+  `mood_pri`, `moff_f`.
+- Screen/render extras: `bshdbuf`, `hshdbuf`, `hs_size`, `g_dsb`
+  (may be dead; comment says former alias of `g_srptr - 254`),
+  `g_spdc`, `g_sedeh`, `g_sedew`, `g_sedim`, `g_sedms`, `g_setmt`,
+  `g_setah`, `g_setaw`, `g_srmfd` (see conflict note above).
+- Letter/clock: `g_ltscb`, `g_clcop`, `g_clcos`, `g_cdibp`,
+  `g_cdinb`, `g_ptanf`, `g_ptdoa`, `g_ptdsi`, `g_ptlss`.
+- Poker war: `pk_wcs`, `pk_wpr`, `pk_wrf`, `pk_bs1`, `pk_bs2`,
+  `pk_c1bj`, `pk_c2bj`, `pk_dsc`, `pk_phrk`, `g_ppppa`.
+- Misc: `env_val`, `no_keyin`, `in_evrt`, `rec_ledt`, `studyDrO`,
+  `subAniC`, `cprot_r`, `dsb_stor`, `usr_buf`, `fs_trg`, `bm_lo`,
+  `g_aprio`, `g_alsts`, `g_obisa`, `g_obtmt`, `g_lcieo`,
+  `lcp_stR`, `lcp_recP`, `lcp_tv`.
 
 ## How to extend this table
 
