@@ -167,6 +167,239 @@ handlers.)
 |------------------------------------|--------------|
 | `vdihandle`                        | `vdihnd`     |
 | `screen_mfdb` (backbuffer)         | `mf_scrp`    |
+| `screen_scale_factor`              | `scr_scal`   |
+
+### Dog AI
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `dog_pettable_flag`                | `dg_petok`   |
+| `dog_idle_countdown`               | `dg_idlcd`   |
+| `dog_food_bowl_change`             | `dg_bwlch`   |
+| `dog_near_food_bowl`               | `dg_nrbwl`   |
+| `dog_on_stairs_flag`               | `dg_stair`   |
+| `dog_visible`                      | `dg_vis`     |
+| `dog_initialized`                  | `dg_init`    |
+| `dog_last_target_index`            | `dg_ltgtI`   |
+| `dog_initial_target_index`         | `g_dgitx`    |
+| `dog_initial_y_offset`             | `g_dgiyo`    |
+| `dog_destination_position_table`   | `g_ddipt`    |
+| `dog_dest_x_offset_table`          | `g_ddxot`    |
+| `dog_dest_y_offset_table`          | `g_ddyot`    |
+| `dog_eating_active`                | `g_deact`    |
+| `dog_eating_countdown`             | `g_decou`    |
+| `dog_flip_image_buffer`            | `g_dfimb`    |
+| `dog_flip_mask_buffer`             | `g_dfmab`    |
+| `dog_sprite_eating_anim_tab`       | `g_dseat`    |
+| `dog_sprite_id`                    | `g_dsid`     |
+| `dog_target_x`                     | `g_dtx`      |
+| `dog_target_y`                     | `g_dty`      |
+| `dog_walk_anim_cycle`              | `g_dwanc`    |
+| `dog_walk_anim_frames`             | `g_dwanf`    |
+| `delivery_is_for_dog`              | `g_dvdog`    |
+
+### Head / body / stair
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `head_sprite_buffer`               | `g_hsbuf`    |
+| `head_sprite_frame`                | `g_hsfra`    |
+| `head_sprite_mask`                 | `g_hsmas`    |
+| `head_sprite_mirror_flag`          | `g_hsmif`    |
+| `head_anim_current`                | `g_hacur`    |
+| `head_anim_target_state`           | `g_hatas`    |
+| `head_anim_mode`                   | `g_hamod`    |
+| `head_anim_delay_countdown`        | `g_hadec`    |
+| `head_anim_state_last`             | `g_hastl`    |
+| `head_height_per_state`            | `hd_hgt`     |
+| `head_x_offset_per_state`          | `hd_xoff`    |
+| `head_default_angle_per_state`     | `hd_dang`    |
+| `head_movement_delta_table`        | `hd_mvd`     |
+| `head_tilt_frame_offset`           | `hd_tilt`    |
+| `head_shape_data`                  | `hd_shp`     |
+| `body_shape_data`                  | `body_shp`   |
+| `body_sprite_frame_table`          | `body_frT`   |
+| `body_y_offset_per_state`          | `body_yof`   |
+| `happiness_head_frame_offset`      | `mood_hfo`   |
+| `staircase_waypoint_coords`        | `stair_wp`   |
+| `stair_top_y_threshold`            | `stair_ty`   |
+| `stair_bottom_y_threshold`         | `stair_by`   |
+
+### Anagram game
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `anagram_all_clues_used`           | `g_agacu`    |
+| `anagram_clue_count`               | `g_agclc`    |
+| `anagram_guess_prompt_strings`     | `g_aggpr`    |
+| `anagram_guess_number`             | `g_aggun`    |
+| `anagram_input_buffer`             | `g_aginb`    |
+| `anagram_original_word`            | `g_agorw`    |
+| `anagram_scrambled_word`           | `g_agscw`    |
+| `anagram_words_buffer`             | `g_agwb`     |
+| `anagram_wrong_guess_messages`     | `g_agwgm`    |
+| `anagram_word_length`              | `g_agwol`    |
+| `anagram_clue_used_this_round`     | `ag_clue`    |
+
+### Word puzzle
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `word_puzzle_blank_count`          | `wp_blk`     |
+| `word_puzzle_failure_messages`     | `wp_fail`    |
+| `word_puzzle_prompt_messages`      | `wp_prm`     |
+| `word_puzzle_success_messages`     | `wp_succ`    |
+| `word_puzzle_current_index`        | `g_wpci`     |
+| `word_puzzle_data_buffer`          | `g_wpdb`     |
+
+### Poker / War
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `poker_bet_amount`                 | `pk_bet`     |
+| `poker_computer_bluff_flag`        | `pk_bluff`   |
+| `poker_computer_card_count`        | `pk_ccc`     |
+| `poker_computer_hand`              | `pk_ch`      |
+| `poker_computer_hand_rank`         | `pk_chrk`    |
+| `poker_war_computer_score`         | `pk_cscore`  |
+| `poker_computer_war_cards`         | `pk_cwc`     |
+| `poker_discard_count`              | `pk_disc`    |
+| `poker_discard_pile`               | `pk_dpile`   |
+| `poker_deck_position`              | `pk_dpos`    |
+| `poker_card_display_slot`          | `pk_dslot`   |
+| `poker_hand_rank_flags`            | `pk_hrf`     |
+| `poker_hand_suit_flags`            | `pk_hsf`     |
+| `poker_computer_passed`            | `pk_pass`    |
+| `poker_player_card_count`          | `pk_pcc`     |
+| `poker_player_hand`                | `pk_ph`      |
+| `poker_game_phase`                 | `pk_phase`   |
+| `poker_player_hand_rank_flags`     | `pk_phrf`    |
+| `poker_player_hand_suit_flags`     | `pk_phsf`    |
+| `poker_player_hand_value`          | `pk_phv`     |
+| `poker_player_split_card_count`    | `pk_pscc`    |
+| `poker_war_player_score`           | `pk_pscore`  |
+| `poker_player_split_hand`          | `pk_psh`     |
+| `poker_player_war_cards`           | `pk_pwc`     |
+| `poker_quit_flag`                  | `pk_quit`    |
+| `poker_raise_message`              | `pk_rm`      |
+| `poker_war_round`                  | `pk_round`   |
+| `poker_card_selected`              | `pk_sel`     |
+| `poker_take_cards_message`         | `pk_tcm`     |
+| `poker_computer_hand_cards`        | `g_pchc`     |
+| `poker_computer_bet`               | `g_pcbet`    |
+| `poker_computer_draw_pile`         | `g_pcdrp`    |
+| `poker_computer_money`             | `g_pcmon`    |
+| `poker_player_bet`                 | `g_ppbet`    |
+| `poker_player_draw_pile`           | `g_ppdrp`    |
+| `poker_player_money`               | `g_ppmon`    |
+
+### Cards
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `cards_data`                       | `crd_dat`    |
+| `cards_MFDB_blocks`                | `crd_mfdb`   |
+| `cards_x_pos_a`                    | `crd_xa`     |
+| `cards_x_pos_b`                    | `crd_xb`     |
+| `cards_y_pos_a`                    | `crd_ya`     |
+| `cards_y_pos_b`                    | `crd_yb`     |
+
+### Letter (extended)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `letter_line_count`                | `g_ltlic`    |
+| `letter_paragraph_count`           | `g_ltpac`    |
+| `letter_char_width_table`          | `g_ltcwt`    |
+| `letter_greeting_table`            | `g_ltg`      |
+
+### Save / load
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `save_physbase`                    | `sv_phb`     |
+| `save_logbase`                     | `sv_lgb`     |
+| `saved_body_sprite_ptr`            | `sv_bodyP`   |
+| `saved_head_sprite_ptr`            | `sv_headP`   |
+| `saved_vqt_attr`                   | `sv_vqta`    |
+| `lcp_loaded`                       | `g_lcldd`    |
+
+### Fire event
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `fire_active_flag`                 | `fire_act`   |
+| `fire_duration_countdown`          | `fire_dur`   |
+| `fire_extinguish_flag`             | `fire_ext`   |
+
+### TV patterns
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `tv_pattern_0_x_coords`            | `g_tp0xc`    |
+| `tv_pattern_0_y_coords`            | `g_tp0yc`    |
+| `tv_pattern_1_x_coords`            | `g_tp1xc`    |
+| `tv_pattern_1_y_coords`            | `g_tp1yc`    |
+| `tv_pattern_2_x_coords`            | `g_tp2xc`    |
+| `tv_pattern_2_y_coords`            | `g_tp2yc`    |
+| `tv_pattern_3_x_coords`            | `g_tp3xc`    |
+| `tv_pattern_3_y_coords`            | `g_tp3yc`    |
+| `tv_pattern_color_indices`         | `g_tpcoi`    |
+
+### Sprite engine (extended)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `sprite_active_x`                  | `g_seacx`    |
+| `sprite_active_y`                  | `g_seacy`    |
+| `sprite_pending_flag`              | `g_sepef`    |
+| `sprite_pending_width`             | `g_sepew`    |
+| `sprite_pending_x`                 | `g_sepex`    |
+| `sprite_pending_y`                 | `g_sepey`    |
+| `sprite_pending_image`             | `g_sepim`    |
+| `sprite_pending_mask`              | `g_sepms`    |
+| `sprite_pending_height`            | `g_sepeh`    |
+| `sprite_slot_map`                  | `g_seslm`    |
+| `sprite_layer_flags`               | `g_selaf`    |
+
+### Object tables
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `object_tab_mfdb`                  | `g_otmfd`    |
+| `object_tab_width`                 | `g_obtaw`    |
+| `object_tab_height`                | `g_obtah`    |
+| `objects_file`                     | `obj_file`   |
+| `action_interruptible_flag`        | `g_actif`    |
+
+### Clock / phone / misc
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `clock_minute`                     | `g_cmmin`    |
+| `clock_hour`                       | `g_chhou`    |
+| `phone_ring_countdown`             | `g_phrc`     |
+| `phone_hangup_flag`                | `ph_hu`      |
+| `record_browsing_active`           | `g_rbact`    |
+| `food_delivery_available`          | `food_dlv`   |
+
+### Init / palette / parser / debug
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `main_colorpalette`                | `main_pal`   |
+| `skin_color_palette`               | `skin_pal`   |
+| `month_name_table`                 | `mo_names`   |
+| `pex_lcp_ptr`                      | `pex_ptr`    |
+| `pex_lcp_file`                     | `pex_name`   |
+| `sng_song_file_count`              | `sng_cnt`    |
+| `org_song_file_count`              | `org_cnt`    |
+| `input_string`                     | `in_str`     |
+| `command_input_buffer`             | `cmd_inp`    |
+| `debug_hide_lcp_offscreen`         | `dbg_hide`   |
+| `text_scroll_timer`                | `tx_sctm`    |
+| `last_hz200`                       | `last_hz`    |
+| `last_vbclock`                     | `last_vbc`   |
 
 ## Ghidra names seen but role not yet mapped to a port global
 
