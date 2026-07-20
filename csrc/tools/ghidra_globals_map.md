@@ -688,8 +688,6 @@ port shorts, cross-checked by usage patterns in the port
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
 | `scene_common_data`                | `scn_cmn`    |
-| `scene_data_ptr`                   | `scn_dat`    |
-| `house_scene_size`                 | `hs_size`    |
 | `vdi_color_table`                  | `vdi_colt`   |
 | `vdi_handle`                       | `vdi_hnd`    |
 

@@ -64,8 +64,6 @@ extern BOOL16 g_rbact;
 extern char* mi_sbuf;
 extern short sng_cnt;
 extern short org_cnt;
-extern short hs_size;
-extern void* scn_dat;
 extern char scn_cmn[];
 extern char pex_name[];
 extern BOOL16 fire_act;

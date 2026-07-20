@@ -99,10 +99,9 @@ char *  mi_sbuf                = (char *) 0;
    as a guess. */
 short   sng_cnt             = 0;
 short   org_cnt             = 0;
-/* House scene loader intermediates used by main() during house.scn
-   load.  Ghidra keeps these as BSS globals. */
-short   hs_size                = 0;
-void *  scn_dat                  = (void *) 0;
+/* scn_cmn -- 30-byte scene common-data header shared between
+   house.scn and title.scn.  Ghidra `scene_common_data` @ 0x4cf7c.
+   The port's unScn helper (assets.c) fills this via fr_read. */
 char    scn_cmn[30];
 /* PEx.LCP filename.  Ghidra pex_name @ 0x2a0f8 points to "pex.lcp"
    at 0x2a330 and main() mutates index 2 to select the character.
