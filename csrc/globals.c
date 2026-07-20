@@ -66,7 +66,13 @@ BOOL16  g_actif       = NO;
 BOOL16  dg_petok               = NO;
 short   g_wtx                   = 0;
 short   g_wty                   = 0;
-short   pst_arr[4];
+/* Ghidra triggered_event_list @ 0x2b6da: 10-short scratch buffer used
+   by action handlers (bathroom, food, house, leisure, idle, simple)
+   to cache a small set of state values indexed by variable expressions
+   like `i & 3`.  Port previously declared [4], which was one byte
+   short of a real out-of-bounds write via `pst_arr[4]` writes in the
+   bathroom/food/house paths -- the fifth slot overlapped lcp_frdO. */
+short   pst_arr[10];
 
 short   lcp_frdO             = 0;
 short   studyDrO             = 0;
@@ -696,7 +702,11 @@ short   g_tpcoi[4] = { 10, 5, 7, 13 };
    test for verification that "please play a game" now matches. */
 
 unsigned char   g_ewb[10];
-char            usr_buf[32];
+/* Ghidra user_input_buffer @ 0x4b782: 42-byte ROM slot.  Port
+   previously declared [32] which cmd_upp() could overflow: it walks
+   input from g_cdinb (bounded < 38 chars) and writes one byte per
+   alphabetic char to usr_buf, potentially 38+ bytes. */
+char            usr_buf[42];
 /* Ghidra happiniess_to_priority (sic) @ 0x2bf98: {3, 1, 0}.  Used as
    the base priority for parsed commands -- HAPPY (0) gives priority 3
    (accepts more), SAD (2) gives 0 (rejects most).  Port previously
