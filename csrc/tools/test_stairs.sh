@@ -32,7 +32,7 @@
 set -uo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-VBLS=${VBLS:-6000}
+VBLS=${VBLS:-40000}
 TOS=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari\ ST/Atari\ TOS\ Images/TOS104US.ROM}
 GAME=$HOME/hatari-c/GAME
 PRG=$CSRC/build/alcyon/LCP.PRG
@@ -53,7 +53,7 @@ fi
 # Text base of the loaded PRG (established from `info basepage` in Hatari).
 # Alcyon links this build with a static image base — re-check with the
 # `find_base.sh` helper if the layout changes.
-BASE=0x13bbc
+BASE=0x12596
 
 # Derive symbol offsets from the just-built .o files so any TEXT /
 # DATA / BSS drift (adding globals, growing games.c, TEST_STAIRS
@@ -82,10 +82,13 @@ printf -v STR_H '%x'    $LCP_STR
 
 # Attic centre / upper-flight top: (x=182, y=72) matches stair_wp[4..5].
 # Bottom-floor centre: (x=300, y=195).
-INIT_VBL=1500
-# First sample lands just after the warp so we capture the top-floor
-# start state before lcp_wkD begins moving.
-SAMPLES="1520 1600 1800 2100 2500 3000 3500 4000 5000"
+# cs_mvIn's move-in cutscene takes ~8000-12000 VBLs on a fresh boot
+# before returning; the TEST_STAIRS=1 hook that warps to the attic
+# and starts the descent fires at the very end of cs_mvIn.  Sample
+# densely from just past that point through the end of the run to
+# catch the descent + arrival on the bottom floor.
+INIT_VBL=100
+SAMPLES="10000 14000 18000 22000 26000 30000 34000 37000 39000"
 
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
@@ -120,10 +123,11 @@ hatari \
     --harddrive "$GAME" \
     --tos "$TOS" \
     --fast-forward on \
+    --auto 'C:\LCP.PRG' \
     --run-vbls "$VBLS" \
     --parse "$WORKDIR/run.ini" > "$WORKDIR/hatari.log" 2>&1 &
 HPID=$!
-sleep 40
+sleep 90
 kill $HPID 2>/dev/null; wait $HPID 2>/dev/null
 
 # Extract sample values.

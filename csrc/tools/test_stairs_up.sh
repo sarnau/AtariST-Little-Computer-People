@@ -18,7 +18,7 @@
 set -uo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-VBLS=${VBLS:-6000}
+VBLS=${VBLS:-40000}
 TOS=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari\ ST/Atari\ TOS\ Images/TOS104US.ROM}
 GAME=$HOME/hatari-c/GAME
 PRG=$CSRC/build/alcyon/LCP.PRG
@@ -35,7 +35,7 @@ if [ ! -f "$PRG" ]; then
     exit 2
 fi
 
-BASE=0x13c14
+BASE=0x12596
 # Derive symbol offsets from the just-built .o files -- see
 # test_stairs.sh for rationale.
 _syms=$(python3 "$CSRC/tools/find_syms.py" \
@@ -62,12 +62,12 @@ printf -v STR_H '%x'    $LCP_STR
 # Warp: bottom-floor stair entry (170, 185) with attic centre target
 # (300, 45).  x=170 (0x00aa), y=185 (0x00b9), wtx=300 (0x012c),
 # wty=45 (0x002d).
-INIT_VBL=1500
-# Dense sampling — climbing crosses two flights of stairs plus the
-# middle-floor landing in ~1500 VBLs; too-sparse a schedule can leave
-# the "fall through ceiling" heuristic seeing a large Y-jump between
-# samples with lcp_stR=0 on both endpoints (legitimate climb).
-SAMPLES="1520 1600 1750 1900 2100 2300 2500 2700 2900 3100 3300 3600 4000 5000"
+# cs_mvIn's move-in cutscene takes ~8000-12000 VBLs on a fresh boot
+# before returning; the TEST_STAIRS=2 hook warps to the bottom floor
+# and starts the ascent at the tail of cs_mvIn.  Sample densely from
+# just past that point through the end of the run.
+INIT_VBL=100
+SAMPLES="10000 14000 17000 20000 22000 24000 26000 28000 30000 32000 34000 36000 38000 39000"
 
 WORKDIR=$(mktemp -d)
 trap "rm -rf $WORKDIR" EXIT
@@ -99,10 +99,11 @@ hatari \
     --harddrive "$GAME" \
     --tos "$TOS" \
     --fast-forward on \
+    --auto 'C:\LCP.PRG' \
     --run-vbls "$VBLS" \
     --parse "$WORKDIR/run.ini" > "$WORKDIR/hatari.log" 2>&1 &
 HPID=$!
-sleep 40
+sleep 90
 kill $HPID 2>/dev/null; wait $HPID 2>/dev/null
 
 LCP_X_H_UP=$(printf '%08X' $LCP_X)

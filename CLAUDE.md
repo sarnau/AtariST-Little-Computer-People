@@ -130,21 +130,28 @@ Struct name/field syncing uses the same HTTP mechanism via
   earlier bus-error cascade.  Ghidra now shows the real short[4]
   buffer layouts; both fixed in commit 12e572f.  Long-run test now
   passes for 36000 VBLs / 10 real minutes.)*
-- **`test_stairs.sh` / `test_stairs_up.sh` still fail on harness
-  plumbing.**  The test-side design flaw is fixed: a `#ifdef
-  TEST_STAIRS=1|2` hook in `cs_mvIn` (init.c) now directly warps +
-  calls `lcp_wkD()`, bypassing the AI action ladder that would
-  otherwise ignore the injected `g_wtx` / `g_wty`.  What remains
-  broken is the sample-address lookup:
-  `tools/find_syms.py` reports DATA offsets that drift by ~88 bytes
-  from the actual link layout (specifically for symbols in .o files
-  that come after globals.o alphabetically -- sprglobs.o, tick.o,
-  tvanim.o, vocab.o, walk.o).  Same-invocation math: BASE derived
-  from `_lcp_x` disagrees with BASE derived from `_lcp_st` by 0x58.
-  Root cause not diagnosed; likely a per-.o padding / alignment
-  contribution missing from find_syms's `acc_d` accumulator.
-  Task #33 ("Fix player sliding through floor on stairs") was
-  verified via manual play, not this harness.
+- **`test_stairs.sh` / `test_stairs_up.sh` harness now works;
+  underlying stair descent doesn't use stair mode.**  Two harness
+  bugs fixed 2026-07-21:
+    1. Scripts didn't pass `--auto 'C:\LCP.PRG'` to Hatari, so
+       the game never launched -- Hatari booted to GEM desktop and
+       every "0 bus errors" verdict was spurious.
+    2. `BASE` was hardcoded to `0x13bbc`; under `--auto`, TOS's
+       Pexec loads LCP.PRG's TEXT segment at `0x12596` instead
+       (verified via Hatari's `info basepage` at VBL 5000).
+  `find_syms.py` was never broken -- earlier apparent 88-byte drift
+  was cross-build comparison (offsets from a clean init.o vs runtime
+  from a TEST_STAIRS-enabled init.o).  A new `#ifdef TEST_STAIRS=1|2`
+  hook in `cs_mvIn` (init.c) directly warps + calls `lcp_wkD()`,
+  bypassing the AI action ladder.  With hook + `--auto` + correct
+  BASE, samples now capture real game state: LCP does reach the
+  bottom floor from the attic warp position, but `lcp_stR` never
+  transitions to 1 and stair-state range 9..24 is never entered --
+  meaning the port descends by falling through floors rather than
+  via a proper staircase walk.  Task #33 ("Fix player sliding
+  through floor on stairs") was verified via manual play in a
+  different scenario; the automated harness surfaces the regression
+  the manual test missed.
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
   documented in `csrc/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).
