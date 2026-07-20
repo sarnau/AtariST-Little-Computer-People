@@ -1316,3 +1316,57 @@ top:
                 mi_sqpos = next;
         }
 }
+
+/* mq_stop (Ghidra midi_seq_stop @ 0x1103c): stop MIDI sequencer
+   playback.  Drains all pending events in the queue by advancing
+   the tick counter past every scheduled event, then sends note-off
+   (velocity=0) messages for every note flagged in mi_noSt[].
+   Finally clears g_msmsa so mq_tick stops processing sequencer
+   events on the next tick.
+   Not called yet -- present for parity with the ROM.
+   addr: mq_stop() */
+
+void
+mq_stop()
+{
+        short   note;
+        BOOL16  hadPend;
+
+        hadPend = (g_mnevi > 0);
+
+        while (g_mnevi > 0) {
+                g_medu = g_mtcou - mi_nxTk;
+                if (g_medu > 0) {
+                        mq_expN(g_medu);
+                        mi_nxTk = mi_nxTk + g_medu;
+                }
+        }
+
+        if (hadPend != NO) {
+                g_meve[2] = 0;
+                for (note = 0; note < 0x80; note = note + 1) {
+                        if ((char) mi_noSt[note] != 0) {
+                                g_meve[0] = (mi_chmap[(short)(char) mi_noSt[note]] & 0x0f) | 0x90;
+                                g_meve[1] = (unsigned char) note;
+                                mq_dise(g_meve, 3,
+                                        mi_chmap[(short)(char) mi_noSt[note]]);
+                        }
+                }
+        }
+
+        g_msmsa = NO;
+}
+
+/* mq_extm (Ghidra midi_seq_exit_timer @ 0x11162): tear down the
+   MFP Timer-A hook installed by mq_intim.  Restores the original
+   MFP Timer-A interrupt vector saved into mi_svtv at boot.
+   Xbtimer with ctrl=0 disables the timer and reinstalls the
+   previous ISR from mi_svtv.
+   Not called yet -- present for parity with the ROM.
+   addr: mq_extm() */
+
+void
+mq_extm()
+{
+        Xbtimer(0, 0, 0x1c, mi_svtv);
+}

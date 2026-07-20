@@ -24,5 +24,7 @@ extern void mq_expN();
 extern void mq_spgm();
 extern void mq_qnne();
 extern short mq_pars();
+extern void mq_stop();
+extern void mq_extm();
 
 #endif /* MIDI_SEQ_H */

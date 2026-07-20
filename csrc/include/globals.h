@@ -153,6 +153,7 @@ extern short mi_evrl[];
 extern short mi_evst[];
 extern unsigned char psg_rot[];
 extern unsigned char mi_chmap[];
+extern unsigned char mi_noSt[];
 extern short g_mcpro[];
 extern short mi_pgmap[];
 extern unsigned char g_mstr[];

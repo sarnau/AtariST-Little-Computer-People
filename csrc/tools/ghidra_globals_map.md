@@ -391,6 +391,7 @@ handlers.)
 |------------------------------------|--------------|
 | `copyprot_check_return`            | `cprot_r`    |
 | `game_speed_counter`               | `g_spdc`     |
+| `midi_noteon_state`                | `mi_noSt`    |
 
 ### (subsystem line placeholder — do not remove)
 

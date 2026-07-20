@@ -404,6 +404,13 @@ unsigned char   mi_chmap[16];
 short           g_mcpro[16];
 short           mi_pgmap[16];
 
+/* mi_noSt (Ghidra midi_noteon_state @ 0x53df8): 128-entry table tracking
+   which MIDI notes are currently sounding and on which logical channel.
+   Value 0 = note not sounding.  Non-zero = the mi_chmap[] index (low
+   nibble used) that owns the note, so mq_stop can emit a matching
+   note-off through the correct MIDI channel on shutdown. */
+unsigned char   mi_noSt[128];
+
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
    0..131 (C-1..G9).  Populated by mq_bust at song
    start; each note maps to either itself (identity) or a shifted note
