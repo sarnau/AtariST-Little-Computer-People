@@ -67,7 +67,7 @@ tv_boul()
 {
         unsigned short  rnd;
         unsigned short  rcolor;
-        short           pos[2];
+        short           pos[4];
         short           dx, dy;
         short           frame;
         short           line_pos[2];
@@ -90,6 +90,8 @@ tv_boul()
                 line_pos[0] = line_pos[0] + dx;
                 pos[0] = line_pos[1];
                 pos[1] = line_pos[0];
+                pos[2] = line_pos[1];
+                pos[3] = line_pos[0];
 
                 sc_sdtb();
                 v_pline(vdihnd, 2, pos);
@@ -113,7 +115,7 @@ void
 tv_patl()
 {
         unsigned short  rnd;
-        short           point[2];
+        short           pxy[4];
         short           i;
         short           pattern;
         short *         xs;
@@ -141,13 +143,15 @@ tv_patl()
                 }
 
                 for (i = 0; i <= (short) (rnd & 7); i = i + 1) {
-                        point[0] = xs[i];
-                        point[1] = ys[i];
+                        pxy[0] = xs[i];
+                        pxy[1] = ys[i];
+                        pxy[2] = pxy[0] + 3;
+                        pxy[3] = pxy[1];
                         sc_sdtb();
                         vsl_color(vdihnd,
                                   vdi_colt[
                                     g_tpcoi[pattern]]);
-                        v_pline(vdihnd, 2, point);
+                        v_pline(vdihnd, 2, pxy);
                         sc_sdtf();
                         gameTick(1);
                 }
