@@ -325,7 +325,7 @@ aes_init()
 #define REZ_ST_HIGH     2
 #define M_OFF           256
 
-/* vdi_erase_screen (Ghidra 0x166fe): turn off the mouse then fill the
+/* sc_ers (Ghidra 0x166fe): turn off the mouse then fill the
    whole screen with COLOR_black via v_bar.  Rectangle extents depend
    on scr_scal (low/medium: 319x199, high: 639x399).  Trailing vsf_color
    restores the default fill colour to palette slot 1 (Ghidra labels
@@ -333,7 +333,7 @@ aes_init()
    naming discrepancy only, byte value is 1). */
 
 void
-vdi_erase_screen()
+sc_ers()
 {
         short   r[4];
 
@@ -372,7 +372,7 @@ vdi_init()
         v_opnvwk(workin, &vdihnd, work_out);
         scr_scal = REZ_ST_MEDIUM;
         if (work_out[0] < 601) {
-                vdi_erase_screen();
+                sc_ers();
                 return;
         }
         for (;;)

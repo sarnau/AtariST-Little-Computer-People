@@ -502,7 +502,7 @@
 #define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
 
 /* ---- VDI fill styles ------------------------------------------------
-   Match Ghidra's vdi_erase_screen at 0x166fe / screen_set_draw_to_backbuffer:
+   Match Ghidra's sc_ers at 0x166fe / screen_set_draw_to_backbuffer:
      vsf_interior(vdihnd, 2)   -- interior = PATTERN
      vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
    Numeric values must match the ROM byte-for-byte. */

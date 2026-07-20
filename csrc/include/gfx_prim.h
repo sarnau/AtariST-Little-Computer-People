@@ -15,7 +15,7 @@ extern void drwPixel();
 extern void blkcp32();
 extern void cpyScr();
 extern void aes_init();
-extern void vdi_erase_screen();
+extern void sc_ers();
 extern void vdi_init();
 extern void stpScrB();
 extern void vst_h20();
