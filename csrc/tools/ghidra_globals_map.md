@@ -111,7 +111,7 @@ handlers.)
 | `midi_reentrant_lock`              | `mi_rlock`   |
 | `midi_sequencer_active`            | `g_msmsa`    |
 | `midi_seq_phase`                   | `g_mspha`    |
-| `midi_event_duration`              | `g_medu`     |
+| `midi_event_duration`              | `mi_nlp0`    |
 | `midi_next_event_tick`             | `mi_nxTk`    |
 | `midi_last_processed_tick`         | `mi_lpTk`    |
 | `midi_note_event_index`            | `mi_evi`     |
@@ -372,7 +372,7 @@ handlers.)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `object_tab_mfdb`                  | `g_otmfd`    |
+| `object_tab_mfdb`                  | `g_obtmt`    |
 | `object_tab_width`                 | `g_obtaw`    |
 | `object_tab_height`                | `g_obtah`    |
 | `objects_file`                     | `obj_file`   |

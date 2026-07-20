@@ -119,7 +119,6 @@ extern long g_mtcou;
 extern short mi_dwrm;
 extern short g_mtdiv;
 extern short g_mtpre;
-extern short g_medu;
 extern short mi_nxTk;
 extern short mi_lpTk;
 extern BOOL16 g_msmsa;

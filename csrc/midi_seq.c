@@ -357,7 +357,7 @@ mq_stap()
         mi_dwrm  = 0;
         g_mtdiv       = 100;
         g_mtpre     = 100;
-        g_medu     = 100;
+        mi_nlp0    = 100;
         mi_nxTk    = 100;
         mi_lpTk= 100;
         g_msmsa   = YES;
@@ -1335,10 +1335,10 @@ mq_stop()
         hadPend = (mi_evi > 0);
 
         while (mi_evi > 0) {
-                g_medu = g_mtcou - mi_nxTk;
-                if (g_medu > 0) {
-                        mq_expN(g_medu);
-                        mi_nxTk = mi_nxTk + g_medu;
+                mi_nlp0 = g_mtcou - mi_nxTk;
+                if (mi_nlp0 > 0) {
+                        mq_expN(mi_nlp0);
+                        mi_nxTk = mi_nxTk + mi_nlp0;
                 }
         }
 

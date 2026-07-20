@@ -287,7 +287,8 @@ long            g_mtcou       = 0;
 short           mi_dwrm  = 0;
 short           g_mtdiv       = 100;
 short           g_mtpre     = 100;
-short           g_medu     = 100;
+/* mi_nlp0 (midi_event_duration @ 0x4b7b0) is declared further down
+   with the sequencer state block; mq_stap resets it at song start. */
 short           mi_nxTk    = 100;
 short           mi_lpTk= 100;
 BOOL16          g_msmsa   = NO;
