@@ -25,6 +25,7 @@
 #include "../include/types.h"
 #include "../include/structs.h"
 #include "../include/enums.h"
+#include "../include/sprites.h"
 
 extern PLAYER   lcp;
 extern short    lcp_x;
@@ -120,7 +121,8 @@ char ** argv;
                "per-frame=%ld\n", count, payload_bytes, frame_size);
         CHECK(count > 0,             "BODY.LCP count is zero");
         CHECK(payload_bytes > 0,     "BODY.LCP payload is zero");
-        CHECK(frame_size == 168,     "BODY.LCP frame_size != 168");
+        CHECK(frame_size == LCP_BODY_FRAME_SIZE,
+                                     "BODY.LCP frame_size != LCP_BODY_FRAME_SIZE");
         body_buf = (unsigned char *) malloc(payload_bytes);
         if (body_buf == NULL) { perror("malloc body_buf"); return 1; }
         if ((long) fread(body_buf, 1, payload_bytes, f) != payload_bytes) {
@@ -152,8 +154,8 @@ char ** argv;
         debug_hide_lcp_offscreen = 0;
         g_sepef[3]   = 0;
 
-        memset(g_lsimg,  0, 168 * sizeof(short));
-        memset(g_lsmas, 0, 168 * sizeof(short));
+        memset(g_lsimg,  0, LCP_BODY_DEST_WORDS * sizeof(short));
+        memset(g_lsmas, 0, LCP_BODY_DEST_WORDS * sizeof(short));
 
         /* Call the compositor. */
         sp_updb();
@@ -161,7 +163,7 @@ char ** argv;
         /* The output buffer should now contain the flipped/composited
            frame -- 21 rows × 4 words per row.  Some bit must be set. */
         nonzero = 0;
-        for (i = 0; i < 168; i++)
+        for (i = 0; i < LCP_BODY_DEST_WORDS; i++)
                 if (g_lsimg[i]) { nonzero = 1; break; }
         CHECK(nonzero, "g_lsimg is all zeros after compose");
 

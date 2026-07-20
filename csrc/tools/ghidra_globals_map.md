@@ -209,6 +209,7 @@ handlers.)
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
 | `head_sprite_buffer`               | `g_hsbuf`    |
+| `sprite_buffer`                    | `sp_mbuf`    |
 | `head_sprite_frame`                | `g_hsfra`    |
 | `head_sprite_mask`                 | `g_hsmas`    |
 | `head_sprite_mirror_flag`          | `g_hsmif`    |
@@ -405,7 +406,7 @@ handlers.)
 | `skin_color_palette`               | `skin_pal`   |
 | `month_name_table`                 | `mo_names`   |
 | `pex_lcp_ptr`                      | `pex_ptr`    |
-| `pex_lcp_file`                     | `pex_name`   |
+| `pex_lcp_file`                     | `pex_buf`    |
 | `sng_song_file_count`              | `sng_cnt`    |
 | `org_song_file_count`              | `org_cnt`    |
 | `input_string`                     | `in_str`     |
@@ -456,7 +457,7 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `body_lcp_file`                    | `body_ptr`   |
+| `body_lcp_file`                    | `body_buf`   |
 | `lcp_sprite_img`                   | `g_lsimg`    |
 | `lcp_sprite_mask`                  | `g_lsmas`    |
 | `lcp_carrying_object_flag`         | `g_lcyof`    |
@@ -743,6 +744,38 @@ Identity-name port shorts (already Ghidra-named the same; skipped
 by the rename TSV generator but noted here for coverage):
 `contrl`, `intin`, `intout`, `ptsin`, `ptsout`, `workin`,
 `work_out`, `lcp_x`, `lcp_y`, `dog_x`, `dog_y`, `_vbclock`.
+
+## OOB-audit log (2026-07-20)
+
+Systematic sweep for `port_bytes < ROM_slot_bytes` AND code writes past
+the port's declared end.  Covered `globals.c`, `sprglobs.c`,
+`tick_tables.c`, `vocab.c`, then extended to `tables.c`, `sprload.c`,
+`assets.c` plus BSS/partial arrays across other modules.
+
+Real OOBs found and fixed in prior commits (all shape: port array
+declared smaller than ROM slot):
+
+- `pst_arr[4]` → `[10]` — action handlers wrote `pst_arr[4]`
+- `usr_buf[32]` → `[42]` — `cmd_upp` copies up to 38 chars
+- `g_pcdrp[26]` → `[52]` — `pk_rmch` shift loop writes 50 bytes past end
+- `g_ppdrp[26]` → `[52]` — same shift loop
+
+Verified in this pass (safe, ROM has trailing pad or `sizeof`-cap):
+
+- `sp_mbuf[14000]` — exact ROM match (`sprite_buffer` slot 0x36B0)
+- `body_buf` bumped 20000 → 20160 to match ROM `body_lcp_file` slot
+  exactly.  On-disk `BODY.LCP` is 16468 B so there was no truncation
+  risk, but sizes now match Ghidra.
+- `pex_buf` shrunk 12000 → 11088 to match ROM `pex_lcp_file` slot
+  (0x4d2da → 0x4fe2a).
+- `g_lsimg[168]`, `g_lsmas[168]`, `g_hsbuf[168]`, `g_hsmas[168]` —
+  `sp_lcpf` inner loop writes exactly 168 shorts; ROM 512/516 B pad
+- `pex_name[8]` — template filename; only 8 B ever touched
+- `comp_tok[15]` — `letload.c` reads exactly 15 B
+- `bm32or[32]`, `bm32and[32]`, `rev_tab[256]` — all mask/index-bounded
+
+Signature exhausted across all inspected modules; 0 remaining
+CONFIRMED bugs in this class.
 
 ## How to extend this table
 

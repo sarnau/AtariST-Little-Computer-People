@@ -86,7 +86,7 @@ main()
 
         /* BODY.LCP */
         {
-                static unsigned char body_buf[20000];
+                static unsigned char body_buf[20160];
                 short frames = al_loal("body.lcp", body_buf,
                                               sizeof body_buf);
                 printf("BODY.LCP: %d frames\n", frames);

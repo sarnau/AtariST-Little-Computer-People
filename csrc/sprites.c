@@ -61,8 +61,8 @@ sp_updb()
            body_shp (DEST).  The decompile collapses the
            multiplication into type-based scaling; the disassembly
            at Ghidra 0x2669a (`muls.w #0x54, D0`) confirms *84. */
-        sp_lcpf((short *) ((char *) body_ptr    + (long) frame * 168L),
-                (short *) ((char *) body_shp  + (long) frame *  84L),
+        sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
+                (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
                 (short *) g_lsimg,
                 (short *) g_lsmas,
                 2, 21, lcp_face, 1);
@@ -474,8 +474,8 @@ sp_lchu()
 
         /* Same stride-scaling shape as sp_updb -- 168 bytes per head
            frame in PEx.LCP, 84 bytes per frame in hd_shp. */
-        sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * 168L),
-                (short *) ((char *) hd_shp + (long) headIndex *  84L),
+        sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * (long) LCP_BODY_FRAME_SIZE),
+                (short *) ((char *) hd_shp + (long) headIndex * (long) LCP_BODY_SHAPE_SIZE),
                 g_hsbuf, g_hsmas,
                 2, 21, g_hsmif, 0);
 
@@ -714,15 +714,15 @@ sp_lbal()
         for (index = 0; index < 98; index = index + 1) {
                 sp_lbbd((unsigned short *) src_ptr,
                         (unsigned short *) dst_ptr, 21);
-                src_ptr = src_ptr + 168;
-                dst_ptr = dst_ptr + 84;
+                src_ptr = src_ptr + LCP_BODY_FRAME_SIZE;
+                dst_ptr = dst_ptr + LCP_BODY_SHAPE_SIZE;
         }
         src_ptr = (char *) pex_ptr;
         dst_ptr = (char *) hd_shp;
         for (index = 0; index < 66; index = index + 1) {
                 sp_lbhd((unsigned short *) src_ptr,
                         (unsigned short *) dst_ptr, 21);
-                src_ptr = src_ptr + 168;
-                dst_ptr = dst_ptr + 84;
+                src_ptr = src_ptr + LCP_BODY_FRAME_SIZE;
+                dst_ptr = dst_ptr + LCP_BODY_SHAPE_SIZE;
         }
 }

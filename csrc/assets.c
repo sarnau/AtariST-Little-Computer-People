@@ -48,6 +48,7 @@
 #include "save.h"
 #include "sprender.h"
 #include "sprglobs.h"
+#include "sprites.h"
 
 
 /* ldObj: read the 14000-byte OBJECTS file into obj_file[].
@@ -227,8 +228,13 @@ long            max_b;
    pex_lcp_file)`.  Wrapped here so main()'s call site stays a
    single named entry. */
 
-static unsigned char    body_buf[20000];
-static unsigned char    pex_buf[12000];
+/* body.lcp / PEn.LCP layouts: each is a sequence of 168-byte sprite
+   frames (sp_lcpf width=2, height=21, 4 bytes per plane-pair row).
+   body_lcp_file holds 120 frames; pex_lcp_file holds 66 frames.
+   Sizes match Ghidra's `body_lcp_file` @ 0x3f8b0 (20160 B) and
+   `pex_lcp_file` @ 0x4d2da (11088 B). */
+static unsigned char    body_buf[120][LCP_BODY_FRAME_SIZE];
+static unsigned char    pex_buf[66][LCP_BODY_FRAME_SIZE];
 
 void
 al_locs()
@@ -242,7 +248,7 @@ al_locs()
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
-        al_loal("body.lcp", body_buf,
+        al_loal("body.lcp", (unsigned char *) body_buf,
                        (long) sizeof(body_buf));
         body_ptr    = (short *) body_buf;
         body_shp  = bshdbuf;
@@ -260,7 +266,7 @@ al_locs()
         pex_filename[6] = 'P';
         pex_filename[7] = 0;
 
-        al_loal(pex_filename, pex_buf,
+        al_loal(pex_filename, (unsigned char *) pex_buf,
                        (long) sizeof(pex_buf));
         pex_ptr    = (short *) pex_buf;
         hd_shp = hshdbuf;

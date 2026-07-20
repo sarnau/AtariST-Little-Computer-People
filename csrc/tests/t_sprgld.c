@@ -24,6 +24,7 @@
 #include "../include/types.h"
 #include "../include/structs.h"
 #include "../include/enums.h"
+#include "../include/sprites.h"
 
 extern PLAYER   lcp;
 extern short    lcp_x;
@@ -131,7 +132,7 @@ char ** argv;
                 for (facing = 0; facing < 2; facing++) {
                         lcp_state            = i;
                         lcp_facing_direction = facing;
-                        memset(g_lsimg, 0, 168 * sizeof(short));
+                        memset(g_lsimg, 0, LCP_BODY_DEST_WORDS * sizeof(short));
                         /* Clear the double-buffer flag every iteration:
                            sp_updb sets it to YES on exit and
                            spin-waits for it to clear on entry; in-game

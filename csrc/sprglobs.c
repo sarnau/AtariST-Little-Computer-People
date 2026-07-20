@@ -11,6 +11,7 @@
 #include "structs.h"
 #include "enums.h"
 #include "sprglobs.h"
+#include "sprites.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
 /* Ghidra BSS = 0.  cs_mvIn sets lcp_st to
@@ -124,9 +125,9 @@ short * body_shp;
    destination for sprite_lcp_build_all_body's 30-bit dilation of the
    raw 168-byte body frames.  84 bytes = 21 rows * 2 words per row.
    BSS-resident so it survives to game end without heap traffic. */
-short   bshdbuf[98 * 42];    /* 42 shorts/frame = 84 bytes */
-short   g_lsimg[168];    /* 21 rows * 4 words * 2 (image+mask) */
-short   g_lsmas[168];
+short   bshdbuf[98 * (LCP_BODY_SHAPE_SIZE / 2)]; /* one short per 2 shape bytes */
+short   g_lsimg[LCP_BODY_DEST_WORDS];    /* sp_lcpf dest: image plane pair */
+short   g_lsmas[LCP_BODY_DEST_WORDS];    /* sp_lcpf dest: mask plane pair */
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
 /* g_dwanf (Ghidra dog_walk_anim_frames @ 0x2A0E8): 8 sprite ids the
@@ -168,15 +169,15 @@ short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
 short   subAniC     = 0;
 
 /* ---- Head sprite double-buffer + source pointers ---------------------- */
-short   g_hsbuf[168];        /* 21 rows * 4 words * 2 (image) */
-short   g_hsmas[168];
+short   g_hsbuf[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head image */
+short   g_hsmas[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head mask */
 short   g_hsmif         = 0;
 short * pex_ptr;                   /* filled by asset loader */
 short * hd_shp;
 /* hd_shp buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
    destination for sprite_lcp_build_all_head's dilation of the raw
    168-byte head frames from the PEx.LCP file. */
-short   hshdbuf[66 * 42];    /* 42 shorts/frame = 84 bytes */
+short   hshdbuf[66 * (LCP_BODY_SHAPE_SIZE / 2)]; /* one short per 2 shape bytes */
 /* Ghidra head_anim_delay_countdown @ 0x2ba2a = 1. */
 short   g_hadec                         = 1;
 
