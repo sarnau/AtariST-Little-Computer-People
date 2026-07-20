@@ -87,3 +87,45 @@ source ships; ad-hoc debug scaffolding does not.
   regression tests, symbol lookup helpers).
 - `csrc/tests/` — host-side unit tests (compile under host cc, not
   Alcyon; not part of the shipped binary).
+
+## Ghidra ↔ port cross-reference
+
+`csrc/tools/ghidra_globals_map.md` documents every port global that
+has a Ghidra counterpart with a different (usually longer) name.  To
+push the map to the Ghidra project, run:
+
+    csrc/tools/apply_ghidra_renames.sh
+
+This regenerates a TSV via `gen_ghidra_rename_tsv.py`, then POSTs to
+Ghidra's HTTP server at `localhost:8089/run_script` to invoke
+`~/ghidra_scripts/RenameLcpGlobals.java`.  Prereqs: Ghidra open with
+LCP.PRG loaded; `list_data_symbols.java` has been run at least once.
+
+Struct name/field syncing uses the same HTTP mechanism via
+`~/ghidra_scripts/RenameGhidraStructs.java` and a
+`lcp_struct_rename_map.tsv`.
+
+## Known open issues
+
+- **Real-time crash inside TOS VDI at address error / bus error.**
+  Reproduces intermittently under Hatari real-time (never under
+  `--fast-forward`).  Symptom: user code jumps to a wild PC in low
+  RAM, then TOS cleanup cascades into `$fc9304` writing to
+  wrapped-negative SP.  Root cause unknown after multiple audits
+  (sign-extension audit clean, Timer-A ISR clean vs ROM 0x1219a,
+  VSync/Setscreen pairing matches ROM, Super() bracketing not a
+  race).  Next diagnostic: Hatari memwatch on `$25722` to catch the
+  writer that clobbers `lcp_std`'s abs.L operand.  User has
+  confirmed audio is off when it fires -- not a MIDI/PSG ISR issue.
+- **`test_longrun_stable.sh` currently fails env-side.**  Multiple
+  commits (including known-clean baselines) all report identical
+  PSNR 24.479517 with varying bus-error counts (6-15).  Suggests
+  Hatari cache / TOS ROM / `~/hatari-c/GAME/` state issue rather
+  than a code regression.  Worth 30 min to nail down before it
+  masks a real regression.
+- **`cp_main` copy protection stubbed.**  Intentional non-fidelity
+  documented in `csrc/stubs.c`; the ROM routine can't run under
+  Hatari (flock + XOR decrypt + FDC signature check).
+- **Music playback never verified in production build.**  Test
+  builds use `-DSKIP_MIDI=1` which never actually exercises the
+  audio ISR.  A fixed-input `.SNG` smoke test would close this gap.

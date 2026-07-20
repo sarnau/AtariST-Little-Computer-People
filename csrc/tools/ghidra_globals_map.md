@@ -5,31 +5,34 @@ truncates external symbols to 8 characters.  Ghidra's LCP.PRG database
 uses long descriptive names.  This file lists the correspondence for
 cross-referencing decompiler output against port source.
 
-## Status: unable to auto-rename Ghidra globals
+## Coverage
 
-The GhidraMCP surface exposes no endpoint to rename data (global-variable)
-symbols by address.  Available rename endpoints are:
+**Currently mapped: ~304/397 port globals.**  Remaining ~93 are mostly
+port-only helpers, MIDI/sprite arrays where Ghidra shows only
+`PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx` labels, or file-scoped statics with
+no descriptive ROM name.  Extend by decompiling more Ghidra functions
+and appending to the appropriate subsystem table below, then re-run
+`csrc/tools/apply_ghidra_renames.sh` to push the new pairs to Ghidra.
 
-- `mcp__ghidra__rename_function_by_address` -- functions only
-- `mcp__ghidra__rename_variables` -- **locals only**; verified against
-  `midi_tick_counter` inside `mq_tick`: the call reported
-  `variables_renamed: 0, variables_failed: 0` because it only enumerated
-  the function's local variables, not global references in the
-  decompilation.
+## Status: auto-rename pipeline
 
-Ghidra scripting (`save_ghidra_script` writes to
-`~/ghidra_scripts/`) has no matching *execute* endpoint over MCP, so a
-Java `SymbolTable`-walking rename script cannot be triggered from the
-port session.
+Automated via `csrc/tools/apply_ghidra_renames.sh`:
 
-Consequence: bulk renaming Ghidra's globals to the port's short names
-requires either
-  (a) a new MCP endpoint (`rename_data_by_address`), or
-  (b) running the saved script `list_data_symbols.java` from Ghidra's
-      Script Manager manually, then feeding a rename script the same
-      way.
+1. `gen_ghidra_rename_tsv.py` walks this file, extracts the pairs,
+   and joins against `/tmp/ghidra_syms.txt` to write
+   `~/ghidra_scripts/lcp_rename_map.tsv` (address+current+new triples).
+2. POST to Ghidra's HTTP server at `localhost:8089/run_script`
+   invokes `~/ghidra_scripts/RenameLcpGlobals.java`, which reads the
+   TSV and renames each symbol via `Symbol.setName(...)`.
 
-Until then the table below serves as the cross-reference.
+Prereqs: Ghidra open with LCP.PRG loaded; HTTP server listening on
+:8089; `list_data_symbols.java` has been run at least once to refresh
+`/tmp/ghidra_syms.txt`.
+
+The MCP tool surface itself has no data-symbol rename endpoint --
+`rename_function_by_address` handles functions only, and
+`rename_variables` handles function-local variables.  The HTTP script
+executor is what actually gets us there.
 
 ## Address mismatch caveat
 
@@ -111,7 +114,7 @@ handlers.)
 | `midi_event_duration`              | `g_medu`     |
 | `midi_next_event_tick`             | `mi_nxTk`    |
 | `midi_last_processed_tick`         | `mi_lpTk`    |
-| `midi_note_event_index`            | `g_mnevi`    |
+| `midi_note_event_index`            | `mi_evi`     |
 | `midi_note_length_params[]`        | `mi_ntLp[]`  |
 | `aes_int_out[]`                    | `aes_intO[]` |
 
@@ -489,7 +492,7 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 | `midi_song_loop_flag`              | `mi_slop`    |
 | `midi_seq_position`                | `mi_sqpos`   |
 | `midi_note_event_queue`            | `mi_evq`     |
-| `midi_note_event_count`            | `g_mnevc`    |
+| `midi_note_event_count`            | `mi_evcn`    |
 | `midi_note_on_flag`                | `mi_nnOn`    |
 | `midi_note_off_flag`               | `mi_nnOf`    |
 | `midi_note_mode_flags`             | `mi_nmof`    |

@@ -111,8 +111,6 @@ extern short mi_vel;
 extern short mi_dvel;
 extern short psg_cvol;
 extern short psg_dvol;
-extern short g_mnevi;
-extern short g_mnevc;
 extern short g_mchcn;
 extern short g_mtspb;
 extern short mi_temp;

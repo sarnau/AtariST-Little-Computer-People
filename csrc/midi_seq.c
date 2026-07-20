@@ -332,8 +332,8 @@ long            maxPos;
         mi_env = (long) (mi_dbase - 0x168);
         mi_vel           = mi_dvel;
         psg_cvol      = psg_dvol;
-        g_mnevi   = 0;
-        g_mnevc   = 9;
+        mi_evi    = 0;
+        mi_evcn   = 9;
         aes_intO[7]          = g_mtspb;
 }
 

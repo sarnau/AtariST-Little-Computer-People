@@ -269,8 +269,9 @@ short           mi_vel           = 127;
 short           mi_dvel   = 127;
 short           psg_cvol      = 15;
 short           psg_dvol      = 15;
-short           g_mnevi   = 0;
-short           g_mnevc   = 9;
+/* mi_evi (midi_note_event_index @ 0x4b9ca) and mi_evcn
+   (midi_note_event_count @ 0x4b9cc) are declared with the sequencer
+   state block further down; mq_setp resets them at song start. */
 /* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
    writes p[2] here and passes through mq_bust. */
 short           g_mchcn                 = 1;
