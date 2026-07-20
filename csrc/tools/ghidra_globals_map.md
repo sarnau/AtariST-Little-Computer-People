@@ -645,6 +645,106 @@ against the Ghidra symbol dump.
   `g_aprio`, `g_alsts`, `g_obisa`, `g_obtmt`, `g_lcieo`,
   `lcp_stR`, `lcp_recP`, `lcp_tv`.
 
+### Batch 5 additions
+
+Derived from targeted grep of `/tmp/ghidra_syms.txt` against remaining
+port shorts, cross-checked by usage patterns in the port
+(`aleisure.c`, `keyboard.c`, `parser.c`, `assets.c`, `tick.c`,
+`gfx_prim.c`, `walk.c`, `sprites.c`, `render.c`).
+
+#### LCP appliance / state flags
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `lcp_record_playing`               | `lcp_recP`   |
+| `lcp_tv_on`                        | `lcp_tv`     |
+| `lcp_study_door_open`              | `studyDrO`   |
+| `lcp_cabinet_open`                 | `lcp_cabO`   |
+| `lcp_toilet_door_open`             | `lcp_toiO`   |
+| `lcp_food_count`                   | `lcp_food`   |
+| `lcp_closet_door_open`             | `lcp_clsO`   |
+| `lcp_dresser_open`                 | `lcp_drsO`   |
+| `lcp_front_door_open`              | `lcp_frdO`   |
+| `lcp_on_stairs_flag`               | `lcp_stR`    |
+| `lcp_carried_object`               | `g_lcieo`    |
+
+#### Petting / input / parser
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `game_input_mode_flag`             | `g_inpmd`    |
+| `compression_tokens`               | `comp_tok`   |
+| `clothing_color_primary`           | `g_clcop`    |
+| `clothing_color_secondary`         | `g_clcos`    |
+| `petting_dog_active`               | `g_ptdoa`    |
+| `petting_anim_frame`               | `g_ptanf`    |
+| `petting_last_sprite_slot`         | `g_ptlss`    |
+| `command_input_buffer_pos`         | `g_cdibp`    |
+| `user_input_buffer`                | `usr_buf`    |
+
+#### Scene / VDI
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `scene_common_data`                | `scn_cmn`    |
+| `scene_data_ptr`                   | `scn_dat`    |
+| `house_scene_size`                 | `hs_size`    |
+| `vdi_color_table`                  | `vdi_colt`   |
+| `vdi_handle`                       | `vdi_hnd`    |
+
+#### Object animation tables (extras)
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `object_fire_animation`            | `g_obfia`    |
+| `object_dog_eating_animation`      | `g_obdea`    |
+
+#### Misc
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `sub_animation_frame_counter`      | `subAniC`    |
+| `alarm_sound_started`              | `g_alsts`    |
+| `action_priority`                  | `g_aprio`    |
+| `mouse_off_flag`                   | `moff_f`     |
+
+## Batch 5 conflicts / ambiguities noted
+
+- Existing row `command_input_buffer -> cmd_inp` is suspect:
+  Ghidra `command_input_buffer` at 0x4d28a is the 64-byte char array,
+  which the port declares as `char g_cdinb[64]`. The port's `cmd_inp`
+  is a `char *` (declared `char * cmd_inp`) and most likely
+  corresponds to Ghidra `command_input_ptr` at 0x2c6fc. Not touched
+  per task rules -- a new `command_input_ptr -> cmd_inp` row would
+  create two Ghidra symbols renaming to `cmd_inp`, which the rename
+  script rejects.
+- Ghidra `poker_blackjack_flag` (single BOOL @ 0x3d114) still cannot
+  disambiguate port's `pk_c1bj` / `pk_c2bj` (two flags). Also
+  unresolved: `pk_wcs`, `pk_wpr`, `pk_wrf`, `pk_bs1`, `pk_bs2`,
+  `pk_phrk` -- Ghidra symbol dump has no matching shapes.
+- Ghidra `poker_computer_hand_value_lo/_hi`, `poker_card_deck_index`,
+  `poker_display_x_offset`, `poker_round_count`, `poker_card_back_mfdb`
+  still not paired to port shorts.
+- Music-Studio-only MIDI shorts (`g_ewb`, `g_molof`, `g_msmap`,
+  `g_momap`, `g_mccha`, `mi_nOS`, `mi_nlp0`, `mi_nlpA`, `mi_lasT`,
+  `mi_evi`, `mi_evcn`) still unresolved -- Ghidra dump has no
+  matching long-name shapes visible without decompiling the
+  Music-Studio front-end (function names not preserved).
+- Sprite descriptor arrays `g_sedeh`, `g_sedew`, `g_sedim`, `g_sedms`,
+  `g_setmt`, `g_setah`, `g_setaw` -- Ghidra addresses only carry
+  raw `PTR_ARRAY_xxxxxx` / `SHORT_ARRAY_xxxxxx` labels, no long
+  name to pair against.
+- `dsb_stor`, `g_dsb`, `bshdbuf`, `hshdbuf`, `bm_lo`, `env_val`,
+  `in_evrt`, `rec_ledt`, `fs_trg`, `g_hzhi`, `g_hzlo`, `spr_file`,
+  `g_ltscb`, `g_ptdsi`, `g_obisa`, `g_obtmt`, `mood_pri`,
+  `cprot_r` -- either port-only helpers or no matching-shape
+  Ghidra long name in the dump.
+
+Identity-name port shorts (already Ghidra-named the same; skipped
+by the rename TSV generator but noted here for coverage):
+`contrl`, `intin`, `intout`, `ptsin`, `ptsout`, `workin`,
+`work_out`, `lcp_x`, `lcp_y`, `dog_x`, `dog_y`, `_vbclock`.
+
 ## How to extend this table
 
 1. Pick a port function `foo()` whose Ghidra counterpart still exists
