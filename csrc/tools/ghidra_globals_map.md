@@ -101,7 +101,8 @@ handlers.)
 |------------------------------------|--------------|
 | `midi_is_playing`                  | `mi_play`    |
 | `midi_tick_counter`                | `g_mtcou`    |
-| `midi_tick_prescaler`              | `g_mtspb`    |
+| `midi_tick_prescaler`              | `g_mtpre`    |
+| `midi_ticks_per_beat`              | `g_mtspb`    |
 | `midi_tick_divider`                | `g_mtdiv`    |
 | `midi_direct_write_mode`           | `mi_dwrm`    |
 | `midi_reentrant_lock`              | `mi_rlock`   |
@@ -558,12 +559,75 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
   `poker_card_back_mfdb`, `poker_draw_discard_flags` seen but port
   shorts uncertain.
 
+### Batch 4 additions
+
+Derived from decompiling `mq_advs`, `mq_pars`, `mq_expN`, `mq_pshl`,
+`pk_dpot`, `pk_wrMn`, `pk_bjwr`, plus targeted grep of the port
+against the Ghidra symbol dump.
+
+#### MIDI envelope tables and sequencer
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `midi_seq_max_position`            | `mi_seqE`    |
+| `midi_envelope_data_base`          | `mi_env`     |
+| `midi_envelope_rate_table`         | `mi_evrt`    |
+| `midi_envelope_time_table`         | `mi_evtt`    |
+| `midi_envelope_sustain_table`      | `mi_evst`    |
+| `midi_envelope_release_table`      | `mi_evrl`    |
+
+#### Poker / minigame
+
+| Ghidra                             | Port         |
+|------------------------------------|--------------|
+| `poker_pot_amount`                 | `g_ppppa`    |
+| `poker_draw_discard_flags`         | `pk_dsc`     |
+| `disable_key_input_flag`           | `no_keyin`   |
+| `minigame_timeout_flag`            | `mg_tofl`    |
+
+## Batch 4 conflicts / ambiguities noted
+
+- Ghidra's `g_mnevi` / `g_mnevc` are used in `mq_advs`, `mq_pars`,
+  `mq_expN`, `mq_pshl` where the port uses `mi_evi` / `mi_evcn`,
+  yet the port also has separately-named globals `g_mnevi` /
+  `g_mnevc` (used only in `mq_stop`). The existing map rows
+  `midi_note_event_index -> g_mnevi` and
+  `midi_note_event_count -> g_mnevc` may therefore be pointing at
+  the wrong port short: the addresses referenced by the sequencer
+  hot path in Ghidra correspond to port `mi_evi` / `mi_evcn`.
+  Not touched -- needs an address-based audit before deciding
+  which port short is the "real" counterpart.
+- Similarly, `midi_event_duration` (Ghidra `g_medu`) is written
+  from `aes_intO[7]` and used as "ticks until next event" in
+  `mq_advs`; the port assigns `mi_nlp0 = -1` and
+  `mi_nlp0 = (short)mi_nxTk - (short)g_mtcou` in the same place,
+  while the port's `g_medu` is only referenced by `mq_stop`.
+  So `midi_event_duration -> mi_nlp0` looks like the correct
+  pairing, but a duplicate row was not added.
+- `midi_tick_prescaler` (Ghidra) is set from `aes_intO[7]` in
+  `mq_advs`; the port assigns to `g_mtpre` there. Existing map
+  row is `midi_tick_prescaler -> g_mtspb`, but `g_mtspb` is used
+  in `mq_pars` where Ghidra uses `midi_ticks_per_beat`. So the
+  correct pairs appear to be `midi_tick_prescaler -> g_mtpre`
+  and `midi_ticks_per_beat -> g_mtspb`. Not touched.
+- `poker_blackjack_flag` (Ghidra 0x3d114) is a single BOOL; port
+  has two (`pk_c1bj`, `pk_c2bj`) for the two blackjack hands.
+  Cannot pair without decompiling the blackjack routine (not
+  found by name in this pass).
+- `poker_computer_hand_value_lo`/`_hi`, `poker_card_deck_index`,
+  `poker_display_x_offset`, `poker_round_count`, `poker_card_back_mfdb`
+  still not paired to port shorts.
+- Sprite descriptor arrays (`g_sedim`, `g_sedms`, `g_sedeh`,
+  `g_sedew`) live at Ghidra addresses that only have raw
+  `PTR_ARRAY_xxxxxx` / `SHORT_ARRAY_xxxxxx` symbols -- no
+  meaningful long name to pair against.
+
 ### Port shorts still unpaired (candidates for future decompile passes)
 
 - Music Studio / MIDI: `g_ewb`, `g_molof`, `g_msmap`, `mi_nOS`,
-  `mi_nlp0`, `mi_nlpA`, `mi_lasT`, `mi_seqE`, `mi_evi`, `mi_evrl`,
-  `mi_evrt`, `mi_evst`, `mi_evtt`, `mi_evcn`, `mi_env`, `mg_tofl`,
-  `mood_pri`, `moff_f`.
+  `mi_nlp0`, `mi_nlpA`, `mi_lasT`, `mi_evi`, `mi_evcn`,
+  `mood_pri`, `moff_f`.  (Batch 4 paired `mi_seqE`, `mi_env`,
+  `mi_evrl`, `mi_evrt`, `mi_evst`, `mi_evtt`, `mg_tofl`.)
 - Screen/render extras: `bshdbuf`, `hshdbuf`, `hs_size`, `g_dsb`
   (may be dead; comment says former alias of `g_srptr - 254`),
   `g_spdc`, `g_sedeh`, `g_sedew`, `g_sedim`, `g_sedms`, `g_setmt`,
@@ -571,8 +635,9 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 - Letter/clock: `g_ltscb`, `g_clcop`, `g_clcos`, `g_cdibp`,
   `g_cdinb`, `g_ptanf`, `g_ptdoa`, `g_ptdsi`, `g_ptlss`.
 - Poker war: `pk_wcs`, `pk_wpr`, `pk_wrf`, `pk_bs1`, `pk_bs2`,
-  `pk_c1bj`, `pk_c2bj`, `pk_dsc`, `pk_phrk`, `g_ppppa`.
-- Misc: `env_val`, `no_keyin`, `in_evrt`, `rec_ledt`, `studyDrO`,
+  `pk_c1bj`, `pk_c2bj`, `pk_phrk`.  (Batch 4 paired `pk_dsc`,
+  `g_ppppa`.)
+- Misc: `env_val`, `in_evrt`, `rec_ledt`, `studyDrO`,
   `subAniC`, `cprot_r`, `dsb_stor`, `usr_buf`, `fs_trg`, `bm_lo`,
   `g_aprio`, `g_alsts`, `g_obisa`, `g_obtmt`, `g_lcieo`,
   `lcp_stR`, `lcp_recP`, `lcp_tv`.

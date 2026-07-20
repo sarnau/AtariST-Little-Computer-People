@@ -1332,9 +1332,9 @@ mq_stop()
         short   note;
         BOOL16  hadPend;
 
-        hadPend = (g_mnevi > 0);
+        hadPend = (mi_evi > 0);
 
-        while (g_mnevi > 0) {
+        while (mi_evi > 0) {
                 g_medu = g_mtcou - mi_nxTk;
                 if (g_medu > 0) {
                         mq_expN(g_medu);
