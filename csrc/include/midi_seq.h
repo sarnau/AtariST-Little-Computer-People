@@ -27,4 +27,9 @@ extern short mq_pars();
 extern void mq_stop();
 extern void mq_extm();
 
+/* mq_tick lives in mq_tick.s (asm ISR).  Declared here so C
+   callers passing its address to Xbtimer compile without an
+   implicit-declaration error under strict K&R. */
+extern void mq_tick();
+
 #endif /* MIDI_SEQ_H */

@@ -51,7 +51,7 @@ for entry in "${tests[@]}"; do
     # Add -DTEST_ACTIONS=$id via cp68 flags temporarily.
     # alcyon_build.sh doesn't take custom flags out of the box, so
     # we set ALCYON_CPPFLAGS via the environment.
-    ALCYON_CPPFLAGS="-DTEST_ACTIONS=$id" \
+    ALCYON_CPPFLAGS="-DTEST_ACTIONS=$id -DSKIP_TITLE=1 -DSKIP_MIDI=1" \
         FILES=init.c "$CSRC/tools/alcyon_build.sh" > /dev/null 2>&1 || {
         echo "BUILD-FAIL"; fail=1; results+="\n  $name  BUILD-FAIL"; continue
     }

@@ -45,7 +45,7 @@ for entry in "${tests[@]}"; do
     name=${entry#*=}
     printf "==== %-16s (code=%3s)  " "$name" "$id"
 
-    ALCYON_CPPFLAGS="-DTEST_KEY=$id" \
+    ALCYON_CPPFLAGS="-DTEST_KEY=$id -DSKIP_TITLE=1 -DSKIP_MIDI=1" \
         FILES=init.c "$CSRC/tools/alcyon_build.sh" > /dev/null 2>&1 || {
         echo "BUILD-FAIL"; fail=1; results+="\n  $name  BUILD-FAIL"; continue
     }
