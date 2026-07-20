@@ -166,7 +166,7 @@ void
 sgPlay(filename)
 char *  filename;
 {
-        DTA *   dta_ptr;
+        _DTA *   dta_ptr;
         short           fhnd;
         unsigned char   temp[10];
 
@@ -184,7 +184,7 @@ char *  filename;
         }
 
         Fsfirst(filename, 0L);
-        dta_ptr = (DTA *) Fgetdta();
+        dta_ptr = (_DTA *) Fgetdta();
         mi_sbuf = (char *) Malloc(dta_ptr->d_length);
         if (mi_sbuf == (char *) 0)
                 er_nomem();

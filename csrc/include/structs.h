@@ -12,6 +12,8 @@
 #define STRUCTS_H
 
 #include "types.h"
+#include <vdibind.h>    /* MFDB */
+#include <ostruct.h>    /* _DTA */
 
 /* PLAYER (LCP) -- 128-byte persistent character state.
    Layout verified via Ghidra struct editor and HYBER save file dumps. */
@@ -130,20 +132,7 @@ typedef struct {
         char            priority_offset;
 } WORD_TO_ACTION;
 
-/* MFDB -- VDI memory form definition block.  Passed as source or
-   destination descriptor to vro_cpyfm and related raster ops.
-   Layout matches the GEM VDI ABI exactly (Alcyon's <mfdb.h>). */
-typedef struct {
-        void *  fd_addr;                /* pointer to bitmap data      */
-        short   fd_w;                   /* width in pixels             */
-        short   fd_h;                   /* height in pixels            */
-        short   fd_wdwidth;             /* width in words (fd_w / 16)  */
-        short   fd_stand;               /* 0=device, 1=standard format */
-        short   fd_nplanes;             /* number of bit planes        */
-        short   fd_r1;                  /* reserved */
-        short   fd_r2;
-        short   fd_r3;
-} MFDB;
+/* MFDB is defined in <vdibind.h> (included above) -- do not redeclare. */
 
 /* RECT16 -- 4-corner rectangle used for VDI polylines.
    Laid out so a `short *` can be passed to v_pline() and it walks the
@@ -155,18 +144,8 @@ typedef struct {
         short   y2;
 } RECT16;
 
-/* DTA -- GEMDOS Disk Transfer Address, the record Fsfirst / Fsnext
-   write to and Fgetdta returns.  Matches the standard TOS/Alcyon
-   layout (see ~/hatari-c/TOOLS/INCLUDE/ostruct.h `_DTA`).  Total 44
-   bytes.  Callers here read `d_length` (song file loader) and
-   `d_fname` (song enumeration). */
-typedef struct {
-        char    d_reserved[21];         /* reserved for GEMDOS */
-        char    d_attrib;               /* file attributes */
-        short   d_time;                 /* packed time */
-        short   d_date;                 /* packed date */
-        long    d_length;               /* file size */
-        char    d_fname[14];            /* filename (8.3 uppercase) */
-} DTA;
+/* _DTA is defined in <ostruct.h> (included above) -- do not redeclare.
+   Callers use _DTA * directly; the on-disk layout is identical to
+   the previous port-local `DTA` typedef (44 bytes). */
 
 #endif  /* STRUCTS_H */

@@ -59,7 +59,7 @@ a_lists()
 {
         short   result;
         short   index;
-        DTA *   dta_ptr;
+        _DTA *   dta_ptr;
         char *  filename;
         short   i;
 
@@ -80,7 +80,7 @@ a_lists()
         Fsfirst("*.sng", 0L);
         while ((index = index - 1) != 0)
                 Fsnext();
-        dta_ptr = (DTA *) Fgetdta();
+        dta_ptr = (_DTA *) Fgetdta();
         filename = dta_ptr->d_fname;
         for (i = 0; filename[i] != '.'; i = i + 1)
                 ;
@@ -142,7 +142,7 @@ void
 a_plawr()
 {
         short           result;
-        DTA *           dta_ptr;
+        _DTA *           dta_ptr;
         char *          filename;
         long            xres;
         unsigned char   psg_a, psg_b, psg_c;
@@ -185,7 +185,7 @@ a_plawr()
         Fsfirst("*.org", 0L);
         while ((i = i - 1) != 0)
                 Fsnext();
-        dta_ptr = (DTA *) Fgetdta();
+        dta_ptr = (_DTA *) Fgetdta();
         filename = dta_ptr->d_fname;
         for (i = 0; filename[i] != '.'; i = i + 1)
                 ;
