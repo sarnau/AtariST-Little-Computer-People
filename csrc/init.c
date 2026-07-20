@@ -152,13 +152,13 @@ st_titl()
 }
 #else
 
-/* draw_text_input_cursor_8x8: paint an 8x8 solid rect at (x, y-7)..
+/* drwCurs: paint an 8x8 solid rect at (x, y-7)..
    (x+7, y).  Called alternately with COLOR_dk_brown (erase) and the
    text colour (rewrite) to blink the cursor between characters.
-   addr: draw_text_input_cursor_8x8() */
+   addr: drwCurs() */
 
 void
-draw_text_input_cursor_8x8(x, y, color)
+drwCurs(x, y, color)
 short   x;
 short   y;
 short   color;
@@ -166,17 +166,17 @@ short   color;
         drwBar(x, y - 7, x + 7, y, color);
 }
 
-/* string_input: read `val` digits into in_str[] with a blinking
+/* inpNum: read `val` digits into in_str[] with a blinking
    cursor.  Only digits 0..9 are accepted; cursor-left erases the
    most recent digit.  The (i % 3 == 2) skip-past-separator pattern
    keeps the '/' in "MM/DD/YY" or ':' in "HH:MM" from being
    overwritten during input.  Digits are stored as raw 0..9 values
    (ch - 0x30) in in_str[], matching Ghidra's post-parse arithmetic
    in st_titl (date/time decoded as tens*10 + ones).
-   addr: string_input() */
+   addr: inpNum() */
 
 void
-string_input(x, y, str, val, color)
+inpNum(x, y, str, val, color)
 short   x;
 short   y;
 char *  str;
@@ -200,13 +200,13 @@ short   color;
                                 if ((short)(i - 1) % 3 == 2)
                                         next = i - 2;
                                 i = next;
-                                draw_text_input_cursor_8x8(
+                                drwCurs(
                                              x + i * 8, y, COLOR_dk_brown);
                                 prCh((short) str[i],
                                                  x + i * 8, y, color);
                         }
                 } while ((short) ch < '0' || '9' < (short) ch);
-                draw_text_input_cursor_8x8(x + i * 8, y, COLOR_dk_brown);
+                drwCurs(x + i * 8, y, COLOR_dk_brown);
                 prCh(ch, x + i * 8, y, color);
                 in_str[i] = (char) ch - 0x30;
                 next = i + 1;
@@ -248,7 +248,7 @@ st_titl()
                                 if (ch != KEY_CURSOR_LEFT || xpos <= 0)
                                         break;
                                 xpos = xpos - 1;
-                                draw_text_input_cursor_8x8(
+                                drwCurs(
                                              xpos * 8 + 128, 110, COLOR_dk_brown);
                                 prCh('-', xpos * 8 + 0x80, 110,
                                                  COLOR_lt_brown);
@@ -258,7 +258,7 @@ st_titl()
                         ch = lcp_upp(ch);
                 } while (ch < 0x20);
                 lcp.owner_name[xpos] = (char) ch;
-                draw_text_input_cursor_8x8(xpos * 8 + 0x80, 110,
+                drwCurs(xpos * 8 + 0x80, 110,
                                                                           COLOR_dk_brown);
                 prCh(ch, xpos * 8 + 0x80, 110, COLOR_lt_brown);
                 xpos = xpos + 1;
@@ -266,14 +266,14 @@ st_titl()
 name_done:
         lcp.owner_name[xpos] = '\0';
         for (ilen = xpos; ilen < 18; ilen = ilen + 1)
-                draw_text_input_cursor_8x8(ilen * 8 + 128, 110,
+                drwCurs(ilen * 8 + 128, 110,
                                                                           COLOR_dk_brown);
 
         /* DATE phase. */
         strPr("ENTER DATE:", 80, 122, COLOR_lt_brown);
         do {
                 do {
-                        string_input(176, 122, "MM/DD/YY", 8,
+                        inpNum(176, 122, "MM/DD/YY", 8,
                                                     COLOR_lt_brown);
                         dt_mon   = (short) in_str[1] + in_str[0] * 10 - 1;
                         date_day = (short) in_str[4] + in_str[3] * 10 - 1;
@@ -287,7 +287,7 @@ name_done:
         strPr("ENTER TIME:", 80, 134, COLOR_lt_brown);
         do {
                 do {
-                        string_input(176, 134, "HH:MM", 5,
+                        inpNum(176, 134, "HH:MM", 5,
                                                     COLOR_lt_brown);
                         t_hour = (short) in_str[1] + in_str[0] * 10;
                         t_min  = (short) in_str[4] + in_str[3] * 10;
@@ -311,7 +311,7 @@ name_done:
                         break;
                 }
         }
-        draw_text_input_cursor_8x8(160, 146, COLOR_dk_brown);
+        drwCurs(160, 146, COLOR_dk_brown);
         prCh(pmc, 160, 146, COLOR_lt_brown);
         evnt_timer(1000, 0);
 }

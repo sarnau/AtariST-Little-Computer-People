@@ -6,8 +6,8 @@
 extern void lcp_crnd();
 extern void cl_drini();
 extern void st_titl();
-extern void draw_text_input_cursor_8x8();
-extern void string_input();
+extern void drwCurs();
+extern void inpNum();
 extern void mq_intim();
 extern void cntSong();
 extern void bldBRev();
