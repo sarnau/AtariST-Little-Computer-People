@@ -771,8 +771,14 @@ short           g_pcbet              = 0;
 short           g_ppbet                = 0;
 short           pk_phase                = 0;
 short           pk_dsc[52];
-short           g_pcdrp[26];
-short           g_ppdrp[26];
+/* Ghidra poker_computer_draw_pile @ 0x47e24 and poker_player_draw_pile
+   @ 0x3f712: 52-short ROM slots (104 bytes each).  Port previously
+   declared [26], which pk_rmch's unconditional
+     for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
+   overflowed by 25 slots (50 bytes) per draw.  The sibling
+   pk_dpile[52] was already correctly sized. */
+short           g_pcdrp[52];
+short           g_ppdrp[52];
 
 /* War/Blackjack per-round face-down "war" cards.  Sized 52 so the
    deepest possible recursion (all cards ending up here) still fits.
