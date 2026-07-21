@@ -31,22 +31,18 @@ short   counter;
         short   psi;                            /* petting sprite id */
         short   key;
 
-        /* Carrying-mode position update.  Ghidra 0x256a6..0x258e4 shows
-           Path B in the ROM (g_lcyof != NO) first repositions the
-           carried sprite for the current lcp_face + carry offset, then
-           dispatches through carried_object_id_table[10] to a per-
-           object handler at 0x257c6..0x258b0.  Each handler is the
-           identical 5-instruction sequence `g_sepey[g_seslm[SPRITE_X]]
-           = lcp_y - 20` differing only in which stored sprite-def
-           index it uses; since g_lcieo is always the current carried
-           SPRITE_ID, `g_seslm[g_lcieo]` picks the same slot the
-           handlers would.  The 10-slot table + dispatch was therefore
-           equivalent to one inline write, hence the collapsed form
-           here.  Each ROM handler ends with `bra.w 0x25d60` which
-           re-enters Path A's counter loop, so the frame still gets
-           rendered -- Path B is not a disjoint return path.  Path B
-           and Path A merged into one code path below eliminates the
-           g_lcyof-stuck freeze (diagnosed via trace_lcyof.sh). */
+        /* Carrying-mode position update (Ghidra 0x256a6..0x258e4).
+           Path B in the ROM repositions the carried sprite then
+           dispatches through carried_object_id_table (0x2b95a) to
+           one of 9 per-object handlers at 0x257c6..0x258b0.  Each
+           handler writes `g_sepey[g_seslm[SPRITE_X]] = lcp_y - 20`
+           with the handler's own SPRITE_ID.  After the handler the
+           ROM branches back into Path A's animation counter loop
+           via 0x25d60, so Path B is NOT a separate return path --
+           reproduced below by falling through into the loop.  A
+           port that treated Path B as return-without-rendering
+           froze the game whenever g_lcyof leaked YES (see
+           source/tools/trace_lcyof.sh). */
         if (g_lcyof != NO) {
                 slot = g_seslm[g_lcieo];
                 if (lcp_face == FACING_RIGHT) {
@@ -56,7 +52,43 @@ short   counter;
                         if (g_sepex[slot] < 0)
                                 g_sepex[slot] = 0;
                 }
-                g_sepey[slot] = lcp_y - 20;
+                /* Per-object Y dispatch (Ghidra 0x257c6..0x258b0).
+                   All 9 handlers write the same offset -20; the
+                   individual cases exist for byte-fidelity with the
+                   ROM's per-sprite-ID jump.  A default case
+                   suppresses the ROM's out-of-table wild jump (dbeq
+                   fall-through would land on the function pointer at
+                   `table + 0x24` which is undefined when g_lcieo
+                   matches no carried-object entry). */
+                switch (g_lcieo) {
+                case SPRITE_GLASS:
+                        g_sepey[g_seslm[SPRITE_GLASS]]        = lcp_y - 20;
+                        break;
+                case SPRITE_GAME_BOX:
+                        g_sepey[g_seslm[SPRITE_GAME_BOX]]     = lcp_y - 20;
+                        break;
+                case SPRITE_FOOD_PACKAGE:
+                        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] = lcp_y - 20;
+                        break;
+                case SPRITE_FIREWOOD:
+                        g_sepey[g_seslm[SPRITE_FIREWOOD]]     = lcp_y - 20;
+                        break;
+                case SPRITE_COOKING_POT:
+                        g_sepey[g_seslm[SPRITE_COOKING_POT]]  = lcp_y - 20;
+                        break;
+                case SPRITE_SUITCASE:
+                        g_sepey[g_seslm[SPRITE_SUITCASE]]     = lcp_y - 20;
+                        break;
+                case SPRITE_BOOK:
+                        g_sepey[g_seslm[SPRITE_BOOK]]         = lcp_y - 20;
+                        break;
+                case SPRITE_VINYL_CARRY:
+                        g_sepey[g_seslm[SPRITE_VINYL_CARRY]]  = lcp_y - 20;
+                        break;
+                case SPRITE_COOKED_MEAL:
+                        g_sepey[g_seslm[SPRITE_COOKED_MEAL]]  = lcp_y - 20;
+                        break;
+                }
         }
 
         {
