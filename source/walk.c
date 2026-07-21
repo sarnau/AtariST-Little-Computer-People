@@ -315,7 +315,6 @@ lcp_path()
                         setHTgt(HEAD_ANIM_HORIZONTAL_RANGE |
                                         HEAD_ANIM_SHOWER);
                 } else {
-                        /* At target X, just cycle animation. */
                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
                         if (lcp_st > STATE_WALK_FRAME_7_STEP)
                                 lcp_st = STATE_WALK_FRAME_0;

@@ -53,9 +53,6 @@
 #include "walk.h"
 
 
-/* Forward-declare the two helpers + a_playp so calls before
-   the definitions still resolve under -Werror. */
-
 /* lt_tyca: emit one character.  On CR (< space),
    scrolls the text pane down; otherwise plays a random click and blits
    the char via prCh, then swaps in the appropriate width sprite
@@ -70,7 +67,7 @@ short   ch;
         short   pick;
         short   i;
 
-        if (ch < ' ') {                 /* control char, treated as CR */
+        if (ch < ' ') {                 /* CR */
                 lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
                 pick = rndRng(0, 5);
@@ -179,7 +176,6 @@ short   val;
         short   i;
         BOOL16  word_wrap_needed;
 
-        /* Emit leading spaces. */
         if (val < 0 || g_cdibp > 0) {
                 if (val < 0)
                         val = -val;
@@ -190,15 +186,13 @@ short   val;
         word_wrap_needed = NO;
         line_remaining   = 0;
         while (word_wrap_needed == NO) {
-                /* Skip inter-word spaces (emit them if we've already
-                   started a line). */
+                /* Skip inter-word spaces (emit if line already started). */
                 while (*str == ' ') {
                         str = str + 1;
                         if (g_cdibp > 0)
                                 lt_tyca(' ');
                 }
 
-                /* Collect one word into g_ltscb. */
                 i = 0;
                 for (;;) {
                         line_remaining = (short) *str;
@@ -214,8 +208,7 @@ short   val;
                         str = str + 1;
                 }
 
-                /* Word-wrap: if this word would overflow the 40-col
-                   line, insert a CR first. */
+                /* Word-wrap at 40 columns. */
                 if ((short) (i + g_cdibp) > 0x27)
                         lt_tyca('\r');
 
@@ -299,7 +292,6 @@ a_writl()
 
         g_actif = YES;
 
-        /* Drop the typewriter + typing sprites. */
         g_selaf[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_TYPEWRITER);
         g_sepex[g_seslm[SPRITE_TYPEWRITER]] = 201;
@@ -336,7 +328,6 @@ a_writl()
         no_keyin = YES;
         fillTopR(0x1b);
 
-        /* Allocate the letter template buffer -- 0x2900 bytes. */
         g_lttx = (char *) Malloc(0x2900L);
         if (g_lttx == (char *) 0)
                 er_nomem();
@@ -345,7 +336,6 @@ a_writl()
         tx_sctm = 9999;
         gameTick(2);
 
-        /* --- Date + salutation --- */
         full_year = dt_year + 1900;
         sprintf(in_str, "%s %d, %4d",
                 mo_names[dt_mon],
@@ -358,7 +348,7 @@ a_writl()
         lt_tysa(in_str, 0);
         lt_tyca('\r');
 
-        /* --- Shuffle the 4 section indices via 16 random swaps. --- */
+        /* Shuffle the 4 section indices via 16 random swaps. */
         for (i = 0; i < 4; i = i + 1)
                 section_order[i] = i;
         for (i = 0; i < 16; i = i + 1) {
@@ -369,7 +359,7 @@ a_writl()
                 section_order[swap_b] = swap_temp;
         }
 
-        /* --- Body: 2..4 paragraphs from the shuffled sections. --- */
+        /* Body: 2..4 paragraphs from the shuffled sections. */
         paragraph_count = rndRng(2, 4);
         for (i = 0; i < paragraph_count; i = i + 1) {
                 section_id     = section_order[i];
@@ -414,7 +404,7 @@ a_writl()
                         char_test);
         }
 
-        /* --- Sign-off. --- */
+        /* Sign-off. */
         lt_tyca('\r');
         line_spacing = -8;
         walk_result = rndRng(0, 3);
@@ -426,7 +416,7 @@ a_writl()
         lt_tysa(in_str, -10);
         gameTick(60);
 
-        /* --- Cleanup: free buffer, hide typing sprites, walk out. --- */
+        /* Cleanup: free buffer, hide typing sprites, walk out. */
         tx_sctm        = 0;
         g_cdibp = 0;
         no_keyin   = NO;

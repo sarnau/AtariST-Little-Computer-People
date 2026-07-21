@@ -1,16 +1,8 @@
 /*
  * renderx.c -- palette, TV, screen-scroll, and prCh.
- *
- * Split from render.c to keep the file digest manageable.  Everything
- * here is a real port of a Ghidra-verified function; the underlying
- * VDI/XBIOS traps (Setpalette, Setscreen, Logbase, vst_color, vswr_mode,
- * v_gtext) fall through to host stubs in osbind.h / stubs.c when
- * building without the ST hardware.
- *
- * addr: pa_cloc(), pa_skic(),
- *       lcp_upal(), td_line(),
- *       td_nois(), sc_sctd(),
- *       prCh()
+ * Split from render.c. All functions are Ghidra-verified.
+ * addr: pa_cloc(), pa_skic(), lcp_upal(), td_line(),
+ *       td_nois(), sc_sctd(), prCh()
  */
 
 #include "types.h"
@@ -25,10 +17,9 @@
 #include "random.h"
 #include "renderx.h"
 
-/* pa_cloc: pick a random or player-configured
-   CLOTHING_COLOR_ID (0..15) and load its primary/secondary colours
-   into palette slots 1 and 2, then Setpalette.  If the random pick
-   overshoots the 16-entry table, falls back to lcp.clothing_color.
+/* pa_cloc: pick random/configured CLOTHING_COLOR_ID (0..15),
+   load prim/sec colours to palette slots 1,2. Overshoot falls back
+   to lcp.clothing_color.
    addr: pa_cloc() */
 
 void
@@ -45,7 +36,7 @@ pa_cloc()
         Setpalette(main_pal);
 }
 
-/* pa_skic: same shape, 8-entry skin table.
+/* pa_skic: same as pa_cloc but 8-entry skin table.
    addr: pa_skic() */
 
 void
@@ -62,10 +53,9 @@ pa_skic()
         Setpalette(main_pal);
 }
 
-/* lcp_upal: refresh the sickness tint at palette
-   slot 6.  ST_PEACH (0x743) when healthy, ST_SICK_GREEN (0x363) when
-   sick.  Called from sim.c on recovery, from health.c on onset, and
-   from lc_load after HYBER restore.
+/* lcp_upal: refresh sickness tint at palette slot 6.
+   ST_PEACH (0x743) healthy, ST_SICK_GREEN (0x363) sick.
+   Called from sim.c (recovery), health.c (onset), lc_load (HYBER restore).
    addr: lcp_upal() */
 
 void
@@ -78,10 +68,9 @@ lcp_upal()
         Setpalette(main_pal);
 }
 
-/* td_line: draw the 5-line rabbit-ear antenna on top of
-   the TV.  Lines diagonal-up-right from (44..48, 51..49) to (44..48,
-   57..55).  Color is passed by the caller (COLOR_white when off,
-   random color when on for static effect).
+/* td_line: draw 5-line rabbit-ear antenna on TV.
+   Diagonal-up-right from (44..48, 51..49) to (44..48, 57..55).
+   Colour: COLOR_white when off, random when on (static effect).
    addr: td_line() */
 
 void
@@ -96,9 +85,8 @@ short   color;
                           color);
 }
 
-/* td_nois: random-colour antenna each frame while the TV
-   is on.  Called from the frame loop; the mask (& COLOR_dk_brown = 0xf)
-   keeps the picked colour within the 16-entry palette.
+/* td_nois: random-colour antenna each frame while TV on.
+   Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette.
    addr: td_nois() */
 
 void
@@ -110,10 +98,8 @@ td_nois()
         td_line((short) rnd & COLOR_dk_brown);
 }
 
-/* sc_sctd: 1-row block scroll on the top text strip
-   (used by the letter typewriter when a line wraps).  Copies 13 rows
-   of 40 words each downward using the blitter, then blanks the top
-   two rows (24 and 25) to white.
+/* sc_sctd: 1-row block scroll on top text strip (letter typewriter wrap).
+   Copies 13 rows of 40 words each downward, blanks top two rows to white.
    addr: sc_sctd() */
 
 void

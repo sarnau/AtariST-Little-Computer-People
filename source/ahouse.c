@@ -240,7 +240,6 @@ a_uset()
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
-        /* Open the door if it isn't already. */
         if (lcp_toiO == NO) {
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
@@ -255,7 +254,6 @@ a_uset()
                 lcp_toiO = YES;
         }
 
-        /* Walk into the toilet cubicle. */
         lcp_face = FACING_RIGHT;
         g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_DOOR_ANIM_3);
@@ -270,7 +268,7 @@ a_uset()
         lcp_wkD();
         saved_x = lcp_x;
 
-        /* Close door behind the resident (3 sprite phases). */
+        /* Close door behind resident (3 sprite phases). */
         g_selaf[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
         sp_upds();
         g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
@@ -291,13 +289,12 @@ a_uset()
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(1);
 
-        /* Do the thing.  45..60 ticks, then flush + 16 tick refill. */
+        /* 45..60 ticks, then flush + 16 tick refill. */
         counter = rndRng(45, 60);
         gameTick(counter);
         sf_sele(SFX_TOILET_FLUSH, 6L);
         gameTick(16);
 
-        /* Reopen door + walk out. */
         g_selaf[SPRITE_DOOR_ANIM_1] = SPRITE_HIDDEN;
         sp_upds();
         g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;

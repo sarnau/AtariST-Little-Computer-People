@@ -1,13 +1,5 @@
 /*
- * actions.c -- doAct() dispatcher (45 cases).
- *
- * Called from chk_actT() with a resolved ACTION_ID
- * already in g_trac.  Snapshots g_trac into lastAct
- * (used by the AI to avoid picking the same action twice in a row),
- * clears the trigger, waking the resident first if asleep, then
- * switches to the per-action handler.  All 45 handlers live in
- * separate .c files (or, until ported, astubs.c).
- *
+ * actions.c -- doAct() dispatcher.
  * addr: doAct()
  */
 
@@ -25,11 +17,6 @@
 #include "aletter.h"
 #include "asimple.h"
 #include "globals.h"
-/* Forward-declarations for every action_ handler.  Real ports live in
-   action_*.c; unported ones share stub bodies in astubs.c. */
-
-/* doAct: dispatch g_trac to its handler.
-   addr: doAct() */
 
 void
 doAct()

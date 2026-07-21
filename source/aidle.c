@@ -1,12 +1,6 @@
 /*
  * aidle.c -- short "no-walk" idle / gesture handlers.
- *
- * All share the same shape: pick a pair of animation states, tick
- * through them for a short duration, return to STATE_STAND_SIDE_VIEW.
- * No walking, no world state mutation, no sound (except toggle_tv).
- *
- * addr: a_wandi(), a_peeka(),
- *       a_pacen(), a_toggt(), a_sleep()
+ * addr: a_wandi(), a_peeka(), a_pacen(), a_toggt(), a_sleep()
  */
 
 #include "types.h"
@@ -24,9 +18,7 @@
 #include "tick.h"
 #include "walk.h"
 
-/* a_wandi: two-state shrug idle.
-   addr: a_wandi() */
-
+/* addr: a_wandi() */
 void
 a_wandi()
 {
@@ -43,9 +35,7 @@ a_wandi()
         lcp_st = STATE_STAND_SIDE_VIEW; gameTick(0);
 }
 
-/* a_peeka: 6-tick look-away with head frame 2.
-   addr: a_peeka() */
-
+/* addr: a_peeka() */
 void
 a_peeka()
 {
@@ -67,9 +57,7 @@ a_peeka()
         gameTick(0);
 }
 
-/* a_pacen: 15-frame side-shift alternation.
-   addr: a_pacen() */
-
+/* addr: a_pacen() */
 void
 a_pacen()
 {
@@ -90,10 +78,7 @@ a_pacen()
         gameTick(0);
 }
 
-/* a_toggt: flip the TV state.  Both tt_on and tt_off
-   handle their own SFX_TV_CLICK.
-   addr: a_toggt() */
-
+/* addr: a_toggt() */
 void
 a_toggt()
 {
@@ -103,11 +88,9 @@ a_toggt()
                 tt_off();
 }
 
-/* a_sleep: lie in bed, snore, optionally forever (value == -1 is
-   the copy-protection punishment path).  On value == -1 the resident
-   first walks to the current floor's center Y before lying down.
+/* value == -1 is the copy-protection punishment path (sleep forever);
+   the resident first walks to the current floor's center Y before lying down.
    addr: a_sleep() */
-
 void
 a_sleep(value)
 short   value;

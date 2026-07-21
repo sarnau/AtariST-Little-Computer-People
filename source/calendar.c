@@ -1,29 +1,17 @@
-/*
- * calendar.c -- calendar helpers and midnight reset.
- *
- * daysInMo() consults a 12-entry lookup table (days_pmo[]) for
- * non-February months and applies a divisible-by-4 leap-year rule for
- * February.  daily_rs() is called by sim.c at 00:00 to
- * re-arm the once-per-day action triggers (meals, wake, bedtime).
- */
+/* calendar.c -- calendar helpers and midnight reset. */
 
 #include "types.h"
 #include "calendar.h"
 #include "globals.h"
-/* Days per calendar month.  Index 0 = January.  February is patched at
-   runtime by daysInMo() with the leap-year branch. */
+
 short days_pmo[12] = {
         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-/* daysInMo: return the number of days in month `m` of year `y`.
-   Note: the original binary reads `dt_year` (the global) rather than
-   the `year` parameter during the leap-year check.  Preserved verbatim
-   so save-file compatibility survives, but flagged here as almost
-   certainly an oversight in the 1985 source.
-
+/* The original binary reads dt_year (global) rather than the `year`
+   parameter during the leap-year check.  Preserved verbatim for
+   save-file compatibility.
    addr: daysInMo() */
-
 short
 daysInMo(month, year)
 short   month;

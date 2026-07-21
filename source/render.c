@@ -1,15 +1,5 @@
 /*
- * render.c -- VDI palette and screen refresh (stubs for now).
- *
- * sc_ren8() copies the pending sprite buffers onto the visible
- * screen at ~8 Hz.  lcp_upal() reloads the 16-entry
- * palette from lcp_current_palette[] via Setpalette(); called after
- * sickness onset, sickness recovery, and TV toggle.
- *
- * All hardware calls (Setpalette, VDI vs_color) will be reintroduced
- * when the render pipeline is ported for real; today these are stubs so
- * everything upstream links.
- *
+ * render.c -- VDI palette and screen refresh.
  * addr: sc_ren8(), lcp_upal()
  */
 
@@ -34,10 +24,8 @@
 
 /* sc_ren8 -> renderf.c */
 
-/* cl_redrH: erase the previous minute/hour hand pair (paint
-   in white), then draw the new pair (paint in grey).  Compares
-   t_min against a cached g_cmmin to skip work when the
-   clock hasn't advanced yet.
+/* cl_redrH: erase prev hands in white, draw new pair in grey.
+   Skips when t_min hasn't advanced past cached g_cmmin.
    addr: cl_redrH() */
 
 
@@ -52,10 +40,7 @@ cl_redrH()
         cl_drwH(t_min, t_hour, COLOR_grey);
 }
 
-/* od_draw: blit a pre-loaded background object at (x, y) via
-   vro_cpyfm (VRO copy S_ONLY = replace, no transparency).  Each
-   object has its width/height stored in g_obtaw/height[] and
-   its MFDB source rect in g_obtmt indexed by g_oiidx.
+/* od_draw: blit background object at (x,y) via vro_cpyfm S_ONLY.
    addr: od_draw() */
 
 
@@ -87,11 +72,9 @@ short   y;
         }
 }
 
-/* fillTopR: clear the top text strip (rows 0
-   through maxY-1).  Uses a solid white fill for the letter-typing
-   pane (maxY < 70) and a striped house-background fill for the
-   larger clear cases.  The last row before maxY is painted black to
-   form a separator.
+/* fillTopR: clear top text strip (rows 0..maxY-1).
+   White fill for letter pane (maxY < 70), striped house-bg fill otherwise.
+   Last row painted black as separator.
    addr: fillTopR() */
 
 
@@ -116,14 +99,12 @@ short   max_y;
         sc_firb(g_dscp, max_y - 1);
 }
 
-/* sc_sctd, td_nois -> renderx.c */
+/* sc_sctd, td_nois, rp_anim -> renderx.c */
 
-/* rp_anim -> renderx.c */
+/* -- TV toggle -- */
 
-/* ---- TV toggle ------------------------------------------------------- */
-
-/* tt_on: walk to the living room, do an idle look-left, set the
-   flag and play the click SFX.  Returns -1 on walk failure, 0 otherwise.
+/* tt_on: walk to living room, idle look-left, set flag, play click SFX.
+   Returns -1 on walk failure, 0 otherwise.
    addr: tt_on() */
 
 short
@@ -147,9 +128,8 @@ tt_on()
         return 0;
 }
 
-/* tt_off: same walk, clear the flag, redraw the antenna in the
-   off (static-line) state.  Note: no SFX_TV_CLICK on off in the 1985
-   binary -- preserved verbatim.
+/* tt_off: same walk, clear flag, redraw antenna in off state.
+   Note: no SFX_TV_CLICK on off in the 1985 binary -- preserved verbatim.
    addr: tt_off() */
 
 short
@@ -173,14 +153,11 @@ tt_off()
         return 0;
 }
 
-/* ---- Kitchen food-cabinet overlay ----------------------------------- */
+/* -- Kitchen food-cabinet overlay -- */
 
-/* sc_drfc: paint the food-count marker sprites in the
-   4 slots of the open kitchen cabinet.  Count comes from bits 9..11 of
-   door_states_and_flags (0..4 packs).
-     1 item -> (50, 159)   3 items -> +(50, 151)
-     2      -> +(58, 159)  4       -> +(58, 151)
-   No-op when the cabinet is closed.
+/* sc_drfc: paint food-count markers in 4 cabinet slots.
+   Count = bits 9..11 of door_states_and_flags (0..4 packs). No-op if closed.
+     1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151)
    addr: sc_drfc() */
 
 void
@@ -200,17 +177,14 @@ sc_drfc()
         if (cabinet_content > 3) od_draw(OBJ_CABINET_ITEM, 58, 151);
 }
 
-/* ---- Water tank level bar (VDI polylines) ---------------------------- */
+/* -- Water tank level bar (VDI polylines) -- */
 
-/* updWtLv: repaint or animate the water tank indicator
-   at x=146..159, y=165..174.
+/* updWtLv: repaint/animate water tank indicator at x=146..159, y=165..174.
      val == 0 : full redraw at current lcp_watr
-     val <  0 : drain `-val` steps down, one game-tick each
-     val >  0 : fill `val` steps up
-   Each level is one 14px-wide horizontal polyline; drawn in colour 0x0D
-   when filled and 0x0C (empty background) otherwise.  VDI operations
-   go to the backbuffer so the animation isn't torn by the next 8Hz
-   render.
+     val <  0 : drain `-val` steps, one game-tick each
+     val >  0 : fill `val` steps
+   Each level = one 14px horizontal polyline; colour 0x0D filled, 0x0C empty.
+   VDI ops go to backbuffer so animation isn't torn by next 8Hz render.
    addr: updWtLv() */
 
 void

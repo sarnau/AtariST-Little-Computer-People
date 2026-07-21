@@ -238,7 +238,7 @@ short   count;
                 dp[2] = sp[2]; dp[3] = sp[3];
                 dp[4] = sp[4]; dp[5] = sp[5];
                 dp[6] = sp[6]; dp[7] = sp[7];
-                sp = sp + 8;    /* 8 longs = 32 bytes */
+                sp = sp + 8;
                 dp = dp + 8;
                 remaining = remaining - 1;
         } while (remaining != -1);
@@ -317,7 +317,7 @@ aes_init()
         vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
                                  &gr_hwbox,  &gr_hhbox);
         Setpalette(main_pal);
-        sv_phb = (void *) Physbase();  /* XBIOS Physbase */
+        sv_phb = (void *) Physbase();
 }
 
 

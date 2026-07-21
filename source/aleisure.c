@@ -38,9 +38,6 @@
 #include "walk.h"
 
 
-/* Ghidra references. */
-/* g_momap declared in globals.h */
-
 /* a_lists: pick a random .sng file and start it playing.
    Uses lcp_food as a modulo index (yes, it's a bit hacky; the
    1985 code reused the field).
@@ -194,7 +191,7 @@ a_plawr()
 
         g_hamod = HEAD_ANIM_WALKING;
         while (mi_play == NO)
-                ;                        /* wait for playback to start */
+                ;
 
         while (mi_play != NO) {
                 xres = Giaccess(0, 8);  psg_a = (unsigned char) xres & 0x1f;

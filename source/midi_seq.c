@@ -56,8 +56,6 @@
    normally rely on default-int declarations, but Clang under -Werror
    complains about the mixed short/long signatures below. */
 
-/* Sequencer parse state -- see globals.c comment block. */
-
 /* Header-command handlers.  mq_parh dispatches to these
    by matching the command byte against 0x80/0x81/0x83/0x84/0xC0/0xFF.
    The 1985 code used a jump table for the dispatch (which Ghidra

@@ -1,11 +1,6 @@
 /*
  * asimple.c -- short idle / gesture actions.
- *
- * Ports for doAct() handlers that don't need walking to a specific
- * house position and involve mostly head/body animation with sound.
- *
- * addr: a_wakfa(), a_hello(), a_yawas(),
- *       a_nodh(), a_petd(), a_calld()
+ * addr: a_wakfa(), a_hello(), a_yawas(), a_nodh(), a_petd(), a_calld()
  */
 
 #include "types.h"
@@ -23,10 +18,7 @@
 #include "tick.h"
 #include "walk.h"
 
-/* a_wakfa: Ctrl+A path.  Walks to the bedroom alarm,
-   faces right, silences the alarm and clears the pressed flag.
-   addr: a_wakfa() */
-
+/* addr: a_wakfa() */
 void
 a_wakfa()
 {
@@ -44,10 +36,7 @@ a_wakfa()
         }
 }
 
-/* a_hello: face-forward wave with a random 20-40 head sequence.
-   Interruptible via the deferred-event queue.
-   addr: a_hello() */
-
+/* addr: a_hello() */
 void
 a_hello()
 {
@@ -100,9 +89,7 @@ a_hello()
         gameTick(0);
 }
 
-/* a_yawas: 15-frame idle yawn.
-   addr: a_yawas() */
-
+/* addr: a_yawas() */
 void
 a_yawas()
 {
@@ -123,9 +110,7 @@ a_yawas()
         gameTick(0);
 }
 
-/* a_nodh: 3-frame nod with SFX.
-   addr: a_nodh() */
-
+/* addr: a_nodh() */
 void
 a_nodh()
 {
@@ -157,11 +142,7 @@ a_nodh()
         gameTick(0);
 }
 
-/* a_petd: call the dog if not already pettable, then wait
-   100..200 frames (10 during intro) or until a new event queues.
-   addr: a_petd() */
-
-
+/* addr: a_petd() */
 void
 a_petd()
 {
@@ -188,10 +169,7 @@ a_petd()
         gameTick(0);
 }
 
-/* a_calld: walk to POS_BTM_DOG_FOOD, crouch, set dg_petok.
-   Real Ghidra behaviour -- see previous session for the derivation.
-   addr: a_calld() */
-
+/* addr: a_calld() */
 void
 a_calld()
 {

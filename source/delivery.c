@@ -40,8 +40,7 @@
 #include "walk.h"
 
 
-/* wkFrDr: tiny helper used by all four delivery events.
-   addr: wkFrDr() */
+/* addr: wkFrDr() */
 
 void
 wkFrDr()
@@ -51,9 +50,7 @@ wkFrDr()
         lcp_wkD();
 }
 
-/* a_opcfd: toggle the front door with SFX+draw.
-   Called from every delivery event and from event handlers via the
-   initiative-threshold roll.  door_st=0 opens, 1 closes.
+/* a_opcfd: toggle the front door.  door_st=0 opens, 1 closes.
    addr: a_opcfd() */
 
 void
@@ -86,9 +83,7 @@ short   door_st;
         gameTick(0);
 }
 
-/* a_opecc: kitchen cabinet toggle used by the food
-   delivery to reveal / hide the stocked cabinet interior.
-   addr: a_opecc() */
+/* a_opecc: kitchen cabinet toggle.  addr: a_opecc() */
 
 void
 a_opecc(oc_stat)
@@ -120,10 +115,8 @@ short   oc_stat;
         }
 }
 
-/* Small helper: the "at the door, pick up" sequence common to all
-   deliveries: face right + look forward, open door, bend / reach /
-   bend / stand, then optionally close the door based on the
-   initiative-threshold roll. */
+/* Common "at the door, pick up" sequence: open door, bend/reach/bend,
+   then optionally close via the initiative-threshold roll. */
 
 static void
 dv_pick()
@@ -150,8 +143,7 @@ dv_pick()
                 a_opcfd(1);
 }
 
-/* er_food: Ctrl+F grocery event.  Also reused by
-   er_dogf with g_dvdog set.
+/* er_food: Ctrl+F grocery event.  Reused by er_dogf with g_dvdog set.
    addr: er_food() */
 
 void
@@ -215,8 +207,7 @@ er_food()
         }
 }
 
-/* er_bood: Ctrl+B.  Book -> bookshelf.
-   addr: er_bood() */
+/* er_bood: Ctrl+B.  Book -> bookshelf.  addr: er_bood() */
 
 void
 er_bood()
@@ -281,8 +272,7 @@ er_recd()
         g_actif = NO;
 }
 
-/* er_dogf: Ctrl+D.  Trivial trampoline into food
-   delivery with g_dvdog set.
+/* er_dogf: Ctrl+D.  Trampoline into er_food with g_dvdog set.
    addr: er_dogf() */
 
 void
@@ -293,14 +283,9 @@ er_dogf()
         g_dvdog = NO;
 }
 
-/* ev_ansPh: Ctrl+C or random daytime call.  Calls the dog
-   over first (which puts the resident at position 43 next to the
-   phone), then picks up the handset, talks for 40..50 ticks with
-   random head positions and speech SFX, hangs up, crouches, waits for
-   any petting to finish, then stands.  ph_ans prevents
-   re-entry while the animation is running.
-
-   addr: ev_ansPh() */
+/* ev_ansPh: Ctrl+C or random daytime call.  a_calld() puts the resident
+   at the phone (position 43); talks 40..50 ticks with random head
+   positions/SFX; ph_ans guards re-entry.  addr: ev_ansPh() */
 
 void
 ev_ansPh()

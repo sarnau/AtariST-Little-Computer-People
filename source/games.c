@@ -1,38 +1,6 @@
 /*
  * games.c -- mini-game entry points + shared setup helpers.
- *
- * Fully-ported helpers:
- *   mg_stp -- 5-tick pause, top-strip clear, freeze the
- *                            text scroll pane, disable keyboard input.
- *   plEr       -- v_bar-based rectangular clear at (x1,y1)-(x2,y2)
- *                            with VDI init/exit brackets.
- *
- * Skeleton-ported game mains:
- *   Each of the 5 game mains has its *outer flow* ported for real:
- *     1. Allocate the game-specific data buffer via GEMDOS_Malloc
- *        (sizes verified from Ghidra: 10000 for anagram, 2000 for
- *        word puzzle, 10400 for poker/war, 0x28a0 = 10432 for
- *        blackjack).  On OOM, er_nomem (infinite alert
- *        loop on ST; exit(1) on host).
- *     2. Load the required data file with fr_reac
- *        ("words" for anagram, "wordpz.txt" for word puzzle).  Card
- *        games load their graphics via pk_ldCrd.
- *     3. Call mg_stp.
- *     4. Print the game title.
- *     5. Enter a key-poll loop that terminates on F10.
- *     6. Free the buffer via GEMDOS_Mfree, restore tx_sctm,
- *        clear no_keyin, return.
- *
- * The *inner* game logic (word scrambling, poker hand evaluation,
- * card-shuffle algorithms, ~50 subsystem helpers per game) is
- * intentionally deferred to per-game batches -- each of the 5 games
- * is a self-contained 100..600-line subsystem worth its own file.
- * With this skeleton, pressing F10 (or the outer game menu timing
- * out) cleanly returns to the house so the overall port continues
- * to link and run to completion.
- *
- * addr: mg_stp(), plEr(),
- *       ag_main(), wp_main(), pk_main(),
+ * addr: mg_stp(), plEr(), ag_main(), wp_main(), pk_main(),
  *       pk_wrMn(), pk_bjMn()
  */
 
@@ -65,16 +33,8 @@
 #include "tick.h"
 #include "walk.h"
 
-/* Anagram-subsystem globals + shared mini-game plumbing. */
-
-/* KEY_F10 already defined in enums.h as 0x144 in our compact encoding. */
-
-/* ---- Real helpers ---------------------------------------------------- */
-
 /* mg_stp: prep the top status strip for the game menu.
-   Fills 0x4d = 77 rows (the full text pane) with the house background,
-   then freezes the text-scroll pane (`tx_sctm = -1`) and
-   disables keyboard input from the game-command dispatcher so keys
+   Freezes text-scroll pane and disables keyboard input so keys
    don't leak into the parser while a mini-game is running.
    addr: mg_stp() */
 
@@ -87,9 +47,7 @@ mg_stp()
         no_keyin = YES;
 }
 
-/* plEr: clear a rectangle via VDI v_bar.  Bracketed by
-   initVdi / exitVdi which are the mini-game-
-   specific VDI setup helpers (deferred stubs for now).
+/* plEr: clear a rectangle via VDI v_bar.
    addr: plEr() */
 
 void
@@ -110,10 +68,7 @@ short   y2;
         exitVdi();
 }
 
-/* ---- Mini-game skeletons -------------------------------------------- */
-
-/* Shared cleanup at exit from any game: restore text scroll, free the
-   game's data buffer if allocated, re-enable keyboard input. */
+/* Shared cleanup at exit from any game. */
 
 static void
 gameCln(buffer)
@@ -125,7 +80,6 @@ void *  buffer;
                 Mfree(buffer);
 }
 
-/* Poll-loop skeleton: tick + read key + return true if user quit. */
 
 static short
 gamePlWQ()
@@ -141,13 +95,10 @@ gamePlWQ()
         }
 }
 
-/* ---- Shared mini-game plumbing -------------------------------------- */
-
 /* lcp_lgt: leave the game table for an interrupt event (alarm,
    bathroom, thirst, delivery).  Walks the resident to the kitchen
    sink area, tucks away the game-box + table-setting sprites, and
-   re-attaches the game-box in the "carried-behind" slot so subsequent
-   actions render the resident holding the box.
+   re-attaches the game-box in the "carried-behind" slot.
    addr: lcp_leave_game_table() */
 
 void
@@ -182,10 +133,8 @@ lcp_lgt()
         g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
 }
 
-/* lcp_rgt: reverse of lcp_lgt -- walk resident back to the kitchen
-   table, put the game-box down, replace the table-setting sprite,
-   and restore the seated STATE_EAT_BITE pose with the +8y/+6x
-   offset expected by the mini-game overlays.
+/* lcp_rgt: reverse of lcp_lgt -- restore seated STATE_EAT_BITE pose
+   with the +8y/+6x offset expected by mini-game overlays.
    addr: lcp_return_to_game_table() */
 
 void
@@ -232,11 +181,8 @@ lcp_rgt()
         g_actif  = NO;
 }
 
-/* mg_wkev: wait for a key while continuing to process urgent game
-   events (alarm, bathroom, thirst, delivery/doorbell).  Forwards the
-   Ctrl-modified event keycodes to the keyboard dispatcher so the AI
-   queue sees them.  On 7200 idle frames (~15 min) sets mg_tofl=YES
-   and returns KEY_F10 to force the game to quit.
+/* mg_wkev: wait for a key while processing urgent game events.
+   On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10.
    addr: minigame_wait_for_key_with_events() */
 
 short
@@ -295,10 +241,7 @@ mg_wkev()
         return KEY_F10;
 }
 
-/* ---- Anagram helpers ------------------------------------------------- */
-
-/* ag_csb: clear/redraw the bottom info bar (5,62)-(319,75).
-   Used to wipe status prompts between guesses.
+/* ag_csb: clear the bottom info bar (5,62)-(319,75).
    addr: anagram_clear_status_bar() */
 
 void
@@ -326,9 +269,7 @@ ag_cwda()
         exitVdi();
 }
 
-/* ag_cswa: clear the left-panel intro/instructions area
-   (5,10)-(160,60).  Called by ag_intr's caller when moving between
-   rounds.
+/* ag_cswa: clear the left-panel intro/instructions area (5,10)-(160,60).
    addr: anagram_clear_scrambled_word_area() */
 
 void
@@ -342,8 +283,7 @@ ag_cswa()
         exitVdi();
 }
 
-/* ag_cgpa: clear the middle separator bar (166,50)-(319,65) where
-   the "Guess #N?" prompt is drawn.
+/* ag_cgpa: clear the "Guess #N?" prompt bar (166,50)-(319,65).
    addr: anagram_clear_guess_prompt_area() */
 
 void
@@ -368,8 +308,7 @@ short   guess;
         strPr(g_aggpr[guess - 1], 166, 57, COLOR_black);
 }
 
-/* ag_dwl: display a word in 20px-tall text in the right panel at
-   (162, 37), with 12px spacing per character.
+/* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch.
    addr: anagram_display_word_large() */
 
 void
@@ -403,10 +342,8 @@ ag_intr()
 }
 
 /* ag_matc: character-by-character equality test for two C strings.
-   Preserves the 1985 shape (walks both strings even after finding a
-   mismatch and only reports the final result) so the port stays
-   byte-comparable.
-   Returns 1 if the strings match, 0 otherwise.
+   Preserves 1985 shape: walks both strings after mismatch, reports
+   final result -- byte-comparable with the original.
    addr: anagram_match_result() */
 
 short
@@ -432,11 +369,9 @@ char *  b;
         return 1;
 }
 
-/* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes
-   per row), copy it into g_agscw, then scramble by swapping character
-   pairs 10..20 times.  Re-scramble if the result equals the original.
-   Also plants a '\0' terminator into g_agwb at the word's row-tail so
-   subsequent code can read g_agorw as a plain C string.
+/* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
+   copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
+   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string.
    addr: anagram_select_and_scramble_word() */
 
 void
@@ -1087,12 +1022,7 @@ pk_wrMn()
         crd_dat = (short *) 0;
 }
 
-/* pk_bjMn moved to the end of the file so it can reference every
-   blackjack helper (pk_dbhi/chsc/dchd/cnbj/sbet/bjr) without needing
-   forward declarations.  Entry point + calling signature preserved
-   so agames.c compiles unchanged. */
-
-/* ---- Poker/War/Blackjack shared helpers ---------------------------- */
+/* -- Poker/War/Blackjack shared helpers -- */
 
 
 /* pk_pmsg: print a green status message in the bottom info bar
@@ -1311,7 +1241,7 @@ short   yi;
                               x, y, x + 15, y + 23);
 }
 
-/* ---- Poker helpers ------------------------------------------------- */
+/* -- Poker helpers -- */
 
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
    On F1: both players contribute 1 chip to the pot (empty check first,
@@ -2409,7 +2339,7 @@ cleanup:
         moff();
 }
 
-/* ---- Blackjack helpers --------------------------------------------- */
+/* -- Blackjack helpers -- */
 
 
 /* pk_dbhi: display bet with highlight.  Selector 1 -> render
@@ -3358,7 +3288,7 @@ cleanup:
         moff();
 }
 
-/* ---- Word Puzzle helpers ------------------------------------------- */
+/* -- Word Puzzle helpers -- */
 
 /* wp_shwm: word-puzzle status message.  Clears the bottom prompt
    strip and prints `msg` in green at (8, 58).

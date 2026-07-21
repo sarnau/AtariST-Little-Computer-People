@@ -1,20 +1,5 @@
 /*
  * airandom.c -- time-of-day / mood-based random action selector.
- *
- * Called as the 11th and lowest-priority tier of the AI decision
- * ladder in chk_actT.  Picks one of three action
- * tables based on how many hours the resident has been awake, then
- * rolls a random index into that table.  Weekends bias toward the
- * relaxed table; sickness locks it to "sleep".
- *
- * Tables:
- *   g_atact[16]     -- morning / early day (0..6 h since wake)
- *   g_atmod[16]   -- midday (7..12 h since wake)
- *   g_atrel[16]    -- evening (13..17 h since wake)
- *
- * sch_tab[8][3] is indexed by activity_level and by
- * (hours_since_wake / 2) % 3 to pick the effective table for the roll.
- *
  * addr: chk_timA()
  */
 
@@ -28,20 +13,10 @@
 #include "random.h"
 #include "tables.h"
 
-/* Weekday enum values used by the weekend-bias branch.  Ghidra's enum
-   has SUN=0..SAT=6 but the code only tests for saturday and sunday. */
 #define WEEKDAY_SUNDAY          0
 #define WEEKDAY_SATURDAY        6
 
-/* Three action tables (16 entries each) and the schedule indirection.
-   Values match Ghidra sch_tab[3][8] at 0x2b96e and
-   g_atact/moderate/relaxed at 0x2b8fe/0x2b91e/0x2b93e. */
-
-/* chk_timA: pick a random action for right now.
-   Returns ACTION_NONE if the resident is sleeping and the time-of-day
-   branch resolves to bedtime.
-   addr: chk_timA() */
-
+/* addr: chk_timA() */
 short
 chk_timA()
 {
@@ -55,21 +30,9 @@ chk_timA()
                 hours_since_wake = hours_since_wake + 24;
 
         if (hours_since_wake < 18 && lcp.sickness_level < 2) {
-                /* Indirection through the per-activity_level schedule:
-                   sch_tab[0] holds pointer arrays of
-                   short[8], indexed via
-                     sch_tab[0][(activity_level << 1) +
-                                                ((hours/2)%3 << 4)]
-                   The << 4 (16 shorts per row) matches the 16-entry
-                   action tables that follow. */
                 /* Ghidra: `*(short *)((int)ptr + byte_offset)` -- the
-                   `<<1` and `<<4` values ARE byte offsets, so we cast
-                   the base pointer to `char *` before advancing, then
-                   cast to `short *` for the dereference.  Our older
-                   port had `(short *)ptr + N` which scales N by 2
-                   (short-pointer arithmetic), reading twice as far
-                   into the row and hitting garbage past _schedule_row_0's
-                   8-short bound. */
+                   `<<1` and `<<4` values ARE byte offsets, so cast the
+                   base pointer to `char *` before advancing. */
                 table_pick = *(short *) ((char *) sch_tab[0] +
                         (lcp.activity_level << 1) +
                         (((hours_since_wake / 2) % 3) << 4));

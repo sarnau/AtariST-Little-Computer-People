@@ -2,26 +2,20 @@
  * renderf.c -- sc_ren8, the main 8Hz compositor.
  *
  * Structure:
- *   1. Rate-gate on the 200 Hz clock: skip until at least 25 ticks
- *      (~125 ms) have elapsed since the previous frame AND we've
- *      crossed at least one VBL boundary (prevents double-rendering
- *      when the 200 Hz check races the VBL).
+ *   1. Rate-gate on 200 Hz clock: skip until >=25 ticks (~125 ms) elapsed
+ *      AND at least one VBL crossed (prevents double-render race).
  *   2. Advance dog movement + wander AI (idle countdown, food-bowl
  *      sequence, random-destination pick over 9 waypoints).
- *   3. Time out any long-running SFX (doorbell -> echo, toilet flush
- *      -> refill), advance dog eating animation.
- *   4. Background copy from house buffer to compositing buffer.
- *      Three modes based on tx_sctm sign:
- *          <0: partial top-strip copy (letter typewriter panel)
- *          =0: full-screen copy
- *          >0: split copy (letter scroll region + game area)
- *   5. Iterate 8 hardware sprite slots.  Any slot with the pending
- *      flag set gets its pending state promoted to active.  Any slot
- *      with a non-NULL active image gets drawn via sp_draw.
- *   6. Vsync + Setscreen to page-flip.
- *   7. Play any queued SFX via sf_irqp.
- *   8. Toggle the compositing target for the next frame between the
- *      original physbase and the alternate buffer at 0x2CA00.
+ *   3. Time out long-running SFX (doorbell -> echo, flush -> refill),
+ *      advance dog eating animation.
+ *   4. Background copy from house buffer, mode by tx_sctm sign:
+ *          <0: partial top-strip (letter typewriter panel)
+ *          =0: full-screen
+ *          >0: split (letter scroll region + game area)
+ *   5. Iterate 8 sprite slots: promote pending -> active, draw active.
+ *   6. Vsync + Setscreen page-flip.
+ *   7. Play queued SFX via sf_irqp.
+ *   8. Toggle compositing target between physbase and alt buffer.
  *   9. Bump ani_cnt.
  *
  * addr: sc_ren8()
@@ -79,11 +73,10 @@ rd_vbc()
         return v;
 }
 
-/* dg_pkTgt: choose the next dog destination from a
-   9-entry table.  Extracted from sc_ren8 for readability.
-   The `dg_vis` flag broadens the acceptable-random range to
-   include the food-adjacent positions when the dog is currently
-   visible on-screen. */
+/* dg_pkTgt: pick next dog destination from 9-entry table.
+   Extracted from sc_ren8 for readability.
+   dg_vis broadens random range to include food-adjacent positions
+   when the dog is on-screen. */
 
 static void
 dg_pkTgt()
@@ -110,8 +103,7 @@ dg_pkTgt()
         dg_idlcd    = rndRng(20, 200);
 }
 
-/* sc_ren8: the frame driver.
-   addr: sc_ren8() */
+/* addr: sc_ren8() */
 
 void
 sc_ren8()

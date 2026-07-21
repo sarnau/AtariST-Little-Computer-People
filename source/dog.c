@@ -83,7 +83,6 @@ dg_mvAni()
                 }
         }
 
-        /* Waypoint reached? */
         if (dog_x == g_dyx && dog_y == g_dyy) {
                 if (dog_x == g_dtx && dog_y == g_dty) {
                         g_dtx = 0;

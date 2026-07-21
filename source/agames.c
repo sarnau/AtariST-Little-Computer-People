@@ -43,14 +43,11 @@
 #include "walk.h"
 
 
-/* Mini-game entry points.  Each lives in its own games/*.c when we
-   port them for real; for now they're stubs in stubs.c that return
-   immediately. */
+/* Mini-game entry points are stubs in stubs.c until ported per game. */
 
-/* a_playc: sit and type.  The 3 state constants in
-   pst_arr are the two typing poses plus the resting
-   sit-at-desk pose used between keystrokes and during the "clear
-   screen" mini-animation.
+/* a_playc: sit and type.  pst_arr[0..1] are typing poses;
+   pst_arr[2] is the resting sit-at-desk pose used between keystrokes
+   and during the "clear screen" mini-animation.
    addr: a_playc() */
 
 void
@@ -137,23 +134,9 @@ a_playc()
         gameTick(5);
 }
 
-/* a_plaag: main menu -> pick -> game -> cleanup.
-
-   Structure (heavily nested in the 1985 code; slightly flattened here
-   with an early-return-on-menu-timeout for readability):
-
-   1. Walk to filing cabinet, open it if closed.
-   2. Draw the 5-line game-selection prompt.
-   3. Loop polling keys, sleeping between polls with occasional
-      a_sleep(1) yawn animations when the menu times out (300 ->
-      250 tick reload cycles).  Any digit '1'..'5' picked bumps out of
-      the menu loop.
-   4. Face the desk, grab SPRITE_GAME_BOX, walk to the kitchen table,
-      set the game up (SPRITE_TABLE_SETTING), sit down (STATE_EAT_BITE
-      pose), and hand off to the picked game's main().
-   5. On return, walk everything back to the filing cabinet, close it,
-      clear dg_vis.
-
+/* a_plaag: filing cabinet -> menu -> game -> cleanup.
+   Menu poll uses tx_sctm timeout (300 -> 250 tick reload) with
+   a_sleep(1) yawns between polls; digit '1'..'5' selects.
    addr: a_plaag() */
 
 void
@@ -179,7 +162,6 @@ a_plaag()
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
-        /* Open the filing cabinet if it isn't already. */
         if (lcp_flcO == NO) {
                 lcp_st = STATE_BEND_DOWN;
                 gameTick(1);
@@ -196,7 +178,6 @@ a_plaag()
                 gameTick(1);
         }
 
-        /* Draw the menu. */
         lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
         lcp_hwt();
@@ -211,8 +192,6 @@ a_plaag()
         keycode      = 0;
         game_running = NO;
 
-        /* Menu poll loop -- keep at it until either a valid digit is
-           pressed or the menu times out to a yawn animation. */
         while (tx_sctm != 0 || game_running == NO) {
                 if (keycode > '0' && keycode < '6') {
                         tx_sctm      = 0;
@@ -268,7 +247,6 @@ a_plaag()
                                 g_sepey[g_seslm[SPRITE_GAME_BOX]] - 4;
                         gameTick(0);
 
-                        /* Dispatch. */
                         switch (keycode) {
                         case '1': ag_main();         break;
                         case '2': pk_wrMn();       break;
@@ -277,7 +255,6 @@ a_plaag()
                         case '5': wp_main();     break;
                         }
 
-                        /* Pack up. */
                         g_lcyof = YES;
                         sp_ssco(SPRITE_GAME_BOX);
                         lcp_y = lcp_y - 8;

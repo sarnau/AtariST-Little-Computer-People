@@ -26,9 +26,8 @@
 #include "tick.h"
 #include "walk.h"
 
-/* a_eatm: pot from cabinet -> stove (with cooking animation)
-   -> table setting; ends with a kitchen_cabinet call to actually eat.
-   addr: a_eatm() */
+/* a_eatm: pot from cabinet -> stove (cooking anim) -> chains into
+   a_kitcc() to eat.  addr: a_eatm() */
 
 void
 a_eatm()
@@ -52,7 +51,6 @@ a_eatm()
         lcp_st = STATE_REACH_FORWARD;gameTick(2);
         lcp_st = STATE_STAND_FACING_SCREEN; gameTick(0);
 
-        /* Pot from cabinet to stove */
         sp_ssco(SPRITE_COOKING_POT);
         hs_posXY(POS_BTM_STOVE,
                               &g_wtx, &g_wty);
@@ -83,7 +81,7 @@ a_eatm()
         sp_upds();
         sp_ssco(SPRITE_COOKED_MEAL);
 
-        /* Back to cabinet, then chain into kitchen_cabinet to eat. */
+        /* Back to cabinet, then chain into a_kitcc to eat. */
         hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
         g_actif = YES;
@@ -96,10 +94,8 @@ a_eatm()
         g_actif = NO;
 }
 
-/* a_kitcc: the eat routine.  Open cabinet, decrement
-   food count, carry package to table, eat 10..20 bite/chew cycles,
-   return the package.  This is where hunger actually gets reset.
-   addr: a_kitcc() */
+/* a_kitcc: the eat routine.  Decrements food count, eats 10..20
+   bite/chew cycles, resets hunger at end.  addr: a_kitcc() */
 
 void
 a_kitcc()
@@ -134,7 +130,7 @@ a_kitcc()
                 return;
         }
 
-        /* Take one package: decrement the 3-bit food-count nibble. */
+        /* Decrement the 3-bit food-count nibble (bits 9..11). */
         lcp_st = STATE_REACH_INTO_CABINET;
         gameTick(3);
         lcp.door_states_and_flags =
@@ -156,7 +152,6 @@ a_kitcc()
                               &g_wtx, &g_wty);
         lcp_wkD();
 
-        /* Drop a table setting sprite in the foreground. */
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_TABLE_SETTING);
         g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
@@ -256,9 +251,9 @@ a_kitcc()
         g_actif = NO;
 }
 
-/* a_feedd: fridge -> dog bowl -> fridge.  Called both
-   standalone (value == 0, open fridge first) and from the Ctrl+D
-   delivery path (value == 1, already have the package in hand).
+/* a_feedd: fridge -> dog bowl -> fridge.
+   value==0: standalone, open fridge first.
+   value==1: Ctrl+D delivery path, package already in hand.
    addr: a_feedd() */
 
 void
@@ -310,7 +305,6 @@ short   value;
                 sp_ssco(SPRITE_FOOD_PACKAGE);
         }
 
-        /* Package -> dog bowl (fill it). */
         hs_posXY(POS_BTM_DOG_BOWL,
                               &g_wtx, &g_wty);
         g_actif = YES;
@@ -333,7 +327,6 @@ short   value;
         lcp_st = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        /* Package back to fridge. */
         sp_ssco(SPRITE_FOOD_PACKAGE);
         hs_posXY(POS_BTM_FRIDGE,
                               &g_wtx, &g_wty);
@@ -347,8 +340,7 @@ short   value;
         g_actif = NO;
 }
 
-/* a_gesff: trampoline into a_opecf
-   after walking to the fridge.
+/* a_gesff: walk to fridge, then trampoline into a_opecf.
    addr: a_gesff() */
 
 void
