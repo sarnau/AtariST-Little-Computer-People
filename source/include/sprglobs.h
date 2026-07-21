@@ -46,6 +46,23 @@
 #define HW_SLOT_DOG_FRONT       7
 #define HW_SLOT_NONE            9
 
+/* Allocation size for the hardware-slot pending/active arrays below.
+   Logical render slots are 0..7 (SPRITE_HW_SLOTS); HW_SLOT_NONE (9) is
+   the "disabled" slot that sp_upds parks HIDDEN sprites in.  gameTick's
+   carrying path writes g_sepex/g_sepey[g_seslm[g_lcieo]] every frame,
+   and sp_ssco/sp_ss02 write g_seaim/g_seams/g_seach/g_seacw the same
+   way -- so any of these arrays can be indexed at HW_SLOT_NONE when a
+   carried sprite is momentarily hidden.  The ROM's 8-entry arrays
+   tolerate the [9] write only because it overflows into the adjacent
+   array (g_sepey[9] == g_seacw[1], a harmless short).  The port's
+   linker instead places g_obtmt[0].fd_addr right after g_sepey, so the
+   same stray write corrupts an MFDB bitmap pointer -> odd address ->
+   TOS VDI bus error (~30 min in).  Allocating through HW_SLOT_NONE
+   keeps every slot-9 write in-bounds and inert regardless of link
+   order.  Real-slot loops/bounds checks still use SPRITE_HW_SLOTS (8),
+   matching the ROM's `i < 8`. */
+#define SPRITE_HW_SLOTS_ALLOC   (HW_SLOT_NONE + 1)
+
 extern short lcp_st;
 extern short lcp_face;
 extern short g_lcyof;

@@ -69,19 +69,25 @@ short   dg_init                 = NO;
    (currently drawn on the visible frame).  Slot layout: 0/7 = dog
    (behind/in-front of LCP by Y depth), 3 = LCP body, 4 = LCP head,
    1..2 and 5..6 = door/object overlay slots. */
-short   g_sepef[SPRITE_HW_SLOTS];       /* sprite_pending_flag: YES = pending draw queued */
-short * g_sepim[SPRITE_HW_SLOTS];       /* sprite_pending_image: image bitmap for next draw */
-short * g_sepms[SPRITE_HW_SLOTS];       /* sprite_pending_mask: 1-bit AND mask for next draw */
-short   g_sepex[SPRITE_HW_SLOTS];       /* sprite_pending_x: X for next draw */
-short   g_sepey[SPRITE_HW_SLOTS];       /* sprite_pending_y: Y for next draw */
-short   g_sepeh[SPRITE_HW_SLOTS];       /* sprite_pending_height: rows for next draw */
-short   g_sepew[SPRITE_HW_SLOTS];       /* sprite_pending_width: pixels for next draw */
-short * g_seaim[SPRITE_HW_SLOTS];       /* sprite_active_image: image currently drawn */
-short * g_seams[SPRITE_HW_SLOTS];       /* sprite_active_mask: mask currently drawn */
-short   g_seacx[SPRITE_HW_SLOTS];       /* sprite_active_x: X currently drawn */
-short   g_seacy[SPRITE_HW_SLOTS];       /* sprite_active_y: Y currently drawn */
-short   g_seach[SPRITE_HW_SLOTS];       /* sprite_active_height: rows currently drawn */
-short   g_seacw[SPRITE_HW_SLOTS];       /* sprite_active_width: pixels currently drawn */
+/* Sized SPRITE_HW_SLOTS_ALLOC (= HW_SLOT_NONE + 1), not SPRITE_HW_SLOTS:
+   sp_upds parks HIDDEN sprites in the disabled slot HW_SLOT_NONE (9),
+   and gameTick's carrying path / sp_ssco then index these arrays at [9]
+   for a momentarily-hidden carried sprite.  Allocating the scratch slot
+   keeps that write in-bounds; see the SPRITE_HW_SLOTS_ALLOC note in
+   sprglobs.h.  Real-slot loops still bound by SPRITE_HW_SLOTS. */
+short   g_sepef[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_flag: YES = pending draw queued */
+short * g_sepim[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_image: image bitmap for next draw */
+short * g_sepms[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_mask: 1-bit AND mask for next draw */
+short   g_sepex[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_x: X for next draw */
+short   g_sepey[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_y: Y for next draw */
+short   g_sepeh[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_height: rows for next draw */
+short   g_sepew[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_width: pixels for next draw */
+short * g_seaim[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_image: image currently drawn */
+short * g_seams[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_mask: mask currently drawn */
+short   g_seacx[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_x: X currently drawn */
+short   g_seacy[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_y: Y currently drawn */
+short   g_seach[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_height: rows currently drawn */
+short   g_seacw[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_width: pixels currently drawn */
 
 /* ---- Sprite definitions (SPRITE_SLOTS logical slots) -------------------
    Populated once by sprite_register_loop from the SPRITES asset file
