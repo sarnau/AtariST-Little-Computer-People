@@ -241,6 +241,13 @@
 #define POS_BTM_SCREEN_EDGE             47
 
 /* ---- SPRITE_ID (study doors + carried objects) ------------------------ */
+/* Logical sprite-def IDs 0 and 1 are the LCP body and head sprites --
+   pinned to hardware slots HW_SLOT_LCP_BODY / HW_SLOT_LCP_HEAD in
+   g_seslm[] at boot.  Distinct from the sprite-layer values
+   SPRITE_HIDDEN=0 / SPRITE_IN_FRONT=1 above (different domain: layer
+   flags for g_selaf[] vs sprite-def indices for g_sedim[]/g_seslm[]). */
+#define SPRITE_LCP_BODY_ID              0x00
+#define SPRITE_LCP_HEAD_ID              0x01
 #define SPRITE_GLASS                    0x03
 #define SPRITE_GAME_BOX                 0x04       /* also mini-game box */
 #define SPRITE_STUDY_DOOR_FRAME         0x06       /* also used as toothbrush */

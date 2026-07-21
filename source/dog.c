@@ -220,8 +220,8 @@ short   g_seid;
 short   layer_p;
 BOOL16  flipH2;
 {
-        g_seaim[0] = NULL;
-        g_seaim[7] = NULL;
+        g_seaim[HW_SLOT_DOG_BACK] = NULL;
+        g_seaim[HW_SLOT_DOG_FRONT] = NULL;
 
         if (g_seid < 0 || dg_init != NO)
                 return;
@@ -235,28 +235,28 @@ BOOL16  flipH2;
                                        15, 2);
         }
 
-        g_seach[0] = g_sedeh[0x21];
-        g_seach[7] = g_sedeh[0x21];
-        g_seacw[0]  = g_sedew[0x21];
-        g_seacw[7]  = g_sedew[0x21];
-        g_sepex[0] = dog_x;
-        g_sepex[7] = dog_x;
-        g_sepey[0] = dog_y - 17;
-        g_sepey[7] = dog_y - 17;
+        g_seach[HW_SLOT_DOG_BACK] = g_sedeh[SPRITE_DOG_LAY_DOWN];
+        g_seach[HW_SLOT_DOG_FRONT] = g_sedeh[SPRITE_DOG_LAY_DOWN];
+        g_seacw[HW_SLOT_DOG_BACK]  = g_sedew[SPRITE_DOG_LAY_DOWN];
+        g_seacw[HW_SLOT_DOG_FRONT]  = g_sedew[SPRITE_DOG_LAY_DOWN];
+        g_sepex[HW_SLOT_DOG_BACK] = dog_x;
+        g_sepex[HW_SLOT_DOG_FRONT] = dog_x;
+        g_sepey[HW_SLOT_DOG_BACK] = dog_y - 17;
+        g_sepey[HW_SLOT_DOG_FRONT] = dog_y - 17;
 
         if (flipH2 == NO) {
-                g_seams[0] = g_sedms[g_seid];
-                g_seams[7] = g_sedms[g_seid];
+                g_seams[HW_SLOT_DOG_BACK] = g_sedms[g_seid];
+                g_seams[HW_SLOT_DOG_FRONT] = g_sedms[g_seid];
                 if (layer_p == 1)
-                        g_seaim[7] = g_sedim[g_seid];
+                        g_seaim[HW_SLOT_DOG_FRONT] = g_sedim[g_seid];
                 else
-                        g_seaim[0] = g_sedim[g_seid];
+                        g_seaim[HW_SLOT_DOG_BACK] = g_sedim[g_seid];
         } else {
-                g_seams[0] = g_dfmab;
-                g_seams[7] = g_dfmab;
+                g_seams[HW_SLOT_DOG_BACK] = g_dfmab;
+                g_seams[HW_SLOT_DOG_FRONT] = g_dfmab;
                 if (layer_p == 1)
-                        g_seaim[7] = g_dfimb;
+                        g_seaim[HW_SLOT_DOG_FRONT] = g_dfimb;
                 else
-                        g_seaim[0] = g_dfimb;
+                        g_seaim[HW_SLOT_DOG_BACK] = g_dfimb;
         }
 }

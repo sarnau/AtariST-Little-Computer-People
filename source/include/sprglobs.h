@@ -5,6 +5,47 @@
 
 #include "types.h"
 
+/* Number of logical sprite-definition slots.  The port keeps one
+   shared 60-entry table (matching the ROM); slot IDs are
+   SPRITE_* enum values in include/enums.h.  The sprite-slot map
+   `g_seslm[SPRITE_SLOTS]` picks which of the SPRITE_HW_SLOTS
+   hardware slots each logical sprite lands on. */
+#define SPRITE_SLOTS    60
+
+/* Number of hardware sprite slots the compositor maintains.  Matches
+   ROM.  Slot roles are named individually below. */
+#define SPRITE_HW_SLOTS         8
+
+/* Hardware-slot IDs (indices into g_sepim/g_sepms/g_seaim/g_seams/
+   g_seacx/g_seacy/etc.).  Z-order runs low-to-high back-to-front:
+   slot 0 draws first, slot 7 draws last on top of everything.
+
+     0  DOG_BACK        dog when depth puts it behind the LCP
+     1  BEHIND_OVERFLOW behind-LCP overlay, secondary
+     2  BEHIND_PRIMARY  behind-LCP overlay, primary (compositor
+                        assigns here first for SPRITE_BEHIND_LCP;
+                        overflow falls back to slot 1)
+     3  LCP_BODY        the character body sprite
+     4  LCP_HEAD        the character head sprite (drawn over body)
+     5  FRONT_OVERFLOW  in-front overlay, secondary
+     6  FRONT_PRIMARY   in-front overlay, primary (compositor
+                        assigns here first for SPRITE_IN_FRONT;
+                        overflow falls back to slot 5)
+     7  DOG_FRONT       dog when depth puts it in front of the LCP
+
+   `HW_SLOT_NONE` is a sentinel value stored in g_seslm[] meaning
+   "this logical sprite is not currently mapped to any hardware
+   slot" (i.e. not drawn). */
+#define HW_SLOT_DOG_BACK        0
+#define HW_SLOT_BEHIND_OVERFLOW 1
+#define HW_SLOT_BEHIND_PRIMARY  2
+#define HW_SLOT_LCP_BODY        3
+#define HW_SLOT_LCP_HEAD        4
+#define HW_SLOT_FRONT_OVERFLOW  5
+#define HW_SLOT_FRONT_PRIMARY   6
+#define HW_SLOT_DOG_FRONT       7
+#define HW_SLOT_NONE            9
+
 extern short lcp_st;
 extern short lcp_face;
 extern short g_lcyof;

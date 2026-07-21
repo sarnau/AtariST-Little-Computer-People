@@ -48,11 +48,11 @@ sp_updb()
         short   frame;
 
         /* Wait out any double-buffer race on slot 3. */
-        while (g_sepef[3] == YES)
+        while (g_sepef[HW_SLOT_LCP_BODY] == YES)
                 ;
 
         frame = body_frT[lcp_st];
-        if (g_lcyof != NO && lcp_st < 25)
+        if (g_lcyof != NO && lcp_st < STATE_BEND_AND_REACH)
                 frame = cy_frT[lcp_st];
 
         /* Ghidra `body_ptr + frame` / `body_shp + frame`
@@ -68,23 +68,23 @@ sp_updb()
                 2, 21, lcp_face, 1);
 
         if (lcp_face == FACING_RIGHT)
-                g_seacx[3] = lcp_x - 4;
+                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 4;
         else
-                g_seacx[3] = lcp_x - 14;
+                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 14;
 
-        g_seacy[3] = lcp_y + body_yof[lcp_st] - 21;
+        g_seacy[HW_SLOT_LCP_BODY] = lcp_y + body_yof[lcp_st] - 21;
         if (dbg_hide != NO)
-                g_seacy[3] = 300;
+                g_seacy[HW_SLOT_LCP_BODY] = 300;
 
-        g_sepeh[3] = 21;
-        g_sepew[3]  = 32;
-        g_sepim[3]  = g_lsimg;
-        g_sepms[3]   = g_lsmas;
+        g_sepeh[HW_SLOT_LCP_BODY] = 21;
+        g_sepew[HW_SLOT_LCP_BODY]  = 32;
+        g_sepim[HW_SLOT_LCP_BODY]  = g_lsimg;
+        g_sepms[HW_SLOT_LCP_BODY]   = g_lsmas;
 
         if (g_lssh != NO)
-                g_sepim[3] = NULL;
+                g_sepim[HW_SLOT_LCP_BODY] = NULL;
 
-        g_sepef[3] = YES;
+        g_sepef[HW_SLOT_LCP_BODY] = YES;
 }
 
 /* sp_ssco: activate a sprite as a carried
@@ -152,10 +152,10 @@ lcp_hwt()
 void
 hideLcp()
 {
-        sv_bodyP  = g_seaim[3];
-        sv_headP  = g_seaim[4];
-        g_seaim[3] = NULL;
-        g_seaim[4] = NULL;
+        sv_bodyP  = g_seaim[HW_SLOT_LCP_BODY];
+        sv_headP  = g_seaim[HW_SLOT_LCP_HEAD];
+        g_seaim[HW_SLOT_LCP_BODY] = NULL;
+        g_seaim[HW_SLOT_LCP_HEAD] = NULL;
         g_lssh     = YES;
 }
 
@@ -165,8 +165,8 @@ hideLcp()
 void
 showLcp()
 {
-        g_seaim[3] = sv_bodyP;
-        g_seaim[4] = sv_headP;
+        g_seaim[HW_SLOT_LCP_BODY] = sv_bodyP;
+        g_seaim[HW_SLOT_LCP_HEAD] = sv_headP;
         g_lssh     = NO;
 }
 
@@ -346,44 +346,44 @@ sp_upds()
         short   index;
         short   i;
 
-        if (g_selaf[0] == SPRITE_HIDDEN)
-                g_seaim[g_seslm[0]] = NULL;
-        if (g_selaf[1] == SPRITE_HIDDEN)
-                g_seaim[g_seslm[0]] = NULL;
+        if (g_selaf[SPRITE_LCP_BODY_ID] == SPRITE_HIDDEN)
+                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
+        if (g_selaf[SPRITE_LCP_HEAD_ID] == SPRITE_HIDDEN)
+                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
 
-        for (spriteID = 3; spriteID < 60; spriteID = spriteID + 1) {
+        for (spriteID = HW_SLOT_LCP_BODY; spriteID < SPRITE_SLOTS; spriteID = spriteID + 1) {
                 if (g_selaf[spriteID] == SPRITE_HIDDEN) {
-                        g_seslm[spriteID] = 9;
+                        g_seslm[spriteID] = HW_SLOT_NONE;
                         continue;
                 }
 
                 if (g_selaf[spriteID] == SPRITE_IN_FRONT) {
                         i = g_seslm[spriteID];
-                        g_seslm[spriteID] = 6;
+                        g_seslm[spriteID] = HW_SLOT_FRONT_PRIMARY;
 
                         for (index = 3; index < spriteID;
                              index = index + 1) {
-                                if (g_seslm[index] == 6) {
-                                        g_seslm[spriteID] = 5;
+                                if (g_seslm[index] == HW_SLOT_FRONT_PRIMARY) {
+                                        g_seslm[spriteID] = HW_SLOT_FRONT_OVERFLOW;
                                         break;
                                 }
                         }
 
-                        for (index = spriteID + 1; index < 60;
+                        for (index = spriteID + 1; index < SPRITE_SLOTS;
                              index = index + 1) {
                                 if (g_seslm[index] ==
                                     g_seslm[spriteID]) {
-                                        g_seslm[index] = 5;
-                                        g_sepex[5]     = g_sepex[6];
-                                        g_sepey[5]     = g_sepey[6];
-                                        g_seaim[5]  = g_seaim[6];
-                                        g_seams[5]   = g_seams[6];
-                                        g_seach[5] = g_seach[6];
-                                        g_seacw[5]  = g_seacw[6];
+                                        g_seslm[index] = HW_SLOT_FRONT_OVERFLOW;
+                                        g_sepex[HW_SLOT_FRONT_OVERFLOW] = g_sepex[HW_SLOT_FRONT_PRIMARY];
+                                        g_sepey[HW_SLOT_FRONT_OVERFLOW] = g_sepey[HW_SLOT_FRONT_PRIMARY];
+                                        g_seaim[HW_SLOT_FRONT_OVERFLOW] = g_seaim[HW_SLOT_FRONT_PRIMARY];
+                                        g_seams[HW_SLOT_FRONT_OVERFLOW] = g_seams[HW_SLOT_FRONT_PRIMARY];
+                                        g_seach[HW_SLOT_FRONT_OVERFLOW] = g_seach[HW_SLOT_FRONT_PRIMARY];
+                                        g_seacw[HW_SLOT_FRONT_OVERFLOW] = g_seacw[HW_SLOT_FRONT_PRIMARY];
                                 }
                         }
 
-                        if (i < 8) {
+                        if (i < SPRITE_HW_SLOTS) {
                                 sVar1 = g_seslm[spriteID];
                                 g_sepex[sVar1]     = g_sepex[i];
                                 g_sepey[sVar1]     = g_sepey[i];
@@ -399,31 +399,31 @@ sp_upds()
 
                 if (g_selaf[spriteID] == SPRITE_BEHIND_LCP) {
                         i = g_seslm[spriteID];
-                        g_seslm[spriteID] = 2;
+                        g_seslm[spriteID] = HW_SLOT_BEHIND_PRIMARY;
 
                         for (index = 3; index < spriteID;
                              index = index + 1) {
-                                if (g_seslm[index] == 2) {
-                                        g_seslm[spriteID] = 1;
+                                if (g_seslm[index] == HW_SLOT_BEHIND_PRIMARY) {
+                                        g_seslm[spriteID] = HW_SLOT_BEHIND_OVERFLOW;
                                         break;
                                 }
                         }
 
-                        for (index = spriteID + 1; index < 60;
+                        for (index = spriteID + 1; index < SPRITE_SLOTS;
                              index = index + 1) {
                                 if (g_seslm[index] ==
                                     g_seslm[spriteID]) {
-                                        g_seslm[index] = 1;
-                                        g_sepex[1]     = g_sepex[2];
-                                        g_sepey[1]     = g_sepey[2];
-                                        g_seaim[1]  = g_seaim[2];
-                                        g_seams[1]   = g_seams[2];
-                                        g_seach[1] = g_seach[2];
-                                        g_seacw[1]  = g_seacw[2];
+                                        g_seslm[index] = HW_SLOT_BEHIND_OVERFLOW;
+                                        g_sepex[HW_SLOT_BEHIND_OVERFLOW] = g_sepex[HW_SLOT_BEHIND_PRIMARY];
+                                        g_sepey[HW_SLOT_BEHIND_OVERFLOW] = g_sepey[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seaim[HW_SLOT_BEHIND_OVERFLOW] = g_seaim[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seams[HW_SLOT_BEHIND_OVERFLOW] = g_seams[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seach[HW_SLOT_BEHIND_OVERFLOW] = g_seach[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seacw[HW_SLOT_BEHIND_OVERFLOW] = g_seacw[HW_SLOT_BEHIND_PRIMARY];
                                 }
                         }
 
-                        if (i < 8) {
+                        if (i < SPRITE_HW_SLOTS) {
                                 sVar1 = g_seslm[spriteID];
                                 g_sepex[sVar1]     = g_sepex[i];
                                 g_sepey[sVar1]     = g_sepey[i];
@@ -439,12 +439,12 @@ sp_upds()
 
         /* Second pass: zero any hardware slot not currently claimed by
            a logical sprite (prevents ghosting). */
-        for (spriteID = 1; spriteID < 7; spriteID = spriteID + 1) {
+        for (spriteID = HW_SLOT_BEHIND_OVERFLOW; spriteID < HW_SLOT_DOG_FRONT; spriteID = spriteID + 1) {
                 for (index = 0;
-                     index < 60 && g_seslm[index] != spriteID;
+                     index < SPRITE_SLOTS && g_seslm[index] != spriteID;
                      index = index + 1)
                         ;
-                if (index == 60)
+                if (index == SPRITE_SLOTS)
                         g_seaim[spriteID] = NULL;
         }
 }
@@ -466,7 +466,7 @@ sp_lchu()
 {
         short   headIndex;
 
-        while (g_sepef[4] == YES)
+        while (g_sepef[HW_SLOT_LCP_HEAD] == YES)
                 ;
 
         headIndex = mood_hfo[lcp.happiness] +
@@ -480,28 +480,28 @@ sp_lchu()
                 2, 21, g_hsmif, 0);
 
         if (g_hsmif == NO)
-                g_seacx[4] = lcp_x + hd_xoff[lcp_st] - 4;
+                g_seacx[HW_SLOT_LCP_HEAD] = lcp_x + hd_xoff[lcp_st] - 4;
         else
-                g_seacx[4] = lcp_x + hd_xoff[lcp_st] - 14;
+                g_seacx[HW_SLOT_LCP_HEAD] = lcp_x + hd_xoff[lcp_st] - 14;
 
-        g_seacy[4] = (lcp_y + body_yof[lcp_st]) -
+        g_seacy[HW_SLOT_LCP_HEAD] = (lcp_y + body_yof[lcp_st]) -
                              (hd_hgt[lcp_st] + 21);
         if (dbg_hide != NO)
-                g_seacy[4] = 300;
+                g_seacy[HW_SLOT_LCP_HEAD] = 300;
 
         if (g_lcyof != NO &&
-            lcp_st > 12 && lcp_st < 17)
-                g_seacy[4] = g_seacy[4] + 1;
+            lcp_st > STATE_STR_CLIMB_F3S && lcp_st < STATE_STR_DESC_F0)
+                g_seacy[HW_SLOT_LCP_HEAD] = g_seacy[HW_SLOT_LCP_HEAD] + 1;
 
-        g_sepeh[4] = 21;
-        g_sepew[4]  = 32;
-        g_sepim[4]  = g_hsbuf;
-        g_sepms[4]   = g_hsmas;
+        g_sepeh[HW_SLOT_LCP_HEAD] = 21;
+        g_sepew[HW_SLOT_LCP_HEAD]  = 32;
+        g_sepim[HW_SLOT_LCP_HEAD]  = g_hsbuf;
+        g_sepms[HW_SLOT_LCP_HEAD]   = g_hsmas;
 
         if (g_lssh != NO)
-                g_sepim[4] = NULL;
+                g_sepim[HW_SLOT_LCP_HEAD] = NULL;
 
-        g_sepef[4] = YES;
+        g_sepef[HW_SLOT_LCP_HEAD] = YES;
 }
 
 /* sp_imfs (Ghidra): populate the 8 per-slot MFDB pairs
@@ -525,7 +525,7 @@ sp_imfs()
         short   i;
 
         last_hz = 0;
-        for (i = 0; i < 8; i = i + 1) {
+        for (i = 0; i < SPRITE_HW_SLOTS; i = i + 1) {
                 sp_iniM(0L, &g_semfi[i],
                                  (void *) g_seaim[i],
                                  g_seacw[i], g_seach[i]);

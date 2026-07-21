@@ -262,10 +262,10 @@ a_plaag()
 
                         /* Nudge the head sprite over so the game
                            overlay doesn't clip the resident. */
-                        g_sepex[g_seslm[4]] =
-                                g_sepex[g_seslm[4]] + 3;
-                        g_sepey[g_seslm[4]] =
-                                g_sepey[g_seslm[4]] - 4;
+                        g_sepex[g_seslm[SPRITE_GAME_BOX]] =
+                                g_sepex[g_seslm[SPRITE_GAME_BOX]] + 3;
+                        g_sepey[g_seslm[SPRITE_GAME_BOX]] =
+                                g_sepey[g_seslm[SPRITE_GAME_BOX]] - 4;
                         gameTick(0);
 
                         /* Dispatch. */
@@ -306,7 +306,7 @@ a_plaag()
                         lcp_face   = FACING_RIGHT;
                         lcp_st              = STATE_STAND_FACING_SCREEN;
                         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-                        g_selaf[4] = SPRITE_HIDDEN;
+                        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
                         sp_upds();
                         g_lcyof = NO;
                         lcp_hwt();

@@ -170,7 +170,7 @@ er_food()
                                       &g_wtx, &g_wty);
                 lcp_wkD();
 
-                g_selaf[9] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
                 sp_upds();
                 g_lcyof = NO;
                 lcp_face     = FACING_RIGHT;
@@ -208,7 +208,7 @@ er_food()
                         a_feedd(1);
                 } else {
                         a_gesff();
-                        g_selaf[9] = SPRITE_HIDDEN;
+                        g_selaf[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
                         sp_upds();
                         g_lcyof = NO;
                 }

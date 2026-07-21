@@ -14,63 +14,119 @@
 #include "sprites.h"
 
 /* ---- LCP animation ----------------------------------------------------- */
-/* Ghidra BSS = 0.  cs_mvIn sets lcp_st to
-   STATE_STAND_SIDE_VIEW (34) before gameLoop starts. */
+/* PLAYER_STATE for the LCP character sprite; drives body_frT +
+   body_yof + head-offset lookups.  Ghidra BSS = 0.  cs_mvIn sets
+   this to STATE_STAND_SIDE_VIEW (34) before gameLoop starts. */
 short   lcp_st                       = 0;
-short   lcp_face            = 0;    /* FACING_RIGHT */
-short   g_lcyof        = 0;
+/* Facing direction (FACING_RIGHT / FACING_LEFT).  Selects the mirror
+   path in sprite_lcp_flip and biases per-state head X offsets. */
+short   lcp_face            = FACING_RIGHT;
+/* Ghidra `lcp_carrying_object_flag`.  YES while the LCP is holding
+   a bookshelf item / grocery / game box; enables the alternate
+   arms-up carry_body_frame_table for walking states 0..24. */
+short   g_lcyof        = NO;
+/* Ghidra `lcp_carried_object`.  Set by sprite selection to remember
+   which sprite slot the carried-item overlay came from so the
+   depth-compositor can flip it in front/behind on stairs.  -1 =
+   nothing carried. */
 short   g_lcieo              = -1;
-short   g_lssh              = 0;
-short   dbg_hide        = 0;
+/* Ghidra `lcp_sprites_hidden`.  While YES the compositor forces the
+   body/head sprite pointers to NULL so the character disappears
+   (used by cs_mvIn while the LCP is off-screen, and by the study
+   door-close cutscene). */
+short   g_lssh              = NO;
+/* Ghidra `debug_hide_lcp_offscreen`.  Diagnostic-only: while YES,
+   sprite_update_body / _head force the sprite Y to 300 (below the
+   visible area) so a developer can look at the empty room. */
+short   dbg_hide        = NO;
 
 /* ---- Dog --------------------------------------------------------------- */
+/* Current screen position of the dog sprite (updated ~8Hz by
+   dog_move_and_animate). */
 short   dog_x                           = 0;
 short   dog_y                           = 0;
+/* Ghidra `dog_target_x/y`.  Final destination the dog is heading to
+   (set by the AI when it picks a new wander destination).  When both
+   are 0 the dog is considered idle at its current spot. */
 short   g_dtx                    = 0;
 short   g_dty                    = 0;
+/* Ghidra `dog_waypoint_x/y`.  Intermediate stair-transition point
+   between dog and target when they're on different floors.  When
+   both are 0 no waypoint is active. */
 short   g_dyx                  = 0;
 short   g_dyy                  = 0;
+/* Ghidra `dog_walk_anim_cycle`.  0..7 index into g_dwanf[] that
+   rotates the walk-cycle frame on each tick.  Wraps at 8. */
 short   g_dwanc             = 0;
+/* Ghidra `dog_sprite_id`.  Current SPRITE_DOG_* id pushed into the
+   hardware slot each tick (walk frame, lay-down, sit, etc.). */
 short   g_dsid                   = 0;
-short   dg_stair              = 0;
+/* Ghidra `dog_on_stairs_flag`.  YES while the dog is traversing a
+   flight; steers dog_move_and_animate through the stair-jump table
+   instead of the flat-floor step logic. */
+short   dg_stair              = NO;
 /* dg_init: when non-zero sp_spud skips writing sprite slots
    0/7 (used to hide the dog while off-screen).  Ghidra BSS = 0 --
    dog is visible from frame one. */
-short   dg_init                 = 0;
+short   dg_init                 = NO;
 
-/* ---- Hardware sprite double-buffer (8 slots) --------------------------- */
-short   g_sepef[8];
-short * g_sepim[8];
-short * g_sepms[8];
-short   g_sepex[8];
-short   g_sepey[8];
-short   g_sepeh[8];
-short   g_sepew[8];
-short * g_seaim[8];
-short * g_seams[8];
-short   g_seacx[8];
-short   g_seacy[8];
-short   g_seach[8];
-short   g_seacw[8];
+/* ---- Hardware sprite double-buffer (SPRITE_HW_SLOTS) -------------------
+   Two parallel state sets per hardware slot: `pe` = pending (what game
+   logic queued for the next 8 Hz compositor tick) and `ac` = active
+   (currently drawn on the visible frame).  Slot layout: 0/7 = dog
+   (behind/in-front of LCP by Y depth), 3 = LCP body, 4 = LCP head,
+   1..2 and 5..6 = door/object overlay slots. */
+short   g_sepef[SPRITE_HW_SLOTS];       /* sprite_pending_flag: YES = pending draw queued */
+short * g_sepim[SPRITE_HW_SLOTS];       /* sprite_pending_image: image bitmap for next draw */
+short * g_sepms[SPRITE_HW_SLOTS];       /* sprite_pending_mask: 1-bit AND mask for next draw */
+short   g_sepex[SPRITE_HW_SLOTS];       /* sprite_pending_x: X for next draw */
+short   g_sepey[SPRITE_HW_SLOTS];       /* sprite_pending_y: Y for next draw */
+short   g_sepeh[SPRITE_HW_SLOTS];       /* sprite_pending_height: rows for next draw */
+short   g_sepew[SPRITE_HW_SLOTS];       /* sprite_pending_width: pixels for next draw */
+short * g_seaim[SPRITE_HW_SLOTS];       /* sprite_active_image: image currently drawn */
+short * g_seams[SPRITE_HW_SLOTS];       /* sprite_active_mask: mask currently drawn */
+short   g_seacx[SPRITE_HW_SLOTS];       /* sprite_active_x: X currently drawn */
+short   g_seacy[SPRITE_HW_SLOTS];       /* sprite_active_y: Y currently drawn */
+short   g_seach[SPRITE_HW_SLOTS];       /* sprite_active_height: rows currently drawn */
+short   g_seacw[SPRITE_HW_SLOTS];       /* sprite_active_width: pixels currently drawn */
 
-/* ---- Sprite definitions (60 logical slots) ----------------------------- */
-short * g_sedim[60];
-short * g_sedms[60];
-short   g_sedeh[60];
-short   g_sedew[60];
+/* ---- Sprite definitions (SPRITE_SLOTS logical slots) -------------------
+   Populated once by sprite_register_loop from the SPRITES asset file
+   at boot.  Each logical slot holds a sprite's image bitmap, mask,
+   height, and width; the hardware-slot pipeline above copies from
+   these when a logical sprite is pushed to the screen. */
+short * g_sedim[SPRITE_SLOTS];          /* sprite_def_image[SPRITE_ID] */
+short * g_sedms[SPRITE_SLOTS];          /* sprite_def_mask[SPRITE_ID] */
+short   g_sedeh[SPRITE_SLOTS];          /* sprite_def_height[SPRITE_ID] */
+short   g_sedew[SPRITE_SLOTS];          /* sprite_def_width[SPRITE_ID] */
 /* Ghidra sprite_layer_flags @ 0x2b6ee: entries 0,1 = SPRITE_IN_FRONT (1),
    rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
    0 and 7 in the hardware layout, per sp_upds). */
-short   g_selaf[60] = { 1, 1 };
-/* Ghidra sprite_slot_map @ 0x2b766: entries 0=3 (LCP body slot), 1=4
-   (LCP head slot), rest=9 (off-screen sentinel). */
-short   g_seslm[60] = {
-        3, 4, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-        9, 9, 9, 9, 9, 9, 9, 9, 9, 9
+short   g_selaf[SPRITE_SLOTS] = { 1, 1 };
+/* Ghidra sprite_slot_map @ 0x2b766: which hardware slot each logical
+   sprite is currently mapped to.  Entries 0..1 pin the LCP body/head
+   to their dedicated slots; the rest default to HW_SLOT_NONE (=9,
+   the compositor's off-screen sentinel) and get assigned dynamically
+   by sprite_update_slots when the sprite is queued. */
+short   g_seslm[SPRITE_SLOTS] = {
+        /* 0..9   */ HW_SLOT_LCP_BODY, HW_SLOT_LCP_HEAD,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+        /* 10..19 */ HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE,
+        /* 20..29 */ HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE,
+        /* 30..39 */ HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE,
+        /* 40..49 */ HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE,
+        /* 50..59 */ HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
+                     HW_SLOT_NONE, HW_SLOT_NONE
 };
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
@@ -166,13 +222,22 @@ short   flr_cy[3]        = { 198, 135, 71 };
    waypoint table. */
 short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
 
+/* Ghidra `sub_animation_frame_counter`.  Increments on every 8 Hz
+   render tick; used by cl_redrH etc. to drive slow overlay
+   animations (pendulum, phone-hook rocking, dog tail wag). */
 short   subAniC     = 0;
 
 /* ---- Head sprite double-buffer + source pointers ---------------------- */
 short   g_hsbuf[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head image */
 short   g_hsmas[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head mask */
-short   g_hsmif         = 0;
-short * pex_ptr;                   /* filled by asset loader */
+/* Ghidra `head_sprite_mirror_flag`.  Set by head_animate to select
+   the horizontal-flip path in sprite_lcp_flip when the head faces
+   the opposite direction from the body. */
+short   g_hsmif         = NO;
+/* Points to the loaded PEx.LCP frame table; filled by al_locs. */
+short * pex_ptr;
+/* Points to hshdbuf; base of the dilated head-frame silhouettes
+   produced by sprite_lcp_build_all_head. */
 short * hd_shp;
 /* hd_shp buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
    destination for sprite_lcp_build_all_head's dilation of the raw
@@ -256,10 +321,23 @@ short   hd_mvd[15]   = {
 short   hd_tilt[3]       = { 7, 12, 17 };
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
+/* Intermediate waypoint the LCP walks through to reach `g_wtx`/`g_wty`
+   on a different floor; set by lcp_calc_floor_waypoint, zeroed on
+   arrival.  All-zero = no waypoint active. */
 short   g_wyx                 = 0;
 short   g_wyy                 = 0;
+/* Ghidra `lcp_on_stairs_flag` (short, YES/NO).  YES while
+   lcp_pathfind_one_step is inside a stair-traversal path; drives the
+   stair-specific sprite-state sequence 9..24 and the wood-stairs SFX
+   selection. */
 short   lcp_stR              = 0;
+/* Ghidra `footstep_trigger_flag`.  Latched YES on walk-cycle frames
+   3 and 7 to schedule the next footstep SFX; consumed and cleared by
+   lcp_play_footstep_sound. */
 BOOL16  fs_trg           = 0;
+/* Ghidra `head_anim_state_last`.  Snapshot of the head animation
+   state from the previous tick; head_animate diffs against this to
+   detect direction changes and pick the transition frame. */
 short   g_hastl            = 0;
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
    The middle-floor branch of lcp_flwp uses these to

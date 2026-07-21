@@ -221,9 +221,9 @@ lcp_fstp()
 static void
 wkCyc()
 {
-        if (lcp_st < 8) {
+        if (lcp_st < STATE_STAND_IDLE) {
                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                if (lcp_st > 7)
+                if (lcp_st > STATE_WALK_FRAME_7_STEP)
                         lcp_st = STATE_WALK_FRAME_0;
         } else {
                 lcp_st = STATE_WALK_FRAME_0;
@@ -235,7 +235,7 @@ static void
 stairCyc()
 {
         lcp_st = lcp_st + STATE_WALK_FRAME_1;
-        if (lcp_st > 12)
+        if (lcp_st > STATE_STR_CLIMB_F3S)
                 lcp_st = STATE_STR_CLIMB_F0;
 }
 
@@ -317,7 +317,7 @@ lcp_path()
                 } else {
                         /* At target X, just cycle animation. */
                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                        if (lcp_st > 7)
+                        if (lcp_st > STATE_WALK_FRAME_7_STEP)
                                 lcp_st = STATE_WALK_FRAME_0;
                 }
 
@@ -406,11 +406,11 @@ lcp_path()
                                         g_selaf[g_lcieo] = SPRITE_BEHIND_LCP;
                                         sp_upds();
                                 }
-                                if (lcp_st < 13 || lcp_st > 16) {
+                                if (lcp_st < STATE_STR_TOP_F0 || lcp_st > STATE_STR_TOP_F3S) {
                                         lcp_st = STATE_STR_TOP_F0;
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                                        if (lcp_st > 16) {
+                                        if (lcp_st > STATE_STR_TOP_F3S) {
                                                 lcp_st = STATE_STR_TOP_F0;
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;
@@ -459,9 +459,9 @@ lcp_path()
                                                         next_x = lcp_x - 2;
                                         }
                                         lcp_x = next_x;
-                                        if (lcp_st < 21 && lcp_st > 16) {
+                                        if (lcp_st < STATE_STR_BTM_F0 && lcp_st > STATE_STR_TOP_F3S) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                                                if (lcp_st > 20)
+                                                if (lcp_st > STATE_STR_DESC_F3S)
                                                         lcp_st = STATE_STR_DESC_F0;
                                         } else {
                                                 lcp_st = STATE_STR_DESC_F0;
@@ -482,9 +482,9 @@ lcp_path()
                                                         next_x = lcp_x + 2;
                                         }
                                         lcp_x = next_x;
-                                        if (lcp_st < 21 && lcp_st > 16) {
+                                        if (lcp_st < STATE_STR_BTM_F0 && lcp_st > STATE_STR_TOP_F3S) {
                                                 lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                                                if (lcp_st > 20)
+                                                if (lcp_st > STATE_STR_DESC_F3S)
                                                         lcp_st = STATE_STR_DESC_F0;
                                         } else {
                                                 lcp_st = STATE_STR_DESC_F0;
@@ -497,12 +497,12 @@ lcp_path()
                                 /* Bottom-of-stair frame (state 21..24). */
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
-                                if (lcp_st < 21 || lcp_st > 24) {
+                                if (lcp_st < STATE_STR_BTM_F0 || lcp_st > STATE_STR_BTM_F3) {
                                         lcp_st = STATE_STR_BTM_F0;
                                         lcp_x = lcp_x + 2;
                                 } else {
                                         lcp_st = lcp_st + STATE_WALK_FRAME_1;
-                                        if (lcp_st > 24) {
+                                        if (lcp_st > STATE_STR_BTM_F3) {
                                                 lcp_st = STATE_STR_BTM_F0;
                                                 lcp_face =
                                                         lcp_face ^ FACING_LEFT;

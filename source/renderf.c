@@ -37,6 +37,7 @@
 #include "movement.h"
 #include "random.h"
 #include "renderf.h"
+#include "sprglobs.h"
 #include "sfx_irq.h"
 #include "sound.h"
 #include "sprender.h"
@@ -213,7 +214,7 @@ sc_ren8()
         }
 
         /* --- Sprite compositing --- */
-        for (index = 0; index < 8; index = index + 1) {
+        for (index = 0; index < SPRITE_HW_SLOTS; index = index + 1) {
                 if (g_sepef[index] == YES) {
                         g_sepef[index]  = NO;
                         g_sepex[index]     = g_seacx[index];

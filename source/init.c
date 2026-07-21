@@ -451,10 +451,10 @@ short   wait_ticks;
         hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
         g_wtx = g_wtx - 10;
         lcp_wkD();
-        g_selaf[0x15] = SPRITE_IN_FRONT;
+        g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
         sp_updb(SPRITE_DOG_SIT);
-        g_sepex[g_seslm[0x15]] = 294;
-        g_sepey[g_seslm[0x15]] = 151;
+        g_sepex[g_seslm[SPRITE_DOG_SIT]] = 294;
+        g_sepey[g_seslm[SPRITE_DOG_SIT]] = 151;
         hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
         lcp_wkD();
         hideLcp();
@@ -463,7 +463,7 @@ short   wait_ticks;
         hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
         g_wtx = g_wtx - 10;
         lcp_wkD();
-        g_selaf[0x15] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
         sp_upds();
 
         result = rndRng(0, 100);
@@ -510,10 +510,10 @@ cs_mvIn()
         od_draw(OBJ_DOOR_FRONT_OPEN_2, 294, 151);
         gameTick(2);
         lcp_frdO = YES;
-        g_selaf[0x15] = SPRITE_IN_FRONT;
+        g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
         sp_updb(SPRITE_DOG_SIT);
-        g_sepex[g_seslm[0x15]] = 294;
-        g_sepey[g_seslm[0x15]] = 151;
+        g_sepex[g_seslm[SPRITE_DOG_SIT]] = 294;
+        g_sepey[g_seslm[SPRITE_DOG_SIT]] = 151;
         lcp_x = 300;
         lcp_y = 190;
         showLcp();
@@ -523,7 +523,7 @@ cs_mvIn()
         lcp_st = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
         lcp_hwt();
-        g_selaf[0x15] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
         sp_upds();
         gameTick(0x10);
 
@@ -580,7 +580,7 @@ cs_mvIn()
                 lcp_face = FACING_RIGHT;
                 lcp_st   = STATE_STAND_FACING_SCREEN;
                 g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                g_selaf[0x30] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_SUITCASE] = SPRITE_HIDDEN;
                 sp_upds();
                 g_lcyof = NO;
                 lcp_hwt();

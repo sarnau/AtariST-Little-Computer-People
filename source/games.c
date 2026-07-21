@@ -172,14 +172,14 @@ lcp_lgt()
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         sp_upds();
 
-        save_x = g_sepex[g_seslm[4]];
-        save_y = g_sepey[g_seslm[4]];
-        g_selaf[4] = SPRITE_HIDDEN;
+        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
+        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
+        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         sp_upds();
         sp_ssco(SPRITE_GAME_BOX);
         g_lcyof = NO;
-        g_sepex[g_seslm[4]] = save_x;
-        g_sepey[g_seslm[4]] = save_y;
+        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
+        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
 }
 
 /* lcp_rgt: reverse of lcp_lgt -- walk resident back to the kitchen
@@ -200,14 +200,14 @@ lcp_rgt()
         g_wty = g_wty + 2;
         lcp_wkD();
 
-        save_x = g_sepex[g_seslm[4]];
-        save_y = g_sepey[g_seslm[4]];
-        g_selaf[4] = SPRITE_HIDDEN;
+        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
+        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
+        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         sp_upds();
-        g_selaf[4] = SPRITE_IN_FRONT;
+        g_selaf[SPRITE_GAME_BOX] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_GAME_BOX);
-        g_sepex[g_seslm[4]] = save_x;
-        g_sepey[g_seslm[4]] = save_y;
+        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
+        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
 
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_TABLE_SETTING);

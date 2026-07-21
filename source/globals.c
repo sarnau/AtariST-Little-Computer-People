@@ -11,6 +11,7 @@
 #include "structs.h"
 #include "enums.h"
 #include "globals.h"
+#include "sprglobs.h"
 
 short   ani_cnt  = 0;
 short   g_secs    = 0;
@@ -677,8 +678,8 @@ char *  cmd_inp              = (char *) 0;
 short   g_aprio                = 5;
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
-MFDB    g_semfi[8]            = { { 0 } };
-MFDB    g_semfm[8]             = { { 0 } };
+MFDB    g_semfi[SPRITE_HW_SLOTS] = { { 0 } };
+MFDB    g_semfm[SPRITE_HW_SLOTS] = { { 0 } };
 
 /* TV pattern animation (Ghidra tv_pattern_N_x_coords / _y_coords).
    Four vertical scanlines drawn inside the TV screen -- each is a
