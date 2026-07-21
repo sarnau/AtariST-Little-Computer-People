@@ -38,19 +38,24 @@ LOG=/tmp/lcp_lcyof_trace.log
 [ -f "$PRG" ]     || { echo "SETUP: LCP.PRG missing at $PRG" >&2; exit 2; }
 [ -f "$TOS_IMG" ] || { echo "SETUP: TOS ROM missing at $TOS_IMG" >&2; exit 2; }
 
-# Derive g_lcyof's runtime address from the current build.  BASE for
-# --auto-loaded LCP.PRG is fixed by TOS Pexec at 0x12596 (verified via
-# `info basepage` in earlier diagnostics).
-LCYOF_OFF=$(python3 "$CSRC/tools/find_syms.py" _g_lcyof \
-    | awk '$1=="_g_lcyof"{sub(/^base\+/,"",$3); print $3}')
-if [ -z "$LCYOF_OFF" ]; then
-    echo "SETUP: couldn't derive g_lcyof offset from find_syms" >&2
+# Derive g_lcyof's runtime address from the linker map's raw val column
+# (the SECOND-to-last field).  Linker val is a TEXT-relative offset that
+# TOS Pexec relocates to (BASE + val) at load.  BASE for --auto-loaded
+# LCP.PRG is $12596.  (The map's 4th column is a stale/incorrect runtime
+# computation for D-segment symbols; do not use it.)
+MAP=$CSRC/build/alcyon/lcp.map
+if [ ! -f "$MAP" ]; then
+    echo "SETUP: linker map missing at $MAP -- regenerate via source/tools/alcyon_link.sh" >&2
+    exit 2
+fi
+LCYOF_VAL=$(awk '$1=="_g_lcyof"{sub(/^0x/,"",$3); print $3}' "$MAP")
+if [ -z "$LCYOF_VAL" ]; then
+    echo "SETUP: _g_lcyof not in linker map" >&2
     exit 2
 fi
 BASE=0x12596
-LCYOF_ADDR=$(printf '%x' $((BASE + LCYOF_OFF)))
-# 2-byte range (g_lcyof is a short).
-LCYOF_END=$(printf '%x' $((BASE + LCYOF_OFF + 1)))
+LCYOF_ADDR=$(printf '%x' $((BASE + 0x$LCYOF_VAL)))
+LCYOF_END=$(printf '%x' $((BASE + 0x$LCYOF_VAL + 1)))
 
 echo "==== g_lcyof memwatch armed ===="
 echo "  address:  \$$LCYOF_ADDR..\$$LCYOF_END (2 bytes)"
