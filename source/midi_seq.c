@@ -686,7 +686,7 @@ short           midi_ch;
 }
 
 /* ---- Timer-A interrupt dispatch ---------------------------------- */
-/* mq_tick lives in source/tools/dk/mq_tick.s -- byte-faithful port of
+/* mq_tick lives in source/mq_tick.s -- byte-faithful port of
    Ghidra 0x1219a.  It's assembly because the ROM version uses
    privileged move-sr instructions that Alcyon C 4.14 can't emit,
    and terminates in `rte` (not `rts`) so it's installed by Xbtimer

@@ -25,7 +25,7 @@ set -euo pipefail
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
 ALCYON_BIN=${ALCYON_BIN:-$HOME/hatari-c/bin}
 ATARI_DK=${ATARI_DK:-$HOME/Hatari_C/Compiler/ATARI_DK/DISK_2/LINKER}
-DK_TOOLS=$CSRC/tools/dk
+DK_TOOLS=$CSRC
 OUT=$CSRC/build/alcyon
 
 cd "$OUT"

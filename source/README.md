@@ -90,7 +90,7 @@ source/
 │   ├── psg_io.c        YM2149 register writers
 │   ├── sfx_irq.c       8Hz Dosound tick
 │   ├── psgfreq.c       132-entry PSG tone-period LUT
-│   └── tools/dk/mq_tick.s  Timer-A MFP ISR (byte-faithful asm)
+│   └── mq_tick.s       Timer-A MFP ISR (byte-faithful asm)
 ├── games.c, cards.c    mini-games (poker/blackjack/anagram/war/word-puzzle)
 ├── clock.c, calendar.c, keyboard.c, random.c,
 │   dog.c, delivery.c, events.c, alerts.c, health.c
