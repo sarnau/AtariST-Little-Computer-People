@@ -44,8 +44,11 @@ short   g_ptdsi[11]    = {
    long[10] indexed by lcp_carried_object matching one of {SPRITE_GLASS,
    SPRITE_GAME_BOX, ...}.  Each entry holds a sprite_id in the low
    word; high word is always 0 (Ghidra: `long`, not `short`).
-   NOTE: the port dispatches via the cy_yoff() switch in tick.c; this
-   table itself is not read by any C code -- kept for byte-fidelity. */
+   NOTE: the ROM's per-object dispatch each write the same
+   `g_sepey[g_seslm[SPRITE_X]] = lcp_y - 20` with only the stored
+   sprite-def index differing; the port collapses this to a single
+   inline write in gameTick's carrying-mode positioning block.  Table
+   kept here for byte-fidelity to the ROM data segment. */
 long    g_cotbl[10]    = {
         SPRITE_GLASS, SPRITE_GAME_BOX, SPRITE_FOOD_PACKAGE,
         SPRITE_FIREWOOD, SPRITE_COOKING_POT,

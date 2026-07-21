@@ -20,26 +20,6 @@
 #include "tick_tables.h"
 
 
-/* Carried-object Y offset (Ghidra 0x257c6..0x258b0 jump table). */
-static short
-cy_yoff(id)
-short   id;
-{
-        switch (id) {
-        case SPRITE_GLASS:
-        case SPRITE_GAME_BOX:
-        case SPRITE_FOOD_PACKAGE:
-        case SPRITE_FIREWOOD:
-        case SPRITE_COOKING_POT:
-        case SPRITE_SUITCASE:
-        case SPRITE_BOOK:
-        case SPRITE_VINYL_CARRY:
-        case SPRITE_COOKED_MEAL:
-                return -20;
-        }
-        return 0x7fff;
-}
-
 /* addr: gameTick() */
 void
 gameTick(counter)
@@ -48,23 +28,25 @@ short   counter;
         short   count;
         short   index;
         short   slot;
-        short   y_off;
         short   psi;                            /* petting sprite id */
         short   key;
 
         /* Carrying-mode position update.  Ghidra 0x256a6..0x258e4 shows
            Path B in the ROM (g_lcyof != NO) first repositions the
            carried sprite for the current lcp_face + carry offset, then
-           dispatches through carried_object_id_table[10] to set the Y
-           offset per object -- and then FALLS INTO the same animation
-           loop as Path A (the ROM's `bra.w 0x25d60` at the end of the
-           dispatched handler re-enters Path A's counter loop, so the
-           frame still gets rendered).  The earlier port structured
-           these as two disjoint paths and returned from Path B without
-           calling the loop, causing the game to freeze if g_lcyof ever
-           got stuck YES (diagnosed via source/tools/trace_lcyof.sh).
-           Positioning up-front, then running the shared loop, matches
-           the ROM semantics and eliminates the freeze. */
+           dispatches through carried_object_id_table[10] to a per-
+           object handler at 0x257c6..0x258b0.  Each handler is the
+           identical 5-instruction sequence `g_sepey[g_seslm[SPRITE_X]]
+           = lcp_y - 20` differing only in which stored sprite-def
+           index it uses; since g_lcieo is always the current carried
+           SPRITE_ID, `g_seslm[g_lcieo]` picks the same slot the
+           handlers would.  The 10-slot table + dispatch was therefore
+           equivalent to one inline write, hence the collapsed form
+           here.  Each ROM handler ends with `bra.w 0x25d60` which
+           re-enters Path A's counter loop, so the frame still gets
+           rendered -- Path B is not a disjoint return path.  Path B
+           and Path A merged into one code path below eliminates the
+           g_lcyof-stuck freeze (diagnosed via trace_lcyof.sh). */
         if (g_lcyof != NO) {
                 slot = g_seslm[g_lcieo];
                 if (lcp_face == FACING_RIGHT) {
@@ -74,9 +56,7 @@ short   counter;
                         if (g_sepex[slot] < 0)
                                 g_sepex[slot] = 0;
                 }
-                y_off = cy_yoff(g_lcieo);
-                if (y_off != 0x7fff)
-                        g_sepey[slot] = lcp_y + y_off;
+                g_sepey[slot] = lcp_y - 20;
         }
 
         {
