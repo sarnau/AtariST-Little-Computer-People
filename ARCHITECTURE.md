@@ -267,7 +267,7 @@ Sprites 13–15 (SPRITE_DOOR_ANIM_1–3) are door overlay sprites at three stage
 ### LCP Character Sprites
 
 The character is assembled from separate body and head sprite sheets:
-- **Body** (`body.lcp`): 91 animation states (`PLAYER_STATE` enum) — walk cycle, stairs, sitting, showering, dancing, etc.
+- **Body** (`body.lcp`): 98 sprite frames indexed by a 93-entry state-to-frame table (`body_frame_table[93]`); the `PLAYER_STATE` enum spans ~109 states, several of which share frames (idle right/idle left etc.)
 - **Head** (`pex.lcp`): Expression frames selected by `head_sprite_frame` and `happiness` level, with random head movements controlled by `HEAD_ANIM_MODE`
 
 Both are 2-word-wide source sprites expanded to 4-word-wide compositing buffers by `lcp_flip_sprite_horizontal`, with bit-reversal via `revert_table[256]` for horizontal mirroring.
@@ -356,7 +356,7 @@ The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 function
 |---|---|
 | `house.scn` | Compressed house background scene (320×200, nibble-based RLE) |
 | `title.scn` | Title screen scene (same compression) |
-| `body.lcp` | Body sprite sheet (91 states × 21 scanlines × 2 word-groups) |
+| `body.lcp` | Body sprite sheet (98 frames × 168 bytes; 4-byte header + 16464 bytes payload) |
 | `PE*.lcp` | Head sprite sheets (per-character expressions + happiness variants) |
 | `objects` | 56 static object graphics with FILE_IMG_DATA headers (height, width, pixel data) |
 | `sprites` | 50 overlay sprite definitions (mapped to 56 sprite_id slots via `spritedata_index_table[50]`) |

@@ -550,6 +550,23 @@ Called every frame to render the head:
 stored as right-facing (`FACING_RIGHT`); left-facing (`FACING_LEFT`) is generated at runtime by
 flipping the pixel data horizontally and swapping the left/right halves.
 
+### Sprite Data Sizes
+
+Each source sprite frame is **168 bytes** (21 rows × 4 bytes/row × 2 bit-
+planes; a 16×21-pixel 2-plane image).  `sprite_lcp_flip()` expands each
+frame in place to a 336-byte destination (168 shorts, 32-pixel-wide 4-plane
+MFDB layout) that the compositor then blits.
+
+| Constant (in `csrc/include/sprites.h`) | Value | Meaning |
+|---|---|---|
+| `LCP_BODY_FRAME_SIZE` | `21 * 4 * 2` = 168 bytes | Source frame stride in BODY.LCP / PE*.LCP |
+| `LCP_BODY_SHAPE_SIZE` | `21 * 4` = 84 bytes | Dilated silhouette stride in `body_shp` / `hd_shp` |
+| `LCP_BODY_DEST_WORDS` | `21 * 4 * 2` = 168 shorts | Expanded destination in `g_lsimg` / `g_lsmas` / `g_hsbuf` / `g_hsmas` |
+
+BODY.LCP holds 98 frames = 16,464 bytes of image data; each PE*.LCP holds 66
+frames = 11,088 bytes.  Ghidra's ROM-allocated buffers are slightly larger
+(120 and 66 slots, per the padded reservation the 1985 build set aside).
+
 ### Carried Object Rendering
 
 When `lcp_carrying_object_flag = YES`:
