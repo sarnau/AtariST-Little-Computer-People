@@ -1,7 +1,7 @@
 # csrc/ port status
 
 Snapshot of what is ported for real vs. still a stub.  Update as
-functions move from `action_stubs.c` / `stubs.c` into real
+functions move from `astubs.c` / `stubs.c` into real
 translation units.
 
 Total Ghidra functions in `LCP.PRG`: ~395.
@@ -34,12 +34,12 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `get_floor_number_from_y`              | `movement.c`        | screen Y -> floor 1..3 |
 | `calc_weekday`                         | `movement.c`        | day-of-week accumulator |
 | `endless_game_loop`                    | `main.c`            | top-level game loop |
-| `action_wake_from_alarm`               | `action_simple.c`   | Ctrl+A path |
-| `action_hello`                         | `action_simple.c`   | wave with head-nod loop |
-| `action_yawn_and_stretch`              | `action_simple.c`   | 15-frame idle yawn |
-| `action_nod_head`                      | `action_simple.c`   | 3-frame nod with SFX |
-| `action_pet_dog`                       | `action_simple.c`   | wait + pettable-flag clear |
-| `action_call_dog`                      | `action_simple.c`   | walk to POS 43 + crouch |
+| `action_wake_from_alarm`               | `asimple.c`   | Ctrl+A path |
+| `action_hello`                         | `asimple.c`   | wave with head-nod loop |
+| `action_yawn_and_stretch`              | `asimple.c`   | 15-frame idle yawn |
+| `action_nod_head`                      | `asimple.c`   | 3-frame nod with SFX |
+| `action_pet_dog`                       | `asimple.c`   | wait + pettable-flag clear |
+| `action_call_dog`                      | `asimple.c`   | walk to POS 43 + crouch |
 | `sprite_update_body`                   | `sprites.c`         | body pose selection + slot 3 push |
 | `spritedata_select_carried_object_l/r` | `sprites.c`         | activate carried sprite (behind/in-front) |
 | `dog_move_and_animate`                 | `dog.c`             | 8Hz movement + stair traversal |
@@ -56,55 +56,55 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `spritedata_select`                    | `sprites.c`         | generic sprite -> active slot copy |
 | `lcp_wait_head_reach_target`           | `sprites.c`         | spin-tick until head reaches target |
 | `sprite_lcp_head_update`               | `sprites.c`         | slot-4 head positioning + double-buffer push |
-| `sprite_lcp_head_animate`              | `sprites_head.c`    | 8-direction head state machine (H+V) |
+| `sprite_lcp_head_animate`              | `sprhead.c`    | 8-direction head state machine (H+V) |
 | `lcp_walk_to_destination`              | `walk.c`            | outer walk loop with interrupt gates |
 | `lcp_pathfind_one_step`                | `walk.c`            | 349-line flat + stair + descend + top step |
 | `lcp_calc_floor_waypoint`              | `walk.c`            | same-floor / cross-floor waypoint router |
 | `dog_calc_walk_path`                   | `walk.c`            | dog counterpart, with -3/-8 X patches |
 | `lcp_play_footstep_sound`              | `walk.c`            | carpet/wood/stairs SFX picker by X and floor |
-| `walk_to_front_door`                   | `deliveries.c`      | tiny helper |
-| `action_open_close_front_door`         | `deliveries.c`      | 2-frame door open/close with SFX |
-| `action_open_close_cabinet`            | `deliveries.c`      | kitchen cabinet toggle |
-| `event_receive_food_delivery`          | `deliveries.c`      | Ctrl+F: groceries -> cabinet, 4-pack loop |
-| `event_receive_book_delivery`          | `deliveries.c`      | Ctrl+B: book -> bookshelf |
-| `event_receive_record_delivery`        | `deliveries.c`      | Ctrl+R: record -> shelf (preserves 1985 typo) |
-| `event_receive_dog_food`               | `deliveries.c`      | Ctrl+D: trampoline to food delivery |
-| `event_answer_phone`                   | `deliveries.c`      | Ctrl+C: 40-50 tick phone call with SFX |
-| `check_time_based_actions`             | `ai_random.c`       | 3-table time-of-day action picker with weekend bias |
-| `action_wander_idly`                   | `actions_idle.c`    | 4-step shrug |
-| `action_peek_around`                   | `actions_idle.c`    | 6-tick side glance |
-| `action_pace_nervously`                | `actions_idle.c`    | 15-frame pace |
-| `action_toggle_tv`                     | `actions_idle.c`    | TV on/off flip |
-| `action_sleep`                         | `actions_idle.c`    | snoring lie-down (value=-1 = copy protection loop) |
-| `action_read_newspaper`                | `actions_house.c`   | armchair + 200-tick TV read |
-| `action_get_in_out_of_bed`             | `actions_house.c`   | undress + lie down / reverse |
-| `action_dance`                         | `actions_house.c`   | record player + dance-floor loop |
-| `action_drink`                         | `actions_house.c`   | sink + glass + water tap |
-| `action_use_toilet`                    | `actions_house.c`   | 3-sprite door animation + flush |
-| `action_wake_up_morning`               | `actions_house.c`   | morning routine chain |
-| `action_go_to_bed_night`               | `actions_house.c`   | bedtime routine chain |
-| `action_get_dressed`                   | `actions_house.c`   | head-anim only, 4x vertical bob |
-| `action_eat_meal`                      | `actions_food.c`    | pot -> stove animation -> table -> kitchen_cabinet |
-| `action_kitchen_cabinet`               | `actions_food.c`    | 200+ line eat routine, food-count decrement, 10-20 bite cycles |
-| `action_feed_dog`                      | `actions_food.c`    | fridge -> dog bowl -> fridge (value=0 opens fridge first) |
-| `action_get_snack_from_fridge`         | `actions_food.c`    | trampoline into action_open_close_fridge |
-| `action_take_shower`                   | `actions_bathroom.c`| 20-25 cycles of alternating scrub/wash |
-| `action_brush_teeth`                   | `actions_bathroom.c`| 24-35 cycle brush with sprite-6 toothbrush |
-| `action_wash_hands`                    | `actions_bathroom.c`| 4-127 random hand-position cycles + water SFX |
-| `action_listen_song`                   | `actions_leisure.c` | random `.sng` picker + song_play |
-| `action_play_piano`                    | `actions_leisure.c` | stop the currently-playing record |
-| `action_play_with_record`              | `actions_leisure.c` | PSG-amplitude-reactive vinyl browse animation |
-| `action_light_fireplace`               | `actions_leisure.c` | firewood run + 2500-5000 tick fire countdown |
-| `action_sit_on_couch_with_dog`         | `actions_leisure.c` | call dog + sit + pet + crouch off couch |
-| `action_sit_and_exercise`              | `actions_leisure.c` | 4-frame arms stretch cycle |
-| `action_check_front_door`              | `actions_leisure.c` | open door + look outside + maybe close |
-| `action_tidy_house`                    | `actions_leisure.c` | walk to filing cabinet, close if open |
-| `action_clean_up`                      | `actions_leisure.c` | sweep all 6 open doors/cabinets, close each |
-| `action_open_close_bedroom_closet`     | `actions_leisure.c` | 3-sprite closet + palette swap for outfit change |
-| `action_open_close_upstairs_closet`    | `actions_leisure.c` | study door + save-file chain (value chooses do_save) |
-| `action_write_letter`                  | `actions_letter.c`  | shuffled 4-section procedural letter + sign-off |
-| `letter_type_string_animated`          | `actions_letter.c`  | word-wrapped string typer, 40-col break |
-| `letter_type_character_animated`       | `actions_letter.c`  | per-char keystroke + width-bracket sprite swap |
+| `walk_to_front_door`                   | `delivery.c`      | tiny helper |
+| `action_open_close_front_door`         | `delivery.c`      | 2-frame door open/close with SFX |
+| `action_open_close_cabinet`            | `delivery.c`      | kitchen cabinet toggle |
+| `event_receive_food_delivery`          | `delivery.c`      | Ctrl+F: groceries -> cabinet, 4-pack loop |
+| `event_receive_book_delivery`          | `delivery.c`      | Ctrl+B: book -> bookshelf |
+| `event_receive_record_delivery`        | `delivery.c`      | Ctrl+R: record -> shelf (preserves 1985 typo) |
+| `event_receive_dog_food`               | `delivery.c`      | Ctrl+D: trampoline to food delivery |
+| `event_answer_phone`                   | `delivery.c`      | Ctrl+C: 40-50 tick phone call with SFX |
+| `check_time_based_actions`             | `airandom.c`       | 3-table time-of-day action picker with weekend bias |
+| `action_wander_idly`                   | `aidle.c`    | 4-step shrug |
+| `action_peek_around`                   | `aidle.c`    | 6-tick side glance |
+| `action_pace_nervously`                | `aidle.c`    | 15-frame pace |
+| `action_toggle_tv`                     | `aidle.c`    | TV on/off flip |
+| `action_sleep`                         | `aidle.c`    | snoring lie-down (value=-1 = copy protection loop) |
+| `action_read_newspaper`                | `ahouse.c`   | armchair + 200-tick TV read |
+| `action_get_in_out_of_bed`             | `ahouse.c`   | undress + lie down / reverse |
+| `action_dance`                         | `ahouse.c`   | record player + dance-floor loop |
+| `action_drink`                         | `ahouse.c`   | sink + glass + water tap |
+| `action_use_toilet`                    | `ahouse.c`   | 3-sprite door animation + flush |
+| `action_wake_up_morning`               | `ahouse.c`   | morning routine chain |
+| `action_go_to_bed_night`               | `ahouse.c`   | bedtime routine chain |
+| `action_get_dressed`                   | `ahouse.c`   | head-anim only, 4x vertical bob |
+| `action_eat_meal`                      | `afood.c`    | pot -> stove animation -> table -> kitchen_cabinet |
+| `action_kitchen_cabinet`               | `afood.c`    | 200+ line eat routine, food-count decrement, 10-20 bite cycles |
+| `action_feed_dog`                      | `afood.c`    | fridge -> dog bowl -> fridge (value=0 opens fridge first) |
+| `action_get_snack_from_fridge`         | `afood.c`    | trampoline into action_open_close_fridge |
+| `action_take_shower`                   | `abathrm.c`| 20-25 cycles of alternating scrub/wash |
+| `action_brush_teeth`                   | `abathrm.c`| 24-35 cycle brush with sprite-6 toothbrush |
+| `action_wash_hands`                    | `abathrm.c`| 4-127 random hand-position cycles + water SFX |
+| `action_listen_song`                   | `aleisure.c` | random `.sng` picker + song_play |
+| `action_play_piano`                    | `aleisure.c` | stop the currently-playing record |
+| `action_play_with_record`              | `aleisure.c` | PSG-amplitude-reactive vinyl browse animation |
+| `action_light_fireplace`               | `aleisure.c` | firewood run + 2500-5000 tick fire countdown |
+| `action_sit_on_couch_with_dog`         | `aleisure.c` | call dog + sit + pet + crouch off couch |
+| `action_sit_and_exercise`              | `aleisure.c` | 4-frame arms stretch cycle |
+| `action_check_front_door`              | `aleisure.c` | open door + look outside + maybe close |
+| `action_tidy_house`                    | `aleisure.c` | walk to filing cabinet, close if open |
+| `action_clean_up`                      | `aleisure.c` | sweep all 6 open doors/cabinets, close each |
+| `action_open_close_bedroom_closet`     | `aleisure.c` | 3-sprite closet + palette swap for outfit change |
+| `action_open_close_upstairs_closet`    | `aleisure.c` | study door + save-file chain (value chooses do_save) |
+| `action_write_letter`                  | `aletter.c`  | shuffled 4-section procedural letter + sign-off |
+| `letter_type_string_animated`          | `aletter.c`  | word-wrapped string typer, 40-col break |
+| `letter_type_character_animated`       | `aletter.c`  | per-char keystroke + width-bracket sprite swap |
 | `tv_turn_on`                           | `render.c`          | walk + idle-look + flag + click SFX |
 | `tv_turn_off`                          | `render.c`          | walk + idle-look + antenna redraw |
 | `screen_draw_food_cabinet`             | `render.c`          | 4-slot food-count overlay from door_states_and_flags |
@@ -112,25 +112,25 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `hide_lcp_sprites`                     | `sprites.c`         | stash + null body/head slots |
 | `show_lcp_sprites`                     | `sprites.c`         | restore stashed body/head slots |
 | `lcp_check_recovery`                   | `health.c`          | hunger+thirst=0 -> sickness recovering |
-| `lcp_idle_look_left`                   | `actions_house.c`   | 4-tick stand-and-look |
-| `lcp_idle_look_right`                  | `actions_house.c`   | 4-tick stand-and-look |
-| `action_drink_water_animation`         | `actions_bathroom.c`| glass fill animation with 3-position hand shift |
-| `action_close_toilet_door`             | `actions_doors.c`   | 2-frame close animation |
-| `action_close_closet_door`             | `actions_doors.c`   | 2-frame close animation |
-| `action_open_close_fridge`             | `actions_doors.c`   | 3-frame open, look inside, close |
-| `action_open_close_filing_cabinet`     | `actions_doors.c`   | sequential animation, closes cabinet |
-| `action_open_close_dresser`            | `actions_doors.c`   | 2-frame open/close (value chooses direction) |
-| `action_walk_to_and_turn`              | `actions_doors.c`   | filing cabinet interaction + nervous shuffle |
+| `lcp_idle_look_left`                   | `ahouse.c`   | 4-tick stand-and-look |
+| `lcp_idle_look_right`                  | `ahouse.c`   | 4-tick stand-and-look |
+| `action_drink_water_animation`         | `abathrm.c`| glass fill animation with 3-position hand shift |
+| `action_close_toilet_door`             | `adoors.c`   | 2-frame close animation |
+| `action_close_closet_door`             | `adoors.c`   | 2-frame close animation |
+| `action_open_close_fridge`             | `adoors.c`   | 3-frame open, look inside, close |
+| `action_open_close_filing_cabinet`     | `adoors.c`   | sequential animation, closes cabinet |
+| `action_open_close_dresser`            | `adoors.c`   | 2-frame open/close (value chooses direction) |
+| `action_walk_to_and_turn`              | `adoors.c`   | filing cabinet interaction + nervous shuffle |
 | `file_open`                            | `save.c`            | retrying GEMDOS Fopen with alert |
-| `file_read_compressed`                 | `letter_load.c`     | nibble token decoder (15-entry LUT + escape) |
-| `file_load_letter_template`            | `letter_load.c`     | decompress LETTER.TXT + index 360 line pointers |
-| `palette_apply_clothing_colors`        | `render_extra.c`    | pick + apply 2 palette slots via Setpalette |
-| `palette_apply_skin_colors`            | `render_extra.c`    | same shape, 8-entry skin table |
-| `lcp_update_palette_colors`            | `render_extra.c`    | palette slot 6: peach when healthy, green when sick |
-| `tv_draw_static_line`                  | `render_extra.c`    | 5-line rabbit-ear antenna |
-| `tv_draw_static_noise`                 | `render_extra.c`    | random-colour antenna per frame |
-| `screen_scroll_text_down`              | `render_extra.c`    | 13-row blitter scroll + 2-row white fill |
-| `print_char`                           | `render_extra.c`    | VDI v_gtext with mode/color save/restore |
+| `file_read_compressed`                 | `letload.c`     | nibble token decoder (15-entry LUT + escape) |
+| `file_load_letter_template`            | `letload.c`     | decompress LETTER.TXT + index 360 line pointers |
+| `palette_apply_clothing_colors`        | `renderx.c`    | pick + apply 2 palette slots via Setpalette |
+| `palette_apply_skin_colors`            | `renderx.c`    | same shape, 8-entry skin table |
+| `lcp_update_palette_colors`            | `renderx.c`    | palette slot 6: peach when healthy, green when sick |
+| `tv_draw_static_line`                  | `renderx.c`    | 5-line rabbit-ear antenna |
+| `tv_draw_static_noise`                 | `renderx.c`    | random-colour antenna per frame |
+| `screen_scroll_text_down`              | `renderx.c`    | 13-row blitter scroll + 2-row white fill |
+| `print_char`                           | `renderx.c`    | VDI v_gtext with mode/color save/restore |
 | `letter_select_typewriter_sound`       | `sound.c`           | soundeffect_select(SFX_TYPEWRITER_KEY, 4) |
 | `select_random_click_sound`            | `sound.c`           | soundeffect_select(SFX_CLICK, 2) |
 | `song_play`                            | `sound.c`           | Fsfirst+Malloc+Fread + midi_seq_init_song |
@@ -144,7 +144,7 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `object_draw`                          | `render.c`          | vdi_copy_rect from object_tab_mfdb to screen |
 | `clock_redraw_hands`                   | `render.c`          | erase old + draw new clock hand pair |
 | `fill_top_rect_with_background`        | `render.c`          | rows of white or striped fill + black separator |
-| `record_player_animate_needle`         | `render_extra.c`    | 14-step needle sweep + random VU LED toggle |
+| `record_player_animate_needle`         | `renderx.c`    | 14-step needle sweep + random VU LED toggle |
 | `soundeffect_select`                   | `sound.c`           | priority-based SFX queue insertion |
 | `soundeffects_off`                     | `sound.c`           | silence 3 PSG channels via Giaccess |
 | `play_soundeffect_tv_click/greeting/speech/head_nod` | `sound.c` | 1-line wrappers with SFX id + duration |
@@ -153,19 +153,19 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `deal_with_keycode`                    | `keyboard.c`        | Ctrl+A/B/C/D/F/M/P/R/W + printable ASCII dispatch |
 | `play_doorbell_sound`                  | `sound.c`           | 1-line wrapper: SFX_DOORBELL, duration 4 |
 | `parse_command_to_action`              | `ai.c`              | NLP parse + append to priority queue |
-| `screen_render_8hz`                    | `render_frame.c`    | 8Hz compositor: rate-gate, dog AI, sprite blit, page flip |
+| `screen_render_8hz`                    | `renderf.c`    | 8Hz compositor: rate-gate, dog AI, sprite blit, page flip |
 | `lcp_toupper`                          | `parser.c`          | ASCII single-char uppercase |
 | `command_upperstr`                     | `parser.c`          | tokenize + uppercase, returns next-word pointer |
 | `check_valid_word_input`               | `parser.c`          | dictionary walk, returns WORD_ID or WORD_NONE |
 | `check_entered_command`                | `parser.c`          | bag-of-words parser, action-table match, priority calc |
-| `action_play_computer`                 | `actions_games.c`   | sit at desk + random typing loop + rare screen clear |
-| `action_play_a_game`                   | `actions_games.c`   | 5-game menu + walk to table + dispatch to game main() |
-| `sprite_draw`                          | `sprite_render.c`   | 2-pass masked blit (NOT-AND, then XOR) |
-| `sprite_init_MFDB`                     | `sprite_render.c`   | fill MFDB descriptor for ST low-res |
-| `string_print`                         | `render_extra.c`    | multi-char print loop, 8-pixel advance |
-| `tv_show_screen_clear`                 | `tv_animate.c`      | v_bar fill + coin-flip dispatch to program |
-| `tv_show_bouncing_line`                | `tv_animate.c`      | random-colour pixel bouncer with wall reflection |
-| `tv_show_pattern_lines`                | `tv_animate.c`      | 4 pattern sets of polyline segments |
+| `action_play_computer`                 | `agames.c`   | sit at desk + random typing loop + rare screen clear |
+| `action_play_a_game`                   | `agames.c`   | 5-game menu + walk to table + dispatch to game main() |
+| `sprite_draw`                          | `sprender.c`   | 2-pass masked blit (NOT-AND, then XOR) |
+| `sprite_init_MFDB`                     | `sprender.c`   | fill MFDB descriptor for ST low-res |
+| `string_print`                         | `renderx.c`    | multi-char print loop, 8-pixel advance |
+| `tv_show_screen_clear`                 | `tvanim.c`      | v_bar fill + coin-flip dispatch to program |
+| `tv_show_bouncing_line`                | `tvanim.c`      | random-colour pixel bouncer with wall reflection |
+| `tv_show_pattern_lines`                | `tvanim.c`      | 4 pattern sets of polyline segments |
 | `screen_fill_row_striped`              | `gfx_prim.c`        | 4-word plane-01-off / plane-23-on row fill |
 | `screen_fill_row_black`                | `gfx_prim.c`        | 80-word plane-off row fill |
 | `minigame_setup_screen`                | `games.c`           | 5-tick pause + top-strip fill + freeze scroll |
@@ -194,12 +194,12 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `psg_set_mixer`                        | `psg_io.c`          | YM2149 mixer read-modify-write |
 | `soundeffect_irq_play`                 | `sfx_irq.c`         | 8Hz Dosound commit: priority gate + DMA copy + countdown |
 | `_draw_pixel`                          | `gfx_prim.c`        | degenerate 1-point VDI polyline (backbuffer + colour + pline) |
-| `vsl_color`, `vst_color`, `vsf_color`  | `vdi.c`             | 1-int colour setters (opcodes 17/22/25) |
-| `vsf_interior`, `vsf_style`, `vswr_mode` | `vdi.c`           | 1-int fill/mode setters (opcodes 23/24/32) |
-| `v_pline`                              | `vdi.c`             | N-point polyline (opcode 6) |
-| `v_gtext`                              | `vdi.c`             | ASCII text draw at (x,y) (opcode 8) |
-| `v_bar`                                | `vdi.c`             | filled bar (opcode 11 sub-op 1) |
-| `vdi_copy_rect` (`vro_cpyfm`)          | `vdi.c`             | raster blit with mode + src/dst MFDBs (opcode 109) |
+| `vsl_color`, `vst_color`, `vsf_color`  | Alcyon `vdibind.a` | 1-int colour setters (opcodes 17/22/25) |
+| `vsf_interior`, `vsf_style`, `vswr_mode` | Alcyon `vdibind.a` | 1-int fill/mode setters (opcodes 23/24/32) |
+| `v_pline`                              | Alcyon `vdibind.a` | N-point polyline (opcode 6) |
+| `v_gtext`                              | Alcyon `vdibind.a` | ASCII text draw at (x,y) (opcode 8) |
+| `v_bar`                                | Alcyon `vdibind.a` | filled bar (opcode 11 sub-op 1) |
+| `vdi_copy_rect` (`vro_cpyfm`)          | Alcyon `vdibind.a` | raster blit with mode + src/dst MFDBs (opcode 109) |
 | `load_objects`                         | `assets.c`          | read 14000-byte OBJECTS file |
 | `load_sprites`                         | `assets.c`          | read 14000-byte SPRITES file |
 | `asset_load_objects_table`             | `assets.c`          | load + parse OBJECTS into MFDB table |
@@ -212,21 +212,31 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 ## Stubbed
 
 **None.**  Every game-logic and ABI function referenced anywhere in the
-port has a real body.  `action_stubs.c` and `stubs.c` are retained as
+port has a real body.  `astubs.c` and `stubs.c` are retained as
 empty history files documenting where each function moved.
 
 ### Remaining gaps (non-stub)
 
-- **`vdi_call()` -- done.**  Ported from Alcyon gemlib's own
-  `vdi.c` (bundled with the Atari ST Developer Kit).  Three-statement
-  inline-asm shim: `move.l #_vdipb,d1 ; moveq.l #115,d0 ; trap #2`.
-  Wrapped in `#ifndef HOST`; host build still uses the no-op stub.
+- **`vdi_call()` -- done.**  Port now links against Alcyon's
+  official `vdibind.a` + `aesbind.a` + `gemlib.a` (bundled with the
+  Atari ST Developer Kit), so every VDI/AES entry point is the
+  ROM-authoritative shim: `move.l #_vdipb,d1 ; moveq.l #115,d0 ;
+  trap #2` for VDI, `#200 ; trap #2` for AES.  Host build still
+  uses the no-op stub in `osbind.h`.
 - **Data tables populated from first principles** (see `globals.c`
-  comments): `midi_scale_mask_table[16]`, `tv_pattern_0..3_x/y_coords[8]`,
+  comments): `midi_scale_mask_table[16]`,
   `clothing_color_primary/secondary[16]`, `skin_color_palette[8]`,
   `dog_dest_x/y_offset_table[9]`.  Values are plausible and shape-
   correct but not byte-authoritative -- a Ghidra data-segment dump
   would replace them.
+  (`tv_pattern_0..3_x/y_coords[8]` were also on this list until
+  2026-07-21, when Ghidra was updated to reveal the actual
+  `short pxy[4]` buffer layout of `tv_boul` / `tv_patl` -- our
+  earlier "stand-in" coords were size-correct but the port was
+  passing `count=2` to `v_pline` with only 1 of the 2 points
+  initialised, causing sporadic compositor corruption + crashes
+  during the computer-typing session.  Fixed byte-faithfully in
+  commit 12e572f.)
 - **Card-game engines beyond the skeleton `_main()` entry points.**
   `poker_main`, `poker_blackjack_main`, `poker_war_main`,
   `anagram_main`, `word_puzzle_main` all set up screen state, allocate

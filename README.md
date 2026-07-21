@@ -44,7 +44,7 @@ The reverse engineering analysis is organized into the following documents:
 |---|---|---|
 | `house.scn` | Nibble-dict compressed | House background (320×200), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
 | `title.scn` | Nibble-dict compressed | Title screen, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `body.lcp` | Fixed-frame sprites | Body sprite sheet (66 states × 16×21), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
+| `body.lcp` | Fixed-frame sprites | Body sprite sheet (98 frames × 16×21), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
 | `PE2–PE6.lcp` | Fixed-frame sprites | Character appearance variants, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
 | `objects` | Sequential bitmaps | 56 static object graphics, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
 | `sprites` | Sequential + index table | 50 overlay sprite definitions, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |

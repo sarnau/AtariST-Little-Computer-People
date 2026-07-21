@@ -7,11 +7,15 @@ with the Atari ST Developer Kit).
 
 At a glance:
 
-- ~193 functions ported across ~53 modules
+- ~200 functions ported across ~54 modules
 - 128-byte HYBER save file loads directly into `PLAYER` struct
 - 45 `do_action()` handlers implemented (no game-logic stubs remain)
 - 9 original data-file formats decode byte-exactly
-- 8 host-side tests, all passing
+- 8 host-side tests + 6 Hatari-driven regression tests, all passing
+- Sprite buffers sized to match ROM slots exactly (`body_buf`,
+  `pex_buf`, `sp_mbuf`) with `LCP_BODY_FRAME_SIZE` /
+  `LCP_BODY_SHAPE_SIZE` / `LCP_BODY_DEST_WORDS` constants for the
+  three sprite pipeline dimensions
 
 See [STATUS.md](STATUS.md) for the full per-function port ledger.
 
@@ -76,19 +80,24 @@ csrc/
 ├── assets.c            OBJECTS / SPRITES / BODY.LCP / PEx.LCP loaders
 ├── cards.c             poker card graphics loader
 ├── sprites.c           45-entry sprite table + head/body updater
-│   ├── sprite_globals.c, sprite_render.c, sprites_head.c
+│   ├── sprglobs.c, sprender.c, sprhead.c, sprload.c
 ├── movement.c, walk.c  position table + pathfinding
 ├── render.c            screen_render_8hz frame driver
-│   ├── render_extra.c, render_frame.c, gfx_prim.c
-├── vdi.c               10 VDI trap wrappers
+│   ├── renderx.c, renderf.c, gfx_prim.c, tvanim.c
+├── (VDI/AES trap wrappers now come from Alcyon gemlib)
 ├── sound.c             song_play + soundeffect_* dispatch
 │   ├── midi_seq.c      MIDI sequencer control
 │   ├── psg_io.c        YM2149 register writers
 │   ├── sfx_irq.c       8Hz Dosound tick
-│   └── psg_freq_data.c 132-entry PSG tone-period LUT
-├── cards.c, games.c    mini-game skeletons
+│   ├── psgfreq.c       132-entry PSG tone-period LUT
+│   └── tools/dk/mq_tick.s  Timer-A MFP ISR (byte-faithful asm)
+├── games.c, cards.c    mini-games (poker/blackjack/anagram/war/word-puzzle)
 ├── clock.c, calendar.c, keyboard.c, random.c,
-│   dog.c, deliveries.c, events.c, alerts.c, health.c
+│   dog.c, delivery.c, events.c, alerts.c, health.c
+├── tvanim.c            LCP's on-screen computer/TV animations
+├── init.c              cs_mvIn move-in cutscene + boot-time helpers
+│                       (also hosts TEST_ACTIONS / TEST_KEY /
+│                       TEST_STAIRS #ifdef hooks for regression tests)
 └── tests/              host-side smoke tests (see below)
 ```
 
@@ -171,13 +180,19 @@ byte-exact matches against reference dumps.
 
 ## Known gaps
 
-- `vdi_call()` — the trap #2 assembler entry point needs an Alcyon
-  `.s` stub; the host build uses a C shim in `osbind.h`.
-- A handful of data tables (`midi_scale_mask_table`, TV pattern
-  coords, `clothing_color_*`, `skin_color_palette`,
-  `dog_dest_*_offset_table`) are populated from first principles
-  with clear caveats — a Ghidra data-segment dump would replace
-  them with authoritative bytes. See `globals.c` for details.
+See [CLAUDE.md](../CLAUDE.md)'s "Known open issues" section for the
+live list.  Highlights:
+
+- `cp_main` copy protection is intentionally stubbed (the ROM
+  routine can't run under Hatari — flock + XOR-decrypt + FDC
+  signature read — documented in `csrc/stubs.c`).
+- Stair test harness now runs end-to-end but surfaces a
+  game-behavior regression: LCP descends by falling through floors
+  rather than engaging stair mode.  Manual play in the same
+  scenario worked; automated harness caught what the manual test
+  missed.
+- Music playback in the production build (no `-DSKIP_MIDI=1`) not
+  yet verified end-to-end.
 
 ## History
 
@@ -188,5 +203,20 @@ byte-exact matches against reference dumps.
 - **v4**: Music Studio 2.0 provenance for `.SNG` / `.ORG` files
   documented (byte-diff of 9/11 songs identical to the Music
   Studio distribution disk).
+- **v5**: Sprite buffer sizes matched to ROM slots exactly
+  (`body_buf[120][168]`, `pex_buf[66][168]`,
+  `sp_mbuf[14000]`); introduced `LCP_BODY_FRAME_SIZE` /
+  `LCP_BODY_SHAPE_SIZE` / `LCP_BODY_DEST_WORDS` constants
+  replacing scattered `168` / `84` literals.  4 real OOB bugs
+  fixed (`pst_arr`, `usr_buf`, `g_pcdrp`, `g_ppdrp`) via targeted
+  audit of every port array vs. its Ghidra ROM slot.
+- **v6**: `tv_boul` / `tv_patl` v_pline point-buffer size fix (was
+  reading 1 uninitialised endpoint per call, corrupting the
+  compositor over minutes and crashing the game during the
+  computer-typing session).  Long-run stability test now passes
+  for 36 000 VBLs / 10 real minutes with 0 bus errors.  Test
+  harness: TEST_STAIRS hook in `cs_mvIn`, `--auto` load address
+  fix, TOS boot-probe (`$fc0174`) filter in `run_hatari.sh` --
+  test_actions / test_keyboard / test_saveload all clean.
 
 See [STATUS.md](STATUS.md) for the current port ledger.

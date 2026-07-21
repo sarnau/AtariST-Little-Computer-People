@@ -299,8 +299,11 @@ The 66 frames cover the full set of LCP body poses: walking (left/right,
 8 frames each), standing, sitting, sleeping, eating, typing, exercising,
 carrying objects, and various interaction poses.
 
-BODY.LCP (not included in uploads) uses the same format and contains
-the base character body sprites.
+BODY.LCP uses the same format and contains the base character body
+sprites: 98 frames × 168 bytes = 16,464 bytes of image data (file
+size 16,468 bytes including the 4-byte header).  Each PE*.LCP file
+is layered on top of the corresponding BODY.LCP frames at runtime
+to produce the finished character sprite.
 
 ---
 
@@ -354,4 +357,4 @@ prevents tearing during slot updates.
 | OBJECTS | Raw sequential | 56 | Variable | No | Background objects (opaque) |
 | CARDS | Raw sequential | 53 | 16×24 | No | Playing cards |
 | PE2–PE6.LCP | Header + fixed frames | 66 each | 16×21 | No | Character body variants |
-| BODY.LCP | Header + fixed frames | 66 | 16×21 | No | Base character body |
+| BODY.LCP | Header + fixed frames | 98 | 16×21 | No | Base character body |
