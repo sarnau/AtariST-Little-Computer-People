@@ -130,28 +130,20 @@ Struct name/field syncing uses the same HTTP mechanism via
   earlier bus-error cascade.  Ghidra now shows the real short[4]
   buffer layouts; both fixed in commit 12e572f.  Long-run test now
   passes for 36000 VBLs / 10 real minutes.)*
-- **`test_stairs.sh` / `test_stairs_up.sh` harness now works;
-  underlying stair descent doesn't use stair mode.**  Two harness
-  bugs fixed 2026-07-21:
-    1. Scripts didn't pass `--auto 'C:\LCP.PRG'` to Hatari, so
-       the game never launched -- Hatari booted to GEM desktop and
-       every "0 bus errors" verdict was spurious.
-    2. `BASE` was hardcoded to `0x13bbc`; under `--auto`, TOS's
-       Pexec loads LCP.PRG's TEXT segment at `0x12596` instead
-       (verified via Hatari's `info basepage` at VBL 5000).
-  `find_syms.py` was never broken -- earlier apparent 88-byte drift
-  was cross-build comparison (offsets from a clean init.o vs runtime
-  from a TEST_STAIRS-enabled init.o).  A new `#ifdef TEST_STAIRS=1|2`
-  hook in `cs_mvIn` (init.c) directly warps + calls `lcp_wkD()`,
-  bypassing the AI action ladder.  With hook + `--auto` + correct
-  BASE, samples now capture real game state: LCP does reach the
-  bottom floor from the attic warp position, but `lcp_stR` never
-  transitions to 1 and stair-state range 9..24 is never entered --
-  meaning the port descends by falling through floors rather than
-  via a proper staircase walk.  Task #33 ("Fix player sliding
-  through floor on stairs") was verified via manual play in a
-  different scenario; the automated harness surfaces the regression
-  the manual test missed.
+- **Stairs work in gameplay; the `test_stairs` harness was a false
+  negative (removed 2026-07-21).**  The `TEST_STAIRS=1|2` hook in
+  `cs_mvIn` warped the LCP straight to a stair-entry coordinate and
+  called `lcp_wkD()`, bypassing the AI walk that normally delivers
+  the resident to the stairs in a valid state.  From that synthetic
+  warp `lcp_wkD` degenerated (samples never entered stair mode --
+  `lcp_stR` stayed 0, no 9..24 stair states), which the harness
+  misreported as "descends by falling through floors."  The
+  maintainer confirmed real play walks stairs up/down correctly, and
+  a byte-for-byte audit of `lcp_path`/`lcp_flwp` against Ghidra found
+  them faithful -- so the FAIL was the harness, not the game.  The
+  `TEST_STAIRS` hook (init.c) and both `test_stairs*.sh` scripts have
+  been deleted.  (Task #33 "Fix player sliding through floor on
+  stairs" remains correctly resolved.)
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
   documented in `source/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).

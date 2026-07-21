@@ -96,8 +96,8 @@ source/
 │   dog.c, delivery.c, events.c, alerts.c, health.c
 ├── tvanim.c            LCP's on-screen computer/TV animations
 ├── init.c              cs_mvIn move-in cutscene + boot-time helpers
-│                       (also hosts TEST_ACTIONS / TEST_KEY /
-│                       TEST_STAIRS #ifdef hooks for regression tests)
+│                       (also hosts TEST_ACTIONS / TEST_KEY #ifdef
+│                       hooks for regression tests)
 └── tests/              host-side smoke tests (see below)
 ```
 
@@ -215,8 +215,8 @@ live list.  Highlights:
   compositor over minutes and crashing the game during the
   computer-typing session).  Long-run stability test now passes
   for 36 000 VBLs / 10 real minutes with 0 bus errors.  Test
-  harness: TEST_STAIRS hook in `cs_mvIn`, `--auto` load address
-  fix, TOS boot-probe (`$fc0174`) filter in `run_hatari.sh` --
-  test_actions / test_keyboard / test_saveload all clean.
+  harness: `--auto` load address fix, TOS boot-probe (`$fc0174`)
+  filter in `run_hatari.sh` -- test_actions / test_keyboard /
+  test_saveload all clean.
 
 See [STATUS.md](STATUS.md) for the current port ledger.

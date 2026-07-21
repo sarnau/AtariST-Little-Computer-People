@@ -547,23 +547,6 @@ cs_mvIn()
                         deal_kc(TEST_KEY);
                 }
 #endif
-#ifdef TEST_STAIRS
-                /* -DTEST_STAIRS=1 descend attic->bottom, 2 ascend.
-                   chk_actT ignores externally-set g_wtx/g_wty so we
-                   call lcp_wkD directly. */
-                {
-#if TEST_STAIRS == 1
-                        lcp_x = 182; lcp_y = 72;
-                        g_wtx = 300; g_wty = 195;
-#else
-                        lcp_x = 170; lcp_y = 185;
-                        g_wtx = 300; g_wty = 45;
-#endif
-                        g_wyx = 0; g_wyy = 0;
-                        lcp_stR = NO;
-                        lcp_wkD();
-                }
-#endif
                 return;
         }
         for (;;) a_sleep(-1);
