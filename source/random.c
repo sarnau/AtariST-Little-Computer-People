@@ -1,19 +1,10 @@
-/*
- * random.c -- bounded random-number helper.
- *
- * The 68k Random() XBIOS trap (function 17) returns a 24-bit unsigned
- * value in D0.  We mask to 15 bits and take a modulo to fold it into
- * the requested inclusive range.  Modulo bias is negligible for the
- * small (< 128) ranges the game uses.
- */
+/* random.c -- bounded random-number helper. */
 
 #include "types.h"
 #include <osbind.h>             /* Alcyon: Random() macro -> trap #14 */
 #include "random.h"
 
-/* rndRng: return a uniform random integer in [low, high] inclusive.
-   addr: rndRng() */
-
+/* addr: rndRng() */
 short
 rndRng(low, high)
 short   low;

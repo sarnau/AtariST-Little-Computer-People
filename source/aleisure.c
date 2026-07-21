@@ -1,16 +1,8 @@
 /*
- * aleisure.c -- music, fireplace, couch, exercise, and the
- *                      lightweight house-upkeep handlers.
- *
- * Grouped because they all wire into the same music / dog / couch /
- * closet subsystems -- porting them one at a time forces the same
- * externs into each file.
- *
- * addr: a_lists(), a_playp(),
- *       a_plawr(), a_lighf(),
- *       a_socwd(), a_sitae(),
- *       a_chefd(), a_cleau(),
- *       a_tidyh(), a_opcbc()
+ * aleisure.c -- music, fireplace, couch, exercise, and lightweight
+ * house-upkeep handlers.
+ * addr: a_lists(), a_playp(), a_plawr(), a_lighf(), a_socwd(),
+ *       a_sitae(), a_chefd(), a_cleau(), a_tidyh(), a_opcbc()
  */
 
 #include "types.h"
@@ -39,16 +31,7 @@
 
 
 /* a_lists: pick a random .sng file and start it playing.
-   Uses lcp_food as a modulo index (yes, it's a bit hacky; the
-   1985 code reused the field).
-
-   .sng files on the LCP disk are byte-exact copies of Activision
-   Music Studio 2.0 demo songs (AISLEDAN, BALLAD, BEBOP, BOSSA,
-   CALYPSO, COUNTRY2, CANON, FIVEFOUR, MYSTERY, BOOGIE); the
-   Music Studio disk shipped with the same files, so any tune the
-   resident dances to originally came from Ed Bogas / Audio Light's
-   1986 authoring tool.  See sound.c:sgPlay for the full file
-   format details.
+   Uses lcp_food as a modulo index (1985 code reused the field).
    addr: a_lists() */
 
 void
@@ -85,10 +68,8 @@ a_lists()
         sgPlay(filename);
 }
 
-/* a_playp: shortcut used mostly to *stop* a currently-playing
-   record so the resident can start writing / typing.  Walks to the
-   dance floor, spins the midi buffer to end, frees it, clears the
-   record-playing flag.
+/* a_playp: stop a currently-playing record so the resident can start
+   writing/typing.  Walks to dance floor, drains MIDI buffer, frees it.
    addr: a_playp() */
 
 void
@@ -120,19 +101,10 @@ a_playp()
         }
 }
 
-/* a_plawr: browse the vinyl shelf and put on a random
-   .org file.  The animation is amplitude-reactive: PSG channel volumes
-   are polled via XBIOS Giaccess and if any channel got louder we
-   randomise the browsing pose.  On the host the PSG stub returns 0
-   forever so we fall through the amp check and hold the reach-right
-   pose.
-
-   .org files (FOLKSONG, MAPLE = Maple Leaf Rag, PRELUDE, REQUIEM,
-   STARSPAN = Star-Spangled Banner) are cosmetically-renamed Music
-   Studio 2.0 exports -- same file format as .sng, just organised
-   into a classical/organ category for the vinyl-shelf UI.  PRELUDE
-   and REQUIEM ship byte-identical to Music Studio's demo disk;
-   STARSPAN is a shortened arrangement.  See sound.c:sgPlay.
+/* a_plawr: browse vinyl shelf, play a random .org file.  Animation is
+   amplitude-reactive: poll PSG channel volumes via Giaccess and pick
+   a browsing pose when any channel got louder.  Host PSG stub returns
+   0 forever, so it holds the reach-right pose.
    addr: a_plawr() */
 
 void
@@ -308,8 +280,7 @@ a_lighf()
         lcp_st = STATE_REACH_FORWARD;  gameTick(1);
         lcp_st = STATE_STOKE_FIREPLACE;gameTick(1);
 
-        /* Random-direction shrug for 10 ticks so the resident looks
-           like they're feeding kindling. */
+        /* Random-direction shrug for 10 ticks (feeding kindling). */
         for (i = 0; i < 10; i = i + 1) {
                 lcp_face = rndRng(0, 1);
                 gameTick(0);
@@ -515,9 +486,8 @@ a_tidyh()
 }
 
 /* a_cleau: sweep all open doors/cabinets and close them.
-   Order matters -- upstairs first (filing cabinet, study door) so the
-   dresser/closet close animation doesn't collide with the toilet-door
-   sprite pipeline.
+   Order: upstairs first so downstairs animations don't collide with
+   the toilet-door sprite pipeline.
    addr: a_cleau() */
 
 void
@@ -543,20 +513,9 @@ a_cleau()
                         return;
                 lcp_face = FACING_RIGHT;
                 lcp_st            = STATE_STAND_FACING_SCREEN;
-                /* Ghidra decompile shows `sVar2 = 4;
-                   lcp_wait_head_reach_target(sVar2);` here, unlike
-                   every other a_cleau branch that decompiles as a
-                   plain no-arg call.  Raw disasm at 0x1e9a0:
-                     move.w g_hatas, D0
-                     add.w  #-0xc, D0
-                     jsr    lcp_hwt (0x2568a)
-                   lcp_hwt (verified via disasm) is void: it just does
-                   `while (g_hacur != g_hatas) gameTick(0);` and never
-                   reads D0.  The ADD is a dead compiler artifact --
-                   probably a leftover of a `g_hatas -= 8;` that the
-                   compiler elided when it saw g_hatas wasn't read
-                   after.  Port matches ROM behaviour with a plain
-                   call. */
+                /* Ghidra shows a stray D0 = g_hatas - 12 here (Ghidra
+                   0x1e9a0), but lcp_hwt is void and never reads D0 --
+                   dead compiler artifact.  Port uses plain no-arg call. */
                 lcp_hwt();
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
@@ -618,10 +577,9 @@ a_cleau()
 }
 
 /* a_opcbc: 3-sprite dress-change sequence.
-   Closet door swings open, then a 3-frame in-closet animation while
-   the palette gets swapped to the newly-picked clothing/skin colours,
-   then door swings back.  value=0 -> pa_cloc,
-   value=1 -> pa_skic.
+   Door swings open, 3-frame in-closet animation with palette swap
+   (clothing/skin), door swings back.
+   value=0 -> pa_cloc, value=1 -> pa_skic.
    addr: a_opcbc() */
 
 void
@@ -759,12 +717,8 @@ short   value;
                 a_clocd();
 }
 
-/* a_opcuc: walk to the study door, open it
-   if closed (3-frame sprite animation), then walk into the study.
-   Chains into lcp_std; the `value` argument selects
-   whether the entry saves (value != 0 -> do_save=YES) or just plays
-   the animation (value == 0 -> do_save=NO).  Both entries play the
-   door SFX.
+/* a_opcuc: walk to study door, 3-frame open if closed, enter study.
+   Chains into lcp_std; value != 0 -> do_save=YES.
    addr: a_opcuc() */
 
 void

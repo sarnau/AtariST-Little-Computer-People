@@ -1,19 +1,8 @@
 /*
  * sprhead.c -- LCP head-animation state machine.
- *
- * g_hacur and g_hatas are 8-bit direction
- * codes packed as follows:
- *   bits 0..2: horizontal angle 0..7 (0 = full right, 4 = full left,
- *              in facing-neutral terms; mirrored based on facing dir)
- *   bits 3..4: vertical tilt 0..3 (0 = center, 1 = up, 2 = down)
- *   bit 7 set: "no active target" sentinel (state machine idles)
- *
- * The animation picks a new random target every 2..9 game frames when
- * the current position has caught up.  g_hamod acts as both a
- * per-state bit-mask (which movements are allowed) and a partial
- * override (fixed target values).  hd_mvd[] gives
- * the signed step to take between horizontal frames.
- *
+ * g_hacur/g_hatas are 8-bit direction codes:
+ *   bits 0..2 horizontal angle 0..7, bits 3..4 vertical tilt 0..3,
+ *   bit 7 set = "no active target" (idle).
  * addr: sp_lcha()
  */
 
@@ -27,18 +16,14 @@
 #include "sprhead.h"
 
 
-/* Bit-fields inside g_hamod.  These are distinct from the
-   HEAD_ANIM_* target-state constants in enums.h that share the Ghidra
-   name -- Ghidra collapsed both meanings into one symbol on decompile,
-   but the disassembly uses them at different bit widths (mask vs value). */
+/* Bit-fields inside g_hamod.  Distinct from HEAD_ANIM_* target-state
+   constants in enums.h (Ghidra collapsed both meanings on decompile). */
 #define HEAD_MODE_H_AMPLITUDE           0x07
 #define HEAD_MODE_H_RANGE               0x08
 #define HEAD_MODE_V_RANGE               0x60
 #define HEAD_MODE_V_OVERRIDE            0x80
 
-/* sp_lcha: pick or advance a head direction target.
-   addr: sp_lcha() */
-
+/* addr: sp_lcha() */
 void
 sp_lcha()
 {

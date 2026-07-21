@@ -1,11 +1,7 @@
 /*
  * sim.c -- game-clock and needs simulation (gameSim1).
- *
- * Called every 8 animation frames (~1 game-second).  Advances thirst,
- * hunger, sickness, bathroom, mood, and the wall clock; triggers a
- * random daytime phone call.  All logic is verified against the Ghidra
- * decompile of gameSim1 at addr 0x??? in LCP.PRG (see
- * plate comment for exhaustive per-field notes).
+ * Called every 8 animation frames (~1 game-second).
+ * addr: gameSim1()
  */
 
 #include "types.h"
@@ -18,22 +14,6 @@
 #include "random.h"
 #include "renderx.h"
 #include "sim.h"
-/* gameSim1: called every 8 animation frames (~1 game-second).
-   Updates all time-dependent PLAYER state:
-     Thirst: thirst_timer-- each minute. At 0 -> thirst_level++ (max 3, then sickness)
-     Hunger: hunger_timer-- each minute. At 0 -> hunger_level++ (max 3, then sickness)
-     Sickness: sickness_countdown-- each minute. At 0 -> level changes by
-               sickness_direction. Level 0 = recovered (restores palette).
-               Level >1 = forces happiness=2.
-               Recovery rate: 5 min/step. Worsening rate: 60 min/step.
-     Bathroom: bathroom_timer-- each minute. At 0 -> bathroom_need=1, timer=9999.
-     Phone: 2% chance per second of random phone call, 8AM-10PM only.
-     Happiness: hourly cycle. happiness_duration_active-- each hour. At 0 ->
-                happiness shifts by happiness_direction. Reverses at bounds
-                (0 or 2). Overridden by sickness.
-     Clock: seconds->minutes->hours->days->months->years with proper calendar.
-
-   addr: gameSim1() */
 
 void
 gameSim1()
@@ -112,11 +92,9 @@ gameSim1()
 
         t_min = 0;
 
-        /* Happiness mood cycle -- suppressed while sick unless already sad.
-           The three-entry lookup table happiness_initial_countdown /
-           happiness_duration_happy / happiness_duration_content lives at
-           struct offsets 0x2A..0x2F; original code indexed via
-           (&lcp.happiness_initial_countdown)[happiness]. */
+        /* Happiness mood cycle -- suppressed while sick unless sad.
+           Original indexes via (&lcp.happiness_initial_countdown)[happiness]
+           into the three struct fields at offsets 0x2A..0x2F. */
         if ((lcp.sickness_level == SICKNESS_HEALTHY ||
              lcp.happiness != MOOD_SAD)) {
                 lcp.happiness_duration_active =

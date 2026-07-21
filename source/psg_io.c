@@ -1,14 +1,6 @@
 /*
  * psg_io.c -- ST hardware register writes (MIDI ACIA + YM2149 PSG).
- *
- * All four functions are direct memory-mapped register writes with no
- * game logic.  On the ST target they touch the real 68901 MFP-adjacent
- * ACIA and the YM2149 chip; on the host they hit scratch bytes defined
- * below so the compilable-on-host promise holds without any observable
- * audio effect.
- *
- * addr: mowrit(), psg_cpE(),
- *       psg_wr(), psg_mix()
+ * addr: mowrit(), psg_cpE(), psg_wr(), psg_mix()
  */
 
 #include "types.h"
@@ -26,18 +18,9 @@ volatile unsigned char  g_hgis   = 0;
 volatile unsigned char  g_hgiw    = 0;
 #endif
 
-/* mowrit: poll the ACIA status register for
-   TDRE (Transmit Data Register Empty, bit 1), then write one byte
-   to the data register.  Used by the "direct write" path of
-   mq_dise when the sequencer is in speed-critical
-   mode (bypassing the XBIOS Midiws trap).
-
-   On the host the TDRE bit is preseeded to 1 (see g_hmc
-   above) so the poll returns immediately -- otherwise host builds
-   would spin forever.
-
+/* Poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE is
+   preseeded to 1 so the poll returns immediately.
    addr: mowrit() */
-
 void
 mowrit(byte)
 char    byte;
@@ -50,15 +33,8 @@ char    byte;
         midi = byte;
 }
 
-/* psg_cpE: 8-byte memcpy from an ADSR parameter block
-   in the .SNG file to a PSG_ENVELOPE struct.  The 1985 code implements
-   this inline rather than calling libc memcpy(3), which makes sense
-   given Alcyon's minimal runtime -- the 8-byte block is small enough
-   that the unrolled loop is comparable in size to a memcpy call.
-   Preserved verbatim.
-
+/* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
    addr: psg_cpE() */
-
 void
 psg_cpE(src, dest, count)
 unsigned char * src;
@@ -73,18 +49,9 @@ short           count;
         }
 }
 
-/* psg_wr: write to a YM2149 register.
-
-   ST quirk: the 1985 source has the argument order swapped relative
-   to typical documentation -- `reg` is the register number, `val` is
-   the data.  But the writes below store `val` into giselect and `reg`
-   into giwrite.  Preserved verbatim; on the real ST the YM2149 latches
-   the value written to giselect and then reads it back through giwrite
-   in a two-stage sequence, so the apparent swap is actually correct
-   for the hardware.
-
+/* ST quirk: the 1985 source stores `val` into giselect and `reg` into
+   giwrite (YM2149 two-stage latch).  Preserved verbatim.
    addr: psg_wr() */
-
 void
 psg_wr(reg, val)
 char    reg;
@@ -94,20 +61,8 @@ char    val;
         giwrite  = (unsigned char) reg;
 }
 
-/* psg_mix: read-modify-write on YM2149 mixer register 7.
-   Selects register 7 by writing to giselect, reads the current value
-   back through giselect (the register acts as both write-address and
-   read-data), then applies (or_mask | (and_mask & current)) and
-   writes the result via giwrite.
-
-   Note the double read of giselect in the 1985 code (`giselect = 7;
-   bVar1 = giselect;`) -- the first write latches the register
-   selection, the second read pulls the current register value.  On the
-   host this collapses to a scratch-byte read that returns whatever was
-   written last, matching the ST behaviour.
-
+/* Read-modify-write on YM2149 mixer register 7.
    addr: psg_mix() */
-
 void
 psg_mix(or_mask, and_mask)
 char    or_mask;

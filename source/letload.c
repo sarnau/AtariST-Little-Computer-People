@@ -22,10 +22,8 @@
 #include "save.h"
 
 
-/* fr_reac: decode a token-compressed file into out_buf.
-   outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
+/* outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
    addr: fr_reac() */
-
 void
 fr_reac(filename, out_buf, outsize)
 char *          filename;
@@ -97,17 +95,7 @@ short           outsize;
         Mfree(fbuffer_orig);
 }
 
-/* fl_ltpl: decompress LETTER.TXT into
-   g_lttx and populate the 360-entry g_ltlp[]
-   line-start table.  Called by a_writl after the buffer
-   is allocated.
-
-   Line terminator: any control byte (< ' ', which is 0x20).  There may
-   be multiple consecutive terminators (typical is CR+LF); we skip past
-   the whole run before recording the next line's start.
-
-   addr: fl_ltpl() */
-
+/* addr: fl_ltpl() */
 void
 fl_ltpl()
 {

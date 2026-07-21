@@ -1,17 +1,6 @@
 /*
- * vocab.c -- NLP parser data tables.
- *
- * Vocabulary (160 words), position/bit maps, and 33 action-matching
- * rules for the chk_encm dispatcher.  Ported from the
- * reference implementation in lcp/LCP.py, which was itself derived
- * from a Ghidra data-segment dump of LCP.PRG.
- *
- * With these populated, sentences like "please play a game" now
- * resolve to concrete ACTION_IDs instead of falling through to
- * ACTION_NONE.
- *
- * addr: vwd_tab[], ew2pos[],
- *       g_ew2b[], g_ew2a[]
+ * vocab.c -- NLP parser data tables (Ghidra data-segment dump).
+ * addr: vwd_tab[], ew2pos[], g_ew2b[], g_ew2a[]
  */
 
 #include "types.h"
@@ -84,10 +73,8 @@ short ew2pos[160] = {
 
 };
 
-/* g_ew2b (Ghidra enteredword_to_bit @ 0x2bad2): 160-byte table indexed
-   by WORD_ID.  Previous port had this shifted by 2 (missing the
-   {255, 0} sentinel head), so every parser lookup returned the bit for
-   the WRONG word ID.  Dumped verbatim from Ghidra data segment. */
+/* g_ew2b (Ghidra enteredword_to_bit @ 0x2bad2): 160-byte WORD_ID -> bit.
+   Head sentinel is {255, 0}. */
 short g_ew2b[160] = {
     255,  0,  3,  0,  1,  2,  2,  4,  4,  5,
       5,  5,  5,  5,  6,  6,  6,  6,  6,  6,
@@ -108,11 +95,8 @@ short g_ew2b[160] = {
 };
 
 
-/* Alcyon C 4.14 rejects nested struct-with-array initializers.
-   Kept as zero-initialised BSS for the Alcyon target; the parser
-   will match no actions until this is populated at runtime.
-   Host build still uses the real table in the pre-Alcyon
-   history (see git). */
+/* Alcyon C 4.14 rejects nested struct-with-array initializers -- BSS
+   for the Alcyon target; parser matches no actions until runtime init. */
 #ifdef __ALCYON__
 WORD_TO_ACTION g_ew2a[34];
 #else

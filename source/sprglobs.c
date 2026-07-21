@@ -1,11 +1,4 @@
-/*
- * sprglobs.c -- storage for sprite pipeline, LCP animation, and
- *                     dog state.
- *
- * Kept separate from globals.c because the sprite arrays are large and
- * the two units evolve at different cadences.  All variables here are
- * declared extern in globals.h.
- */
+/* sprglobs.c -- storage for sprite pipeline, LCP animation, dog state. */
 
 #include "types.h"
 #include "structs.h"
@@ -154,8 +147,6 @@ short   cy_frT[25]      = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
-/* (Removed dead head_sprite_frame_table[66] -- it was a mis-transcribed
-   duplicate of hd_xoff and not referenced anywhere.) */
 /* body_yof (Ghidra 0x29F8C, 109 shorts):
    Y anchor offset per lcp_st.  Verified against Ghidra dump. */
 short   body_yof[109] = {

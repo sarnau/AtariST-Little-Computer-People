@@ -1,14 +1,6 @@
 /*
  * movement.c -- coordinate mapping and floor lookup.
- *
- * hs_posXY() converts a HOUSE_POS index (0..47) into screen
- * coordinates via g_rpxs[] and per-floor baselines.
- * getFlrY() is its inverse for pathfinding decisions.
- * cWkday() lives here because it's a pure calendar helper the
- * scheduling code consults.
- *
- * addr: hs_posXY(), getFlrY(),
- *       cWkday()
+ * addr: hs_posXY(), getFlrY(), cWkday()
  */
 
 #include "types.h"
@@ -16,19 +8,9 @@
 #include "globals.h"
 #include "movement.h"
 #include "tables.h"
-/* Per-position X and height tables, indexed by HOUSE_POS (0..47).  Data
-   lives in a separate translation unit (tables.c) so the same table can
-   be shared between movement.c and the sprite/render code. */
-
 #include "enums.h"
 
-/* hs_posXY: read out the screen X/Y for a room-position
-   index.  X = table[index] << 1 (the source table stores half-pixels).
-   Y = per-floor baseline minus height[index+1].  Out-of-range indices
-   fall back to POS_BTM_SCREEN_EDGE.
-
-   addr: hs_posXY() */
-
+/* addr: hs_posXY() */
 void
 hs_posXY(index, g_txx, g_txy)
 short   index;
@@ -52,9 +34,7 @@ short   *g_txy;
         *g_txy = floor_y_pos - g_rphs[index + 1];
 }
 
-/* getFlrY: inverse mapping, screen Y -> floor 1..3.
-   addr: getFlrY() */
-
+/* addr: getFlrY() */
 short
 getFlrY(y)
 short   y;
@@ -66,15 +46,10 @@ short   y;
         return 1;
 }
 
-/* cWkday: compute the current day of week (0=Sunday..6=Saturday)
-   from dt_year/month/day.  Uses a direct day-count accumulator (Zeller
-   equivalents were considered overkill for a 1985-scale calendar).
-   The original references `daysInMo(dt_mon, dt_year)` inside
-   the month loop instead of `daysInMo(i, dt_year)` -- preserved
-   for behavioural fidelity though it's clearly a bug in the 1985 source.
-
+/* The original references `daysInMo(dt_mon, dt_year)` inside the month
+   loop instead of `daysInMo(i, dt_year)` -- preserved for fidelity
+   though it's clearly a bug in the 1985 source.
    addr: cWkday() */
-
 short
 cWkday()
 {

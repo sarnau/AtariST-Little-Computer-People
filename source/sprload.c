@@ -1,17 +1,7 @@
 /*
  * sprload.c -- sprite pointer registration pass for the dog pipeline.
- *
- * Ghidra's main() walks the SPRITES file twice: first via
- * asset_load_sprites_table (al_lost -> per-record MFDBs in g_setmt)
- * and again via a second loop that calls spritedata_create_with_mask
- * indexed by sprite_file_index_table[i] so the resulting pointers land
- * at the correct g_sedim[sprite_id] slot.  This file
- * hosts that second pass (sp_reglp) plus the mask buffer it writes to.
- *
  * addr: spritedata_create_with_mask() @ Ghidra 0x15BDC,
- *       spritedata_generate_mask_from_color() @ Ghidra (inlined near
- *       0x15BDC), plus the driver loop from main() at
- *       0x1579c..0x15828.
+ *       sp_reglp driver loop from main() at 0x1579c..0x15828.
  */
 
 #include "types.h"
@@ -86,10 +76,7 @@ short                   width;
                  (unsigned short) height);
 }
 
-/* sp_reglp: second-pass registration loop over spr_file.
-   Mirrors Ghidra main() at 0x1579c..0x15828 exactly.  Called once
-   from main() right after al_lost. */
-
+/* Ghidra main() at 0x1579c..0x15828. */
 void
 sp_reglp()
 {

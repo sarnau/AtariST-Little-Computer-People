@@ -1,22 +1,6 @@
 /*
  * save.c -- HYBER save file I/O and the study-door save flow.
- *
- * The Atari ST version persists 128 bytes of PLAYER state to a
- * single file named "hyber" in the current directory.  Load happens
- * once at startup; save happens whenever the resident walks into the
- * study, closes the door, and does the "packing" animation.
- *
- *   crFile()          -- ensures the target exists via GEMDOS Fcreate
- *   fr_read()            -- retrying GEMDOS Fread with error alert
- *   lcp_save()             -- writes N bytes to a named file (128 in practice)
- *   lc_load()             -- reads 128 bytes and unpacks
- *                            door_states_and_flags into per-door globals
- *   lcp_std() -- packs runtime state back into the PLAYER
- *                            struct, calls lcp_save, and runs the study
- *                            enter/exit animation.
- *
- * addr: crFile(), fr_read(), lcp_save(), lc_load(),
- *       lcp_std()
+ * addr: crFile(), fr_read(), lcp_save(), lc_load(), lcp_std()
  */
 
 #include "types.h"
@@ -37,13 +21,9 @@
 #include "tick.h"
 #include "walk.h"
 
-/* Externals resolved elsewhere. */
-
-/* fOpen: retrying GEMDOS Fopen.  rwmode: 0=read, 1=write, 2=both.
-   Same retry-then-alert pattern as fr_read/lcp_save -- three tries
-   with a 1-second sleep, then loop with a Retry alert.
+/* rwmode: 0=read, 1=write, 2=both.  Three tries with a 1s sleep, then
+   Retry alert loop.
    addr: fOpen() */
-
 short
 fOpen(filename, rwmode)
 char *  filename;
@@ -66,13 +46,7 @@ short   rwmode;
         }
 }
 
-/* crFile: idempotent GEMDOS Fcreate.  Uses access() to see if the
-   file already exists; if not, keep retrying Fcreate until it succeeds.
-   The original quietly Fcloses the temporary handle it opened -- we
-   preserve that so the file is closed even in the success path.
-
-   addr: crFile() */
-
+/* addr: crFile() */
 void
 crFile(filename)
 char *  filename;
@@ -93,11 +67,7 @@ char *  filename;
         Fclose(iVar1);
 }
 
-/* fr_read: GEMDOS Fread with retry-then-alert error handling.  After
-   three failed attempts, throws a Retry alert and loops.
-
-   addr: fr_read() */
-
+/* addr: fr_read() */
 void
 fr_read(fhnd, count, buffer)
 short   fhnd;
@@ -109,13 +79,9 @@ void *  buffer;
 
         retry = 0;
         for (;;) {
-                /* GEMDOS Fread expects: func(word), handle(word),
-                   count(long), buffer(long).  Pass fhnd as its
-                   NATURAL SHORT type -- the `(long)` cast that used
-                   to be here pushed 4 bytes where TOS wanted 2, so
-                   the trap read handle = 0 (the high word of the long)
-                   and every file was silently being read from stdin
-                   with a bogus (huge) count. */
+                /* Fread expects handle as word; a (long) cast here pushes
+                   4 bytes where TOS wants 2 and silently reads from
+                   handle 0.  Keep fhnd as short. */
                 err = Fread(fhnd, count, buffer);
                 if (err >= 0)
                         return;
@@ -128,17 +94,8 @@ void *  buffer;
         }
 }
 
-/* fLoad: open + read header + read payload + close.  The 1985
-   .lcp/.pex files carry a 4-byte header of two shorts -- the first
-   short is discarded (temp), the second is the payload byte count.
-   Ghidra:
-       fhnd = fOpen(filename, 0);
-       file_read(fhnd, 2, &temp);
-       file_read(fhnd, 2, &size);
-       file_read(fhnd, size, buffer);
-       Fclose(fhnd);
+/* 4-byte header: discarded temp short, then payload size short.
    addr: fLoad() */
-
 void
 fLoad(filename, buffer)
 char *  filename;
@@ -155,13 +112,7 @@ void *  buffer;
         Fclose(fhnd);
 }
 
-/* lcp_save: create + open + write + close a file, retrying on every
-   failure via er_write() (which pops a Retry alert).
-   Original signature took (filename, size, addr) with size as short --
-   preserved verbatim.
-
-   addr: lcp_save() */
-
+/* addr: lcp_save() */
 void
 lcp_save(filename, size, addr)
 char *  filename;
@@ -190,13 +141,7 @@ void *  addr;
         Fclose(filehandle);
 }
 
-/* lc_load: read 128 bytes from "hyber" into the PLAYER struct, unpack
-   the door bitfield into per-door runtime globals, and repaint the
-   palette (which may depend on lcp.sickness_level).  Returns 1 on
-   success, 0 if no save file.
-
-   addr: lc_load() */
-
+/* addr: lc_load() */
 short
 lc_load()
 {
@@ -226,20 +171,10 @@ lc_load()
         return 1;
 }
 
-/* lcp_std: three-phase animation:
-     1. Study door closes behind the resident (SPRITE_DOOR_STUDY_1).
-     2. Optionally write PLAYER -> HYBER (do_save flag).
-     3. Study door swings back open (SPRITE_DOOR_STUDY_AJAR ->
-        SPRITE_DOOR_STUDY_WIDE_OPEN), resident walks back to the door,
-        then the door closes.
-
-   The bit-field for door_states_and_flags is repacked from the eight
-   per-door runtime globals; the food-count nibble (bits 9..11) is
-   preserved via the FE00 mask so the delivery event handler's 3-bit
-   counter survives the save.
-
+/* Study-door save flow: close door, optionally write HYBER, reopen,
+   walk resident back to door, close.  Food-count nibble (bits 9..11)
+   is preserved via the FE00 mask so the 3-bit delivery counter survives.
    addr: lcp_std() */
-
 void
 lcp_std(do_save, p_dosnd)
 BOOL16  do_save;

@@ -1,21 +1,7 @@
 /*
  * tvanim.c -- TV screen contents (bouncing line, pattern lines).
- *
- * When a_playc triggers the rare "clear the screen and
- * pretend to be watching TV" gesture, tv_scrc blanks the
- * 15x7-pixel TV rectangle at (293, 99)..(308, 106) with a filled
- * black bar, then picks (via 1 bit of XBIOS Random) between two
- * "programs":
- *
- *   tv_boul -- 64..319 tick loop, single-pixel line
- *     bouncing around inside the rectangle with a random colour each
- *     step.  Wall-collision reverses dx/dy.
- *   tv_patl -- 4 sets of 8 pre-computed lines from
- *     tv_pattern_0/1/2/3_x/y_coords[], each drawn in a specific
- *     colour from g_tpcoi[].
- *
- * addr: tv_scrc(), tv_boul(),
- *       tv_patl()
+ * TV rect: (293,99)..(308,106).
+ * addr: tv_scrc(), tv_boul(), tv_patl()
  */
 
 #include "types.h"
@@ -29,12 +15,7 @@
 #include "tick.h"
 #include "tvanim.h"
 
-/* tv_scrc: blank the TV area with a filled rectangle,
-   then dispatch to one of the two programs via a coin flip on
-   XBIOS Random.
-   addr: tv_scrc() */
-
-
+/* addr: tv_scrc() */
 void
 tv_scrc()
 {
@@ -56,12 +37,7 @@ tv_scrc()
                 tv_patl();
 }
 
-/* tv_boul: `(rnd & 0xff) | 0x40` iterations (64..319) of
-   one-pixel step + reverse-on-wall, each step drawn in a random colour
-   from `(rnd & 0xf) | 1` (never picks 0=black so the pixels are always
-   visible).
-   addr: tv_boul() */
-
+/* addr: tv_boul() */
 void
 tv_boul()
 {
@@ -105,12 +81,7 @@ tv_boul()
         }
 }
 
-/* tv_patl: 4 canned pattern sets, each drawing 1..8 line
-   segments (count determined by `Random() & 7`) in a per-pattern
-   colour.  Coordinate tables live in globals.c; the values are
-   plausible stand-ins pending a Ghidra data-segment dump.
-   addr: tv_patl() */
-
+/* addr: tv_patl() */
 void
 tv_patl()
 {

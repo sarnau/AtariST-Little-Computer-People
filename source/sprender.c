@@ -1,23 +1,5 @@
 /*
- * sprender.c -- masked-blit sprite renderer.
- *
- * sp_draw is called from sc_ren8 for each of the 8 hardware
- * sprite slots.  It uses the standard Atari ST two-pass masked blit:
- *
- *   Pass 1  vro_cpyfm(NOTS_AND_D, mask, screen)
- *     Punches a transparent hole in the background where the sprite
- *     will go.  The mask has 1-bits where the sprite is opaque, so
- *     inverting it and AND'ing clears the destination pixels only
- *     under the opaque part of the sprite.
- *
- *   Pass 2  vro_cpyfm(S_XOR_D, image, screen)
- *     XOR the sprite image onto the cleared area.  Since we just wrote
- *     zeros there, XOR effectively becomes a copy.
- *
- * sp_iniM is a tiny helper that fills in the sprite's MFDB
- * descriptor from raw address + width/height so the VDI wrappers
- * can consume it.
- *
+ * sprender.c -- masked-blit sprite renderer (two-pass NOTS_AND_D + S_XOR_D).
  * addr: sp_draw(), sp_iniM()
  */
 
@@ -30,12 +12,8 @@
 #include "sprender.h"
 #include "sprglobs.h"
 
-/* sp_iniM: populate an MFDB with the ST low-res format
-   defaults (device-specific, 4 bitplanes).  The first parameter is
-   ignored -- the 1985 code had it as `nplanes` but hardcoded to 4
-   inside; preserved for signature fidelity.
+/* First parameter is unused (was `nplanes`, hardcoded to 4).
    addr: sp_iniM() */
-
 void
 sp_iniM(unused, mfdb, addr, width, height)
 long    unused;
@@ -53,9 +31,7 @@ short   height;
         mfdb->fd_nplanes = 4;
 }
 
-/* sp_draw: composite a single sprite slot onto g_srmfd.
-   addr: sp_draw() */
-
+/* addr: sp_draw() */
 void
 sp_draw(index)
 short   index;

@@ -31,15 +31,10 @@
 #include "sprites.h"
 #include "tables.h"
 #include "tick.h"
-/* Forward-decls -- Alcyon skips these silently; modern clang under
-   -Werror -std=c89 does not. */
 
-/* sp_updb: select the body pose for the current lcp_st and
-   drop it into slot 3.  When carrying an object during a walking state
-   (< 25), uses the alternate arms-up frames from cy_frT.
-   Positioning: X = lcp_x - 4 (right) or lcp_x - 14 (left);
-   Y = lcp_y + body_y_offset[state] - 21.
-
+/* sp_updb: select body pose for lcp_st -> slot 3.  When carrying an
+   object during walk states (< 25), uses arms-up frames from cy_frT.
+   X = lcp_x - 4 (right) or lcp_x - 14 (left); Y = lcp_y + body_yof[st] - 21.
    addr: sp_updb() */
 
 void
@@ -47,7 +42,6 @@ sp_updb()
 {
         short   frame;
 
-        /* Wait out any double-buffer race on slot 3. */
         while (g_sepef[HW_SLOT_LCP_BODY] == YES)
                 ;
 
@@ -55,12 +49,7 @@ sp_updb()
         if (g_lcyof != NO && lcp_st < STATE_BEND_AND_REACH)
                 frame = cy_frT[lcp_st];
 
-        /* Ghidra `body_ptr + frame` / `body_shp + frame`
-           is shorthand for `+ frame * stride`: 168 bytes per body
-           frame in body.lcp (SOURCE), 84 bytes per frame in
-           body_shp (DEST).  The decompile collapses the
-           multiplication into type-based scaling; the disassembly
-           at Ghidra 0x2669a (`muls.w #0x54, D0`) confirms *84. */
+        /* Ghidra 0x2669a `muls.w #0x54, D0`: stride is 168 src, 84 dest. */
         sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
                 (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
                 (short *) g_lsimg,
@@ -87,11 +76,8 @@ sp_updb()
         g_sepef[HW_SLOT_LCP_BODY] = YES;
 }
 
-/* sp_ssco: activate a sprite as a carried
-   object in the behind-LCP layer.  Called from action code when the
-   resident picks something up.  The per-frame X/Y update happens in
-   update_carried_object_sprite() below.
-
+/* sp_ssco: activate sprite as carried object in behind-LCP layer.
+   Per-frame X/Y update happens in update_carried_object_sprite().
    addr: sp_ssco() */
 
 void
@@ -111,11 +97,9 @@ short   g_seix;
         g_lcieo       = g_seix;
 }
 
-/* sp_sprs: the "generic" sprite activator used by save.c and
-   the pet/petting animations.  Recomputes the 8-slot layout then copies
-   the definition's image / mask / dimensions into the active-slot
-   arrays.  Bypasses the pending double-buffer.
-
+/* sp_sprs: generic sprite activator (save.c, pet animations).
+   Recomputes 8-slot layout, copies definition into active slot.
+   Bypasses the pending double-buffer.
    addr: sp_sprs() */
 
 void
@@ -132,8 +116,7 @@ short   g_seix;
         g_seacw[slot]  = g_sedew[g_seix];
 }
 
-/* lcp_hwt: spin ticking the animation loop until the
-   head's current direction matches its target.
+/* lcp_hwt: tick until g_hacur == g_hatas.
    addr: lcp_hwt() */
 
 void
@@ -143,10 +126,7 @@ lcp_hwt()
                 gameTick(0);
 }
 
-/* hideLcp: stash slot 3 (body) and slot 4 (head) active image
-   pointers, nil them out, and raise the hidden flag so the sprite
-   update pipeline knows to keep them cleared.  Used during the closet /
-   toilet / front-door "resident enters an enclosed sprite" sequences.
+/* hideLcp: stash body/head image pointers, NULL them, raise g_lssh.
    addr: hideLcp() */
 
 void
@@ -170,8 +150,7 @@ showLcp()
         g_lssh     = NO;
 }
 
-/* sp_ss02: as above, but places the
-   carried sprite in the in-front-of-LCP layer.
+/* sp_ss02: same as sp_ssco but in the in-front-of-LCP layer.
    addr: sp_ss02() */
 
 void
@@ -191,17 +170,10 @@ short   g_seix;
         g_lcieo       = g_seix;
 }
 
-/* ---- Sprite compositing pipeline -------------------------------------- */
-
-/* sp_lcpf: expand a 2-word (32-pixel)-wide LCP source frame into
-   a 4-word (64-pixel)-wide destination row, with optional horizontal
-   mirror.  flipV selects whether the sprite content sits in the
-   left half of the destination row (padding on the right) or the right
-   half (padding on the left), so a right-facing frame's 32 pixels land
-   at the same screen X as a left-facing one after body_sprite_frame_
-   table selection.  Called from sp_updb and
-   sp_lchu.
-
+/* sp_lcpf: expand 2-word (32-px) LCP source frame into 4-word (64-px)
+   dest row, with optional horizontal mirror.  flipV picks left- vs
+   right-half so mirrored frames land at the same screen X.
+   Called from sp_updb and sp_lchu.
    addr: sp_lcpf() */
 
 void
@@ -294,9 +266,7 @@ short   flipV;
         }
 }
 
-/* sp_flih: mirror a general sprite in place.  Unlike
-   sp_lcpf this preserves the source width (no row expansion);
-   the caller supplies pre-sized destination buffers.
+/* sp_flih: mirror sprite in place, preserving width (no expansion).
    addr: sp_flih() */
 
 void
@@ -328,14 +298,10 @@ short                   wdWidth;
         }
 }
 
-/* sp_upds: allocate the 60 logical sprites onto 8 hardware
-   slots by layer.  Slot 3 is body, slot 4 is head (both reserved).
-   Layer -1 (SPRITE_BEHIND_LCP) uses slots 1..2, layer +1 (SPRITE_IN_FRONT)
-   uses slots 5..6, layer 0 (SPRITE_HIDDEN) maps to slot 9 (off-screen).
-   Slot 0 and 7 are reserved for the dog.  When two logical sprites
-   compete for the same slot, the older one is bumped to the alternate
-   slot and its render state (image, mask, pending X/Y) is copied along.
-
+/* sp_upds: allocate 60 logical sprites onto 8 hardware slots by layer.
+   Slots: 3=body, 4=head (reserved), 0/7=dog, 1..2=behind, 5..6=front,
+   9=off-screen (hidden).  On collision, older sprite bumps to overflow
+   slot with its render state copied.
    addr: sp_upds() */
 
 void
@@ -449,16 +415,9 @@ sp_upds()
         }
 }
 
-/* ---- LCP head sprite (slot 4) ----------------------------------------- */
-
-/* sp_lchu: pick the current head frame from PEx.LCP based
-   on happiness + g_hsfra, expand into the double-buffer via
-   sp_lcpf, and drop it into slot 4.  Positioning tracks the body:
-     X = lcp_x + head_x_offset[state] + (-4 or -14)
-     Y = lcp_y + body_y_offset[state] - head_height[state] - 21
-   Special case: while carrying an object on stairs (states 13..16), the
-   head is lowered 1 px to sync with the carry animation bob.
-
+/* sp_lchu: pick head frame from PEx.LCP by happiness + g_hsfra,
+   expand via sp_lcpf into slot 4.  Tracks body position; head lowers
+   1 px while carrying on stair states 13..16.
    addr: sp_lchu() */
 
 void
@@ -472,8 +431,7 @@ sp_lchu()
         headIndex = mood_hfo[lcp.happiness] +
                     (g_hsfra & 0x7f);
 
-        /* Same stride-scaling shape as sp_updb -- 168 bytes per head
-           frame in PEx.LCP, 84 bytes per frame in hd_shp. */
+        /* Same 168-src/84-dest stride as sp_updb. */
         sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * (long) LCP_BODY_FRAME_SIZE),
                 (short *) ((char *) hd_shp + (long) headIndex * (long) LCP_BODY_SHAPE_SIZE),
                 g_hsbuf, g_hsmas,
@@ -504,18 +462,11 @@ sp_lchu()
         g_sepef[HW_SLOT_LCP_HEAD] = YES;
 }
 
-/* sp_imfs (Ghidra): populate the 8 per-slot MFDB pairs
-   (image + mask) from the active sprite tables, wire the compositing
-   MFDB (screen_mfdb == g_srmfd) at scrbufA + 0xCD, and call
-   sp_drin.  Also zeroes last_hz so the very first sc_ren8
-   frame-rate gate sees a 0->N delta and proceeds.
-
-   Note on the offset 0xCD: same shape as stpScrB's 0x12F,
-   just a different header size, and NOT rounded up here (unlike
-   stpScrB's align-up-to-512).  The 1985 code left this
-   compositing target unaligned; VDI raster ops don't require it and
-   the shifter is pointed elsewhere via the page-flip in sc_ren8.
-
+/* sp_imfs: populate 8 per-slot MFDB pairs, wire compositor MFDB
+   (g_srmfd) at scrbufA-aligned, call sp_drin.  Zeroes last_hz so
+   the first sc_ren8 frame-gate sees 0->N delta and proceeds.
+   Note: 1985 code left this compositing target unaligned; VDI doesn't
+   require alignment and the shifter is pointed elsewhere via sc_ren8.
    addr: sp_imfs() */
 
 
@@ -534,23 +485,14 @@ sp_imfs()
                                  g_seacw[i], g_seach[i]);
         }
         {
-                /* Compositor screen = scrbufA rounded UP to next 512.
-
-                   PORT DIVERGENCE FROM GHIDRA.  Raw disasm at 0x25110
-                   is `move.l #0x2ca66, -(SP); andi.l #-0x200, (SP)` --
-                   an align-DOWN of the compile-time constant
-                   `SCREEN_BUFFER_A + 0xCD`.  That works in the 1985
-                   binary only because SCREEN_BUFFER_A landed at
-                   0x2c999 (low 9 bits = 0x199), which happens to make
-                   (SCREEN_BUFFER_A + 0xCD) & ~0x1FF round UP to
-                   0x2ca00 (still inside the buffer).  Our linker
-                   places scrbufA elsewhere; a literal
-                   `((long)scrbufA + 0xCD) & ~0x1FF` can round DOWN
-                   to an address BEFORE scrbufA.  So we use the
-                   safer align-UP pattern from stpScrB
-                   (0x165ae/0x165b4).  Result: same shape (a 512-
-                   aligned screen inside scrbufA), non-literal instr
-                   sequence. */
+                /* PORT DIVERGENCE FROM GHIDRA (align-UP vs align-DOWN).
+                   Ghidra 0x25110 does align-DOWN of the compile-time
+                   constant scrbufA+0xCD; this only worked because 1985
+                   scrbufA landed at 0x2c999 so the result rounded UP to
+                   0x2ca00 anyway.  Our linker places scrbufA elsewhere;
+                   literal align-DOWN can produce an address BEFORE
+                   scrbufA.  Use safer align-UP from stpScrB
+                   (0x165ae/0x165b4) -- same shape, different instrs. */
                 long    buf;
                 buf = ((long) scrbufA + 0x200L) & ~0x1FFL;
                 sp_iniM(0L, &g_srmfd, (void *) buf,
@@ -560,9 +502,7 @@ sp_imfs()
         sp_drin();
 }
 
-/* sp_drin (Ghidra): empty stub.  Present in the 1985 code
-   as a hook -- probably a wired-up function pointer table entry that
-   was reduced to a no-op in the final build.
+/* sp_drin: empty in the 1985 code (dead hook).
    addr: sp_drin() */
 
 void

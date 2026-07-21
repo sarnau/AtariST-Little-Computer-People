@@ -1,31 +1,6 @@
 /*
- * tick.c -- main frame driver.
- *
- * gameTick(counter) is the workhorse of gameLoop.
- * Ghidra 0x256A6.  Two entry paths:
- *
- *   g_lcyof == NO:  loop counter+1 frames.  Each frame:
- *     - wait for the next 8 Hz render tick (sc_ren8 spin)
- *     - advance subAniC, redraw clock pendulum
- *     - gameSim1, cl_redrH
- *     - petting-dog animation cycle (11 frames of head-pat sprites)
- *     - dog food bowl countdown + redraw
- *     - fire animation (4 frames while fire active) + auto-extinguish
- *     - alarm-clock animation + SFX loop
- *     - phone-ring animation + SFX loop
- *     - record-player needle animation (rp_anim)
- *     - TV static-noise animation (td_nois)
- *     - LCP body + head sprite update (sp_updb / sp_lcha / sp_lchu)
- *     - keyboard input dispatch (deal_kc)
- *     - screen scroll if a text-scroll countdown is active
- *     - final sc_ren8
- *
- *   g_lcyof != NO:  reposition the currently-carried object sprite
- *     (X = lcp_x + 10 facing right, or lcp_x - width + 16 facing left),
- *     then dispatch to a per-carried-object Y-offset handler by
- *     walking g_cotbl until the sprite id matches.
- *
- * addr: gameTick()
+ * tick.c -- main frame driver (gameTick).
+ * addr: gameTick() @ Ghidra 0x256A6
  */
 
 #include "types.h"
@@ -45,8 +20,7 @@
 #include "tick_tables.h"
 
 
-/* Carried-object per-frame Y offset (Ghidra 0x257c6..0x258b0 jump
-   table).  Every listed sprite id uses -20; the default is "no update". */
+/* Carried-object Y offset (Ghidra 0x257c6..0x258b0 jump table). */
 static short
 cy_yoff(id)
 short   id;
@@ -66,10 +40,7 @@ short   id;
         return 0x7fff;
 }
 
-/* gameTick: drive counter+1 frames of animation, or
-   update the carried-object sprite if the resident is holding one.
-   addr: gameTick() */
-
+/* addr: gameTick() */
 void
 gameTick(counter)
 short   counter;

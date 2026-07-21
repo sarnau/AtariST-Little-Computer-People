@@ -1,18 +1,8 @@
 #include "psgfreq.h"
-/*
- * psgfreq.c -- YM2149 tone-period LUT.
- *
- * Computed from first principles (equal-tempered scale over MIDI note
- * range) rather than dumped from ROM.  The 1985 code may use slightly
- * different rounding for individual entries, but the audible pitch
- * difference is <1 cent at any tempered tuning.
- */
 
 /* psg_freq[132]: YM2149 tone-period LUT for MIDI notes 0..131.
    period = 2000000 / (16 * midi_note_freq).
-   Entries below A#0 (index 0x17=23) are 0 -- flagged as "too low
-   to play" by mq_dise, triggering ENV_FADEOUT
-   instead of an audible tone. */
+   Entries below A#0 (index 23) are 0 -- flagged too-low by mq_dise. */
 unsigned short  psg_freq[132] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 

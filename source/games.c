@@ -1448,10 +1448,8 @@ pk_blf()
                 pk_bluff = YES;
 }
 
-/* pk_cace: should the computer open?  If bluffing, always yes (0).
-   Otherwise looks for a card of rank >= King (rank 11 = Q, 12 = A).
-   Returns rank of best card if it beats jacks (>= Q), else -1
-   (pass) -- classic "Jacks or better to open".
+/* pk_cace: should the computer open?  Bluffing -> yes (0).
+   Otherwise "Jacks or better" -- returns best rank >= Q, else -1.
    addr: poker_computer_check_ace() */
 
 static short
@@ -1477,9 +1475,8 @@ pk_cace()
         return ret;
 }
 
-/* pk_dbet: quick "call vs raise" decision.  Returns 'c' (call) if
-   out of money or weak hand, else 'r' (raise) with pk_dpos set to
-   money/10 clamped to [1, 20].
+/* pk_dbet: computer call/raise decision.  Returns 'c' or 'r'.
+   On raise: pk_dpos = money/10 clamped [1,20].
    addr: poker_computer_decide_bet() */
 
 static short
@@ -1500,10 +1497,8 @@ pk_dbet()
         return ch;
 }
 
-/* pk_ddec: one chip animated transfer for the current player.
-   `who`==0 -> computer contributes, 1 -> player contributes.
-   `n` chips to move.  Caps pk_bet at 20 to prevent unbounded
-   sessions.  Called every tick during pk_cbet's F1 hold-to-raise.
+/* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
+   Caps pk_bet at 20.
    addr: poker_computer_draw_decision() */
 
 static void
@@ -1537,10 +1532,8 @@ short   n;
         }
 }
 
-/* pk_cbet: player betting UI.  Shows caller-provided prompt then
-   F1 Bet / F3 Enter / F5 Pass-Clr keys.  F1 held: pk_ddec bumps one
-   chip per tick.  F3: locks in current bet (or sets pk_pass if 0).
-   F5: refunds current bet.  Returns 0 normally, -1 on timeout.
+/* pk_cbet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
+   Returns 0 normally, -1 on timeout.
    addr: poker_computer_bet_decision() */
 
 static short
@@ -1590,16 +1583,10 @@ char *  str;
         return 0;
 }
 
-/* pk_cdrw: computer AI draw phase.  Evaluates hand, decides bluff,
-   picks discard count by rank:
-      rank 0 (high card)  -> discard 4, keep highest
-      rank 1 (one pair)   -> discard 3, keep pair
-      rank 2 (two pair)   -> discard 1, keep both pairs
-      rank 3 (three)      -> discard 2, keep trips
-      rank >=4            -> stay
-   When bluffing, picks 0..2 discards from non-rank cards to fake it.
-   Then re-draws unique replacements, patches pk_tcm with "N card"
-   or "N cards", and animates the swap (blank slot flash -> new back).
+/* pk_cdrw: computer AI draw phase.
+   Discard count by rank: 0->4, 1->3, 2->1, 3->2, >=4->stay.
+   Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
+   replacements and animates the swap.
    addr: poker_computer_draw_cards() */
 
 static void
@@ -1713,16 +1700,9 @@ pk_cdrw()
         }
 }
 
-/* pk_show: showdown.  Reveals the computer's face-down hand, then
-   evaluates both hands, then plays the poker hand-comparison ladder:
-    rank tie -> kicker/high-card ladder for pair, two-pair, trips,
-                       full house, four-of-kind, straight-flush;
-    rank differs -> higher rank wins.
-   Winner blinks (5x on/off) then pk_annr transfers the pot.
-   sets pk_round to 1 as a "round completed" side-flag used by the
-   caller.  Preserves Ghidra's exact per-rank tiebreak shape --
-   including reusing pk_hsf as the sorted-hand scratch and the
-   CARD_HEART_KING (value 0, rank 0) seeds -- for byte fidelity.
+/* pk_show: showdown.  Reveal computer hand, evaluate both, walk the
+   per-rank tiebreak ladder.  Winner blinks 5x then pk_annr transfers.
+   Sets pk_round=1.  Preserves Ghidra tiebreak shape (byte-comparable).
    addr: poker_showdown() */
 
 static void
@@ -1886,32 +1866,11 @@ pk_show()
         }
 }
 
-/* pk_main_body: 5-card draw poker main loop.  Full 819-instruction
-   port of poker_main.  Structure:
-     - init (Malloc, load cards, mg_stp, money=400 each, initial
-       display)
-     - per-round loop:
-        1. plEr; pk_ante()
-        2. pk_evhs() -- deal
-        3. pk_cbet("Do you feel lucky today?") -- first bet round
-        4. On computer-pass: nothing (unless bluff triggers below).
-           Otherwise: computer sees, drains player bet chip-by-chip.
-        5. Player discard phase: F1 Draw (with 1..5 to toggle cards)
-           / F3 Stay.  Highlighted card = pk_sel[i]=1, blank slot.
-        6. pk_cdrw() -- computer AI draws
-        7. pk_cbet("Want to make a bet?") -- final bet round
-        8. On computer pass with weak hand: call and go to showdown.
-           Otherwise: pk_cace() to decide if it opens; if it folds,
-           award pot to player.  If it opens, use pk_dbet to pick
-           call vs raise.  On raise: patch pk_rm, chip transfer,
-           player F1 See / F3 Fold, then F1 Raise / F3 Enter / F5
-           Call loop.
-        9. pk_show() -- showdown reveals + hand comparison ladder
-       10. tick(0x18), loop.
-   All Ghidra gotos (LAB_00018da0 = cleanup, LAB_00018d72 = tick-
-   before-next-round, LAB_00019082 = keep-polling-during-discard,
-   LAB_00019514 / LAB_00019950 = final-bet raise loop) preserved
-   verbatim as gotos to match the shape of the 1985 source.
+/* pk_main: 5-card draw poker main loop.
+   Init: Malloc, load cards, mg_stp, money=400 each.
+   Per-round: ante, deal, bet, discard/draw, computer draw, final bet,
+   showdown.  Preserves goto LAB_00018da0 (cleanup), LAB_00018d72,
+   LAB_00019082, LAB_00019514, LAB_00019950 verbatim.
    addr: pk_main() (== poker_main) */
 
 void
@@ -2285,12 +2244,8 @@ cleanup:
         moff();
 }
 
-/* -- Blackjack helpers -- */
-
-
-/* pk_dbhi: display bet with highlight.  Selector 1 -> render
-   pk_bet_computer at (31, 51); anything else -> pk_bet_player.
-   Same fixed-buffer 3-digit format as pk_awp/dppm/dpot.
+/* pk_dbhi: display bet with highlight.  sel=1 -> computer bet, else
+   player bet.  3-digit format as pk_awp/dppm/dpot.
    addr: poker_display_bet_with_highlight() */
 
 static void
@@ -2317,11 +2272,9 @@ short   sel;
         strPr(str, 31, 51, COLOR_black);
 }
 
-/* pk_chsc: blackjack card value.  ace_mode=0 forces all aces to 1;
-   ace_mode=1 counts one ace as 11 (soft hand), rest as 1.  8..Q
-   (rank 6..11 pre-Ace) all score 10.  Rank 0..5 (2..7) score
-   rank+2.  Rank 12 = Ace.  Called twice per turn with mode 0 then
-   mode 1 to pick the better score without busting.
+/* pk_chsc: blackjack card value.  ace_mode=0 all aces=1; ace_mode=1
+   one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
+   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2.
    addr: poker_calculate_hand_score() */
 
 static short
@@ -2355,10 +2308,8 @@ short   ace_mode;
         return score;
 }
 
-/* pk_dchd: deal one card into `hand` at the next CARD_NONE slot.
-   Rejects duplicates against BOTH poker hands AND the split hand.
-   `face_down`=0 -> face-up, else face-down (CARD_BACK) sprite.
-   Returns -1 if the hand is already full (all 5 slots used).
+/* pk_dchd: deal one card into hand at next CARD_NONE slot.
+   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full.
    addr: poker_deal_card_to_hand() */
 
 static short
@@ -2396,9 +2347,7 @@ short   face_down;
         return 0;
 }
 
-/* pk_cnbj: check for natural blackjack (an Ace + a Ten/J/Q/K in
-   the initial two-card hand).  Returns 1 if hand[0]/hand[1] form
-   a natural, 0 otherwise.
+/* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two).
    addr: poker_check_natural_blackjack() */
 
 static short
@@ -2417,15 +2366,10 @@ short * hand;
         return 0;
 }
 
-/* pk_sbet: settle a bet.  winner=0 -> computer keeps bet; winner=1
-   -> player wins bet back.  `mode` (third arg, stack slot 0xa in
-   Ghidra) tweaks payoff:
-     mode == 0 -> normal (single transfer)
-     mode == 1 -> player-side double-collect (natural blackjack
-                     bonus: computer also pays out its side)
-     mode == 2 -> split-hand -- suppress the second (player)
-                     transfer
-   Sets pk_quit if someone runs out mid-transfer.
+/* pk_sbet: settle a bet.  winner: 0=computer, 1=player.
+   mode: 0=normal, 1=natural blackjack double-collect,
+         2=split -- suppress the second (player) transfer.
+   Sets pk_quit on mid-transfer bankruptcy.
    addr: poker_settle_bet() */
 
 static void
@@ -2510,13 +2454,9 @@ short   mode;
         }
 }
 
-/* pk_bjr: play one blackjack round for `hand` at `row`.  If the
-   caller is playing under the double-down/split forced-single-hit
-   modes (pk_wrf for the primary hand, pk_wcs for the split), auto-
-   deals one final card and returns.  Otherwise prompts with the
-   `prompt` string + F1 Hit / F3 Stand.  Loops F1 hits until either
-   the player stands (F3), busts (>21), or exhausts the 3-hit
-   allowance.  Returns 0 on stand, -1 on bust or timeout.
+/* pk_bjr: play one blackjack round for `hand` at row.
+   pk_wrf/pk_wcs forced-single-hit modes auto-deal one card + return.
+   Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout.
    addr: poker_blackjack_round() */
 
 static short
@@ -2608,34 +2548,11 @@ char *  prompt;
         return 0;
 }
 
-/* pk_bjMn: BLACKJACK main game loop.  Full 1270-instruction port of
-   poker_blackjack_main.  Flow:
-     1. Malloc 0x28a0 card buffer + pk_ldCrd + mg_stp + money 400 each
-     2. Per-round loop (Ghidra LAB_0001bcc8):
-        a. plEr card + bet displays; init bets = 0; F1 Bet / F10 Quit
-        b. Bet-entry loop: F1 to add chip (up to 20 cap), F3 to enter,
-           F5 to clear.  Player quit -> game over.
-        c. Deal 2 cards each (player face-up, computer[1] face-down)
-        d. Check pk_cnbj on each hand -> natural blackjack early payoff
-        e. On matching first two cards, "Do you wish to split?"
-           F1 -> split path: 2nd hand initialised, player must match
-           first bet, second natural also possible
-        f. Double-down prompt (F1) doubles bet on first (and split)
-           hand.  Wraps pk_pcc/pscc to CARD_BJ_STEP so only one hit.
-        g. pk_bjr for each hand -> hit/stand loop
-        h. Reveal computer's face-down card, hit up to 3 times using
-           two-value picker (score-with-no-Ace vs score-with-Ace-11)
-        i. Compare final scores, pk_sbet transfers.
-     3. Cleanup on quit (Ghidra LAB_0001bd9e): tx_sctm=0, no_keyin=NO,
-        Mfree, moff().
-   Preserves every Ghidra goto (LAB_0001bcbe, LAB_0001bd9e, LAB_0001beb6)
-   verbatim so the port stays byte-comparable with the 1985 asm.
-
-   Deliberate naming detail: this exports as pk_bjMn (the existing
-   symbol) rather than a wrapper-plus-body pair, because Alcyon's
-   8-char external-symbol truncation would map both `pk_bjMn` and
-   `pk_bjMn_body` to the same `_pk_bjMn` link name.
-
+/* pk_bjMn: BLACKJACK main game loop.
+   Bet-entry (F1 add, F3 enter, F5 clear, 20 cap), deal, natural check,
+   optional split, double-down, hit/stand rounds, dealer plays, settle.
+   Preserves Ghidra gotos LAB_0001bcbe, LAB_0001bd9e, LAB_0001beb6.
+   Alcyon 8-char link-name truncation prevents a body/wrapper split.
    addr: pk_bjMn() (== poker_blackjack_main) */
 
 void
@@ -3234,10 +3151,7 @@ cleanup:
         moff();
 }
 
-/* -- Word Puzzle helpers -- */
-
-/* wp_shwm: word-puzzle status message.  Clears the bottom prompt
-   strip and prints `msg` in green at (8, 58).
+/* wp_shwm: word-puzzle status message in green at (8,58).
    addr: word_puzzle_show_status_message() */
 
 void
@@ -3248,20 +3162,9 @@ char *  msg;
         strPr(msg, 8, 58, COLOR_green);
 }
 
-/* wp_rtmp: render the current puzzle template with player answers
-   substituted in place of '@' markers.  Walks the template one
-   character at a time:
-    - literal chars accumulated into an in-buffer word until the
-      next space; then, if the word overruns column 0x26, wraps
-      to the next row; otherwise prints char-by-char at (col*8, y)
-      in blue.
-    - '@' pulls the next wp_ans[i] string, wraps if needed, prints,
-      then advances the cursor by its length.  The character
-      immediately after '@' (already stashed at wp_ans[i][0] by
-      the caller during parse) is treated as trailing punctuation
-      and printed alongside, then column bumps past it.
-   Preserves Ghidra's cursor_x = 1, cursor_y = 0x28 (40) start
-   position for byte-comparable output.
+/* wp_rtmp: render puzzle template with player answers substituted for '@'.
+   Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at
+   (x=1, y=0x28) -- byte-comparable.
    addr: word_puzzle_render_template_with_answers() */
 
 void
@@ -3334,18 +3237,9 @@ wp_rtmp()
         }
 }
 
-/* wp_solv: solve phase.  For each of wp_blk blanks:
-    - clear the input strip
-    - pick a prompt string: word 0 -> random from wp_prm[0..4],
-      later words -> wp_prm[word_index + 4]
-    - keyboard loop: A-Z (uppercased via lcp_upp), max 10 chars;
-      cursor-left erases; Enter confirms; F10 quits early
-   After all blanks entered, walks the solution line (odd index of
-   the current puzzle's line pair), comparing token-by-token with
-   the player's answers.  On success: renders + shows a random
-   wp_succ message.  On any mismatch: same but wp_fail.
-   Preserves Ghidra's LAB_00017c4a (failure exit) as a labeled
-   goto so the byte-for-byte control flow matches the 1985 source.
+/* wp_solv: solve phase.  Per blank: prompt, read A-Z (10-char max),
+   Enter confirms, F10 quits.  Then walk solution line, compare
+   token-by-token; show wp_succ or wp_fail.  Preserves LAB_00017c4a.
    addr: word_puzzle_solve_phase() */
 
 void
