@@ -609,11 +609,180 @@
 #define ACTION_WAKE_UP_MORNING          43
 #define ACTION_GO_TO_BED_NIGHT          44
 
-/* ---- Word IDs (subset used by the parser) ----------------------------
-   WORD_NONE (-1) marks "not in dictionary".  The rest are populated
-   at runtime from the vocabulary table -- add named constants here as
-   specific words become referenced by name in other .c files. */
+/* ---- Word IDs (161 entries -- synced from Ghidra's WORD_ID enum) -----
+   Auto-derived via ~/ghidra_scripts/DumpWordIdEnum.java + Ghidra's
+   HTTP script executor.  Every name here matches the ROM's enum
+   character-for-character; the `2` suffixes on WORD_START2 /
+   WORD_LIKE2 / WORD_IS2 disambiguate the ROM's duplicated dictionary
+   entries; WORD_WHATS is spelt without the apostrophe so the name is
+   a legal C identifier (ROM's entry is literally "WHAT'S").
+
+   Port-specific divergence: WORD_NONE = -1 here rather than Ghidra's
+   0.  The port's `chk_vwd` in parser.c uses 0-indexed table iteration
+   (vwd_tab[0] = "PLEASE") and returns -1 as the not-found sentinel;
+   Ghidra's ROM uses 1-indexed iteration with entry 0 reserved as
+   WORD_NONE.  Aligning the port to Ghidra's scheme requires inserting
+   a sentinel at vwd_tab[0]; that reindexing is deferred. */
 #define WORD_NONE                       (-1)
-#define WORD_PLEASE                     1
+#define WORD_PLEASE                      1
+#define WORD_DO                          2
+#define WORD_YOU                         3
+#define WORD_LIKE                        4
+#define WORD_ENJOY                       5
+#define WORD_WILL                        6
+#define WORD_WOULD                       7
+#define WORD_PLAY                        8
+#define WORD_PERFORM                     9
+#define WORD_USE                         10
+#define WORD_TRY                         11
+#define WORD_PLAYING                     12
+#define WORD_ALLERGY                     13
+#define WORD_ALLERGIC                    14
+#define WORD_FEVER                       15
+#define WORD_DUST                        16
+#define WORD_POLLEN                      17
+#define WORD_HANKY                       18
+#define WORD_RELAX                       19
+#define WORD_LIGHT                       20
+#define WORD_START                       21
+#define WORD_MAKE                        22
+#define WORD_BURN                        23
+#define WORD_IGNITE                      24
+#define WORD_BUILD                       25
+#define WORD_LOOKS                       26
+#define WORD_IS                          27
+#define WORD_SEEMS                       28
+#define WORD_APPEARS                     29
+#define WORD_SEEM                        30
+#define WORD_LOOK                        31
+#define WORD_APPEAR                      32
+#define WORD_HEAR                        33
+#define WORD_LISTEN                      34
+#define WORD_PUT                         35
+#define WORD_START2                      36
+#define WORD_SPIN                        37
+#define WORD_ON                          38
+#define WORD_CLEAN                       39
+#define WORD_TIDY                        40
+#define WORD_PICK                        41
+#define WORD_UP                          42
+#define WORD_SLOPPY                      43
+#define WORD_MESSY                       44
+#define WORD_UNTIDY                      45
+#define WORD_SHOULD                      46
+#define WORD_OUGHT                       47
+#define WORD_PROGRAM                     48
+#define WORD_UTILITIES                   49
+#define WORD_MATH                        50
+#define WORD_HOMEWORK                    51
+#define WORD_ADD                         52
+#define WORD_SUBTRACT                    53
+#define WORD_MULTIPLY                    54
+#define WORD_DIVIDE                      55
+#define WORD_TICKLE                      56
+#define WORD_TYPE                        57
+#define WORD_TELL                        58
+#define WORD_WRITE                       59
+#define WORD_CONFIDE                     60
+#define WORD_BRUSH                       61
+#define WORD_FLOSS                       62
+#define WORD_DRINK                       63
+#define WORD_IMBIBE                      64
+#define WORD_GET                         65
+#define WORD_FEED                        66
+#define WORD_FILL                        67
+#define WORD_OPEN                        68
+#define WORD_DANCE                       69
+#define WORD_MOON                        70
+#define WORD_SHOW                        71
+#define WORD_LIKE2                       72
+#define WORD_TIRED                       73
+#define WORD_BORED                       74
+#define WORD_APATHETIC                   75
+#define WORD_HATE                        76
+#define WORD_AWFUL                       77
+#define WORD_IF                          78
+#define WORD_WHAT                        79
+#define WORD_WHATS                       80
+#define WORD_IN                          81
+#define WORD_INSIDE                      82
+#define WORD_STORED                      83
+#define WORD_KEEP                        84
+#define WORD_IS2                         85
+#define WORD_PIANO                       86
+#define WORD_ORGAN                       87
+#define WORD_STEREO                      88
+#define WORD_TURNTABLE                   89
+#define WORD_MUSIC                       90
+#define WORD_RECORD                      91
+#define WORD_PLATTER                     92
+#define WORD_FIRE                        93
+#define WORD_FIREPLACE                   94
+#define WORD_LOG                         95
+#define WORD_CHILLY                      96
+#define WORD_COLD                        97
+#define WORD_PROBLEM                     98
+#define WORD_PROBLEMS                    99
+#define WORD_TROUBLES                    100
+#define WORD_MATTER                      101
+#define WORD_LETTER                      102
+#define WORD_NOTE                        103
+#define WORD_SONG                        104
+#define WORD_TUNE                        105
+#define WORD_SONATA                      106
+#define WORD_FUGUE                       107
+#define WORD_SERENADE                    108
+#define WORD_JAZZ                        109
+#define WORD_BOOGIE                      110
+#define WORD_IVORIES                     111
+#define WORD_TEETH                       112
+#define WORD_HYGIENE                     113
+#define WORD_GLASS                       114
+#define WORD_COOLER                      115
+#define WORD_DOG                         116
+#define WORD_PET                         117
+#define WORD_MUTT                        118
+#define WORD_POOCH                       119
+#define WORD_BOWL                        120
+#define WORD_DISH                        121
+#define WORD_CAN                         122
+#define WORD_TV                          123
+#define WORD_CHAIR                       124
+#define WORD_COMPUTER                    125
+#define WORD_ATARI                       126
+#define WORD_WATER                       127
+#define WORD_LIQUID                      128
+#define WORD_LIQUIDS                     129
+#define WORD_FLUID                       130
+#define WORD_FLUIDS                      131
+#define WORD_UPSTAIRS                    132
+#define WORD_BEDROOM                     133
+#define WORD_CLOSET                      134
+#define WORD_KITCHEN                     135
+#define WORD_FILING                      136
+#define WORD_CABINET                     137
+#define WORD_FREEZER                     138
+#define WORD_REFRIDGERATOR               139
+#define WORD_FRIDGE                      140
+#define WORD_DRESSER                     141
+#define WORD_NIGHTSTAND                  142
+#define WORD_ADDITION                    143
+#define WORD_SUBTRACTION                 144
+#define WORD_MULTIPLICATION              145
+#define WORD_DIVISION                    146
+#define WORD_HOUSE                       147
+#define WORD_HOME                        148
+#define WORD_GAME                        149
+#define WORD_CARDS                       150
+#define WORD_POKER                       151
+#define WORD_WAR                         152
+#define WORD_CARD                        153
+#define WORD_ANAGRAMS                    154
+#define WORD_BLACKJACK                   155
+#define WORD_EXCUSE                      156
+#define WORD_PARDON                      157
+#define WORD_HELLO                       158
+#define WORD_ATTENTION                   159
+#define WORD_HEY                         160
 
 #endif  /* ENUMS_H */

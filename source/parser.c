@@ -104,7 +104,7 @@ char *  word;
                         input_ptr = input_ptr + 1;
                         dict_ptr  = dict_ptr  + 1;
                 }
-                word_index = word_index + WORD_PLEASE;
+                word_index = word_index + 1;
         }
         return WORD_NONE;
 }
