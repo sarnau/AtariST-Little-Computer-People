@@ -1,22 +1,7 @@
 /*
  * agames.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
- *
- * Two long routines that share the "walk to a specific room, sit down,
- * and interact with a device" shape but branch out completely different
- * subsystems:
- *
- *   a_playc  -- Atari ST computer at the desk.  Types
- *                            randomly on the keyboard for ~ random
- *                            duration (0x80..0x1FF ticks), with a rare
- *                            "clear screen" gesture when the RNG rolls
- *                            small (< 3 out of 128).
- *   a_plaag    -- Filing cabinet -> game box -> table.
- *                            Prompts the user with a 5-game menu
- *                            (Anagrams / War / Poker / Blackjack /
- *                            Word Puzzles) via strPr + text
- *                            scroll pane, then hands off to the
- *                            picked game's main() and cleans up.
- *
+ * a_playc: type at computer 0x80..0x1FF ticks, rare "clear screen".
+ * a_plaag: filing cabinet -> game menu (1..5) -> game main -> cleanup.
  * addr: a_playc(), a_plaag()
  */
 
@@ -43,11 +28,7 @@
 #include "walk.h"
 
 
-/* Mini-game entry points are stubs in stubs.c until ported per game. */
-
-/* a_playc: sit and type.  pst_arr[0..1] are typing poses;
-   pst_arr[2] is the resting sit-at-desk pose used between keystrokes
-   and during the "clear screen" mini-animation.
+/* a_playc: sit-and-type.  pst_arr[0..1] typing poses; pst_arr[2] rest.
    addr: a_playc() */
 
 void
@@ -76,8 +57,7 @@ a_playc()
         lcp_hwt();
         g_hamod = HEAD_ANIM_COMPUTER;
 
-        /* First XBIOS Random call is discarded, matching the 1985
-           binary; the second seeds the loop length. */
+        /* First Random() discarded (matches 1985 binary). */
         (void) Random();
         random_seed = (unsigned short) Random();
 
@@ -101,16 +81,14 @@ a_playc()
                         lcp_st = pst_arr[0];
                         sfClick();
                 }
-                /* The 1985 code flips `is_even_frame` here, so the
-                   even/odd branches actually swap for the tick call. */
+                /* 1985 flips is_even_frame here (even/odd swap for tick). */
                 is_even_frame = !is_even_frame;
                 if (is_even_frame)
                         gameTick(0);
                 else
                         gameTick(random_duration & 3);
 
-                /* Rare "clear the screen" gesture: pause typing, look
-                   up, blank the display, look back down. */
+                /* Rare "clear the screen" gesture. */
                 random_duration = (unsigned short) Random();
                 if ((random_duration & 0x7f) < 3 && is_even_frame) {
                         g_hamod         = HEAD_ANIM_DISABLED;
@@ -134,9 +112,8 @@ a_playc()
         gameTick(5);
 }
 
-/* a_plaag: filing cabinet -> menu -> game -> cleanup.
-   Menu poll uses tx_sctm timeout (300 -> 250 tick reload) with
-   a_sleep(1) yawns between polls; digit '1'..'5' selects.
+/* a_plaag: cabinet -> menu -> game -> cleanup.
+   tx_sctm timeout (300 -> 250 reload), a_sleep(1) yawn between polls.
    addr: a_plaag() */
 
 void
@@ -239,8 +216,7 @@ a_plaag()
                         gameTick(0);
                         g_lcyof = NO;
 
-                        /* Nudge the head sprite over so the game
-                           overlay doesn't clip the resident. */
+                        /* Nudge head so game overlay doesn't clip. */
                         g_sepex[g_seslm[SPRITE_GAME_BOX]] =
                                 g_sepex[g_seslm[SPRITE_GAME_BOX]] + 3;
                         g_sepey[g_seslm[SPRITE_GAME_BOX]] =
@@ -298,7 +274,7 @@ a_plaag()
                 if (tx_sctm > 0x31 || game_running != NO)
                         continue;
 
-                /* Menu timed out -- yawn and idle for a bit. */
+                /* Menu timed out -- yawn and idle. */
                 tx_sctm = 250;
                 selected_game    = 8;
                 g_wtx    = lcp_x;

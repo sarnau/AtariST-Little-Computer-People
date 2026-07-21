@@ -1,26 +1,11 @@
 /*
  * delivery.c -- Ctrl+F/B/R/D/C doorbell events.
- *
- * All five deferred events share the same open-door-pick-up pattern:
- *   1. wkFrDr
- *   2. face right, stand facing screen, look forward
- *   3. open front door (unless already open)
- *   4. bend down, reach forward, bend down again (the "pickup")
- *   5. maybe close the door (initiative_threshold roll)
- *   6. attach a carried sprite and walk to the destination shelf
- *   7. bend down / reach forward again to put it down
- *
- * The Ctrl+D dog-food variant reuses er_food with
- * g_dvdog=YES so the food goes to the dog bowl instead of
- * the kitchen cabinet.
- *
- * ev_ansPh is grouped here because it's the same event-queue
- * consumer even though it's a phone call rather than a delivery.
- *
- * addr: er_food(), er_bood(),
- *       er_recd(), er_dogf(),
- *       ev_ansPh(), wkFrDr(),
- *       a_opcfd(), a_opecc()
+ * Shared shape: wkFrDr, open door, bend/reach/bend, maybe close,
+ * attach carried sprite, walk to shelf, put down.
+ * Ctrl+D dog-food reuses er_food with g_dvdog=YES.
+ * ev_ansPh is here because it's the same event-queue consumer.
+ * addr: er_food(), er_bood(), er_recd(), er_dogf(), ev_ansPh(),
+ *       wkFrDr(), a_opcfd(), a_opecc()
  */
 
 #include "types.h"

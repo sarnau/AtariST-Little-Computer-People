@@ -1,34 +1,9 @@
 /*
- * aletter.c -- ACTION_WRITE_LETTER + its typewriter helpers.
- *
- * The resident walks to the filing cabinet, grabs paper, moves to the
- * desk, and types a procedurally-assembled letter:
- *
- *   Date line       -- mo_names[dt_mon] date_day, 1900+dt_year
- *   Salutation      -- "Dear <owner_name>,"
- *   2..4 paragraphs -- picked from 4 topic sections in shuffled order.
- *                      Each section has 3 lines (opening / middle /
- *                      ending) chosen from 4 alternates each.  Sickness
- *                      or happiness modifies which alternate row we
- *                      pull from.
- *   Greeting        -- one of 4 sign-offs from g_ltg[]
- *   Signature       -- lcp.character_name
- *
- * Text is fed one character at a time through letter_type_character_
- * animated(), which drives the desk-typing sprite pipeline (four
- * SPRITE_TYPING_1..4 width brackets) and picks a random typewriter
- * click SFX per character.  lt_tysa() word-wraps
- * at 40 columns (0x27 threshold) and inserts a carriage return when
- * a word would overflow.
- *
- * The letter template pointers live in globals.c: g_ltlp[] is filled
- * at runtime by fl_ltpl() (letload.c) from the 360-line LETTER.TXT
- * template; g_ltg[4] is a static array of the four sign-off strings
- * ("Sincerely," / "Cordially," / "Yours Truly," / "Love,") that the
- * ROM stores as compile-time DATA literals.
- *
- * addr: a_writl(), lt_tysa(),
- *       lt_tyca()
+ * aletter.c -- ACTION_WRITE_LETTER + typewriter helpers.
+ * Procedurally-assembled letter: date, salutation, 2..4 paragraphs
+ * from 4 topic sections (3 lines x 4 alternates, biased by mood),
+ * sign-off (g_ltg[4]), signature.  Word-wraps at 40 cols (0x27).
+ * addr: a_writl(), lt_tysa(), lt_tyca()
  */
 
 #include "types.h"
@@ -53,11 +28,9 @@
 #include "walk.h"
 
 
-/* lt_tyca: emit one character.  On CR (< space),
-   scrolls the text pane down; otherwise plays a random click and blits
-   the char via prCh, then swaps in the appropriate width sprite
-   from g_ltcwt[] based on current buffer position.
-
+/* lt_tyca: emit one char.  CR (< space) scrolls the pane; else plays a
+   random click, blits via prCh, swaps in the g_ltcwt width sprite
+   per buffer position.
    addr: lt_tyca() */
 
 void
@@ -90,11 +63,9 @@ short   ch;
                 g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
                 sp_upds();
 
-                /* Pick the width-bracket sprite for the (now-empty)
-                   buffer position.  Buckets: 0..9, 10..19, 20..29, 30+.
-                   Original code re-checks the just-cleared buffer_pos
-                   here, so i always resolves to 0 (< 10); preserved
-                   verbatim as it may be a placeholder for future logic. */
+                /* Width-bracket sprite for buffer_pos (0..9/10..19/20..29/30+).
+                   i resolves to 0 here (buffer_pos just cleared);
+                   preserved verbatim. */
                 i = 3;
                 if (g_cdibp < 10)      i = 0;
                 else if (g_cdibp < 20) i = 1;
@@ -158,12 +129,8 @@ short   ch;
 }
 
 /* lt_tysa: word-wrapped string typer.
-   `val` argument: leading-space indent count (negative means "always
-   indent"; positive means "only indent if the previous line ended
-   mid-line").  Returns the last character emitted so the caller can
-   check if it was a space (used to decide whether to insert a break
-   before the next chunk).
-
+   val: leading-space indent (< 0 always; > 0 only if prev line mid).
+   Returns last char emitted.
    addr: lt_tysa() */
 
 short
@@ -220,23 +187,9 @@ short   val;
         return line_remaining;
 }
 
-/* a_writl: outer flow -- walk, allocate letter buffer,
-   assemble letter body from shuffled template sections, free buffer,
-   walk out.
-
-   Letter structure (each template section spans 96 short entries):
-     paragraph_count   = rndRng(2, 4)
-     for i in 0..paragraph_count-1:
-       section_id      = section_order[i]           (0..3, shuffled)
-       template_index  = section_id * 96
-       if section_id == 3:      last section, 6 alternates
-           template_index += rndRng(0, 5) * 12
-       elif sickness == 0:      healthy, use happiness row
-           template_index += rndRng(0, 1) * 48 + happiness * 12
-       else:                    sick, use dedicated sick row
-           template_index += rndRng(0, 1) * 48 + 36
-       type 3 lines from that subsection at offsets +0..3, +4..7, +8..11
-
+/* a_writl: walk, malloc letter buffer, assemble body from shuffled
+   template sections (2..4 paragraphs, each 3 lines picked from 4
+   alternates via section_id * 96 + mood offset), free, walk out.
    addr: a_writl() */
 
 void

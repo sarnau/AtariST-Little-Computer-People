@@ -1,41 +1,14 @@
 /*
- * assets.c -- asset file loaders (OBJECTS, SPRITES, BODY.LCP, PEx.LCP,
- *             NAMES, and the dispatchers that unpack them into runtime
- *             MFDB tables).
+ * assets.c -- OBJECTS/SPRITES/BODY.LCP/PEx.LCP/NAMES loaders and
+ * the dispatchers that unpack them into runtime MFDB tables.
  *
- * Formats (all big-endian, all extracted from readFiles.py + Ghidra
- * ldObj / ldSpr decompiles):
- *
- *   OBJECTS / SPRITES:
- *     Sequence of records, each:
- *       +0..1     height (short, big-endian)
- *       +2..3     width  (short, big-endian)
- *       +4..     ceil(width/16) * 4 * 2 * height  pixel bytes
- *                (4 bitplanes interleaved per row, MSB-first)
- *     Total file size caps at 14000 bytes; parser stops at buffer end.
- *
- *   BODY.LCP / PE2..PE6.LCP (character sprite sheets):
- *     +0..1     count  (short, big-endian) -- number of frames
- *     +2..3     total  (short, big-endian) -- total payload bytes
- *                        (== count * 168 for the 16x21 LCP sprites)
- *     +4..      total pixel bytes -- 168 bytes per 16x21 frame,
- *               laid out as 21 rows of 4 words (2 image + 2 mask).
- *
- *   Historical note: the previous version of this file documented the
- *   second short as "bytes per frame" and al_loal multiplied
- *   count * size to get the read length -- that gave the correct
- *   number for OBJECTS/SPRITES-style records but a nonsense-huge
- *   value for BODY.LCP (98 * 16464 = ~1.6 MB) which happened to be
- *   capped by max_b at the call site.  Real semantics: the
- *   header's second short IS the total payload byte count.  See
- *   tests/sprite_compose.c for the byte-verified layout.
- *
- *   NAMES:
- *     Plain ASCII, newline-terminated names, one per line.  10 chars
- *     max per name.  Read as text.
+ * OBJECTS/SPRITES record: {h:BE16, w:BE16, ceil(w/16)*4*2*h pixel bytes}
+ *   (4 bitplanes interleaved per row, MSB-first).  File caps at 14000.
+ * BODY.LCP / PE2..PE6.LCP: {count:BE16, total_bytes:BE16, payload}
+ *   168 bytes per 16x21 frame (21 rows x 4 words = 2 image + 2 mask).
+ * NAMES: newline-terminated ASCII, <= 10 chars per line.
  *
  * addr: ldObj(), ldSpr()
- *       (parsers + name/BODY/PEx loaders inferred from readFiles.py)
  */
 
 #include "types.h"
@@ -77,10 +50,8 @@ ldSpr()
         Fclose(fhnd);
 }
 
-/* Parse a sequence-of-records buffer (OBJECTS or SPRITES format) into
-   its per-record MFDB descriptor table + width/height arrays.  Stops
-   at buffer end (records with height==0 or offset >= size) or at the
-   64th record (table size). */
+/* Parse OBJECTS/SPRITES buffer -> per-record MFDB + w/h arrays.
+   Stops at buffer end / height==0 / 64 records. */
 
 static short
 prsRec(buf, size, mfdb_tab, w_tab, h_tab)
@@ -100,36 +71,24 @@ short *         h_tab;
         offset = 0;
         count  = 0;
         while (offset < size && count < 64) {
-                /* Height + width are big-endian shorts.  Read via a
-                   two-byte splice to keep the port host-endian
-                   agnostic. */
+                /* BE16 read, host-endian agnostic. */
                 height = ((short) buf[offset]     << 8) | buf[offset + 1];
                 width  = ((short) buf[offset + 2] << 8) | buf[offset + 3];
                 if (height == 0 || width == 0)
                         break;
                 offset = offset + 4;
 
-                /* MFDB width MUST be a multiple of 16 -- sp_iniM
-                   computes fd_wdwidth = width / 16 with an integer
-                   truncation.  Passing the raw (unrounded) pixel
-                   width lands on the wrong stride whenever the object
-                   isn't a clean multiple of 16, and vro_cpyfm then
-                   sources the wrong bytes -- the door outlines look
-                   right but the fill pattern is off / smeared.
-                   Ghidra's parse loop does the same round-up before
-                   calling sprite_init_MFDB. */
+                /* MFDB width MUST be a multiple of 16 (sp_iniM does
+                   fd_wdwidth = width/16 with truncation).  Round up. */
                 words_per_row = (width + 15) / 16;
                 sp_iniM(0L, &mfdb_tab[count],
                                  buf + offset,
                                  (short) (words_per_row * 16), height);
-                /* w_tab keeps the true (unrounded) pixel width so
-                   od_draw's source rectangle is the exact object
-                   size, not the padded MFDB width. */
+                /* w_tab keeps unrounded pixel width for od_draw's src rect. */
                 w_tab[count] = width;
                 h_tab[count] = height;
 
-                /* Advance past this record's pixel data: words_per_row
-                   * 4 planes * 2 bytes per word. */
+                /* Advance: words_per_row * 4 planes * 2 bytes. */
                 record_bytes  = (long) height * words_per_row * 4 * 2;
                 offset = offset + record_bytes;
                 count = count + 1;
@@ -137,12 +96,8 @@ short *         h_tab;
         return count;
 }
 
-/* al_loot: read OBJECTS, then unpack the records.
-   addr: port-side helper -- no Ghidra counterpart function.  The
-   1985 code inlines this pair as `ldObj();` followed by a 56-iter
-   parse loop in Ghidra's main (ROM 0x15546, "Load object images"
-   comment).  Wrapped here so main()'s call site stays a single
-   named entry. */
+/* al_loot: read OBJECTS and unpack.  Port-side wrapper; ROM inlines
+   at 0x15546 as ldObj() + 56-iter parse loop. */
 
 short
 al_loot()
@@ -153,12 +108,7 @@ al_loot()
                              g_obtaw, g_obtah);
 }
 
-/* al_lost: read SPRITES, then unpack the records.
-   addr: port-side helper -- no Ghidra counterpart function.  The
-   1985 code inlines this pair as `load_sprites();` followed by a
-   50-iter spritedata_create_with_mask loop in Ghidra's main (ROM
-   0x15546, "Load sprite images" comment).  Wrapped here so main()'s
-   call site stays a single named entry. */
+/* al_lost: read SPRITES and unpack.  Port-side wrapper. */
 
 short
 al_lost()
@@ -169,17 +119,8 @@ al_lost()
                              g_setaw, g_setah);
 }
 
-/* al_loal: load a BODY.LCP / PE2..PE6.LCP character sprite
-   sheet into a caller-supplied buffer.  Header format:
-     +0..1  count (short, big-endian) -- number of frames
-     +2..3  total (short, big-endian) -- total payload bytes
-                    (== count * 168 for the 16x21 LCP sprites)
-   Returns the number of frames.
-   addr: port-side helper -- no Ghidra counterpart function.  The
-   1985 code has one loader per file inlined in main (ROM 0x15546):
-   `fLoad("body.lcp", body_lcp_file)` and `fLoad(pex_lcp_ptr,
-   pex_lcp_file)` are back-to-back after `cl_drini()`.  Factored
-   here so callers share a single named entry. */
+/* al_loal: load BODY.LCP / PE2..6.LCP into caller buffer.
+   Header: {count:BE16, total_bytes:BE16, payload}.  Returns frame count. */
 
 short
 al_loal(filename, dest_buf, max_b)
@@ -203,48 +144,20 @@ long            max_b;
         return count;
 }
 
-/* al_locs: boot-time entry that loads BODY.LCP and
-   the PEx.LCP head sheet keyed by the PLAYER's character_sprite_id
-   into their runtime buffers, then wires body_ptr and pex_ptr
-   at those buffers.
+/* al_locs: load BODY.LCP + PEx.LCP (x = character_sprite_id, 2..6,
+   clamped to 2).  Wires body_ptr and pex_ptr.  Static buffers
+   (survive to game end without heap fragmentation). */
 
-   Buffers are static (not GEMDOS_Malloc'd) so the load survives to
-   game end without heap fragmentation.  BODY.LCP holds 98 x 168-byte
-   frames = 16464 bytes; each PEx sheet holds up to 66 x 168-byte
-   head frames = 11088 bytes.  Sized to 20000 / 12000 to leave headroom
-   for any unseen variant.
-
-   Called from the boot sequence after al_lost and
-   before the first sp_updb / sp_lchu tick.
-
-   The character_sprite_id is 2..6, matching PE2..PE6.LCP.  Values
-   outside that range are clamped to 2 so the loader never wanders off
-   a random string ("PE1.LCP" doesn't exist in the shipped disk).
-
-   addr: port-side helper -- no Ghidra counterpart function.  The
-   1985 code inlines both loads in main (ROM 0x15546): after
-   `fLoad("body.lcp", body_lcp_file)`, it mutates `pex_lcp_ptr[2]`
-   from '0'+character_sprite_id then calls `fLoad(pex_lcp_ptr,
-   pex_lcp_file)`.  Wrapped here so main()'s call site stays a
-   single named entry. */
-
-/* body.lcp / PEn.LCP layouts: each is a sequence of 168-byte sprite
-   frames (sp_lcpf width=2, height=21, 4 bytes per plane-pair row).
-   body_lcp_file holds 120 frames; pex_lcp_file holds 66 frames.
-   Sizes match Ghidra's `body_lcp_file` @ 0x3f8b0 (20160 B) and
-   `pex_lcp_file` @ 0x4d2da (11088 B). */
+/* body.lcp @ 0x3f8b0 = 20160 B, pex_lcp_file @ 0x4d2da = 11088 B
+   (168 bytes/frame, sp_lcpf w=2/h=21). */
 static unsigned char    body_buf[120][LCP_BODY_FRAME_SIZE];
 static unsigned char    pex_buf[66][LCP_BODY_FRAME_SIZE];
 
 void
 al_locs()
 {
-        /* pex_filename: local equivalent of Ghidra's pex_name @ 0x2a0f8,
-           which points at the static string "pex.lcp" at 0x2a330 and gets
-           mutated in place at index 2 to select the character sheet.  Port
-           uses a stack-local to avoid a mutable global; GEMDOS FAT is
-           case-insensitive so the uppercase / lowercase difference is
-           immaterial (files ship as PE2.LCP..PE6.LCP). */
+        /* Ghidra pex_name @ 0x2a0f8 mutates index 2 in place; port uses
+           stack-local (GEMDOS FAT case-insensitive). */
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
@@ -272,28 +185,11 @@ al_locs()
         hd_shp = hshdbuf;
 }
 
-/* unScn: decode a .SCN screen-image file into
-   `out_wds` (16-bit output words, dest_size measured in words, not
-   bytes).  Same nibble-stream shape as fr_reac, but two
-   width differences:
-     - Dictionary is 15 *words* (30 bytes) at file offset 2..31,
-       vs 15 bytes at offset 2..16 for the .TXT variant.
-     - Each output symbol is a 16-bit word: recognised nibbles map
-       through the word dictionary, and the escape (nibble == 0xF)
-       reads 4 more nibbles for a literal 16-bit word.
-   Total header = 32 bytes; payload starts at offset 32.
-
-   HOUSE.SCN and TITLE.SCN are the two 320x200 4-plane screen images
-   that the 1985 game boots from (house background and title splash).
-
-   addr: nibble-decode inner loop == Ghidra `decompress_scn` (called
-   from main at ROM 0x15546 immediately after the fOpen+Malloc+
-   fr_read sequence for house.scn).  The port's unScn additionally
-   wraps the fOpen / dictionary-read / Malloc / fr_read / Mfree /
-   Fclose sequence that Ghidra inlines around the decompress_scn
-   call.  Data-flow and control-flow of the decoder match Ghidra
-   one-for-one (word-dictionary of 15 entries, 0xF escape, 4-nibble
-   literal read). */
+/* unScn: decode .SCN screen image into out_wds (16-bit words).
+   Nibble-stream like fr_reac, but 15-WORD dictionary at file offset
+   2..31 (30 bytes), 0xF escape reads 4 more nibbles for literal word.
+   Header 32 bytes; payload at 32.
+   addr: decompress_scn @ ROM 0x15546 (with wrapper fOpen/Malloc/etc). */
 
 void
 unScn(filename, out_wds, dst_wds)
@@ -319,15 +215,8 @@ long            dst_wds;
                 unsigned short lo;
                 fr_read(filehandle, 30L, raw);
                 for (i = 0; i < 15; i = i + 1) {
-                        /* Explicit byte-masked casts before OR --
-                           Alcyon C 4.14 sign-extends `raw[j]` in
-                           expressions where the char has bit 7 set,
-                           turning e.g. 0xFF into 0xFFFF and
-                           corrupting any dict entry whose low byte
-                           is >= 0x80 (this shows up as a repeating
-                           horizontal-streak pattern in HOUSE.SCN
-                           because 3 of its 15 dictionary words have
-                           high-bit low bytes). */
+                        /* Byte-mask before OR: Alcyon 4.14 sign-extends
+                           raw[j] with bit 7 set (0xFF -> 0xFFFF). */
                         hi = (unsigned short) raw[i * 2]     & 0x00FF;
                         lo = (unsigned short) raw[i * 2 + 1] & 0x00FF;
                         word_dict[i] = (hi << 8) | lo;
@@ -340,10 +229,8 @@ long            dst_wds;
                 er_nomem();
         fr_read(filehandle, body_size, fbuffer);
 
-        /* Nibble state-machine decode.  Explicit `b = *src & 0xFF`
-           read isolates the byte value BEFORE any implicit int
-           promotion / sign extension that Alcyon C 4.14 may inject
-           when a signed-char temporary is used in a shift. */
+        /* Nibble state-machine decode.  `b = *src & 0xFF` isolates the
+           byte before Alcyon signed-char promotion in shifts. */
         {
                 short           readHigh;
                 unsigned short  val;
@@ -388,11 +275,8 @@ long            dst_wds;
         Mfree(fbuffer);
 }
 
-/* al_loan: read the NAMES text file into a caller-provided
-   buffer.  Format is plain ASCII, one name per line, newline
-   terminated.  The buffer is a raw ASCII dump; the caller (name
-   selection logic) walks it line-by-line for random pick.
-   NAMES file on the 1985 disk is 2.6 KB; we read up to that much. */
+/* al_loan: read NAMES text file (plain ASCII, newline-terminated names,
+   ~2.6 KB on the 1985 disk). */
 
 long
 al_loan(dest_buf, max_b)

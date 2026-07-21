@@ -1,24 +1,6 @@
 /*
  * walk.c -- LCP & dog pathfinding + step animation.
- *
- * Four functions:
- *   lcp_wkD()   -- outer loop: steps toward walk_target_
- *                                  x/y until arrival or interruption.
- *   lcp_path()     -- inner loop: one 8Hz step, handles flat
- *                                  walking, 3 staircase phases (climb,
- *                                  top-of-flight, descend, bottom-of-
- *                                  flight), footstep sound triggers.
- *   lcp_flwp()   -- when there's no active waypoint,
- *                                  routes the resident to the next
- *                                  staircase entry (or straight to
- *                                  destination if same floor).
- *   dg_wkPth()        -- same waypoint math for the dog.
- *   lcp_fstp()   -- selects carpet/wood/stairs SFX
- *                                  based on floor + X position.
- *
- * addr: lcp_wkD(), lcp_path(),
- *       lcp_flwp(), dg_wkPth(),
- *       lcp_fstp()
+ * addr: lcp_wkD(), lcp_path(), lcp_flwp(), dg_wkPth(), lcp_fstp()
  */
 
 #include "types.h"
@@ -34,8 +16,7 @@
 #include "walk.h"
 
 /* lcp_wkD: pump lcp_path() until arrival.
-   Returns 0 on natural arrival, -1 on interruption (only when the
-   resident is idle enough for the queue to preempt).
+   Returns 0 on arrival, -1 on preemption when idle.
    addr: lcp_wkD() */
 
 short
@@ -60,14 +41,9 @@ lcp_wkD()
         return -1;
 }
 
-/* lcp_flwp: pick the next waypoint given the current
-   resident position and the destination.  Same-floor destinations
-   route straight to g_wtx/y; cross-floor destinations route
-   through the appropriate entry of stair_wp[] first.
-   The middle-floor case has an extra pair-of-flights landing branch
-   (stair_ty / _bottom_y_threshold) that the top and
-   bottom floors don't need.
-
+/* lcp_flwp: pick next waypoint.  Same-floor -> straight to g_wtx/y;
+   cross-floor -> through stair_wp[].  Middle floor has an extra
+   stair_ty/stair_by landing branch top/bottom don't need.
    addr: lcp_flwp() */
 
 void
@@ -122,10 +98,9 @@ lcp_flwp()
         }
 }
 
-/* dg_wkPth: dog waypoint math.  Structurally identical to
-   lcp_flwp but uses dog_x/y/target/waypoint and applies
-   a -3 X patch on the middle-floor landing plus an -8 X kick when the
-   dog crests the top of a staircase.
+/* dg_wkPth: dog waypoint math.  Same shape as lcp_flwp but uses
+   dog_x/y and applies -3 X on middle-floor landing + -8 X on stair
+   crest.
    addr: dg_wkPth() */
 
 void
@@ -183,9 +158,8 @@ dg_wkPth()
         }
 }
 
-/* lcp_fstp: sample-selecting footstep helper.
-   fs_trg is set by lcp_path exactly when
-   the walk-cycle frame that plants a foot has just landed.
+/* lcp_fstp: pick footstep SFX (carpet/wood/stairs) by floor + X.
+   fs_trg is set by lcp_path on foot-plant frames.
    addr: lcp_fstp() */
 
 void
@@ -215,9 +189,7 @@ lcp_fstp()
         }
 }
 
-/* ---- lcp_path -------------------------------------------- */
-
-/* Nested-if helper: cycle the walk state through 0..7. */
+/* Cycle walk state through 0..7. */
 static void
 wkCyc()
 {
@@ -230,7 +202,7 @@ wkCyc()
         }
 }
 
-/* Nested-if helper: cycle stair-climb state 9..12 wrapping. */
+/* Cycle stair-climb state 9..12. */
 static void
 stairCyc()
 {
@@ -239,7 +211,7 @@ stairCyc()
                 lcp_st = STATE_STR_CLIMB_F0;
 }
 
-/* Nested-if helper: set head_anim_target if it isn't already `target`. */
+/* Set head_anim_target if not already `target`. */
 static void
 setHTgt(target)
 short   target;
@@ -250,14 +222,10 @@ short   target;
         }
 }
 
-/* lcp_path: one 8Hz step along the current waypoint.
-   Structurally: (1) if waypoint reached, either destination is reached
-   (return) or pick the next waypoint.  (2) If not on stairs, flat walk
-   toward waypoint (X first with cycle, then Y in "channel" of the
-   floor center).  (3) If on stairs, run the appropriate stair phase
-   for the current stair Y bucket.  Footstep flag is set on the two
-   step-planting frames per walk cycle.
-
+/* lcp_path: one 8Hz step along current waypoint.
+   Waypoint reached -> done or pick next.  Not on stairs -> flat walk
+   toward waypoint (X first, then Y).  On stairs -> stair-phase by Y
+   bucket.  Sets fs_trg on the two foot-plant frames.
    addr: lcp_path() */
 
 void

@@ -1,14 +1,7 @@
 /*
  * ai.c -- AI decision engine and event dispatcher.
- *
- * Two entry points:
- *   chk_actT() -- called ~1 Hz from the main tick
- *     loop.  Walks a 9-priority ladder (event queue, alarm, bathroom,
- *     thirst, hunger, meals, wake/sleep, command queue, time-based
- *     random) and calls doAct() with the winning ACTION_ID.
- *   execEv() -- dispatches deferred events out of the FIFO to
- *     the matching event_receive_* / event_answer_* handler.
- *
+ * chk_actT: ~1 Hz priority ladder -> doAct(g_trac).
+ * execEv: dispatch deferred events from FIFO.
  * addr: chk_actT(), execEv()
  */
 
@@ -64,22 +57,12 @@ short   event;
         in_evrt = NO;
 }
 
-/* -- 9-priority AI decision engine -- */
-
-/* chk_actT: pick the next action for the resident.
-   The nine priority levels (in order):
-     1. Event queue drained via execEv()
-     2. Ctrl+A alarm -> ACTION_WAKE_FROM_ALARM
-     3. Bathroom need -> ACTION_USE_TOILET
-     4. Thirst (randomly skipped if sick)  -> ACTION_DRINK
-     5. Hunger (randomly skipped if sick)  -> ACTION_KITCHEN_CABINET
-     6. Scheduled lunch -> ACTION_EAT_MEAL (once per day)
-     7. Scheduled dinner -> ACTION_EAT_MEAL (once per day)
-     8. Scheduled wake -> ACTION_WAKE_UP_MORNING (once per day)
-     9. Scheduled bedtime -> ACTION_GO_TO_BED_NIGHT (once per day)
-    10. User command queue with priority escalation
-    11. Random time/mood-based action from personality tables
-
+/* chk_actT: 9-priority AI ladder.
+   1. Event queue -> execEv
+   2. Alarm -> WAKE_FROM_ALARM   3. Bathroom -> USE_TOILET
+   4. Thirst -> DRINK             5. Hunger -> KITCHEN_CABINET
+   6. Lunch  7. Dinner  8. Wake  9. Bedtime (once/day scheduled)
+   10. User command queue         11. Random time/mood-based
    addr: chk_actT() */
 
 void
@@ -108,9 +91,7 @@ chk_actT()
                 return;
         }
 
-        /* Sickness biases thirst/hunger: 66% skip when healthy so the
-           resident doesn't guzzle water constantly, 0% skip when sick
-           (so sickness always drives food/water). */
+        /* Sickness bias: 66% skip healthy, 0% sick. */
         if (lcp.sickness_level < 1)
                 sickness_skip_probability = 66;
         else
@@ -126,18 +107,10 @@ chk_actT()
                         return;
                 }
         }
-        /* P5: hunger.
-           Ghidra fires KITCHEN_CABINET when hunger > 0 AND rnd > skip AND
+        /* P5: hunger.  Ghidra shape: hunger > 0 AND rnd > skip AND
              ( (sick   AND food_slots > 0) OR
-               (healthy AND lastAct != ACTION_KITCHEN_CABINET) )
-           The `sick AND food > 0` disjunct is what lets a sick resident
-           chain multiple KITCHEN_CABINET visits.  The port previously
-           had a boolean shape that OR-ed food_slots with healthy and
-           only guarded lastAct at the outer AND, which meant a sick
-           resident whose lastAct was already KITCHEN_CABINET would
-           bounce out even with food available.  See Ghidra's
-           check_for_any_action_triggers hunger branch (inverted skip
-           form) for the exact boolean shape. */
+               (healthy AND lastAct != ACTION_KITCHEN_CABINET) ).
+           The sick-branch disjunct lets a sick resident chain visits. */
         if (lcp.hunger_level > 0) {
                 rnd = rndRng(1, 100);
                 if (rnd > sickness_skip_probability &&

@@ -1,15 +1,6 @@
 /*
- * gfx_prim.c -- low-level graphics primitives.
- *
- * These sit above the raw VDI/XBIOS traps but below the compositing
- * pipeline in render.c.  Each function is a real port of a Ghidra-
- * verified routine; the underlying VDI wrappers (vsl_color, v_pline,
- * vswr_mode, vsf_color, vsf_interior, vsf_style) are extern stubs in
- * stubs.c that map to the real trap #2 dispatch under Alcyon.
- *
- * addr: drwLine(), sc_sdtb(),
- *       sc_sdtf(), sc_firw(),
- *       blkcp32()
+ * gfx_prim.c -- low-level graphics primitives above VDI/XBIOS.
+ * addr: drwLine(), sc_sdtb(), sc_sdtf(), sc_firw(), blkcp32()
  */
 
 #include "types.h"
@@ -23,9 +14,7 @@
 #include "globals.h"
 #include "sprender.h"
 
-/* drwLine: Bresenham-ish line via VDI v_pline in backbuffer, then
-   restore frontbuffer draw target.  The 2-point polyline maps directly
-   to a single-segment line under VDI.
+/* drwLine: single-segment line via VDI v_pline (backbuffer, restore).
    addr: drwLine() */
 
 void
@@ -48,18 +37,12 @@ short   color;
         sc_sdtf();
 }
 
-/* sc_sdtb: XBIOS Logbase() saves the current
-   log-base pointer; Setscreen redirects VDI output to g_srptr (the
-   off-screen buffer).  Also resets the VDI fill mode to solid black so
-   subsequent fill calls have a well-known state.
+/* sc_sdtb: stash Logbase, Setscreen->g_srptr, reset fill to solid black.
    addr: sc_sdtb()
 
-   Launcher note: if LCP is launched via COMMAND.PRG (the Atari shell),
-   the shell's own workstation state doesn't survive our Setscreen
-   here and vsl_color silently falls back to pen 15 (dark brown) --
-   see the "water tank draws brown" report.  Launching LCP.PRG
-   directly from the GEM desktop (or a launcher that gives us a
-   fresh VDI workstation) avoids the issue. */
+   Launcher note: launching via COMMAND.PRG leaves VDI in a state where
+   vsl_color silently falls back to pen 15 (dark brown) -- water tank
+   renders brown.  Launch LCP.PRG directly (GEM desktop or --auto). */
 
 void
 sc_sdtb()
@@ -72,8 +55,7 @@ sc_sdtb()
         vsf_color(vdihnd, COLOR_black);
 }
 
-/* sc_sdtf: restore the log-base pointer stashed
-   by the backbuffer switch.
+/* sc_sdtf: restore log-base after sc_sdtb.
    addr: sc_sdtf() */
 
 void
@@ -82,11 +64,7 @@ sc_sdtf()
         Setscreen(g_srlgb, (void *)-1L, -1);
 }
 
-/* sc_firw: paint one row (160 bytes = 80 words = 20
-   quads-of-4) with the low-res-mode 3-bitplane 0xFFF pattern.  Row is
-   offset by `row * 160` bytes from `scrptr`.  Each 4-word write plants
-   1 blank bit-plane (0x0000) + 3 solid planes (0xFFFF), which combines
-   into palette entry 0xF (white in the LCP palette).
+/* sc_firw: paint row (160 B) with 0x0FFF (palette entry 0xF, white).
    addr: sc_firw() */
 
 void
@@ -107,11 +85,7 @@ short                   row;
         }
 }
 
-/* sc_firs: same row-stride shape as _white, but plants
-   two blank planes (0x0000) followed by two solid planes (0xFFFF)
-   instead of one + three.  In the LCP 4-bitplane low-res palette this
-   produces the light-cyan house-background stripe used for the top
-   status strip between menu screens.
+/* sc_firs: paint row with 0x0033 (2 planes) -- light-cyan status stripe.
    addr: sc_firs() */
 
 void
@@ -132,10 +106,7 @@ short                   row;
         }
 }
 
-/* sc_firb: paint one row (80 words = 160 bytes) with
-   zeros.  All 4 bitplanes off -> palette index 0 -> black in the LCP
-   palette.  Used by fillTopR as the separator
-   line between the text pane and the game area.
+/* sc_firb: paint row with 0 -> palette index 0 (black) separator.
    addr: sc_firb() */
 
 void
@@ -153,13 +124,8 @@ short                   row;
         }
 }
 
-/* initVdi: mini-game VDI setup.  Same shape as
-   sc_sdtb -- stash the current log-base, point
-   VDI output at the off-screen dest buffer, reset fill mode -- but
-   uses a separate sv_lgb slot (since the mini-game may nest its
-   own set_draw_to_backbuffer calls without clobbering ours) and sets
-   the default fill colour to palette entry 0xC (light green in the
-   LCP mini-game palette) instead of black.
+/* initVdi: mini-game VDI setup.  Same shape as sc_sdtb but uses
+   sv_lgb (nestable) and default fill = palette 0xC (light green).
    addr: initVdi() */
 
 void
@@ -173,7 +139,7 @@ initVdi()
         vsf_color(vdihnd, vdi_colt[0xc]);
 }
 
-/* exitVdi: restore the pre-mini-game log-base.
+/* exitVdi: restore pre-mini-game log-base.
    addr: exitVdi() */
 
 void
@@ -182,18 +148,8 @@ exitVdi()
         Setscreen(sv_lgb, (void *)-1L, -1);
 }
 
-/* drwPixel: single-pixel plot via a degenerate VDI polyline where
-   both endpoints are the same (x, y).  Structurally identical to
-   drwLine -- backbuffer switch, colour set, 2-point polyline draw,
-   frontbuffer restore -- but the collapsed endpoints let the VDI take
-   the single-pixel fast path in the polyline handler.
-
-   Used by rp_anim for the needle sweep pixels
-   and by the mini-games' cursor + score indicators.
-
-   addr: Ghidra `draw_pixel` at 0x00023930 (called by rp_anim as
-   `_draw_pixel`; identical shape/instruction count to drwLine per
-   Ghidra's function-similarity index). */
+/* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
+   addr: draw_pixel @ 0x23930 */
 
 void
 drwPixel(x, y, color)
@@ -213,11 +169,8 @@ short   color;
         sc_sdtf();
 }
 
-/* blkcp32: unrolled 32-byte block copy.  Copies count*32 bytes from
-   src to dst, 8 longwords at a time -- the 1985 code was aiming at a
-   MOVEM.L unrolling for maximum ST bus throughput.  Modern compilers
-   turn a plain memcpy() into equivalent SIMD, but preserving the shape
-   keeps the port byte-for-byte comparable when we do build under Alcyon.
+/* blkcp32: unrolled 32-byte block copy (count * 32 bytes, 8 longs at a
+   time -- MOVEM.L target).  Kept for byte-comparability.
    addr: blkcp32() */
 
 void
@@ -244,18 +197,9 @@ short   count;
         } while (remaining != -1);
 }
 
-/* sprite_init_MFDB (Ghidra 0x16612) is already ported as sp_iniM in
-   sprender.c -- we call it from stpScrB below rather than
-   duplicating the body here. */
-
-/* cpyScr (Ghidra 0x164FA): raster-copy the current physbase
-   screen into the memory buffer described by pdesMFDB.  Source is
-   MFDB_A whose fd_addr is NULL -- the VDI convention that means
-   "device screen", so vro_cpyfm reads from the shifter's currently
-   displayed video RAM.  Mode ALL_WHITE (=0) is the S=1 constant
-   raster op (fill destination with 1s, no source involved).  With
-   fd_addr=NULL, GEM's vro_cpyfm implementation on the ST snapshots
-   the visible screen into pdesMFDB's buffer regardless of the mode.
+/* cpyScr (Ghidra 0x164FA): vro_cpyfm the physbase screen into pdesMFDB.
+   Source MFDB_A.fd_addr=NULL is VDI "device screen" -- reads visible
+   video RAM.  Mode ALL_WHITE (=0) irrelevant on ST with fd_addr=NULL.
    addr: cpyScr() */
 
 void
@@ -276,35 +220,15 @@ MFDB *  pdesMFDB;
         vro_cpyfm(handle, ALL_WHITE, points, &MFDB_A, pdesMFDB);
 }
 
-/* stpScrB (Ghidra 0x16576): allocate and initialise the
-   double-buffered compositing screen.
-
-     1. Zero MFDB_A.fd_addr so future vro_cpyfm calls that source
-        from it read the visible device screen.
-     2. Point g_srptr at scrbufB + 0x12F, then align UP to
-        the next 512-byte boundary.  The 0x12F offset is a header
-        the original code carved out before the aligned buffer; the
-        512-byte alignment is stricter than the shifter DMA's 256-
-        byte requirement and matches the disassembly exactly.
-     3. Populate mf_scrp describing that buffer as a
-        scale*320 x scale*200 device-format bitmap (scale=1 =
-        low-res, so 320x200).  0x1D00 is the "unused" first arg to
-        sp_imfd (originally an nplanes hint).
-     4. Snapshot the currently visible physbase into the buffer via
-        cpyScr so the first compositing frame has something
-        sensible to blend on top of.
+/* stpScrB (Ghidra 0x16576): init double-buffered compositing screen.
+   1. MFDB_A.fd_addr=NULL (future vro_cpyfm read device screen).
+   2. g_srptr = scrbufB + 0x12F, aligned UP to 512.
+   3. Populate mf_scrp as scale*320 x scale*200; 0x1D00 = unused nplanes.
+   4. cpyScr physbase snapshot for first compositing frame.
    addr: stpScrB() */
 
-
-/* aes_init (Ghidra 0x167aa): AES + palette + physbase snapshot.
-     appl_init();
-     vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar, &gr_hwbox, &gr_hhbox);
-     Setpalette(main_pal);
-     sv_phb = Physbase();
-   The four graf_handle out-parameters (character w/h and box w/h) are
-   AES housekeeping globals; the port doesn't reference them elsewhere,
-   so local storage is fine.  Notably this function does NOT call
-   v_opnvwk -- that's vdi_init's job. */
+/* aes_init (Ghidra 0x167aa): appl_init + graf_handle + Setpalette +
+   physbase snapshot.  Does NOT call v_opnvwk (vdi_init's job). */
 
 #include <gembind.h>            /* appl_init, graf_handle, graf_mouse, form_alert */
 
@@ -325,12 +249,8 @@ aes_init()
 #define REZ_ST_HIGH     2
 #define M_OFF           256
 
-/* sc_ers (Ghidra 0x166fe): turn off the mouse then fill the
-   whole screen with COLOR_black via v_bar.  Rectangle extents depend
-   on scr_scal (low/medium: 319x199, high: 639x399).  Trailing vsf_color
-   restores the default fill colour to palette slot 1 (Ghidra labels
-   COLOR_green_sea; port's color_enum names slot 1 as COLOR_olive --
-   naming discrepancy only, byte value is 1). */
+/* sc_ers (Ghidra 0x166fe): mouse off + v_bar full screen COLOR_black.
+   Trailing vsf_color restores default fill to palette slot 1. */
 
 void
 sc_ers()
@@ -355,10 +275,8 @@ sc_ers()
         vsf_color(vdihnd, 1);
 }
 
-/* vdi_init (Ghidra 0x16680): open the virtual VDI workstation, verify
-   ST-low or ST-medium resolution, and clear the screen.  Ghidra flow
-   preserved byte-for-byte, including the form_alert reboot-loop when
-   the resolution query returns >= 601 pixels wide (mono ST-high). */
+/* vdi_init (Ghidra 0x16680): open workstation, require ST-low/medium,
+   clear screen.  Reboots via form_alert if width >= 601 (ST-high). */
 
 void
 vdi_init()
@@ -389,20 +307,8 @@ stpScrB()
         buf = (long) scrbufB + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
-        /* dest_screenbase_ptr: independent 32 KB compositing buffer
-           written by fillTopR / prCh and
-           read (blkcp32'd into the compositor screen) by
-           screen_render_8hz.  Ghidra's `dest_scr_buffer + 0x7f`
-           decompile is a constant-fold of the same align-up-to-512
-           pattern used here for g_srptr (verified against raw disasm
-           of fillTopR at 0x1686c:
-              add.l #0x200, D0
-              and.l #-0x200, D0     ; = & ~0x1FF).
-           The old port hack `g_dsb = g_srptr - 254` aliased the two
-           buffers, which made the top-strip content "visible" only
-           because it overwrote g_srptr directly; that broke the
-           letter-scroll compositing and every other feature that
-           expects dest_screenbase to be an independent buffer. */
+        /* g_dsb / g_dscp: independent 32 KB compositing buffer, aligned
+           UP to 512 (raw disasm fillTopR 0x1686c). */
         buf = ((long) dsb_stor + 0x200L) & ~0x1FFL;
         g_dsb  = (short *) buf;
         g_dscp = (void  *) buf;
@@ -412,8 +318,7 @@ stpScrB()
         cpyScr(vdihnd, &mf_scrp);
 }
 
-/* vst_h20: save current VDI text attributes into sv_vqta and set
-   text height to 20 pixels (mini-game title / answer render).
+/* vst_h20: save VDI attrs to sv_vqta; set text height 20 px.
    addr: vdi_save_and_set_text_height_20() */
 
 void
@@ -424,8 +329,7 @@ vst_h20()
         vst_height(vdihnd, 20, &td, &tc, &tb, &ta);
 }
 
-/* rst_vsth: restore VDI text height from the saved attribute block
-   (sv_vqta[7] is the cell-height slot).
+/* rst_vsth: restore VDI text height from sv_vqta[7] (cell height).
    addr: reset_vst_height() */
 
 void
@@ -435,9 +339,7 @@ rst_vsth()
         vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
 }
 
-/* vdi_cprt: VDI raster-copy wrapper.  Packs the (src rect, dst rect)
-   pair into an 8-short pxy array and dispatches vro_cpyfm.  Used by
-   the mini-game card renderer.
+/* vdi_cprt: vro_cpyfm wrapper packing (src rect, dst rect) into pxy[8].
    addr: vdi_copy_rect() */
 
 void
@@ -456,11 +358,7 @@ short   x1b, y1b, x2b, y2b;
         vro_cpyfm(handle, mode, pts, srcMFDB, dstMFDB);
 }
 
-/* moff: idempotent AES mouse hide.  Called before mini-game
-   rendering so the GEM cursor doesn't leak onto the card sprites.
-   moff_f prevents the second call from re-issuing M_OFF (cheap
-   guard; AES tolerates repeated M_OFF but the guard preserves the
-   original Ghidra semantics).
+/* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
    addr: mouse_off() */
 
 
@@ -473,11 +371,8 @@ moff()
         }
 }
 
-/* drwBar: solid-fill rectangle at (x1,y1)-(x2,y2) in `color`.
-   Same shape as plEr (initVdi/v_bar/exitVdi bracket) but takes an
-   explicit fill colour rather than using the fixed palette-0xC
-   preset.  Used by the title-screen name/date/time input area
-   which erases with COLOR_dk_brown before printing each field.
+/* drwBar: solid-fill rect (x1,y1)-(x2,y2) with explicit color.
+   Same bracket as plEr; used by title screen input erase.
    addr: draw_bar_color() */
 
 void

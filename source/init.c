@@ -1,14 +1,6 @@
 /*
- * init.c -- boot-time init functions ported from Ghidra's main path.
- *
- * These wrap the parts of Ghidra's main() at 0x15546 that the port
- * had been silently skipping: lcp_crnd (populates the PLAYER
- * struct for a new game), cl_drini (paints the clock face),
- * and cs_mvIn (minimal seeding of lcp_x/y/state
- * and dog target so the AI loop can pick up on frame 1).
- *
- * addr: lcp_crnd @ 0x169D8, cl_drini @ 0x233B4,
- *       cutscene_new_lcp_move_in @ Ghidra (large, only stub here).
+ * init.c -- boot-time init functions from Ghidra main() at 0x15546.
+ * addr: lcp_crnd @ 0x169D8, cl_drini @ 0x233B4, cs_mvIn.
  */
 
 #include "types.h"
@@ -43,10 +35,9 @@
 #include "walk.h"
 
 
-/* lcp_crnd (Ghidra 0x169D8): populate a fresh PLAYER struct
-   for a new game.  The 1985 code also picks a random name from the
-   "names" file -- we skip that so we don't need fOpen here;
-   character_name is left NUL-terminated. */
+/* lcp_crnd (Ghidra 0x169D8): populate PLAYER for a new game.
+   1985 code also picks a random name from "names"; skipped here
+   (avoids fOpen); character_name left NUL. */
 
 void
 lcp_crnd()
@@ -96,8 +87,7 @@ lcp_crnd()
         lcp.door_states_and_flags     = 0x0800;         /* DSF_INIT_FOOD_FULL */
 }
 
-/* cl_drini (Ghidra 0x233B4): paint the clock face's center
-   dot then delegate to cl_redrH. */
+/* cl_drini (Ghidra 0x233B4): paint clock-face center, cl_redrH. */
 
 void
 cl_drini()
@@ -106,22 +96,11 @@ cl_drini()
         cl_redrH();
 }
 
-/* st_titl -- full port of Ghidra show_title_screen_enter_name_and_date
-   (Ghidra 0x16de6).  Decompresses title.scn to the visible physbase,
-   then walks four interactive input phases:
-     1. NAME -- up to 18 uppercased chars, cursor-left backspace,
-                     Enter finishes early (min 1 char)
-     2. DATE -- MM/DD/YY, re-prompt on invalid month/day
-     3. TIME -- HH:MM, re-prompt on hours == 0 or > 12 or minutes > 59
-     4. AM/PM -- adjusts t_hour to 24-hour internal representation
-   Ends with a 1-second evnt_timer pause before returning.
-
-   Build-time switch:
-     -DSKIP_TITLE=1    ->  keep the pre-existing PLAYER/noon/0-0-0
-                                 defaults path, no visual + no getKey blocking.
-                                 Used by frame_hash / test_stairs etc. that
-                                 must run under Hatari's --fast-forward.
-     default           ->  full 1985 behaviour (visual + interactive) */
+/* st_titl (Ghidra 0x16de6): title screen name/date/time/AM-PM entry.
+   Phases: NAME (<= 18 upper chars), DATE (MM/DD/YY), TIME (HH:MM),
+   AM/PM (adjusts t_hour to 24h).  Ends with 1s evnt_timer.
+   Build switch -DSKIP_TITLE=1 keeps default PLAYER/noon/0-0-0 so
+   test harnesses under --fast-forward don't block on getKey. */
 
 
 #ifdef SKIP_TITLE
@@ -129,11 +108,8 @@ void
 st_titl()
 {
         short   i;
-        /* Match the non-skip path's first statement: prime g_dscp so
-           subsequent prCh->Setscreen(g_dscp,-1,-1) doesn't clobber
-           logbase with NULL and trigger the v_gtext $fd330c fault.
-           Without this, any prCh call before the first fillTopR()
-           crashes TOS's v_gtext -- see the 5-min real-time run log. */
+        /* Prime g_dscp: without this, prCh->Setscreen(NULL,...) triggers
+           TOS v_gtext $fd330c fault before first fillTopR(). */
         g_dscp = sv_phb;
 
         lcp.owner_name[0] = 'P';
@@ -152,9 +128,7 @@ st_titl()
 }
 #else
 
-/* drwCurs: paint an 8x8 solid rect at (x, y-7)..
-   (x+7, y).  Called alternately with COLOR_dk_brown (erase) and the
-   text colour (rewrite) to blink the cursor between characters.
+/* drwCurs: 8x8 solid rect at (x, y-7)..(x+7, y) for cursor blink.
    addr: drwCurs() */
 
 void
@@ -166,13 +140,9 @@ short   color;
         drwBar(x, y - 7, x + 7, y, color);
 }
 
-/* inpNum: read `val` digits into in_str[] with a blinking
-   cursor.  Only digits 0..9 are accepted; cursor-left erases the
-   most recent digit.  The (i % 3 == 2) skip-past-separator pattern
-   keeps the '/' in "MM/DD/YY" or ':' in "HH:MM" from being
-   overwritten during input.  Digits are stored as raw 0..9 values
-   (ch - 0x30) in in_str[], matching Ghidra's post-parse arithmetic
-   in st_titl (date/time decoded as tens*10 + ones).
+/* inpNum: read `val` digits into in_str[] with blinking cursor.
+   (i % 3 == 2) skip preserves the '/' or ':' separator.  Stored as
+   raw 0..9 (ch - 0x30) so st_titl can decode tens*10 + ones.
    addr: inpNum() */
 
 void
@@ -225,17 +195,12 @@ st_titl()
         short   xpos;
         short   pmc;   /* AM/PM char to display */
 
-        /* Ghidra's first statement: dest_screenbase_ptr = save_physbase.
-           Required so prCh's Setscreen(g_dscp, ...) redirects VDI text
-           output at visible physbase instead of the dsb_stor letter
-           buffer stpScrB left g_dscp pointing at.  Missing this was a
-           port literal-audit hole -- text on the title screen was
-           silently going to the offscreen letter buffer. */
+        /* g_dscp = sv_phb: redirect prCh's Setscreen at visible
+           physbase, not the dsb_stor letter buffer left by stpScrB. */
         g_dscp = sv_phb;
 
-        /* Decompress title.scn straight to visible physbase.  Port's
-           unScn folds Ghidra's inline fOpen + Malloc + read +
-           decompress + Mfree into one call. */
+        /* Decompress title.scn to physbase.  unScn folds Ghidra's
+           inline fOpen+Malloc+read+decompress+Mfree into one call. */
         unScn("title.scn", (unsigned short *) sv_phb, 16000L);
 
         /* NAME phase. */
@@ -317,31 +282,17 @@ name_done:
 }
 #endif   /* SKIP_TITLE */
 
-/* mq_tick is the asm ISR (mq_tick.s) -- byte-faithful port of Ghidra
-   0x1219a.  It has SR-manipulation instructions (privileged move sr,dn
-   / move dn,sr) that Alcyon C cannot emit, and terminates in `rte`,
-   so it must live in assembly.  Installed directly via Xbtimer -- no
-   C wrapper needed. */
+/* mq_tick lives in mq_tick.s (privileged move-sr, rte). */
 
-/* mq_intim (Ghidra 0x11112): install the Timer-A interrupt for the
-   MIDI sequencer.  Ghidra body:
-     midi_tick_prescaler   = 100
-     midi_tick_divider     = 4
-     midi_saved_timer_vect = Bios(Setexc, 0x4d, -1)   (query only)
-     Xbtimer(0, 5, 0x28, midi_seq_tick_handler)
-
+/* mq_intim (Ghidra 0x11112): install Timer-A for MIDI sequencer.
    addr: mq_intim() */
 
 void
 mq_intim()
 {
 #ifdef SKIP_MIDI
-        /* Automated tests set -DSKIP_MIDI=1 to keep runs deterministic:
-           the 200 Hz Timer-A interrupt fires at times that shift by a
-           few cycles between Hatari boots, and the game loop's state
-           at a fixed VBL count then differs enough to break
-           warp-based stair tests + frame-hash goldens.  Interactive
-           builds get the real handler. */
+        /* SKIP_MIDI: Timer-A jitter breaks frame-hash goldens under
+           --fast-forward.  Interactive builds get the real handler. */
         (void) 0;
 #else
         g_mtpre = 100;
@@ -351,10 +302,8 @@ mq_intim()
 #endif
 }
 
-/* cntSong: enumerate *.SNG and *.ORG files in the current
-   directory, storing counts in sng_cnt / org_cnt.
-   addr: Ghidra `count_songs` (called from main at step 8 of the boot
-   sequence documented above main() at ROM 0x15546). */
+/* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
+   addr: Ghidra count_songs (main step 8). */
 
 
 void
@@ -385,11 +334,7 @@ cntSong()
         }
 }
 
-/* bldBRev (Ghidra 0x1680e, build_bit_revert_table): fill rev_tab[256]
-   with bit-reversed byte values.  For each i in 0..255 and each bit
-   position j in 0..7, if the j-th "high-first" bit (bm_msb_lsb[j]) is
-   set in i, OR in the j-th "low-first" bit (bm_lsb_msb[j]).  Result:
-   rev_tab[i] has the bits of i in reversed order. */
+/* bldBRev (Ghidra 0x1680e): fill rev_tab[256] with bit-reversed bytes. */
 
 
 void
@@ -412,9 +357,7 @@ bldBRev()
         }
 }
 
-/* initBRev (Ghidra 0x16804, init_build_bit_revert_table): thin wrapper
-   -- just calls bldBRev.  Kept as a distinct entry point so main()
-   can call it at the exact Ghidra boot step. */
+/* initBRev (Ghidra 0x16804): wrapper for bldBRev, kept for boot-step parity. */
 
 void
 initBRev()
@@ -422,11 +365,9 @@ initBRev()
         bldBRev();
 }
 
-/* a_chfd (Ghidra action_check_front_door): resident walks to the front
-   door, opens it if closed, briefly stands aside (dog sprite fills the
-   doorway) for `wait_ticks` frames, walks back to look outside, then
-   randomly closes the door based on the initiative-threshold roll.
-   Used from cs_mvIn's tour and by future doorbell events. */
+/* a_chfd: resident checks the front door for `wait_ticks` frames,
+   randomly closes based on initiative_threshold.
+   addr: action_check_front_door() */
 
 
 void
@@ -480,17 +421,10 @@ short   wait_ticks;
         g_actif = NO;
 }
 
-/* cs_mvIn: Ghidra cutscene_new_lcp_move_in.  Full "resident moves into
-   the house" cutscene played once for a brand-new save: rings the
-   doorbell twice, opens the front door, walks the resident on screen
-   from the right edge, then (if copy protection passed) drives through
-   the scripted room tour before releasing the AI loop.
-
-   Ported line-for-line from Ghidra using a_chfd() and a_opecd() as
-   the port equivalents of action_check_front_door /
-   action_open_close_dresser.  Verified end-to-end in Hatari: 30k VBLs
-   of gameplay clean, tour visibly runs (upstairs closet opens, dog
-   transitions between rooms, resident carries suitcase to dresser). */
+/* cs_mvIn: "resident moves in" cutscene (first run only).
+   Doorbell x2, opens door, resident walks in from right, scripted
+   room tour (if copy-protection passed).
+   addr: cutscene_new_lcp_move_in() */
 
 
 void
@@ -602,29 +536,21 @@ cs_mvIn()
                 introSeq = NO;
 
 #ifdef TEST_ACTIONS
-                /* Enqueue one test event so chk_actT dispatches it as
-                   soon as gameLoop takes over.  Guarded by
-                   -DTEST_ACTIONS=<id> in the test build. */
+                /* -DTEST_ACTIONS=<id>: enqueue one test event. */
                 {
                         putEv(TEST_ACTIONS);
                 }
 #endif
 #ifdef TEST_KEY
-                /* Invoke the keyboard dispatcher with a single keycode
-                   to exercise the Ctrl-letter / cursor / printable
-                   paths.  Guarded by -DTEST_KEY=<code> in the test
-                   build. */
+                /* -DTEST_KEY=<code>: dispatch one keycode. */
                 {
                         deal_kc(TEST_KEY);
                 }
 #endif
 #ifdef TEST_STAIRS
-                /* Force a stair traversal.  The AI ladder in chk_actT
-                   never reads externally-set g_wtx/g_wty, so a
-                   memory-poke test can't drive one; call lcp_wkD
-                   directly.
-                     TEST_STAIRS=1 -> descend attic to bottom floor
-                     TEST_STAIRS=2 -> ascend bottom floor to attic  */
+                /* -DTEST_STAIRS=1 descend attic->bottom, 2 ascend.
+                   chk_actT ignores externally-set g_wtx/g_wty so we
+                   call lcp_wkD directly. */
                 {
 #if TEST_STAIRS == 1
                         lcp_x = 182; lcp_y = 72;

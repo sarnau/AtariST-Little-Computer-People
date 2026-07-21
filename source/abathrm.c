@@ -1,10 +1,5 @@
 /*
- * abathrm.c -- hygiene handlers.
- *
- * All three share the bathroom-sink / shower-cubicle walk-and-animate
- * pattern, without persistent world-state updates (unlike toilet or
- * kitchen).  Water-running SFX is toggled on entry and stopped on exit.
- *
+ * abathrm.c -- hygiene handlers (bathroom-sink / shower).
  * addr: a_takes(), a_brust(), a_washh()
  */
 
@@ -24,9 +19,7 @@
 #include "walk.h"
 
 
-/* a_takes: enter the shower cubicle, randomly alternate
-   scrub / wash blocks for 20..25 cycles, exit.  Head-anim mode gets a
-   dedicated HEAD_ANIM_SHOWER so the head bobs left/right in step.
+/* a_takes: shower.  20..25 scrub/wash cycles.  HEAD_ANIM_SHOWER bobs L/R.
    addr: a_takes() */
 
 void
@@ -84,9 +77,8 @@ a_takes()
         g_actif = NO;
 }
 
-/* a_brust: 24..35 cycle brush loop.  The "toothbrush"
-   sprite is actually SPRITE_STUDY_DOOR_FRAME (id 6) repositioned above
-   the resident's head, alternating between two X positions.
+/* a_brust: 24..35 tooth-brush cycles.  Reuses SPRITE_STUDY_DOOR_FRAME
+   (id 6) as the brush overlay above the head.
    addr: a_brust() */
 
 void

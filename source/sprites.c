@@ -229,12 +229,9 @@ short   flipV;
                         psVar2 = destImg;
 
                         iVar3 = (width - 1) - x;
-                        /* Alcyon C 4.14 miscompiles `(unsigned char) x`:
-                           it emits `ext.w` which sign-extends the low byte,
-                           so a byte >= 0x80 becomes a negative rev_tab
-                           index and reads garbage before the table.
-                           `& 0xff` forces unsigned semantics through bit-
-                           masking, which the compiler emits correctly. */
+                        /* Alcyon 4.14 miscompiles (unsigned char) x with
+                           ext.w -- byte >= 0x80 sign-extends to negative
+                           rev_tab index.  & 0xff forces unsigned. */
                         mask  = rev_tab[(srcImg[iVar3 + iVar3] >> 8) & 0xff] |
                                 rev_tab[srcImg[iVar3 + iVar3] & 0xff] << 8;
                         uVar1 = rev_tab[(srcImg[iVar3 + iVar3 + 1] >> 8) & 0xff] |
@@ -510,17 +507,12 @@ sp_drin()
 {
 }
 
-/* sp_lbbd (Ghidra sprite_lcp_build_all_body):
-   dilate one 21-row body frame into shape data.  The 168-byte source
-   is 4 shorts per row (a 64-bit sprite word split across four shorts,
-   read in the order src[0]|src[1] << 16 | src[2] << 16 (?)) -- Ghidra
-   decompiled the pack as
+/* sp_lbbd: dilate 21-row body frame -> shape data.  Source is 168 bytes
+   (4 shorts/row); Ghidra packs as
        mask = src[3] | ((src[1] | src[0]) << 16) | src[2];
-   Each row's mask is walked bit-by-bit from bit 30 down to bit 1,
-   and every isolated ON bit is smeared into its neighbours (bit-1,
-   bit, bit+1 all set) -- a 3-pixel-wide dilation that produces the
-   silhouette outline.  A second pass then bit-ORs each row into its
-   predecessor for vertical dilation.
+   Walk bits 30..1: each isolated ON bit smears into 3 (bit-1|bit|bit+1)
+   -- 3-px silhouette dilation.  Second pass: vertical dilation, OR each
+   row into its predecessor.
    addr: sp_lcp_build_all_body() */
 
 
@@ -571,16 +563,10 @@ short           height;
         (void) dp;
 }
 
-/* sp_lbhd (Ghidra sprite_lcp_build_all_head):
-   dilate one 21-row head frame.  Same source packing as sp_lbbd but a
-   different bit-smearing rule:
-     - start with mask = 0xFFFFFFFF and img = the packed source pixels
-     - shrink mask from bit 31 downwards until bit_or[bit-1] & img != 0
-     - shrink mask from bit 0 upwards   until bit_or[bit+1] & img != 0
-   The result is a mask that covers exactly the horizontal extent of
-   the ON pixels (plus 1 bit of slack on each side) -- the head's
-   convex-hull outline instead of a pixel-precise dilation.
-   Then the same vertical-OR merge as sp_lbbd.
+/* sp_lbhd: dilate 21-row head frame.  Same packing as sp_lbbd but:
+   start with mask = 0xFFFFFFFF, shrink from bit 31 down and bit 0 up
+   until the next bit hits set img pixels -- convex-hull outline plus
+   1 bit slack.  Then vertical-OR merge (opposite direction to sp_lbbd).
    addr: sp_lcp_build_all_head() */
 
 
@@ -618,8 +604,7 @@ short           height;
                 dest[1] = (unsigned short) mask;
                 dest = dest + 2;
         }
-        /* Vertical dilation: OR each row into the row BELOW (opposite
-           direction to sp_lbbd). */
+        /* Vertical dilation: OR each row into the row BELOW. */
         dest = dp;
         for (h = 0; h < (short) (height - 1); h = h + 1) {
                 dest[0] = dest[2] | dest[0];
@@ -628,12 +613,7 @@ short           height;
         }
 }
 
-/* sp_lbal (Ghidra sprite_lcp_build_all):
-   dispatcher.  Iterate 98 body frames (168 source bytes each ->
-   84 dest bytes each) then 66 head frames, calling sp_lbbd /
-   sp_lbhd.  Sources come from body_ptr / pex_ptr loaded
-   by fLoad; destinations are the BSS arrays body_shape_data_buf
-   / head_shape_data_buf we allocate in sprglobs.c.
+/* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
    addr: sp_lcp_build_all() */
 
 void
@@ -643,12 +623,8 @@ sp_lbal()
         char *  src_ptr;
         char *  dst_ptr;
 
-        /* Precompute walking pointers instead of the more obvious
-           `body_ptr + index * 168` per iteration -- the Alcyon
-           codegen for the (short * ) + (int * short) expression
-           crashed on the very first iteration in testing; walking
-           two char* accumulators is byte-for-byte equivalent and
-           compiles cleanly. */
+        /* Walking char* accumulators (not body_ptr + index * 168):
+           Alcyon miscompiled the (short*) + (int * short) form. */
         src_ptr = (char *) body_ptr;
         dst_ptr = (char *) body_shp;
         for (index = 0; index < 98; index = index + 1) {
