@@ -1,2 +1,2 @@
 *.pyc
-csrc/tools/frame_hash.txt
+source/tools/frame_hash.txt
