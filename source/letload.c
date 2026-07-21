@@ -1,29 +1,14 @@
 /*
- * letload.c -- decompress LETTER.TXT and index it into
- *                  g_ltlp[] for a_writl().
+ * letload.c -- decompress LETTER.TXT into g_ltlp[] for a_writl().
  *
- * fr_reac: nibble-based token decoder.  The on-disk file
- * format is:
+ * On-disk format:
  *   +0    short   uncompressed_size + 0x11 header bytes
  *   +2    byte    comp_tok[15]  (15 most common bytes)
- *   +17   ...     compressed body
+ *   +17   ...     compressed body (nibble stream; 15 = literal byte escape)
  *
- * Body decode: read 4 bits at a time (high nibble of each byte first,
- * then the low nibble; state kept in `flag`).  For each nibble:
- *   nibble in 0..14  ->  emit comp_tok[nibble]
- *   nibble == 15     ->  read two more nibbles for a literal 8-bit byte
- *
- * fl_ltpl: after decompression, g_lttx
- * is a stream of newline-terminated (well, control-char-terminated)
- * strings.  We walk it exactly 360 times, recording the start of each
- * line into g_ltlp[i] and then skipping past the terminator
- * run (any bytes < ' ') to the start of the next line.
- *
- * Fidelity note: the 1985 code passes the *advanced* fbuffer to
- * GEMDOS Mfree at the end -- Alcyon's ST allocator tolerated freeing
- * from anywhere inside the block, but modern free(3) traps on that.
- * We stash the original pointer in fbuffer_orig and free that.  The
- * visible behaviour is unchanged.
+ * Fidelity note: the 1985 code passes the *advanced* fbuffer to Mfree;
+ * Alcyon's allocator tolerated that, modern free(3) traps.  We stash
+ * the original pointer in fbuffer_orig.
  *
  * addr: fr_reac(), fl_ltpl()
  */

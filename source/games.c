@@ -414,12 +414,9 @@ ag_ssw()
         ag_dwl(g_agscw, COLOR_green);
 }
 
-/* ag_main: full anagram game loop.
-   Structure: outer per-word loop, middle per-guess loop, inner
-   per-keypress loop.  Uses labels (`new_word` / `validate`) to mirror
-   the two `goto LAB_00018210` and `goto LAB_00018562` jumps in the
-   1985 source -- flattening them into structured flow would change
-   the shape of the port.
+/* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
+   inner per-keypress.  Labels new_word/validate mirror the two
+   goto LAB_00018210 / LAB_00018562 jumps in the 1985 source.
    addr: ag_main() (== anagram_main) */
 
 void
@@ -586,20 +583,11 @@ validate:
         goto new_word;
 }
 
-/* Forward declarations: word-puzzle helpers live after the poker
-   helper block and per-file extern additions further down. */
-
 /* wp_main: WORD PUZZLE main loop.
-   Loads wordpz.txt into a 2000-byte buffer, indexes 66 line
-   pointers (33 puzzles x {template, solution}) via the same
-   ordinal-scan pattern used by fl_ltpl for letter-writing.
-   Displays the numeric puzzle selector; F1 next, F2 prev
-   (wraps 0..0x20), F5 solve, F10 quit.  Per-puzzle: parses the
-   template to count '@' blanks and seed wp_ans[i][0] with the
-   character following each '@' (used by the render/scan logic
-   below), renders, and waits for the next key.
-   Preserves the two Ghidra gotos (LAB_000177ac = next-puzzle,
-   LAB_0001797c = cleanup) verbatim.
+   Loads wordpz.txt into a 2000-byte buffer, indexes 66 line pointers
+   (33 puzzles x {template, solution}).  F1 next / F2 prev (wraps 0..0x20)
+   / F5 solve / F10 quit.  Preserves goto LAB_000177ac (next_puzzle)
+   and LAB_0001797c (cleanup) verbatim.
    addr: wp_main() (== word_puzzle_main) */
 
 void
@@ -641,10 +629,7 @@ next_puzzle:
                 plEr(128,  0, 143,  8);
                 plEr(  0, 50, 319, 69);
 
-                /* Scan the template: count '@' blanks and seed the
-                   player-answer buffer with the character following
-                   each '@' (typically the punctuation the answer will
-                   sit against, so the render pass has an anchor). */
+                /* Count '@' blanks; seed wp_ans[i][0] with char after '@'. */
                 parse_ptr = g_ltlp[g_wpci + g_wpci];
                 wp_blk = 0;
                 for (;;) {
@@ -697,14 +682,11 @@ cleanup:
         return;
 }
 
-/* Forward declaration for the showdown routine, used by pk_main. */
 static void     pk_show();
 
-/* pk_bjwr: nested war round.  Both players draw 3 face-down cards
-   (or fewer if either is down to their last chip) then 1 face-up
-   card.  On tie, recurses via the outer for loop with g_pchc++.
-   Returns 0 (normal completion), -1 (computer out of cards / user
-   quit), or -2 (player out of cards).
+/* pk_bjwr: nested war round.  Draw 3 face-down + 1 face-up each.
+   On tie, loops with g_pchc++.
+   Returns 0 = normal, -1 = computer out / user quit, -2 = player out.
    addr: poker_blackjack_war_round() */
 
 static short
@@ -817,18 +799,9 @@ pk_bjwr()
         return 0;
 }
 
-/* pk_wrMn: WAR mini-game main loop.  After the standard init
-   (Malloc, load cards, mg_stp, 400-swap shuffle, split into 26-card
-   piles, initial display), enters a per-round loop:
-     - erase card/message areas
-     - check both money=0 exits
-     - each player reveals one card
-     - compare ranks (mod 13)
-     - player-higher: witty computer reaction, pk_annr(1), transfer
-     - computer-higher: reaction by margin+rank, a_peeka animation,
-                              pk_annr(0), transfer
-     - tie: pk_bjwr() (nested war)
-   Ghidra 385-instruction port.
+/* pk_wrMn: WAR mini-game main loop.
+   Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
+   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
    addr: pk_wrMn() (== poker_war_main) */
 
 void
@@ -1022,11 +995,7 @@ pk_wrMn()
         crd_dat = (short *) 0;
 }
 
-/* -- Poker/War/Blackjack shared helpers -- */
-
-
-/* pk_pmsg: print a green status message in the bottom info bar
-   (5,71)..(319,75) after clearing the strip.
+/* pk_pmsg: print a green status message in the bottom info bar.
    addr: poker_print_message() */
 
 void
@@ -1038,11 +1007,8 @@ char *  str;
 }
 
 /* pk_awp: display computer money count in the top-left panel.
-   Ghidra hand-formats a 3-digit decimal (space-padded on leading
-   zeros) into a fixed 12-byte stack buffer, laying the digit bytes
-   at positions 0/1/2 with '\0' at position 3 and using positions
-   4/6/8 as scratch for the quotient/remainder pass.  Preserved
-   verbatim so the port stays byte-comparable.
+   Preserves the 3-digit hand-formatted, space-padded byte layout
+   from Ghidra verbatim (byte-comparable).
    addr: poker_award_pot() */
 
 void
@@ -1066,8 +1032,7 @@ pk_awp()
         strPr(str, 5, 18, COLOR_black);
 }
 
-/* pk_dppm: display player money count in the bottom-left panel.
-   Same three-digit-with-space-padding shape as pk_awp.
+/* pk_dppm: display player money (same 3-digit format as pk_awp).
    addr: poker_display_player_money() */
 
 void
@@ -1115,10 +1080,8 @@ pk_dpot()
         strPr(str, 31, 38, COLOR_black);
 }
 
-/* pk_rmch: pop a card off the top of `pile`; shift the remaining
-   `*count-1` entries down one slot.  Returns CARD_NONE if the pile
-   was already empty.  Used by war/blackjack to draw from each
-   player's draw pile.
+/* pk_rmch: pop card from top of `pile`; shift remaining entries down.
+   Returns CARD_NONE if empty.
    addr: poker_remove_card_from_hand() */
 
 short
@@ -1142,9 +1105,7 @@ short * count;
         return card;
 }
 
-/* pk_actd: append `val` at position pile[*idx] and increment idx.
-   Used to push captured cards back to the winner's draw pile after
-   a round resolves.
+/* pk_actd: append val at pile[*idx]; increment idx.
    addr: poker_add_card_to_discard() */
 
 void
@@ -1157,9 +1118,8 @@ short   val;
         *idx = *idx + 1;
 }
 
-/* pk_annr: transfer the pot to the round winner one chip per tick
-   (winner=0 -> computer, winner=1 -> player).  Zeros the pot when
-   done.  Animated so the running total ticks up on screen.
+/* pk_annr: transfer pot to winner one chip per tick
+   (winner=0 -> computer, winner=1 -> player).
    addr: poker_ante_and_new_round() */
 
 void
@@ -1184,10 +1144,8 @@ short   winner;
         g_ppppa = 0;
 }
 
-/* pk_inph: wait for one of the caller-supplied F-keys (a/b/c),
-   digit keys 1..5, or auto-timeout.  Returns codes 1..8 for
-   a/b/c/1/2/3/4/5 respectively, or -1 on inactivity timeout.
-   Handles the ambient event pump via mg_wkev between polls.
+/* pk_inph: wait for one of F-keys a/b/c or digits 1..5.
+   Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout.
    addr: poker_input_handler() */
 
 short
@@ -1214,10 +1172,8 @@ short   c;
         }
 }
 
-/* pk_drcs: blit one card sprite at slot `xi` of row `yi`.
-   card=CARD_BACK selects the shared face-down back MFDB
-   (crd_mfdb[52]); face cards 0..51 index directly.  15x23-pixel
-   card artwork.
+/* pk_drcs: blit one card sprite (15x23) at slot xi of row yi.
+   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly.
    addr: poker_draw_card_sprite() */
 
 void
@@ -1241,12 +1197,8 @@ short   yi;
                               x, y, x + 15, y + 23);
 }
 
-/* -- Poker helpers -- */
-
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip to the pot (empty check first,
-   with "Sorry, you're all out!!!" / "I'm all out!!!" exits).  On F10
-   or timeout: sets pk_quit.
+   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
    addr: poker_ante_phase() */
 
 static void
@@ -1286,12 +1238,9 @@ pk_ante()
         }
 }
 
-/* pk_evh: evaluate a 5-card hand.  Writes hand rank into *hand_rank
-   (0=high card ... 9=royal flush) and marks the cards that make up
-   the winning combination in rank_flags[i]=1.  suit_flags receives
-   a rank-sorted copy of the hand (used as kicker scratch by pk_show).
-   Preserves the exact Ghidra shape including two goto exits so the
-   port stays byte-comparable with the 1985 asm.
+/* pk_evh: evaluate a 5-card hand.  *hand_rank <- 0=high card..9=royal flush.
+   rank_flags[i]=1 for winning combo cards.  suit_flags: rank-sorted hand copy.
+   Preserves Ghidra shape (two goto exits) -- byte-comparable.
    addr: poker_evaluate_hand() */
 
 static void
@@ -1438,10 +1387,8 @@ rank_from_hc_bp:
         *hand_rank = 1;                                          /* one pair */
 }
 
-/* pk_evhs: deal a fresh 5-card hand to each player.  Zeros both
-   hands with CARD_NONE, then repeatedly draws random cards
-   (uniqueness check across both hands) until 10 unique picks land.
-   Player hand shown face-up, computer hand face-down.
+/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
+   face-up, computer face-down.
    addr: poker_evaluate_hands() */
 
 static void
@@ -1487,8 +1434,7 @@ pk_evhs()
         }
 }
 
-/* pk_blf: 1/15 chance of bluff -- but only when the computer's hand
-   is weak (rank < 2, i.e. high card or single pair).  Sets pk_bluff.
+/* pk_blf: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff.
    addr: poker_computer_decide_bluff() */
 
 static void

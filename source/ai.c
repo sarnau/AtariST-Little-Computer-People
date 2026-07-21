@@ -24,14 +24,10 @@
 #include "globals.h"
 #include "parser.h"
 #include "random.h"
-/* Forward-declared handlers (real ports arrive later, one .c per group). */
 
 /* execEv: dispatch a single deferred event to its handler.
-   Guards against recursion via in_evrt and forces
-   the resident out of bed first if asleep.  Food-delivery has an extra
-   guard: the 3-bit food-count field must not be full (4) or the event
-   is dropped silently.
-
+   in_evrt guards recursion; sleeper is forced out of bed first.
+   Food-delivery drops silently if the 3-bit food-count is already 4.
    addr: execEv() */
 
 void
@@ -68,13 +64,7 @@ short   event;
         in_evrt = NO;
 }
 
-/* ---- 9-priority AI decision engine ------------------------------------- */
-
-/* Externals implemented elsewhere (or stubbed). */
-
-/* Command-queue globals filled from typed input.  Priority is bumped
-   every rejected round until it crosses the 8 threshold, at which point
-   the queued command wins. */
+/* -- 9-priority AI decision engine -- */
 
 /* chk_actT: pick the next action for the resident.
    The nine priority levels (in order):
@@ -223,12 +213,8 @@ chk_actT()
                 doAct();
 }
 
-/* prsCmd: called from deal_kc when the user
-   presses Enter.  Runs the natural-language parser
-   chk_encm() over the current g_cdinb, and
-   if it returns a valid ACTION_ID and the queue has room, appends it
-   with the priority currently sitting in g_aprio.
-
+/* prsCmd: called from deal_kc on Enter.  Runs chk_encm() on g_cdinb;
+   valid ACTION_ID with queue room is appended at g_aprio priority.
    addr: prsCmd() */
 
 

@@ -36,12 +36,7 @@
 #include "sprender.h"
 
 
-/* pk_ldCrd: read 53 card bitmaps from disk into
-   crd_dat, synthesise the 54th highlight pattern, then wire all 54
-   MFDB descriptors + the destination-screen MFDB used by the game UI.
-
-   addr: pk_ldCrd() */
-
+/* addr: pk_ldCrd() */
 void
 pk_ldCrd()
 {

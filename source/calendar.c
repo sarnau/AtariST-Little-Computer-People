@@ -30,13 +30,7 @@ short   year;
         return result;
 }
 
-/* daily_rs: called from gameSim1() when
-   the clock rolls over to 00:00.  Clears the four "already fired today"
-   flags so meals, wake-up, and bedtime can trigger again on the new
-   game-day.
-
-   addr: daily_rs() */
-
+/* addr: daily_rs() */
 void
 daily_rs()
 {

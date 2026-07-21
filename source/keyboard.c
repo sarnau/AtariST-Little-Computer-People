@@ -1,18 +1,5 @@
 /*
  * keyboard.c -- keyboard polling + Ctrl-key event dispatch.
- *
- * getKey() polls GEMDOS Cconis then Crawcin.  Crawcin
- * returns a 32-bit value packing scancode (bits 16..23) and ASCII
- * (bits 0..7); function keys and cursor keys have ASCII 0, so we
- * fall through to the scancode dispatch.  On the host, Cconis
- * always returns 0 (no keyboard) so this reduces to a noop -- the
- * ST-side game state is unchanged.
- *
- * deal_kc() is the router.  Ctrl+A..W trigger event
- * queue items or one-shot flags; Ctrl+M (Enter) submits the command
- * buffer; cursor-left is backspace; other printable ASCII appends
- * to the g_cdinb and prints via prCh.
- *
  * addr: getKey(), deal_kc()
  */
 
@@ -29,13 +16,9 @@
 #include "sound.h"
 
 
-/* getKey: poll BIOS for the next keycode.  Returns KEY_NONE
-   (-1) when the buffer is empty.  When the ASCII byte is 0 we consult
-   the scancode (bits 16..23) for function keys and cursor keys, and
-   fold them into a compact 16-bit value (0xE0 | scancode) that
-   deal_kc dispatches on.
+/* Returns KEY_NONE (-1) when the buffer is empty.  When ASCII byte is 0
+   the scancode (bits 16..23) is folded into 0x100 | scan.
    addr: getKey() */
-
 short
 getKey()
 {
@@ -64,9 +47,7 @@ getKey()
         return KEY_NONE;
 }
 
-/* deal_kc: dispatch one keycode to its handler.
-   addr: deal_kc() */
-
+/* addr: deal_kc() */
 void
 deal_kc(keycode)
 short   keycode;

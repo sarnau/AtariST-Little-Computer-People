@@ -120,12 +120,9 @@ sc_sctd()
         sc_firw(g_dscp, 25);
 }
 
-/* prCh: render one character via VDI.  Sets the log-base to the
-   back-buffer, calls vst_color to set the current text ink, switches
-   to MD_TRANS (transparent overlay), calls v_gtext to blit, then
-   restores MD_REPLACE and the original log-base.  The Setscreen calls
-   pass (void*)-1 for phys and rez which the trap treats as "leave
-   unchanged".
+/* prCh: render one char via VDI.
+   Sets logbase to backbuffer, MD_TRANS overlay via v_gtext, restores state.
+   Setscreen (void*)-1 for phys/rez means "leave unchanged".
    addr: prCh() */
 
 void
@@ -150,14 +147,11 @@ short   color;
         Setscreen(saved_log, (void *)-1L, -1);
 }
 
-/* rp_anim: sweep the needle back and forth from
-   x=70..83 at y=42, one pixel per frame, wrapping at 0.  If music is
-   playing and we're not currently browsing records, roll a random VU
-   meter LED (0..6) at y=47 and toggle its lit/unlit state (red if the
-   new mask overlaps the accumulated `g_ltpac`, else
-   black).  The `g_ltlic` / `g_ltpac` variable
-   names are 1985 shared-storage reuse -- they double as record-player
-   state when no letter is being written.
+/* rp_anim: sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
+   If music playing and not browsing records, roll random VU LED (0..6)
+   at y=47 and toggle lit/unlit (red if new mask overlaps g_ltpac, else black).
+   g_ltlic/g_ltpac are 1985 shared-storage: also record-player state
+   when no letter is being written.
    addr: rp_anim() */
 
 void
@@ -190,10 +184,8 @@ rp_anim()
         }
 }
 
-/* strPr: paint a NUL-terminated string starting at (x, y).
-   Loops prCh one char at a time, bumping x by 8 pixels between
-   chars (the font advance width for the 8x8 system font used by the
-   status strip / game menu).
+/* strPr: paint NUL-terminated string at (x,y) via prCh, 8px/char advance
+   (8x8 system font used by status strip / game menu).
    addr: strPr() */
 
 void
