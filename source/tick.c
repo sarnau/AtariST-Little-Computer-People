@@ -52,8 +52,34 @@ short   counter;
         short   psi;                            /* petting sprite id */
         short   key;
 
-        /* ---- Path A: not carrying, run the animation loop. ---- */
-        if (g_lcyof == NO) {
+        /* Carrying-mode position update.  Ghidra 0x256a6..0x258e4 shows
+           Path B in the ROM (g_lcyof != NO) first repositions the
+           carried sprite for the current lcp_face + carry offset, then
+           dispatches through carried_object_id_table[10] to set the Y
+           offset per object -- and then FALLS INTO the same animation
+           loop as Path A (the ROM's `bra.w 0x25d60` at the end of the
+           dispatched handler re-enters Path A's counter loop, so the
+           frame still gets rendered).  The earlier port structured
+           these as two disjoint paths and returned from Path B without
+           calling the loop, causing the game to freeze if g_lcyof ever
+           got stuck YES (diagnosed via source/tools/trace_lcyof.sh).
+           Positioning up-front, then running the shared loop, matches
+           the ROM semantics and eliminates the freeze. */
+        if (g_lcyof != NO) {
+                slot = g_seslm[g_lcieo];
+                if (lcp_face == FACING_RIGHT) {
+                        g_sepex[slot] = lcp_x + 10;
+                } else {
+                        g_sepex[slot] = (lcp_x - g_seacw[slot]) + 16;
+                        if (g_sepex[slot] < 0)
+                                g_sepex[slot] = 0;
+                }
+                y_off = cy_yoff(g_lcieo);
+                if (y_off != 0x7fff)
+                        g_sepey[slot] = lcp_y + y_off;
+        }
+
+        {
                 count = ani_cnt;
                 for (index = 0; index < counter + 1; index = index + 1) {
                         while (count == ani_cnt)
@@ -206,19 +232,5 @@ short   counter;
 
                         sc_ren8();
                 }
-                return;
         }
-
-        /* ---- Path B: carrying an object.  Reposition its sprite. ---- */
-        slot = g_seslm[g_lcieo];
-        if (lcp_face == FACING_RIGHT) {
-                g_sepex[slot] = lcp_x + 10;
-        } else {
-                g_sepex[slot] = (lcp_x - g_seacw[slot]) + 16;
-                if (g_sepex[slot] < 0)
-                        g_sepex[slot] = 0;
-        }
-        y_off = cy_yoff(g_lcieo);
-        if (y_off != 0x7fff)
-                g_sepey[slot] = lcp_y + y_off;
 }
