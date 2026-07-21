@@ -1,9 +1,9 @@
 #Ghidra Lock File
-#Thu Jul 16 15:10:19 CEST 2026
+#Mon Jul 20 20:50:35 CEST 2026
 <META>\ Supports\ File\ Channel\ Locking=Channel Lock
-Hostname=MMM-MacBook-Pro-M3-6.local
+Hostname=MMM-MBP-M3-6.local
 OS\ Architecture=aarch64
 OS\ Name=Mac OS X
 OS\ Version=26.5.2
-Timestamp=7/16/26, 3\:10\u202FPM
+Timestamp=7/20/26, 8\:50\u202FPM
 Username=sarnau
