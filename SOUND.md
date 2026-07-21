@@ -52,7 +52,7 @@ A custom MIDI-like sequencer engine (`midi_seq_*` functions, 24 total) plays
 `.sng` song files. It supports dual output: external MIDI via the Atari ST's
 ACIA port, and internal PSG synthesis via direct YM2149 register writes. Both
 outputs can operate simultaneously or independently, controlled by
-`midi_output_enabled` and `psg_output_enabled` flags.
+`g_moen` and `psg_out` flags.
 
 ### Timing Architecture
 
@@ -70,12 +70,12 @@ midi_seq_tick_handler (200 Hz IRQ)
           +-- midi_seq_dispatch_event() — send note-on/off to PSG/MIDI
 ```
 
-The `midi_tick_prescaler` controls the effective tempo. It counts down from
-`midi_tempo` and triggers sequencer advancement when it reaches zero. The
-`midi_tick_divider` provides finer event-level timing within each prescaler
+The `g_mtpre` controls the effective tempo. It counts down from
+`mi_temp` and triggers sequencer advancement when it reaches zero. The
+`g_mtdiv` provides finer event-level timing within each prescaler
 period.
 
-A re-entrancy lock (`midi_reentrant_lock`) prevents the sequencer from being
+A re-entrancy lock (`mi_rlock`) prevents the sequencer from being
 interrupted by another timer tick while still processing the previous one.
 
 ### Sequencer State Machine (MIDI_SEQ_PHASE enum)
@@ -115,7 +115,7 @@ Byte 2: [bit 7: always 0] [bits 0-6: MIDI note number 0-127]
 | Transpose mode | byte1 bits 6–7 | 0 = apply scale table, 1–3 = raw note |
 | MIDI note | byte2 bits 0–6 | Standard MIDI note number (0–127) |
 
-### Scale/Transpose System (`midi_seq_build_scale_table`)
+### Scale/Transpose System (`mq_bust`)
 
 The sequencer includes a scale quantization system that constrains notes to
 specific musical scales:
@@ -145,15 +145,15 @@ via `midi_seq_queue_note_event()`. Each entry stores the note duration, note val
 (combined with timing info), and mapped channel. Notes are expired by
 `midi_seq_expire_notes()` which sends note-off events when their duration completes.
 
-### Event Dispatch (`midi_seq_dispatch_event`)
+### Event Dispatch (`mq_dise`)
 
 The largest sound function (154 lines). Routes MIDI events to both outputs:
 
-**External MIDI** (`midi_output_enabled`):
+**External MIDI** (`g_moen`):
 - Applies octave transposition based on channel mapping
-- Sends via `_xbios(XBIOS_Midiws)` or direct ACIA byte writes (`midi_out_write_byte`)
+- Sends via `_xbios(XBIOS_Midiws)` or direct ACIA byte writes (`mowrit`)
 
-**Internal PSG** (`psg_output_enabled`):
+**Internal PSG** (`psg_out`):
 - Note-on (status 0x90): looks up frequency in `psg_frequency_table[]`, writes to PSG
   period registers, triggers ADSR envelope
 - Note-off (status 0x90 with velocity 0): finds matching channel, triggers envelope release
@@ -161,7 +161,7 @@ The largest sound function (154 lines). Routes MIDI events to both outputs:
 - Allocates notes to the 3 available PSG channels, tracking active notes in
   `psg_channel_notes[]`
 
-### Channel Mapping (`midi_seq_parse_channel_map`)
+### Channel Mapping (`mq_pacm`)
 
 A 90-byte block preceding the song header defines how MIDI channels map to
 PSG channels and what program (instrument) each uses. Parsed into
@@ -188,8 +188,8 @@ song_play("filename.sng")
 
 ### Record Player / Piano Playback
 
-When the LCP plays the record player (`action_play_with_record`) or piano
-(`action_play_piano`), the game:
+When the LCP plays the record player (`a_plawr`) or piano
+(`a_playp`), the game:
 
 1. Scans the data directory for `*.sng` or `*.org` files using GEMDOS Fsfirst/Fsnext
 2. Selects a random file from those found
@@ -199,7 +199,7 @@ When the LCP plays the record player (`action_play_with_record`) or piano
    - If any channel exceeds the previous frame's volume, switch to an active
      dance/playing pose
    - Otherwise switch to idle pose
-5. Loops until `midi_is_playing` becomes false (song ends)
+5. Loops until `mi_play` becomes false (song ends)
 
 ---
 
@@ -288,7 +288,7 @@ and music are mutually exclusive — they share the PSG hardware.
 ### Data Source: `sounds.lcp`
 
 The file is 1,156 bytes and contains 23 DoSound command sequences terminated
-by a 2-byte `0x0000` sentinel, loaded into `midi_note_length_params[]` at
+by a 2-byte `0x0000` sentinel, loaded into `mi_ntLp[]` at
 startup. Each effect is a variable-length byte array in the Atari ST DoSound
 format: a sequence of register-write commands that the OS executes at 50 Hz.
 
@@ -351,7 +351,7 @@ frequency alone.
 
 ### Priority System
 
-Each sound effect has a priority value stored in `_soundeffect_priority_table[]`.
+Each sound effect has a priority value stored in `sf_pri[]`.
 When a new effect is requested via `soundeffect_select()`:
 
 - If no effect is currently playing: play immediately
@@ -399,7 +399,7 @@ This chaining is handled in `screen_render_8hz()` when the duration timer expire
 ### Mutual Exclusion with Music
 
 Sound effects and music cannot play simultaneously because they share the
-YM2149 PSG hardware. `soundeffect_irq_play()` checks `midi_is_playing` first
+YM2149 PSG hardware. `soundeffect_irq_play()` checks `mi_play` first
 and returns immediately if music is active. During record player and piano
 actions, no ambient SFX are heard.
 
@@ -469,7 +469,7 @@ and earlier offsets for envelope parameters.
 
 ### Header Configuration Commands
 
-Parsed by `midi_seq_parse_header()` starting at `midi_data_base_ptr`.
+Parsed by `midi_seq_parse_header()` starting at `mi_dbase`.
 The parser uses the mask `(byte & 0x9F) < 0x20` to distinguish note events
 (3-byte groups, skipped) from configuration commands (dispatched via jump table).
 The header ends when a 0x00 byte is encountered after the initial skip.
@@ -532,7 +532,7 @@ Within the S-byte content region:
 - **Duration**: last 4 bytes — two big-endian shorts (hi, lo) combined as
   `(hi << 16) | lo`, then divided by 25 to yield 200 Hz tick count
 
-The game copies the entire S-byte content into `soundeffect_DoSound_Buffer`,
+The game copies the entire S-byte content into `g_sfDoB`,
 extracts the 4-byte duration from the end, then zeroes those 4 bytes so the
 DoSound interpreter (XBIOS `Dosound`) won't try to execute them as commands.
 
@@ -571,24 +571,24 @@ walk cycle), controlled by `footstep_trigger_flag`.
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x10028 | `midi_seq_init_song` | Initialize and start song playback |
-| 0x10082 | `midi_seq_start_playback` | Reset timing, enable sequencer |
-| 0x100B4 | `midi_seq_set_position` | Set playback position in event stream |
-| 0x1012A | `midi_seq_skip_padding` | Skip leading 0x00/0xFF padding bytes |
+| 0x10028 | `mq_inis` | Initialize and start song playback |
+| 0x10082 | `mq_stap` | Reset timing, enable sequencer |
+| 0x100B4 | `mq_setp` | Set playback position in event stream |
+| 0x1012A | `mq_skip` | Skip leading 0x00/0xFF padding bytes |
 | 0x1026A | `midi_seq_push_loop` | Push loop context onto stack |
 | 0x10338 | `midi_seq_parse_events` | Parse next event(s) from stream |
 | 0x105CA | `midi_seq_read_note_duration` | Read note duration from duration table |
 | 0x10628 | `midi_seq_queue_note_event` | Queue note into event queue |
 | 0x107B0 | `midi_seq_send_note_off` | Send note-off for a queued note |
-| 0x10918 | `midi_seq_dispatch_event` | Route event to PSG/MIDI outputs (154 lines) |
+| 0x10918 | `mq_dise` | Route event to PSG/MIDI outputs (154 lines) |
 | 0x10E88 | `midi_seq_expire_notes` | Release notes whose duration expired |
 | 0x10EC2 | `midi_seq_advance_sequencer` | Main sequencer tick advance |
 | 0x1103C | `midi_seq_stop` | Stop sequencer, silence all notes |
-| 0x11184 | `midi_seq_reset_programs` | Reset all MIDI channel programs |
-| 0x111FA | `midi_seq_parse_header` | Parse header configuration commands |
-| 0x1135C | `midi_seq_parse_channel_map` | Parse 90-byte channel/program map |
-| 0x113B4 | `midi_seq_build_scale_table` | Build scale/transpose lookup table |
-| 0x11494 | `midi_out_write_byte` | Write single byte to MIDI ACIA |
+| 0x11184 | `mq_resp` | Reset all MIDI channel programs |
+| 0x111FA | `mq_parh` | Parse header configuration commands |
+| 0x1135C | `mq_pacm` | Parse 90-byte channel/program map |
+| 0x113B4 | `mq_bust` | Build scale/transpose lookup table |
+| 0x11494 | `mowrit` | Write single byte to MIDI ACIA |
 | 0x114BC | `psg_write_register` | Write value to YM2149 register |
 | 0x1219A | `midi_seq_tick_handler` | 200 Hz MFP Timer A interrupt handler |
 
@@ -604,11 +604,11 @@ walk cycle), controlled by `footstep_trigger_flag`.
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x1DA0A | `soundeffect_select` | Queue a sound effect by ID and duration |
-| 0x1DAFC | `soundeffect_irq_play` | Play queued effect via XBIOS Dosound |
-| 0x1DC3C | `soundeffects_off` | Silence all PSG channels, clear SFX state |
+| 0x1DA0A | `sf_sele` | Queue a sound effect by ID and duration |
+| 0x1DAFC | `sf_irqp` | Play queued effect via XBIOS Dosound |
+| 0x1DC3C | `sf_so` | Silence all PSG channels, clear SFX state |
 | 0x14FEC | `lcp_play_footstep_sound` | Surface-dependent footstep SFX selection |
-| 0x1D904 | `play_doorbell_sound` | Queue doorbell ring effect |
+| 0x1D904 | `p_dobls` | Queue doorbell ring effect |
 
 ### Song Playback (2 functions)
 
@@ -621,29 +621,29 @@ walk cycle), controlled by `footstep_trigger_flag`.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `midi_is_playing` | bool | True when sequencer is active |
-| `midi_sequencer_active` | bool | True when timer interrupt drives sequencer |
-| `midi_data_base_ptr` | uint8_t* | Pointer to start of MIDI event stream |
-| `midi_seq_position` | uint8_t* | Current read position in event stream |
-| `midi_seq_phase` | MIDI_SEQ_PHASE | Current sequencer state |
-| `midi_tempo` | short | Ticks per beat (controls playback speed) |
-| `midi_tick_counter` | short | Raw 200 Hz tick counter |
-| `midi_tick_prescaler` | short | Tempo-scaled tick subdivider |
-| `midi_output_enabled` | BOOL16 | Enable external MIDI output |
-| `psg_output_enabled` | BOOL16 | Enable internal PSG synthesis |
-| `midi_song_loop_flag` | bool | True = loop song, false = play once |
-| `midi_song_buffer` | uint8_t* | Heap buffer for current song data |
+| `mi_play` | bool | True when sequencer is active |
+| `g_msmsa` | bool | True when timer interrupt drives sequencer |
+| `mi_dbase` | uint8_t* | Pointer to start of MIDI event stream |
+| `mi_sqpos` | uint8_t* | Current read position in event stream |
+| `g_mspha` | MIDI_SEQ_PHASE | Current sequencer state |
+| `mi_temp` | short | Ticks per beat (controls playback speed) |
+| `g_mtcou` | short | Raw 200 Hz tick counter |
+| `g_mtpre` | short | Tempo-scaled tick subdivider |
+| `g_moen` | BOOL16 | Enable external MIDI output |
+| `psg_out` | BOOL16 | Enable internal PSG synthesis |
+| `mi_slop` | bool | True = loop song, false = play once |
+| `mi_sbuf` | uint8_t* | Heap buffer for current song data |
 | `midi_note_event_queue[]` | short[] | Note queue (58 entries x 3 shorts) |
 | `midi_scale_transpose_table[]` | uint8_t[] | 132-entry scale quantization table |
 | `midi_channel_map[]` | short[] | MIDI channel to PSG channel mapping |
 | `psg_envelope[3]` | PSG_ENVELOPE | Software ADSR state per PSG channel |
 | `psg_channel_notes[3]` | byte | Currently sounding note per PSG channel |
 | `psg_frequency_table[]` | short[] | Note-to-PSG-period lookup table |
-| `soundeffect_current` | SOUND_EFFECT_ID | Currently queued effect |
-| `soundeffect_playing_id` | SOUND_EFFECT_ID | Currently playing effect |
-| `soundeffect_playing_flag` | BOOL16 | True when a DoSound effect is active |
-| `soundeffect_remaining_ticks` | long | Frames remaining for current effect |
-| `_soundeffect_priority_table[]` | short[] | Priority value per effect ID |
+| `g_sfcur` | SOUND_EFFECT_ID | Currently queued effect |
+| `g_sfpli` | SOUND_EFFECT_ID | Currently playing effect |
+| `g_sfplf` | BOOL16 | True when a DoSound effect is active |
+| `g_sfret` | long | Frames remaining for current effect |
+| `sf_pri[]` | short[] | Priority value per effect ID |
 
 ---
 

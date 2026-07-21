@@ -9,12 +9,12 @@ animations, and interact with objects.
 ## Overview
 
 The LCP has a multi-layered rendering system:
-- **Body sprite** (slot 3): selected from `body.lcp` based on `lcp_state`
-- **Head sprite** (slot 4): selected from `pex.lcp` based on `head_sprite_frame` + happiness
+- **Body sprite** (slot 3): selected from `body.lcp` based on `lcp_st`
+- **Head sprite** (slot 4): selected from `pex.lcp` based on `g_hsfra` + happiness
 - **Carried object sprite** (slot dependent): when carrying items
 - **Door overlay sprites** (slots 5–6): walk-behind-door illusion
 
-Movement is driven by setting `walk_target_x`/`walk_target_y` and calling
+Movement is driven by setting `g_wtx`/`g_wty` and calling
 `lcp_walk_to_destination()`, which loops `lcp_pathfind_one_step()` until arrival
 or interruption by a game event.
 
@@ -56,31 +56,31 @@ position index range (0–15 = top, 16–31 = middle, 32–47 = bottom).
 |---|---|---|
 | `lcp_x` | short | Current X pixel position |
 | `lcp_y` | short | Current Y pixel position |
-| `walk_target_x` | short | Final destination X (0 = no target) |
-| `walk_target_y` | short | Final destination Y (0 = no target) |
-| `walk_waypoint_x` | short | Current intermediate waypoint X |
-| `walk_waypoint_y` | short | Current intermediate waypoint Y |
-| `lcp_on_stairs_flag` | BOOL16 | YES when navigating stairs |
-| `lcp_facing_direction` | FACING_DIR | FACING_RIGHT (0) or FACING_LEFT (1) |
+| `g_wtx` | short | Final destination X (0 = no target) |
+| `g_wty` | short | Final destination Y (0 = no target) |
+| `g_wyx` | short | Current intermediate waypoint X |
+| `g_wyy` | short | Current intermediate waypoint Y |
+| `lcp_stR` | BOOL16 | YES when navigating stairs |
+| `lcp_face` | FACING_DIR | FACING_RIGHT (0) or FACING_LEFT (1) |
 
 ### Character State
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `lcp_state` | PLAYER_STATE | Current body pose / animation state |
-| `lcp_carrying_object_flag` | BOOL16 | YES when carrying an object |
-| `lcp_carried_object` | sprite_id | Which object is being carried |
-| `lcp_sprites_hidden` | BOOL16 | YES to hide all LCP sprites |
+| `lcp_st` | PLAYER_STATE | Current body pose / animation state |
+| `g_lcyof` | BOOL16 | YES when carrying an object |
+| `g_lcieo` | sprite_id | Which object is being carried |
+| `g_lssh` | BOOL16 | YES to hide all LCP sprites |
 
 ### Head Animation
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `head_sprite_frame` | short | Current head direction (5-bit encoded) |
-| `head_anim_current` | short | Current head animation position |
+| `g_hsfra` | short | Current head direction (5-bit encoded) |
+| `g_hacur` | short | Current head animation position |
 | `head_anim_target` | short | Target head animation position |
-| `head_anim_mode` | HEAD_ANIM_MODE | Bit flags controlling allowed head movement |
-| `head_anim_delay_countdown` | short | Frames until next random head movement |
+| `g_hamod` | HEAD_ANIM_MODE | Bit flags controlling allowed head movement |
+| `g_hadec` | short | Frames until next random head movement |
 | `last_walk_sound_id` | short | Last head target set during walking (avoids redundant sets) |
 
 ### Sound
@@ -478,9 +478,9 @@ head_sprite_frame = (vertical << 3) | horizontal
 - **Bits 0–2** (horizontal): 0=far left, 4=center, 7=far right
 - **Bits 3–4** (vertical): 0=looking up, 1=center, 2=looking down
 
-### Random Head Movement (`sprite_lcp_head_animate`, 0x26368)
+### Random Head Movement (`sp_lcha`, 0x26368)
 
-Called every frame. Uses a countdown timer (`head_anim_delay_countdown`) that
+Called every frame. Uses a countdown timer (`g_hadec`) that
 triggers a random head position change every 2–9 frames:
 
 1. Random coin flip (bit 4 of XBIOS Random):
@@ -535,8 +535,8 @@ Called every frame to render the body:
 
 Called every frame to render the head:
 
-1. Compute head frame from `head_sprite_frame` + happiness offset
-2. Call `sprite_lcp_flip()` with `head_sprite_mirror_flag` for horizontal flip
+1. Compute head frame from `g_hsfra` + happiness offset
+2. Call `sprite_lcp_flip()` with `g_hsmif` for horizontal flip
 3. Position relative to body using per-state offset tables:
    - X offset: `head_x_offset_per_state[lcp_state]`
    - Y offset: `body_y_offset_per_state[lcp_state] - head_height_per_state[lcp_state]`
@@ -546,7 +546,7 @@ Called every frame to render the head:
 ### Horizontal Flipping
 
 `sprite_lcp_flip()` handles the mirroring of body and head sprites based on
-`lcp_facing_direction` (`FACING_DIR` enum). The source sprite data in `body.lcp` / `pex.lcp` is
+`lcp_face` (`FACING_DIR` enum). The source sprite data in `body.lcp` / `pex.lcp` is
 stored as right-facing (`FACING_RIGHT`); left-facing (`FACING_LEFT`) is generated at runtime by
 flipping the pixel data horizontally and swapping the left/right halves.
 
@@ -637,30 +637,30 @@ inside event handlers, mini-games.
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x26244 | `sprite_update_body` | Build and position body sprite (slot 3) |
-| 0x2664C | `sprite_lcp_head_update` | Build and position head sprite (slot 4) |
-| 0x26368 | `sprite_lcp_head_animate` | Random head movement state machine |
+| 0x26244 | `sp_updb` | Build and position body sprite (slot 3) |
+| 0x2664C | `sp_lchu` | Build and position head sprite (slot 4) |
+| 0x26368 | `sp_lcha` | Random head movement state machine |
 | 0x267B0 | `sprite_lcp_build_all` | Build all LCP sprite components |
 
 ### Head Animation
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x26368 | `sprite_lcp_head_animate` | Head direction randomizer |
-| 0x2664C | `sprite_lcp_head_update` | Head sprite rendering |
+| 0x26368 | `sp_lcha` | Head direction randomizer |
+| 0x2664C | `sp_lchu` | Head sprite rendering |
 | 0x26530 | `lcp_wait_head_reach_target` | Block until head reaches target angle |
 
 ### Carried Objects
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x24A26 | `spritedata_select_carried_object_left` | Set carried object for left-facing |
-| 0x24A94 | `spritedata_select_carried_object_right` | Set carried object for right-facing |
+| 0x24A26 | `sp_ssco` | Set carried object for left-facing |
+| 0x24A94 | `sp_ss02` | Set carried object for right-facing |
 
 ### Walk Helpers
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x1DF06 | `action_walk_to_and_turn` | Walk to position and face screen |
+| 0x1DF06 | `a_watat` | Walk to position and face screen |
 | 0x1DEBC | `hide_lcp_sprites` | Hide all LCP sprites |
 | 0x1DEDC | `show_lcp_sprites` | Show all LCP sprites |

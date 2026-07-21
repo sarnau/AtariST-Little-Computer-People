@@ -209,7 +209,7 @@ Offset  Size   Content
 
 Total file size: 13,504 bytes (56 entries, fully consumed).
 
-Objects are loaded into `objects_file` by `load_objects()` (reads
+Objects are loaded into `obj_file` by `load_objects()` (reads
 "objects" file, up to 14,000 bytes). Individual objects are accessed
 by `object_draw()` via the `object_tab_mfdb[]`, `object_tab_width[]`,
 and `object_tab_height[]` lookup tables.

@@ -17,7 +17,7 @@ All mini-games share a common framework:
 - `minigame_setup_screen()` fills the top 77 rows with background, freezes text scroll
 - `minigame_wait_for_key_with_events()` handles input while processing urgent game events
   (alarm, bathroom, thirst, doorbell) — the LCP leaves the table, handles the event, returns
-- Auto-quit after 7,200 frames (~15 min) of inactivity, sets `minigame_timeout_flag`
+- Auto-quit after 7,200 frames (~15 min) of inactivity, sets `mg_tofl`
 - Card graphics loaded from `cards` data file (52 cards + card back, 53 MFDB blocks)
 
 Screen resolution: 320×200 pixels, 16 colors, Atari ST low resolution.
@@ -39,14 +39,14 @@ request letter clues at the cost of one guess each.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `anagram_words_buffer` | char* | 10,000-byte buffer for decompressed dictionary |
-| `anagram_original_word` | char* | Pointer into dictionary for current word |
-| `anagram_scrambled_word` | char[11] | Working copy with shuffled characters |
-| `anagram_word_length` | short | Length of current word (max 10) |
-| `anagram_input_buffer` | char[11] | Player's typed guess |
-| `anagram_guess_number` | short | Current guess attempt (1–9) |
-| `anagram_clue_count` | short | Total clues used (cumulative) |
-| `anagram_all_clues_used` | short | Flag: 1 when all letters revealed |
+| `g_agwb` | char* | 10,000-byte buffer for decompressed dictionary |
+| `g_agorw` | char* | Pointer into dictionary for current word |
+| `g_agscw` | char[11] | Working copy with shuffled characters |
+| `g_agwol` | short | Length of current word (max 10) |
+| `g_aginb` | char[11] | Player's typed guess |
+| `g_aggun` | short | Current guess attempt (1–9) |
+| `g_agclc` | short | Total clues used (cumulative) |
+| `g_agacu` | short | Flag: 1 when all letters revealed |
 | `_anagram_clue_used_this_round` | short | Flag: prevents >1 clue per guess |
 
 ### Dictionary Format
@@ -59,7 +59,7 @@ and decompressed into a 10,000-byte heap buffer. Words are accessed by index:
 ### Scrambling Algorithm (`anagram_select_and_scramble_word`)
 
 1. Pick random index 0–149
-2. Copy word characters into `anagram_scrambled_word` (stop at `.` or space)
+2. Copy word characters into `g_agscw` (stop at `.` or space)
 3. Store null terminator; also null-terminate the original (replacing delimiter)
 4. Scramble loop:
    - Generate random swap count (10–20)
@@ -156,12 +156,12 @@ for player (from `cards_y_pos_b[]`). Up to 5 cards per row.
 
 | Variable | Purpose |
 |---|---|
-| `poker_player_money` | Player's chip count (poker/blackjack) or card count (war) |
-| `poker_computer_money` | Computer's chip count or card count |
-| `poker_pot_amount` | Current pot (chips in play) |
-| `poker_player_bet` / `poker_computer_bet` | Current bet amounts |
-| `poker_quit_flag` | Set to YES when game should end |
-| `cards_data` | Heap-allocated buffer for card MFDB image data |
+| `g_ppmon` | Player's chip count (poker/blackjack) or card count (war) |
+| `g_pcmon` | Computer's chip count or card count |
+| `g_ppppa` | Current pot (chips in play) |
+| `g_ppbet` / `g_pcbet` | Current bet amounts |
+| `pk_quit` | Set to YES when game should end |
+| `crd_dat` | Heap-allocated buffer for card MFDB image data |
 
 **Shared functions:**
 
@@ -196,14 +196,14 @@ card deciding the outcome. The game ends when one player runs out of cards.
 
 | Variable | Purpose |
 |---|---|
-| `poker_player_draw_pile` (0x3F712) | Player's card pile (up to 52 cards) |
-| `poker_computer_draw_pile` (0x47E24) | Computer's card pile |
-| `poker_player_war_cards` (0x3C9DC) | Player's face-down war cards |
-| `poker_computer_war_cards` (0x3CC78) | Computer's face-down war cards |
-| `poker_player_money` | Number of cards remaining (starts at 26) |
-| `poker_computer_money` | Number of cards remaining (starts at 26) |
+| `g_ppdrp` (0x3F712) | Player's card pile (up to 52 cards) |
+| `g_pcdrp` (0x47E24) | Computer's card pile |
+| `pk_pwc` (0x3C9DC) | Player's face-down war cards |
+| `pk_cwc` (0x3CC78) | Computer's face-down war cards |
+| `g_ppmon` | Number of cards remaining (starts at 26) |
+| `g_pcmon` | Number of cards remaining (starts at 26) |
 
-Note: `poker_player_money` and `poker_computer_money` represent **card counts** in War
+Note: `g_ppmon` and `g_pcmon` represent **card counts** in War
 (not money), since the shared globals are reused across all three card games.
 
 #### Deck Initialization
@@ -282,11 +282,11 @@ The computer has hand evaluation, bluff logic, and draw strategy.
 | `poker_player_hand_rank_flags[5]` | Same for player |
 | `poker_hand_suit_flags[5]` | Sorted hand by rank (computer) |
 | `poker_player_hand_suit_flags[5]` | Same for player |
-| `poker_computer_hand_rank` | Computer's hand rank (0–8) |
+| `pk_chrk` | Computer's hand rank (0–8) |
 | `poker_card_selected[5]` | Cards selected for discard (1=selected) |
 | `poker_discard_pile[]` | Discarded cards (prevents re-dealing) |
-| `poker_discard_count` | Number of discarded cards |
-| `poker_computer_bluff_flag` | YES if computer is bluffing this round |
+| `pk_disc` | Number of discarded cards |
+| `pk_bluff` | YES if computer is bluffing this round |
 
 #### Hand Ranks (`poker_evaluate_hand`, 0x18804)
 
@@ -404,9 +404,9 @@ The `ace_mode` parameter controls ace handling:
 | `poker_player_hand[5]` | Player's main hand (up to 5 hit cards) |
 | `poker_player_split_hand[5]` (0x3F6D2) | Player's split hand (after pair split) |
 | `poker_computer_hand[5]` | Computer/dealer's hand |
-| `poker_player_card_count` (0x501A6) | Cards dealt to player hand |
-| `poker_player_split_card_count` (0x50240) | Cards dealt to split hand |
-| `poker_computer_card_count` (0x480D2) | Cards dealt to computer hand |
+| `pk_pcc` (0x501A6) | Cards dealt to player hand |
+| `pk_pscc` (0x50240) | Cards dealt to split hand |
+| `pk_ccc` (0x480D2) | Cards dealt to computer hand |
 | `_poker_war_round` | Flag: non-zero during war resolution |
 | `_poker_war_computer_score` | Computer's war status |
 | `poker_blackjack_flag` (0x3D114) | Split game active flag |
@@ -455,7 +455,7 @@ Checks if the initial 2-card deal contains an ace (rank 12) paired with a face c
 
 When the player's initial two cards have the same rank (e.g., two Kings):
 
-1. Second card moved to `poker_player_split_hand`
+1. Second card moved to `pk_psh`
 2. First hand played fully (hit/stand)
 3. Then second hand played with its own bet
 4. Each hand checked independently for blackjack and bust
@@ -494,9 +494,9 @@ are filled, the answers are compared against the solution.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `word_puzzle_data_buffer` | char* | 2,000-byte buffer for decompressed puzzle data |
-| `word_puzzle_current_index` | short | Current puzzle number (0–32) |
-| `word_puzzle_blank_count` | short | Number of `@` blanks in current puzzle |
+| `g_wpdb` | char* | 2,000-byte buffer for decompressed puzzle data |
+| `g_wpci` | short | Current puzzle number (0–32) |
+| `wp_blk` | short | Number of `@` blanks in current puzzle |
 | `word_puzzle_player_answers[][12]` | char[][] | Player's typed answers (up to 10 chars each) |
 | `letter_line_ptr[66]` | char*[] | Parsed line pointers (2 lines per puzzle) |
 | `word_puzzle_prompt_messages[9]` | char*[] | Prompts: "OK, what's the first word?", etc. |
@@ -515,7 +515,7 @@ The file contains 33 puzzles stored as 66 lines (2 lines per puzzle):
 
 Lines are delimited by control characters (ASCII < 32). The file is compressed and
 decompressed into a 2,000-byte buffer. After loading, all 66 line start pointers are
-stored in `letter_line_ptr[]`.
+stored in `g_ltlp[]`.
 
 ### Template Rendering (`word_puzzle_render_template_with_answers`, 0x17CAC)
 
@@ -613,7 +613,7 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 ### Anagram (9 functions)
 | Address | Function |
 |---|---|
-| 0x181AE | `anagram_main` |
+| 0x181AE | `ag_main` |
 | 0x18084 | `anagram_select_and_scramble_word` |
 | 0x17538 | `anagram_strings_equal` |
 | 0x17E34 | `anagram_display_word_large` |
@@ -677,7 +677,7 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 ### Word Puzzle (5 functions)
 | Address | Function |
 |---|---|
-| 0x176F8 | `word_puzzle_main` |
+| 0x176F8 | `wp_main` |
 | 0x1799E | `word_puzzle_solve_phase` |
 | 0x17CAC | `word_puzzle_render_template_with_answers` |
 | 0x17C80 | `word_puzzle_show_status_message` |
@@ -686,6 +686,6 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 ### Game Selection
 | Address | Function |
 |---|---|
-| 0x21860 | `action_play_a_game` |
+| 0x21860 | `a_plaag` |
 | 0x1759C | `minigame_setup_screen` |
 | 0x173E8 | `minigame_wait_for_key_with_events` |

@@ -42,7 +42,7 @@ The staircase has specific Y breakpoints that trigger direction changes:
 | 100 | Top of lower stair / bottom of upper stair (floor 2 landing) |
 | 98 | Top of upper stair (floor 2 → floor 3 transition) |
 
-Additional globals `stair_top_y_threshold` and `stair_bottom_y_threshold` define
+Additional globals `stair_ty` and `stair_by` define
 the stair entry/exit coordinates for the middle floor.
 
 ## State Variables
@@ -53,18 +53,18 @@ the stair entry/exit coordinates for the middle floor.
 |---|---|---|
 | `dog_x` | short | Current X pixel position |
 | `dog_y` | short | Current Y pixel position |
-| `dog_target_x` | short | Final destination X (0 = idle) |
-| `dog_target_y` | short | Final destination Y (0 = idle) |
-| `dog_waypoint_x` | short | Current intermediate waypoint X |
-| `dog_waypoint_y` | short | Current intermediate waypoint Y |
-| `dog_on_stairs_flag` | BOOL16 | YES when navigating stairs |
+| `g_dtx` | short | Final destination X (0 = idle) |
+| `g_dty` | short | Final destination Y (0 = idle) |
+| `g_dyx` | short | Current intermediate waypoint X |
+| `g_dyy` | short | Current intermediate waypoint Y |
+| `dg_stair` | BOOL16 | YES when navigating stairs |
 
 ### Animation
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `dog_walk_anim_cycle` | short | Walk frame counter (0–7) |
-| `dog_sprite_id` | sprite_id | Current sprite to display |
+| `g_dwanc` | short | Walk frame counter (0–7) |
+| `g_dsid` | sprite_id | Current sprite to display |
 | `dog_walk_anim_frames[8]` | sprite_id[] | Walk cycle: SPRITE_DOG_WALK_RIGHT_1–8 |
 | `dog_sprite_eating_anim_tab[3]` | sprite_id[] | Eat cycle: SPRITE_DOG_EATING_1–3 |
 
@@ -72,9 +72,9 @@ the stair entry/exit coordinates for the middle floor.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `dog_idle_countdown` | short | Ticks until next wander (20–200) |
-| `dog_last_target_index` | short | Last destination index (avoid repeats) |
-| `dog_visible` | BOOL16 | NO restricts to top-floor destinations |
+| `dg_idlcd` | short | Ticks until next wander (20–200) |
+| `dg_ltgtI` | short | Last destination index (avoid repeats) |
+| `dg_vis` | BOOL16 | NO restricts to top-floor destinations |
 | `dog_destination_position_table[9]` | HOUSE_POS[] | Wander destination lookup |
 | `dog_dest_x_offset_table[9]` | short[] | Per-destination X offset |
 | `dog_dest_y_offset_table[9]` | short[] | Per-destination Y offset |
@@ -83,28 +83,28 @@ the stair entry/exit coordinates for the middle floor.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `dog_near_food_bowl` | BOOL16 | YES when dog is near bowl area |
-| `dog_eating_active` | BOOL16 | YES during eating animation |
-| `dog_eating_countdown` | short | Frames remaining in eat cycle (82–100) |
-| `dog_food_bowl_change` | short | -1 = drain bowl one level, 0 = no change |
-| `lcp_dog_bowl_status` | DOG_BOWL_STATUS | BOWL_EMPTY / BOWL_HALF / BOWL_FULL |
+| `dg_nrbwl` | BOOL16 | YES when dog is near bowl area |
+| `g_deact` | BOOL16 | YES during eating animation |
+| `g_decou` | short | Frames remaining in eat cycle (82–100) |
+| `dg_bwlch` | short | -1 = drain bowl one level, 0 = no change |
+| `lcp_bwlS` | DOG_BOWL_STATUS | BOWL_EMPTY / BOWL_HALF / BOWL_FULL |
 
 ### Petting
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `dog_pettable_flag` | BOOL16 | YES when LCP is crouching to pet |
-| `petting_dog_active` | BOOL16 | YES during petting animation |
-| `petting_anim_frame` | short | Current frame of 11-frame petting sequence |
-| `petting_last_sprite_slot` | short | Sprite slot to hide after petting ends |
+| `dg_petok` | BOOL16 | YES when LCP is crouching to pet |
+| `g_ptdoa` | BOOL16 | YES during petting animation |
+| `g_ptanf` | short | Current frame of 11-frame petting sequence |
+| `g_ptlss` | short | Sprite slot to hide after petting ends |
 
 ### System
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `dog_initialized` | BOOL16 | YES suppresses rendering during intro |
-| `dog_flip_image_buffer` | void* | Pre-allocated buffer for horizontally flipped sprite |
-| `dog_flip_mask_buffer` | void* | Pre-allocated buffer for flipped mask |
+| `dg_init` | BOOL16 | YES suppresses rendering during intro |
+| `g_dfimb` | void* | Pre-allocated buffer for horizontally flipped sprite |
+| `g_dfmab` | void* | Pre-allocated buffer for flipped mask |
 
 ## Dog Sprites
 
@@ -123,12 +123,12 @@ the stair entry/exit coordinates for the middle floor.
 | 43 | `SPRITE_DOG_EATING_2` | Eating animation frame 2 |
 | 44 | `SPRITE_DOG_EATING_3` | Eating animation frame 3 |
 
-The walk cycle uses 8 frames indexed by `dog_walk_anim_cycle` (0–7) via
+The walk cycle uses 8 frames indexed by `g_dwanc` (0–7) via
 `dog_walk_anim_frames[]`. The eating animation cycles through 3 frames
 via `dog_sprite_eating_anim_tab[countdown % 3]`.
 
 Horizontal flipping is performed by `sprite_flip_horizontal()` into dedicated
-buffers (`dog_flip_image_buffer`, `dog_flip_mask_buffer`) when the dog faces left.
+buffers (`g_dfimb`, `g_dfmab`) when the dog faces left.
 
 ## Sprite Rendering
 
@@ -220,7 +220,7 @@ else:
 ```
 
 Special cases:
-- **Floor 2 going down**: uses `stair_top_y_threshold` / `stair_bottom_y_threshold`
+- **Floor 2 going down**: uses `stair_ty` / `stair_by`
 - **Floor 3 entry**: offsets `dog_x` by -8 to align with stair column
 - **Floor 1 stair entry**: overrides waypoint to threshold coordinates
 
@@ -373,7 +373,7 @@ All of these must be true simultaneously:
 5. Dog position is near food bowl: `dog_x < 20` and `dog_y > 160`
 
 The food bowl is located in the bottom-left corner of the house (near x=8, y=190).
-The `dog_near_food_bowl` flag is set when the wandering AI selects
+The `dg_nrbwl` flag is set when the wandering AI selects
 `POS_BTM_STAIR_LANDING` as the destination, which routes the dog near the bowl area.
 
 ### Eating Sequence
@@ -420,7 +420,7 @@ The bowl has 3 visual states mapped to `DOG_BOWL_STATUS`:
 - `BOWL_FULL` (2): full bowl sprite
 
 Bowl changes are clamped to the valid range (0–2) and applied per-tick in
-`game_tick_and_animate()` based on `dog_food_bowl_change`.
+`game_tick_and_animate()` based on `dg_bwlch`.
 
 ### Feeding the Dog
 
@@ -456,10 +456,10 @@ The player presses Ctrl+P, which queues `ACTION_PET_DOG`.
    - Uses `object_id_ARRAY_0002b93e[]` — a table of sprite IDs for the petting overlay
    - Each frame rendered at fixed position (192, 165) in SPRITE_BEHIND_LCP layer
    - Previous frame hidden, current frame shown
-   - After 11 frames: hide last sprite, clear `petting_dog_active`
+   - After 11 frames: hide last sprite, clear `g_ptdoa`
 
 Note: the petting system does not explicitly move the dog to the LCP. Instead,
-`dog_pettable_flag` is set and the normal wandering AI is expected to eventually
+`dg_petok` is set and the normal wandering AI is expected to eventually
 bring the dog near the LCP's position. The petting animation is a separate
 overlay sprite sequence, not the dog sprite itself.
 
@@ -499,11 +499,11 @@ identical — `dog_calc_walk_path` is a simplified mirror of `lcp_calc_floor_way
 |---|---|---|
 | 0x1412C | `dog_move_and_animate` | Main per-tick movement and animation |
 | 0x14586 | `dog_calc_walk_path` | Calculate next waypoint for multi-floor routing |
-| 0x248FE | `spritedata_update_dog` | Update dog sprite slots 0 and 7 |
+| 0x248FE | `sp_spud` | Update dog sprite slots 0 and 7 |
 | 0x15224 | `get_floor_number_from_y` | Convert Y coordinate to floor number (shared) |
 | 0x150BC | `lcp_calc_floor_waypoint` | LCP equivalent of dog_calc_walk_path (shared stair table) |
-| 0x25138 | `screen_render_8hz` | Contains wandering AI, eating trigger, food bowl update |
+| 0x25138 | `sc_ren8` | Contains wandering AI, eating trigger, food bowl update |
 | 0x256A6 | `game_tick_and_animate` | Contains petting animation, food bowl display |
-| 0x20C9E | `action_pet_dog` | Player-initiated petting action |
-| 0x20C50 | `action_call_dog` | LCP crouches and calls dog over |
-| 0x20AF8 | `action_feed_dog` | Fill food bowl via fridge |
+| 0x20C9E | `a_petd` | Player-initiated petting action |
+| 0x20C50 | `a_calld` | LCP crouches and calls dog over |
+| 0x20AF8 | `a_feedd` | Fill food bowl via fridge |
