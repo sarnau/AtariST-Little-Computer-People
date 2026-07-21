@@ -1,4 +1,4 @@
-# csrc/ port status
+# source/ port status
 
 Snapshot of what is ported for real vs. still a stub.  Update as
 functions move from `astubs.c` / `stubs.c` into real

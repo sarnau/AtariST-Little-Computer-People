@@ -12,7 +12,7 @@
  * daytime phone-call branch, keeping the test deterministic.
  *
  * Build: make sim_test
- * Run:   from csrc/build/host/, execute ./sim_test
+ * Run:   from source/build/host/, execute ./sim_test
  */
 
 #include <stdio.h>

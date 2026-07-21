@@ -14,7 +14,7 @@
  * so the initial run bootstraps the reference.
  *
  * Build: make sprite_golden_test
- * Run:   from csrc/build/host/, execute ./sprite_golden_test
+ * Run:   from source/build/host/, execute ./sprite_golden_test
  */
 
 #include <stdio.h>

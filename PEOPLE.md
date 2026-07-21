@@ -557,7 +557,7 @@ planes; a 16×21-pixel 2-plane image).  `sprite_lcp_flip()` expands each
 frame in place to a 336-byte destination (168 shorts, 32-pixel-wide 4-plane
 MFDB layout) that the compositor then blits.
 
-| Constant (in `csrc/include/sprites.h`) | Value | Meaning |
+| Constant (in `source/include/sprites.h`) | Value | Meaning |
 |---|---|---|
 | `LCP_BODY_FRAME_SIZE` | `21 * 4 * 2` = 168 bytes | Source frame stride in BODY.LCP / PE*.LCP |
 | `LCP_BODY_SHAPE_SIZE` | `21 * 4` = 84 bytes | Dilated silhouette stride in `body_shp` / `hd_shp` |

@@ -8,7 +8,7 @@
  * itself fires.
  *
  * Build: make vdi_pb_test
- * Run:   from csrc/build/host/, execute ./vdi_pb_test
+ * Run:   from source/build/host/, execute ./vdi_pb_test
  */
 
 #include <stdio.h>

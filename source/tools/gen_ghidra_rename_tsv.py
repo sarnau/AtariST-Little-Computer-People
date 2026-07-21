@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gen_ghidra_rename_tsv.py -- generate the rename TSV for RenameLcpGlobals.java
 
-Reads csrc/tools/ghidra_globals_map.md and Ghidra's symbol dump (produced
+Reads source/tools/ghidra_globals_map.md and Ghidra's symbol dump (produced
 by ~/ghidra_scripts/list_data_symbols.java), emits address<TAB>ghidra_name
 <TAB>port_short_name to ~/ghidra_scripts/lcp_rename_map.tsv.
 
@@ -16,7 +16,7 @@ Skips identity pairs (Ghidra name == port name).
 Deduplicates.
 
 Usage:
-  python3 csrc/tools/gen_ghidra_rename_tsv.py
+  python3 source/tools/gen_ghidra_rename_tsv.py
 """
 import os, re, sys
 

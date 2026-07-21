@@ -2,7 +2,7 @@
 # apply_ghidra_renames.sh -- one-shot Ghidra rename pipeline.
 #
 # Regenerates ~/ghidra_scripts/lcp_rename_map.tsv from
-# csrc/tools/ghidra_globals_map.md, then triggers Ghidra's
+# source/tools/ghidra_globals_map.md, then triggers Ghidra's
 # RenameLcpGlobals.java via the local HTTP server, and reports
 # the outcome.
 #

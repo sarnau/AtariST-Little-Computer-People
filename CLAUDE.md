@@ -4,7 +4,7 @@ This is a **faithful C port** of the 1985 Atari ST game *Little Computer
 People* (Activision).  The original LCP.PRG is disassembled in Ghidra
 on the maintainer's machine and is the ground truth for every function,
 initialization step, and control-flow decision.  The C source in
-`csrc/` compiles under Alcyon C 4.14 (K&R) and runs on Hatari.
+`source/` compiles under Alcyon C 4.14 (K&R) and runs on Hatari.
 
 ## The rule: Ghidra-faithful means literal-faithful
 
@@ -42,7 +42,7 @@ visible; it will not surface in a 25-second smoke test.  Regression
 checks that exercise long-running gameplay (≥ 15 000 VBLs under
 `--auto`) and diff a mid-run frame against an early-run frame catch
 this class of bug in seconds — see
-`csrc/tools/test_longrun_stable.sh`.
+`source/tools/test_longrun_stable.sh`.
 
 ## Don't invent
 
@@ -73,7 +73,7 @@ source ships; ad-hoc debug scaffolding does not.
   where subsequent `Setscreen` calls invalidate VDI line-attribute
   state, and `vsl_color` silently falls back to pen 15 (dark brown).
   This causes the water tank to render brown instead of blue — see
-  the comment above `sc_sdtb` in `csrc/gfx_prim.c`.
+  the comment above `sc_sdtb` in `source/gfx_prim.c`.
 - Test builds use `-DSKIP_TITLE=1 -DSKIP_MIDI=1` to bypass the title
   screen (`st_titl` triggers a TOS `v_gtext` crash at `$fd330c`)
   and disable Timer-A determinism issues.  Production builds omit
@@ -81,20 +81,20 @@ source ships; ad-hoc debug scaffolding does not.
 
 ## Key project layout
 
-- `csrc/*.c` — the port itself.
-- `csrc/include/*.h` — types, enums, struct layouts.
-- `csrc/tools/` — build & test scripts (Alcyon build, Hatari-driven
+- `source/*.c` — the port itself.
+- `source/include/*.h` — types, enums, struct layouts.
+- `source/tools/` — build & test scripts (Alcyon build, Hatari-driven
   regression tests, symbol lookup helpers).
-- `csrc/tests/` — host-side unit tests (compile under host cc, not
+- `source/tests/` — host-side unit tests (compile under host cc, not
   Alcyon; not part of the shipped binary).
 
 ## Ghidra ↔ port cross-reference
 
-`csrc/tools/ghidra_globals_map.md` documents every port global that
+`source/tools/ghidra_globals_map.md` documents every port global that
 has a Ghidra counterpart with a different (usually longer) name.  To
 push the map to the Ghidra project, run:
 
-    csrc/tools/apply_ghidra_renames.sh
+    source/tools/apply_ghidra_renames.sh
 
 This regenerates a TSV via `gen_ghidra_rename_tsv.py`, then POSTs to
 Ghidra's HTTP server at `localhost:8089/run_script` to invoke
@@ -153,7 +153,7 @@ Struct name/field syncing uses the same HTTP mechanism via
   different scenario; the automated harness surfaces the regression
   the manual test missed.
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
-  documented in `csrc/stubs.c`; the ROM routine can't run under
+  documented in `source/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).
 - **Music playback never verified in production build.**  Test
   builds use `-DSKIP_MIDI=1` which never actually exercises the

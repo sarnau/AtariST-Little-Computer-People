@@ -15,7 +15,7 @@
  * we want portable field-level assertions.
  *
  * Build: make hyber_test
- * Run:   from csrc/build/host/, execute ./hyber_test
+ * Run:   from source/build/host/, execute ./hyber_test
  */
 
 #include <stdio.h>

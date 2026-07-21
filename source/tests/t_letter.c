@@ -8,7 +8,7 @@
  * can eyeball the output matches the actual 1985 letter fragments.
  *
  * Build: make letter_test
- * Run:   from csrc/build/host/, execute ./letter_test
+ * Run:   from source/build/host/, execute ./letter_test
  */
 
 #include <stdio.h>

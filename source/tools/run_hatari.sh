@@ -10,7 +10,7 @@
 #   VBLS       run length in VBLs        (default 5000)
 #   TOS_IMG    TOS ROM to boot           (default TOS104US.ROM under Retro/)
 #   GAME_DIR   Hatari GEMDOS-HDD root    (default ~/hatari-c/GAME)
-#   PRG        LCP.PRG to install        (default csrc/build/alcyon/LCP.PRG)
+#   PRG        LCP.PRG to install        (default source/build/alcyon/LCP.PRG)
 #   HATARI     hatari binary             (default `hatari` in PATH)
 #   AVI        set to a path to record   (default off)
 #   LOG        Hatari stderr log target  (default /tmp/lcp_run.log)

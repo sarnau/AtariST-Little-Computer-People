@@ -53,7 +53,7 @@ Byte-exact validation is a *later* pass on individual hot files.
 ## Layout
 
 ```
-csrc/
+source/
 ├── include/
 │   ├── types.h         BOOL16, YES/NO, size types
 │   ├── enums.h         all symbolic constants (#define)
@@ -110,7 +110,7 @@ executable reference.
 ### Host build (for tests / development)
 
 Requires a C89/C99 compiler (`cc`, `clang`, `gcc`) with `-DHOST`. From
-the `csrc/` directory:
+the `source/` directory:
 
 ```
 make host
@@ -185,7 +185,7 @@ live list.  Highlights:
 
 - `cp_main` copy protection is intentionally stubbed (the ROM
   routine can't run under Hatari — flock + XOR-decrypt + FDC
-  signature read — documented in `csrc/stubs.c`).
+  signature read — documented in `source/stubs.c`).
 - Stair test harness now runs end-to-end but surfaces a
   game-behavior regression: LCP descends by falling through floors
   rather than engaging stair mode.  Manual play in the same

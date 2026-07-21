@@ -12,11 +12,11 @@ port-only helpers, MIDI/sprite arrays where Ghidra shows only
 `PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx` labels, or file-scoped statics with
 no descriptive ROM name.  Extend by decompiling more Ghidra functions
 and appending to the appropriate subsystem table below, then re-run
-`csrc/tools/apply_ghidra_renames.sh` to push the new pairs to Ghidra.
+`source/tools/apply_ghidra_renames.sh` to push the new pairs to Ghidra.
 
 ## Status: auto-rename pipeline
 
-Automated via `csrc/tools/apply_ghidra_renames.sh`:
+Automated via `source/tools/apply_ghidra_renames.sh`:
 
 1. `gen_ghidra_rename_tsv.py` walks this file, extracts the pairs,
    and joins against `/tmp/ghidra_syms.txt` to write
@@ -36,7 +36,7 @@ executor is what actually gets us there.
 
 ## Address mismatch caveat
 
-`csrc/tools/find_syms.py` addresses cover the **port's rebuilt PRG**
+`source/tools/find_syms.py` addresses cover the **port's rebuilt PRG**
 (different .o layout, different link order) -- they do NOT map to the
 Ghidra project's addresses (which loaded the **original 1985 LCP.PRG**
 at base 0x0).  Matching between the two is by *role* and *access
@@ -427,11 +427,11 @@ port globals (they are direct memory-mapped I/O in `psg_io.c`).
 
 Every port global not in the tables above; still to be paired by
 sampling more decompilations.  Priority modules to sample next:
-`csrc/dog.c` (dog AI, `g_dtx`/`g_dwanc`/`g_dsid`), `csrc/save.c`
-(`sv_bodyP`, `sv_headP`, `sv_phb`, `sv_lgb`), `csrc/games.c`
-(poker `pk_*` block, anagram `ag_*` block), `csrc/parser.c`
-(`comp_tok`, `in_str`, `cmd_inp`), `csrc/letload.c`
-(`g_ltcwt`, `g_ltscb`), `csrc/render.c` (compositor `tx_sctm`,
+`source/dog.c` (dog AI, `g_dtx`/`g_dwanc`/`g_dsid`), `source/save.c`
+(`sv_bodyP`, `sv_headP`, `sv_phb`, `sv_lgb`), `source/games.c`
+(poker `pk_*` block, anagram `ag_*` block), `source/parser.c`
+(`comp_tok`, `in_str`, `cmd_inp`), `source/letload.c`
+(`g_ltcwt`, `g_ltscb`), `source/render.c` (compositor `tx_sctm`,
 `scr_scal`, `MFDB_A`, `scrbufA`/`scrbufB`).
 
 ### Batch 3 additions
@@ -785,5 +785,5 @@ CONFIRMED bugs in this class.
 2. Run `mcp__ghidra__decompile_function(name="foo")`.
 3. Every long identifier that is not a local (no declaration inside
    the function) is a global.  Match it to the port global that
-   `foo()` in `csrc/*.c` accesses at the same position.
+   `foo()` in `source/*.c` accesses at the same position.
 4. Add a row here.

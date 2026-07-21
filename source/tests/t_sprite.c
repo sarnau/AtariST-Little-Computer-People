@@ -15,7 +15,7 @@
  * for that you'd need the full VDI blit path plus palette.
  *
  * Build: make sprite_test
- * Run:   from csrc/build/host/, execute ./sprite_test
+ * Run:   from source/build/host/, execute ./sprite_test
  */
 
 #include <stdio.h>

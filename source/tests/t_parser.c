@@ -14,7 +14,7 @@
  * sandwich" -> ACTION_ID mappings.
  *
  * Build: make parser_test
- * Run:   from csrc/build/host/, execute ./parser_test
+ * Run:   from source/build/host/, execute ./parser_test
  */
 
 #include <stdio.h>
