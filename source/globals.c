@@ -926,6 +926,13 @@ BOOL16  g_dvdog             = NO;
 BOOL16  ph_hu               = NO;
 BOOL16  g_ptdoa              = NO;
 
+/* Study-door object ids.  The ROM keeps these as initialized word
+   globals (base-0 data 0x11758/0x1175a/0x1175c) and every od_draw of
+   the study door reads them -- it never pushes the constants. */
+short   od_stcl = 46;           /* OBJ_DOOR_STUDY_CLOSED  */
+short   od_sto1 = 47;           /* OBJ_DOOR_STUDY_OPEN_1  */
+short   od_sto2 = 48;           /* OBJ_DOOR_STUDY_OPEN_2  */
+
 /* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they
    are added here.) */

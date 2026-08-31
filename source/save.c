@@ -34,7 +34,8 @@ short   rwmode;
 
         retry = 0;
         for (;;) {
-                fhandle = Fopen(filename, rwmode);
+                /* ROM pushes a trailing 0L after the mode word. */
+                fhandle = gemdos(0x3D, filename, rwmode, 0L);
                 if (fhandle >= 0)
                         return fhandle;
                 retry = retry + 1;
@@ -59,12 +60,13 @@ char *  filename;
                 return;
 
         for (;;) {
-                iVar1 = Fcreate(filename, 0L);
+                /* ROM: two trailing 0L args on create and close. */
+                iVar1 = gemdos(0x3C, filename, 0L, 0L);
                 if (iVar1 >= 0)
                         break;
                 er_write();
         }
-        Fclose(iVar1);
+        gemdos(0x3E, iVar1, 0L, 0L);
 }
 
 /* addr: fr_read() */
@@ -109,7 +111,7 @@ void *  buffer;
         fr_read(fhnd, 2L, &temp);
         fr_read(fhnd, 2L, &size);
         fr_read(fhnd, (long) size, buffer);
-        Fclose(fhnd);
+        gemdos(0x3E, fhnd, 0L, 0L);     /* ROM: two trailing 0L args */
 }
 
 /* addr: lcp_save() */
@@ -125,20 +127,22 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
-                filehandle = Fopen(filename, 1L);
+                /* ROM pushes a trailing 0L after the long mode. */
+                filehandle = gemdos(0x3D, filename, 1L, 0L);
                 if (filehandle >= 0)
                         break;
                 er_write();
         }
 
         for (;;) {
-                lVar1 = Fwrite(filehandle, (long) size, addr);
-                if (lVar1 == (long) size)
+                lVar1 = gemdos(0x40, filehandle, (long) size, addr);
+                /* ROM evaluates the size cast first. */
+                if ((long) size == lVar1)
                         break;
                 er_write();
         }
 
-        Fclose(filehandle);
+        gemdos(0x3E, filehandle, 0L, 0L);       /* two trailing 0L args */
 }
 
 /* addr: lc_load() */
@@ -147,12 +151,13 @@ lc_load()
 {
         short   fhnd;
 
-        fhnd = Fopen("hyber", 0L);
+        /* ROM: mode is 0L and a second trailing 0L follows. */
+        fhnd = gemdos(0x3D, "hyber", 0L, 0L);
         if (fhnd < 0)
                 return 0;
 
         fr_read(fhnd, 0x80L, &lcp);
-        Fclose(fhnd);
+        gemdos(0x3E, fhnd, 0L, 0L);     /* two trailing 0L args */
 
         lcp_watr         = lcp.water_level;
         lcp_frdO     = lcp.door_states_and_flags & DSF_FRONT_DOOR;
@@ -190,7 +195,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_1);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] =  23;
-        od_draw(OBJ_DOOR_STUDY_CLOSED, 178, 23);
+        od_draw(od_stcl, 178, 23);
 
         if (p_dosnd != NO)
                 sf_sele(SFX_DOOR_CLOSE, 6L);
@@ -225,7 +230,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_AJAR);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        od_draw(OBJ_DOOR_STUDY_OPEN_1, 178, 23);
+        od_draw(od_sto1, 178, 23);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
@@ -236,7 +241,7 @@ BOOL16  p_dosnd;
         sp_sprs(SPRITE_DOOR_STUDY_WIDE_OPEN);
         g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
         g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
-        od_draw(OBJ_DOOR_STUDY_OPEN_2, 178, 23);
+        od_draw(od_sto2, 178, 23);
         showLcp();
         gameTick(1);
 
@@ -255,9 +260,9 @@ BOOL16  p_dosnd;
                 sp_upds();
                 gameTick(0);
         }
-        od_draw(OBJ_DOOR_STUDY_OPEN_1, 178, 23);
+        od_draw(od_sto1, 178, 23);
         gameTick(2);
-        od_draw(OBJ_DOOR_STUDY_CLOSED,  178, 23);
+        od_draw(od_stcl, 178, 23);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         studyDrO = NO;

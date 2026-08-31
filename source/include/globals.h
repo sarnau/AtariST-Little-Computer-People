@@ -320,5 +320,8 @@ extern MFDB mf_scb_c;
 extern BOOL16 g_dvdog;
 extern BOOL16 ph_hu;
 extern BOOL16 g_ptdoa;
+extern short od_stcl;
+extern short od_sto1;
+extern short od_sto2;
 
 #endif /* GLOBALS_H */

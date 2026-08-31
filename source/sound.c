@@ -29,13 +29,14 @@ long    duration;
         }
 }
 
-/* addr: sf_so() */
+/* addr: sf_so() (ROM 0xb122).  Giaccess as xbios(0x1C) with long
+   args and a trailing 0L, matching the ROM's push shapes. */
 void
 sf_so()
 {
-        Giaccess(0L, 0x88L);
-        Giaccess(0L, 0x89L);
-        Giaccess(0L, 0x8aL);
+        xbios(0x1C, 0L, 0x88L, 0L);
+        xbios(0x1C, 0L, 0x89L, 0L);
+        xbios(0x1C, 0L, 0x8aL, 0L);
         g_sfdos  = 0xff;
         g_sfdoc = 0;
         g_sfplf    = NO;
@@ -67,29 +68,20 @@ sfClick()
    addr: sgPlay() */
 
 
-/* SOUNDS.LCP format: sequence of {size:short, bytes[size]}, size=0 term.
+/* sf_sl (ROM 0xb234): opens SOUNDS.LCP and immediately closes it --
+   the ST original never reads the file and nothing in the ROM ever
+   writes the mi_ntLp effect table (its only reference is the read in
+   sf_irqp).  The block-loading loop that used to live here was a
+   port invention; in the original this call is effectively just a
+   "SOUNDS.LCP must exist" check via fOpen's retry-alert loop.
    addr: sf_sl() */
 void
 sf_sl()
 {
         short           fhandle;
-        short           index;
-        short           size;
-        short *         block;
 
         fhandle = fOpen("sounds.lcp", 0);
-        for (index = 0; index < 500; index = index + 1) {
-                fr_read(fhandle, 2L, &size);
-                if (size == 0)
-                        break;
-                block = (short *) Malloc((long) (size + 4));
-                mi_ntLp[index] = (unsigned char *) block;
-                if (block == (short *) 0)
-                        er_nomem();
-                *block = size;
-                fr_read(fhandle, (long) size, block + 1);
-        }
-        Fclose(fhandle);
+        gemdos(0x3E, fhandle, 0L, 0L);  /* two trailing 0L args */
 }
 
 void
@@ -109,13 +101,14 @@ char *  filename;
                         ;
         }
         if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
+                /* ROM GEMDOS shapes: trailing 0L padding on each call. */
+                gemdos(0x49, mi_sbuf, 0L, 0L);
                 mi_sbuf = (char *) 0;
         }
 
-        Fsfirst(filename, 0L);
-        dta_ptr = (_DTA *) Fgetdta();
-        mi_sbuf = (char *) Malloc(dta_ptr->d_length);
+        gemdos(0x4E, filename, 0L, 0L);
+        dta_ptr = (_DTA *) gemdos(0x2F, 0L, 0L, 0L);
+        mi_sbuf = (char *) gemdos(0x48, dta_ptr->d_length, 0L, 0L);
         if (mi_sbuf == (char *) 0)
                 er_nomem();
 
@@ -123,7 +116,7 @@ char *  filename;
         if (fhnd >= 0) {
                 fr_read(fhnd, 10L, temp);
                 fr_read(fhnd, 20000L, mi_sbuf);
-                Fclose(fhnd);
+                gemdos(0x3E, fhnd, 0L, 0L);
         }
         mq_inis(mi_sbuf, g_momap);
 }
