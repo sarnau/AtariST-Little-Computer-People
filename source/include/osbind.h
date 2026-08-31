@@ -77,26 +77,42 @@ extern long     gemdos();
 extern long     bios();
 extern long     xbios();
 
-/* GEMDOS: each macro casts args to their declared trap-ABI types
-   (WORD=short, VOIDP/LONG=long) so callers can pass anything
-   convertible and the trap handler reads correct byte sizes. */
-#define Fopen(n, m)             ((short) gemdos(0x3D, (long)(n),  (short)(m)))
-#define Fcreate(n, a)           ((short) gemdos(0x3C, (long)(n),  (short)(a)))
-#define Fread(h, n, b)          ((long)  gemdos(0x3F, (short)(h), (long)(n),  (long)(b)))
-#define Fwrite(h, n, b)         ((long)  gemdos(0x40, (short)(h), (long)(n),  (long)(b)))
-#define Fclose(h)               ((short) gemdos(0x3E, (short)(h)))
-#define Malloc(sz)              ((void *) gemdos(0x48, (long)(sz)))
-#define Mfree(p)                ((long)  gemdos(0x49, (long)(p)))
-#define Fgetdta()               ((void *) gemdos(0x2F))
-#define Fsfirst(p, a)           ((short) gemdos(0x4E, (long)(p),  (short)(a)))
-#define Fsnext()                ((short) gemdos(0x4F))
-#define Cconin()                ((long)  gemdos(0x01))
-#define Cconws(s)               ((short) gemdos(0x09, (long)(s)))
-#define Cconis()                ((short) gemdos(0x0B))
-#define Crawcin()               ((long)  gemdos(0x07))
-#define Pterm(rc)               ((void)  gemdos(0x4C, (short)(rc)))
-#define Super(ssp)              ((void *) gemdos(0x20, (long)(ssp)))
-#define Dsetpath(p)             ((short) gemdos(0x3B, (long)(p)))
+/* GEMDOS: the ROM's own binding macros padded every call to the
+   opcode plus THREE arguments (0L fills unused slots), and applied
+   NO casts -- each argument is pushed at the width of the source
+   expression.  Byte-verified against LCP_ORG.PRG (verify_bytes.py):
+   Fopen/Fcreate/Fsfirst carry one trailing 0L, one-arg calls carry
+   two, zero-arg calls three, and Fread/Fwrite are already full.
+   Callers must therefore pass each argument at the ROM's width
+   (e.g. a word rwmode vs. Fopen("hyber", 0L) in lc_load). */
+#define Fopen(n, m)             gemdos(0x3D, n, m, 0L)
+#define Fcreate(n, a)           gemdos(0x3C, n, a, 0L)
+#define Fread(h, n, b)          gemdos(0x3F, h, n, b)
+#define Fwrite(h, n, b)         gemdos(0x40, h, n, b)
+#define Fclose(h)               gemdos(0x3E, h, 0L, 0L)
+#define Malloc(sz)              gemdos(0x48, sz, 0L, 0L)
+#define Mfree(p)                gemdos(0x49, p, 0L, 0L)
+#define Fgetdta()               gemdos(0x2F, 0L, 0L, 0L)
+#define Fsfirst(p, a)           gemdos(0x4E, p, a, 0L)
+#define Fsnext()                gemdos(0x4F, 0L, 0L, 0L)
+#define Cconin()                gemdos(0x01, 0L, 0L, 0L)
+#define Cconws(s)               gemdos(0x09, s, 0L, 0L)
+#define Cconis()                gemdos(0x0B, 0L, 0L, 0L)
+#define Crawcin()               gemdos(0x07, 0L, 0L, 0L)
+#define Pterm(rc)               gemdos(0x4C, rc, 0L, 0L)
+#define Super(ssp)              gemdos(0x20, ssp, 0L, 0L)
+#define Dsetpath(p)             gemdos(0x3B, p, 0L, 0L)
+#define Giaccess(d, r)          xbios(0x1C, d, r, 0L)
+#define Dosound(p)              xbios(0x20, p, 0L, 0L)
+
+/* XBIOS, padded by the same ROM rule (opcode + three args). */
+#define Physbase()              xbios(2, 0L, 0L, 0L)
+#define Logbase()               xbios(3, 0L, 0L, 0L)
+#define Setscreen(l, p, r)      xbios(5, l, p, r)
+#define Setpalette(p)           xbios(6, p, 0L, 0L)
+#define Midiws(n, b)            xbios(12, n, b, 0L)
+#define Random()                xbios(17)       /* ROM: bare, no padding */
+#define Vsync()                 xbios(37, 0L, 0L, 0L)
 
 /* BIOS #5 -- Setexc(vector, handler): install/query an exception vector.
    Passing handler = -1 queries the current vector without installing. */

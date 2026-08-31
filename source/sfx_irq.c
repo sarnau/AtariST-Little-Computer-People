@@ -21,17 +21,16 @@ short   lo;
                (long) (unsigned short) lo;
 }
 
-/* Read 200 Hz counter via Super mode.
-   ROM: both Super calls carry two trailing 0L args (0xac5e). */
+/* Read 200 Hz counter via Super mode. */
 static short
 rd_hz()
 {
         void *  saveSSP;
         short   lo;
 
-        saveSSP = (void *) gemdos(0x20, 0L, 0L, 0L);
+        saveSSP = (void *) Super(0L);
         lo = g_hzlo;
-        gemdos(0x20, saveSSP, 0L, 0L);
+        Super(saveSSP);
         return lo;
 }
 
@@ -84,8 +83,7 @@ sf_irqp()
         g_sfddl = *(short *) (effectPtr - 2);
         g_sfpli          = g_sfcur;
 
-        /* ROM: two trailing 0L args on the Dosound xbios call. */
-        xbios(0x20, g_sfDoB, 0L, 0L);
+        Dosound(g_sfDoB);
 
         /* Convert Dosound envelope time (200 Hz) to 8 Hz game ticks. */
         g_sfHz2 = (long) (unsigned short) rd_hz();

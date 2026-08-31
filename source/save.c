@@ -34,8 +34,7 @@ short   rwmode;
 
         retry = 0;
         for (;;) {
-                /* ROM pushes a trailing 0L after the mode word. */
-                fhandle = gemdos(0x3D, filename, rwmode, 0L);
+                fhandle = Fopen(filename, rwmode);
                 if (fhandle >= 0)
                         return fhandle;
                 retry = retry + 1;
@@ -60,13 +59,12 @@ char *  filename;
                 return;
 
         for (;;) {
-                /* ROM: two trailing 0L args on create and close. */
-                iVar1 = gemdos(0x3C, filename, 0L, 0L);
+                iVar1 = Fcreate(filename, 0L);
                 if (iVar1 >= 0)
                         break;
                 er_write();
         }
-        gemdos(0x3E, iVar1, 0L, 0L);
+        Fclose(iVar1);
 }
 
 /* addr: fr_read() */
@@ -111,7 +109,7 @@ void *  buffer;
         fr_read(fhnd, 2L, &temp);
         fr_read(fhnd, 2L, &size);
         fr_read(fhnd, (long) size, buffer);
-        gemdos(0x3E, fhnd, 0L, 0L);     /* ROM: two trailing 0L args */
+        Fclose(fhnd);
 }
 
 /* addr: lcp_save() */
@@ -127,22 +125,21 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
-                /* ROM pushes a trailing 0L after the long mode. */
-                filehandle = gemdos(0x3D, filename, 1L, 0L);
+                filehandle = Fopen(filename, 1L);
                 if (filehandle >= 0)
                         break;
                 er_write();
         }
 
         for (;;) {
-                lVar1 = gemdos(0x40, filehandle, (long) size, addr);
+                lVar1 = Fwrite(filehandle, (long) size, addr);
                 /* ROM evaluates the size cast first. */
                 if ((long) size == lVar1)
                         break;
                 er_write();
         }
 
-        gemdos(0x3E, filehandle, 0L, 0L);       /* two trailing 0L args */
+        Fclose(filehandle);
 }
 
 /* addr: lc_load() */
@@ -151,13 +148,12 @@ lc_load()
 {
         short   fhnd;
 
-        /* ROM: mode is 0L and a second trailing 0L follows. */
-        fhnd = gemdos(0x3D, "hyber", 0L, 0L);
+        fhnd = Fopen("hyber", 0L);      /* ROM passes the mode as 0L */
         if (fhnd < 0)
                 return 0;
 
         fr_read(fhnd, 0x80L, &lcp);
-        gemdos(0x3E, fhnd, 0L, 0L);     /* two trailing 0L args */
+        Fclose(fhnd);
 
         lcp_watr         = lcp.water_level;
         lcp_frdO     = lcp.door_states_and_flags & DSF_FRONT_DOOR;

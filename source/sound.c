@@ -29,14 +29,13 @@ long    duration;
         }
 }
 
-/* addr: sf_so() (ROM 0xb122).  Giaccess as xbios(0x1C) with long
-   args and a trailing 0L, matching the ROM's push shapes. */
+/* addr: sf_so() (ROM 0xb122) */
 void
 sf_so()
 {
-        xbios(0x1C, 0L, 0x88L, 0L);
-        xbios(0x1C, 0L, 0x89L, 0L);
-        xbios(0x1C, 0L, 0x8aL, 0L);
+        Giaccess(0L, 0x88L);
+        Giaccess(0L, 0x89L);
+        Giaccess(0L, 0x8aL);
         g_sfdos  = 0xff;
         g_sfdoc = 0;
         g_sfplf    = NO;
@@ -81,7 +80,7 @@ sf_sl()
         short           fhandle;
 
         fhandle = fOpen("sounds.lcp", 0);
-        gemdos(0x3E, fhandle, 0L, 0L);  /* two trailing 0L args */
+        Fclose(fhandle);
 }
 
 void
@@ -101,14 +100,13 @@ char *  filename;
                         ;
         }
         if (mi_sbuf != (char *) 0) {
-                /* ROM GEMDOS shapes: trailing 0L padding on each call. */
-                gemdos(0x49, mi_sbuf, 0L, 0L);
+                Mfree(mi_sbuf);
                 mi_sbuf = (char *) 0;
         }
 
-        gemdos(0x4E, filename, 0L, 0L);
-        dta_ptr = (_DTA *) gemdos(0x2F, 0L, 0L, 0L);
-        mi_sbuf = (char *) gemdos(0x48, dta_ptr->d_length, 0L, 0L);
+        Fsfirst(filename, 0L);
+        dta_ptr = (_DTA *) Fgetdta();
+        mi_sbuf = (char *) Malloc(dta_ptr->d_length);
         if (mi_sbuf == (char *) 0)
                 er_nomem();
 
@@ -116,7 +114,7 @@ char *  filename;
         if (fhnd >= 0) {
                 fr_read(fhnd, 10L, temp);
                 fr_read(fhnd, 20000L, mi_sbuf);
-                gemdos(0x3E, fhnd, 0L, 0L);
+                Fclose(fhnd);
         }
         mq_inis(mi_sbuf, g_momap);
 }
