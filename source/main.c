@@ -80,13 +80,10 @@ gameLoop()
    (~440 KB) back to GEMDOS for Malloc to draw from. */
 long _stksize = 65536L;
 
-/* main -- C entry point for the Alcyon build (target only).  The 1985
-   startup path did title screen + palette + save-file setup here
-   before jumping into gameLoop(); those pre-init hooks are
-   still TODO.  Meanwhile this drives just enough of the runtime to
-   verify the .PRG actually executes: prints a marker string, waits
-   for a key, then exits cleanly.  Excluded from the host build so
-   tests can supply their own main(). */
+/* main -- C entry point for the Alcyon build (target only).
+   Ported line-by-line from Ghidra 0x15546; see the per-step comments
+   in the function body.  Excluded from the host build so tests can
+   supply their own main(). */
 
 
 /* Init dependencies -- Alcyon-renamed short names (see namemap.md).
@@ -106,11 +103,9 @@ long _stksize = 65536L;
    cp_main -> sp_imfs -> (cutscene if new) ->
    gameLoop.
 
-   Almost none of those subroutines are ported yet; this stub only
-   exercises the parts we do have so LCP.PRG at least builds and
-   launches for smoke tests.  Every added line here should either
-   correspond to an original Ghidra call, or be marked as diagnostic
-   scaffolding to remove. */
+   All of those steps are ported.  Every line in main() corresponds
+   to an original Ghidra call; the few port-specific additions are
+   marked inline. */
 
 
 /* Object-draw chain (Ghidra main 0x15546, after unScn).
