@@ -6,6 +6,31 @@ on the maintainer's machine and is the ground truth for every function,
 initialization step, and control-flow decision.  The C source in
 `source/` compiles under Alcyon C 4.14 (K&R) and runs on Hatari.
 
+## Original toolchain (identified 2026-08-31)
+
+The original LCP.PRG was built with **Alcyon C (DRI CP/M-68K C
+compiler) as shipped in the official Atari ST Developer's Kit** — the
+same Alcyon C 4.14 toolchain the port uses.  Fingerprinted from
+`DATA/LCP_ORG.PRG` against the compiler collection in
+`~/Hatari_C/Compiler/`:
+
+- **Startup**: instruction-for-instruction the Atari DK
+  `DISK_2/LINKER/GEMSTART.S` — including the "constant STACK value"
+  fragment with **STACK=$8000 (32 KB stack)**, `MINSTACK=$1000`,
+  `FUDGE=$200`, the `ext.w` command-length sequence, and the
+  `tst.l (a7)+ / Pterm($4C)` exit.  The older `alcyon2` GEMSTART
+  variant (`andi.l #$ff`, no stack models) does NOT match — it is
+  specifically the DK revision.
+- **Runtime library**: the DK's GEMLIB, wildcard `_main` (`xwmain.c`)
+  linked in (strings `: unmatched quote`, `Cannot open/append/create`,
+  `: No match`, `Stack Overflow`).  No LIBF traces — no floating point.
+- **Control experiment**: the port's `source/build/alcyon/LCP.PRG`
+  startup is byte-identical to the original modulo relocated absolute
+  addresses.
+- Ruled out: Pure C and Lattice 5.60 (postdate the game), Laser C /
+  Megamax and Mark Williams C (different crt0 + runtime strings),
+  early Lattice/Metacomco (no DRI-style wildcard `_main`).
+
 ## The rule: Ghidra-faithful means literal-faithful
 
 Before writing or modifying any code path, verify it against the
