@@ -1,2 +1,12 @@
 *.pyc
 source/tools/frame_hash.txt
+
+# Ghidra project (LCP.rep) runtime churn -- locks, temp/backup files,
+# UI state, and per-user checkout dbs. Real analysis stays tracked.
+LCP.lock
+LCP.lock~
+LCP.rep/projectState
+LCP.rep/**/tmp*.ps
+LCP.rep/**/~journal.bak
+LCP.rep/**/~index.bak
+LCP.rep/user/**/db.*.gbf
