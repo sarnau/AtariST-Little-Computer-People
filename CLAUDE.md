@@ -92,6 +92,14 @@ source ships; ad-hoc debug scaffolding does not.
 
 ## Launching / running the port
 
+- **Always use the Hatari MCP server for interactive testing** (AI
+  assistants: registered as `hatari` in local MCP config; source in
+  `~/Downloads/Hatari/`).  It drives a patched Hatari over a socket:
+  keyboard/mouse injection, inline screenshots, resolution & CPU
+  clock control, floppy/GEMDOS-drive mounting, and debugger
+  memory/register reads.  Batch regression scripts in `source/tools/`
+  keep their own Hatari invocations.
+
 - LCP.PRG must be launched **directly** — from Hatari's `--auto`
   option or double-clicked from the GEM desktop.  Launching via
   COMMAND.PRG (Atari's shell) leaves the workstation in a state
