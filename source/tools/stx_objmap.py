@@ -112,12 +112,21 @@ def matched_names():
                 pass
     finally:
         sys.argv = argv
-    names = {}
+    names, cands, cur = {}, {}, None
     for l in buf.getvalue().splitlines():
         m = re.match(r'MATCH\s+(\S+)\s+port=0x[0-9a-f]+\s+orig=0x([0-9a-f]+)', l)
         if m:
             names[int(m.group(2), 16)] = m.group(1)
-    return names
+            continue
+        m = re.match(r'DIVERGENT\s+(\S+)\s', l)
+        if m:
+            cur = m.group(1)
+            continue
+        m = re.search(r'candidate orig=0x([0-9a-f]+)', l)
+        if m and cur:
+            cands[int(m.group(1), 16)] = cur
+            cur = None
+    return names, cands
 
 
 def port_objects():
@@ -150,7 +159,7 @@ def main():
           f'{len(bsr)} bsr, {len(jsr)} jsr')
 
     clusters = merge([[min(a, b), max(a, b)] for a, b in bsr])
-    names = matched_names()
+    names, cands = matched_names()
     owners = port_objects()
 
     print(f'\n{len(clusters)} bsr clusters (lower bounds on object extents):')
@@ -172,6 +181,30 @@ def main():
     print(f'\njsr edges inside a cluster (expect 0 unless >32 KB): {len(bad)}')
     for a, b in bad[:10]:
         print(f'  {a:#07x} -> {b:#07x}  (distance {abs(b - a):#x})')
+
+    if '--members' in sys.argv:
+        print('\n=== cluster membership (matched + candidate) ===')
+        straddle = {}
+        for lo, hi in clusters:
+            rows = []
+            for a, n in sorted(list(names.items()) + list(cands.items())):
+                if lo <= a <= hi:
+                    rows.append((a, n, owners.get(n, '?'),
+                                 'M' if a in names else 'c'))
+            if not rows:
+                continue
+            byobj = {}
+            for a, n, o, k in rows:
+                byobj.setdefault(o, []).append(f'{n}({k})')
+                straddle.setdefault(o, set()).add(lo)
+            print(f'\n  {lo:#07x}-{hi:#07x}:')
+            for o in sorted(byobj):
+                print(f'    {o:<16} {" ".join(byobj[o])}')
+        split = {o: sorted(c) for o, c in straddle.items() if len(c) > 1}
+        print(f'\n  port objects straddling clusters (must be split): '
+              f'{len(split)}')
+        for o, cs in sorted(split.items()):
+            print(f'    {o:<16} {" ".join(f"{c:#x}" for c in cs)}')
 
     if show_edges:
         print('\nbsr edges:')

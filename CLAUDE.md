@@ -408,6 +408,36 @@ this build, ALL different from LCP_ORG's:
   orig=` addresses verify_bytes reports for divergent ones -- is
   the natural next evidence step before any restructuring.
 
+  **Membership map (done -- `stx_objmap.py --members`).**  Folding
+  in the candidate addresses, only FIVE port files straddle STX
+  cluster boundaries and therefore need splitting; every other file
+  already sits wholly inside one cluster:
+
+      alerts.c    3 clusters  er_nomem @0x400c | er_write @0x14824
+                              | sp_spud,sp_flih @0x148fe
+      games.c     2 clusters  minigame suite @0x73e8 | lcp_rgt @0xdece
+      gfx_prim.c  2 clusters  vst_h20 @0x73e8 | drwPixel @0xdece
+      init.c      2 clusters  mq_inti @0x12a | cl_drini,cl_redrH @0xdece
+      sprites.c   2 clusters  hideLcp,showLcp @0xdece | sp_updb @0x148fe
+
+  Concrete restructuring plan, in order:
+   1. Split those five files along the listed boundaries (or gate
+      the minority functions per-configuration, as sp_spud already
+      is), so every port .c belongs to exactly one STX cluster.
+   2. Add default-build-only unity units (stx_u*.c) that #include
+      their cluster's .c files; teach alcyon_build.sh to compile the
+      units instead of the constituents in that configuration.
+      FAITHFUL keeps compiling the files individually -- its own
+      partition (LCP_ORG's) is already proven correct and MUST stay
+      byte-identical.
+   3. Recover intra-unit ORDER from the matched functions' STX
+      addresses (e.g. cluster 0x400c runs dog < actions < movement
+      < calendar < renderx < alerts) and order the #includes to
+      match; ordering only affects addresses, not verify_bytes
+      matching, so it can be tuned after the bsr/jsr shapes land.
+   4. Re-sweep; expect a large jump, since call-shape divergence is
+      the single largest remaining class.
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
