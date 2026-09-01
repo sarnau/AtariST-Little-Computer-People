@@ -139,7 +139,7 @@ short   color;
         str[1] = 0;
 
         saved_log = (void *) Logbase();
-        Setscreen(g_dscp, (void *)-1L, -1);
+        Setscreen(g_dscp, (void *)-1L, -1L);
         vst_color(vdihnd, vdi_colt[color]);
         vswr_mode(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);

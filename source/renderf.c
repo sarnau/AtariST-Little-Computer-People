@@ -222,7 +222,7 @@ sc_ren8()
         /* --- Page flip --- */
         cur_mf = &g_srmfd;
         Vsync();
-        Setscreen((void *)-1L, cur_mf->fd_addr, -1);
+        Setscreen((void *)-1L, cur_mf->fd_addr, -1L);
 
         if (g_sfacf != NO) {
                 sf_irqp();

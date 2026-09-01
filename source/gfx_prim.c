@@ -48,7 +48,7 @@ void
 sc_sdtb()
 {
         g_srlgb = (void *) Logbase();
-        Setscreen(g_srptr, (void *)-1L, -1);
+        Setscreen(g_srptr, (void *)-1L, -1L);
         vswr_mode(vdihnd, MD_REPLACE);
         vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
@@ -61,7 +61,7 @@ sc_sdtb()
 void
 sc_sdtf()
 {
-        Setscreen(g_srlgb, (void *)-1L, -1);
+        Setscreen(g_srlgb, (void *)-1L, -1L);
 }
 
 /* sc_firw: paint row (160 B) with 0x0FFF (palette entry 0xF, white).
@@ -132,7 +132,7 @@ void
 initVdi()
 {
         sv_lgb = (void *) Logbase();
-        Setscreen(g_dscp, (void *)-1L, -1);
+        Setscreen(g_dscp, (void *)-1L, -1L);
         vswr_mode(vdihnd, MD_REPLACE);
         vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
@@ -145,7 +145,7 @@ initVdi()
 void
 exitVdi()
 {
-        Setscreen(sv_lgb, (void *)-1L, -1);
+        Setscreen(sv_lgb, (void *)-1L, -1L);
 }
 
 /* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
