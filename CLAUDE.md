@@ -146,7 +146,7 @@ wildcarded); `fn_diff.py NAME [orig_hex]` prints side-by-side
 disassembly for recovering exact C.  Workflow: build, link, relink
 without `-s` to `lcp_sym.68k`, run verify, fix, repeat.
 
-Status: **278 matched / 87 divergent, 82.4% of the original text
+Status: **303 matched / 57 divergent, 91.6% of the original text
 proven byte-identical.**  Recovered so far: the ROM's own osbind.h
 shapes (GEMDOS padded to opcode+3 args, NO argument casts; XBIOS
 per-site), the od_* frame-id global tables (data 0x11758-0x1177e and
@@ -157,6 +157,30 @@ logic recoveries (chk_actT hunger gate, a_kitcc chew loop + g_actif,
 dg_mvAn eating-sprite gate, ev_ansP od_med1, sf_sl is open+close
 only -- SOUNDS.LCP is vestigial on ST), and lcp_save/lc_load/sgPlay
 call shapes.
+
+Second wave (after the maintainer confirmed LCP_ORG.PRG as the
+reference): stair states hold the planted F3/F3S frames (walk core
+lcp_pat/lcp_fst byte-MATCH); tv_boul/tv_patl draw a deliberate
+pseudo-random second polyline point via frame-layout overlap (reverts
+12e572f semantics); the game's OWN VDI binding layer exists at ROM
+0xd664-0xd976 (vdiown.c + injected trap-#2 stub -- game code never
+draws through VDIBIND); od_draw/sp_draw use the discrete-arg vro_cpy;
+stpScrB/fillTopR share ONE buffer (dsb_stor was invented); rev_tab is
+initialized DATA; and this binary has NO interactive title screen, NO
+Timer-A install (st_titl defaults PLAYER/noon, mq_intim is empty), and
+NO move-in cutscene (cs_mvIn is a state initializer).
+
+Remaining 57 divergent: the minigame cluster (ag_*/wp_*/pk_*/mg_wkev/
+lcp_lgt/lcp_rgt, ~28 fns -- ROM layout differs, mg_wkev/lcp_lgt are
+structurally different), the MIDI/PSG engine (mq_*/psg_upE/fl_ltpl --
+NOTE: no Timer-A ISR exists in this ROM, so the engine is likely
+polled; mq_tick.s may be another other-image artifact), gameTic (ROM
+0xce28 is a VBL-wait + phone-ring + housekeeping loop, structurally
+different from the port's), main + vdi_ini/initVdi + small gfx
+helpers (vst_h20/rst_vsth/vdi_cprt/moff), the old-revision VDIBIND
+library entries still linked (vqt_att/vst_hei), and port-only ct_clrB.
+Runtime smoke + long-run tests REQUIRED before trusting the behavior
+changes (SOUNDS.LCP, tv polylines, stairs, single-buffer compositing).
 
 **OPEN QUESTION for the maintainer -- two Ghidra programs.**
 `LCP.rep` contains TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`), and
