@@ -18,7 +18,7 @@
 #
 # Env:
 #   TOS_IMG    default TOS104US.ROM under Retro/
-#   GAME_DIR   default ~/hatari-c/GAME
+#   GAME_DIR   default ~/Hatari_C/hatari-c/GAME
 #   PRG        default source/build/alcyon/LCP.PRG
 #
 # Usage:
@@ -31,7 +31,7 @@ set -uo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
 TOS_IMG=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari ST/Atari TOS Images/TOS104US.ROM}
-GAME_DIR=${GAME_DIR:-$HOME/hatari-c/GAME}
+GAME_DIR=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
 PRG=${PRG:-$CSRC/build/alcyon/LCP.PRG}
 LOG=/tmp/lcp_lcyof_trace.log
 

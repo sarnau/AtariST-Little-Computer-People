@@ -279,6 +279,27 @@ relink.  Open lead: LCP_STX.PRG may be the pre-crack parent of the
 other Ghidra image, and may reveal the intact SOUNDS.LCP loading
 that the crack destroyed (see the SFX crash note below).
 
+## Toolchain reconstruction (2026-09-01)
+
+The original native toolchain directory (~/hatari-c) was lost in a
+disk reorganization.  The entire environment is now REGENERABLE with
+`source/tools/build_toolchain.sh`, which rebuilds host tools from
+`~/Hatari_C/Compiler/Alcyon/alcyon` (Thorsten Otto's cleaned-up
+Alcyon C sources -- "no changes that would lead to different code
+generation") into `~/Hatari_C/hatari-c/{bin,src,TOOLS/INCLUDE,GAME}`:
+cp68 c068 c168 as68 ar68 link68 relmod optimize.  Host patches (all
+scripted, see the script header): SSIZE 8->32 (identifier/macro
+significance), parser/init.c unsigned-array initializer fast paths,
+macOS shims.  The linker is now link68 (DRI CLI, response files,
+`PRGFLAGS[0]` -- the modern default of 7 was the single differing
+byte on first try); relmod converts to PRG; bss_remap.py is
+unchanged.  TOOLS/INCLUDE comes from the DK DISK_1/COMPILER headers
+with CP/M ^Z markers stripped plus reconstructed ostruct.h (_DTA)
+and an MFDB typedef appended to vdibind.h.  VALIDATED: rm -rf of
+both the toolchain and build tree, full regeneration, FAITHFUL
+rebuild -> byte-identical LCP_ORG.PRG (MD5 02900cfd).  Quirk: this
+cp68 crashes on ~120+ char input paths; keep build paths short.
+
 ## Campaign #2 (2026-09-01): LCP_STX.PRG is the truth for the C sources
 
 Maintainer directive: recover the C sources for `DATA/LCP_STX.PRG`

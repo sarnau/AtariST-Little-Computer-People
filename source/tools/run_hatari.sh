@@ -9,7 +9,7 @@
 # Env vars (all optional):
 #   VBLS       run length in VBLs        (default 5000)
 #   TOS_IMG    TOS ROM to boot           (default TOS104US.ROM under Retro/)
-#   GAME_DIR   Hatari GEMDOS-HDD root    (default ~/hatari-c/GAME)
+#   GAME_DIR   Hatari GEMDOS-HDD root    (default ~/Hatari_C/hatari-c/GAME)
 #   PRG        LCP.PRG to install        (default source/build/alcyon/LCP.PRG)
 #   HATARI     hatari binary             (default `hatari` in PATH)
 #   AVI        set to a path to record   (default off)
@@ -24,7 +24,7 @@ set -uo pipefail
 
 VBLS=${VBLS:-5000}
 TOS_IMG=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari ST/Atari TOS Images/TOS104US.ROM}
-GAME_DIR=${GAME_DIR:-$HOME/hatari-c/GAME}
+GAME_DIR=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
 PRG=${PRG:-$(cd "$(dirname "$0")/.." && pwd)/build/alcyon/LCP.PRG}
 HATARI=${HATARI:-hatari}
 AVI=${AVI:-}

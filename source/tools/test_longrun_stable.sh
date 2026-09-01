@@ -54,7 +54,7 @@ VBL_EARLY=${VBL_EARLY:-3000}
 VBL_LATE=${VBL_LATE:-13000}
 PSNR_MIN=${PSNR_MIN:-18}
 TOS_IMG=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari ST/Atari TOS Images/TOS104US.ROM}
-GAME_DIR=${GAME_DIR:-$HOME/hatari-c/GAME}
+GAME_DIR=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
 PRG=$CSRC/build/alcyon/LCP.PRG
 
 AVI=$(mktemp -t lcp_longrun.XXXXXX).avi

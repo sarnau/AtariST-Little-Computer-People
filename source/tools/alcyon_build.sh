@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 # alcyon_build.sh -- drive Alcyon C 4.14 NATIVELY on macOS.
 #
-# Uses the native-macOS ports of cp68/c068/c168/as68 at ~/hatari-c/bin/
+# Uses the native-macOS ports of cp68/c068/c168/as68 at ~/Hatari_C/hatari-c/bin/
 # instead of Hatari, so each compile takes a fraction of a second
 # instead of ~15 seconds.
 #
 # Environment:
 #   ALCYON_BIN  directory holding cp68/c068/c168/as68
-#               (default: $HOME/hatari-c/bin)
+#               (default: $HOME/Hatari_C/hatari-c/bin)
 #   ALCYON_INC  directory holding Alcyon system headers (osbind.h etc.)
-#               (default: $HOME/hatari-c/TOOLS/INCLUDE)
+#               (default: $HOME/Hatari_C/hatari-c/TOOLS/INCLUDE)
 #   FILES       space-separated .c basenames to build (default: all)
 
 set -euo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-ALCYON_BIN=${ALCYON_BIN:-$HOME/hatari-c/bin}
-ALCYON_INC=${ALCYON_INC:-$HOME/hatari-c/TOOLS/INCLUDE}
+# Toolchain: host builds of the cleaned-up Alcyon sources
+# (~/Hatari_C/hatari-c/src, from Compiler/Alcyon/alcyon) -- see
+# CLAUDE.md "Toolchain reconstruction (2026-09-01)".
+ALCYON_BIN=${ALCYON_BIN:-$HOME/Hatari_C/hatari-c/bin}
+ALCYON_INC=${ALCYON_INC:-$HOME/Hatari_C/hatari-c/TOOLS/INCLUDE}
 OUT=$CSRC/build/alcyon
 WORK=$OUT/work
 

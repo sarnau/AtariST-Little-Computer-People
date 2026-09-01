@@ -23,7 +23,7 @@
 set -uo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-GAME=${GAME_DIR:-$HOME/hatari-c/GAME}
+GAME=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
 DATA_DIR=$GAME/data
 HYBER=$DATA_DIR/HYBER   # Alcyon Fopen is case-insensitive per Atari conv
 BACKUP=/tmp/hyber.saveload_test.bak

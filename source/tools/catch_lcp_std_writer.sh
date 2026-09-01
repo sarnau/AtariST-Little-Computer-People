@@ -22,7 +22,7 @@
 #
 # Env:
 #   TOS_IMG    TOS ROM                   (default TOS104US.ROM in Retro/)
-#   GAME_DIR   Hatari GEMDOS-HDD root    (default ~/hatari-c/GAME)
+#   GAME_DIR   Hatari GEMDOS-HDD root    (default ~/Hatari_C/hatari-c/GAME)
 #   PRG        LCP.PRG to install        (default source/build/alcyon/LCP.PRG)
 #
 # Usage:
@@ -37,7 +37,7 @@ set -uo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
 TOS_IMG=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari ST/Atari TOS Images/TOS104US.ROM}
-GAME_DIR=${GAME_DIR:-$HOME/hatari-c/GAME}
+GAME_DIR=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
 PRG=${PRG:-$CSRC/build/alcyon/LCP.PRG}
 LOG=/tmp/lcp_memwatch.log
 

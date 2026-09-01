@@ -31,10 +31,9 @@ cd "$OUT"
 OBJS=$(find . -maxdepth 1 -name "*.o" ! -name "gemstart.o" ! -name "main.o" \
     ! -name "osbind.o" ! -name "crt0.o" ! -name "nofloat.o" \
     ! -name "vdilib.o" ! -name "vdilib_a.o" | sort | sed 's|^\./||')
-~/hatari-c/bin/lo68 -r -o lcp_sym.68k \
-    gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
-    vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf \
-    >/dev/null 2>&1
+LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' \n' ',,')
+echo "lcp_sym.68k=$LIST" > lcp_sym.cmd
+~/Hatari_C/hatari-c/bin/link68 "[SYMBOLS,COMMAND[lcp_sym.cmd]]" >/dev/null 2>&1
 cd "$CSRC/.."
 
 python3 - "$NAMES" <<'EOF'

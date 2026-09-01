@@ -23,7 +23,7 @@
 set -euo pipefail
 
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-ALCYON_BIN=${ALCYON_BIN:-$HOME/hatari-c/bin}
+ALCYON_BIN=${ALCYON_BIN:-$HOME/Hatari_C/hatari-c/bin}
 ATARI_DK=${ATARI_DK:-$HOME/Hatari_C/Compiler/ATARI_DK/DISK_2/LINKER}
 DK_TOOLS=$CSRC
 OUT=$CSRC/build/alcyon
@@ -86,18 +86,17 @@ rm -f lcp.68k LCP.PRG
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
 fi
-"$ALCYON_BIN/lo68" -r -s -o lcp.68k \
-    gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
-    vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf 2>&1 | tail -20 || true
+# link68 (DRI CLI) with a response file; same object order as lo68 had.
+LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' ' ',')
+echo "lcp.68k=$LIST" > lcp_link.cmd
+"$ALCYON_BIN/link68" "[PRGFLAGS[0],COMMAND[lcp_link.cmd]]" 2>&1 | tail -5 || true
 
 # 4b. FAITHFUL: unstripped side link -- bss_remap.py resolves the
 #     rom_bss_layout.tsv symbol keys against its symbol table.
 if [ "${FAITHFUL:-0}" = "1" ]; then
     rm -f lcp_sym.68k
-    "$ALCYON_BIN/lo68" -r -o lcp_sym.68k \
-        gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
-        vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf \
-        2>&1 | tail -5 || true
+    echo "lcp_sym.68k=$LIST" > lcp_sym.cmd
+    "$ALCYON_BIN/link68" "[PRGFLAGS[0],SYMBOLS,COMMAND[lcp_sym.cmd]]" 2>&1 | tail -3 || true
     [ -f lcp_sym.68k ] || { echo "FAILED: symbol side link"; exit 1; }
 fi
 
