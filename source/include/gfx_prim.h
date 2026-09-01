@@ -15,13 +15,11 @@ extern void drwPixel();
 extern void blkcp32();
 extern void cpyScr();
 extern void aes_init();
-extern void sc_ers();
 extern void vdi_init();
 extern void stpScrB();
 extern void vst_h20();
 extern void rst_vsth();
 extern void vdi_cprt();
 extern void moff();
-extern void drwBar();
 
 #endif /* GFX_PRIM_H */

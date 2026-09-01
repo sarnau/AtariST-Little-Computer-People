@@ -49,10 +49,10 @@ sc_sdtb()
 {
         g_srlgb = (void *) Logbase();
         Setscreen(g_srptr, (void *)-1L, -1L);
-        vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, FIS_PATTERN);
-        vsf_style(vdihnd, FILL_SOLID);
-        vsf_color(vdihnd, COLOR_black);
+        vswr_mode(vdihnd, 1);
+        vsf_interior(vdihnd, 1);        /* ROM: FIS_SOLID, not PATTERN */
+        vsf_style(vdihnd, 1);           /* ROM: 1, not 8 */
+        vsf_color(vdihnd, 0);
 }
 
 /* sc_sdtf: restore log-base after sc_sdtb.
@@ -257,10 +257,10 @@ sc_ers()
 {
         short   r[4];
 
-        vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, FIS_PATTERN);
-        vsf_style(vdihnd, FILL_SOLID);
-        vsf_color(vdihnd, COLOR_black);
+        vswr_mode(vdihnd, 1);
+        vsf_interior(vdihnd, 1);        /* ROM: FIS_SOLID, not PATTERN */
+        vsf_style(vdihnd, 1);           /* ROM: 1, not 8 */
+        vsf_color(vdihnd, 0);
         r[0] = 0;
         r[1] = 0;
         if (scr_scal == REZ_ST_HIGH) {
@@ -371,24 +371,3 @@ moff()
         }
 }
 
-/* drwBar: solid-fill rect (x1,y1)-(x2,y2) with explicit color.
-   Same bracket as plEr; used by title screen input erase.
-   addr: draw_bar_color() */
-
-void
-drwBar(x1, y1, x2, y2, color)
-short   x1;
-short   y1;
-short   x2;
-short   y2;
-short   color;
-{
-        short   r[4];
-        r[0] = x1; r[1] = y1;
-        r[2] = x2; r[3] = y2;
-        initVdi();
-        vsf_color(vdihnd, vdi_colt[color]);
-        v_bar(vdihnd, r);
-        vsf_color(vdihnd, vdi_colt[0xc]);
-        exitVdi();
-}

@@ -96,21 +96,17 @@ cl_drini()
         cl_redrH();
 }
 
-/* st_titl (Ghidra 0x16de6): title screen name/date/time/AM-PM entry.
-   Phases: NAME (<= 18 upper chars), DATE (MM/DD/YY), TIME (HH:MM),
-   AM/PM (adjusts t_hour to 24h).  Ends with 1s evnt_timer.
-   Build switch -DSKIP_TITLE=1 keeps default PLAYER/noon/0-0-0 so
-   test harnesses under --fast-forward don't block on getKey. */
+/* st_titl (ROM 0x7fae): in THIS binary the "title screen" is a stub
+   that defaults the owner name to "PLAYER" and the clock to noon,
+   0-0-0 -- there is no interactive name/date/time entry.  (The
+   916-byte interactive version previously here came from the other
+   Ghidra image; its TOS v_gtext crash makes sense in hindsight.)
+   addr: st_titl() */
 
-
-#ifdef SKIP_TITLE
 void
 st_titl()
 {
         short   i;
-        /* Prime g_dscp: without this, prCh->Setscreen(NULL,...) triggers
-           TOS v_gtext $fd330c fault before first fillTopR(). */
-        g_dscp = sv_phb;
 
         lcp.owner_name[0] = 'P';
         lcp.owner_name[1] = 'L';
@@ -126,180 +122,15 @@ st_titl()
         t_hour   = 12;
         t_min    = 0;
 }
-#else
 
-/* drwCurs: 8x8 solid rect at (x, y-7)..(x+7, y) for cursor blink.
-   addr: drwCurs() */
-
-void
-drwCurs(x, y, color)
-short   x;
-short   y;
-short   color;
-{
-        drwBar(x, y - 7, x + 7, y, color);
-}
-
-/* inpNum: read `val` digits into in_str[] with blinking cursor.
-   (i % 3 == 2) skip preserves the '/' or ':' separator.  Stored as
-   raw 0..9 (ch - 0x30) so st_titl can decode tens*10 + ones.
-   addr: inpNum() */
-
-void
-inpNum(x, y, str, val, color)
-short   x;
-short   y;
-char *  str;
-short   val;
-short   color;
-{
-        short   ch;
-        short   i;
-        short   next;
-
-        drwBar(x, y - 7, x + val * 8, y, COLOR_dk_brown);
-        strPr(str, x, y, color);
-        i = 0;
-        do {
-                do {
-                        for (;;) {
-                                ch = getKey();
-                                if (ch != KEY_CURSOR_LEFT || i < 1)
-                                        break;
-                                next = i - 1;
-                                if ((short)(i - 1) % 3 == 2)
-                                        next = i - 2;
-                                i = next;
-                                drwCurs(
-                                             x + i * 8, y, COLOR_dk_brown);
-                                prCh((short) str[i],
-                                                 x + i * 8, y, color);
-                        }
-                } while ((short) ch < '0' || '9' < (short) ch);
-                drwCurs(x + i * 8, y, COLOR_dk_brown);
-                prCh(ch, x + i * 8, y, color);
-                in_str[i] = (char) ch - 0x30;
-                next = i + 1;
-                if ((short)(i + 1) % 3 == 2)
-                        next = i + 2;
-                i = next;
-        } while (i < val);
-}
-
-void
-st_titl()
-{
-        short   ch;
-        short   parsed;
-        short   ilen;
-        short   xpos;
-        short   pmc;   /* AM/PM char to display */
-
-        /* g_dscp = sv_phb: redirect prCh's Setscreen at visible
-           physbase, not the dsb_stor letter buffer left by stpScrB. */
-        g_dscp = sv_phb;
-
-        /* Decompress title.scn to physbase.  unScn folds Ghidra's
-           inline fOpen+Malloc+read+decompress+Mfree into one call. */
-        unScn("title.scn", (unsigned short *) sv_phb, 16000L);
-
-        /* NAME phase. */
-        strPr("NAME: ------------------", 80, 110, COLOR_lt_brown);
-        xpos = 0;
-        do {
-                do {
-                        for (;;) {
-                                ch = getKey();
-                                if (ch != KEY_CURSOR_LEFT || xpos <= 0)
-                                        break;
-                                xpos = xpos - 1;
-                                drwCurs(
-                                             xpos * 8 + 128, 110, COLOR_dk_brown);
-                                prCh('-', xpos * 8 + 0x80, 110,
-                                                 COLOR_lt_brown);
-                        }
-                        if (ch == KEY_CTRL_M && xpos > 0)
-                                goto name_done;
-                        ch = lcp_upp(ch);
-                } while (ch < 0x20);
-                lcp.owner_name[xpos] = (char) ch;
-                drwCurs(xpos * 8 + 0x80, 110,
-                                                                          COLOR_dk_brown);
-                prCh(ch, xpos * 8 + 0x80, 110, COLOR_lt_brown);
-                xpos = xpos + 1;
-        } while (xpos != 0x12);
-name_done:
-        lcp.owner_name[xpos] = '\0';
-        for (ilen = xpos; ilen < 18; ilen = ilen + 1)
-                drwCurs(ilen * 8 + 128, 110,
-                                                                          COLOR_dk_brown);
-
-        /* DATE phase. */
-        strPr("ENTER DATE:", 80, 122, COLOR_lt_brown);
-        do {
-                do {
-                        inpNum(176, 122, "MM/DD/YY", 8,
-                                                    COLOR_lt_brown);
-                        dt_mon   = (short) in_str[1] + in_str[0] * 10 - 1;
-                        date_day = (short) in_str[4] + in_str[3] * 10 - 1;
-                        dt_year  = (short) in_str[7] + in_str[6] * 10;
-                } while (dt_mon < 0);
-        } while (dt_mon > 0xb || date_day < 0 ||
-                 (parsed = daysInMo(dt_mon, dt_year),
-                  parsed <= date_day));
-
-        /* TIME phase. */
-        strPr("ENTER TIME:", 80, 134, COLOR_lt_brown);
-        do {
-                do {
-                        inpNum(176, 134, "HH:MM", 5,
-                                                    COLOR_lt_brown);
-                        t_hour = (short) in_str[1] + in_str[0] * 10;
-                        t_min  = (short) in_str[4] + in_str[3] * 10;
-                } while (t_hour == 0);
-        } while (t_hour > 12 || t_min > 59);
-
-        /* AM/PM phase. */
-        strPr("AM OR PM: -M", 80, 146, COLOR_lt_brown);
-        for (;;) {
-                ch = getKey();
-                if (ch == 'A' || ch == 'a') {
-                        pmc = 'A';
-                        if (t_hour == 12)
-                                t_hour = 0;
-                        break;
-                }
-                if (ch == 'P' || ch == 'p') {
-                        pmc = 'P';
-                        if (t_hour != 12)
-                                t_hour = t_hour + 12;
-                        break;
-                }
-        }
-        drwCurs(160, 146, COLOR_dk_brown);
-        prCh(pmc, 160, 146, COLOR_lt_brown);
-        evnt_timer(1000, 0);
-}
-#endif   /* SKIP_TITLE */
-
-/* mq_tick lives in mq_tick.s (privileged move-sr, rte). */
-
-/* mq_intim (Ghidra 0x11112): install Timer-A for MIDI sequencer.
+/* mq_intim (ROM 0x804e): an EMPTY stub.  This binary never installs
+   a Timer-A ISR -- there is no Xbtimer call anywhere in the ROM; the
+   Timer-A machinery (mq_tick.s) came from the other Ghidra image.
    addr: mq_intim() */
 
 void
 mq_intim()
 {
-#ifdef SKIP_MIDI
-        /* SKIP_MIDI: Timer-A jitter breaks frame-hash goldens under
-           --fast-forward.  Interactive builds get the real handler. */
-        (void) 0;
-#else
-        g_mtpre = 100;
-        g_mtdiv = 4;
-        mi_svtv = Setexc(0x4d, -1L);
-        Xbtimer(0, 5, 0x28, (long) mq_tick);
-#endif
 }
 
 /* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
