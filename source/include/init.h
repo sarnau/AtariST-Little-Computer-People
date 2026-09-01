@@ -10,7 +10,6 @@ extern void drwCurs();
 extern void inpNum();
 extern void mq_intim();
 extern void cntSong();
-extern void bldBRev();
 extern void initBRev();
 extern void a_chfd();
 extern void cs_mvIn();

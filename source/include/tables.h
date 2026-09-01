@@ -5,8 +5,6 @@
 
 extern short g_rpxs[];
 extern unsigned short rev_tab[];
-extern unsigned short bm_msb_lsb[];
-extern unsigned short bm_lsb_msb[];
 extern short g_atact[];
 extern short g_atmod[];
 extern short g_atrel[];

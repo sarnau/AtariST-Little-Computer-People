@@ -145,55 +145,34 @@ cntSong()
 
         sng_cnt = 0;
         org_cnt = 0;
-        result = (short) Fsfirst("*.sng", 0L);
+        /* ROM shapes: one trailing 0L on Fsfirst, bare Fsnext. */
+        result = (short) gemdos(0x4E, "*.sng", 0L);
         if (result == 0) {
                 sng_cnt = 1;
                 for (;;) {
-                        next = Fsnext();
+                        next = gemdos(0x4F);
                         if (next != 0) break;
                         sng_cnt = sng_cnt + 1;
                 }
         }
-        result = (short) Fsfirst("*.org", 0L);
+        result = (short) gemdos(0x4E, "*.org", 0L);
         if (result == 0) {
                 org_cnt = 1;
                 for (;;) {
-                        next = Fsnext();
+                        next = gemdos(0x4F);
                         if (next != 0) break;
                         org_cnt = org_cnt + 1;
                 }
         }
 }
 
-/* bldBRev (Ghidra 0x1680e): fill rev_tab[256] with bit-reversed bytes. */
 
-
-void
-bldBRev()
-{
-        unsigned short  v;
-        short           j;
-        unsigned short  i;
-        unsigned short *ptr;
-
-        ptr = rev_tab;
-        for (i = 0; (short) i < 0x100; i = i + 1) {
-                v = 0;
-                for (j = 0; j < 8; j = j + 1) {
-                        if ((bm_msb_lsb[j] & i) != 0)
-                                v = bm_lsb_msb[j] | v;
-                }
-                *ptr = v;
-                ptr = ptr + 1;
-        }
-}
-
-/* initBRev (Ghidra 0x16804): wrapper for bldBRev, kept for boot-step parity. */
+/* initBRev (ROM 0x80fe): an empty stub in the ROM -- rev_tab ships
+   as initialized data (tables.c); nothing to build at runtime. */
 
 void
 initBRev()
 {
-        bldBRev();
 }
 
 /* a_chfd: resident checks the front door for `wait_ticks` frames,
