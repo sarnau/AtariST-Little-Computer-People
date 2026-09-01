@@ -20,6 +20,7 @@
 #include "events.h"
 #include "games.h"
 #include "gfx_prim.h"
+#include "vdiown.h"
 #include "globals.h"
 #include "keyboard.h"
 #include "letload.h"
@@ -1192,7 +1193,8 @@ short   yi;
                 x = crd_xb[xi];
                 y = crd_yb[xi];
         }
-        vdi_cprt(vdihnd, S_ONLY, &crd_mfdb[card], &mf_scb_c,
+        vro_cpy(vdihnd, S_ONLY,
+                              (long) &crd_mfdb[card], (long) &mf_scb_c,
                               0, 0, 15, 23,
                               x, y, x + 15, y + 23);
 }

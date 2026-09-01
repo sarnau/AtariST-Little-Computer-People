@@ -133,9 +133,9 @@ initVdi()
 {
         sv_lgb = (void *) Logbase();
         Setscreen(g_dscp, (void *)-1L, -1L);
-        vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, FIS_PATTERN);
-        vsf_style(vdihnd, FILL_SOLID);
+        vswr_mode(vdihnd, 1);
+        vsf_interior(vdihnd, 1);        /* ROM 0x791c: 1, not PATTERN */
+        vsf_style(vdihnd, 1);           /* ROM 0x792e: 1, not 8 */
         vsf_color(vdihnd, vdi_colt[0xc]);
 }
 
@@ -249,53 +249,35 @@ aes_init()
 #define REZ_ST_HIGH     2
 #define M_OFF           256
 
-/* sc_ers (Ghidra 0x166fe): mouse off + v_bar full screen COLOR_black.
-   Trailing vsf_color restores default fill to palette slot 1. */
-
-void
-sc_ers()
-{
-        short   r[4];
-
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 1);        /* ROM: FIS_SOLID, not PATTERN */
-        vsf_style(vdihnd, 1);           /* ROM: 1, not 8 */
-        vsf_color(vdihnd, 0);
-        r[0] = 0;
-        r[1] = 0;
-        if (scr_scal == REZ_ST_HIGH) {
-                r[2] = 639;
-                r[3] = 399;
-        } else {
-                r[2] = 319;
-                r[3] = 199;
-        }
-        graf_mouse(M_OFF, (void *) 0);
-        v_bar(vdihnd, r);
-        vsf_color(vdihnd, 1);
-}
-
-/* vdi_init (Ghidra 0x16680): open workstation, require ST-low/medium,
-   clear screen.  Reboots via form_alert if width >= 601 (ST-high). */
+/* vdi_init (ROM 0x7b72): open a virtual workstation on the physical
+   handle using LOCAL work arrays, scr_scal=1, reset drawing
+   attributes, hide the mouse, and clear the whole screen.  The ROM
+   has no resolution check and no reboot alert. */
 
 void
 vdi_init()
 {
+        short   work_in[11];
+        short   wk_out[57];
         short   i;
+        short   rect[4];
 
         vdihnd = vdi_hnd;
         for (i = 0; i < 10; i = i + 1)
-                workin[i] = 1;
-        workin[10] = 2;
-        v_opnvwk(workin, &vdihnd, work_out);
-        scr_scal = REZ_ST_MEDIUM;
-        if (work_out[0] < 601) {
-                sc_ers();
-                return;
-        }
-        for (;;)
-                form_alert(0,
-                        "[1][Must be in|low resolution.][REBOOT]");
+                work_in[i] = 1;
+        work_in[10] = 2;
+        v_opnvwk(work_in, &vdihnd, wk_out);
+        scr_scal = 1;
+        vswr_mode(vdihnd, 1);
+        vsf_interior(vdihnd, 1);
+        vsf_style(vdihnd, 1);
+        vsf_color(vdihnd, 0);
+        rect[0] = 0;
+        rect[1] = 0;
+        rect[2] = 319;
+        rect[3] = 199;
+        graf_mouse(256, 0L);
+        v_bar(vdihnd, rect);
 }
 
 void
@@ -339,24 +321,6 @@ rst_vsth()
         vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
 }
 
-/* vdi_cprt: vro_cpyfm wrapper packing (src rect, dst rect) into pxy[8].
-   addr: vdi_copy_rect() */
-
-void
-vdi_cprt(handle, mode, srcMFDB, dstMFDB, x1a, y1a, x2a, y2a,
-                                              x1b, y1b, x2b, y2b)
-short   handle;
-short   mode;
-MFDB *  srcMFDB;
-MFDB *  dstMFDB;
-short   x1a, y1a, x2a, y2a;
-short   x1b, y1b, x2b, y2b;
-{
-        short   pts[8];
-        pts[0] = x1a; pts[1] = y1a; pts[2] = x2a; pts[3] = y2a;
-        pts[4] = x1b; pts[5] = y1b; pts[6] = x2b; pts[7] = y2b;
-        vro_cpyfm(handle, mode, pts, srcMFDB, dstMFDB);
-}
 
 /* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
    addr: mouse_off() */

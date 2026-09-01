@@ -19,7 +19,6 @@ extern void vdi_init();
 extern void stpScrB();
 extern void vst_h20();
 extern void rst_vsth();
-extern void vdi_cprt();
 extern void moff();
 
 #endif /* GFX_PRIM_H */
