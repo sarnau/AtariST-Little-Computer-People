@@ -52,11 +52,11 @@ short   index;
         sp_iniM(0L, &g_semfm[index],
                          g_seams[index],  w, h);
 
-        vro_cpy(vdihnd, NOTS_AND_D,
+        vroCpyD(vdihnd, NOTS_AND_D,
                 index * 20 + (long) g_semfm, (long) &g_srmfd,
                 0, 0, w - 1, h - 1,
                 x1, y1, x1 + w - 1, y1 + h - 1);
-        vro_cpy(vdihnd, S_XOR_D,
+        vroCpyD(vdihnd, S_XOR_D,
                 index * 20 + (long) g_semfi, (long) &g_srmfd,
                 0, 0, w - 1, h - 1,
                 x1, y1, x1 + w - 1, y1 + h - 1);

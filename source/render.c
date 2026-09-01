@@ -52,7 +52,7 @@ short   g_oiidx;
 short   x;
 short   y;
 {
-        vro_cpy(vdihnd, 3,
+        vroCpyD(vdihnd, 3,
                 g_oiidx * 20 + (long) g_obtmp,
                 (long) &mf_scrp,
                 0, 0,

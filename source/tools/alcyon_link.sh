@@ -46,6 +46,14 @@ fi
 #     `move sr,dn` instructions (raise IPL to 7 on entry, lower to 5
 #     during sub-calls) that Alcyon C 4.14 can't emit, and ends with
 #     `rte`.  Installed directly by Xbtimer -- no C wrapper needed.
+if [ ! -f vdilib_a.o ] || [ "$DK_TOOLS/vdilib_a.s" -nt vdilib_a.o ]; then
+    cp -f "$DK_TOOLS/vdilib_a.s" vdilib_a.s
+    "$ALCYON_BIN/as68" -l -u vdilib_a.s > /dev/null 2>&1 || {
+        echo "FAILED: vdilib_a assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f mq_tick.o ] || [ "$DK_TOOLS/mq_tick.s" -nt mq_tick.o ]; then
     rm -f mq_hlpr.o mq_hlpr.s          # stale from earlier port scheme
     cp -f "$DK_TOOLS/mq_tick.s" mq_tick.s
@@ -66,14 +74,20 @@ cp -f "$ATARI_DK/LIBF"       libf
 OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" \
-    ! -name "crt0.o" ! -name "nofloat.o" | sort); do
+    ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
 # 4. Link.  -r emits relocation bits.  -s strips symbol table.
 rm -f lcp.68k LCP.PRG
+# vdilib.o sits in library position, exactly where the ROM links its
+# own workstation module (0xe754), ahead of vdibind.a which it shadows.
+# FAITHFUL=1 drops mq_tick.o -- the ROM has no Timer-A ISR.
+if [ "${FAITHFUL:-0}" = "1" ]; then
+    OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
+fi
 "$ALCYON_BIN/lo68" -r -s -o lcp.68k \
-    gemstart.o main.o $OBJS \
+    gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
     vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf 2>&1 | tail -20 || true
 
 if [ ! -f lcp.68k ]; then

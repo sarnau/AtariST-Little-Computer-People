@@ -13,7 +13,7 @@ extern void     vswr_mode();
 extern void     v_pline();
 extern void     v_gtext();
 extern void     v_bar();
-extern void     vro_cpy();
+extern void     vroCpyD();
 
 extern short *  vdipb[];
 

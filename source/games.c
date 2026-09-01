@@ -1327,7 +1327,7 @@ short   yi;
                 x = crd_xb[xi];
                 y = crd_yb[xi];
         }
-        vro_cpy(vdihnd, S_ONLY,
+        vroCpyD(vdihnd, S_ONLY,
                               (long) &crd_mfdb[card], (long) &mf_scb_c,
                               0, 0, 15, 23,
                               x, y, x + 15, y + 23);

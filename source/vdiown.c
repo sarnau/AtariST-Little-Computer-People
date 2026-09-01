@@ -160,9 +160,9 @@ short * pxy;
         vdi_go();
 }
 
-/* addr: vro_cpy() (ROM 0xd8d2) -- discrete-argument vro_cpyfm. */
+/* addr: vroCpyD() (ROM 0xd8d2) -- discrete-argument vro_cpyfm. */
 void
-vro_cpy(handle, mode, src, dst, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2)
+vroCpyD(handle, mode, src, dst, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2)
 short   handle;
 short   mode;
 long    src;
