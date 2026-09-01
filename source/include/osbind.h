@@ -77,9 +77,11 @@ extern long     gemdos();
 extern long     bios();
 extern long     xbios();
 
-/* GEMDOS: the ROM's own binding macros padded every call to the
-   opcode plus THREE arguments (0L fills unused slots), and applied
-   NO casts -- each argument is pushed at the width of the source
+#ifdef FAITHFUL
+
+/* GEMDOS: LCP_ORG's binding macros padded every call to the opcode
+   plus THREE arguments (0L fills unused slots), and applied NO
+   casts -- each argument is pushed at the width of the source
    expression.  Byte-verified against LCP_ORG.PRG (verify_bytes.py):
    Fopen/Fcreate/Fsfirst carry one trailing 0L, one-arg calls carry
    two, zero-arg calls three, and Fread/Fwrite are already full.
@@ -123,6 +125,45 @@ extern long     xbios();
    3 = Timer-D; ctrl/data are the initial MFP prescaler and data
    register values.  Used by mq_intim to install the Timer-A ISR. */
 #define Xbtimer(t, c, d, v)     ((long) xbios(31, (short)(t), (short)(c), (short)(d), (long)(v)))
+
+#else   /* !FAITHFUL: the STX revision's convention */
+
+/* LCP_STX.PRG was built against the older Alcyon distribution's
+   OSBIND.H (alcyon2, 1985-05-30), whose macros pass ONLY the real
+   arguments -- no 0L padding, no casts (except the documented int
+   casts on Cconis/Fsfirst/Fsnext).  Byte-observed in the STX text:
+   Fclose pushes just opcode+handle before jsr gemdos (text 0x11a
+   trap-#1 veneer).  Shapes below mirror that header's subset. */
+#define Fopen(n, m)             gemdos(0x3D, n, m)
+#define Fcreate(n, a)           gemdos(0x3C, n, a)
+#define Fread(h, n, b)          gemdos(0x3F, h, n, b)
+#define Fwrite(h, n, b)         gemdos(0x40, h, n, b)
+#define Fclose(h)               gemdos(0x3E, h)
+#define Malloc(sz)              gemdos(0x48, sz)
+#define Mfree(p)                gemdos(0x49, p)
+#define Fgetdta()               gemdos(0x2F)
+#define Fsfirst(p, a)           (int) gemdos(0x4E, p, a)
+#define Fsnext()                (int) gemdos(0x4F)
+#define Cconin()                gemdos(0x01)
+#define Cconws(s)               gemdos(0x09, s)
+#define Cconis()                (int) gemdos(0x0B)
+#define Crawcin()               gemdos(0x07)
+#define Pterm(rc)               gemdos(0x4C, rc)
+#define Super(ssp)              gemdos(0x20, ssp)
+#define Dsetpath(p)             gemdos(0x3B, p)
+#define Giaccess(d, r)          xbios(28, d, r)
+#define Dosound(p)              xbios(32, p)
+#define Physbase()              xbios(2)
+#define Logbase()               xbios(3)
+#define Setscreen(l, p, r)      xbios(5, l, p, r)
+#define Setpalette(p)           xbios(6, p)
+#define Midiws(n, b)            xbios(12, n, b)
+#define Random()                xbios(17)
+#define Vsync()                 xbios(37)
+#define Setexc(v, h)            bios(5, v, h)
+#define Xbtimer(t, c, d, v)     xbios(31, t, c, d, v)
+
+#endif  /* FAITHFUL */
 
 #endif  /* HOST */
 

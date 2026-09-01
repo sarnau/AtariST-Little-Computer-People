@@ -397,8 +397,16 @@
 #define SFX_SNORING                     22
 
 /* ---- Palette values (12-bit RGB, Atari ST format) --------------------- */
+/* Skin-tone palette values differ between the two revisions:
+   LCP_ORG uses 0x743/0x363, the STX revision 0x754/0x453
+   (byte-observed in each binary's lcp_upal). */
+#ifdef FAITHFUL
 #define ST_PEACH                        0x743
 #define ST_SICK_GREEN                   0x363
+#else
+#define ST_PEACH                        0x754
+#define ST_SICK_GREEN                   0x453
+#endif
 
 /* ---- MIDI sequencer phase ------------------------------------------- */
 #define SEQ_PHASE_IDLE                          0

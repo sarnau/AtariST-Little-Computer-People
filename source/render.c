@@ -53,7 +53,13 @@ short   x;
 short   y;
 {
         vroCpyD(vdihnd, 3,
+                /* LCP_ORG goes through the g_obtmp pointer variable;
+                   the STX revision addresses the MFDB array itself. */
+#ifdef FAITHFUL
                 g_oiidx * 20 + (long) g_obtmp,
+#else
+                g_oiidx * 20 + (long) g_obtmt,
+#endif
                 (long) &mf_scrp,
                 0, 0,
                 g_obtaw[g_oiidx] - 1,

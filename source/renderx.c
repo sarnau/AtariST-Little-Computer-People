@@ -58,6 +58,7 @@ pa_skic()
    Called from sim.c (recovery), health.c (onset), lc_load (HYBER restore).
    addr: lcp_upal() */
 
+#ifdef FAITHFUL
 void
 lcp_upal()
 {
@@ -67,6 +68,7 @@ lcp_upal()
                 main_pal[6] = ST_SICK_GREEN;
         Setpalette(main_pal);
 }
+#endif  /* FAITHFUL -- the STX revision keeps it in health.c */
 
 /* td_line: draw 5-line rabbit-ear antenna on TV.
    Diagonal-up-right from (44..48, 51..49) to (44..48, 57..55).

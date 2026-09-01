@@ -31,7 +31,13 @@ short   *g_txy;
         else
                 floor_y_pos = 202;
 
+        /* LCP_ORG reads one slot past the position index; the STX
+           revision indexes the height table directly. */
+#ifdef FAITHFUL
         *g_txy = floor_y_pos - g_rphs[index + 1];
+#else
+        *g_txy = floor_y_pos - g_rphs[index];
+#endif
 }
 
 /* addr: getFlrY() */
