@@ -144,7 +144,7 @@ short   color;
         vswr_mode(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);
         vswr_mode(vdihnd, MD_REPLACE);
-        Setscreen(saved_log, (void *)-1L, -1);
+        Setscreen(saved_log, (void *)-1L, -1L);
 }
 
 /* rp_anim: sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
