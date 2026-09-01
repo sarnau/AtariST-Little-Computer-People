@@ -26,35 +26,35 @@ short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };          /* phone_animation @ 0x2B92E */
 short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };            /* fire_animation  @ 0x2B936 */
-short   g_obdea[4]     = { OBJ_DOG_FOOD_BOWL_3,
+short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_2,
-                           OBJ_DOG_FOOD_BOWL_1,
-                           27 };        /* ROM data 0x13584: {51,50,49,27} */
+                           OBJ_DOG_FOOD_BOWL_1 };  /* ROM 0x13584 */
 
-/* Petting-dog sprite frames -- 11-frame array of sprite ids the
-   petting animation cycles through (Ghidra sprite_id array
-   @ 0x2B93E; ping-pong pattern over frames 1..6). */
-short   g_ptdsi[11]    = {
+/* Petting-dog sprite frames -- sprite ids the petting animation
+   cycles through (ROM data 0x1358a, referenced from tick at
+   0xced0/0xceec): ping-pong over frames 1..6 back down to 1,
+   closed by a 0 terminator. */
+short   g_ptdsi[12]    = {
         SPRITE_PET_HAND_1, SPRITE_PET_HAND_2, SPRITE_PET_HAND_3,
         SPRITE_PET_HAND_4, SPRITE_PET_HAND_5, SPRITE_PET_HAND_6,
         SPRITE_PET_HAND_5, SPRITE_PET_HAND_4, SPRITE_PET_HAND_3,
-        SPRITE_PET_HAND_2, SPRITE_PET_HAND_1
+        SPRITE_PET_HAND_2, SPRITE_PET_HAND_1, 0
 };
 
-/* Carried-object jump table (Ghidra carried_object_id_table @ 0x2B95A):
-   long[10] indexed by lcp_carried_object matching one of {SPRITE_GLASS,
-   SPRITE_GAME_BOX, ...}.  Each entry holds a sprite_id in the low
-   word; high word is always 0 (Ghidra: `long`, not `short`).
+/* Carried-object sprite table (Ghidra carried_object_id_table
+   @ 0x2B95A; ROM data 0x135a2, 38 bytes): 19 shorts forming
+   {sprite_id, 0} pairs closed by a single 0 terminator.
    NOTE: the ROM's per-object dispatch each write the same
    `g_sepey[g_seslm[SPRITE_X]] = lcp_y - 20` with only the stored
    sprite-def index differing; the port collapses this to a single
    inline write in gameTick's carrying-mode positioning block.  Table
    kept here for byte-fidelity to the ROM data segment. */
-long    g_cotbl[10]    = {
-        SPRITE_GLASS, SPRITE_GAME_BOX, SPRITE_FOOD_PACKAGE,
-        SPRITE_FIREWOOD, SPRITE_COOKING_POT,
-        SPRITE_SUITCASE, SPRITE_BOOK, SPRITE_VINYL_CARRY,
-        SPRITE_COOKED_MEAL, 0
+short   g_cotbl[19]    = {
+        SPRITE_GLASS, 0, SPRITE_GAME_BOX, 0,
+        SPRITE_FOOD_PACKAGE, 0, SPRITE_FIREWOOD, 0,
+        SPRITE_COOKING_POT, 0, SPRITE_SUITCASE, 0,
+        SPRITE_BOOK, 0, SPRITE_VINYL_CARRY, 0,
+        SPRITE_COOKED_MEAL, 0, 0
 };
 
 /* Frame-state globals for the animation loop.  8-char-safe port names.

@@ -73,7 +73,11 @@ short   g_wty                   = 0;
    like `i & 3`.  Port previously declared [4], which was one byte
    short of a real out-of-bounds write via `pst_arr[4]` writes in the
    bathroom/food/house paths -- the fifth slot overlapped lcp_frdO. */
+#ifdef FAITHFUL
+short   pst_arr[4];
+#else
 short   pst_arr[10];
+#endif
 
 short   lcp_frdO             = 0;
 short   studyDrO             = 0;
@@ -87,11 +91,29 @@ short   lcp_food                  = 4;
 short   lcp_recP              = 0;
 short   lcp_tv                       = 0;
 
-/* g_obisa: stove-on animation frame slots, indexed by a_eatm's
-   `pick = rndRng(0,2)` cooking loop.  ROM data 0x11774, initialized
-   {23,24,25}; part of the od_* frame-slot block (see below), which
-   runtime code can rewrite -- the enum stove-on ids are 43..45. */
-short   g_obisa[3]    = { 23, 24, 25 };
+/* Openable-object frame-id slots, exactly in ROM data order
+   (0x11758-0x1177e): study/front/cabinet/medicine/toilet doors,
+   stove-off, the 3-slot stove-on table (g_obisa), then the fridge.
+   od_draw sites read these slots, never enum constants. */
+short   od_stcl = 46;           /* OBJ_DOOR_STUDY_CLOSED   */
+short   od_sto1 = 47;           /* OBJ_DOOR_STUDY_OPEN_1   */
+short   od_sto2 = 48;           /* OBJ_DOOR_STUDY_OPEN_2   */
+short   od_frcl = 36;           /* OBJ_DOOR_FRONT_CLOSED   */
+short   od_fro1 = 37;           /* OBJ_DOOR_FRONT_OPEN_1   */
+short   od_fro2 = 38;           /* OBJ_DOOR_FRONT_OPEN_2   */
+short   od_cbcl = 19;           /* OBJ_CABINET_CLOSED      */
+short   od_cbo1 = 20;           /* OBJ_CABINET_OPEN_1      */
+short   od_cbo2 = 21;           /* OBJ_CABINET_OPEN_2      */
+short   od_med1 = 40;           /* OBJ_MEDICINE_OPEN_1     */
+short   od_tocl = 25;           /* OBJ_DOOR_TOILET_CLOSED  */
+short   od_too1 = 26;           /* OBJ_DOOR_TOILET_OPEN_1  */
+short   od_too2 = 27;           /* OBJ_DOOR_TOILET_OPEN_2  */
+short   od_stof = 22;           /* stove-off frame slot    */
+short   g_obisa[3]    = { 23, 24, 25 };  /* stove-on frame slots */
+short   od_fdcl = 16;           /* OBJ_FRIDGE_CLOSED       */
+short   od_fdo1 = 17;           /* OBJ_FRIDGE_OPEN_1       */
+short   od_fdo2 = 18;           /* OBJ_FRIDGE_OPEN_2       */
+
 
 BOOL16  mi_play                 = NO;
 short   dg_bwlch            = 0;
@@ -105,6 +127,9 @@ char *  mi_sbuf                = (char *) 0;
    as a guess. */
 short   sng_cnt             = 0;
 short   org_cnt             = 0;
+/* Six bytes of zero-initialized, completely unreferenced data the ROM
+   carries between org_cnt and the PEx filename (data 0x11792). */
+short   g_unus1[3]          = { 0, 0, 0 };
 /* scn_cmn -- 30-byte scene common-data header shared between
    house.scn and title.scn.  Ghidra `scene_common_data` @ 0x4cf7c.
    The port's unScn helper (assets.c) fills this via fr_read. */
@@ -129,19 +154,18 @@ short   g_cdibp        = 0;
    a_writl. */
 char *  g_lttx              = (char *) 0;
 char *  g_ltlp[512]            = { (char *) 0 };
-/* g_ltg[4]: the four letter sign-offs picked at random by
-   a_writl (`letter_type_string_animated(g_ltg[rndRng(0,3)], -8)` at
-   the greeting slot).  Byte-for-byte the ROM's DATA layout at 0x2b671
-   (verified via /read_memory): "Sincerely,\0Cordially,\0Yours
-   Truly,\0Love,\0".  Previously left NULL because a stub loader was
-   assumed to populate it from LETTER.TXT -- but the ROM's
-   file_load_letter_template only walks 360 template lines and the
-   sign-offs are static C string literals compiled into DATA. */
+/* g_ltg[4]: letter sign-off pointers.  In THIS ROM they are four
+   NULL pointers in DATA (0x11fb2) -- the sign-off strings do not
+   exist in the binary, and a_writl's pick hits lt_tysa's NULL guard,
+   so letters simply end without one.  (The static "Sincerely," set
+   belongs to the other game revision.) */
 char *  g_ltg[4]        = {
-        "Sincerely,",
-        "Cordially,",
-        "Yours Truly,",
-        "Love,"
+        (char *) 0, (char *) 0, (char *) 0, (char *) 0
+};
+/* 16 more zero bytes of unreferenced ROM data (0x11fc2) -- likely
+   four more never-used sign-off slots. */
+char *  g_unus2[4]      = {
+        (char *) 0, (char *) 0, (char *) 0, (char *) 0
 };
 char *  mo_names[12] = {
         "January", "February", "March",     "April",
@@ -154,6 +178,24 @@ short   g_ltcwt[4]      = {
         SPRITE_TYPING_1, SPRITE_TYPING_2,
         SPRITE_TYPING_3, SPRITE_TYPING_4
 };
+
+/* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
+   fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
+short   od_clcl = 28;           /* OBJ_DOOR_CLOSET_CLOSED  */
+short   od_clo1 = 29;           /* OBJ_DOOR_CLOSET_OPEN_1  */
+short   od_clo2 = 30;           /* OBJ_DOOR_CLOSET_OPEN_2  */
+short   od_fir0 = 31;           /* OBJ_FIRE_OFF            */
+short   od_fir1 = 32;           /* OBJ_FIRE_1 (unreferenced slots */
+short   od_fir2 = 33;           /* OBJ_FIRE_2  the ROM carries    */
+short   od_fir3 = 34;           /* OBJ_FIRE_3  alongside fire-off)*/
+short   od_fir4 = 35;           /* OBJ_FIRE_4              */
+short   od_ficl = 0;            /* OBJ_FILING_CABINET_CLOSED */
+short   od_fio1 = 1;            /* OBJ_FILING_CAB_OPEN_1   */
+short   od_fio2 = 2;            /* OBJ_FILING_CAB_OPEN_2   */
+short   od_drcl = 10;           /* OBJ_DRESSER_CLOSED      */
+short   od_dro1 = 11;           /* OBJ_DRESSER_OPEN_1      */
+short   od_dro2 = 12;           /* OBJ_DRESSER_OPEN_2      */
+short   od_cbit = 44;           /* cabinet food-marker slot */
 char    g_ltscb[64];
 char    in_str[256];
 /* comp_tok[15]: the 15 most common byte values in the
@@ -188,6 +230,10 @@ short   vdi_colt[16]            = {
         9, 10, 11, 14, 12, 15, 13,  1
 };
 
+/* The ROM's VDI parameter block (data 0x12054): the game-local
+   arrays used by vdiown.c's bindings and vdi_go. */
+short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
+
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
    defines these in vdi.o, but the pre-compiled Atari DK vdibind.a we
    link against does NOT pull vdi.o in with its contrl definitions in
@@ -205,7 +251,9 @@ short   ptsout[128];
    stack locals -- vdi_init only allocates 6 bytes on the stack
    (link.w A6,-0x6 at 0x16680), enough for the loop counter only. */
 short   workin[11];
+#ifndef FAITHFUL
 short   work_out[57];
+#endif
 
 void *  g_dscp             = (void *) 0;
 
@@ -274,9 +322,10 @@ short           mi_vel           = 127;
 short           mi_dvel   = 127;
 short           psg_cvol      = 15;
 short           psg_dvol      = 15;
-/* mi_evi (midi_note_event_index @ 0x4b9ca) and mi_evcn
-   (midi_note_event_count @ 0x4b9cc) are declared with the sequencer
-   state block further down; mq_setp resets them at song start. */
+/* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),
+   with mi_evcn initialized to 9. */
+short           mi_evi          = 0;
+short           mi_evcn         = 9;
 /* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
    writes p[2] here and passes through mq_bust. */
 short           g_mchcn                 = 1;
@@ -292,11 +341,37 @@ long            g_mtcou       = 0;
 short           mi_dwrm  = 0;
 short           g_mtdiv       = 100;
 short           g_mtpre     = 100;
-/* mi_nlp0 (midi_event_duration @ 0x4b7b0) is declared further down
-   with the sequencer state block; mq_stap resets it at song start. */
+/* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
+   mq_stap resets it at song start. */
+short           mi_nlp0         = 100;
 short           mi_nxTk    = 100;
 short           mi_lpTk= 100;
 BOOL16          g_msmsa   = NO;
+/* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
+   lookup.  Dumped verbatim -- previous port had guessed the values
+   from Music Studio 2.0 documentation but the real ones diverge
+   significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
+unsigned char   g_msmk[16] = {
+        0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
+        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
+};
+
+BOOL16          g_moen     = YES;
+unsigned char   g_meve[4];
+
+/* g_momap: the "maxPos" argument passed to
+   mq_inis at song start.  0 means "no explicit end-of-song
+   offset -- let the sequencer walk the event stream to its natural
+   terminator" (in which case mq_setp stores -1 into
+   g_msmap).  A .SNG file may carry a real byte offset
+   here to trigger clean loop-back or fade-out at a specific point.
+   Renamed from Ghidra's placeholder gSongMaxPosition_0. */
+long            g_momap  = 0;
+
+/* The remaining sequencer/PSG working state below exists only in the
+   other-revision music engine kept in the default build; LCP_ORG.PRG
+   has none of it in its data segment. */
+#ifndef FAITHFUL
 
 /* Timer-A interrupt state.
    mi_rlock -- reentrancy guard so the tick handler doesn't recurse
@@ -332,7 +407,6 @@ char            mi_ccha         = 0;
 char            mi_cnot         = 0;
 char            mi_nmof         = 0;
 char            mi_nlpA         = 0;
-short           mi_nlp0         = 0;
 BOOL16          mi_slop         = NO;
 
 short           mi_ndt[32] = {
@@ -346,12 +420,10 @@ short           mi_ndt[32] = {
    physical MIDI channel byte}.  Max 60 slots -> 20 concurrent
    notes. */
 short           mi_evq[60];
-short           mi_evi          = 0;
 
 /* Loop stack -- {return_addr, remaining_count} pairs.  Max 24
    nested loops (48 entries + 2 slack). */
 long            mi_lstk[50];
-short           mi_evcn         = 0;
 
 /* Per-MIDI-note bookkeeping (128 possible notes -- one byte each). */
 unsigned char   mi_nOS[128];
@@ -404,13 +476,6 @@ short           mi_evst[16] = {
    before calling psg_wr to recover the raw register number. */
 unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
 
-/* Per-logical-channel maps.  Populated from the 90-byte channel-map
-   block that precedes the header events; mq_resp
-   iterates over them at song start. */
-unsigned char   mi_chmap[16];
-short           g_mcpro[16];
-short           mi_pgmap[16];
-
 /* mi_noSt (Ghidra midi_noteon_state @ 0x53df8): 128-entry table tracking
    which MIDI notes are currently sounding and on which logical channel.
    Value 0 = note not sounding.  Non-zero = the mi_chmap[] index (low
@@ -422,32 +487,24 @@ unsigned char   mi_noSt[128];
    0..131 (C-1..G9).  Populated by mq_bust at song
    start; each note maps to either itself (identity) or a shifted note
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
-unsigned char   g_mstr[132];
 
-/* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
-   lookup.  Dumped verbatim -- previous port had guessed the values
-   from Music Studio 2.0 documentation but the real ones diverge
-   significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
-unsigned char   g_msmk[16] = {
-        0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
-        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
-};
-
-BOOL16          g_moen     = YES;
-unsigned char   g_meve[4];
-
-/* g_momap: the "maxPos" argument passed to
-   mq_inis at song start.  0 means "no explicit end-of-song
-   offset -- let the sequencer walk the event stream to its natural
-   terminator" (in which case mq_setp stores -1 into
-   g_msmap).  A .SNG file may carry a real byte offset
-   here to trigger clean loop-back or fade-out at a specific point.
-   Renamed from Ghidra's placeholder gSongMaxPosition_0. */
-long            g_momap  = 0;
 
 /* ---- PSG channel state ---------------------------------------------- */
+#endif  /* !FAITHFUL */
+
+/* Referenced by the ROM text (bss 0x3df96 / 0x4549a / 0x1dc7c /
+   0x48bce). */
+short           g_mcpro[16];
+unsigned char   g_mstr[132];
+unsigned char   mi_chmap[16];
+short           mi_pgmap[16];
+
 BOOL16          psg_out              = YES;
 BOOL16          psg_ntAc                = NO;
+short           env_val            = 5;    /* octave-5 baseline */
+char            g_mnlol      = 0x17; /* A#0 */
+char           g_mnhil       = 0x7f; /* MIDI max         */
+short           g_mccha    = 1;
 unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psg_envelope[3];
 
@@ -456,10 +513,6 @@ PSG_ENVELOPE    psg_envelope[3];
    Definition lives in its own TU so the ~1KB of table data doesn't
    clutter globals.c. */
 
-short           env_val            = 5;    /* octave-5 baseline */
-char            g_mnlol      = 0x17; /* A#0 */
-char           g_mnhil       = 0x7f; /* MIDI max         */
-short           g_mccha    = 1;
 
 /* ---- SFX / Dosound state -------------------------------------------- */
 short           g_sfcup    = 0;
@@ -492,11 +545,15 @@ void *  g_srptr                      = (void *) 0;
    active.
    Sized 32000 (one ST low-res screen) + 512 (worst-case align-up
    slack from `(base + 0x200) & ~0x1FF`, verified via raw disasm of
-   fillTopR at 0x1686c) + margin.  g_dsb is
-   set to the ALIGNED start in stpScrB -- do not
-   initialise it here. */
+   fillTopR at 0x1686c) + margin.  The ROM statically points g_dsb at
+   the raw buffer base (relocated data 0x1214e -> bss 0x1dcc6);
+   stpScrB re-points it to the ALIGNED start at runtime. */
+#ifdef FAITHFUL
+short   dsb_stor[16256];
+#else
 short   dsb_stor[17408];
-short * g_dsb = (short *) 0;
+#endif
+short * g_dsb = dsb_stor;
 
 /* scr_scal (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
    Multiplier for the 320x200 low-res screen dimensions in
@@ -731,9 +788,6 @@ short           g_agacu          = 0;
 short           ag_clue   = 0;
 short           g_agwol             = 0;
 char            g_aginb[12];
-/* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
-   set by ag_ssw when a word is picked.  Ghidra treats it as char *. */
-char *          g_agorw           = (char *) 0;
 char            g_agscw[12];
 char *          g_agwgm[3] = {
         "Nope, try again!",
@@ -743,6 +797,7 @@ char *          g_agwgm[3] = {
 
 /* anagram_guess_prompt_strings: shown per attempt (0..8 -> "Guess #1?"..
    "Guess #9?").  Rendered by ag_sgp at (166, 57). */
+#ifndef FAITHFUL
 char *          g_aggpr[9] = {
         "Guess #1?",
         "Guess #2?",
@@ -754,6 +809,7 @@ char *          g_aggpr[9] = {
         "Guess #8?",
         "Guess #9?"
 };
+#endif  /* !FAITHFUL */
 
 /* Mini-game shared state.
    mg_tofl: set YES by mg_wkev when the 7200-frame (~15 min) idle
@@ -762,18 +818,29 @@ char *          g_aggpr[9] = {
    sv_vqta: 10-short buffer holding the pre-mini-game VDI text
             attributes so rst_vsth can restore them after temporarily
             switching to 20-pixel height for the title/answer render. */
+#ifndef FAITHFUL
 BOOL16          mg_tofl                    = NO;
+#endif
+#ifndef FAITHFUL
 short           sv_vqta[10];
+#endif
 
+#ifndef FAITHFUL
 short           pk_round              = 0;
 BOOL16          pk_quit                 = NO;
+#endif
+short           g_pcbet              = 0;
+short           g_ppbet                = 0;
 short           g_pcmon            = 400;
 short           g_ppmon              = 400;
 short           g_ppppa                = 0;
-short           g_pcbet              = 0;
-short           g_ppbet                = 0;
+/* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
+   set by ag_ssw when a word is picked.  Ghidra treats it as char *.
+   The ROM places it between g_ppppa and pk_phase (data 0x124aa). */
+char *          g_agorw           = (char *) 0;
 short           pk_phase                = 0;
 short           pk_dsc[52];
+#ifndef FAITHFUL
 /* Ghidra poker_computer_draw_pile @ 0x47e24 and poker_player_draw_pile
    @ 0x3f712: 52-short ROM slots (104 bytes each).  Port previously
    declared [26], which pk_rmch's unconditional
@@ -789,14 +856,22 @@ short           g_ppdrp[52];
    war rounds this hand (indexes further into the arrays). */
 short           pk_pwc[52];             /* poker_player_war_cards */
 short           pk_cwc[52];             /* poker_computer_war_cards */
-short           g_pchc            = 0;  /* poker_computer_hand_cards */
+short           g_pchc;  /* poker_computer_hand_cards */
 
-BOOL16          moff_f              = NO;
+BOOL16          moff_f;
+#endif  /* !FAITHFUL */
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
-   at the start of each round in pk_ante / pk_evhs / pk_show. */
+   at the start of each round in pk_ante / pk_evhs / pk_show.
+   In the ROM pk_ch / pk_ph are the WAR hands: 26 shorts each. */
+#ifdef FAITHFUL
+short           pk_ch[26];
+short           pk_ph[26];
+#else
 short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
 short           pk_ph[5];           /* player_hand */
+#endif
+#ifndef FAITHFUL
 short           pk_hrf[5];          /* hand_rank_flags   -- which cards
                                        form computer's pair/trip/etc */
 short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
@@ -804,29 +879,32 @@ short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
                                        scratch by pk_show) */
 short           pk_phrf[5];         /* player_hand_rank_flags */
 short           pk_phsf[5];         /* player_hand_suit_flags */
-short           pk_chrk    = 0;     /* computer_hand_rank
+short           pk_chrk;     /* computer_hand_rank
                                        0=high,1=pair,2=two-pair,3=trips,
                                        4=straight,5=flush,6=full,7=four,
                                        8=straight-flush,9=royal */
-short           pk_phrk    = 0;     /* player_hand_rank */
-short           pk_dslot   = 0;     /* winner (0=comp, 1=player) */
+short           pk_phrk;     /* player_hand_rank */
+short           pk_dslot;     /* winner (0=comp, 1=player) */
 short           pk_sel[5];          /* card_selected -- 1 = discard */
-short           pk_disc    = 0;     /* discard_count */
+short           pk_disc;     /* discard_count */
 short           pk_dpile[52];       /* discard_pile of already-seen cards */
-short           pk_dpos    = 0;     /* deck_position -- reused as
+short           pk_dpos;     /* deck_position -- reused as
                                        raise amount / draw counter */
-short           pk_phv     = 0;     /* player_hand_value -- saved bet */
-short           pk_bet     = 0;     /* current bet accumulator (shared) */
-BOOL16          pk_bluff   = NO;    /* computer intends to bluff */
-BOOL16          pk_pass    = NO;    /* computer passed on the bet loop */
+short           pk_phv;     /* player_hand_value -- saved bet */
+short           pk_bet;     /* current bet accumulator (shared) */
+BOOL16          pk_bluff;    /* computer intends to bluff */
+BOOL16          pk_pass;    /* computer passed on the bet loop */
+#endif  /* !FAITHFUL */
 
 /* Editable poker prompts.  pk_bm / pk_rm have single-space digit
    slots at fixed offsets; pk_tcm's card count digit + trailing
    period/'s.' get patched in by pk_cdrw.  Buffer widths sized so
    the biggest overwrite (a 2-digit prefix like "20") still fits. */
+#ifndef FAITHFUL
 char            pk_bm[]   = "I'll bet 00.  ";
 char            pk_rm[]   = "I'll raise 00.";
 char            pk_tcm[]  = "I'll take 0 cards.";
+#endif
 
 /* Blackjack per-hand state.
    pk_psh[]  -- 3rd hand slot used when the player elects to split
@@ -851,19 +929,21 @@ char            pk_tcm[]  = "I'll take 0 cards.";
                 Ghidra reused poker_display_x_offset and
                 midi_dma_start_lo.
 */
+#ifndef FAITHFUL
 short           pk_psh[5];      /* player_split_hand */
-short           pk_pcc     = 0; /* player_card_count       */
-short           pk_ccc     = 0; /* computer_card_count     */
-short           pk_pscc    = 0; /* player_split_card_count */
-short           pk_wpr     = 0; /* saved bet across split  */
-BOOL16          pk_wrf     = NO;
-BOOL16          pk_wcs     = NO;
-BOOL16          pk_c1bj    = NO;
-BOOL16          pk_c2bj    = NO;
-BOOL16          pk_bs1     = NO;
-BOOL16          pk_bs2     = NO;
-short           pk_cscore  = 0;
-short           pk_pscore  = 0;
+short           pk_pcc; /* player_card_count       */
+short           pk_ccc; /* computer_card_count     */
+short           pk_pscc; /* player_split_card_count */
+short           pk_wpr; /* saved bet across split  */
+BOOL16          pk_wrf;
+BOOL16          pk_wcs;
+BOOL16          pk_c1bj;
+BOOL16          pk_c2bj;
+BOOL16          pk_bs1;
+BOOL16          pk_bs2;
+short           pk_cscore;
+short           pk_pscore;
+#endif  /* !FAITHFUL */
 
 /* Word Puzzle state.
    wp_ans[i][12]  -- player's typed answer for blank i.  Max 10
@@ -877,9 +957,12 @@ short           pk_pscore  = 0;
                                                         for word slots 2..5)
       wp_succ @ 0x2a490   6 entries, random on solve
       wp_fail @ 0x2a4a8   6 entries, random on wrong answer  */
+#ifndef FAITHFUL
 char            wp_ans[10][12];
-short           wp_blk    = 0;
+short           wp_blk;
+#endif
 
+#ifndef FAITHFUL
 char *          wp_prm[9] = {
         "OK, what's the first word?",
         "Good luck! What's the first word?",
@@ -909,15 +992,18 @@ char *          wp_fail[6] = {
         "Nope.",
         "Not quite."
 };
+#endif  /* !FAITHFUL */
 
 /* Card display positions -- 5 slots per row, extracted from Ghidra
    memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns
    are spaced 28 pixels apart (15-px card + 13-px gutter). */
+#ifndef FAITHFUL
 short           crd_xa[5]         = { 70, 98, 126, 154, 182 };
 short           crd_ya[5]         = { 11, 11, 11, 11, 11 };
 short           crd_xb[5]         = { 70, 98, 126, 154, 182 };
 short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
+#endif
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share crd_dat as their bitmap backing. */
@@ -928,42 +1014,7 @@ BOOL16  g_dvdog             = NO;
 BOOL16  ph_hu               = NO;
 BOOL16  g_ptdoa              = NO;
 
-/* Openable-object frame ids.  The ROM keeps the whole set as
-   initialized word globals (base-0 data 0x11758..0x1177e) and every
-   od_draw of a door / appliance reads them -- it never pushes the
-   enum constants.  Values verified against the original DATA
-   segment; the stove-on frames sit at 0x11774 as g_obisa[3]. */
-short   od_stcl = 46;           /* 0x11758 OBJ_DOOR_STUDY_CLOSED   */
-short   od_sto1 = 47;           /* 0x1175a OBJ_DOOR_STUDY_OPEN_1   */
-short   od_sto2 = 48;           /* 0x1175c OBJ_DOOR_STUDY_OPEN_2   */
-short   od_frcl = 36;           /* 0x1175e OBJ_DOOR_FRONT_CLOSED   */
-short   od_fro1 = 37;           /* 0x11760 OBJ_DOOR_FRONT_OPEN_1   */
-short   od_fro2 = 38;           /* 0x11762 OBJ_DOOR_FRONT_OPEN_2   */
-short   od_cbcl = 19;           /* 0x11764 OBJ_CABINET_CLOSED      */
-short   od_cbo1 = 20;           /* 0x11766 OBJ_CABINET_OPEN_1      */
-short   od_cbo2 = 21;           /* 0x11768 OBJ_CABINET_OPEN_2      */
-short   od_med1 = 40;           /* 0x1176a OBJ_MEDICINE_OPEN_1     */
-short   od_tocl = 25;           /* 0x1176c OBJ_DOOR_TOILET_CLOSED  */
-short   od_too1 = 26;           /* 0x1176e OBJ_DOOR_TOILET_OPEN_1  */
-short   od_too2 = 27;           /* 0x11770 OBJ_DOOR_TOILET_OPEN_2  */
-short   od_stof = 22;           /* 0x11772 stove-off frame slot    */
-short   od_fdcl = 16;           /* 0x1177a OBJ_FRIDGE_CLOSED       */
-short   od_fdo1 = 17;           /* 0x1177c OBJ_FRIDGE_OPEN_1       */
-short   od_fdo2 = 18;           /* 0x1177e OBJ_FRIDGE_OPEN_2       */
 
-/* Second ROM frame-id block (base-0 data 0x1200a..0x12026). */
-short   od_clcl = 28;           /* 0x1200a OBJ_DOOR_CLOSET_CLOSED  */
-short   od_clo1 = 29;           /* 0x1200c OBJ_DOOR_CLOSET_OPEN_1  */
-short   od_clo2 = 30;           /* 0x1200e OBJ_DOOR_CLOSET_OPEN_2  */
-short   od_fir0 = 31;           /* 0x12010 OBJ_FIRE_OFF            */
-short   od_ficl = 0;            /* 0x1201a OBJ_FILING_CABINET_CLOSED */
-short   od_fio1 = 1;            /* 0x1201c OBJ_FILING_CAB_OPEN_1   */
-short   od_fio2 = 2;            /* 0x1201e OBJ_FILING_CAB_OPEN_2   */
-short   od_drcl = 10;           /* 0x12020 OBJ_DRESSER_CLOSED      */
-short   od_dro1 = 11;           /* 0x12022 OBJ_DRESSER_OPEN_1      */
-short   od_dro2 = 12;           /* 0x12024 OBJ_DRESSER_OPEN_2      */
-short   od_cbit = 44;           /* 0x12026 cabinet food-marker slot
-                                   (sc_drfc draws it; init value 44) */
 
 /* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they

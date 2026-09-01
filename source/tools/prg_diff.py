@@ -10,6 +10,9 @@ Usage: python3 source/tools/prg_diff.py [port.prg] [orig.prg]
 """
 import os, struct, sys
 
+MASK = '--mask' in sys.argv
+sys.argv = [a for a in sys.argv if a != '--mask']
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         ROOT, 'build', 'alcyon', 'LCP.PRG')
@@ -24,6 +27,22 @@ def load(path):
     text = d[0x1C:0x1C + t]
     data = d[0x1C + t:0x1C + t + dd]
     reloc = d[0x1C + t + dd + s:]
+    if MASK and reloc:
+        first = struct.unpack('>I', reloc[:4])[0]
+        blob = bytearray(text + data)
+        if first:
+            pos, i = first, 4
+            blob[pos:pos + 4] = b'\0\0\0\0'
+            while i < len(reloc):
+                c = reloc[i]; i += 1
+                if c == 0:
+                    break
+                if c == 1:
+                    pos += 254
+                else:
+                    pos += c
+                    blob[pos:pos + 4] = b'\0\0\0\0'
+        text, data = bytes(blob[:t]), bytes(blob[t:])
     return t, dd, b, text, data, reloc
 
 

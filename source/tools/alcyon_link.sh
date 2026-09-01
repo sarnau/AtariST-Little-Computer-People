@@ -102,4 +102,18 @@ if [ ! -f LCP.PRG ]; then
     exit 1
 fi
 
+# 6. FAITHFUL: re-lay BSS to the original linker's allocation.  lo68
+#    allocates .comm blocks hash-grouped; the 1985 linker used an
+#    order no surviving tool reproduces.  bss_remap.py derives the
+#    address translation from the (byte-identical) relocation stream,
+#    verifies it is a consistent one-to-one symbol mapping, and
+#    rewrites the relocated longwords -- see the header of
+#    tools/bss_remap.py.
+if [ "${FAITHFUL:-0}" = "1" ]; then
+    python3 "$CSRC/tools/bss_remap.py" LCP.PRG || {
+        echo "FAILED: bss_remap"
+        exit 1
+    }
+fi
+
 echo "SUCCESS: $OUT/LCP.PRG ($(stat -f%z LCP.PRG) bytes)"

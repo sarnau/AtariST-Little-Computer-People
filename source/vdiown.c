@@ -15,9 +15,8 @@
 #include "globals.h"
 #include "vdiown.h"
 
-/* The ROM's VDI parameter block (data 0x12054), pointing at the
-   game-local arrays -- NOT VDIBIND's. */
-short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
+/* The VDI parameter block lives in globals.c (ROM data 0x12054). */
+extern short *  vdipb[];
 
 /* addr: vsl_color() (ROM 0xd676) */
 void

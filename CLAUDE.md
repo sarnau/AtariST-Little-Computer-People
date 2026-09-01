@@ -187,29 +187,48 @@ entire games area is ~1 KB at 0x72ac and whose music engine is ~1.5 KB
 at 0x8cce, polled -- no ISR).  They are retained as intentional
 non-fidelity and reported as KEPT by verify_bytes.py.
 
-**GOAL (2026-09-01): a byte-identical LCP.PRG built from the
-recreated C with the Alcyon toolchain.**  Enablers already in place:
-`rom_map.py` reconstructs the ROM symbol map from matched relocation
-operands (353 globals mapped -- see rom_data_map.txt) and proves the
-ROM link order IS the port's alphabetical file order
-(rom_link_order.txt).  Remaining phases:
- 1. Code completeness (-DFAITHFUL): **DONE.**  ROM minigame banner
-    stubs, dead stub 0x8030, empty mq_intim, the vestigial music
-    engine (mq_dise 1460/1460 byte-identical; 10-byte PSG_ENVELOPE;
-    Timer-A tail gated out and mq_tick.o dropped via FAITHFUL=1 in
-    alcyon_link.sh), and the ROM's own workstation module
-    (vdilib.c + vdilib_a.s in library position, shadowing VDIBIND's
-    v_opnvwk/vro_cpyfm; a second runtime-patched parameter block
-    vdipb2).  init.c's duplicate a_chfd deleted (aleisure.c a_chefd
-    is the real one).  **The FAITHFUL text segment is SIZE-IDENTICAL
-    to the ROM (70376 bytes) with every function at its exact ROM
-    address**; the ~4.9 KB of differing text bytes are all relocated
-    operands awaiting data/bss layout.  Use tools/prg_diff.py as the
-    scoreboard (currently: data +1172, bss +3996, reloc 109 B off).
- 2. Layout: redistribute globals from globals.c into their ROM
-    defining objects in ROM data order per rom_data_map.txt; match
-    string-literal ordering; drop port-only globals (_stksize etc.).
- 3. prg_diff tool: whole-file compare (header/text/data/reloc).
+**GOAL ACHIEVED (2026-09-01): the FAITHFUL build is BYTE-IDENTICAL
+to LCP_ORG.PRG** (MD5 02900cfd883ed80b9187013c161536f2, 87832 bytes).
+Reproduce with:
+
+    ALCYON_CPPFLAGS="-DFAITHFUL=1" source/tools/alcyon_build.sh
+    FAITHFUL=1 source/tools/alcyon_link.sh
+    python3 source/tools/prg_diff.py     # prints *** BYTE-IDENTICAL ***
+
+How it was reached (all phases DONE):
+ 1. Code completeness (-DFAITHFUL): ROM minigame banner stubs, dead
+    stub 0x8030, empty mq_intim, the vestigial music engine (mq_dise
+    byte-identical; 10-byte PSG_ENVELOPE; Timer-A tail gated out and
+    mq_tick.o dropped via FAITHFUL=1), the ROM's own workstation
+    module (vdilib.c + vdilib_a.s, second parameter block vdipb2).
+    Text segment: every function at its exact ROM address.
+ 2. Data layout: globals.c reordered to the ROM's declaration order
+    (od_* blocks, mi_evi/mi_evcn/mi_nlp0 initialized in data, g_msmk
+    position, vdipb moved from vdiown.c, minigame window at 0x12484,
+    poker/wordpuzzle kept-only data gated with #ifndef FAITHFUL,
+    g_ptdsi[12]/g_obdea[3] boundary, short[19] g_cotbl, static
+    g_dsb = dsb_stor initializer).  Three real code-reference fixes
+    fell out: pk_main clears g_pcbet/g_ppbet at ROM 0x124a0, tick's
+    petting table starts at 0x1358a, and cs_mvIn sets lcp_face (not
+    g_lcyof).
+ 3. BSS layout: kept-only commons gated; ROM sizes restored under
+    FAITHFUL (SPRITE_HW_SLOTS_ALLOC=8, pst_arr[4], dsb_stor[16256],
+    pk_ch/pk_ph[26], assets body_buf[20000]/pex_buf[12000]); the ROM
+    stores the pex frame pointer over pex_name's first 4 bytes --
+    FAITHFUL aliases pex_ptr to that slot via the 8-char-truncation
+    trick (pex_namP -> _pex_nam).  The 1985 linker's .comm
+    allocation order matches NO surviving linker (native lo68/link68
+    hash-group, ALN.PRG sorts alphabetically, and it is neither
+    first-mention nor last-mention order), so alcyon_link.sh's
+    FAITHFUL path finishes with tools/bss_remap.py: it pairs the
+    byte-identical relocation streams site-by-site, verifies the
+    port->ROM BSS address translation is a consistent one-to-one
+    mapping (222 addresses, 873 sites), then applies it.  The
+    consistency check is the proof that the port's reference
+    structure matches the ROM's exactly.
+
+The default (kept) build is unaffected: minigames, Timer-A MIDI, and
+the hardened array sizes all remain; 8000-VBL Hatari smoke clean.
 
 Current: **308 matched / 50 kept, 95.1% coverage -- the
 function-level campaign is COMPLETE for game code.**  `main` matches ROM 0x1ba (no Dsetpath, no

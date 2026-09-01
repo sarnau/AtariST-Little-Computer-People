@@ -231,8 +231,11 @@ short   g_hsmas[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head mask */
    the horizontal-flip path in sprite_lcp_flip when the head faces
    the opposite direction from the body. */
 short   g_hsmif         = NO;
-/* Points to the loaded PEx.LCP frame table; filled by al_locs. */
+/* Points to the loaded PEx.LCP frame table; filled by al_locs.
+   FAITHFUL builds alias this onto pex_name (see sprglobs.h). */
+#ifndef FAITHFUL
 short * pex_ptr;
+#endif
 /* Points to hshdbuf; base of the dilated head-frame silhouettes
    produced by sprite_lcp_build_all_head. */
 short * hd_shp;

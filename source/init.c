@@ -213,7 +213,7 @@ cs_mvIn()
 {
         lcp_x = 300;
         lcp_y = 190;
-        g_lcyof = NO;
+        lcp_face = FACING_RIGHT;
         lcp_st = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
         g_hacur = 8;

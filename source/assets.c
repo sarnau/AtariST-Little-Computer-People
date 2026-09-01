@@ -150,8 +150,13 @@ long            max_b;
 
 /* body.lcp @ 0x3f8b0 = 20160 B, pex_lcp_file @ 0x4d2da = 11088 B
    (168 bytes/frame, sp_lcpf w=2/h=21). */
+#ifdef FAITHFUL
+static unsigned char    body_buf[20000];        /* ROM bss: flat 20000 B */
+static unsigned char    pex_buf[12000];         /* ROM bss: flat 12000 B */
+#else
 static unsigned char    body_buf[120][LCP_BODY_FRAME_SIZE];
 static unsigned char    pex_buf[72][LCP_BODY_FRAME_SIZE];   /* >= ROM's 12000-byte cap */
+#endif
 
 void
 al_locs()
