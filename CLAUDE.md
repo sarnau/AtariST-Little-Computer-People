@@ -435,8 +435,24 @@ this build, ALL different from LCP_ORG's:
       < calendar < renderx < alerts) and order the #includes to
       match; ordering only affects addresses, not verify_bytes
       matching, so it can be tuned after the bsr/jsr shapes land.
-   4. Re-sweep; expect a large jump, since call-shape divergence is
-      the single largest remaining class.
+   4. Re-sweep.
+
+  **Step 1-2 DONE for the 0x400c object (stx_u1.c), and the measured
+  result corrects the prediction above:** the unit compiles (17 bsr
+  emitted where separate compilation had jsr), all seven of its
+  byte-matched members still match and are now laid out contiguously
+  in STX order, FAITHFUL stays byte-identical -- but the match count
+  did NOT move (112 before and after).  Unity units are necessary
+  infrastructure, not a source of matches by themselves: a partition
+  fix only flips a function to MATCH when the call shape was its
+  LAST divergence.  The earlier gains that looked like partition
+  wins (the ag_c* quartet, cl_drini) were exactly those cases.  The
+  remaining divergences inside stx_u1's files are ordinary logic and
+  literal differences -- e.g. execEv (0x5fae) is missing a call and
+  has different branch structure -- so per-function recovery remains
+  the way the count moves.  Build both configurations after any unit
+  change: `tools/stx_units.txt` drives which files are skipped, and
+  alcyon_build.sh deletes stale objects for skipped files.
 
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with

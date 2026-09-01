@@ -14,19 +14,12 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* addr: er_nomem() */
-void
-er_nomem()
-{
-#ifdef HOST
-        fprintf(stderr,
-                "FATAL: Not enough memory.\n");
-        exit(1);
-#else
-        for (;;)
-                form_alert(0, "[1][Not enough memory.|Requires ROMs.][REBOOT]");
+/* er_nomem lives in THIS object only in LCP_ORG; the STX revision
+   puts it at the end of its 0x400c object (see stx_u1.c).  The body
+   is shared via parts/ so neither configuration duplicates it. */
+#ifdef FAITHFUL
+#include "parts/er_nomem.c"
 #endif
-}
 
 /* Single-shot RETRY alert; caller is expected to retry the file op.
    addr: er_write() */

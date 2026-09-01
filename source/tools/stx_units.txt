@@ -1,0 +1,11 @@
+# stx_units.txt -- STX object partition for the DEFAULT build.
+#
+# One line per unity unit: <unit.c> <constituent.c>...
+# alcyon_build.sh compiles the unit and skips the constituents when
+# FAITHFUL is not set; under FAITHFUL it does the opposite (the
+# constituents are compiled individually and the units skipped),
+# because LCP_ORG's object partition IS the port's own file list.
+#
+# Membership is evidence-driven -- see stx_objmap.py --members.
+
+stx_u1.c dog.c ai.c actions.c movement.c calendar.c renderx.c

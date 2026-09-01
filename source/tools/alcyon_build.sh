@@ -25,6 +25,23 @@ WORK=$OUT/work
 
 mkdir -p "$OUT" "$WORK"
 
+# STX unity units (tools/stx_units.txt): the default build compiles
+# each unit and skips its constituents, reproducing LCP_STX's object
+# partition so as68 emits its bsr call shapes.  FAITHFUL does the
+# reverse -- LCP_ORG's partition is the port's own file list.
+UNITS=""; PARTS=""
+if [ -f "$CSRC/tools/stx_units.txt" ]; then
+    while read -r unit rest; do
+        case "$unit" in ''|'#'*) continue;; esac
+        UNITS="$UNITS $unit"
+        PARTS="$PARTS $rest"
+    done < "$CSRC/tools/stx_units.txt"
+fi
+case " ${ALCYON_CPPFLAGS:-} " in
+    *-DFAITHFUL*) SKIP="$UNITS" ;;   # units off, constituents on
+    *)            SKIP="$PARTS" ;;   # units on, constituents off
+esac
+
 # Which files to build?
 if [ -n "${FILES:-}" ]; then
     TO_BUILD="$FILES"
@@ -33,6 +50,10 @@ else
     for c in "$CSRC"/*.c; do
         base=$(basename "$c")
         [ "$base" = "savehost.c" ] && continue
+        case " $SKIP " in *" $base "*)
+            rm -f "$OUT/${base%.c}.o"   # never leave a stale object
+            continue;;
+        esac
         TO_BUILD="$TO_BUILD $base"
     done
 fi
