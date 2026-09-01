@@ -231,133 +231,31 @@ short   wait_ticks;
         g_actif = NO;
 }
 
-/* cs_mvIn: "resident moves in" cutscene (first run only).
-   Doorbell x2, opens door, resident walks in from right, scripted
-   room tour (if copy-protection passed).
-   addr: cutscene_new_lcp_move_in() */
-
+/* cs_mvIn (ROM 0x8106): boot-state initializer.  In this binary the
+   "moves in" moment is just placing the resident at the front door
+   (300,190) and parking the dog -- there is no animated cutscene.
+   addr: cs_mvIn() */
 
 void
 cs_mvIn()
 {
-        dg_init  = YES;
-        introSeq = YES;
-        hideLcp();
-        gameTick(0xf0);
-        p_dobls();
-        gameTick(0x50);
-        p_dobls();
-        gameTick(0x18);
-        od_draw(od_fro1, 294, 151);
-        sf_sele(SFX_DOOR_OPEN, 6);
-        gameTick(2);
-        od_draw(od_fro2, 294, 151);
-        gameTick(2);
-        lcp_frdO = YES;
-        g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
-        sp_updb(SPRITE_DOG_SIT);
-        g_sepex[g_seslm[SPRITE_DOG_SIT]] = 294;
-        g_sepey[g_seslm[SPRITE_DOG_SIT]] = 151;
         lcp_x = 300;
         lcp_y = 190;
-        showLcp();
-        hs_posXY(POS_BTM_SCREEN_EDGE, &g_wtx, &g_wty);
-        g_wtx = g_wtx - 50;
-        lcp_wkD();
+        g_lcyof = NO;
         lcp_st = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
-        lcp_hwt();
-        g_selaf[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
-        sp_upds();
-        gameTick(0x10);
-
-        if (cprot_r != 0) {
-                hs_posXY(POS_BTM_KITCHEN_CABINET, &g_wtx, &g_wty);
-                lcp_wkD();
-                lcp_face = FACING_RIGHT;
-                lcp_st   = STATE_STAND_FACING_SCREEN;
-                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                lcp_hwt();
-                a_opecc(0);
-                gameTick(0x10);
-                a_opecc(1);
-                hs_posXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
-                lcp_wkD();
-                gameTick(8);
-                a_gesff();
-                tt_on();
-                lcp_st  = STATE_STAND_SIDE_VIEW;
-                g_hatas = 8;
-                lcp_hwt();
-                a_getd();
-                a_opcuc(0);
-                a_wakum();
-                hs_posXY(POS_MID_DRESSER, &g_wtx, &g_wty);
-                lcp_wkD();
-                lcp_face = FACING_RIGHT;
-                lcp_st   = STATE_STAND_FACING_SCREEN;
-                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                lcp_hwt();
-                a_opcbc(0);
-                a_uset();
-                hs_posXY(POS_MID_BATHROOM_SINK, &g_wtx, &g_wty);
-                lcp_wkD();
-                a_gesff();
-                a_playc();
-                a_tidyh();
-                a_wandi();
-                tt_off();
-                a_chfd(100);
-                wkFrDr();
-                lcp_face = FACING_RIGHT;
-                lcp_st   = STATE_STAND_FACING_SCREEN;
-                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                lcp_hwt();
-                a_opcfd(0);
-                lcp_st = STATE_BEND_DOWN;    gameTick(1);
-                lcp_st = STATE_REACH_FORWARD; gameTick(2);
-                lcp_st = STATE_BEND_DOWN;    gameTick(1);
-                lcp_st = STATE_STAND_FACING_SCREEN; gameTick(0);
-                sp_ssco(SPRITE_SUITCASE);
-                hs_posXY(POS_MID_DRESSER, &g_wtx, &g_wty);
-                lcp_wkD();
-                lcp_face = FACING_RIGHT;
-                lcp_st   = STATE_STAND_FACING_SCREEN;
-                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                g_selaf[SPRITE_SUITCASE] = SPRITE_HIDDEN;
-                sp_upds();
-                g_lcyof = NO;
-                lcp_hwt();
-                a_opecd(0);
-                hs_posXY(POS_BTM_FRONT_DOOR, &dog_x, &dog_y);
-                dog_y = 190;
-                dog_x = 273;
-                dg_ltgtI = g_dgitx;
-                hs_posXY(g_dgitx, &g_dtx, &g_dty);
-                g_dyy = g_dgiyo + g_dty;
-                g_dyx = g_dtx;
-                dg_stair = NO;
-                dg_idlcd = 20;
-                dg_init  = NO;
-                g_dty    = g_dyy;
-                sp_spud(SPRITE_DOG_LAY_DOWN, -1, YES);
-                a_opcbc(0);
-                a_opcuc(1);
-                introSeq = NO;
-
-#ifdef TEST_ACTIONS
-                /* -DTEST_ACTIONS=<id>: enqueue one test event. */
-                {
-                        putEv(TEST_ACTIONS);
-                }
-#endif
-#ifdef TEST_KEY
-                /* -DTEST_KEY=<code>: dispatch one keycode. */
-                {
-                        deal_kc(TEST_KEY);
-                }
-#endif
-                return;
-        }
-        for (;;) a_sleep(-1);
+        g_hacur = 8;
+        g_hamod = HEAD_ANIM_DISABLED;
+        dog_x = 273;
+        dog_y = 190;
+        g_dtx = 0;
+        g_dty = 0;
+        g_dyx = 0;
+        g_dyy = 0;
+        dg_stair = NO;
+        dg_idlcd = 20;
+        dg_ltgtI = g_dgitx;
+        dg_init = 0;
+        sp_spud(SPRITE_DOG_LAY_DOWN, -1, 1);
+        introSeq = NO;
 }
