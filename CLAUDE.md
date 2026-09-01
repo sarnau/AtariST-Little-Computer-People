@@ -138,6 +138,40 @@ Struct name/field syncing uses the same HTTP mechanism via
 `~/ghidra_scripts/RenameGhidraStructs.java` and a
 `lcp_struct_rename_map.tsv`.
 
+## Byte-fidelity campaign (2026-09-01)
+
+`source/tools/verify_bytes.py` proves each port function byte-identical
+to `DATA/LCP_ORG.PRG` (relocations and PC-relative displacements
+wildcarded); `fn_diff.py NAME [orig_hex]` prints side-by-side
+disassembly for recovering exact C.  Workflow: build, link, relink
+without `-s` to `lcp_sym.68k`, run verify, fix, repeat.
+
+Status: **278 matched / 87 divergent, 82.4% of the original text
+proven byte-identical.**  Recovered so far: the ROM's own osbind.h
+shapes (GEMDOS padded to opcode+3 args, NO argument casts; XBIOS
+per-site), the od_* frame-id global tables (data 0x11758-0x1177e and
+0x1200a-0x12026), WORD_TO_ACTION 14-byte rows, screen alignment
+`(scrbufA+0xFF)&~0xFF` with alt screen at +0x8000, the shipped
+(unsigned char)->ext.w Alcyon miscompile in sp_lcpf, several real
+logic recoveries (chk_actT hunger gate, a_kitcc chew loop + g_actif,
+dg_mvAn eating-sprite gate, ev_ansP od_med1, sf_sl is open+close
+only -- SOUNDS.LCP is vestigial on ST), and lcp_save/lc_load/sgPlay
+call shapes.
+
+**OPEN QUESTION for the maintainer -- two Ghidra programs.**
+`LCP.rep` contains TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`), and
+port comments cite addresses from both (main@0x15546, gameTick@0x256a6,
+st_titl@0x16de6, mq_tick 0x1219a vs 0x111b0 -- no single load base can
+reconcile these against LCP_ORG.PRG offsets).  ~280 functions match
+LCP_ORG.PRG byte-for-byte, but some port readings (12-byte parser rows,
+crd_xa as initialized data at 0x2a4fe, the gameTick body) do not exist
+in LCP_ORG.PRG at all and presumably come from the other image.
+Before continuing on the remaining 87 divergent functions (games
+ag_*/wp_*/pk_*, MIDI mq_*/psg_upE, VDI init cluster, main/st_titl,
+gameTic, and the VDIBIND library revision), confirm WHICH binary is
+the porting reference.  Everything committed so far is byte-verified
+against DATA/LCP_ORG.PRG.
+
 ## Known open issues
 
 - **Real-time crash inside TOS VDI at address error / bus error.**
