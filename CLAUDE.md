@@ -389,6 +389,25 @@ this build, ALL different from LCP_ORG's:
   recovered partition -- e.g. er_write ends at 0x148e6 and sp_spud
   starts at 0x148fe, 24 bytes apart.
 
+  **The unity-unit mechanism is VALIDATED** (probe, 2026-09-01): a
+  TU that `#include`s movement.c + calendar.c compiles cleanly
+  through cp68/c068/c168/as68 and turns the cross-file call into
+  `bsrs` in the object bytes, where separate compilation emits
+  `jsr abs.l` + relocation.  c168 always writes `jsr` in the .s;
+  as68 alone decides the encoding, so ONLY the object bytes prove
+  it (grepping the .s is misleading).
+
+  **Membership must be per-FUNCTION, not per-file:** the port's
+  alerts.c is split across two STX objects -- er_nomem lands in the
+  0x400c-0x73ce cluster while er_write is in the 0x14824 one.  So
+  the unity units cannot simply include whole port .c files
+  wherever the port's own grouping disagrees; those files need
+  splitting first (or per-function #ifdef gating as already done
+  for sp_spud/sp_flih).  Extending cluster membership beyond the 96
+  byte-matched functions -- e.g. by collecting the `candidate
+  orig=` addresses verify_bytes reports for divergent ones -- is
+  the natural next evidence step before any restructuring.
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
