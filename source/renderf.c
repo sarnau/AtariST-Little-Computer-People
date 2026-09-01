@@ -244,7 +244,7 @@ sc_ren8()
            an implausible MFDB pointer).  Compute the same relative
            offset off scrbufA instead. */
         if (cur_mf->fd_addr == sv_phb) {
-                long alt = ((long) scrbufA + 0x200L) & ~0x1FFL;
+                long alt = ((long) scrbufA + 0xFFL) & ~0xFFL;   /* ROM: 256-align */
                 alt = alt + 0x8000L;
                 cur_mf->fd_addr = (void *) alt;
         } else {

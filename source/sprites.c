@@ -229,13 +229,15 @@ short   flipV;
                         psVar2 = destImg;
 
                         iVar3 = (width - 1) - x;
-                        /* Alcyon 4.14 miscompiles (unsigned char) x with
-                           ext.w -- byte >= 0x80 sign-extends to negative
-                           rev_tab index.  & 0xff forces unsigned. */
-                        mask  = rev_tab[(srcImg[iVar3 + iVar3] >> 8) & 0xff] |
-                                rev_tab[srcImg[iVar3 + iVar3] & 0xff] << 8;
-                        uVar1 = rev_tab[(srcImg[iVar3 + iVar3 + 1] >> 8) & 0xff] |
-                                rev_tab[srcImg[iVar3 + iVar3 + 1] & 0xff] << 8;
+                        /* Alcyon 4.14 miscompiles (unsigned char) with
+                           ext.w -- and the ROM SHIPPED that way (asr.w
+                           #8 + ext.w at 0xbd66): bytes >= 0x80 index
+                           rev_tab negatively.  Frames never set those
+                           bits, so it is benign; keep the ROM bytes. */
+                        mask  = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3] >> 8)] |
+                                rev_tab[(unsigned char) srcImg[iVar3 + iVar3]] << 8;
+                        uVar1 = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1] >> 8)] |
+                                rev_tab[(unsigned char) srcImg[iVar3 + iVar3 + 1]] << 8;
 
                         if (flipV == 0) {
                                 destImg[0] = 0;
@@ -250,8 +252,8 @@ short   flipV;
                         destImg[0] = 0;
                         destImg    = psVar2 + 4;
 
-                        mask = rev_tab[(srcMask[(width - 1) - x] >> 8) & 0xff] |
-                               rev_tab[srcMask[(width - 1) - x] & 0xff] << 8;
+                        mask = rev_tab[(unsigned char) (srcMask[(width - 1) - x] >> 8)] |
+                               rev_tab[(unsigned char) srcMask[(width - 1) - x]] << 8;
                         destMask[0] = mask;
                         destMask[1] = mask;
                         destMask[2] = mask;
@@ -491,7 +493,7 @@ sp_imfs()
                    scrbufA.  Use safer align-UP from stpScrB
                    (0x165ae/0x165b4) -- same shape, different instrs. */
                 long    buf;
-                buf = ((long) scrbufA + 0x200L) & ~0x1FFL;
+                buf = ((long) scrbufA + 0xFFL) & ~0xFFL;        /* ROM: 256-align */
                 sp_iniM(0L, &g_srmfd, (void *) buf,
                         (short) (scr_scal * 320),
                         (short) (scr_scal * 200));
