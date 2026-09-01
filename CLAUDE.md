@@ -184,8 +184,28 @@ entire games area is ~1 KB at 0x72ac and whose music engine is ~1.5 KB
 at 0x8cce, polled -- no ISR).  They are retained as intentional
 non-fidelity and reported as KEPT by verify_bytes.py.
 
-Current: **308 matched / 50 kept, 95.1% coverage -- the campaign is
-COMPLETE for game code.**  `main` matches ROM 0x1ba (no Dsetpath, no
+**GOAL (2026-09-01): a byte-identical LCP.PRG built from the
+recreated C with the Alcyon toolchain.**  Enablers already in place:
+`rom_map.py` reconstructs the ROM symbol map from matched relocation
+operands (353 globals mapped -- see rom_data_map.txt) and proves the
+ROM link order IS the port's alphabetical file order
+(rom_link_order.txt).  Remaining phases:
+ 1. Faithful-configuration code completeness (-DFAITHFUL): DONE for
+    the games shell (five ROM banner stubs byte-MATCH at exact
+    addresses 0x72ac..0x761e -- the ST original has NO playable
+    minigames), the init.c dead stub 0x8030, and empty mq_intim.
+    REMAINING: the polled music engine (one 1460-B function at
+    0x8cce + five statics; full disassembly and reconstruction notes
+    in tools/rom_midi_engine.asm) and the ~190 B of older-revision
+    library fragments (0xe7d4/0xead2/0xff40/0x10a84).  A FAITHFUL
+    build currently verifies at 314 matched / 96.6% coverage.
+ 2. Layout: redistribute globals from globals.c into their ROM
+    defining objects in ROM data order per rom_data_map.txt; match
+    string-literal ordering; drop port-only globals (_stksize etc.).
+ 3. prg_diff tool: whole-file compare (header/text/data/reloc).
+
+Current: **308 matched / 50 kept, 95.1% coverage -- the
+function-level campaign is COMPLETE for game code.**  `main` matches ROM 0x1ba (no Dsetpath, no
 initBM call -- bm32or/bm32and stay zero at runtime, the ROM's own
 dead code; ct_clrB lands at ROM-identical 0x42e via same-object bsr).
 `gameTick` matches ROM 0xce28 (carrying mode returns via the restored
