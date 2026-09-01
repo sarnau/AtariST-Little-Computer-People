@@ -276,12 +276,12 @@ short   value;
 
                 lcp_face = FACING_LEFT;
                 lcp_st            = STATE_REACH_INTO_CABINET;
-                od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
+                od_draw(od_fdcl, 24, 153);
                 gameTick(1);
-                od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
+                od_draw(od_fdo1, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(1);
-                od_draw(OBJ_FRIDGE_OPEN_2, 24, 153);
+                od_draw(od_fdo2, 24, 153);
                 gameTick(1);
 
                 lcp_face = FACING_RIGHT;
@@ -296,9 +296,9 @@ short   value;
                 lcp_st = STATE_STAND_FACING_SCREEN;
                 gameTick(2);
 
-                od_draw(OBJ_FRIDGE_OPEN_1, 24, 153);
+                od_draw(od_fdo1, 24, 153);
                 gameTick(1);
-                od_draw(OBJ_FRIDGE_CLOSED, 24, 153);
+                od_draw(od_fdcl, 24, 153);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(1);
 

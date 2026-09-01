@@ -169,7 +169,7 @@ sc_drfc()
                 return;
 
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
-        od_draw(OBJ_CABINET_OPEN_2, 46, 140);
+        od_draw(od_cbo2, 46, 140);
 
         if (cabinet_content > 0) od_draw(OBJ_CABINET_ITEM, 50, 159);
         if (cabinet_content > 1) od_draw(OBJ_CABINET_ITEM, 58, 159);

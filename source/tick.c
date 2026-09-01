@@ -164,7 +164,7 @@ short   counter;
                         if (fire_ext != NO) {
                                 fire_ext = NO;
                                 fire_act = NO;
-                                od_draw(OBJ_FIRE_OFF, 257, 170);
+                                od_draw(od_fir0, 257, 170);
                         }
 
                         /* Alarm clock SFX + animation. */
@@ -196,14 +196,14 @@ short   counter;
                                         if (g_sfacf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
                                                 sf_so();
-                                        od_draw(OBJ_PHONE_2, 190, 168);
+                                        od_draw(od_ph2, 190, 168);
                                 } else {
                                         od_draw(g_obpha[subAniC & 3],
                                                 190, 168);
                                 }
                         }
                         if (ph_hu != NO) {
-                                od_draw(OBJ_PHONE_2, 190, 168);
+                                od_draw(od_ph2, 190, 168);
                                 ph_hu = NO;
                                 if (g_sfacf != NO && g_sfpli == SFX_PHONE_RING)
                                         sf_so();

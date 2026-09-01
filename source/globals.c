@@ -926,12 +926,43 @@ BOOL16  g_dvdog             = NO;
 BOOL16  ph_hu               = NO;
 BOOL16  g_ptdoa              = NO;
 
-/* Study-door object ids.  The ROM keeps these as initialized word
-   globals (base-0 data 0x11758/0x1175a/0x1175c) and every od_draw of
-   the study door reads them -- it never pushes the constants. */
-short   od_stcl = 46;           /* OBJ_DOOR_STUDY_CLOSED  */
-short   od_sto1 = 47;           /* OBJ_DOOR_STUDY_OPEN_1  */
-short   od_sto2 = 48;           /* OBJ_DOOR_STUDY_OPEN_2  */
+/* Openable-object frame ids.  The ROM keeps the whole set as
+   initialized word globals (base-0 data 0x11758..0x1177e) and every
+   od_draw of a door / appliance reads them -- it never pushes the
+   enum constants.  Values verified against the original DATA
+   segment; a_kitcc additionally takes &od_ph2 as an array base. */
+short   od_stcl = 46;           /* 0x11758 OBJ_DOOR_STUDY_CLOSED   */
+short   od_sto1 = 47;           /* 0x1175a OBJ_DOOR_STUDY_OPEN_1   */
+short   od_sto2 = 48;           /* 0x1175c OBJ_DOOR_STUDY_OPEN_2   */
+short   od_frcl = 36;           /* 0x1175e OBJ_DOOR_FRONT_CLOSED   */
+short   od_fro1 = 37;           /* 0x11760 OBJ_DOOR_FRONT_OPEN_1   */
+short   od_fro2 = 38;           /* 0x11762 OBJ_DOOR_FRONT_OPEN_2   */
+short   od_cbcl = 19;           /* 0x11764 OBJ_CABINET_CLOSED      */
+short   od_cbo1 = 20;           /* 0x11766 OBJ_CABINET_OPEN_1      */
+short   od_cbo2 = 21;           /* 0x11768 OBJ_CABINET_OPEN_2      */
+short   od_med1 = 40;           /* 0x1176a OBJ_MEDICINE_OPEN_1     */
+short   od_tocl = 25;           /* 0x1176c OBJ_DOOR_TOILET_CLOSED  */
+short   od_too1 = 26;           /* 0x1176e OBJ_DOOR_TOILET_OPEN_1  */
+short   od_too2 = 27;           /* 0x11770 OBJ_DOOR_TOILET_OPEN_2  */
+short   od_ph1  = 22;           /* 0x11772 OBJ_PHONE_1             */
+short   od_ph2  = 23;           /* 0x11774 OBJ_PHONE_2             */
+short   od_ph3  = 24;           /* 0x11776 OBJ_PHONE_3             */
+short   od_tcl2 = 25;           /* 0x11778 (unreferenced twin)     */
+short   od_fdcl = 16;           /* 0x1177a OBJ_FRIDGE_CLOSED       */
+short   od_fdo1 = 17;           /* 0x1177c OBJ_FRIDGE_OPEN_1       */
+short   od_fdo2 = 18;           /* 0x1177e OBJ_FRIDGE_OPEN_2       */
+
+/* Second ROM frame-id block (base-0 data 0x1200a..0x12026). */
+short   od_clcl = 28;           /* 0x1200a OBJ_DOOR_CLOSET_CLOSED  */
+short   od_clo1 = 29;           /* 0x1200c OBJ_DOOR_CLOSET_OPEN_1  */
+short   od_clo2 = 30;           /* 0x1200e OBJ_DOOR_CLOSET_OPEN_2  */
+short   od_fir0 = 31;           /* 0x12010 OBJ_FIRE_OFF            */
+short   od_ficl = 0;            /* 0x1201a OBJ_FILING_CABINET_CLOSED */
+short   od_fio1 = 1;            /* 0x1201c OBJ_FILING_CAB_OPEN_1   */
+short   od_fio2 = 2;            /* 0x1201e OBJ_FILING_CAB_OPEN_2   */
+short   od_drcl = 10;           /* 0x12020 OBJ_DRESSER_CLOSED      */
+short   od_dro1 = 11;           /* 0x12022 OBJ_DRESSER_OPEN_1      */
+short   od_dro2 = 12;           /* 0x12024 OBJ_DRESSER_OPEN_2      */
 
 /* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they

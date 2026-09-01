@@ -438,10 +438,10 @@ cs_mvIn()
         gameTick(0x50);
         p_dobls();
         gameTick(0x18);
-        od_draw(OBJ_DOOR_FRONT_OPEN_1, 294, 151);
+        od_draw(od_fro1, 294, 151);
         sf_sele(SFX_DOOR_OPEN, 6);
         gameTick(2);
-        od_draw(OBJ_DOOR_FRONT_OPEN_2, 294, 151);
+        od_draw(od_fro2, 294, 151);
         gameTick(2);
         lcp_frdO = YES;
         g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
