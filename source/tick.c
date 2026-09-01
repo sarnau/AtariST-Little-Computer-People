@@ -20,7 +20,31 @@
 #include "tick_tables.h"
 
 
-/* addr: gameTick() */
+/* cy_yoff: Y offset applied to the carried-object sprite; 32767 =
+   not a carried object.  ROM 0xcdfa -- Alcyon compiles this switch to
+   the value/handler table at data 0x13518. */
+static short
+cy_yoff(id)
+short   id;
+{
+        switch (id) {
+        case SPRITE_GLASS:
+        case SPRITE_GAME_BOX:
+        case SPRITE_FOOD_PACKAGE:
+        case SPRITE_FIREWOOD:
+        case SPRITE_COOKING_POT:
+        case SPRITE_SUITCASE:
+        case SPRITE_BOOK:
+        case SPRITE_VINYL_CARRY:
+        case SPRITE_COOKED_MEAL:
+                return -20;
+        }
+        return 32767;
+}
+
+/* addr: gameTick() (ROM 0xce28).  Carrying mode (g_lcyof) repositions
+   the carried sprite and RETURNS -- in this binary Path B does not
+   fall through into the animation loop. */
 void
 gameTick(counter)
 short   counter;
@@ -28,77 +52,11 @@ short   counter;
         short   count;
         short   index;
         short   slot;
+        short   yoff;
         short   psi;                            /* petting sprite id */
         short   key;
 
-        /* Ghidra 0x256a6: carrying-mode position update FALLS INTO the
-           shared animation loop -- it is NOT a separate return path.
-           The Ghidra C decompile misleadingly renders Path B as
-           `(*handler)(); return;`, but the raw assembly proves a
-           fall-through:
-
-             000258de  movea.l (0x24,A0),A0    ; per-object handler ptr
-             000258e2  jmp (A0)                 ; handler writes g_sepey,
-                                                ;   then bra.w 0x258e4
-             000258e4  move.w (ani_cnt),count   ; <- shared loop SETUP
-             000258ec  clr.w   index
-             000258f0  bra.w  0x25d60           ; enter the for-loop
-
-           So when g_lcyof != NO the ROM repositions the carried sprite
-           (g_sepex + per-object g_sepey), then runs the SAME per-frame
-           animation loop as Path A -- including sp_lcha, which advances
-           the head toward g_hatas.  A port that returned early here
-           starved sp_lcha, so lcp_hwt() (a_kitcc line 172: g_hatas=8,
-           g_lcyof=YES) spun forever waiting for g_hacur to reach 8 --
-           the ~30-min freeze.  See source/tools/trace_lcyof.sh and
-           trap_lcp_hwt_leak.sh. */
-        if (g_lcyof != NO) {
-                slot = g_seslm[g_lcieo];
-                if (lcp_face == FACING_RIGHT) {
-                        g_sepex[slot] = lcp_x + 10;
-                } else {
-                        g_sepex[slot] = (lcp_x - g_seacw[slot]) + 16;
-                        if (g_sepex[slot] < 0)
-                                g_sepex[slot] = 0;
-                }
-                /* Per-object Y dispatch (Ghidra 0x257c6..0x258b0).  All
-                   9 handlers write `g_sepey[g_seslm[SPRITE_X]] = lcp_y
-                   - 20`; the per-case form keeps byte-fidelity with the
-                   ROM's carried_object_id_table jump.  A g_lcieo that
-                   matches no carried object suppresses the ROM's
-                   out-of-table wild jump (default: no write). */
-                switch (g_lcieo) {
-                case SPRITE_GLASS:
-                        g_sepey[g_seslm[SPRITE_GLASS]]        = lcp_y - 20;
-                        break;
-                case SPRITE_GAME_BOX:
-                        g_sepey[g_seslm[SPRITE_GAME_BOX]]     = lcp_y - 20;
-                        break;
-                case SPRITE_FOOD_PACKAGE:
-                        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] = lcp_y - 20;
-                        break;
-                case SPRITE_FIREWOOD:
-                        g_sepey[g_seslm[SPRITE_FIREWOOD]]     = lcp_y - 20;
-                        break;
-                case SPRITE_COOKING_POT:
-                        g_sepey[g_seslm[SPRITE_COOKING_POT]]  = lcp_y - 20;
-                        break;
-                case SPRITE_SUITCASE:
-                        g_sepey[g_seslm[SPRITE_SUITCASE]]     = lcp_y - 20;
-                        break;
-                case SPRITE_BOOK:
-                        g_sepey[g_seslm[SPRITE_BOOK]]         = lcp_y - 20;
-                        break;
-                case SPRITE_VINYL_CARRY:
-                        g_sepey[g_seslm[SPRITE_VINYL_CARRY]]  = lcp_y - 20;
-                        break;
-                case SPRITE_COOKED_MEAL:
-                        g_sepey[g_seslm[SPRITE_COOKED_MEAL]]  = lcp_y - 20;
-                        break;
-                }
-        }
-
-        {
+        if (g_lcyof == NO) {
                 count = ani_cnt;
                 for (index = 0; index < counter + 1; index = index + 1) {
                         while (count == ani_cnt)
@@ -221,7 +179,7 @@ short   counter;
                                 if (no_keyin == NO &&
                                     introSeq == NO) {
                                         key = getKey();
-                                        if (key != KEY_NONE) {
+                                        if (key != 0)     /* ROM getKey: 0 = no key */ {
                                                 if (key != KEY_CTRL_W_WATER &&
                                                     key != KEY_CTRL_B_BOOK &&
                                                     key != KEY_CTRL_R_RECORD &&
@@ -240,7 +198,7 @@ short   counter;
                                         }
                                 } else if (g_inpmd != NO) {
                                         key = getKey();
-                                        if (key != KEY_NONE)
+                                        if (key != 0)     /* ROM getKey: 0 = no key */
                                                 deal_kc(key);
                                 }
                         } else {
@@ -251,5 +209,17 @@ short   counter;
 
                         sc_ren8();
                 }
+        } else {
+                slot = g_seslm[g_lcieo];
+                if (lcp_face == FACING_RIGHT) {
+                        g_sepex[slot] = lcp_x + 10;
+                } else {
+                        g_sepex[slot] = (lcp_x - g_seacw[slot]) + 16;
+                        if (g_sepex[slot] < 0)
+                                g_sepex[slot] = 0;
+                }
+                yoff = cy_yoff(g_lcieo);
+                if (yoff != 32767)
+                        g_sepey[slot] = lcp_y + yoff;
         }
 }
