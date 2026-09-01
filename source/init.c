@@ -96,6 +96,7 @@ cl_drini()
         cl_redrH();
 }
 
+
 /* st_titl (ROM 0x7fae): in THIS binary the "title screen" is a stub
    that defaults the owner name to "PLAYER" and the clock to noon,
    0-0-0 -- there is no interactive name/date/time entry.  (The
@@ -192,6 +193,64 @@ cntSong()
                 }
         }
 }
+
+/* STX grouping: the clock object holds cl_redrH and drwLine too
+   (cl_drini reaches both with bsr).  FAITHFUL twins live in
+   render.c / gfx_prim.c. */
+#ifndef FAITHFUL
+void
+cl_redrH()
+{
+        if (g_cmmin == t_min)
+                return;
+        cl_drwH(g_cmmin, g_chhou, COLOR_white);
+        g_cmmin = t_min;
+        g_chhou   = t_hour;
+        cl_drwH(t_min, t_hour, COLOR_grey);
+}
+
+void
+cl_drwH(minute, hour, color)
+short   minute;
+short   hour;
+short   color;
+{
+        short   m;
+        short   h;
+
+        m = minute / 5;
+        h = hour % 12;
+
+        drwLine(278, 85,
+                  278 + g_cmmip[m],
+                   85 - g_cmmip[m + 3],
+                  color);
+        drwLine(278, 85,
+                  278 + g_chhop[h],
+                   85 - g_chhop[h + 3],
+                  color);
+}
+
+void
+drwLine(x1, y1, x2, y2, color)
+short   x1;
+short   y1;
+short   x2;
+short   y2;
+short   color;
+{
+        short   pts[4];
+
+        sc_sdtb();
+        vsl_color(vdihnd, vdi_colt[color]);
+        pts[0] = x1;
+        pts[1] = y1;
+        pts[2] = x2;
+        pts[3] = y2;
+        v_pline(vdihnd, 2, pts);
+        sc_sdtf();
+}
+#endif  /* !FAITHFUL */
 
 
 /* initBRev (ROM 0x80fe): an empty stub in the ROM -- rev_tab ships

@@ -17,6 +17,7 @@
 /* drwLine: single-segment line via VDI v_pline (backbuffer, restore).
    addr: drwLine() */
 
+#ifdef FAITHFUL
 void
 drwLine(x1, y1, x2, y2, color)
 short   x1;
@@ -36,6 +37,7 @@ short   color;
         v_pline(vdihnd, 2, pts);
         sc_sdtf();
 }
+#endif  /* FAITHFUL -- STX groups it with cl_drini in init.c */
 
 /* sc_sdtb: stash Logbase, Setscreen->g_srptr, reset fill to solid black.
    addr: sc_sdtb()

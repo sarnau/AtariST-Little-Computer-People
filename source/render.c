@@ -30,6 +30,7 @@
    addr: cl_redrH() */
 
 
+#ifdef FAITHFUL
 void
 cl_redrH()
 {
@@ -40,6 +41,7 @@ cl_redrH()
         g_chhou   = t_hour;
         cl_drwH(t_min, t_hour, COLOR_grey);
 }
+#endif  /* FAITHFUL -- STX groups it with cl_drini in init.c */
 
 /* od_draw: blit background object at (x,y) through the game's own
    vro_cpy binding (ROM 0x97d0 -> 0xd8d2).

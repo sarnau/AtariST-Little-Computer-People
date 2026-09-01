@@ -1272,7 +1272,7 @@ short * idx;
 short   val;
 {
         pile[*idx] = val;
-        *idx = *idx + 1;
+        (*idx)++;
 }
 
 /* pk_annr: transfer pot to winner one chip per tick
