@@ -170,17 +170,29 @@ initialized DATA; and this binary has NO interactive title screen, NO
 Timer-A install (st_titl defaults PLAYER/noon, mq_intim is empty), and
 NO move-in cutscene (cs_mvIn is a state initializer).
 
-Remaining 57 divergent: the minigame cluster (ag_*/wp_*/pk_*/mg_wkev/
-lcp_lgt/lcp_rgt, ~28 fns -- ROM layout differs, mg_wkev/lcp_lgt are
-structurally different), the MIDI/PSG engine (mq_*/psg_upE/fl_ltpl --
-NOTE: no Timer-A ISR exists in this ROM, so the engine is likely
-polled; mq_tick.s may be another other-image artifact), gameTic (ROM
-0xce28 is a VBL-wait + phone-ring + housekeeping loop, structurally
-different from the port's), main + vdi_ini/initVdi + small gfx
-helpers (vst_h20/rst_vsth/vdi_cprt/moff), the old-revision VDIBIND
-library entries still linked (vqt_att/vst_hei), and port-only ct_clrB.
-Runtime smoke + long-run tests REQUIRED before trusting the behavior
-changes (SOUNDS.LCP, tv polylines, stairs, single-buffer compositing).
+Third wave: vdi_init matches ROM 0x7b72 (local work arrays, no
+resolution check, inline mouse-off + screen clear; sc_ers deleted),
+initVdi matches 0x78c8, vdi_cprt folded into vro_cpy.
+
+**Policy decision (2026-09-01): the minigames are KEPT.**  The poker/
+blackjack/word-puzzle/anagram suite (~26 KB), the Timer-A MIDI
+sequencer (mq_*/psg_upE + mq_tick.s + the Xbtimer install in
+mq_intim), and their support helpers (mg_wkev, lcp_lgt/lcp_rgt,
+vst_h20, rst_vsth, moff, + linked vqt_att/vst_hei) come from the
+OTHER, larger game revision and do not exist in LCP_ORG.PRG (whose
+entire games area is ~1 KB at 0x72ac and whose music engine is ~1.5 KB
+at 0x8cce, polled -- no ISR).  They are retained as intentional
+non-fidelity and reported as KEPT by verify_bytes.py.
+
+Current: **305 matched / 3 divergent / 51 kept, 92.1% coverage.**
+Remaining true divergence: `main` (~10% similar -- boot order
+differs), `gameTic` (ROM 0xce28 is a VBL-wait + phone-ring +
+housekeeping loop), and `fl_ltpl` (its own body matches; the extent
+drags in symbol-less midi statics).  Optional future work: recover the
+ROM's polled music engine (0x8cce) and games shell (0x72ac) alongside
+the kept versions.  Runtime smoke + long-run tests REQUIRED before
+trusting the behavior changes (SOUNDS.LCP, tv polylines, stairs,
+single-buffer compositing, vdi_init clear).
 
 **OPEN QUESTION for the maintainer -- two Ghidra programs.**
 `LCP.rep` contains TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`), and
