@@ -202,61 +202,6 @@ initBRev()
 {
 }
 
-/* a_chfd: resident checks the front door for `wait_ticks` frames,
-   randomly closes based on initiative_threshold.
-   addr: action_check_front_door() */
-
-
-void
-a_chfd(wait_ticks)
-short   wait_ticks;
-{
-        short   result;
-
-        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result != 0)
-                return;
-
-        lcp_face = FACING_RIGHT;
-        lcp_st   = STATE_STAND_FACING_SCREEN;
-        g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
-        if (lcp_frdO == NO)
-                a_opcfd(0);
-
-        g_actif = YES;
-        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
-        g_wtx = g_wtx - 10;
-        lcp_wkD();
-        g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
-        sp_updb(SPRITE_DOG_SIT);
-        g_sepex[g_seslm[SPRITE_DOG_SIT]] = 294;
-        g_sepey[g_seslm[SPRITE_DOG_SIT]] = 151;
-        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
-        lcp_wkD();
-        hideLcp();
-        gameTick(wait_ticks);
-        showLcp();
-        hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
-        g_wtx = g_wtx - 10;
-        lcp_wkD();
-        g_selaf[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
-        sp_upds();
-
-        result = rndRng(0, 100);
-        if (lcp.initiative_threshold < result) {
-                g_actif = YES;
-                hs_posXY(POS_BTM_FRONT_DOOR, &g_wtx, &g_wty);
-                lcp_wkD();
-                lcp_face = FACING_RIGHT;
-                lcp_st   = STATE_STAND_FACING_SCREEN;
-                g_hatas  = HEAD_ANIM_HORIZONTAL_RANGE;
-                lcp_hwt();
-                a_opcfd(1);
-        }
-        g_actif = NO;
-}
 
 /* cs_mvIn (ROM 0x8106): boot-state initializer.  In this binary the
    "moves in" moment is just placing the resident at the front door

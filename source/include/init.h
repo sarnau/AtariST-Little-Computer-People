@@ -11,7 +11,6 @@ extern void inpNum();
 extern void mq_intim();
 extern void cntSong();
 extern void initBRev();
-extern void a_chfd();
 extern void cs_mvIn();
 
 #endif /* INIT_H */
