@@ -321,6 +321,11 @@ extern MFDB mf_scb_c;
 extern BOOL16 g_dvdog;
 extern BOOL16 ph_hu;
 extern BOOL16 g_ptdoa;
+/* The od_* frame ids are DATA globals in LCP_ORG (od_draw
+   reads them from memory) but compile-time constants in the
+   STX revision, which pushes the numbers as immediates.
+   Nothing writes them at runtime, so a macro is exact. */
+#ifdef FAITHFUL
 extern short od_stcl;
 extern short od_sto1;
 extern short od_sto2;
@@ -349,5 +354,35 @@ extern short od_drcl;
 extern short od_dro1;
 extern short od_dro2;
 extern short od_cbit;
+#else
+#define od_stcl    46
+#define od_sto1    47
+#define od_sto2    48
+#define od_frcl    36
+#define od_fro1    37
+#define od_fro2    38
+#define od_cbcl    19
+#define od_cbo1    20
+#define od_cbo2    21
+#define od_med1    40
+#define od_tocl    25
+#define od_too1    26
+#define od_too2    27
+#define od_stof    22
+#define od_fdcl    16
+#define od_fdo1    17
+#define od_fdo2    18
+#define od_clcl    28
+#define od_clo1    29
+#define od_clo2    30
+#define od_fir0    31
+#define od_ficl    0
+#define od_fio1    1
+#define od_fio2    2
+#define od_drcl    10
+#define od_dro1    11
+#define od_dro2    12
+#define od_cbit    44
+#endif
 
 #endif /* GLOBALS_H */

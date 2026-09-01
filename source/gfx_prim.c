@@ -315,7 +315,8 @@ vst_h20()
 {
         short   ta, tb, tc, td;
         vqt_attributes(vdihnd, sv_vqta);
-        vst_height(vdihnd, 20, &td, &tc, &tb, &ta);
+        /* STX passes the four out-pointers in declaration order. */
+        vst_height(vdihnd, 20, &ta, &tb, &tc, &td);
 }
 #endif
 

@@ -95,6 +95,7 @@ short   lcp_tv                       = 0;
    (0x11758-0x1177e): study/front/cabinet/medicine/toilet doors,
    stove-off, the 3-slot stove-on table (g_obisa), then the fridge.
    od_draw sites read these slots, never enum constants. */
+#ifdef FAITHFUL   /* STX compiles these ids as literals */
 short   od_stcl = 46;           /* OBJ_DOOR_STUDY_CLOSED   */
 short   od_sto1 = 47;           /* OBJ_DOOR_STUDY_OPEN_1   */
 short   od_sto2 = 48;           /* OBJ_DOOR_STUDY_OPEN_2   */
@@ -109,10 +110,13 @@ short   od_tocl = 25;           /* OBJ_DOOR_TOILET_CLOSED  */
 short   od_too1 = 26;           /* OBJ_DOOR_TOILET_OPEN_1  */
 short   od_too2 = 27;           /* OBJ_DOOR_TOILET_OPEN_2  */
 short   od_stof = 22;           /* stove-off frame slot    */
+#endif
 short   g_obisa[3]    = { 23, 24, 25 };  /* stove-on frame slots */
+#ifdef FAITHFUL   /* STX compiles these ids as literals */
 short   od_fdcl = 16;           /* OBJ_FRIDGE_CLOSED       */
 short   od_fdo1 = 17;           /* OBJ_FRIDGE_OPEN_1       */
 short   od_fdo2 = 18;           /* OBJ_FRIDGE_OPEN_2       */
+#endif
 
 
 BOOL16  mi_play                 = NO;
@@ -181,6 +185,7 @@ short   g_ltcwt[4]      = {
 
 /* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
    fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
+#ifdef FAITHFUL   /* STX compiles these ids as literals */
 short   od_clcl = 28;           /* OBJ_DOOR_CLOSET_CLOSED  */
 short   od_clo1 = 29;           /* OBJ_DOOR_CLOSET_OPEN_1  */
 short   od_clo2 = 30;           /* OBJ_DOOR_CLOSET_OPEN_2  */
@@ -196,6 +201,7 @@ short   od_drcl = 10;           /* OBJ_DRESSER_CLOSED      */
 short   od_dro1 = 11;           /* OBJ_DRESSER_OPEN_1      */
 short   od_dro2 = 12;           /* OBJ_DRESSER_OPEN_2      */
 short   od_cbit = 44;           /* cabinet food-marker slot */
+#endif
 char    g_ltscb[64];
 char    in_str[256];
 /* comp_tok[15]: the 15 most common byte values in the
