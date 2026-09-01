@@ -962,6 +962,8 @@ short   od_fio2 = 2;            /* 0x1201e OBJ_FILING_CAB_OPEN_2   */
 short   od_drcl = 10;           /* 0x12020 OBJ_DRESSER_CLOSED      */
 short   od_dro1 = 11;           /* 0x12022 OBJ_DRESSER_OPEN_1      */
 short   od_dro2 = 12;           /* 0x12024 OBJ_DRESSER_OPEN_2      */
+short   od_cbit = 44;           /* 0x12026 cabinet food-marker slot
+                                   (sc_drfc draws it; init value 44) */
 
 /* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they

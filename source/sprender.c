@@ -10,6 +10,7 @@
 #include <obdefs.h>
 #include "globals.h"
 #include "sprender.h"
+#include "vdiown.h"
 #include "sprglobs.h"
 
 /* First parameter is unused (was `nplanes`, hardcoded to 4).
@@ -51,16 +52,12 @@ short   index;
         sp_iniM(0L, &g_semfm[index],
                          g_seams[index],  w, h);
 
-        {
-                short   pxy[8];
-                pxy[0] = 0;      pxy[1] = 0;
-                pxy[2] = w - 1;  pxy[3] = h - 1;
-                pxy[4] = x1;     pxy[5] = y1;
-                pxy[6] = x1 + w - 1;
-                pxy[7] = y1 + h - 1;
-                vro_cpyfm(vdihnd, NOTS_AND_D, pxy,
-                          &g_semfm[index], &g_srmfd);
-                vro_cpyfm(vdihnd, S_XOR_D, pxy,
-                          &g_semfi[index], &g_srmfd);
-        }
+        vro_cpy(vdihnd, NOTS_AND_D,
+                index * 20 + (long) g_semfm, (long) &g_srmfd,
+                0, 0, w - 1, h - 1,
+                x1, y1, x1 + w - 1, y1 + h - 1);
+        vro_cpy(vdihnd, S_XOR_D,
+                index * 20 + (long) g_semfi, (long) &g_srmfd,
+                0, 0, w - 1, h - 1,
+                x1, y1, x1 + w - 1, y1 + h - 1);
 }

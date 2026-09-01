@@ -348,5 +348,6 @@ extern short od_fio2;
 extern short od_drcl;
 extern short od_dro1;
 extern short od_dro2;
+extern short od_cbit;
 
 #endif /* GLOBALS_H */

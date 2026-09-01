@@ -75,11 +75,7 @@ short   max_y;
 {
         short   y;
 
-        /* dest_screenbase_ptr = (dest_scr_buffer + 0x200) & ~0x1FF,
-           precomputed in stpScrB.  Ghidra shows the
-           fold as `dest_scr_buffer + 0x7f` (the +0xFE-byte residual
-           after the align-up-to-512 lands on our BSS base). */
-        g_dscp = (void *) g_dsb;
+        g_dscp = (void *) ((long) g_dsb + 254L);        /* ROM 0x9868 */
 
         for (y = 0; y < max_y - 1; y = y + 1) {
                 if (max_y < 70)
@@ -162,10 +158,10 @@ sc_drfc()
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
         od_draw(od_cbo2, 46, 140);
 
-        if (cabinet_content > 0) od_draw(OBJ_CABINET_ITEM, 50, 159);
-        if (cabinet_content > 1) od_draw(OBJ_CABINET_ITEM, 58, 159);
-        if (cabinet_content > 2) od_draw(OBJ_CABINET_ITEM, 50, 151);
-        if (cabinet_content > 3) od_draw(OBJ_CABINET_ITEM, 58, 151);
+        if (cabinet_content > 0) od_draw(od_cbit, 50, 159);
+        if (cabinet_content > 1) od_draw(od_cbit, 58, 159);
+        if (cabinet_content > 2) od_draw(od_cbit, 50, 151);
+        if (cabinet_content > 3) od_draw(od_cbit, 58, 151);
 }
 
 /* -- Water tank level bar (VDI polylines) -- */
@@ -186,7 +182,9 @@ short   val;
         RECT16  rect;
 
         rect.x1 = 146;
+        rect.y1 = 174;
         rect.x2 = 159;
+        rect.y2 = 174;
 
         if (val == 0) {
                 /* Draw filled portion (colour 0x0D). */

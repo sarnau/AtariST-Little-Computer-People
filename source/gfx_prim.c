@@ -307,11 +307,11 @@ stpScrB()
         buf = (long) scrbufB + 0x12FL;
         buf = (buf + 0x200L) & ~0x1FFL;
         g_srptr = (void *) buf;
-        /* g_dsb / g_dscp: independent 32 KB compositing buffer, aligned
-           UP to 512 (raw disasm fillTopR 0x1686c). */
-        buf = ((long) dsb_stor + 0x200L) & ~0x1FFL;
-        g_dsb  = (short *) buf;
-        g_dscp = (void  *) buf;
+        /* ROM 0x7c84: the fillTopR base is simply g_srptr - 254;
+           fillTopR adds the 254 back before drawing, so the top strip
+           renders into the SAME buffer -- the ROM has no separate
+           compositing buffer. */
+        g_dsb = (short *) ((long) g_srptr + -254L);
         sp_iniM(0x1D00L, &mf_scrp, g_srptr,
                          (short) (scr_scal * 0x140),
                          (short) (scr_scal * 200));
