@@ -16,7 +16,8 @@ sys.argv = [a for a in sys.argv if a != '--mask']
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PORT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         ROOT, 'build', 'alcyon', 'LCP.PRG')
-ORIG = sys.argv[2] if len(sys.argv) > 2 else os.path.join(
+ORIG = sys.argv[2] if len(sys.argv) > 2 else \
+       os.environ.get('LCP_REF') or os.path.join(
         ROOT, '..', 'DATA', 'LCP_ORG.PRG')
 
 

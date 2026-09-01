@@ -279,6 +279,56 @@ relink.  Open lead: LCP_STX.PRG may be the pre-crack parent of the
 other Ghidra image, and may reveal the intact SOUNDS.LCP loading
 that the crack destroyed (see the SFX crash note below).
 
+## Campaign #2 (2026-09-01): LCP_STX.PRG is the truth for the C sources
+
+Maintainer directive: recover the C sources for `DATA/LCP_STX.PRG`
+-- the uncracked, larger revision extracted from the protected
+Pasti image -- as the porting truth going forward.  The FAITHFUL
+(-DFAITHFUL) configuration and its byte-identity to LCP_ORG.PRG
+remain frozen as-is.
+
+Reconnaissance (all verified by direct binary analysis):
+- **Ghidra correspondence solved:** the "other Ghidra image"
+  (`LCP.PRG.1.1`) is LCP_STX loaded at BASE 0x10000.  Every old
+  port comment citing other-image addresses resolves as
+  `addr - 0x10000 = LCP_STX text offset` (mq_tick 0x1219a ->
+  0x219a, gameTick 0x256a6 -> 0x156a6 [confirmed: STX code calls
+  0x156a6 where the port calls gameTic], main 0x15546 -> 0x5546,
+  st_titl 0x16de6 -> 0x6de6).
+- **Toolchain differs from LCP_ORG's:** the STX startup is the
+  OLDER Alcyon distribution's GEMSTART.O verbatim
+  (~/Hatari_C/Compiler/Alcyon/alcyon2/, dated 1985-05-30; 250
+  bytes, only relocation tails differ) -- NOT the Atari DK
+  revision used by LCP_ORG.  The alcyon2 distribution has the
+  full toolchain (CP68/C068/C168/AS68, AESBIND, and
+  alcyon/orig/lib's gemlib) for an eventual byte-identical link.
+- **Function inventory** (verify_bytes with LCP_REF=DATA/LCP_STX.PRG
+  against the KEPT build, kept-classification disabled): 85
+  functions already byte-match, including mq_tick at 0x219a (the
+  Timer-A ISR is byte-faithful to this truth), mq_inti/mq_extm,
+  mg_stp, ag_intr, pk_pmsg, wp_shwm, and Activision's workstation
+  module (v_opnvwk at 0x17426, vro_cpyfm, vdi_go2).  ~213 port
+  functions diverge: the two revisions are genuinely different
+  builds (immediate-vs-global operand shapes, bsr-vs-jsr call
+  shapes), and the kept minigame/MIDI code is shape-faithful but
+  not yet literal-faithful to this binary.
+
+Tooling: all comparison tools (verify_bytes.py, prg_diff.py,
+fn_diff.py, rom_map.py) now honor `LCP_REF=<path>` to select the
+reference binary; default stays DATA/LCP_ORG.PRG.
+
+Roadmap (mirrors campaign #1):
+ 1. Function-level recovery: iterate fn_diff/verify_bytes with
+    LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
+    recovering exact literals/shapes.  The kept build is the
+    natural vehicle -- it should converge to this truth.
+ 2. Identify the STX revision's own runtime/lib shapes (alcyon2
+    osbind/gemlib) and link order; build an stx equivalent of
+    rom_data_map via rom_map.py.
+ 3. End state: the default build reproduces LCP_STX.PRG
+    byte-identically (its own gemstart/libs/layout), while
+    -DFAITHFUL keeps reproducing LCP_ORG.PRG.
+
 ## Issue log -- ALL CLOSED (2026-09-01)
 
 Maintainer ruling: with the FAITHFUL build proven byte-identical to

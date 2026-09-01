@@ -36,7 +36,7 @@ ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD  = os.path.join(ROOT, 'build', 'alcyon')
 PORT   = os.path.join(BUILD, 'LCP.PRG')
 SYM68K = os.path.join(BUILD, 'lcp_sym.68k')
-ORIG   = os.path.join(ROOT, '..', 'DATA', 'LCP_ORG.PRG')
+ORIG   = os.environ.get('LCP_REF') or os.path.join(ROOT, '..', 'DATA', 'LCP_ORG.PRG')
 
 MIN_UNIQUE = 10   # fixed bytes needed before we trust a match
 PROBE      = 24   # prefix length used to hunt a candidate site
