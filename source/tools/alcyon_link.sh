@@ -90,6 +90,17 @@ fi
     gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
     vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf 2>&1 | tail -20 || true
 
+# 4b. FAITHFUL: unstripped side link -- bss_remap.py resolves the
+#     rom_bss_layout.tsv symbol keys against its symbol table.
+if [ "${FAITHFUL:-0}" = "1" ]; then
+    rm -f lcp_sym.68k
+    "$ALCYON_BIN/lo68" -r -o lcp_sym.68k \
+        gemstart.o main.o $OBJS vdilib.o vdilib_a.o \
+        vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf \
+        2>&1 | tail -5 || true
+    [ -f lcp_sym.68k ] || { echo "FAILED: symbol side link"; exit 1; }
+fi
+
 if [ ! -f lcp.68k ]; then
     echo "FAILED: lo68 didn't produce lcp.68k"
     exit 1
@@ -104,11 +115,11 @@ fi
 
 # 6. FAITHFUL: re-lay BSS to the original linker's allocation.  lo68
 #    allocates .comm blocks hash-grouped; the 1985 linker used an
-#    order no surviving tool reproduces.  bss_remap.py derives the
-#    address translation from the (byte-identical) relocation stream,
-#    verifies it is a consistent one-to-one symbol mapping, and
-#    rewrites the relocated longwords -- see the header of
-#    tools/bss_remap.py.
+#    order no surviving tool reproduces.  bss_remap.py applies the
+#    checked-in layout spec tools/rom_bss_layout.tsv (symbol+offset
+#    -> ROM address), resolved via the lcp_sym.68k side link -- the
+#    original binary is not read.  See the header of
+#    tools/bss_remap.py (and its --gen mode to regenerate the spec).
 if [ "${FAITHFUL:-0}" = "1" ]; then
     python3 "$CSRC/tools/bss_remap.py" LCP.PRG || {
         echo "FAILED: bss_remap"

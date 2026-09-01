@@ -219,13 +219,17 @@ How it was reached (all phases DONE):
     trick (pex_namP -> _pex_nam).  The 1985 linker's .comm
     allocation order matches NO surviving linker (native lo68/link68
     hash-group, ALN.PRG sorts alphabetically, and it is neither
-    first-mention nor last-mention order), so alcyon_link.sh's
-    FAITHFUL path finishes with tools/bss_remap.py: it pairs the
-    byte-identical relocation streams site-by-site, verifies the
-    port->ROM BSS address translation is a consistent one-to-one
-    mapping (222 addresses, 873 sites), then applies it.  The
-    consistency check is the proof that the port's reference
-    structure matches the ROM's exactly.
+    first-mention nor last-mention order), so the allocation is
+    carried as a checked-in layout spec: tools/rom_bss_layout.tsv
+    (222 rows, port symbol+offset -> ROM address, bss size header).
+    alcyon_link.sh's FAITHFUL path finishes with tools/bss_remap.py,
+    which resolves the spec against the lcp_sym.68k side link and
+    rewrites the 873 relocated BSS longwords -- the original binary
+    is NOT read at link time.  `bss_remap.py --gen` regenerates the
+    spec from DATA/LCP_ORG.PRG after a layout-affecting change; its
+    site-by-site pairing verifies the port->ROM translation is a
+    consistent one-to-one mapping, which is the proof that the
+    port's reference structure matches the ROM's exactly.
 
 The default (kept) build is unaffected: minigames, Timer-A MIDI, and
 the hardened array sizes all remain (verified with --auto long-run,
