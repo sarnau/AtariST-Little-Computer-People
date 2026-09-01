@@ -184,15 +184,20 @@ entire games area is ~1 KB at 0x72ac and whose music engine is ~1.5 KB
 at 0x8cce, polled -- no ISR).  They are retained as intentional
 non-fidelity and reported as KEPT by verify_bytes.py.
 
-Current: **305 matched / 3 divergent / 51 kept, 92.1% coverage.**
-Remaining true divergence: `main` (~10% similar -- boot order
-differs), `gameTic` (ROM 0xce28 is a VBL-wait + phone-ring +
-housekeeping loop), and `fl_ltpl` (its own body matches; the extent
-drags in symbol-less midi statics).  Optional future work: recover the
-ROM's polled music engine (0x8cce) and games shell (0x72ac) alongside
-the kept versions.  Runtime smoke + long-run tests REQUIRED before
-trusting the behavior changes (SOUNDS.LCP, tv polylines, stairs,
-single-buffer compositing, vdi_init clear).
+Current: **308 matched / 50 kept, 95.1% coverage -- the campaign is
+COMPLETE for game code.**  `main` matches ROM 0x1ba (no Dsetpath, no
+initBM call -- bm32or/bm32and stay zero at runtime, the ROM's own
+dead code; ct_clrB lands at ROM-identical 0x42e via same-object bsr).
+`gameTick` matches ROM 0xce28 (carrying mode returns via the restored
+cy_yoff switch helper; getKey's no-key sentinel is 0 in this binary,
+NOT -1 -- the 2026-07-19 incident's polarity belongs to the other
+image).  The one listed "divergent", fl_ltpl, is extent pollution:
+its body matches; symbol-less statics of the kept MIDI engine follow
+it in link order.  Optional future work: recover the ROM's polled
+music engine (0x8cce) and games shell (0x72ac) alongside the kept
+versions.  Runtime smoke + long-run tests REQUIRED before trusting
+the behavior changes (SOUNDS.LCP, tv polylines, stairs, single-buffer
+compositing, vdi_init clear, gameTick Path-B return, key sentinel).
 
 **OPEN QUESTION for the maintainer -- two Ghidra programs.**
 `LCP.rep` contains TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`), and
