@@ -280,9 +280,13 @@ refer to before trusting offsets.
   wrapped-negative SP.  Root cause unknown after multiple audits
   (sign-extension audit clean, Timer-A ISR clean vs ROM 0x1219a,
   VSync/Setscreen pairing matches ROM, Super() bracketing not a
-  race).  Next diagnostic: Hatari memwatch on `$25722` to catch the
-  writer that clobbers `lcp_std`'s abs.L operand.  User has
-  confirmed audio is off when it fires -- not a MIDI/PSG ISR issue.
+  race).  User has confirmed audio is off when it fires -- not a
+  MIDI/PSG ISR issue.  STALE NOTE: the old "memwatch $25722 /
+  lcp_std operand" diagnostic predates the 2026-09-01 layout
+  reshuffle -- recompute the address from a fresh symbol link before
+  reusing it.  The report also predates the tv polyline fix
+  (12e572f), the freeze fix, and the byte-fidelity recoveries, so
+  first try to re-reproduce under real-time before digging further.
 - **`test_longrun_stable.sh` currently fails env-side.**  Multiple
   commits (including known-clean baselines) all report identical
   PSNR 24.479517 with varying bus-error counts (6-15).  Suggests
@@ -313,6 +317,11 @@ refer to before trusting offsets.
 - **`cp_main` copy protection stubbed.**  Intentional non-fidelity
   documented in `source/stubs.c`; the ROM routine can't run under
   Hatari (flock + XOR decrypt + FDC signature check).
-- **Music playback never verified in production build.**  Test
-  builds use `-DSKIP_MIDI=1` which never actually exercises the
-  audio ISR.  A fixed-input `.SNG` smoke test would close this gap.
+- **`.SNG` playback still unverified (gap narrowed 2026-09-01).**
+  The production kept build (no SKIP_MIDI) now passes a 36000-VBL
+  --auto long-run with the Timer-A ISR installed and ticking idle
+  (0 bus errors, PSNR 25.6 dB), so the install path itself is fine.
+  But a GEMDOS-traced run showed the resident never opened a .SNG
+  autonomously in 10 minutes -- actually playing a song needs a
+  driven test: inject "please play a record" (or equivalent) via the
+  Hatari MCP server's keyboard injection in an interactive session.
