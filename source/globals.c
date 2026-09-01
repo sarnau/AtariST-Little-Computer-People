@@ -87,12 +87,11 @@ short   lcp_food                  = 4;
 short   lcp_recP              = 0;
 short   lcp_tv                       = 0;
 
-/* g_obisa: stove-on animation frame IDs, indexed at runtime by
-   a_eatm's `pick = rndRng(0,2)` cooking loop.  Ghidra ROM has an
-   array of three shorts at 0x2b4b6; port keeps the array shape for
-   variable-indexed access.  All other object slots are now inlined
-   as OBJ_* constants at their call sites. */
-short   g_obisa[3]    = { OBJ_STOVE_ON_1, OBJ_STOVE_ON_2, OBJ_STOVE_ON_3 };
+/* g_obisa: stove-on animation frame slots, indexed by a_eatm's
+   `pick = rndRng(0,2)` cooking loop.  ROM data 0x11774, initialized
+   {23,24,25}; part of the od_* frame-slot block (see below), which
+   runtime code can rewrite -- the enum stove-on ids are 43..45. */
+short   g_obisa[3]    = { 23, 24, 25 };
 
 BOOL16  mi_play                 = NO;
 short   dg_bwlch            = 0;
@@ -930,7 +929,7 @@ BOOL16  g_ptdoa              = NO;
    initialized word globals (base-0 data 0x11758..0x1177e) and every
    od_draw of a door / appliance reads them -- it never pushes the
    enum constants.  Values verified against the original DATA
-   segment; a_kitcc additionally takes &od_ph2 as an array base. */
+   segment; the stove-on frames sit at 0x11774 as g_obisa[3]. */
 short   od_stcl = 46;           /* 0x11758 OBJ_DOOR_STUDY_CLOSED   */
 short   od_sto1 = 47;           /* 0x1175a OBJ_DOOR_STUDY_OPEN_1   */
 short   od_sto2 = 48;           /* 0x1175c OBJ_DOOR_STUDY_OPEN_2   */
@@ -944,10 +943,7 @@ short   od_med1 = 40;           /* 0x1176a OBJ_MEDICINE_OPEN_1     */
 short   od_tocl = 25;           /* 0x1176c OBJ_DOOR_TOILET_CLOSED  */
 short   od_too1 = 26;           /* 0x1176e OBJ_DOOR_TOILET_OPEN_1  */
 short   od_too2 = 27;           /* 0x11770 OBJ_DOOR_TOILET_OPEN_2  */
-short   od_ph1  = 22;           /* 0x11772 OBJ_PHONE_1             */
-short   od_ph2  = 23;           /* 0x11774 OBJ_PHONE_2             */
-short   od_ph3  = 24;           /* 0x11776 OBJ_PHONE_3             */
-short   od_tcl2 = 25;           /* 0x11778 (unreferenced twin)     */
+short   od_stof = 22;           /* 0x11772 stove-off frame slot    */
 short   od_fdcl = 16;           /* 0x1177a OBJ_FRIDGE_CLOSED       */
 short   od_fdo1 = 17;           /* 0x1177c OBJ_FRIDGE_OPEN_1       */
 short   od_fdo2 = 18;           /* 0x1177e OBJ_FRIDGE_OPEN_2       */

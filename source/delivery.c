@@ -296,7 +296,9 @@ ev_ansPh()
         ph_call = NO;
         ph_hu      = YES;
         gameTick(0);
-        od_draw(OBJ_PHONE_CALL, 190, 168);
+        /* ROM reads od_med1 (=40, OBJ_MEDICINE_OPEN_1) here, not the
+           phone-call frame -- likely an original-game slip, kept. */
+        od_draw(od_med1, 190, 168);
 
         lcp_st = STATE_PHONE_TALKING;
         gameTick(1);

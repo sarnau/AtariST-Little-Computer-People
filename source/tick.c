@@ -196,14 +196,14 @@ short   counter;
                                         if (g_sfacf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
                                                 sf_so();
-                                        od_draw(od_ph2, 190, 168);
+                                        od_draw(OBJ_PHONE_2, 190, 168);
                                 } else {
                                         od_draw(g_obpha[subAniC & 3],
                                                 190, 168);
                                 }
                         }
                         if (ph_hu != NO) {
-                                od_draw(od_ph2, 190, 168);
+                                od_draw(OBJ_PHONE_2, 190, 168);
                                 ph_hu = NO;
                                 if (g_sfacf != NO && g_sfpli == SFX_PHONE_RING)
                                         sf_so();

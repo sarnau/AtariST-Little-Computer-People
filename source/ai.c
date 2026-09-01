@@ -107,17 +107,15 @@ chk_actT()
                         return;
                 }
         }
-        /* P5: hunger.  Ghidra shape: hunger > 0 AND rnd > skip AND
-             ( (sick   AND food_slots > 0) OR
-               (healthy AND lastAct != ACTION_KITCHEN_CABINET) ).
-           The sick-branch disjunct lets a sick resident chain visits. */
+        /* P5: hunger.  ROM 0x2e82: hunger > 0 AND rnd > skip AND
+           (healthy OR food_slots != 0) AND lastAct != KITCHEN_CABINET
+           -- the lastAct check gates the sick branch too. */
         if (lcp.hunger_level > 0) {
                 rnd = rndRng(1, 100);
                 if (rnd > sickness_skip_probability &&
-                    ((lcp.sickness_level != SICKNESS_HEALTHY &&
-                      ((lcp.door_states_and_flags >> 9) & 7) > 0) ||
-                     (lcp.sickness_level == SICKNESS_HEALTHY &&
-                      lastAct != ACTION_KITCHEN_CABINET))) {
+                    (lcp.sickness_level == SICKNESS_HEALTHY ||
+                     ((lcp.door_states_and_flags >> 9) & 7) != 0) &&
+                    lastAct != ACTION_KITCHEN_CABINET) {
                         g_trac = ACTION_KITCHEN_CABINET;
                         doAct();
                         lastAct = ACTION_KITCHEN_CABINET;

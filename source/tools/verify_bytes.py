@@ -121,15 +121,34 @@ def pattern(code, base, relocs):
 
 
 def first_mismatch(code, base, relocs, otext, oo):
-    """Pattern-aware compare of `code` against otext[oo:]; -1 if equal."""
+    """Pattern-aware compare of `code` against otext[oo:].
+
+    Returns (first_any, first_hard): a conditional-branch displacement
+    that differs is a SOFT mismatch (a downstream size change echoes
+    into every bcc.w/bcc.s over it); the first non-branch difference is
+    the HARD one that names the real divergence.  Either is -1 if none.
+    """
+    first_any = first_hard = -1
     for off, width, fix in tokens(code, base, relocs):
         if not fix:
             continue
         if oo + off + width > len(otext):
-            return off
-        if code[off:off + width] != otext[oo + off:oo + off + width]:
-            return off
-    return -1
+            return (off, off) if first_any < 0 else (first_any, off)
+        if code[off:off + width] == otext[oo + off:oo + off + width]:
+            continue
+        if first_any < 0:
+            first_any = off
+        # soft: bcc.w displacement word (preceded by 6xxx 00 opcode) or
+        # differing low byte of a bcc.s (opcode byte 0x6x, same opcode)
+        prev = code[off - 2:off]
+        if width == 2 and len(prev) == 2 and (prev[0] & 0xF0) == 0x60:
+            continue
+        if width == 2 and (code[off] & 0xF0) == 0x60 and \
+                code[off] == otext[oo + off] and width == 2:
+            continue
+        first_hard = off
+        break
+    return first_any, first_hard
 
 
 def hexctx(buf, pos, lo, hi):
@@ -176,9 +195,13 @@ def main():
             where = ''
             if cand:
                 oo = cand[0]
-                j = first_mismatch(code, off, prelocs, otext, oo)
+                j_any, j = first_mismatch(code, off, prelocs, otext, oo)
+                if j < 0:
+                    j = j_any
+                soft = '' if j == j_any else (f' (soft branch-disp diff '
+                                              f'from +0x{j_any:x})')
                 where = (f'\n            candidate orig=0x{oo:05x}, first '
-                         f'mismatch at +0x{j:x}:'
+                         f'hard mismatch at +0x{j:x}{soft}:'
                          f'\n            port.. {hexctx(ptext, off + j, -6, 10)}'
                          f'\n            orig.. {hexctx(otext, oo + j, -6, 10)}')
             divergent.append((name, off, size))
