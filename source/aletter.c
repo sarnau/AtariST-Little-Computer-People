@@ -143,6 +143,9 @@ short   val;
         short   i;
         BOOL16  word_wrap_needed;
 
+        if (str == (char *) 0)          /* ROM 0x4e02: NULL guard */
+                return 0;
+
         if (val < 0 || g_cdibp > 0) {
                 if (val < 0)
                         val = -val;

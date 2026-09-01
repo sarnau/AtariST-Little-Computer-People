@@ -151,7 +151,7 @@ long            max_b;
 /* body.lcp @ 0x3f8b0 = 20160 B, pex_lcp_file @ 0x4d2da = 11088 B
    (168 bytes/frame, sp_lcpf w=2/h=21). */
 static unsigned char    body_buf[120][LCP_BODY_FRAME_SIZE];
-static unsigned char    pex_buf[66][LCP_BODY_FRAME_SIZE];
+static unsigned char    pex_buf[72][LCP_BODY_FRAME_SIZE];   /* >= ROM's 12000-byte cap */
 
 void
 al_locs()
@@ -161,8 +161,8 @@ al_locs()
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
-        al_loal("body.lcp", (unsigned char *) body_buf,
-                       (long) sizeof(body_buf));
+        /* ROM passes round buffer caps, not exact file sizes. */
+        al_loal("body.lcp", (unsigned char *) body_buf, 20000L);
         body_ptr    = (short *) body_buf;
         body_shp  = bshdbuf;
 
@@ -179,8 +179,7 @@ al_locs()
         pex_filename[6] = 'P';
         pex_filename[7] = 0;
 
-        al_loal(pex_filename, (unsigned char *) pex_buf,
-                       (long) sizeof(pex_buf));
+        al_loal(pex_filename, (unsigned char *) pex_buf, 12000L);
         pex_ptr    = (short *) pex_buf;
         hd_shp = hshdbuf;
 }
