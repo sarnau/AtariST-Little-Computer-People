@@ -70,7 +70,13 @@ a_pacen()
         g_hatas = 8;
         lcp_hwt();
 
+        /* LCP_ORG's source uses the register form; the STX revision
+           writes i++ (addq straight to the frame slot). */
+#ifdef FAITHFUL
         for (i = 0; i < 15; i = i + 1) {
+#else
+        for (i = 0; i < 15; i++) {
+#endif
                 lcp_st = pst_arr[i & 1];
                 gameTick(1);
         }

@@ -102,7 +102,13 @@ a_yawas()
         g_hatas = 8;
         lcp_hwt();
 
+        /* LCP_ORG's source uses the register form; the STX revision
+           writes i++ (addq straight to the frame slot). */
+#ifdef FAITHFUL
         for (i = 0; i < 15; i = i + 1) {
+#else
+        for (i = 0; i < 15; i++) {
+#endif
                 lcp_st = pst_arr[i & 1];
                 gameTick(1);
         }
@@ -157,12 +163,23 @@ a_petd()
         if (introSeq != NO)
                 ticks = 10;
 
+        /* Same loop, two source shapes: LCP_ORG spells out the
+           decrement-and-break, the STX revision uses a pre-decrement
+           while with the break inverted. */
+#ifdef FAITHFUL
         do {
                 ticks = ticks - 1;
                 if (ticks == 0)
                         break;
                 gameTick(0);
         } while (g_trel[0] == ACTION_NONE);
+#else
+        while (--ticks != 0) {
+                gameTick(0);
+                if (g_trel[0] != ACTION_NONE)
+                        break;
+        }
+#endif
 
         dg_petok = NO;
         lcp_st         = STATE_STAND_SIDE_VIEW;

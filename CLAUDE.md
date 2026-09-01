@@ -454,6 +454,29 @@ this build, ALL different from LCP_ORG's:
   change: `tools/stx_units.txt` drives which files are skipped, and
   alcyon_build.sh deletes stale objects for skipped files.
 
+  **Codegen is NOT the explanation for source-shape divergence
+  (tested 2026-09-01).**  The obvious hypothesis -- that `i++` vs
+  `i = i + 1` shapes come from LCP_STX's older compiler rather than
+  from its source -- is FALSE.  Running alcyon2's own C168.PRG (the
+  1985-05-30 binary that built LCP_STX) under Hatari on the same
+  input emits, instruction for instruction, what our rebuilt c168
+  emits: `i = i + 1` -> move/add/move through a register, `i++` ->
+  `add #1,-2(R14)` straight to the frame slot.  So these really are
+  source differences and must be recovered as such (gated
+  `#ifdef FAITHFUL`), and -- valuable side result -- the rebuilt
+  toolchain is codegen-equivalent to the one that built LCP_STX, so
+  the campaign never needs to run the period compiler under Hatari.
+
+  Recurring source-shape rules recovered so far, all gated:
+      i = i + 1            (ORG)  vs  i++            (STX)
+      *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)
+      do{d--;if(!d)break;  (ORG)  vs  while(--d){body;
+        body}while(cond)              if(!cond)break;}
+  If this list keeps growing, consider replacing the per-site
+  #ifdefs with one documented macro pair -- ask the maintainer
+  first; CLAUDE.md's "don't invent" rule makes that a judgement
+  call, not a default.
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
