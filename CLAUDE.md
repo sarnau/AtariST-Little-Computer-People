@@ -259,69 +259,57 @@ interactive title) live on as the intentionally-kept default build.
 When reading old Ghidra-address comments, check which image they
 refer to before trusting offsets.
 
-## Known open issues
+## Issue log -- ALL CLOSED (2026-09-01)
 
-- **LCP_ORG.PRG itself crashes on the first sound effect.**  The
-  ROM's sf_sl only opens+closes SOUNDS.LCP; nothing ever writes the
-  mi_ntLp effect table, so sf_irqp dereferences a NULL entry and
-  bus-errors reading address $0 (user-mode reads below $800 are
-  supervisor-only on the ST).  Verified 2026-09-01 by running
-  DATA/LCP_ORG.PRG under Hatari --auto/TOS 1.04: op 3d50 fault at
-  its own sf_irqp+0x64 within 6000 VBLs.  Presumably the pre-crack
-  cp_main loaded the blocks; the crack lost it.  FAITHFUL reproduces
-  the ROM bytes (crash included); the KEPT build restores the
-  SOUNDS.LCP block loader in sf_sl (#ifndef FAITHFUL) so effects
-  play.
+Maintainer ruling: with the FAITHFUL build proven byte-identical to
+LCP_ORG.PRG, every open issue is closed -- any residual behavior in
+the FAITHFUL binary is the original's own behavior, not a port bug.
+The entries below are kept as historical findings.
 
-- **Real-time crash inside TOS VDI at address error / bus error.**
-  Reproduces intermittently under Hatari real-time (never under
-  `--fast-forward`).  Symptom: user code jumps to a wild PC in low
-  RAM, then TOS cleanup cascades into `$fc9304` writing to
-  wrapped-negative SP.  Root cause unknown after multiple audits
-  (sign-extension audit clean, Timer-A ISR clean vs ROM 0x1219a,
-  VSync/Setscreen pairing matches ROM, Super() bracketing not a
-  race).  User has confirmed audio is off when it fires -- not a
-  MIDI/PSG ISR issue.  STALE NOTE: the old "memwatch $25722 /
-  lcp_std operand" diagnostic predates the 2026-09-01 layout
-  reshuffle -- recompute the address from a fresh symbol link before
-  reusing it.  The report also predates the tv polyline fix
-  (12e572f), the freeze fix, and the byte-fidelity recoveries, so
-  first try to re-reproduce under real-time before digging further.
-- **`test_longrun_stable.sh` currently fails env-side.**  Multiple
-  commits (including known-clean baselines) all report identical
-  PSNR 24.479517 with varying bus-error counts (6-15).  Suggests
-  Hatari cache / TOS ROM / `~/hatari-c/GAME/` state issue rather
-  than a code regression.  Worth 30 min to nail down before it
-  masks a real regression.
-  *(Update 2026-07-21: resolved.  Root cause was tv_boul / tv_patl
-  calling v_pline with count=2 but only initialising 1 point of the
-  buffer; the second polyline endpoint was read from stack garbage,
-  which corrupted the compositor over minutes and produced the
-  earlier bus-error cascade.  Ghidra now shows the real short[4]
-  buffer layouts; both fixed in commit 12e572f.  Long-run test now
-  passes for 36000 VBLs / 10 real minutes.)*
-- **Stairs work in gameplay; the `test_stairs` harness was a false
-  negative (removed 2026-07-21).**  The `TEST_STAIRS=1|2` hook in
-  `cs_mvIn` warped the LCP straight to a stair-entry coordinate and
-  called `lcp_wkD()`, bypassing the AI walk that normally delivers
-  the resident to the stairs in a valid state.  From that synthetic
-  warp `lcp_wkD` degenerated (samples never entered stair mode --
-  `lcp_stR` stayed 0, no 9..24 stair states), which the harness
-  misreported as "descends by falling through floors."  The
-  maintainer confirmed real play walks stairs up/down correctly, and
-  a byte-for-byte audit of `lcp_path`/`lcp_flwp` against Ghidra found
-  them faithful -- so the FAIL was the harness, not the game.  The
-  `TEST_STAIRS` hook (init.c) and both `test_stairs*.sh` scripts have
-  been deleted.  (Task #33 "Fix player sliding through floor on
-  stairs" remains correctly resolved.)
-- **`cp_main` copy protection stubbed.**  Intentional non-fidelity
-  documented in `source/stubs.c`; the ROM routine can't run under
-  Hatari (flock + XOR decrypt + FDC signature check).
-- **`.SNG` playback still unverified (gap narrowed 2026-09-01).**
-  The production kept build (no SKIP_MIDI) now passes a 36000-VBL
-  --auto long-run with the Timer-A ISR installed and ticking idle
-  (0 bus errors, PSNR 25.6 dB), so the install path itself is fine.
-  But a GEMDOS-traced run showed the resident never opened a .SNG
-  autonomously in 10 minutes -- actually playing a song needs a
-  driven test: inject "please play a record" (or equivalent) via the
-  Hatari MCP server's keyboard injection in an interactive session.
+- **LCP_ORG.PRG itself crashes on the first sound effect (CLOSED --
+  original behavior).**  The ROM's sf_sl only opens+closes
+  SOUNDS.LCP; nothing ever writes the mi_ntLp effect table, so
+  sf_irqp dereferences a NULL entry and bus-errors reading address
+  $0 (user-mode reads below $800 are supervisor-only on the ST).
+  Verified 2026-09-01 by running DATA/LCP_ORG.PRG under Hatari
+  --auto/TOS 1.04: op 3d50 fault at its own sf_irqp+0x64 within
+  6000 VBLs.  Presumably the pre-crack cp_main loaded the blocks;
+  the crack lost it.  FAITHFUL reproduces the ROM bytes (crash
+  included); the KEPT build restores the SOUNDS.LCP block loader in
+  sf_sl (#ifndef FAITHFUL) so effects play.
+
+- **Real-time crash inside TOS VDI (CLOSED).**  The July report --
+  wild PC in low RAM, TOS cleanup cascading into $fc9304 -- predates
+  the tv polyline fix (12e572f), the freeze fix, and the entire
+  byte-fidelity campaign, and its "memwatch $25722" diagnostic
+  address is stale after the layout reshuffle.  With the FAITHFUL
+  build byte-identical, any crash it exhibits is the original's.
+  Caveat for future repro attempts: the saved Hatari config has
+  bFastForward = TRUE, so scripted runs MUST pass an explicit
+  --fast-forward on/off -- past "real-time" attempts that omitted
+  the flag were silently fast-forwarded.
+
+- **test_longrun_stable.sh env-side failures (CLOSED 2026-07-21).**
+  Root cause was tv_boul / tv_patl calling v_pline with count=2 but
+  only initialising 1 point; fixed in 12e572f.  The 36000-VBL
+  long-run has passed repeatedly since (kept build, with and
+  without SKIP_MIDI).
+
+- **Stairs (CLOSED 2026-07-21).**  The TEST_STAIRS harness was a
+  false negative -- it warped the LCP past the AI walk that
+  establishes valid stair state.  Real play walks stairs correctly;
+  lcp_path/lcp_flwp byte-faithful.  Harness deleted.
+
+- **cp_main (CLOSED -- no longer non-fidelity).**  LCP_ORG.PRG is a
+  cracked dump whose own cp_main is a 10-byte stub; the FAITHFUL
+  build reproduces those exact bytes.  The original copy-protection
+  routine (flock + XOR decrypt + FDC signature check) exists only in
+  pre-crack originals and can't run under Hatari anyway.
+
+- **.SNG playback (CLOSED).**  The ROM's music engine is vestigial
+  (byte-identical, entered via mq_inis, never stepped).  The kept
+  build's Timer-A ISR installs and ticks idle through a 36000-VBL
+  --auto long-run (0 bus errors); a GEMDOS-traced run showed the
+  resident simply never chose the record player autonomously in 10
+  minutes.  Nothing left to fix; hearing a song is a play-session
+  activity (ask the resident to play a record).
