@@ -42,14 +42,16 @@ A shape-match audit ("both check `if (key)`, both set `tx_sctm=160`")
 is NOT sufficient.  A single-token divergence can produce a silent
 runaway bug:
 
-**The getKey `!= 0` incident (2026-07-19)** — tick.c had
-`if (key != 0)` after `key = getKey()`.  Ghidra had
-`if (keycode != keycode_enum_none)` where `keycode_enum_none == -1`.
-`-1 != 0` is always true, so the "a key was received" branch fired
-every tick, resetting `tx_sctm = 160` continuously and locking the
-split-copy compositor forever.  Visible screen corruption at ~11 500
-VBLs, TOS bus error shortly after.  A shape-audit had passed;
-literal-audit had not been performed.
+**The getKey sentinel incident (2026-07-19)** — tick.c compared
+getKey()'s result against the wrong no-key sentinel, so the "key
+received" branch fired every tick, resetting `tx_sctm = 160`
+continuously and locking the split-copy compositor.  Visible screen
+corruption at ~11 500 VBLs, TOS bus error shortly after.  A
+shape-audit had passed; literal-audit had not.  CAUTION (2026-09-01):
+the sentinel POLARITY differs between the two game revisions -- in
+DATA/LCP_ORG.PRG the tick-side test is `key != 0` (byte-verified),
+while the other Ghidra image used `!= -1`.  Always verify against the
+chosen reference binary, not against this anecdote.
 
 **Every audit must diff:**
 - Numeric literals (`0`, `-1`, `0xFF`, `160`, `27`, hex constants).
@@ -107,10 +109,11 @@ source ships; ad-hoc debug scaffolding does not.
   state, and `vsl_color` silently falls back to pen 15 (dark brown).
   This causes the water tank to render brown instead of blue — see
   the comment above `sc_sdtb` in `source/gfx_prim.c`.
-- Test builds use `-DSKIP_TITLE=1 -DSKIP_MIDI=1` to bypass the title
-  screen (`st_titl` triggers a TOS `v_gtext` crash at `$fd330c`)
-  and disable Timer-A determinism issues.  Production builds omit
-  those flags.
+- `SKIP_TITLE` no longer exists: the interactive title screen was an
+  other-revision feature; st_titl is the ROM's defaults stub.  Test
+  builds may still use `-DSKIP_MIDI=1` (skips the kept Timer-A
+  install for frame-hash determinism).  `-DFAITHFUL=1` selects the
+  byte-identical configuration (ROM minigame stubs, empty mq_intim).
 
 ## Key project layout
 
