@@ -101,6 +101,24 @@ typedef struct {
    because Alcyon C 4.14 doesn't guarantee any specific alignment
    for `short`s within structs (usually 2-byte, but the ROM's
    0xe total confirms no padding between offset 9 and offset 10). */
+#ifdef FAITHFUL
+/* ROM layout (mq_dise walks voices with muls #10): phase, byte-wide
+   phase_timer, then the 8 ADSR bytes copied by psg_cpE at +2. */
+typedef struct {
+        char            phase;                  /* off 0 */
+        char            phase_timer;            /* off 1 (byte)           */
+        unsigned char   attack_start_vol;       /* off 2 (hi nib: mixer)  */
+        unsigned char   attack_duration;        /* off 3 (hi nib: octave) */
+        unsigned char   attack_target_vol;      /* off 4                  */
+        unsigned char   decay_duration;         /* off 5                  */
+        unsigned char   decay_target_vol;       /* off 6                  */
+        unsigned char   current_volume;         /* off 7 (runtime; the 8-
+                                                   byte copy clobbers 7-9,
+                                                   then 7/8 are re-set) */
+        unsigned char   max_volume;             /* off 8 <- psg_cvol      */
+        unsigned char   release_duration;       /* off 9                  */
+} PSG_ENVELOPE;
+#else
 typedef struct {
         char            phase;                  /* off 0  ENV_ATTACK..    */
         unsigned char   attack_start_vol;       /* off 1  volume 0..15    */
@@ -116,6 +134,7 @@ typedef struct {
         unsigned char   current_volume;         /* off 12 live PSG volume */
         unsigned char   max_volume;             /* off 13 vel-derived cap */
 } PSG_ENVELOPE;
+#endif  /* FAITHFUL */
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
    14-byte ROM layout (chk_encm @0x94e8 walks rows with muls #14):

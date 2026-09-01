@@ -95,16 +95,23 @@ static unsigned char *
 mh_scat(p)
 unsigned char * p;
 {
+#ifdef FAITHFUL
+        /* ROM 0x8758: plain 3-byte advance, no velocity bucketing. */
+        (void) p;
+        return p + 3;
+}
+#else
         mi_dvel = p[2];
         if      (mi_dvel < 0x17) psg_dvol = 5;
         else if (mi_dvel < 0x27) psg_dvol = 7;
         else if (mi_dvel < 0x37) psg_dvol = 9;
         else if (mi_dvel < 0x57) psg_dvol = 11;
         else if (mi_dvel < 0x67) psg_dvol = 13;
-        /* mi_dvel >= 0x67: ROM's `cmpi.b #-0x80; bge` is a dead
+        /* mi_dvel >= 0x67: `cmpi.b #-0x80; bge` is a dead
            branch; psg_dvol is left unchanged. */
         return p + 3;
 }
+#endif  /* FAITHFUL */
 static unsigned char *
 mh_proc(p)
 unsigned char * p;
@@ -425,7 +432,7 @@ short           midi_ch;
                                 midiEvS = midiEvS - 1;
                         }
                 } else {
-                        Midiws(midiEvS - 1, midiEvP);
+                        Midiws((long) (midiEvS - 1), midiEvP);
                 }
                 saved_ptr[1] = saved_note;
         }
@@ -510,11 +517,13 @@ short           midi_ch;
                 } else {
                         long    mixer_prev;
                         long    combined;
-                        Giaccess((psg_freq[freq_index] / 0x3c), 0x86);
-                        mixer_prev = Giaccess(0, 7);
+                        Giaccess((long) (unsigned short)
+                                 (psg_freq[freq_index] / 0x3c), 0x86L);
+                        mixer_prev = Giaccess(0L, 7L);
                         combined = (long) mixer_bits |
                                    ((long) (noise_mask | 0xc0) & mixer_prev);
-                        Giaccess((combined >> 16), combined);
+                        Giaccess((long) (short) (combined >> 16),
+                                 (long) (short) combined);
                 }
         }
 
@@ -531,8 +540,10 @@ short           midi_ch;
                         psg_wr((char) period_hi_nibble,
                                            (char) (ret + 1));
                 } else {
-                        Giaccess((period & 0xff), (ret + 0x80));
-                        Giaccess(period_hi_nibble, (ret + 0x81));
+                        Giaccess((long) (unsigned short) (period & 0xff),
+                                 (long) (ret + 0x80));
+                        Giaccess((long) period_hi_nibble,
+                                 (long) (ret + 0x81));
                 }
         }
 
@@ -550,6 +561,10 @@ short           midi_ch;
 /* mq_tick lives in source/mq_tick.s -- privileged move-sr + rte
    terminator, installed by Xbtimer directly. */
 
+#ifndef FAITHFUL
+/* ---- Timer-A sequencer engine (other-image; KEPT build only).
+   The ROM never steps its sequencer -- no ISR exists and nothing
+   below is referenced by ROM code. ---- */
 /* mq_advs: sequencer state-machine advance from mq_tick.  Ghidra 0x111b0.
    WAIT_NOTE_EXPIRE (0): expire queued notes, reload prescaler, -> PARSE.
    PARSE_NEXT_EVENT (1): mq_pars() walks next batch; 0=end-of-song ->
@@ -1168,3 +1183,5 @@ mq_extm()
 {
         Xbtimer(0, 0, 0x1c, mi_svtv);
 }
+
+#endif  /* !FAITHFUL */
