@@ -266,8 +266,11 @@ short   flipV;
 }
 
 /* sp_flih: mirror sprite in place, preserving width (no expansion).
+   The STX revision links it in the alerts object right after
+   sp_spud (see alerts.c).
    addr: sp_flih() */
 
+#ifdef FAITHFUL
 void
 sp_flih(source, dest, pixH, wdWidth)
 unsigned short *        source;
@@ -296,6 +299,7 @@ short                   wdWidth;
                 source = source + (wdWidth << 2);
         }
 }
+#endif  /* FAITHFUL */
 
 /* sp_upds: allocate 60 logical sprites onto 8 hardware slots by layer.
    Slots: 3=body, 4=head (reserved), 0/7=dog, 1..2=behind, 5..6=front,

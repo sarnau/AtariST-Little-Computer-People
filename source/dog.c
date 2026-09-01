@@ -32,7 +32,13 @@ dg_ipos()
 {
         dog_x = 100;
         dog_y = 195;
+        /* LCP_ORG parks the dog on the "unused" sprite id -1; the
+           STX revision passes id 0. */
+#ifdef FAITHFUL
         sp_spud(-1, 1, NO);
+#else
+        sp_spud(0, 1, NO);
+#endif
 }
 
 /* dg_mvAni: 8 Hz movement + walk-cycle advance.  If the dog
@@ -211,8 +217,11 @@ dg_mvAni()
    via sp_flih if needed.  dg_init suppresses the
    push while the dog hasn't been placed in the world yet.
 
+   LCP_ORG links this here in dog.c; the STX revision groups it (and
+   sp_flih) with the alerts object -- see the twin in alerts.c.
    addr: sp_spud() */
 
+#ifdef FAITHFUL
 void
 sp_spud(g_seid, layer_p, flipH2)
 short   g_seid;
@@ -259,3 +268,4 @@ BOOL16  flipH2;
                         g_seaim[HW_SLOT_DOG_BACK] = g_dfimb;
         }
 }
+#endif  /* FAITHFUL */
