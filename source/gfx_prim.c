@@ -303,6 +303,7 @@ stpScrB()
 /* vst_h20: save VDI attrs to sv_vqta; set text height 20 px.
    addr: vdi_save_and_set_text_height_20() */
 
+#ifndef FAITHFUL
 void
 vst_h20()
 {
@@ -310,22 +311,26 @@ vst_h20()
         vqt_attributes(vdihnd, sv_vqta);
         vst_height(vdihnd, 20, &td, &tc, &tb, &ta);
 }
+#endif
 
 /* rst_vsth: restore VDI text height from sv_vqta[7] (cell height).
    addr: reset_vst_height() */
 
+#ifndef FAITHFUL
 void
 rst_vsth()
 {
         short   ta, tb, tc, td;
         vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
 }
+#endif
 
 
 /* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
    addr: mouse_off() */
 
 
+#ifndef FAITHFUL
 void
 moff()
 {
@@ -334,4 +339,5 @@ moff()
                 moff_f = YES;
         }
 }
+#endif
 

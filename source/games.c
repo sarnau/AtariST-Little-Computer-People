@@ -96,6 +96,140 @@ gamePlWQ()
         }
 }
 
+#ifdef FAITHFUL
+/* ---- ROM minigame stubs (games.o 0x72ac-0x769a) ----------------
+   The ST original has NO playable minigames: each handler loads its
+   assets, prints a banner, waits at the table (gamePlWQ), and frees.
+   The full minigames below the #else come from the other, larger
+   game revision and are the default build. ---------------------- */
+
+/* addr: ag_main() (ROM 0x72ac) */
+void
+ag_main()
+{
+        g_agwb = (char *) Malloc(10000L);
+        if (g_agwb == (char *) 0)
+                er_nomem();
+        fr_reac("words", (unsigned char *) g_agwb, 10000);
+        mg_stp();
+        strPr("***ANAGRAMS***", 5, 8, 0);
+        gamePlWQ();
+        gameCln(g_agwb);
+        g_agwb = (char *) 0;
+}
+
+/* addr: wp_main() (ROM 0x732a).  Reuses g_ltlp as the line table. */
+void
+wp_main()
+{
+        char *  i;
+        short   linecount;
+
+        g_wpdb = (char *) Malloc(2000L);
+        if (g_wpdb == (char *) 0)
+                er_nomem();
+        mg_stp();
+        fr_reac("wordpz.txt", (unsigned char *) g_wpdb, 1536);
+        i = g_wpdb;
+        for (linecount = 0; linecount < 66; linecount = linecount + 1) {
+                g_ltlp[linecount] = i;
+                do {
+                        i = i + 1;
+                } while (*i > 31);
+                while (*i < ' ')
+                        i = i + 1;
+        }
+        g_wpci = 0;
+        strPr("**WORD PUZZLE #  **", 8, 8, 0);
+        gamePlWQ();
+        gameCln(g_wpdb);
+        g_wpdb = (char *) 0;
+}
+
+/* addr: pk_main() (ROM 0x740a) */
+void
+pk_main()
+{
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCr();
+        mg_stp();
+        g_pcbet = 0;
+        g_ppbet = 0;
+        g_pcmon = 400;
+        g_ppmon = 400;
+        g_ppppa = 0;
+        strPr("***POKER***", 5, 8, 0);
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
+}
+
+/* addr: pk_wrMn() (ROM 0x7498, WAR).  Shuffles a 52-card deck with
+   400 random swaps and splits it into the two hands. */
+void
+pk_wrMn()
+{
+        short   a;
+        short   b;
+        short   t;
+        short   i;
+        short   swaps;
+        short   j;
+
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCr();
+        mg_stp();
+        g_pcmon = 26;
+        g_ppmon = 26;
+        g_ppppa = 0;
+        for (i = 0; i < 52; i = i + 1)
+                pk_dsc[i] = i;
+        swaps = 400;
+        while (swaps != 0) {
+                a = rndRng(0, 51);
+                do {
+                        b = rndRng(0, 51);
+                } while (a == b);
+                t = pk_dsc[b];
+                pk_dsc[b] = pk_dsc[a];
+                pk_dsc[a] = t;
+                swaps = swaps - 1;
+        }
+        j = 0;
+        for (i = 0; i < 52; i = i + 2) {
+                pk_ch[j] = pk_dsc[i];
+                pk_ph[j] = pk_dsc[i + 1];
+                j = j + 1;
+        }
+        strPr("***WAR***", 5, 8, 0);
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
+}
+
+/* addr: pk_bjMn() (ROM 0x761e) */
+void
+pk_bjMn()
+{
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCr();
+        mg_stp();
+        g_pcmon = 400;
+        g_ppmon = 400;
+        strPr("***BLACKJACK***", 5, 8, 0);
+        gamePlWQ();
+        gameCln(crd_dat);
+        crd_dat = (short *) 0;
+}
+
+#else   /* !FAITHFUL: the kept other-revision minigames */
+
 /* lcp_lgt: leave the game table for an interrupt event (alarm,
    bathroom, thirst, delivery).  Walks the resident to the kitchen
    sink area, tucks away the game-box + table-setting sprites, and
@@ -3331,3 +3465,5 @@ fail:
         ri = rndRng(0, 5);
         wp_shwm(wp_fail[ri]);
 }
+
+#endif  /* FAITHFUL */

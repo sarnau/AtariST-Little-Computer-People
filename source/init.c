@@ -123,6 +123,16 @@ st_titl()
         t_min    = 0;
 }
 
+/* dbg_prA (ROM 0x8030): dead debug helper the ROM shipped between
+   st_titl and mq_intim -- draws 'A' at (100,8) in colour 0.  Nothing
+   calls it; kept for byte-identity of init.o. */
+
+void
+dbg_prA()
+{
+        prCh(65, 100, 8, 0);
+}
+
 /* mq_intim: in THIS ROM an empty stub (0x804e) -- no Xbtimer call
    exists anywhere in the binary; its ~1.5 KB music engine (0x8cce)
    runs without a Timer-A ISR.  The port KEEPS the other-image
@@ -135,6 +145,9 @@ st_titl()
 void
 mq_intim()
 {
+#ifdef FAITHFUL
+        /* ROM 0x804e: empty. */
+#else
 #ifdef SKIP_MIDI
         /* Test builds: Timer-A jitter breaks frame-hash goldens. */
         (void) 0;
@@ -144,6 +157,7 @@ mq_intim()
         mi_svtv = Setexc(0x4d, -1L);
         Xbtimer(0, 5, 0x28, (long) mq_tick);
 #endif
+#endif  /* FAITHFUL */
 }
 
 /* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
