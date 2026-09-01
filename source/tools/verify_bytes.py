@@ -49,7 +49,7 @@ PROBE      = 24   # prefix length used to hunt a candidate site
 # These are reported as KEPT, not DIVERGENT.
 KEPT_PREFIXES = ('_pk_', '_wp_', '_ag_', '_mq_', '_psg_')
 KEPT_NAMES = {'_mg_wkev', '_lcp_lgt', '_lcp_rgt', '_vst_h20',
-              '_rst_vst', '_moff', '_vqt_att', '_vst_hei', '_ct_clrB'}
+              '_rst_vst', '_moff', '_vqt_att', '_vst_hei'}
 
 
 def is_kept(name):

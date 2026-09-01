@@ -26,9 +26,10 @@ short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };          /* phone_animation @ 0x2B92E */
 short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };            /* fire_animation  @ 0x2B936 */
-short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
+short   g_obdea[4]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_2,
-                           OBJ_DOG_FOOD_BOWL_1 };               /* dog_eating_animation @ 0x2B954 */
+                           OBJ_DOG_FOOD_BOWL_1,
+                           27 };        /* ROM data 0x13584: {51,50,49,27} */
 
 /* Petting-dog sprite frames -- 11-frame array of sprite ids the
    petting animation cycles through (Ghidra sprite_id array
