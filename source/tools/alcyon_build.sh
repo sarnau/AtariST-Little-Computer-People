@@ -44,7 +44,23 @@ esac
 
 # Which files to build?
 if [ -n "${FILES:-}" ]; then
-    TO_BUILD="$FILES"
+    # Asking for a file that is a unity-unit constituent in the active
+    # configuration must rebuild its UNIT instead -- otherwise the
+    # constituent object reappears alongside the unit and the link
+    # gets duplicate symbols.
+    TO_BUILD=""
+    for f in $FILES; do
+        case " $SKIP " in *" $f "*)
+            rm -f "$OUT/${f%.c}.o"
+            if [ -f "$CSRC/tools/stx_units.txt" ]; then
+                u=$(awk -v f="$f" '$1 !~ /^#/ { for (i=2;i<=NF;i++) if ($i==f) print $1 }' \
+                    "$CSRC/tools/stx_units.txt")
+                case " $TO_BUILD " in *" $u "*) ;; *) TO_BUILD="$TO_BUILD $u";; esac
+            fi
+            continue;;
+        esac
+        TO_BUILD="$TO_BUILD $f"
+    done
 else
     TO_BUILD=""
     for c in "$CSRC"/*.c; do

@@ -472,10 +472,15 @@ this build, ALL different from LCP_ORG's:
       *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)
       do{d--;if(!d)break;  (ORG)  vs  while(--d){body;
         body}while(cond)              if(!cond)break;}
-  If this list keeps growing, consider replacing the per-site
-  #ifdefs with one documented macro pair -- ask the maintainer
-  first; CLAUDE.md's "don't invent" rule makes that a judgement
-  call, not a default.
+  **Do NOT mass-apply these rules (tested and reverted
+  2026-09-01).**  Converting all 147 `x = x + 1` for-loop
+  increments to a gated STEP() macro across 31 files moved the
+  count 120 -> 122; gating the ONE loop there was actual evidence
+  for (a_watat) reached the same 122 by itself.  The macro would
+  have committed ~145 loops to a shape confirmed in only about five
+  functions -- precisely the speculative single-token editing that
+  produced the 2026-07-19 incident.  Gate per site, when a fn_diff
+  shows it.
 
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
