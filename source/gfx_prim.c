@@ -128,6 +128,7 @@ short                   row;
    sv_lgb (nestable) and default fill = palette 0xC (light green).
    addr: initVdi() */
 
+#ifdef FAITHFUL
 void
 initVdi()
 {
@@ -138,15 +139,18 @@ initVdi()
         vsf_style(vdihnd, 1);           /* ROM 0x792e: 1, not 8 */
         vsf_color(vdihnd, vdi_colt[0xc]);
 }
+#endif  /* FAITHFUL -- the STX build keeps it in games.c */
 
 /* exitVdi: restore pre-mini-game log-base.
    addr: exitVdi() */
 
+#ifdef FAITHFUL
 void
 exitVdi()
 {
         Setscreen(sv_lgb, (void *)-1L, -1L);
 }
+#endif  /* FAITHFUL -- the STX build keeps it in games.c */
 
 /* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
    addr: draw_pixel @ 0x23930 */

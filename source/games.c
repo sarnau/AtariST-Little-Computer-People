@@ -48,6 +48,28 @@ mg_stp()
         no_keyin = YES;
 }
 
+/* STX grouping: the mini-game window enter/leave helpers live in
+   this object (ag_* and wp_* reach them with bsr).  FAITHFUL keeps
+   them in gfx_prim.c. */
+#ifndef FAITHFUL
+void
+initVdi()
+{
+        sv_lgb = (void *) Logbase();
+        Setscreen(g_dscp, (void *)-1L, -1);     /* rez as word */
+        vswr_mode(vdihnd, 1);
+        vsf_interior(vdihnd, 2);        /* STX: FILL_PATTERN */
+        vsf_style(vdihnd, 8);           /* STX: style 8 */
+        vsf_color(vdihnd, vdi_colt[0xc]);
+}
+
+void
+exitVdi()
+{
+        Setscreen(sv_lgb, (void *)-1L, -1);     /* rez as word */
+}
+#endif  /* !FAITHFUL */
+
 /* plEr: clear a rectangle via VDI v_bar.
    addr: plEr() */
 
