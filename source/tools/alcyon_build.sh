@@ -91,6 +91,30 @@ for ln in lines:
 open(p, 'w').write('\n'.join(out))
 "
 
+    # vdiown.c: inject the hand-assembly vdi_go (ROM 0xd664 -- c168
+    # cannot emit trap #2) at the top of the unit and shorten its
+    # calls to bsr, matching the ROM's in-object layout.
+    if [ "$stem" = "vdiown" ]; then
+        python3 - "$WORK/vdiown.s" <<'PYEOF'
+import sys
+p = sys.argv[1]
+s = open(p).read()
+s = s.replace('jsr _vdi_go', 'bsr _vdi_go')
+inj = """.text
+.globl _vdi_go
+_vdi_go:
+link a6,#-4
+move.l #_vdipb,d1
+moveq #115,d0
+trap #2
+unlk a6
+rts
+"""
+s = s.replace('.text', inj, 1)
+open(p, 'w').write(s)
+PYEOF
+    fi
+
     # as68: assemble.  Runs FROM the work dir so its temp files land there.
     (cd "$WORK" && "$ALCYON_BIN/as68" -l -u "$stem.s") > /dev/null 2>&1 || {
         echo "  MISS $base (as68)"; missed=$((missed + 1)); missed_list="$missed_list $base"; continue;

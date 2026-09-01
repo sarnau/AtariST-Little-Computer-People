@@ -7,6 +7,7 @@
 #include "structs.h"
 #include "enums.h"
 #include <vdibind.h>
+#include "vdiown.h"
 #include <obdefs.h>
 #include "ahouse.h"
 #include "clock.h"
@@ -40,7 +41,8 @@ cl_redrH()
         cl_drwH(t_min, t_hour, COLOR_grey);
 }
 
-/* od_draw: blit background object at (x,y) via vro_cpyfm S_ONLY.
+/* od_draw: blit background object at (x,y) through the game's own
+   vro_cpy binding (ROM 0x97d0 -> 0xd8d2).
    addr: od_draw() */
 
 
@@ -50,26 +52,15 @@ short   g_oiidx;
 short   x;
 short   y;
 {
-        /* Ghidra: `object_tab_mfdb + object_index` (MFDB* pointer
-           arithmetic).  An earlier port used `(char*)g_otmfd + g_oiidx`
-           which treated g_oiidx as a byte offset instead of an array
-           index -- MFDB is 18 bytes so all non-zero object IDs
-           landed misaligned and VDI got junk width/height.  Fixed by
-           indexing directly into the typed MFDB[] array. */
-        {
-                short   pxy[8];
-                pxy[0] = 0;
-                pxy[1] = 0;
-                pxy[2] = g_obtaw[g_oiidx] - 1;
-                pxy[3] = g_obtah[g_oiidx] - 1;
-                pxy[4] = x;
-                pxy[5] = y;
-                pxy[6] = x + g_obtaw[g_oiidx] - 1;
-                pxy[7] = y + g_obtah[g_oiidx] - 1;
-                vro_cpyfm(vdihnd, S_ONLY, pxy,
-                          &g_obtmt[g_oiidx],
-                          &mf_scrp);
-        }
+        vro_cpy(vdihnd, 3,
+                g_oiidx * 20 + (long) g_obtmp,
+                (long) &mf_scrp,
+                0, 0,
+                g_obtaw[g_oiidx] - 1,
+                g_obtah[g_oiidx] - 1,
+                x, y,
+                g_obtaw[g_oiidx] + x - 1,
+                g_obtah[g_oiidx] + y - 1);
 }
 
 /* fillTopR: clear top text strip (rows 0..maxY-1).

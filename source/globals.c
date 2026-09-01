@@ -577,6 +577,9 @@ unsigned char   spr_file[14000];
    the 50 or so records in each file (spritedata_index_table in the
    Python reader tops out at index 0x37). */
 MFDB    g_obtmt[64];
+/* od_draw reads the object-MFDB table through this pointer, exactly
+   as the ROM does (initialized data 0x121b6 -> table in BSS). */
+MFDB *  g_obtmp = g_obtmt;
 MFDB    g_setmt[64];
 
 short   g_obtaw[64];
