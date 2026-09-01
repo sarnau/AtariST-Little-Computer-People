@@ -354,7 +354,12 @@ this build, ALL different from LCP_ORG's:
 - **bsr-vs-jsr call patterns differ throughout**, implying different
   source-file groupings than the port's (as68 shortens same-object
   calls to bsr); the STX build's object boundaries must be
-  recovered from these patterns.
+  recovered from these patterns.  First hard datum: drwLine
+  (0x138d4) reaches sc_sdtb/sc_sdtf (0xe292/0xe310) with bsr.w --
+  one STX object spans at least 0xe292..0x1392x (~22 KB), i.e. the
+  screen helpers, gameLoop region, and the clock cluster were ONE
+  large source file in the STX build.  Mapping the full bsr graph
+  (tools job) should precede further per-function regrouping.
 
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
