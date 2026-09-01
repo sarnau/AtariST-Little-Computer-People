@@ -56,6 +56,7 @@ if [ -n "$AVI" ]; then
         --tos "$TOS_IMG" \
         --fast-forward on \
         --run-vbls "$VBLS" \
+        --auto 'C:\LCP.PRG' \
         --avi-vcodec bmp --avi-file "$AVI" --avirecord \
         > "$LOG" 2>&1
 else
@@ -64,6 +65,7 @@ else
         --tos "$TOS_IMG" \
         --fast-forward on \
         --run-vbls "$VBLS" \
+        --auto 'C:\LCP.PRG' \
         > "$LOG" 2>&1
 fi
 

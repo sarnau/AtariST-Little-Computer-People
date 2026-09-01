@@ -158,8 +158,8 @@ per-site), the od_* frame-id global tables (data 0x11758-0x1177e and
 (unsigned char)->ext.w Alcyon miscompile in sp_lcpf, several real
 logic recoveries (chk_actT hunger gate, a_kitcc chew loop + g_actif,
 dg_mvAn eating-sprite gate, ev_ansP od_med1, sf_sl is open+close
-only -- SOUNDS.LCP is vestigial on ST), and lcp_save/lc_load/sgPlay
-call shapes.
+only in the ROM -- see the SOUNDS.LCP crash note under Known open
+issues), and lcp_save/lc_load/sgPlay call shapes.
 
 Second wave (after the maintainer confirmed LCP_ORG.PRG as the
 reference): stair states hold the planted F3/F3S frames (walk core
@@ -228,38 +228,50 @@ How it was reached (all phases DONE):
     structure matches the ROM's exactly.
 
 The default (kept) build is unaffected: minigames, Timer-A MIDI, and
-the hardened array sizes all remain; 8000-VBL Hatari smoke clean.
+the hardened array sizes all remain (verified with --auto long-run,
+see the SOUNDS.LCP note below).
 
-Current: **308 matched / 50 kept, 95.1% coverage -- the
-function-level campaign is COMPLETE for game code.**  `main` matches ROM 0x1ba (no Dsetpath, no
+Current: **verify_bytes on the FAITHFUL build reports 316 matched /
+0 divergent (99.2% of text; the rest is sub-48-byte stubs it skips)
+-- and whole-file byte-identity makes the function-level stats a
+formality.**  `main` matches ROM 0x1ba (no Dsetpath, no
 initBM call -- bm32or/bm32and stay zero at runtime, the ROM's own
 dead code; ct_clrB lands at ROM-identical 0x42e via same-object bsr).
 `gameTick` matches ROM 0xce28 (carrying mode returns via the restored
 cy_yoff switch helper; getKey's no-key sentinel is 0 in this binary,
 NOT -1 -- the 2026-07-19 incident's polarity belongs to the other
-image).  The one listed "divergent", fl_ltpl, is extent pollution:
-its body matches; symbol-less statics of the kept MIDI engine follow
-it in link order.  Optional future work: recover the ROM's polled
-music engine (0x8cce) and games shell (0x72ac) alongside the kept
-versions.  Runtime smoke + long-run tests REQUIRED before trusting
-the behavior changes (SOUNDS.LCP, tv polylines, stairs, single-buffer
-compositing, vdi_init clear, gameTick Path-B return, key sentinel).
+image).  The ROM's polled music engine (0x8cce) and games
+shell (0x72ac) are byte-recovered in the FAITHFUL build; the kept
+build carries the other-revision versions.  The kept build's
+behavior changes (SOUNDS.LCP, tv polylines, stairs, single-buffer
+compositing, vdi_init clear, gameTick Path-B return, key sentinel)
+are re-verified with test_longrun_stable.sh after risky changes
+(NOTE: run_hatari.sh lacked --auto until 2026-09-01 -- smoke runs
+before that date booted to the desktop and tested nothing).
 
-**OPEN QUESTION for the maintainer -- two Ghidra programs.**
-`LCP.rep` contains TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`), and
-port comments cite addresses from both (main@0x15546, gameTick@0x256a6,
-st_titl@0x16de6, mq_tick 0x1219a vs 0x111b0 -- no single load base can
-reconcile these against LCP_ORG.PRG offsets).  ~280 functions match
-LCP_ORG.PRG byte-for-byte, but some port readings (12-byte parser rows,
-crd_xa as initialized data at 0x2a4fe, the gameTick body) do not exist
-in LCP_ORG.PRG at all and presumably come from the other image.
-Before continuing on the remaining 87 divergent functions (games
-ag_*/wp_*/pk_*, MIDI mq_*/psg_upE, VDI init cluster, main/st_titl,
-gameTic, and the VDIBIND library revision), confirm WHICH binary is
-the porting reference.  Everything committed so far is byte-verified
-against DATA/LCP_ORG.PRG.
+**Two Ghidra programs (RESOLVED 2026-09-01).**  `LCP.rep` contains
+TWO programs (`LCP.PRG.1` and `LCP.PRG.1.1`); port comments citing
+addresses like main@0x15546 / gameTick@0x256a6 / mq_tick@0x1219a come
+from the OTHER, larger revision, not from LCP_ORG.PRG.  The
+maintainer confirmed `DATA/LCP_ORG.PRG` as the porting reference; the
+other image's exclusive features (playable minigames, Timer-A MIDI,
+interactive title) live on as the intentionally-kept default build.
+When reading old Ghidra-address comments, check which image they
+refer to before trusting offsets.
 
 ## Known open issues
+
+- **LCP_ORG.PRG itself crashes on the first sound effect.**  The
+  ROM's sf_sl only opens+closes SOUNDS.LCP; nothing ever writes the
+  mi_ntLp effect table, so sf_irqp dereferences a NULL entry and
+  bus-errors reading address $0 (user-mode reads below $800 are
+  supervisor-only on the ST).  Verified 2026-09-01 by running
+  DATA/LCP_ORG.PRG under Hatari --auto/TOS 1.04: op 3d50 fault at
+  its own sf_irqp+0x64 within 6000 VBLs.  Presumably the pre-crack
+  cp_main loaded the blocks; the crack lost it.  FAITHFUL reproduces
+  the ROM bytes (crash included); the KEPT build restores the
+  SOUNDS.LCP block loader in sf_sl (#ifndef FAITHFUL) so effects
+  play.
 
 - **Real-time crash inside TOS VDI at address error / bus error.**
   Reproduces intermittently under Hatari real-time (never under

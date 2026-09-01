@@ -68,12 +68,18 @@ sfClick()
 
 
 /* sf_sl (ROM 0xb234): opens SOUNDS.LCP and immediately closes it --
-   the ST original never reads the file and nothing in the ROM ever
-   writes the mi_ntLp effect table (its only reference is the read in
-   sf_irqp).  The block-loading loop that used to live here was a
-   port invention; in the original this call is effectively just a
-   "SOUNDS.LCP must exist" check via fOpen's retry-alert loop.
-   addr: sf_sl() */
+   nothing in the ROM ever writes the mi_ntLp effect table (its only
+   reference is the read in sf_irqp).  That makes the ROM's first
+   sound effect a LATENT CRASH: sf_irqp dereferences the NULL
+   mi_ntLp[g_sfcur] and bus-errors reading address $0.  Verified
+   2026-09-01 by running DATA/LCP_ORG.PRG itself under Hatari
+   (--auto, TOS 1.04): identical bus error, op 3d50 at its own
+   sf_irqp+0x64.  Presumably the pre-crack cp_main path loaded the
+   effect blocks; the cracked dump lost that.
+
+   FAITHFUL keeps the ROM's (broken) shape for byte-identity.  The
+   kept build restores the block loader so SFX actually play. */
+#ifdef FAITHFUL
 void
 sf_sl()
 {
@@ -82,6 +88,30 @@ sf_sl()
         fhandle = fOpen("sounds.lcp", 0);
         Fclose(fhandle);
 }
+#else
+void
+sf_sl()
+{
+        short           fhandle;
+        short           index;
+        short           size;
+        short *         block;
+
+        fhandle = fOpen("sounds.lcp", 0);
+        for (index = 0; index < 500; index = index + 1) {
+                fr_read(fhandle, 2L, &size);
+                if (size == 0)
+                        break;
+                block = (short *) Malloc((long) (size + 4));
+                mi_ntLp[index] = (unsigned char *) block;
+                if (block == (short *) 0)
+                        er_nomem();
+                *block = size;
+                fr_read(fhandle, (long) size, block + 1);
+        }
+        Fclose(fhandle);
+}
+#endif  /* FAITHFUL */
 
 void
 sgPlay(filename)
