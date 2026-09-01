@@ -118,18 +118,14 @@ typedef struct {
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
-   12-byte layout confirmed against Ghidra (auto-generated labels at
-   enteredword_to_action[0] show action @ +10, priorityOffset @ +11,
-   struct size 12).  `table[10]` is a per-position bitmask: for each
-   of the 10 position slots, all bits that must be present in the
-   accumulated g_ewb[] before this entry matches.  A sentinel entry
-   with `table[0] == 0xff` terminates the table.  `action` is the
-   ACTION_ID to fire; `priority_offset` nudges the action's queue
-   priority up or down.  Both are single bytes. */
+   14-byte ROM layout (chk_encm @0x94e8 walks rows with muls #14):
+   `table[10]` bitmask bytes, then priority_offset as a WORD at +10,
+   then the ACTION_ID byte at +12; Alcyon pads the size to 14.  A
+   sentinel entry with `table[0] == 0xff` terminates the table. */
 typedef struct {
         unsigned char   table[10];
+        short           priority_offset;
         char            action;
-        char            priority_offset;
 } WORD_TO_ACTION;
 
 /* MFDB is defined in <vdibind.h> (included above) -- do not redeclare. */

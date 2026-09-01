@@ -120,7 +120,7 @@ a_plawr()
 
         pst_arr[0] = STATE_VINYL_REACH_R;
         pst_arr[1] = STATE_VINYL_IDLE;
-        pst_arr[2] = STATE_VINYL_REACH_L;
+        pst_arr[2] = STATE_VINYL_REACH_R;  /* ROM: 40 again, not REACH_L */
         pst_arr[3] = STATE_VINYL_PULL_OUT;
 
         prev_a = prev_b = prev_c = 0;
@@ -166,9 +166,11 @@ a_plawr()
                 ;
 
         while (mi_play != NO) {
-                xres = Giaccess(0, 8);  psg_a = (unsigned char) xres & 0x1f;
-                xres = Giaccess(0, 9);  psg_b = (unsigned char) xres & 0x1f;
-                xres = Giaccess(0, 10); psg_c = (unsigned char) xres & 0x1f;
+                /* ROM: bare word-arg xbios shape here (no 0L pad),
+                   unlike sf_so's long-arg Giaccess writes. */
+                xres = xbios(0x1C, 0, 8);  psg_a = (unsigned char) xres & 0x1f;
+                xres = xbios(0x1C, 0, 9);  psg_b = (unsigned char) xres & 0x1f;
+                xres = xbios(0x1C, 0, 10); psg_c = (unsigned char) xres & 0x1f;
 
                 lcp_st = pst_arr[0];
                 if (prev_a < psg_a || prev_b < psg_b || prev_c < psg_c) {
