@@ -193,15 +193,19 @@ recreated C with the Alcyon toolchain.**  Enablers already in place:
 operands (353 globals mapped -- see rom_data_map.txt) and proves the
 ROM link order IS the port's alphabetical file order
 (rom_link_order.txt).  Remaining phases:
- 1. Faithful-configuration code completeness (-DFAITHFUL): DONE for
-    the games shell (five ROM banner stubs byte-MATCH at exact
-    addresses 0x72ac..0x761e -- the ST original has NO playable
-    minigames), the init.c dead stub 0x8030, and empty mq_intim.
-    REMAINING: the polled music engine (one 1460-B function at
-    0x8cce + five statics; full disassembly and reconstruction notes
-    in tools/rom_midi_engine.asm) and the ~190 B of older-revision
-    library fragments (0xe7d4/0xead2/0xff40/0x10a84).  A FAITHFUL
-    build currently verifies at 314 matched / 96.6% coverage.
+ 1. Code completeness (-DFAITHFUL): **DONE.**  ROM minigame banner
+    stubs, dead stub 0x8030, empty mq_intim, the vestigial music
+    engine (mq_dise 1460/1460 byte-identical; 10-byte PSG_ENVELOPE;
+    Timer-A tail gated out and mq_tick.o dropped via FAITHFUL=1 in
+    alcyon_link.sh), and the ROM's own workstation module
+    (vdilib.c + vdilib_a.s in library position, shadowing VDIBIND's
+    v_opnvwk/vro_cpyfm; a second runtime-patched parameter block
+    vdipb2).  init.c's duplicate a_chfd deleted (aleisure.c a_chefd
+    is the real one).  **The FAITHFUL text segment is SIZE-IDENTICAL
+    to the ROM (70376 bytes) with every function at its exact ROM
+    address**; the ~4.9 KB of differing text bytes are all relocated
+    operands awaiting data/bss layout.  Use tools/prg_diff.py as the
+    scoreboard (currently: data +1172, bss +3996, reloc 109 B off).
  2. Layout: redistribute globals from globals.c into their ROM
     defining objects in ROM data order per rom_data_map.txt; match
     string-literal ordering; drop port-only globals (_stksize etc.).
