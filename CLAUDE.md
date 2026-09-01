@@ -351,15 +351,43 @@ this build, ALL different from LCP_ORG's:
   pushes just the opcode+handle, no 3-arg padding.  LCP_ORG's
   padded opcode+3-args osbind convention does NOT apply here; the
   include/osbind.h shapes must become configuration-dependent.
-- **bsr-vs-jsr call patterns differ throughout**, implying different
-  source-file groupings than the port's (as68 shortens same-object
-  calls to bsr); the STX build's object boundaries must be
-  recovered from these patterns.  First hard datum: drwLine
-  (0x138d4) reaches sc_sdtb/sc_sdtf (0xe292/0xe310) with bsr.w --
-  one STX object spans at least 0xe292..0x1392x (~22 KB), i.e. the
-  screen helpers, gameLoop region, and the clock cluster were ONE
-  large source file in the STX build.  Mapping the full bsr graph
-  (tools job) should precede further per-function regrouping.
+- **bsr-vs-jsr call patterns differ throughout** because the STX
+  build's SOURCE-FILE PARTITION is completely different from the
+  port's.  `source/tools/stx_objmap.py` recovers it wholesale: a
+  bsr from A to B proves everything in [A,B] is one object (as68
+  only shortens same-object calls, and the linker lays each object
+  down contiguously), so merging all bsr intervals bounds the
+  objects.  Result: **20 clusters, and ZERO of the 1426 jsr edges
+  falls inside one** -- the model is airtight.  Independent proof
+  it is real: the library clusters reproduce actual DRI libc source
+  files (`_access,_chmod,_chown` / `_free,_realloc` / `_lseek,_tell`
+  / `__creat,_opena,_openb`).
+
+  The game code is only ~7 objects, all huge:
+
+      0x0012a-0x01586   5.2 KB  mq_inti/mq_extm (MIDI init)
+      0x0230e-0x04004   7.4 KB  (no matches yet)
+      0x0400c-0x073ce  13.3 KB  dog, actions, movement, calendar,
+                                renderx, alerts functions
+      0x073e8-0x0d9ce  26.1 KB  the ENTIRE minigame suite (maps 1:1
+                                onto the port's games.c -- already
+                                a correct STX unit)
+      0x0dece-0x1481c  27.0 KB  render, sprites, delivery, aidle,
+                                asimple, ahouse, init, health,
+                                gfx_prim functions
+      0x14824-0x148e6   194 B   er_write (alerts)
+      0x148fe-0x172e8  10.7 KB  the sprite engine
+
+  **Strategy consequence:** per-function regrouping between .c files
+  is the wrong tool -- each such move was hand-replicating one edge
+  of this partition.  The port should instead build the DEFAULT
+  configuration as ~7 "unity" translation units that #include the
+  constituent .c files in STX order, leaving the individual files
+  (and the FAITHFUL build) untouched.  The moves already committed
+  (sp_spud/sp_flih -> alerts.c, initVdi/exitVdi -> games.c,
+  cl_redrH/cl_drwH/drwLine -> init.c) are all consistent with the
+  recovered partition -- e.g. er_write ends at 0x148e6 and sp_spud
+  starts at 0x148fe, 24 bytes apart.
 
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
