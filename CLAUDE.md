@@ -317,6 +317,24 @@ Tooling: all comparison tools (verify_bytes.py, prg_diff.py,
 fn_diff.py, rom_map.py) now honor `LCP_REF=<path>` to select the
 reference binary; default stays DATA/LCP_ORG.PRG.
 
+First fn_diff findings (sf_sl vs STX 0xdcc4) -- structural rules of
+this build, ALL different from LCP_ORG's:
+- **sf_sl is a REAL SOUNDS.LCP block loader** in the STX revision
+  (fr_read sizes, Malloc per block, store into mi_ntLp at 0x43f7a =
+  Ghidra 0x53f7a - 0x10000, er_nomem on failure) -- final proof the
+  crack destroyed the loading and the kept build's restored loader
+  matches the real original's intent.  The port's loop shape is
+  already close; literals/frame layout differ.
+- **GEMDOS binding lives at text 0x11a** (right after the alcyon2
+  gemstart) and calls use MINIMAL argument shapes -- `Fclose(h)`
+  pushes just the opcode+handle, no 3-arg padding.  LCP_ORG's
+  padded opcode+3-args osbind convention does NOT apply here; the
+  include/osbind.h shapes must become configuration-dependent.
+- **bsr-vs-jsr call patterns differ throughout**, implying different
+  source-file groupings than the port's (as68 shortens same-object
+  calls to bsr); the STX build's object boundaries must be
+  recovered from these patterns.
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
