@@ -263,6 +263,22 @@ interactive title) live on as the intentionally-kept default build.
 When reading old Ghidra-address comments, check which image they
 refer to before trusting offsets.
 
+**Physical second reference recovered (2026-09-01):** the protected
+Pasti image `Little Computer People.stx` (repo root) was extracted
+with `source/tools/stx_extract.py` -- an 80-track single-sided FAT12
+volume whose 32 DATA/ files are all byte-identical to the repo's,
+plus the UNCRACKED `LCP.PRG` of the larger revision (123352 bytes:
+text 104156 / data 12260 / bss 187450), now checked in as
+`DATA/LCP_STX.PRG`.  It carries the playable minigames, an Xbtimer
+(Timer-A) install, and a real (non-stubbed) protection region where
+LCP_ORG.PRG has the crack's 10-byte cp_main stub.  A verify_bytes
+sweep against it matches 84 port functions byte-for-byte but shows
+the two revisions genuinely differ (immediate-vs-global operand
+shapes, bsr-vs-jsr call shapes) -- it is a different build, not a
+relink.  Open lead: LCP_STX.PRG may be the pre-crack parent of the
+other Ghidra image, and may reveal the intact SOUNDS.LCP loading
+that the crack destroyed (see the SFX crash note below).
+
 ## Issue log -- ALL CLOSED (2026-09-01)
 
 Maintainer ruling: with the FAITHFUL build proven byte-identical to
