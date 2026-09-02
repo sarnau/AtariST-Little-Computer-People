@@ -171,6 +171,7 @@ short   handle;
 short   count;
 short * pxy;
 {
+#ifdef FAITHFUL
         short   i;
 
         contrl[0] = 6;
@@ -180,6 +181,16 @@ short * pxy;
         for (i = 0; count * 2 > i; i = i + 1)
                 ptsin[i] = pxy[i];
         vdi_go();
+#else
+        /* STX aims the parameter block at the caller's points. */
+        vdipb[2]  = pxy;
+        contrl[0] = 6;
+        contrl[1] = count;
+        contrl[3] = 0;
+        contrl[6] = handle;
+        vdi_go();
+        vdipb[2]  = ptsin;
+#endif
 }
 
 /* addr: v_gtext() (ROM 0xd7fc) */
@@ -209,6 +220,11 @@ v_bar(handle, pxy)
 short   handle;
 short * pxy;
 {
+        /* STX points the parameter block's ptsin entry at the
+           caller's array for the duration of the call instead of
+           copying the points, then restores it -- the same trick
+           vdilib.c's vro_cpyfm uses. */
+#ifdef FAITHFUL
         contrl[0] = 11;
         contrl[1] = 2;
         contrl[3] = 0;
@@ -219,6 +235,16 @@ short * pxy;
         ptsin[2]  = pxy[2];
         ptsin[3]  = pxy[3];
         vdi_go();
+#else
+        vdipb[2]  = pxy;
+        contrl[0] = 11;
+        contrl[1] = 2;
+        contrl[3] = 0;
+        contrl[5] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        vdipb[2]  = ptsin;
+#endif
 }
 
 /* addr: vroCpyD() (ROM 0xd8d2) -- discrete-argument vro_cpyfm. */
@@ -237,6 +263,10 @@ short   dy1;
 short   dx2;
 short   dy2;
 {
+        /* LCP_ORG writes the parameter block directly; STX builds a
+           pxy array on the stack and defers to the array-form
+           vro_cpyfm in vdilib.c. */
+#ifdef FAITHFUL
         contrl[0]  = 109;
         contrl[1]  = 4;
         contrl[3]  = 1;
@@ -255,4 +285,17 @@ short   dy2;
         ptsin[6] = dx2;
         ptsin[7] = dy2;
         vdi_go();
+#else
+        short   pxy[8];
+
+        pxy[0] = sx1;
+        pxy[1] = sy1;
+        pxy[2] = sx2;
+        pxy[3] = sy2;
+        pxy[4] = dx1;
+        pxy[5] = dy1;
+        pxy[6] = dx2;
+        pxy[7] = dy2;
+        vro_cpyfm(handle, mode, pxy, src, dst);
+#endif
 }

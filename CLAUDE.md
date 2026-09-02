@@ -452,6 +452,16 @@ this build, ALL different from LCP_ORG's:
   separate object and skips the injection; alcyon_link.sh adds
   vdiown_a.o only when not FAITHFUL.
 
+  v_bar and v_pline go further: instead of copying points into ptsin
+  they AIM the parameter block at the caller's array for the call and
+  restore it afterwards (vdipb[2] = pxy; ... vdipb[2] = ptsin), the
+  same trick vdilib.c's vro_cpyfm already used.  vroCpyD is likewise
+  only a wrapper in STX -- it builds a pxy[8] on the stack and defers
+  to the array-form vro_cpyfm rather than writing contrl itself.
+  Also: stx_addrs resolves _vdi_go and _vdi_go2 to the SAME address
+  (0x1772e), so STX has one trap dispatcher where the port carries
+  two.
+
   **The port's file split does not match STX's.**  a_gesff (afood.c)
   sits at 0xebf8, BETWEEN two adoors.c functions -- a_clocd 0xeb54
   and a_opecf 0xec22 -- which is why its call to a_opecf is a short
