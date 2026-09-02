@@ -724,6 +724,30 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
+**Status (2026-09-02): 199 matched / 162 divergent, 33 278 of
+104 156 STX text bytes (32.0%) proven byte-identical.**  The FAITHFUL
+build stays byte-identical to LCP_ORG.PRG after every step -- run
+`ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
+tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG
+DATA/LCP_ORG.PRG` before every commit.
+
+  Object membership is as much of the work as source shape.  A call
+  that is `jsr` in the port but `bsr` in STX means the callee is in
+  the STX object; a `bsrw` where STX has `bsrs` means the callee must
+  be placed immediately after the caller.  Both are fixed by moving
+  the function into `parts/` and including it at the right point in
+  the unity file (see the `parts/` list in stx_u1.c / stx_u2.c /
+  stx_u3.c).  Discoveries so far: agames.c, sfClick, tv_scrc,
+  sp_ss02, a_toggt, tt_on, tt_off, td_line, strPr and prCh belong to
+  the STX objects, and fillTopR belongs to the 0x400c object rather
+  than the 0xdece one that holds the rest of render.c.
+
+  **Extraction hazard:** a regex that stops at the first column-0 `}`
+  can still sweep the NEXT function (or a following `#ifdef FAITHFUL
+  #include "parts/..."` stub, whose relative path then no longer
+  resolves).  After every extraction, check that the new parts/ file
+  defines exactly one function and contains no `#include "parts/...`.
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
