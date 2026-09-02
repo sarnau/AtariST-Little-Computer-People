@@ -48,6 +48,7 @@
 #include "parts/showLcp.c"
 #include "parts/sp_ssco.c"   /* 0x1203a */
 #include "parts/sp_ss02.c"   /* 0x12108 */
+#include "parts/cl_drini.c" /* 0x133b4 -- far from cl_redrH */
 #include "abathrm.c"
 #include "agames.c"   /* a_plaag 0x11860 */
 #include "parts/a_opcfc.c" /* 0x11d9a, right after a_plaag */
@@ -65,7 +66,6 @@
 /* The clock/line group: LCP_STX links these in this object.
    cl_drini 0x133b4, cl_redrH 0x137d4, drwLine 0x138d4,
    drwPixel 0x13930. */
-#include "parts/cl_drini.c" /* 0x133b4 */
 #include "parts/cl_redrH.c" /* 0x137d4 */
 #include "parts/cl_drwH.c"
 #include "parts/drwLine.c"  /* 0x138d4 */
