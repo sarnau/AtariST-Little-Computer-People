@@ -39,6 +39,7 @@ char    byte;
 /* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
    addr: psg_cpE() */
 void
+#ifdef FAITHFUL
 psg_cpE(src, dest, count)
 unsigned char * src;
 unsigned char * dest;
@@ -51,6 +52,21 @@ short           count;
                 count = count - 1;
         }
 }
+#else
+/* STX: a long count, tested by post-decrement, pointers stepped in
+   place. */
+psg_cpE(src, dest, count)
+unsigned char * src;
+unsigned char * dest;
+long            count;
+{
+        while (count--) {
+                *dest = *src;
+                src++;
+                dest++;
+        }
+}
+#endif
 
 /* ST quirk: the 1985 source stores `val` into giselect and `reg` into
    giwrite (YM2149 two-stage latch).  Preserved verbatim.
