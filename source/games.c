@@ -376,6 +376,13 @@ mg_wkev()
                 deal_kc(key);
         return key;
 }
+
+/* rndRng -> parts/rndRng.c: LCP_STX links it here (0x74fc), right
+   after mg_wkev, so the minigames reach it with bsr.  random.c keeps
+   it for FAITHFUL. */
+#ifndef FAITHFUL
+#include "parts/rndRng.c"
+#endif
 #endif
 
 /* ag_csb: clear the bottom info bar (5,62)-(319,75).
@@ -503,6 +510,7 @@ ag_matc(a, b)
 char *  a;
 char *  b;
 {
+#ifdef FAITHFUL
         BOOL16  mismatch;
         char    ca;
         char    cb;
@@ -519,6 +527,24 @@ char *  b;
         if (mismatch != NO || *a != '\0' || *b != '\0')
                 return 0;
         return 1;
+#else
+        /* STX keeps no character temporaries: it compares through the
+           post-increments, which makes Alcyon save and restore the
+           condition codes around them (move sr,d0 / move d0,ccr).
+           Its frame is -8, with an unused short ahead of the flag. */
+        short   unused;
+        short   mismatch;
+
+        mismatch = 0;
+        while (*a != '\0' && *b != '\0') {
+                if (*a++ != *b++)
+                        mismatch = 1;
+        }
+        if (mismatch == 1 || *a != '\0' || *b != '\0')
+                return 0;
+        else
+                return 1;
+#endif
 }
 
 /* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
@@ -529,6 +555,7 @@ char *  b;
 void
 ag_ssw()
 {
+#ifdef FAITHFUL
         short   idx;
         short   pos;
         short   n;
@@ -564,6 +591,43 @@ ag_ssw()
                 }
         }
         ag_dwl(g_agscw, COLOR_green);
+#else
+        /* STX's frame is -18: no `idx`, one counter reused for the
+           copy index and the shuffle round, and a local copy of the
+           word length that the shuffle reads instead of g_agwol. */
+        short   pos;
+        short   len;
+        short   ia;
+        short   ib;
+        char    tmp;
+        char *  wp;
+
+        g_agorw = g_agwb + rndRng(0, 0x95) * 11;        /* 0..149 */
+        pos     = 0;
+        for (wp = g_agorw; *wp > ' ' && *wp != '.'; ) {
+                /* index first: the base folds into add.l #base,An */
+                *(pos + g_agscw) = *wp;
+                wp++;
+                pos++;
+        }
+        g_agscw[pos] = '\0';
+        *wp          = '\0';
+        len     = pos;
+        g_agwol = len;
+
+        while (ag_matc(g_agscw, g_agorw) != 0) {
+                pos = 0;
+                while (rndRng(10, 0x14) > pos) {
+                        ia  = rndRng(0, len - 1);
+                        ib  = rndRng(0, len - 1);
+                        tmp = g_agscw[ib];
+                        g_agscw[ib] = g_agscw[ia];
+                        g_agscw[ia] = tmp;
+                        pos++;
+                }
+        }
+        ag_dwl(g_agscw, COLOR_green);
+#endif
 }
 
 /* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
