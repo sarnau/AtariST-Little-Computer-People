@@ -48,6 +48,11 @@ mg_stp()
         no_keyin = YES;
 }
 
+/* LCP_ORG keeps plEr here; the STX build includes it further down. */
+#ifdef FAITHFUL
+#include "parts/plEr.c"
+#endif
+
 /* STX grouping: the mini-game window enter/leave helpers live in
    this object (ag_* and wp_* reach them with bsr).  FAITHFUL keeps
    them in gfx_prim.c. */
@@ -68,28 +73,21 @@ exitVdi()
 {
         Setscreen(sv_lgb, (void *)-1L, -1);     /* rez as word */
 }
-#endif  /* !FAITHFUL */
 
-/* plEr: clear a rectangle via VDI v_bar.
-   addr: plEr() */
+/* STX places wp_shwm between exitVdi (0x76d0) and the anagram
+   helpers (ag_cwda 0x7e9c). */
+/* wp_shwm: word-puzzle status message in green at (8,58).
+   addr: word_puzzle_show_status_message() */
 
 void
-plEr(x1, y1, x2, y2)
-short   x1;
-short   y1;
-short   x2;
-short   y2;
+wp_shwm(msg)
+char *  msg;
 {
-        short   rect[4];
-
-        rect[0] = x1;
-        rect[1] = y1;
-        rect[2] = x2;
-        rect[3] = y2;
-        initVdi();
-        v_bar(vdihnd, rect);
-        exitVdi();
+        plEr(0, 50, 319, 59);
+        strPr(msg, 8, 58, COLOR_green);
 }
+#endif  /* !FAITHFUL */
+
 
 /* Shared cleanup at exit from any game. */
 
@@ -497,6 +495,13 @@ ag_intr()
         strPr("See if you can ",   5, 41, COLOR_black);
         strPr("guess what it is.", 5, 49, COLOR_black);
 }
+
+/* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
+   at 0x7f84); see parts/plEr.c. */
+#ifndef FAITHFUL
+#include "parts/plEr.c"
+#endif
+
 
 /* ag_matc: character-by-character equality test for two C strings.
    Preserves 1985 shape: walks both strings after mismatch, reports
@@ -3309,16 +3314,6 @@ cleanup:
         moff();
 }
 
-/* wp_shwm: word-puzzle status message in green at (8,58).
-   addr: word_puzzle_show_status_message() */
-
-void
-wp_shwm(msg)
-char *  msg;
-{
-        plEr(0, 50, 319, 59);
-        strPr(msg, 8, 58, COLOR_green);
-}
 
 /* wp_rtmp: render puzzle template with player answers substituted for '@'.
    Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at

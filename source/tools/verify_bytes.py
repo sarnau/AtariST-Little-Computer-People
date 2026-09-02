@@ -186,6 +186,21 @@ def main():
         if want and name.lstrip('_') not in want and name not in want:
             continue
         size = bounds[k + 1][0] - off
+        # A `static` function emits no symbol, so the naive
+        # symbol-to-symbol extent swallows it and the comparison
+        # fails on bytes that are not this function's ("extent
+        # pollution").  Alcyon opens every function with
+        # `link a6,#-N` (0x4e56), so stop at the first such prologue
+        # after this function's own -- that is the true end.
+        if size > 4 and ptext[off:off + 2] == b'\x4e\x56':
+            p = off + 4
+            lim = off + size
+            while p + 2 <= lim:
+                if ptext[p:p + 2] == b'\x4e\x56' and \
+                        ptext[p - 2:p] in (b'\x4e\x75', b'\x4e\x71'):
+                    size = p - off
+                    break
+                p += 2
         if size <= 0:
             continue
         code = ptext[off:off + size]

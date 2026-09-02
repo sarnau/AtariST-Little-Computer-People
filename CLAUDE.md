@@ -490,6 +490,27 @@ this build, ALL different from LCP_ORG's:
   versions also use `char str[10]` plus a `short rem` temp and carry
   no (char)/(int) casts at all.
 
+  **Function ORDER inside an object matters** (and is measurable):
+  a call is bsr.s only within +-128 bytes, so ordering shows up as
+  bsr.s-vs-bsr.w.  plEr's sole divergence was exactly that -- STX
+  puts it at 0x86e0, past the anagram helpers, ~4 KB from initVdi,
+  where the port had it 40 bytes away.  Moving it (via parts/,
+  because plEr is shared and FAITHFUL needs it in LCP_ORG's spot)
+  fixed it.  Known games-object order from matched addresses:
+  mg_stp 0x759c < vst_h20 0x75dc < initVdi 0x764e < exitVdi 0x76d0
+  < wp_shwm 0x7c78 < ag_cwda 0x7e9c < ag_cswa < ag_cgpa < ag_csb
+  0x7f4a < ag_intr 0x7f84 < plEr 0x86e0 < pk_awp 0xad26 < pk_dppm
+  < pk_dpot < pk_pmsg 0xb0aa < pk_actd 0xb138.
+
+  **verify_bytes extent fix (2026-09-01).**  A `static` function
+  emits no symbol, so the old symbol-to-symbol extent swallowed it
+  and reported the PRECEDING function divergent on bytes that were
+  not its own.  Extents are now additionally bounded by the next
+  `link a6` prologue that follows an rts/nop, which is the real
+  function end.  That alone converted two standing false negatives
+  (exitVdi, wp_shwm) into matches, so counts before and after this
+  change are not directly comparable.
+
   Recurring source-shape rules recovered so far, all gated:
       i = i + 1            (ORG)  vs  i++            (STX)
       *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)
