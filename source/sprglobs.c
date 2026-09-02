@@ -242,18 +242,12 @@ short   g_hsmas[LCP_BODY_DEST_WORDS];        /* sp_lcpf dest: head mask */
    the horizontal-flip path in sprite_lcp_flip when the head faces
    the opposite direction from the body. */
 short   g_hsmif         = NO;
-/* Points to the loaded PEx.LCP frame table; filled by al_locs.
-   FAITHFUL builds alias this onto pex_name (see sprglobs.h). */
-#ifndef FAITHFUL
-short * pex_ptr;
-#endif
-/* Points to hshdbuf; base of the dilated head-frame silhouettes
-   produced by sprite_lcp_build_all_head. */
-short * hd_shp;
-/* hd_shp buffer (Ghidra 0x4B9D2, 66 * 84 = 5544 bytes):
-   destination for sprite_lcp_build_all_head's dilation of the raw
-   168-byte head frames from the PEx.LCP file. */
-short   hshdbuf[66 * (LCP_BODY_SHAPE_SIZE / 2)]; /* one short per 2 shape bytes */
+/* The loaded PEx.LCP frame table and the dilated head silhouettes are
+   ARRAYS, not pointers: LCP_STX indexes them with an immediate base
+   (muls #168 / muls #84 then add.l #base), exactly like body_ptr and
+   body_shp. */
+unsigned char   pex_ptr[66][168];       /* LCP_BODY_FRAME_SIZE */
+unsigned char   hd_shp[66][84];         /* LCP_BODY_SHAPE_SIZE */
 /* Ghidra head_anim_delay_countdown @ 0x2ba2a = 1. */
 short   g_hadec                         = 1;
 

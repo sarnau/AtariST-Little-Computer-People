@@ -20,8 +20,8 @@ sp_lchu()
                     (g_hsfra & 0x7f);
 
         /* Same 168-src/84-dest stride as sp_updb. */
-        sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * (long) LCP_BODY_FRAME_SIZE),
-                (short *) ((char *) hd_shp + (long) headIndex * (long) LCP_BODY_SHAPE_SIZE),
+        sp_lcpf((short *) pex_ptr[headIndex],
+                (short *) hd_shp[headIndex],
                 g_hsbuf, g_hsmas,
                 2, 21, g_hsmif, 0);
 

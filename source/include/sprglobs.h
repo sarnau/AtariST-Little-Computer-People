@@ -128,19 +128,8 @@ extern short subAniC;
 extern short g_hsbuf[];
 extern short g_hsmas[];
 extern short g_hsmif;
-#ifdef FAITHFUL
-/* The ROM has no separate pex pointer variable: al_locs stores the
-   loaded-frame pointer over the first 4 bytes of the pex_name
-   filename (data 0x11798), which is never read as a name again.
-   pex_namP truncates to the same 8-char symbol (_pex_nam) as
-   pex_name under Alcyon, aliasing the two on purpose. */
-extern short * pex_namP;
-#define pex_ptr pex_namP
-#else
-extern short* pex_ptr;
-#endif
-extern short* hd_shp;
-extern short hshdbuf[];
+extern unsigned char pex_ptr[][168];    /* LCP_BODY_FRAME_SIZE */
+extern unsigned char hd_shp[][84];      /* LCP_BODY_SHAPE_SIZE */
 extern short g_hadec;
 extern short mood_hfo[];
 extern short hd_xoff[];

@@ -503,6 +503,30 @@ sp_imfs()
    addr: sp_lcp_build_all_body() */
 
 
+/* STX order: sp_lbal (0x167b0) is followed directly by sp_lbbd
+   (0x1682e, a bsr.s target) and then sp_lbhd (0x169b4). */
+void
+sp_lbal()
+{
+        /* One local: STX subscripts the four arrays directly instead
+           of walking char* accumulators. */
+        short   index;
+
+        for (index = 0; index < 98; index++)
+                sp_lbbd((unsigned short *) body_ptr[index],
+                        (unsigned short *) body_shp[index], 21);
+        for (index = 0; index < 66; index++)
+                sp_lbhd((unsigned short *) pex_ptr[index],
+                        (unsigned short *) hd_shp[index], 21);
+}
+
+/* sp_lbhd: dilate 21-row head frame.  Same packing as sp_lbbd but:
+   start with mask = 0xFFFFFFFF, shrink from bit 31 down and bit 0 up
+   until the next bit hits set img pixels -- convex-hull outline plus
+   1 bit slack.  Then vertical-OR merge (opposite direction to sp_lbbd).
+   addr: sp_lcp_build_all_head() */
+
+
 void
 sp_lbbd(src, dest, height)
 unsigned short *src;
@@ -550,12 +574,8 @@ short           height;
         (void) dp;
 }
 
-/* sp_lbhd: dilate 21-row head frame.  Same packing as sp_lbbd but:
-   start with mask = 0xFFFFFFFF, shrink from bit 31 down and bit 0 up
-   until the next bit hits set img pixels -- convex-hull outline plus
-   1 bit slack.  Then vertical-OR merge (opposite direction to sp_lbbd).
-   addr: sp_lcp_build_all_head() */
-
+/* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
+   addr: sp_lcp_build_all() */
 
 void
 sp_lbhd(src, dest, height)
@@ -597,35 +617,5 @@ short           height;
                 dest[0] = dest[2] | dest[0];
                 dest[1] = dest[3] | dest[1];
                 dest = dest + 2;
-        }
-}
-
-/* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
-   addr: sp_lcp_build_all() */
-
-void
-sp_lbal()
-{
-        short   index;
-        char *  src_ptr;
-        char *  dst_ptr;
-
-        /* Walking char* accumulators (not body_ptr + index * 168):
-           Alcyon miscompiled the (short*) + (int * short) form. */
-        src_ptr = (char *) body_ptr;
-        dst_ptr = (char *) body_shp;
-        for (index = 0; index < 98; index = index + 1) {
-                sp_lbbd((unsigned short *) src_ptr,
-                        (unsigned short *) dst_ptr, 21);
-                src_ptr = src_ptr + LCP_BODY_FRAME_SIZE;
-                dst_ptr = dst_ptr + LCP_BODY_SHAPE_SIZE;
-        }
-        src_ptr = (char *) pex_ptr;
-        dst_ptr = (char *) hd_shp;
-        for (index = 0; index < 66; index = index + 1) {
-                sp_lbhd((unsigned short *) src_ptr,
-                        (unsigned short *) dst_ptr, 21);
-                src_ptr = src_ptr + LCP_BODY_FRAME_SIZE;
-                dst_ptr = dst_ptr + LCP_BODY_SHAPE_SIZE;
         }
 }

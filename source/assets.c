@@ -134,13 +134,8 @@ long            max_b;
 
 /* body.lcp @ 0x3f8b0 = 20160 B, pex_lcp_file @ 0x4d2da = 11088 B
    (168 bytes/frame, sp_lcpf w=2/h=21). */
-#ifdef FAITHFUL
-static unsigned char    body_buf[20000];        /* ROM bss: flat 20000 B */
-static unsigned char    pex_buf[12000];         /* ROM bss: flat 12000 B */
-#else
-static unsigned char    body_buf[120][LCP_BODY_FRAME_SIZE];
-static unsigned char    pex_buf[72][LCP_BODY_FRAME_SIZE];   /* >= ROM's 12000-byte cap */
-#endif
+/* LCP_STX reads both files straight into the global frame arrays
+   (body_ptr / pex_ptr), so there are no staging buffers. */
 
 void
 al_locs()
@@ -150,15 +145,8 @@ al_locs()
         char    pex_filename[8];        /* "PEn.LCP\0" */
         short   which;
 
-        /* ROM passes round buffer caps, not exact file sizes. */
-#ifdef FAITHFUL
-        al_loal("body.lcp", (unsigned char *) body_buf, 20000L);
-        body_ptr    = (short *) body_buf;
-        body_shp  = bshdbuf;
-#else
-        /* STX reads straight into the global array. */
+        /* Round buffer caps, not exact file sizes. */
         al_loal("body.lcp", (unsigned char *) body_ptr, 20000L);
-#endif
 
         which = lcp.character_sprite_id;
         if (which < 2 || which > 6)
@@ -173,9 +161,7 @@ al_locs()
         pex_filename[6] = 'P';
         pex_filename[7] = 0;
 
-        al_loal(pex_filename, (unsigned char *) pex_buf, 12000L);
-        pex_ptr    = (short *) pex_buf;
-        hd_shp = hshdbuf;
+        al_loal(pex_filename, (unsigned char *) pex_ptr, 12000L);
 }
 
 /* unScn: decode .SCN screen image into out_wds (16-bit words).
