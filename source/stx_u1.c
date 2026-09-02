@@ -58,6 +58,11 @@
 #include "parts/rnd.c"
 
 /* save.c straddles too: fOpen and fr_read close this object. */
+/* main.c straddles: gameLoop is in this object, between lc_load
+   and chk_actT. */
+#include "parts/gameLoop.c"   /* 0x5c76 */
+#include "parts/chk_actT.c"   /* 0x5ce2 -- bsr.s from gameLoop */
+
 #include "parts/fOpen.c"      /* 0x730e */
 #include "parts/fr_read.c"    /* 0x736c */
 

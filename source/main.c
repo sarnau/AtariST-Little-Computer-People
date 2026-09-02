@@ -40,33 +40,10 @@
 #include "tick.h"
 #include "tick_tables.h"
 
-/* gameLoop -- verified against Ghidra `endless_game_loop`.
-   main() calls it as the final step (Ghidra step 40), matching the
-   Ghidra decompile's structure and control flow one-for-one. */
-
-#include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
-
-
-void
-gameLoop()
-{
-        if (g_lcldd != 0) {
-                hs_posXY(POS_TOP_STUDY_DOOR, &lcp_x, &lcp_y);
-                lcp_y = lcp_y - 3;
-                lcp_x = lcp_x - 10;
-                lcp_std(NO, NO);
-        }
-        if (cprot_r != 0) {
-                g_spdc = 5;
-                for (;;) {
-                        gameTick(0);
-                        chk_actT();
-                }
-        }
-
-        for (;;)
-                a_sleep(-1);
-}
+/* gameLoop -> parts/gameLoop.c (STX: 0x5c76, in the 0x400c object between lc_load and chk_actT). */
+#ifdef FAITHFUL
+#include "parts/gameLoop.c"
+#endif
 
 #ifndef HOST
 /* _stksize -- consulted by Alcyon's gemstart.o at boot to decide the

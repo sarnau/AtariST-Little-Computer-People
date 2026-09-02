@@ -27,7 +27,11 @@ extern short g_trac;
 extern short lcp_x;
 extern short lcp_y;
 extern BOOL16 g_lcldd;
+#ifdef FAITHFUL
 extern short cprot_r;
+#else
+extern long cprot_r;
+#endif
 extern short g_spdc;
 extern BOOL16 alarm_p;
 extern short lcp_watr;

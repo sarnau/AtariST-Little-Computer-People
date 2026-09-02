@@ -46,7 +46,11 @@ short   g_trac                  = ACTION_NONE;
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
 BOOL16  g_lcldd                      = 0;
+#ifdef FAITHFUL
 short   cprot_r           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
+#else
+long    cprot_r           = 0;      /* STX tests it with tst.l */
+#endif
 short   g_spdc              = 5;
 
 BOOL16  alarm_p       = NO;
