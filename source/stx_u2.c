@@ -77,6 +77,9 @@
 #include "parts/cl_drwH.c"
 #include "parts/drwLine.c"  /* 0x138d4 */
 #include "parts/drwPixel.c" /* 0x13930 */
+#include "parts/a_lists.c"  /* 0x1398c */
+#include "parts/a_playp.c"  /* 0x13a62 */
+#include "parts/rp_anim.c"  /* 0x13aec */
 #include "parts/a_toggt.c"  /* 0x13bb2 */
 #include "parts/tt_on.c"    /* 0x13bc8 */
 #include "parts/tt_off.c"   /* 0x13c1e */

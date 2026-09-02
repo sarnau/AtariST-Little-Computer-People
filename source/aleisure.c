@@ -30,108 +30,15 @@
 #include "walk.h"
 
 
-/* a_lists: pick a random .sng file and start it playing.
-   Uses lcp_food as a modulo index (1985 code reused the field).
-   addr: a_lists() */
-
-void
-a_lists()
-{
+/* a_lists -> parts/a_lists.c (STX: 0x1398c, right after drwPixel). */
 #ifdef FAITHFUL
-        short   result;
-        short   index;
-        _DTA *   dta_ptr;
-        char *  filename;
-        short   i;
-#else
-        /* STX: link #-12 -- a temporary, index (reused as the '.'
-           scan counter) and the name pointer. */
-        short   tmp;
-        short   index;
-        char *  filename;
+#include "parts/a_lists.c"
 #endif
 
-        if (lcp_recP != NO)
-                return;
-
-        hs_posXY(POS_TOP_DANCE_FLOOR,
-                              &g_wtx, &g_wty);
+/* a_playp -> parts/a_playp.c (STX: 0x13a62, right after a_lists). */
 #ifdef FAITHFUL
-        result = lcp_wkD();
-        if (result != 0)
-#else
-        if (lcp_wkD() != 0)
+#include "parts/a_playp.c"
 #endif
-                return;
-
-        gameTick(2);
-        li_loor();
-        lcp_recP = YES;
-
-#ifdef FAITHFUL
-        index = rndRng(0, lcp_food - 1) + 1;
-        Fsfirst("*.sng", 0L);
-        while ((index = index - 1) != 0)
-                Fsnext();
-        dta_ptr = (_DTA *) Fgetdta();
-        filename = dta_ptr->d_fname;
-        for (i = 0; filename[i] != '.'; i = i + 1)
-                ;
-        filename[i + 4] = '\0';
-#else
-        tmp = rndRng(0, lcp_food - 1);
-        index = tmp + 1;
-        Fsfirst("*.sng", 0);
-        while (--index != 0)
-                Fsnext();
-        filename = ((_DTA *) Fgetdta())->d_fname;
-        for (index = 0; filename[index] != '.'; index++)
-                ;
-        filename[index + 4] = '\0';
-#endif
-        sgPlay(filename);
-}
-
-/* a_playp: stop a currently-playing record so the resident can start
-   writing/typing.  Walks to dance floor, drains MIDI buffer, frees it.
-   addr: a_playp() */
-
-void
-a_playp()
-{
-        /* STX has no local: the walk result is tested in place. */
-#ifdef FAITHFUL
-        short   result;
-#endif
-
-        if (lcp_recP == NO)
-                return;
-
-        hs_posXY(POS_TOP_DANCE_FLOOR,
-                              &g_wtx, &g_wty);
-#ifdef FAITHFUL
-        result = lcp_wkD();
-        if (result != 0)
-                return;
-#else
-        if (lcp_wkD() != 0)
-                return;
-#endif
-
-        gameTick(2);
-
-        if (mi_play != NO) {
-                mq_inis(mi_sbuf, g_momap);
-                while (mi_play != NO)
-                        ;
-        }
-        li_loor();
-        lcp_recP = NO;
-        if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
-                mi_sbuf = (char *) 0;
-        }
-}
 
 /* a_plawr: browse vinyl shelf, play a random .org file.  Animation is
    amplitude-reactive: poll PSG channel volumes via Giaccess and pick
