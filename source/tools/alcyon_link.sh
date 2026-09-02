@@ -127,9 +127,21 @@ else
     OBJS="$OBJS vdiown_a.o psg_asm.o"   # STX: vdi_go + PSG asm
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
-LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' ' ',')
+# LCP_STX contains no LIBF code: its __pftoa/__petoa call _ftoa and
+# _etoa at address 0, i.e. the 1985 link left them UNRESOLVED (the
+# %f/%e printf conversions are never reached).  The default build
+# reproduces that -- gemlib without libf, linked with UNDEFINED so
+# link68 resolves the two dangling externals to 0 instead of failing.
+if [ "${FAITHFUL:-0}" = "1" ]; then
+    TAIL="gemlib.a libf gemlib.a libf"
+    LINKOPT="[PRGFLAGS[0],COMMAND[lcp_link.cmd]]"
+else
+    TAIL="gemlib.a gemlib.a"
+    LINKOPT="[PRGFLAGS[0],UNDEFINED,COMMAND[lcp_link.cmd]]"
+fi
+LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o $TAIL" | tr -s ' ' ',')
 echo "lcp.68k=$LIST" > lcp_link.cmd
-"$ALCYON_BIN/link68" "[PRGFLAGS[0],COMMAND[lcp_link.cmd]]" 2>&1 | tail -5 || true
+"$ALCYON_BIN/link68" "$LINKOPT" 2>&1 | tail -5 || true
 
 # 4b. FAITHFUL: unstripped side link -- bss_remap.py resolves the
 #     rom_bss_layout.tsv symbol keys against its symbol table.

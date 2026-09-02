@@ -338,6 +338,23 @@ Tooling: all comparison tools (verify_bytes.py, prg_diff.py,
 fn_diff.py, rom_map.py) now honor `LCP_REF=<path>` to select the
 reference binary; default stays DATA/LCP_ORG.PRG.
 
+**The library boundaries (maintainer, 2026-09-02).**  In LCP_STX
+everything BEFORE mq_skip (0x12a) is runtime library -- alcyon2's
+GEMSTART.O plus the trap bindings at 0x11a -- and everything from
+vswr_mode (0x1733a) on is library too: the VDI bindings, AES, stdio,
+string and math.  So the game's own code is 0x12a-0x1733a, 94 736 of
+the 104 156 text bytes; the other 9 420 come from the link.  Both
+library regions already match, with ONE exception, now resolved:
+
+  **LCP_STX has no LIBF.**  Its __pftoa/__petoa call _ftoa and _etoa
+  at address ZERO -- the 1985 link simply left the two externals
+  unresolved (the %f/%e conversions are unreachable in this program).
+  alcyon_link.sh reproduces that for the default build: gemlib without
+  libf, linked with link68's `UNDEFINED` option so the danglers
+  resolve to 0 instead of failing the link.  That removed 2 102 bytes
+  of float formatter the original never had, and with it 17 divergent
+  functions.  FAITHFUL keeps libf -- LCP_ORG does contain it.
+
 Locating a divergent function is its own problem: verify_bytes hunts
 with the first 24 bytes and gives up when the prologue differs.  Four
 tools solve it:
@@ -812,8 +829,9 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 253 matched / 104 divergent, 41 082 of
-104 156 STX text bytes (39.4%) proven byte-identical.**  The FAITHFUL
+**Status (2026-09-02): 254 matched / 86 divergent, 41 206 of
+104 156 STX text bytes (39.6%) proven byte-identical -- 43.5% of the
+94 736 bytes that are the game's own code.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
 tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG
