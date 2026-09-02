@@ -21,7 +21,6 @@ extern unsigned char* mq_popl();
 extern short mq_rmev();
 extern void mq_snof();
 extern void mq_expN();
-extern void mq_spgm();
 extern void mq_qnne();
 extern short mq_pars();
 extern void mq_stop();

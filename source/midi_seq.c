@@ -375,27 +375,6 @@ short   value;
    shared physical channels only get one PC per song load.
    addr: mq_sepc() */
 
-#ifdef FAITHFUL
-void
-mq_sepc(index)
-short   index;
-{
-        short   physical;
-
-        physical = mi_chmap[index] & 0xf;
-        if (g_mcpro[physical] == mi_pgmap[index])
-                return;
-        if (g_moen == NO)
-                return;
-
-        g_meve[0] = (mi_chmap[index] & 0xf) | 0xc0;
-        g_meve[1] = (unsigned char) mi_pgmap[index];
-        g_mcpro[physical] = mi_pgmap[index];
-        mq_dise(g_meve, (short) 2, (short) 0);
-}
-#else   /* STX: a char index, no local for the physical channel --
-           every lookup is written out. */
-
 void
 mq_sepc(index)
 char    index;
@@ -410,7 +389,6 @@ char    index;
         g_mcpro[mi_chmap[index] & 0xf] = mi_pgmap[index];
         mq_dise(g_meve, (short) 2, (short) 0);
 }
-#endif
 
 /* mq_dise: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
@@ -1070,23 +1048,8 @@ short   val;
 #include "parts/mq_rmev.c"
 #endif
 
-/* mq_spgm: send Program Change (0xCn) if not already cached + MIDI enabled.
-   addr: midi_seq_send_program_change() */
-
-void
-mq_spgm(idx)
-char    idx;
-{
-        short   physical;
-
-        physical = (short) mi_chmap[(short) idx] & 0xf;
-        if (g_mcpro[physical] == mi_pgmap[(short) idx] || g_moen == NO)
-                return;
-        g_meve[0] = (mi_chmap[(short) idx] & 0xf) | 0xc0;
-        g_meve[1] = (unsigned char) mi_pgmap[(short) idx];
-        g_mcpro[physical] = mi_pgmap[(short) idx];
-        mq_dise(g_meve, (short) 2, (short) 0);
-}
+/* mq_spgm does not exist in LCP_STX: mq_sepc (0x84a) is the one
+   program-change sender, and mq_qnne calls it directly. */
 
 /* mq_qnne: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
    and dispatch Note-On via mq_dise.  Queue entry fires paired Note-Off
@@ -1114,7 +1077,7 @@ mq_qnne()
                         if (mi_slop == NO)
                                 mi_ccha = (char) mi_varR;
                         else
-                                mq_spgm(mi_ccha);
+                                mq_sepc(mi_ccha);
 
                         if (mi_nnOf != 0)
                                 mi_nOS[(short)(char) mi_cnot] = 0;
@@ -1162,7 +1125,7 @@ mq_qnne()
                 return;
 
         if (mi_slop != NO)
-                mq_spgm(mi_ccha);
+                mq_sepc(mi_ccha);
         else
                 mi_ccha = mi_varR;
 

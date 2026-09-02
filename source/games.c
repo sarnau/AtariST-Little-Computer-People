@@ -1559,16 +1559,18 @@ void
 pk_annr(winner)
 short   winner;
 {
-        while (g_ppppa != 0) {
+        /* The pot decrement is the loop condition itself -- `while
+           (n--)` loads the value, subtracts straight to memory and
+           tests the OLD copy -- so it runs one past zero and the tail
+           assignment puts the pot back to 0. */
+        while (g_ppppa--) {
                 if (winner == 0) {
-                        g_pcmon = g_pcmon + 1;
-                        g_ppppa = g_ppppa - 1;
+                        g_pcmon++;
                         pk_awp();
                         pk_dpot();
                         gameTick(0);
                 } else {
-                        g_ppmon = g_ppmon + 1;
-                        g_ppppa = g_ppppa - 1;
+                        g_ppmon++;
                         pk_dppm();
                         pk_dpot();
                         gameTick(0);
