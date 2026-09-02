@@ -766,7 +766,7 @@ char    g_cdinb[64];
 BOOL16  food_dlv         = NO;
 short   g_ptanf              = 0;
 
-short   last_hz                      = 0;
+unsigned short  last_hz              = 0;   /* STX: clr.w zero-extension at every use */
 long    last_vbc                    = 0;
 /* sv_phb: TOS's original Physbase, captured once at boot by
    aes_init via Physbase().  BSS-zero to match Ghidra's

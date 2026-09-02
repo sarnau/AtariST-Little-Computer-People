@@ -8,14 +8,43 @@
 void
 sc_ren8()
 {
-        short   save_hz200;
-        long    save_vbclock;
-        short   index;
+        /* STX inlines rd_hz/rd_vbc (each Super block keeps its own
+           pointer local; the supervisor stack pointer is shared), and
+           its frame is -76 -- twenty-one locals, most of them never
+           read.  _hz_200's low word lives at $04BC and _vbclock at
+           $0462. */
+        short           index;          /* -2 */
+        long            fill1;          /* -6 */
+        long            fill2;          /* -10 */
+        long            fill3;          /* -14 */
+        short *         p_hz;           /* -18 */
+        unsigned short  limit;          /* -20 */
+        unsigned short  save_hz200;     /* -22 */
+        char *          c26;            /* -26 */
+        char *          c30;            /* -30 */
+        long            saveSSP;        /* -34 */
+        long            fill4;          /* -38 */
+        long            fill5;          /* -42 */
+        long *          p_vbc;          /* -46 */
+        long            save_vbclock;   /* -50 */
+        long            vbc2;           /* -54 */
+        long            fill6;          /* -58 */
+        long *          p_vbc2;         /* -62 */
+        short           s64;            /* -64 */
+        short           s66;            /* -66 */
+        short           fill7;          /* -68 */
+        short           fill8;          /* -70 */
+        short           s72;            /* -72 */
 
         /* Frame-rate gate. */
-        save_hz200   = rd_hz();
-        save_vbclock = rd_vbc();
-        if ((unsigned short) (save_hz200 - last_hz) <= 24)
+        p_hz    = (short *) 0x04BCL;
+        p_vbc   = (long *) 0x0462L;
+        saveSSP = Super(0L);
+        save_hz200   = *p_hz;
+        save_vbclock = *p_vbc;
+        Super(saveSSP);
+        limit = last_hz + 25;
+        if (save_hz200 - last_hz < 25)
                 return;
         if (save_vbclock == last_vbc)
                 return;
@@ -43,16 +72,31 @@ sc_ren8()
         /* Idle countdown while waiting for a target. */
         if (g_dtx == 0 && g_dty == 0 &&
             dg_idlcd != 0 && g_deact == NO)
-                dg_idlcd = dg_idlcd - 1;
+                dg_idlcd--;
 
+        /* STX inlines the target picker here (the port factored it out
+           as dg_pkTgt for readability).  base = s72, pick = s66,
+           dest_position = s64. */
         if (g_dtx == 0 && g_dty == 0 &&
-            dg_idlcd == 0 && g_deact == NO)
-                dg_pkTgt();
+            dg_idlcd == 0 && g_deact == NO) {
+                if (dg_vis != NO)
+                        s72 = 3;
+                else
+                        s72 = 0;
+                do {
+                } while ((s66 = rndRng(s72, 8)) == dg_ltgtI);
+                hs_posXY(s64 = g_ddipt[s66], &g_dtx, &g_dty);
+                g_dty += g_ddyot[s66];
+                g_dtx += g_ddxot[s66];
+                dg_ltgtI = s66;
+                if (s64 == POS_BTM_STAIR_LANDING)
+                        dg_nrbwl = YES;
+                dg_idlcd = rndRng(20, 200);
+        }
 
         /* Eating animation cycle. */
         if (g_deact != NO) {
-                g_decou = g_decou - 1;
-                if (g_decou == 0) {
+                if (--g_decou == 0) {
                         g_deact    = NO;
                         dg_nrbwl   = NO;
                         dg_bwlch = -1;
@@ -71,8 +115,7 @@ sc_ren8()
 
         /* --- SFX chaining --- */
         if (g_sfret > 0) {
-                g_sfret =
-                        g_sfret - 1;
+                g_sfret--;
                 if (g_sfret == 0) {
                         sf_so();
                         if (g_sfpli == SFX_DOORBELL)
@@ -82,31 +125,33 @@ sc_ren8()
                 }
         }
 
-        /* --- Background copy --- */
-        if (tx_sctm < 1) {
-                if (tx_sctm < 0) {
-                        /* Partial (top-strip only). */
-                        blkcp32(g_dscp,
-                                  g_srmfd.fd_addr, 385);
-                        blkcp32((char *) mf_scrp.fd_addr + 12320,
-                                  (char *) g_srmfd.fd_addr + 12320,
-                                  615);
-                } else {
-                        /* Full-screen. */
-                        blkcp32(mf_scrp.fd_addr,
-                                  g_srmfd.fd_addr, 1000);
-                }
-        } else {
+        /* --- Background copy ---
+           STX reaches both MFDBs through pointer locals set up here,
+           and tests tx_sctm the other way round. */
+        c26 = (char *) &mf_scrp;
+        c30 = (char *) &g_srmfd;
+        if (tx_sctm > 0) {
                 /* Split copy for letter scroll. */
                 blkcp32(g_dscp,
-                          g_srmfd.fd_addr, 135);
-                blkcp32((char *) mf_scrp.fd_addr + 4320,
-                          (char *) g_srmfd.fd_addr + 4320, 865);
-                tx_sctm = tx_sctm - 1;
+                          ((MFDB *) c30)->fd_addr, 135);
+                blkcp32((char *) ((MFDB *) c26)->fd_addr + 4320,
+                          (char *) ((MFDB *) c30)->fd_addr + 4320, 865);
+                tx_sctm--;
+        } else if (tx_sctm < 0) {
+                /* Partial (top-strip only). */
+                blkcp32(g_dscp,
+                          ((MFDB *) c30)->fd_addr, 385);
+                blkcp32((char *) ((MFDB *) c26)->fd_addr + 12320,
+                          (char *) ((MFDB *) c30)->fd_addr + 12320,
+                          615);
+        } else {
+                /* Full-screen. */
+                blkcp32(((MFDB *) c26)->fd_addr,
+                          ((MFDB *) c30)->fd_addr, 1000);
         }
 
         /* --- Sprite compositing --- */
-        for (index = 0; index < SPRITE_HW_SLOTS; index = index + 1) {
+        for (index = 0; index < SPRITE_HW_SLOTS; index++) {
                 if (g_sepef[index] == YES) {
                         g_sepef[index]  = NO;
                         g_sepex[index]     = g_seacx[index];
@@ -122,35 +167,30 @@ sc_ren8()
         /* --- Page flip --- */
         cur_mf = &g_srmfd;
         Vsync();
-        Setscreen((void *)-1L, cur_mf->fd_addr, -1L);
+        Setscreen((void *) -1L, cur_mf->fd_addr, -1);
 
         if (g_sfacf != NO) {
                 sf_irqp();
                 g_sfacf = NO;
         }
 
-        /* Toggle compositing buffer between the physbase we started
-           with and the alternate.
-
-           Ghidra's screen_render_8hz uses a hardcoded 0x2CA00 as the
-           alt buffer.  In the 1985 binary that literal is
-           SCREEN_BUFFER_A + 0x19A -- a 32 KB region INSIDE the same
-           BSS array that sp_imfs stashes the compositing MFDB at
-           (SCREEN_BUFFER_A + 0xCD).  Our port's linker places scrbufA
-           at a different BSS address, so 0x2CA00 as a literal lands
-           on totally unrelated globals; when blkcp32 writes 32000
-           bytes there it silently corrupts our own state (which is
-           why the third sc_ren8 iteration crashed in TOS ROM with
-           an implausible MFDB pointer).  Compute the same relative
-           offset off scrbufA instead. */
-        if (cur_mf->fd_addr == sv_phb) {
-                long alt = ((long) scrbufA + 0xFFL) & ~0xFFL;   /* ROM: 256-align */
-                alt = alt + 0x8000L;
-                cur_mf->fd_addr = (void *) alt;
-        } else {
+        /* Toggle the compositing buffer.  STX tests the other way
+           round and folds the alternate buffer into ONE relocatable
+           constant masked to a 512-byte boundary -- no runtime
+           alignment arithmetic and no +0x8000 add. */
+        if (cur_mf->fd_addr != sv_phb)
                 cur_mf->fd_addr = sv_phb;
-        }
+        else
+                cur_mf->fd_addr =
+                        (void *) ((long) &scrbufA[0x8000] & ~0x1FFL);
 
-        ani_cnt = ani_cnt + 1;
-        last_vbc = rd_vbc();
+        ani_cnt++;
+
+        /* Second inlined rd_vbc: its own pointer local, the shared
+           supervisor-stack slot. */
+        p_vbc2  = (long *) 0x0462L;
+        saveSSP = Super(0L);
+        vbc2    = *p_vbc2;
+        Super(saveSSP);
+        last_vbc = vbc2;
 }

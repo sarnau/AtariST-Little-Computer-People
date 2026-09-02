@@ -278,7 +278,7 @@ extern BOOL16 g_inpmd;
 extern char g_cdinb[];
 extern BOOL16 food_dlv;
 extern short g_ptanf;
-extern short last_hz;
+extern unsigned short last_hz;
 extern long last_vbc;
 extern void* sv_phb;
 extern MFDB g_srmfd;

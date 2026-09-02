@@ -886,9 +886,13 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 293 matched / 50 divergent, 48 950 of
-104 156 STX text bytes (47.0%) proven byte-identical -- 51.7% of the
-94 736 bytes that are the game's own code.**  The FAITHFUL
+**Status (2026-09-02): 296 matched / 47 divergent, 53 166 of
+104 156 STX text bytes (51.0%) proven byte-identical -- 56.1% of the
+94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
+LONGER the reference (maintainer, 2026-09-02: it was a temporary
+hack, not the original game).  New work is written directly in
+LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
+the LCP_ORG byte-identity check is no longer run.  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
 tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG

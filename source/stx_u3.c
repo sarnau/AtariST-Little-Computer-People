@@ -43,6 +43,7 @@
 #include "parts/deal_kc.c"  /* 0x15d72 */
 #include "parts/p_dobls.c"  /* 0x15f9a */
 #include "parts/putEv.c"    /* 0x15fb4 */
+#include "parts/sp_draw.c"  /* 0x1605c */
 #include "parts/sp_drin.c"
 #include "parts/sp_updb.c"  /* 0x16244 */
 #include "parts/sp_lcha.c"  /* 0x16368 */

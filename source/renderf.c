@@ -38,70 +38,9 @@
 #include "sprglobs.h"
 
 
-/* Read the 200 Hz clock via GEMDOS Super mode.  Matches Ghidra's
-   screen_render_8hz shape:
-       saveSSP = Super(0);
-       save_hz200 = _hz_200._2_2_;   // low word of _hz_200 (long)
-       save_vbclock = _vbclock;
-       Super(saveSSP);
-   _hz_200 lives at absolute address $04BA in TOS's low-memory system
-   variables (populated by the TOS timer IRQ, no game-side handler
-   needed); _vbclock lives at $0462 and is bumped by TOS's VBL IRQ.
-   Both must be read in supervisor mode. */
-
-static short
-rd_hz()
-{
-        void *  saveSSP;
-        long    v;
-
-        saveSSP = (void *) Super(0L);
-        v = *((long *) 0x04BAL);
-        Super(saveSSP);
-        return (short) (v & 0xFFFFL);
-}
-
-static long
-rd_vbc()
-{
-        void *  saveSSP;
-        long    v;
-
-        saveSSP = (void *) Super(0L);
-        v = *((long *) 0x0462L);
-        Super(saveSSP);
-        return v;
-}
-
-/* dg_pkTgt: pick next dog destination from 9-entry table.
-   Extracted from sc_ren8 for readability.
-   dg_vis broadens random range to include food-adjacent positions
-   when the dog is on-screen. */
-
-static void
-dg_pkTgt()
-{
-        short   base;
-        short   pick;
-        short   dest_position;
-
-        base = (dg_vis == NO) ? 0 : 3;
-        do {
-                pick = rndRng(base, 8);
-        } while (pick == dg_ltgtI);
-
-        dest_position = g_ddipt[pick];
-        hs_posXY(dest_position,
-                              &g_dtx, &g_dty);
-        g_dty = g_ddyot[pick] + g_dty;
-        g_dtx = g_ddxot[pick] + g_dtx;
-
-        if (dest_position == POS_BTM_STAIR_LANDING)
-                dg_nrbwl = YES;
-
-        dg_ltgtI = pick;
-        dg_idlcd    = rndRng(20, 200);
-}
+/* LCP_STX inlines all three of the helpers the port used to keep
+   here -- the two Super-mode clock reads and the dog target picker --
+   directly into sc_ren8 (parts/sc_ren8.c), so they are gone. */
 
 /* sc_ren8 -> parts/sc_ren8.c (STX: 0x15138, in the sprite object ahead of lcp_hwt). */
 #ifdef FAITHFUL
