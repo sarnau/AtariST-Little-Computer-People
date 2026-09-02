@@ -43,10 +43,15 @@ sf_so()
 
 /* One-line SFX wrappers.  K&R style (Alcyon 4.14). */
 
-void p_sftvc() { sf_sele(SFX_TV_CLICK,  2L); }
-void p_sfgrt() { sf_sele(SFX_GREETING,  2L); }
-void p_sfspe() { sf_sele(SFX_SPEECH,    3L); }
-void p_sfhnd() { sf_sele(SFX_HEAD_NOD,  2L); }
+/* STX orders these p_sftvc, p_sfgrt, p_sfhnd, p_sfspe immediately
+   after a_hello in the 0xdece object (a_hello reaches each with a
+   bsr) -- see parts/p_sfx.c.  FAITHFUL keeps them here. */
+#ifdef FAITHFUL
+#include "parts/p_sftvc.c"
+#include "parts/p_sfgrt.c"
+#include "parts/p_sfspe.c"
+#include "parts/p_sfhnd.c"
+#endif
 void p_dobls() { sf_sele(SFX_DOORBELL,  4L); }
 
 /* addr: lt_sets(), sfClick() */

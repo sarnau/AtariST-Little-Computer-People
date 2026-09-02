@@ -40,11 +40,21 @@ a_wakfa()
 void
 a_hello()
 {
+        /* Frame offsets pin STX's declaration order: saved_frame -2,
+           pick -4, wave_count -6, prev_pick -8, wait -10. */
+#ifdef FAITHFUL
         short   wave_count;
         short   pick;
         short   prev_pick;
         short   saved_frame;
         short   wait;
+#else
+        short   saved_frame;
+        short   pick;
+        short   wave_count;
+        short   prev_pick;
+        short   wait;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_SIDE_VIEW;
@@ -57,13 +67,29 @@ a_hello()
         g_hacur      = HEAD_ANIM_DISABLED;
 
         wave_count = rndRng(20, 40);
+        /* STX clears pick first. */
+#ifdef FAITHFUL
         prev_pick  = 0;
         pick       = 0;
+#else
+        pick       = 0;
+        prev_pick  = 0;
+#endif
+        /* STX drives the loop from a post-decrement in the
+           condition (read, subq to memory, test the old value). */
+#ifdef FAITHFUL
         while (wave_count != 0) {
+#else
+        while (wave_count--) {
+#endif
                 while (pick == prev_pick)
                         pick = rndRng(0, 2);
                 prev_pick = pick;
 
+                /* STX dispatches with a switch (Alcyon emits the
+                   compare chain at the bottom); the port used an
+                   if/else-if ladder. */
+#ifdef FAITHFUL
                 if (pick == 0) {
                         g_hsfra = 5;
                         p_sftvc();
@@ -77,10 +103,37 @@ a_hello()
                         g_hsfra = 4;
                         p_sfhnd();
                 }
+#else
+                switch (pick) {
+                case 0:
+                        g_hsfra = 5;
+                        p_sftvc();
+                        break;
+                case 1:
+                        g_hsfra = 6;
+                        if (rndRng(0, 1) != 0)
+                                p_sfgrt();
+                        else
+                                p_sfspe();
+                        break;
+                case 2:
+                        g_hsfra = 4;
+                        p_sfhnd();
+                        break;
+                }
+#endif
+                /* STX nests the assignment in the call, so the value
+                   stays in the register. */
+#ifdef FAITHFUL
                 wait = rndRng(1, 2);
                 gameTick(wait);
+#else
+                gameTick(wait = rndRng(1, 2));
+#endif
                 g_sfret = (long) wait;
+#ifdef FAITHFUL
                 wave_count = wave_count - 1;
+#endif
         }
 
         g_hatas = 8;
@@ -88,6 +141,15 @@ a_hello()
         g_hsfra      = saved_frame;
         gameTick(0);
 }
+
+/* STX places the four SFX wrappers immediately after a_hello in
+   this object (a_hello reaches each with a bsr). */
+#ifndef FAITHFUL
+#include "parts/p_sftvc.c"     /* 0xf904 */
+#include "parts/p_sfgrt.c"     /* 0xf91e */
+#include "parts/p_sfhnd.c"     /* 0xf938 */
+#include "parts/p_sfspe.c"     /* 0xf952 */
+#endif
 
 /* addr: a_yawas() */
 void

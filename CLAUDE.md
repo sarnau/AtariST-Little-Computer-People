@@ -565,12 +565,28 @@ this build, ALL different from LCP_ORG's:
       unsigned bound       (ORG)  vs  signed (bcs vs blt on the
                                       loop comparison)
       p = f(); q = p & 3   (ORG)  vs  p = f() & 3
+      if/else-if ladder    (ORG)  vs  switch (Alcyon puts the
+                                      compare chain at the bottom)
+      w = f(); g(w)        (ORG)  vs  g(w = f())
+      while (n != 0){...   (ORG)  vs  while (n--) { ... }
+        n = n - 1;}
+      statement ORDER of two initialisations is evidence too
+        (a_hello clears pick before prev_pick in STX)
   Declaration ORDER is evidence too: the frame offsets pin it (a_driwa
   is rnd, counter, last_pick, pick in STX; the port had rnd, pick,
   last_pick, counter).  And STX's a_driwa never initialises last_pick
   -- the first comparison reads whatever the slot held.  Preserved as
   written; do not "fix" such things.
   a_sitae alone needed six of these; expect several per function.
+  **parts/ files must respect BOTH orders.**  The four p_sf*
+  wrappers sit in a different sequence in each revision (ORG:
+  tvc, grt, spe, hnd; STX: tvc, grt, hnd, spe).  Putting them in one
+  shared parts/ file in STX order silently changed LCP_ORG's layout
+  and broke byte-identity -- the post-change cmp caught it.  They are
+  now one file per function, included in each configuration's own
+  order.  Rule: a parts/ file may hold several functions only if
+  both revisions order them identically.
+
   A narrowing cast changes the operand width: `(Random() & 0x7f) | 8`
   gives or.l, `(unsigned short)(Random() & 0x7f) | 8` gives or.w
   (Alcyon's int is 16-bit).  Verify each guess by compiling both
