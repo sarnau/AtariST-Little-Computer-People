@@ -442,6 +442,15 @@ this build, ALL different from LCP_ORG's:
   od_* fixes -- expect more of these wherever the port carries a
   pointer variable that STX addresses as an array.
 
+  **Clusters are LOWER bounds -- objects start earlier.**  lcp_lgt
+  (0xde80) and lcp_rgt (0xdf66) sit in the gap BEFORE the 0xdece
+  cluster, yet both reach lcp_wkD (0x147a0) and sp_ssco (0x1203a)
+  with bsr, so they are part of that object: it begins before its
+  cluster does.  Both moved from games.c into unit 2 via parts/ --
+  games.c straddles the minigame object and this one.  Note that
+  editing a parts/ file does NOT trigger a rebuild of the unit that
+  includes it; rebuild the unit (or everything) explicitly.
+
   **Membership map (done -- `stx_objmap.py --members`).**  Folding
   in the candidate addresses, only FIVE port files straddle STX
   cluster boundaries and therefore need splitting; every other file

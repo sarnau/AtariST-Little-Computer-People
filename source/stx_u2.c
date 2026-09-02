@@ -30,6 +30,8 @@
 #include "tables.h"
 #include "tick.h"
 
+#include "parts/lcp_lgt.c"   /* 0xde80 */
+#include "parts/lcp_rgt.c"   /* 0xdf66 */
 #include "parts/sp_sprs.c"   /* 0xe0b2, before od_draw */
 #include "render.c"
 #include "delivery.c"

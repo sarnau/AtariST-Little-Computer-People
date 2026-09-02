@@ -250,91 +250,17 @@ pk_bjMn()
 
 #else   /* !FAITHFUL: the kept other-revision minigames */
 
-/* lcp_lgt: leave the game table for an interrupt event (alarm,
-   bathroom, thirst, delivery).  Walks the resident to the kitchen
-   sink area, tucks away the game-box + table-setting sprites, and
-   re-attaches the game-box in the "carried-behind" slot.
-   addr: lcp_leave_game_table() */
+/* lcp_lgt -> parts/lcp_lgt.c (STX puts it at the head of the
+   0xdece object, ahead of sp_sprs). */
+#ifdef FAITHFUL
+#include "parts/lcp_lgt.c"
+#endif
 
-void
-lcp_lgt()
-{
-        short   save_x;
-        short   save_y;
-
-        no_keyin = YES;
-        g_actif  = YES;
-        g_lcyof  = NO;
-        lcp_y    = lcp_y - 8;
-        lcp_x    = lcp_x - 6;
-        lcp_st   = STATE_STAND_SIDE_VIEW;
-        gameTick(0);
-        hs_posXY(POS_BTM_TABLE_RIGHT, &g_wtx, &g_wty);
-        lcp_wkD();
-        hs_posXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
-        g_wty = g_wty + 5;
-        lcp_wkD();
-
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
-        sp_upds();
-
-        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
-        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
-        sp_upds();
-        sp_ssco(SPRITE_GAME_BOX);
-        g_lcyof = NO;
-        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
-        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
-}
-
-/* lcp_rgt: reverse of lcp_lgt -- restore seated STATE_EAT_BITE pose
-   with the +8y/+6x offset expected by mini-game overlays.
-   addr: lcp_return_to_game_table() */
-
-void
-lcp_rgt()
-{
-        short   save_x;
-        short   save_y;
-
-        g_actif = YES;
-        hs_posXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
-        g_wtx = g_wtx + 6;
-        g_wty = g_wty + 2;
-        lcp_wkD();
-
-        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
-        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
-        sp_upds();
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_IN_FRONT;
-        sp_sprs(SPRITE_GAME_BOX);
-        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
-        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
-
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
-        sp_sprs(SPRITE_TABLE_SETTING);
-        g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
-        g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
-
-        hs_posXY(POS_BTM_TABLE_RIGHT, &g_wtx, &g_wty);
-        lcp_wkD();
-        hs_posXY(POS_BTM_TABLE_LEFT, &g_wtx, &g_wty);
-        lcp_wkD();
-
-        lcp_st   = STATE_STAND_SIDE_VIEW;
-        lcp_face = FACING_RIGHT;
-        g_hatas  = 8;
-        lcp_hwt();
-
-        lcp_st = STATE_EAT_BITE;
-        lcp_y  = lcp_y + 8;
-        lcp_x  = lcp_x + 6;
-        gameTick(0);
-        no_keyin = NO;
-        g_actif  = NO;
-}
+/* lcp_rgt -> parts/lcp_rgt.c (STX puts it at the head of the
+   0xdece object, ahead of sp_sprs). */
+#ifdef FAITHFUL
+#include "parts/lcp_rgt.c"
+#endif
 
 /* mg_wkev: wait for a key while processing urgent game events.
    On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10.
