@@ -609,7 +609,8 @@ this build, ALL different from LCP_ORG's:
                                       compare chain at the bottom)
       w = f(); g(w)        (ORG)  vs  g(w = f())
       while (n != 0){...   (ORG)  vs  while (n--) { ... }
-        n = n - 1;}
+        n = n - 1;}                   (load into d0, subq to memory,
+                                       test the OLD value in d0)
       if (c) f(); break;   (ORG)  vs  if (!c) break; f(); break;
                                       (the beq displacement gives it
                                        away: over the call vs to the
@@ -630,6 +631,21 @@ this build, ALL different from LCP_ORG's:
   NONE because every call result is consumed in place.  Removing a
   declaration without checking every use breaks the build (a_tidyh
   used `result` twice).
+
+  **Gating a declaration must not disturb the OTHER configuration's
+  declaration order.**  Local offsets are assigned in declaration
+  order, so wrapping only the now-unused locals in `#ifdef FAITHFUL`
+  silently reorders the FAITHFUL frame and breaks LCP_ORG byte
+  identity (caught in a_takes/a_uset/a_opcbc: `result, count, pick`
+  became `result, pick, count`).  Write BOTH lists out in full:
+
+      #ifdef FAITHFUL
+              short   result;
+              short   count;
+              short   pick;
+      #else
+              short   count;
+      #endif
 
   Declaration ORDER is evidence too: the frame offsets pin it (a_driwa
   is rnd, counter, last_pick, pick in STX; the port had rnd, pick,

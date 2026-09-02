@@ -32,15 +32,23 @@
 void
 a_eatm()
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
         short   counter;
         short   pick;
 
         hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;

@@ -37,7 +37,10 @@
 void
 a_lists()
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
         short   index;
         _DTA *   dta_ptr;
         char *  filename;
@@ -48,9 +51,14 @@ a_lists()
 
         hs_posXY(POS_TOP_DANCE_FLOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         gameTick(2);
         li_loor();
@@ -737,14 +745,22 @@ void
 a_opcbc(value)
 short   value;
 {
+#ifdef FAITHFUL
         short   result;
         short   saved_x;
         short   counter;
+#else
+        short   saved_x;
+#endif
 
         hs_posXY(POS_MID_DRESSER,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
+#else
+        if (lcp_wkD() != 0)
+#endif
                 return;
 
         lcp_face   = FACING_RIGHT;
@@ -752,8 +768,12 @@ short   value;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
         a_opecd(0);
+#ifdef FAITHFUL
         counter = rndRng(0, 100);
         if (lcp.initiative_threshold < counter)
+#else
+        if (lcp.initiative_threshold < rndRng(0, 100))
+#endif
                 a_opecd(1);
 
         hs_posXY(POS_MID_BEDROOM_CLOSET,
@@ -792,16 +812,29 @@ short   value;
                               &g_wtx, &g_wty);
         /* STX: -= straight to memory. */
 #ifdef FAITHFUL
+#ifdef FAITHFUL
         g_wty = g_wty - 3;
+#else
+        g_wty -= 3;
+#endif
+#ifdef FAITHFUL
         g_wtx = g_wtx - 10;
+#else
+        g_wtx -= 10;
+#endif
 #else
         g_wty -= 3;
         g_wtx -= 10;
 #endif
         g_actif = YES;
         lcp_wkD();
+#ifdef FAITHFUL
         saved_x = lcp_x;
         g_actif = NO;
+#else
+        g_actif = NO;                   /* STX clears the flag first */
+        saved_x = lcp_x;
+#endif
 
         /* Close door behind: wide -> ajar -> lcp-inside. */
         g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
@@ -824,8 +857,12 @@ short   value;
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(1);
 
+#ifdef FAITHFUL
         counter = rndRng(45, 60);
         gameTick(counter);
+#else
+        gameTick(rndRng(45, 60));
+#endif
         if (introSeq == NO) {
                 if (value == 0)
                         pa_cloc();
@@ -868,9 +905,14 @@ short   value;
                 gameTick(0);
         }
 
+#ifdef FAITHFUL
         counter = rndRng(0, 100);
         if (lcp.initiative_threshold < counter ||
             introSeq != NO)
+#else
+        if (lcp.initiative_threshold < rndRng(0, 100) ||
+            introSeq != NO)
+#endif
                 a_clocd();
 }
 
@@ -882,15 +924,23 @@ void
 a_opcuc(value)
 short   value;
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         /* STX tests the walk call inline. */
 #ifdef FAITHFUL
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 #else
         if (lcp_wkD() != 0)
                 return;
@@ -927,8 +977,16 @@ short   value;
                               &g_wtx, &g_wty);
         /* STX: -= straight to memory. */
 #ifdef FAITHFUL
+#ifdef FAITHFUL
         g_wty = g_wty - 3;
+#else
+        g_wty -= 3;
+#endif
+#ifdef FAITHFUL
         g_wtx = g_wtx - 10;
+#else
+        g_wtx -= 10;
+#endif
 #else
         g_wty -= 3;
         g_wtx -= 10;
