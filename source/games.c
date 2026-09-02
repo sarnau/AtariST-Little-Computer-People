@@ -1093,6 +1093,201 @@ wp_rtmp()
 
 static void     pk_show();
 
+
+/* pk_wrMn: WAR mini-game main loop.
+   Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
+   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
+   addr: pk_wrMn() (== poker_war_main) */
+
+void
+pk_wrMn()
+{
+        /* Seven locals: ikey and cidx double as the shuffle's and the
+           deal loop's indices, and ikey also carries the war round's
+           result. */
+        short   ikey;
+        short   cidx;
+        short   j;
+        short   t;
+        char *  sp;
+        short   saved_head_frame;
+        short   saved_head_mode;
+
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
+
+        g_pcmon = 26;
+        g_ppmon = 26;
+        g_ppppa = 0;
+
+        /* Deck 0..51 then Fisher-Yates-lite 400-swap shuffle. */
+        for (ikey = 0; ikey < 52; ikey++)
+                pk_dsc[ikey] = ikey;
+        j = 400;
+        while (j--) {
+                ikey = rndRng(0, 51);
+                do {
+                        cidx = rndRng(0, 51);
+                } while (ikey == cidx);
+                t = pk_dsc[cidx];
+                pk_dsc[cidx] = pk_dsc[ikey];
+                pk_dsc[ikey] = t;
+        }
+        ikey = 0;
+        for (cidx = 0; ikey < 52; cidx++) {
+                g_pcdrp[cidx] = pk_dsc[ikey];
+                ikey++;
+                g_ppdrp[cidx] = pk_dsc[ikey];
+                ikey++;
+        }
+
+        pk_awp();
+        pk_dppm();
+        pk_dpot();
+
+        /* Per-round loop (Ghidra LAB_0001b29c): a label and explicit
+           gotos, not a for(;;) -- every round-end branches straight
+           back here rather than to a loop-bottom edge.  The bare
+           `pk_dppm;` is in the original: a call whose parentheses
+           were left off, so Alcyon just loads its address into d0. */
+round:
+                pk_awp();
+                pk_dppm;
+                pk_dpot();
+                plEr(5, 63, 319, 75);
+                plEr(225, 10, 319, 60);
+                plEr(70, 10, 219, 62);
+
+                /* Every exit is a goto: the two message blocks and
+                   the cleanup are labels the war round jumps back
+                   into, and the cleanup returns. */
+                if (g_pcmon == 0) {
+out_of_cards:
+                        pk_pmsg("I'm out of cards! You're too good!");
+                        gameTick(0x14);
+cleanup:
+                        tx_sctm  = 0;
+                        no_keyin = NO;
+                        Mfree(crd_dat);
+                        moff();
+                        return;
+                }
+                if (g_ppmon == 0) {
+no_cards:
+                        pk_pmsg("No cards, huh? Better luck next time.");
+                        gameTick(0x14);
+                        goto cleanup;
+                }
+
+                gameTick(5);
+                pk_pwc[0] = pk_rmch(g_ppdrp, &g_ppmon);
+                g_ppppa++;
+                pk_drcs(CARD_BACK, 0, 1);
+                pk_dpot();
+                pk_dppm();
+                gameTick(3);
+                pk_cwc[0] = pk_rmch(g_pcdrp, &g_pcmon);
+                g_ppppa++;
+                pk_drcs(pk_cwc[0], 0, 0);
+                pk_dpot();
+                pk_awp();
+
+                pk_pmsg("Show me your card, Ace.");
+                strPr("F1  Show", 225, 18, COLOR_red);
+                strPr("F10 Quit", 225, 26, COLOR_red);
+                ikey = 0;
+                while (ikey != 1 && ikey != 2)
+                        ikey = pk_inph(KEY_F1, KEY_F10, 255);
+                if (ikey == 2)
+                        goto cleanup;
+
+                pk_drcs(pk_pwc[0], 0, 1);
+                plEr(225, 10, 319, 60);
+                gameTick(5);
+
+                /* Both ranks land in locals before the compare, and
+                   the loser's branch recomputes them the other way
+                   round. */
+                if ((ikey = pk_pwc[0] % 13) > (cidx = pk_cwc[0] % 13)) {
+                        /* Player wins. */
+                        if (ikey == 12) {
+                                sp = "Ace? I don't believe it!";
+                        } else {
+                                switch (rndRng(1, 6)) {
+                                case 1: sp = "You're awfully lucky!";       break;
+                                case 2: sp = "Arrghh!";                        break;
+                                case 3: sp = "You're tough.";                 break;
+                                case 4: sp = "I'll get you next time.";     break;
+                                case 5: sp = "Dog-gone it.";                   break;
+                                case 6: sp = "All right. Slow down.";       break;
+                                }
+                        }
+                        pk_pmsg(sp);
+                        gameTick(8);
+                        pk_annr(1);
+                        plEr(70, 10, 219, 62);
+                        g_ppmon -= 2;
+                        pk_actd(g_ppdrp, &g_ppmon, pk_pwc[0]);
+                        pk_actd(g_ppdrp, &g_ppmon, pk_cwc[0]);
+                        goto round;
+                } else if ((ikey = pk_cwc[0] % 13) > (cidx = pk_pwc[0] % 13)) {
+                        /* Computer wins by margin (ikey - cidx). */
+                        if (ikey == 12) {
+                                sp = "Ace takes it!";
+                        } else if (ikey - cidx <= 2) {
+                                if (rndRng(0, 1))
+                                        sp = "Whew! That was too close.";
+                                else
+                                        sp = "Hmm... That's not too bad!";
+                        } else if (ikey - cidx >= 7) {
+                                switch (rndRng(1, 3)) {
+                                case 1: sp = "No contest. You lose!"; break;
+                                case 2: sp = "Beat you by a mile.";   break;
+                                case 3: sp = "That was easy!";        break;
+                                }
+                        } else if (cidx <= 3) {
+                                if (rndRng(0, 1))
+                                        sp = "That's an easy card to beat.";
+                                else
+                                        sp = "Not a very high card, but I'll take it.";
+                        } else if (cidx >= 9) {
+                                sp = "Great, a face card, and it's mine now!";
+                        } else {
+                                switch (rndRng(1, 3)) {
+                                case 1: sp = "Alright. I win!";        break;
+                                case 2: sp = "Better luck next time."; break;
+                                case 3: sp = "Hey... look at that!";   break;
+                                }
+                        }
+                        pk_pmsg(sp);
+                        saved_head_frame = g_hsfra;
+                        saved_head_mode  = g_hamod;
+                        a_peeka();
+                        g_hamod = saved_head_mode;
+                        gameTick(8);
+                        pk_annr(0);
+                        plEr(70, 10, 219, 62);
+                        g_pcmon -= 2;
+                        pk_actd(g_pcdrp, &g_pcmon, pk_pwc[0]);
+                        pk_actd(g_pcdrp, &g_pcmon, pk_cwc[0]);
+                        g_hsfra = saved_head_frame;
+                        goto round;
+                } else {
+                        /* Tie -> war round. */
+                        ikey = pk_bjwr();
+                        if (mg_tofl != NO)
+                                goto cleanup;
+                        if (ikey == -1)
+                                goto out_of_cards;
+                        if (ikey == -2)
+                                goto no_cards;
+                        goto round;
+                }
+}
+
 /* pk_bjwr: nested war round.  Draw 3 face-down + 1 face-up each.
    On tie, loops with g_pchc++.
    Returns 0 = normal, -1 = computer out / user quit, -2 = player out.
@@ -1206,202 +1401,6 @@ pk_bjwr()
                 pk_actd(g_pcdrp, &g_pcmon, pk_cwc[idx]);
         }
         return 0;
-}
-
-/* pk_wrMn: WAR mini-game main loop.
-   Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
-   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
-   addr: pk_wrMn() (== poker_war_main) */
-
-void
-pk_wrMn()
-{
-        short   ikey;
-        short   cidx;
-        char *  sp;
-        short   i;
-        short   j;
-        short   k;
-        short   saved_head_frame;
-        short   saved_head_mode;
-        short   res;
-
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCrd();
-        mg_stp();
-
-        g_pcmon = 26;
-        g_ppmon = 26;
-        g_ppppa = 0;
-
-        /* Deck 0..51 then Fisher-Yates-lite 400-swap shuffle. */
-        for (i = 0; i < 52; i = i + 1)
-                pk_dsc[i] = i;
-        j = 400;
-        while (j != 0) {
-                ikey = rndRng(0, 51);
-                do {
-                        cidx = rndRng(0, 51);
-                } while (ikey == cidx);
-                res = pk_dsc[cidx];
-                pk_dsc[cidx] = pk_dsc[ikey];
-                pk_dsc[ikey] = res;
-                j = j - 1;
-        }
-        k = 0;
-        for (i = 0; i < 52; i = i + 2) {
-                g_pcdrp[k] = pk_dsc[i];
-                g_ppdrp[k] = pk_dsc[i + 1];
-                k = k + 1;
-        }
-
-        pk_awp();
-        pk_dppm();
-        pk_dpot();
-
-        /* Per-round loop (Ghidra LAB_0001b29c). */
-        for (;;) {
-                pk_awp();
-                pk_dpot();
-                plEr(5, 63, 319, 75);
-                plEr(225, 10, 319, 60);
-                plEr(70, 10, 219, 62);
-
-                if (g_pcmon == 0) {
-                        pk_pmsg("I'm out of cards! You're too good!");
-                        gameTick(0x14);
-                        break;
-                }
-                if (g_ppmon == 0) {
-                        pk_pmsg("No cards, huh? Better luck next time.");
-                        gameTick(0x14);
-                        break;
-                }
-
-                gameTick(5);
-                pk_pwc[0] = pk_rmch(g_ppdrp, &g_ppmon);
-                g_ppppa = g_ppppa + 1;
-                pk_drcs(CARD_BACK, 0, 1);
-                pk_dpot();
-                pk_dppm();
-                gameTick(3);
-                pk_cwc[0] = pk_rmch(g_pcdrp, &g_pcmon);
-                g_ppppa = g_ppppa + 1;
-                pk_drcs(pk_cwc[0], 0, 0);
-                pk_dpot();
-                pk_awp();
-
-                pk_pmsg("Show me your card, Ace.");
-                strPr("F1  Show", 225, 18, COLOR_red);
-                strPr("F10 Quit", 225, 26, COLOR_red);
-                i = 0;
-                while (i != 1 && i != 2)
-                        i = pk_inph(KEY_F1, KEY_F10, 0);
-                if (i == 2)
-                        break;
-
-                pk_drcs(pk_pwc[0], 0, 1);
-                plEr(225, 10, 319, 60);
-                gameTick(5);
-
-                if ((short)((short) pk_cwc[0] % 13) <
-                    (short)((short) pk_pwc[0] % 13)) {
-                        /* Player wins. */
-                        if ((short)((short) pk_pwc[0] % 13) == 12) {
-                                sp = "Ace? I don't believe it!";
-                        } else {
-                                ikey = rndRng(1, 6);
-                                switch (ikey) {
-                                case 1: sp = "You're awfully lucky!";       break;
-                                case 2: sp = "Arrghh!";                        break;
-                                case 3: sp = "You're tough.";                 break;
-                                case 4: sp = "I'll get you next time.";     break;
-                                case 5: sp = "Dog-gone it.";                   break;
-                                case 6: sp = "All right. Slow down.";       break;
-                                default: sp = "";                                    break;
-                                }
-                        }
-                        pk_pmsg(sp);
-                        gameTick(8);
-                        pk_annr(1);
-                        plEr(70, 10, 219, 62);
-                        g_ppmon = g_ppmon - 2;
-                        pk_actd(g_ppdrp, &g_ppmon, pk_pwc[0]);
-                        pk_actd(g_ppdrp, &g_ppmon, pk_cwc[0]);
-                        continue;
-                }
-
-                ikey = (short) pk_cwc[0] % 13;
-                cidx = (short) pk_pwc[0] % 13;
-
-                if (cidx < ikey) {
-                        /* Computer wins by margin (ikey - cidx). */
-                        if (ikey == 12) {
-                                sp = "Ace takes it!";
-                        } else if ((short)(ikey - cidx) < 3) {
-                                ikey = rndRng(0, 1);
-                                sp = (ikey == 0)
-                                    ? "Hmm... That's not too bad!"
-                                    : "Whew! That was too close.";
-                        } else if ((short)(ikey - cidx) < 7) {
-                                if (cidx < 4) {
-                                        ikey = rndRng(0, 1);
-                                        sp = (ikey == 0)
-                                            ? "Not a very high card, but I'll take it."
-                                            : "That's an easy card to beat.";
-                                } else if (cidx < 9) {
-                                        ikey = rndRng(1, 3);
-                                        if      (ikey == 1) sp = "Alright. I win!";
-                                        else if (ikey == 2) sp = "Better luck next time.";
-                                        else                sp = "Hey... look at that!";
-                                } else {
-                                        sp = "Great, a face card, and it's mine now!";
-                                }
-                        } else {
-                                ikey = rndRng(1, 3);
-                                if      (ikey == 1) sp = "No contest. You lose!";
-                                else if (ikey == 2) sp = "Beat you by a mile.";
-                                else                sp = "That was easy!";
-                        }
-                        pk_pmsg(sp);
-                        saved_head_frame = g_hsfra;
-                        saved_head_mode  = g_hamod;
-                        a_peeka();
-                        g_hamod = saved_head_mode;
-                        gameTick(8);
-                        pk_annr(0);
-                        plEr(70, 10, 219, 62);
-                        g_pcmon = g_pcmon - 2;
-                        pk_actd(g_pcdrp, &g_pcmon, pk_pwc[0]);
-                        pk_actd(g_pcdrp, &g_pcmon, pk_cwc[0]);
-                        g_hsfra = saved_head_frame;
-                        continue;
-                }
-
-                /* Tie -> war round. */
-                res = pk_bjwr();
-                if (mg_tofl != NO)
-                        break;
-                if (res == -1) {
-                        pk_pmsg("I'm out of cards! You're too good!");
-                        gameTick(0x14);
-                        break;
-                }
-                if (res == -2) {
-                        pk_pmsg("No cards, huh? Better luck next time.");
-                        gameTick(0x14);
-                        break;
-                }
-        }
-
-        /* Common cleanup path (Ghidra LAB_0001b308). */
-        tx_sctm  = 0;
-        no_keyin = NO;
-        Mfree(crd_dat);
-        moff();
-        crd_dat = (short *) 0;
 }
 
 /* pk_pmsg: print a green status message in the bottom info bar.
