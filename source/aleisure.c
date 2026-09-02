@@ -532,13 +532,20 @@ void
 a_chefd(value)
 short   value;
 {
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_BTM_FRONT_DOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -550,7 +557,11 @@ short   value;
 
         hs_posXY(POS_BTM_FRONT_DOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         g_wtx = g_wtx - 10;
+#else
+        g_wtx -= 10;
+#endif
         lcp_wkD();
 
         g_selaf[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
@@ -567,13 +578,21 @@ short   value;
 
         hs_posXY(POS_BTM_FRONT_DOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         g_wtx = g_wtx - 10;
+#else
+        g_wtx -= 10;
+#endif
         lcp_wkD();
         g_selaf[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
         sp_upds();
 
+#ifdef FAITHFUL
         result = rndRng(0, 100);
         if (lcp.initiative_threshold < result) {
+#else
+        if (lcp.initiative_threshold < rndRng(0, 100)) {
+#endif
                 g_actif = YES;
                 hs_posXY(POS_BTM_FRONT_DOOR,
                                       &g_wtx, &g_wty);

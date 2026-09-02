@@ -288,7 +288,11 @@ ev_ansPh()
         g_hatas = 8;
         lcp_hwt();
 
+#ifdef FAITHFUL
         lcp_y = lcp_y + 6;
+#else
+        lcp_y += 6;
+#endif
         lcp_st = STATE_PHONE_PICKUP;
         gameTick(1);
 
@@ -327,7 +331,11 @@ ev_ansPh()
                 subpick = rndRng(1, 2);
                 gameTick(subpick);
                 g_sfret = (long) subpick;
+#ifdef FAITHFUL
                 ticks = ticks - 1;
+#else
+                ticks -= 1;
+#endif
         }
 
         ph_hu = YES;
@@ -335,7 +343,11 @@ ev_ansPh()
         g_hsfra = saved_frame;
         gameTick(1);
 
+#ifdef FAITHFUL
         lcp_y = lcp_y - 6;
+#else
+        lcp_y -= 6;
+#endif
         lcp_st = STATE_CROUCH_DOWN;
         gameTick(1);
 
@@ -343,7 +355,11 @@ ev_ansPh()
                 gameTick(0);
 
         dg_petok = NO;
+#ifdef FAITHFUL
         lcp_y = lcp_y - 2;
+#else
+        lcp_y -= 2;
+#endif
         g_hatas = 8;
         g_hacur      = 8;
         lcp_st = STATE_STAND_SIDE_VIEW;

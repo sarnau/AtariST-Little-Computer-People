@@ -61,11 +61,10 @@ lt_sets()
         sf_sele(SFX_TYPEWRITER_KEY, 4L);
 }
 
-void
-sfClick()
-{
-        sf_sele(SFX_CLICK, 2L);
-}
+/* sfClick -> parts/sfClick.c (STX: 0xdece object, 0x14786, just before lcp_wkD). */
+#ifdef FAITHFUL
+#include "parts/sfClick.c"
+#endif
 
 /* sgPlay: load a .sng/.org from disk (10-byte Music Studio 2.0 header,
    then up to 20000 bytes of sequence data) and hand it to mq_inis.

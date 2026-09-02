@@ -46,10 +46,14 @@
 #include "parts/sp_ssco.c"   /* 0x1203a */
 #include "parts/sp_ss02.c"   /* 0x12108 */
 #include "abathrm.c"
+#include "agames.c"   /* a_plaag 0x11860 */
 #include "ahouse.c"
+#include "parts/a_playc.c" /* 0x12e86 */
+#include "parts/tv_scrc.c" /* 0x13074 */
 #include "health.c"
 /* wkFrDr reaches lcp_wkD (STX 0x147a0, inside this cluster) with a
    bsr, so the walk engine is part of this object too. */
+#include "parts/sfClick.c" /* 0x14786 */
 #include "walk.c"
 
 #endif  /* !FAITHFUL */

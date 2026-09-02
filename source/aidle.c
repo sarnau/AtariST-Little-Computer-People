@@ -141,7 +141,11 @@ short   value;
                 sf_sele(SFX_SNORING, 3L);
                 gameTick(1);
                 lcp_st = pst_arr[0]; gameTick(1);
+#ifdef FAITHFUL
                 i = i + 1;
+#else
+                i += 1;
+#endif
         }
 
         if (value == -1) {

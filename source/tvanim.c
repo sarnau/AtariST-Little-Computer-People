@@ -16,26 +16,10 @@
 #include "tvanim.h"
 
 /* addr: tv_scrc() */
-void
-tv_scrc()
-{
-        RECT16          rect;
-        unsigned short  rnd;
-
-        rect.x1 = 293; rect.y1 =  99;
-        rect.x2 = 308; rect.y2 = 106;
-
-        sc_sdtb();
-        v_bar(vdihnd, &rect.x1);
-        sc_sdtf();
-        gameTick(1);
-
-        rnd = (unsigned short) Random();
-        if ((rnd & 1) == 0)
-                tv_boul();
-        else
-                tv_patl();
-}
+/* tv_scrc -> parts/tv_scrc.c (STX: 0xdece object, 0x13074, right after a_playc). */
+#ifdef FAITHFUL
+#include "parts/tv_scrc.c"
+#endif
 
 /* addr: tv_boul() (ROM 0xd404).  v_pline is called with count=2 but
    only pos[0..1] initialised: the second point deliberately overlaps
