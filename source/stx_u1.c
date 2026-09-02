@@ -52,6 +52,8 @@
 #include "parts/setHTgt.c"
 #include "parts/lcp_path.c"  /* 0x470a */
 #include "parts/lcp_fstp.c"  /* 0x4fec */
+#include "parts/lcp_flwp.c"  /* 0x50bc */
+#include "parts/getFlrY.c"    /* 0x5224, reached by bsr from lcp_flwp */
 /* assets.c straddles: the two asset loaders are in this object,
    right after getFlrY.  They need the trap bindings. */
 #include <osbind.h>

@@ -77,62 +77,10 @@ lcp_wkD()
 }
 #endif
 
-/* lcp_flwp: pick next waypoint.  Same-floor -> straight to g_wtx/y;
-   cross-floor -> through stair_wp[].  Middle floor has an extra
-   stair_ty/stair_by landing branch top/bottom don't need.
-   addr: lcp_flwp() */
-
-void
-lcp_flwp()
-{
-        short   target_floor;
-        short   current_floor;
-        short   dest_floor;
-        short   stair_index;
-
-        target_floor  = getFlrY(g_wty);
-        current_floor = getFlrY(lcp_y);
-
-        if (current_floor == target_floor) {
-                lcp_stR = NO;
-                g_wyx = g_wtx;
-                g_wyy = g_wty;
-                return;
-        }
-
-        target_floor    = getFlrY(lcp_y);
-        stair_index     = (target_floor - 1) + (target_floor - 1);
-        current_floor   = stair_index;
-        g_wyx = stair_wp[stair_index];
-        g_wyy = stair_wp[current_floor + 1];
-
-        target_floor = getFlrY(lcp_y);
-        if (target_floor == 2) {
-                target_floor = getFlrY(g_wty);
-                dest_floor   = getFlrY(lcp_y);
-                if (target_floor < dest_floor) {
-                        g_wyx = stair_ty;
-                        g_wyy = stair_by;
-                }
-        }
-
-        lcp_stR = NO;
-        if (lcp_x == g_wyx && lcp_y == g_wyy) {
-                lcp_stR = YES;
-                if (g_wty < lcp_y) {
-                        g_wyx = stair_wp[current_floor + 2];
-                        g_wyy = stair_wp[current_floor + 3];
-                } else {
-                        g_wyy = stair_wp[current_floor - 1];
-                        g_wyx = stair_wp[current_floor - 2];
-                }
-                target_floor = getFlrY(lcp_y);
-                if (target_floor == 1) {
-                        g_wyx = stair_ty;
-                        g_wyy = stair_by;
-                }
-        }
-}
+/* lcp_flwp -> parts/lcp_flwp.c (STX: 0x50bc, just before getFlrY). */
+#ifdef FAITHFUL
+#include "parts/lcp_flwp.c"
+#endif
 
 /* dg_wkPth -> parts/dg_wkPth.c (STX: 0x4586, immediately after dg_mvAni). */
 #ifdef FAITHFUL

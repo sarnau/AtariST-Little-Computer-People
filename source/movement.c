@@ -40,28 +40,10 @@ short   *g_txy;
 #endif
 }
 
-/* addr: getFlrY() */
-short
-getFlrY(y)
-short   y;
-{
+/* getFlrY -> parts/getFlrY.c (STX: 0x5224, after lcp_flwp). */
 #ifdef FAITHFUL
-        if (y < 78)
-                return 3;
-        if (y < 141)
-                return 2;
-        return 1;
-#else
-        /* STX: one if/else-if/else chain -- each arm's return is
-           followed by the else-skip branch. */
-        if (y > 140)
-                return 1;
-        else if (y > 77)
-                return 2;
-        else
-                return 3;
+#include "parts/getFlrY.c"
 #endif
-}
 
 /* cWkday -> parts/cWkday.c (STX: 0x1332e, in the 0xdece object). */
 #ifdef FAITHFUL
