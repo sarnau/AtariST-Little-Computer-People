@@ -32,6 +32,12 @@ short   event;
         if (lcp.is_sleeping != NO)
                 a_gioob();
 
+        /* STX writes the arms in a different source order -- the
+           jump-table targets (28->0x5fd6, 29->0x5fde, 30->0x5ffa,
+           31->0x600c, 32->0x5fce, 35->0x6004) put BOOK_DELIVERY
+           first and DOG_FOOD last -- and passes 0 to the phone
+           handler. */
+#ifdef FAITHFUL
         switch (event) {
         case ACTION_EVENT_RECORD_DELIVERY:
                 er_recd();
@@ -53,6 +59,30 @@ short   event;
                 a_getd();
                 break;
         }
+#else
+        switch (event) {
+        case ACTION_EVENT_BOOK_DELIVERY:        /* 0x5fce */
+                er_bood();
+                break;
+        case ACTION_EVENT_RECORD_DELIVERY:      /* 0x5fd6 */
+                er_recd();
+                break;
+        case ACTION_EVENT_FOOD_DELIVERY:        /* 0x5fde */
+                if (((lcp.door_states_and_flags >> 9) & 7) == 4)
+                        break;
+                er_food();
+                break;
+        case ACTION_EVENT_PHONE_CALL:           /* 0x5ffa */
+                ev_ansPh(0);
+                break;
+        case ACTION_GET_DRESSED:                /* 0x6004 */
+                a_getd();
+                break;
+        case ACTION_EVENT_DOG_FOOD:             /* 0x600c */
+                er_dogf();
+                break;
+        }
+#endif
 
         in_evrt = NO;
 }

@@ -579,6 +579,13 @@ this build, ALL different from LCP_ORG's:
       w = f(); g(w)        (ORG)  vs  g(w = f())
       while (n != 0){...   (ORG)  vs  while (n--) { ... }
         n = n - 1;}
+      if (c) f(); break;   (ORG)  vs  if (!c) break; f(); break;
+                                      (the beq displacement gives it
+                                       away: over the call vs to the
+                                       switch end)
+      case ORDER in the source is recoverable from the jump table's
+        targets (STX's execEv writes BOOK, RECORD, FOOD, PHONE,
+        GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
       lcp_y = lcp_y + 9    (ORG)  vs  lcp_y += 3; ... lcp_y += 6;
