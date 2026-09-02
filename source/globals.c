@@ -339,7 +339,11 @@ long            mi_env = 0;
      mi_dvel    @ 0x29a24 = 0x7F (127)
      psg_dvol       @ 0x29a26 = 0x0F (15)  -- max PSG volume
    Port previously had mi_vel/default at 100 (guess). */
+#ifdef FAITHFUL
 short           mi_vel           = 127;
+#else
+char            mi_vel           = 127; /* STX: byte */
+#endif
 /* STX declares these two as char (byte compares/stores; Alcyon
    word-aligns them, hence the 2-byte spacing). */
 #ifdef FAITHFUL
@@ -347,7 +351,11 @@ short           mi_dvel   = 127;
 #else
 char            mi_dvel   = 127;
 #endif
+#ifdef FAITHFUL
 short           psg_cvol      = 15;
+#else
+char            psg_cvol      = 15;     /* STX: byte */
+#endif
 #ifdef FAITHFUL
 short           psg_dvol      = 15;
 #else
@@ -375,9 +383,15 @@ short           g_mtpre     = 100;
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
    mq_stap resets it at song start. */
 short           mi_nlp0         = 100;
+#ifdef FAITHFUL
 short           mi_nxTk    = 100;
 short           mi_lpTk= 100;
 BOOL16          g_msmsa   = NO;
+#else
+long            mi_nxTk    = 100;       /* STX: long tick counters */
+long            mi_lpTk= 100;
+char            g_msmsa   = NO;         /* STX: byte flag */
+#endif
 /* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
    lookup.  Dumped verbatim -- previous port had guessed the values
    from Music Studio 2.0 documentation but the real ones diverge

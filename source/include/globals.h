@@ -118,13 +118,21 @@ extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;
 extern long g_msmap;
 extern long mi_env;
+#ifdef FAITHFUL
 extern short mi_vel;
+#else
+extern char  mi_vel;            /* STX: byte */
+#endif
 #ifdef FAITHFUL
 extern short mi_dvel;
 #else
 extern char mi_dvel;
 #endif
+#ifdef FAITHFUL
 extern short psg_cvol;
+#else
+extern char  psg_cvol;          /* STX: byte */
+#endif
 #ifdef FAITHFUL
 extern short psg_dvol;
 #else
@@ -138,9 +146,15 @@ extern long g_mtcou;
 extern short mi_dwrm;
 extern short g_mtdiv;
 extern short g_mtpre;
+#ifdef FAITHFUL
 extern short mi_nxTk;
 extern short mi_lpTk;
 extern BOOL16 g_msmsa;
+#else
+extern long  mi_nxTk;           /* STX: long tick counters */
+extern long  mi_lpTk;
+extern char  g_msmsa;           /* STX: byte flag */
+#endif
 extern short mi_rlock;
 extern long mi_svtv;
 extern unsigned char* mi_seqE;

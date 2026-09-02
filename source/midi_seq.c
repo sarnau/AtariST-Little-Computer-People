@@ -145,8 +145,12 @@ long            maxPos;
                 return;
         }
 
+#ifdef FAITHFUL
         mi_dbase = param_1 + 0x1fe;
         mq_parh(mi_dbase);
+#else
+        mq_parh(mi_dbase = param_1 + 0x1fe);
+#endif
         mq_resp();
 #ifdef FAITHFUL
         current_position = mq_skip(mi_dbase,
@@ -190,7 +194,14 @@ unsigned char * curPos;
 long            maxPos;
 {
         mi_sqpos     = curPos;
+#ifdef FAITHFUL
         g_msmap = (maxPos == 0) ? -1 : maxPos;
+#else
+        if (maxPos == 0)
+                g_msmap = -1;
+        else
+                g_msmap = maxPos;
+#endif
 
         mi_env = (long) (mi_dbase - 0x168);
         mi_vel           = mi_dvel;
@@ -208,6 +219,7 @@ long            maxPos;
 void
 mq_stap()
 {
+#ifdef FAITHFUL
         g_mtcou       = 0;
         mi_dwrm  = 0;
         g_mtdiv       = 100;
@@ -217,6 +229,12 @@ mq_stap()
         mi_lpTk= 100;
         g_msmsa   = YES;
         g_mspha          = SEQ_PHASE_PARSE_NEXT_EVENT;
+#else
+        /* STX writes these as chained assignments. */
+        mi_dwrm = g_mtcou = 0;
+        mi_lpTk = mi_nxTk = mi_nlp0 = g_mtpre = g_mtdiv = 100;
+        g_mspha = g_msmsa = YES;
+#endif
 }
 
 /* mq_pacm: unpack 30-byte channel/program map (90 bytes before mi_dbase).
