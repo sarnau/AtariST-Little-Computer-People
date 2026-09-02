@@ -131,7 +131,9 @@ mq_inis(param_1, maxPos)
 unsigned char * param_1;
 long            maxPos;
 {
+#ifdef FAITHFUL
         unsigned char * current_position;
+#endif
 
         if (mi_play != NO) {
                 g_mspha = SEQ_PHASE_SONG_ENDING;
@@ -141,9 +143,13 @@ long            maxPos;
         mi_dbase = param_1 + 0x1fe;
         mq_parh(mi_dbase);
         mq_resp();
+#ifdef FAITHFUL
         current_position = mq_skip(mi_dbase,
                                                  maxPos);
         mq_setp(current_position, maxPos);
+#else
+        mq_setp(mq_skip(mi_dbase), maxPos);
+#endif
         mq_stap();
         mi_play = YES;
 }
@@ -297,12 +303,17 @@ mq_resp()
    addr: mq_skip() */
 
 unsigned char *
+#ifdef FAITHFUL
 mq_skip(ptr, position)
 unsigned char * ptr;
 long            position;
 {
         (void) position;
-
+#else
+mq_skip(ptr)                    /* STX: no second parameter */
+unsigned char * ptr;
+{
+#endif
         if (ptr == (unsigned char *) 0)
                 return (unsigned char *) 0;
 

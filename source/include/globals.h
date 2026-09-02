@@ -109,7 +109,11 @@ extern BOOL16 mi_varR;
 extern char   g_molof;          /* STX: byte flags (moveb) */
 extern char   mi_varR;
 #endif
+#ifdef FAITHFUL
 extern short g_mspha;
+#else
+extern char  g_mspha;           /* STX: byte (moveb/tstb) */
+#endif
 extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;
 extern long g_msmap;

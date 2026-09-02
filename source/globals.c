@@ -321,7 +321,11 @@ BOOL16  mi_varR                      = YES;
 char    g_molof             = NO;
 char    mi_varR                      = YES;
 #endif
+#ifdef FAITHFUL
 short   g_mspha                  = 0;
+#else
+char    g_mspha                  = 0;   /* STX: byte */
+#endif
 unsigned char * mi_dbase      = (unsigned char *) 0;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
