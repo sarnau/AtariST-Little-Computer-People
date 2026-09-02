@@ -46,12 +46,25 @@ sp_updb()
                 ;
 
         frame = body_frT[lcp_st];
+        /* STX spells the bound inclusively on the previous state
+           (cmpi #24/bgt) where LCP_ORG uses < 25 (cmpi #25/bge). */
+#ifdef FAITHFUL
         if (g_lcyof != NO && lcp_st < STATE_BEND_AND_REACH)
+#else
+        if (g_lcyof != NO && lcp_st <= STATE_STR_BTM_F3)
+#endif
                 frame = cy_frT[lcp_st];
 
         /* Ghidra 0x2669a `muls.w #0x54, D0`: stride is 168 src, 84 dest. */
+        /* STX multiplies in word width (muls.w) -- no (long) casts,
+           so no call to the long-multiply helper. */
+#ifdef FAITHFUL
         sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
                 (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
+#else
+        sp_lcpf((short *) ((char *) body_ptr    + frame * LCP_BODY_FRAME_SIZE),
+                (short *) ((char *) body_shp  + frame * LCP_BODY_SHAPE_SIZE),
+#endif
                 (short *) g_lsimg,
                 (short *) g_lsmas,
                 2, 21, lcp_face, 1);

@@ -48,9 +48,7 @@ er_write()
 #include "sprglobs.h"
 #include "dog.h"
 #include "sprites.h"
-/* NOT tables.h: the STX build reads rev_tab as plain (signed) short
-   -- no clr.w zero-extension before the table loads. */
-extern short    rev_tab[];
+#include "tables.h"
 
 void
 sp_spud(g_seid, layer_p, flipH2)

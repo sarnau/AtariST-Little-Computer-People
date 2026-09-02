@@ -4,7 +4,14 @@
 #define TABLES_H
 
 extern short g_rpxs[];
+/* The STX build reads rev_tab as a plain (signed) short: its sp_flih
+   loads the table without the clr.w zero-extension LCP_ORG's build
+   emits. */
+#ifdef FAITHFUL
 extern unsigned short rev_tab[];
+#else
+extern short rev_tab[];
+#endif
 extern short g_atact[];
 extern short g_atmod[];
 extern short g_atrel[];

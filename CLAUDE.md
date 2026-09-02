@@ -421,6 +421,23 @@ this build, ALL different from LCP_ORG's:
   emit no code, so the layout is unaffected) or the parts/ bodies
   compile with nothing in scope.
 
+  **Open lead: the LCP body/shape buffers are ARRAYS in STX, not
+  pointers.**  sp_updb's residual divergence is
+      port:  muls.w #84,d0 ; ext.l d0 ; add.l body_shp,d0
+      STX:   muls.w #84,d0 ;            add.l #184892,d0
+  Probing settled it: `(char *)ptr + i * 84` and every cast variant
+  emit the ext.l, while `a2[i]` on `char a2[][84]` (or `&sarr[i]` on
+  an 84-byte struct array) emit exactly the STX shape -- an
+  immediate base and no ext.l.  Checked against alcyon2's own
+  C168.PRG under Hatari: it emits the ext.l too, so this is NOT a
+  codegen difference; STX's source indexes real global arrays where
+  the port carries `body_ptr`/`body_shp` pointer variables assigned
+  by al_locs from statics in assets.c.  Converting them for the STX
+  configuration (arrays with 168/84-byte rows, loader reading
+  straight into them) is a multi-file change and the natural next
+  step for the sprite object.  This is the same class as the
+  g_obtmp->g_obtmt and od_* fixes.
+
   **Membership map (done -- `stx_objmap.py --members`).**  Folding
   in the candidate addresses, only FIVE port files straddle STX
   cluster boundaries and therefore need splitting; every other file
