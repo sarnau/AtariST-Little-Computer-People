@@ -54,7 +54,11 @@ short   door_st;
                 od_draw(od_fro2, 294, 151);
                 gameTick(2);
                 lcp_frdO = YES;
+#ifdef FAITHFUL
         } else {
+#else
+        } else if (door_st != 0) {      /* STX re-tests the argument */
+#endif
                 if (lcp_frdO == NO)
                         return;
                 od_draw(od_fro1, 294, 151);
@@ -87,7 +91,13 @@ short   oc_stat;
                 sc_drfc();
                 lcp_st = STATE_STAND_FACING_SCREEN;
                 gameTick(2);
+#ifdef FAITHFUL
         } else if (lcp_cabO != NO) {
+#else
+        } else if (oc_stat != 0) {      /* STX re-tests the argument */
+                if (lcp_cabO == NO)
+                        return;
+#endif
                 lcp_cabO = NO;
                 lcp_st = STATE_REACH_INTO_CABINET;
                 gameTick(3);

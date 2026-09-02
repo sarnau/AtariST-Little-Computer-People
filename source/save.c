@@ -160,35 +160,10 @@ void *  buffer;
         Fclose(fhnd);
 }
 
-/* addr: lcp_save() */
-void
-lcp_save(filename, size, addr)
-char *  filename;
-short   size;
-void *  addr;
-{
-        short   filehandle;
-        long    lVar1;
-
-        crFile(filename);
-
-        for (;;) {
-                filehandle = Fopen(filename, 1L);
-                if (filehandle >= 0)
-                        break;
-                er_write();
-        }
-
-        for (;;) {
-                lVar1 = Fwrite(filehandle, (long) size, addr);
-                /* ROM evaluates the size cast first. */
-                if ((long) size == lVar1)
-                        break;
-                er_write();
-        }
-
-        Fclose(filehandle);
-}
+/* lcp_save -> parts/lcp_save.c (STX: 0xdece object, 0x1481c). */
+#ifdef FAITHFUL
+#include "parts/lcp_save.c"
+#endif
 
 /* addr: lc_load() */
 short

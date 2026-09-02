@@ -66,4 +66,7 @@
 #include "parts/sfClick.c" /* 0x14786 */
 #include "walk.c"
 
+/* lcp_save (0x1481c) closes the STX object. */
+#include "parts/lcp_save.c"
+
 #endif  /* !FAITHFUL */

@@ -133,7 +133,11 @@ short   oc_stat;
                 gameTick(2);
                 od_draw(od_dro2, 97, 115);
                 gameTick(2);
+#ifdef FAITHFUL
         } else {
+#else
+        } else if (oc_stat != 0) {      /* STX re-tests the argument */
+#endif
                 if (lcp_drsO == NO)
                         return;
                 lcp_drsO = NO;
