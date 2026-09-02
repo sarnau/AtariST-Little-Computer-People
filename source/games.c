@@ -626,12 +626,19 @@ ag_ssw()
 void
 ag_main()
 {
-        short   walk_result;
+        /* STX's frame is -28: twelve shorts, only six of which the
+           body touches. */
         short   index;
-        short   guess_count;
-        short   clue_count;
+        short   unused1;
+        short   unused2;
         short   key_pressed;
+        short   unused3;
+        short   walk_result;
         char    typed_char;
+        short   clue_count;
+        short   guess_count;
+        short   unused5;
+        short   unused6;
         BOOL16  word_complete;
 
         g_agwb = (char *) Malloc(10000L);
@@ -648,115 +655,119 @@ new_word:
         g_aggun = 1;
         ag_ssw();
 
-        do {
-                g_agacu = 0;
-                ag_clue = 0;
-                strPr("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
-                ag_sgp(g_aggun);
-                for (index = 0; index < 10; index = index + 1)
-                        g_aginb[index] = ' ';
-                g_aginb[10]   = '\0';
-                gameTick(0);
-                word_complete = NO;
-                if (g_aggun > 8 &&
-                    (g_aggun > 9 || g_agacu == 0))
-                        return;
+        /* STX runs the round prologue ONCE per word and folds the
+           guess-count guard into a `while` condition; the
+           "too many guesses" tail lives inside the loop and ends with
+           `goto new_word`. */
+        g_agacu = 0;
+        ag_clue = 0;
+        strPr("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
+        ag_sgp(g_aggun);
+        for (index = 0; index < 10; index++)
+                g_aginb[index] = ' ';
+        g_aginb[10]   = '\0';
+        gameTick(0);
+        word_complete = NO;
+        while (g_aggun < 9 || (g_aggun < 10 && g_agacu != 0)) {
                 index         = 0;
                 key_pressed   = 0;
-                do {
-                        for (;;) {
-                                for (;;) {
-                                        if (key_pressed == KEY_CTRL_M)
-                                                goto validate;
-                                        strPr(g_aginb, 239, 57, COLOR_green);
-                                        key_pressed = mg_wkev();
-                                        if (key_pressed > 0x40 &&
-                                            key_pressed < 0x5B)
-                                                key_pressed = key_pressed + 0x20;
-                                        if (key_pressed < 0x7B &&
-                                            key_pressed > 0x60) {
-                                                g_aginb[index] = (char) key_pressed;
-                                                index = index + 1;
-                                                if (index > 9) {
-                                                        index = 9;
-                                                        ag_sgp(g_aggun);
-                                                }
-                                        }
-                                        if (key_pressed != KEY_CURSOR_LEFT)
-                                                break;
-                                        if (index == 0)
-                                                g_aginb[0] = ' ';
-                                        else if (index == 9 &&
-                                                 g_aginb[9] != ' ')
-                                                g_aginb[9] = ' ';
-                                        else {
-                                                index = index - 1;
-                                                g_aginb[index] = ' ';
-                                        }
+                while (key_pressed != KEY_CTRL_M) {
+                        strPr(g_aginb, 239, 57, COLOR_green);
+                        key_pressed = mg_wkev();
+                        if (key_pressed >= 'A' && key_pressed <= 'Z')
+                                key_pressed += 0x20;
+                        if (key_pressed <= 'z' && key_pressed >= 'a') {
+                                g_aginb[index] = key_pressed;
+                                if (++index >= 10) {
+                                        index = 9;
                                         ag_sgp(g_aggun);
                                 }
-                                if (key_pressed == KEY_F10) {
-                                        tx_sctm  = 0;
-                                        no_keyin = NO;
-                                        Mfree(g_agwb);
-                                        return;
+                        }
+                        if (key_pressed == KEY_CURSOR_LEFT) {
+                                if (index != 0) {
+                                        if (index == 9 &&
+                                            g_aginb[index] != ' ')
+                                                g_aginb[index] = ' ';
+                                        else {
+                                                index--;
+                                                *(index + g_aginb) = ' ';
+                                        }
+                                } else
+                                        g_aginb[index] = ' ';
+                                ag_sgp(g_aggun);
+                                continue;
+                        }
+                        if (key_pressed == KEY_F10) {
+                                tx_sctm  = 0;
+                                no_keyin = NO;
+                                Mfree(g_agwb);
+                                return;
+                        }
+                        if (key_pressed == KEY_F1 && ag_clue == 0) {
+                                /* Braced: a bare `continue` folds into
+                                   the conditional branch, braces make
+                                   Alcyon emit beq-over-bra. */
+                                if (ag_matc(g_agorw, g_agscw) != 0) {
+                                        continue;
                                 }
-                                if (key_pressed == KEY_F1 &&
-                                    ag_clue == 0) {
-                                        walk_result = ag_matc(g_agorw, g_agscw);
-                                        if (walk_result == 0)
+                                /* Clue path: reveal one letter. */
+                                g_agclc++;
+                                g_aggun++;
+                                ag_sgp(g_aggun);
+                                if (g_aggun == 9)
+                                        g_agacu = 1;
+                                ag_clue = 1;
+                                plEr(182, 0, 319, 9);
+                                strPr("         F10 Quit", 183, 8,
+                                      COLOR_blue);
+                                for (guess_count = 0;
+                                     guess_count < g_agwol;
+                                     guess_count++)
+                                        if (g_agorw[guess_count] !=
+                                            g_agscw[guess_count])
                                                 break;
+                                if (guess_count != g_agwol) {
+                                        clue_count = g_agwol - 1;
+                                        for (;;) {
+                                                if (g_agorw[guess_count] ==
+                                                    g_agscw[clue_count])
+                                                        break;
+                                                clue_count--;
+                                        }
+                                        typed_char = g_agscw[clue_count];
+                                        g_agscw[clue_count] =
+                                                g_agscw[guess_count];
+                                        g_agscw[guess_count] = typed_char;
+                                }
+                                ag_dwl(g_agscw, COLOR_green);
+                                if (ag_matc(g_agorw, g_agscw) != 0) {
+                                        ag_csb();
+                                        strPr("You took too many clues!",
+                                              5, 69, COLOR_black);
+                                        ag_dwl(g_agorw, COLOR_black);
+                                        gameTick(0x14);
+                                        word_complete = YES;
                                 }
                                 if (word_complete != NO)
                                         goto validate;
-                        }
-
-                        /* Clue path: reveal one letter. */
-                        g_agclc = g_agclc + 1;
-                        g_aggun = g_aggun + 1;
-                        ag_sgp(g_aggun);
-                        if (g_aggun == 9)
-                                g_agacu = 1;
-                        ag_clue = 1;
-                        plEr(182, 0, 319, 9);
-                        strPr("         F10 Quit", 183, 8, COLOR_blue);
-                        for (guess_count = 0;
-                             guess_count < g_agwol &&
-                             g_agorw[guess_count] == g_agscw[guess_count];
-                             guess_count = guess_count + 1) ;
-                        clue_count = g_agwol;
-                        if (guess_count != g_agwol) {
-                                do {
-                                        clue_count = clue_count - 1;
-                                } while (g_agorw[guess_count] !=
-                                         g_agscw[clue_count]);
-                                typed_char           = g_agscw[clue_count];
-                                g_agscw[clue_count]  = g_agscw[guess_count];
-                                g_agscw[guess_count] = typed_char;
-                        }
-                        ag_dwl(g_agscw, COLOR_green);
-                        walk_result = ag_matc(g_agorw, g_agscw);
-                        if (walk_result != 0) {
-                                ag_csb();
-                                strPr("You took too many clues!",
-                                                     5, 69, COLOR_black);
-                                ag_dwl(g_agorw, COLOR_black);
-                                gameTick(0x14);
-                                word_complete = YES;
-                        }
-                } while (word_complete == NO);
+                        } else if (word_complete != NO)
+                                goto validate;
+                }
 
 validate:
                 if (word_complete != NO)
                         goto new_word;
                 for (index = 0;
                      g_aginb[index] != ' ' &&
-                     g_aginb[index] != '\0';
-                     index = index + 1) ;
+                     /* STX addresses this one with an indexed EA
+                        (movea.l #base,a1 / tst.b (0,a0,a1.l)) that no
+                        spelling reproduces here -- the only byte still
+                        divergent in ag_main. */
+                     *(index + g_aginb) != '\0';
+                     index++) ;
                 if (g_aginb[index] == ' ')
                         g_aginb[index] = '\0';
-                walk_result = ag_matc(g_aginb, g_agorw);
-                if (walk_result != 0) {
+                if (ag_matc(g_aginb, g_agorw) != 0) {
                         strPr("YOU GOT IT!!!!!!",
                                              5, 69, COLOR_black);
                         ag_dwl(g_agorw, COLOR_black);
@@ -764,27 +775,29 @@ validate:
                         ag_csb();
                         goto new_word;
                 }
-                if (g_aggun > 7)
-                        break;
-                g_aggun     = g_aggun + 1;
-                walk_result = rndRng(0, 2);
-                strPr(g_agwgm[walk_result], 5, 69, COLOR_black);
+                if (g_aggun <= 7) {
+                        g_aggun     = g_aggun + 1;
+                        walk_result = rndRng(0, 2);
+                        strPr(g_agwgm[walk_result], 5, 69, COLOR_black);
+                        gameTick(0x14);
+                        ag_csb();
+                        goto new_word;
+                }
+
+                /* Too many wrong guesses: show the answer, start a
+                   new word. */
+                g_aggun = g_aggun + 1;
+                strPr("Sorry, too many guesses!",
+                             5, 69, COLOR_black);
                 gameTick(0x14);
                 ag_csb();
-        } while (1);
-
-        /* Too many wrong guesses: show the answer, start a new word. */
-        g_aggun = g_aggun + 1;
-        strPr("Sorry, too many guesses!",
+                strPr("Here is the word.",
                              5, 69, COLOR_black);
-        gameTick(0x14);
-        ag_csb();
-        strPr("Here is the word.",
-                             5, 69, COLOR_black);
-        ag_dwl(g_agorw, COLOR_black);
-        gameTick(0x1e);
-        ag_cwda();
-        goto new_word;
+                ag_dwl(g_agorw, COLOR_black);
+                gameTick(0x1e);
+                ag_cwda();
+                goto new_word;
+        }
 }
 
 /* wp_main: WORD PUZZLE main loop.
