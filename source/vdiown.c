@@ -203,6 +203,7 @@ char *  str;
 {
         short   i;
 
+#ifdef FAITHFUL
         for (i = 0; str[i] != 0; i = i + 1)
                 intin[i] = str[i];
         contrl[0] = 8;
@@ -211,6 +212,19 @@ char *  str;
         contrl[6] = handle;
         ptsin[0]  = x;
         ptsin[1]  = y;
+#else
+        /* STX sets the point first and copies with the classic
+           while (dst[i++] = *src++) idiom, masking to a byte. */
+        ptsin[0]  = x;
+        ptsin[1]  = y;
+        i = 0;
+        while (intin[i++] = *str++ & 0xff)
+                ;
+        contrl[0] = 8;
+        contrl[1] = 1;
+        contrl[3] = --i;
+        contrl[6] = handle;
+#endif
         vdi_go();
 }
 

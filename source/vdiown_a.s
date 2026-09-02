@@ -8,13 +8,15 @@
 
 	.globl	_vdi_go
 	.globl	_vdipb
+	.globl	_contrl
 
 	.text
 
+* LCP_STX's version has no stack frame and re-points vdipb[0] at
+* contrl on every call.
 _vdi_go:
-	link	a6,#-4
+	move.l	#_contrl,_vdipb
 	move.l	#_vdipb,d1
 	moveq	#115,d0
 	trap	#2
-	unlk	a6
 	rts

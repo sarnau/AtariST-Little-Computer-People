@@ -620,6 +620,17 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      p = (T *)((char *)p    (ORG)  vs  (char *) p += n;
+        + n)                          (Alcyon C 4.14 accepts a CAST
+                                       AS AN LVALUE; the compound form
+                                       emits add.l d0,mem where the
+                                       assignment form emits
+                                       add.l mem,d0 / move.l d0,mem --
+                                       sc_firw/sc_firs/sc_firb)
+      (long) row * 160     (ORG)  vs  row * 160  (muls.w + ext.l
+                                      instead of a call to lmul)
+      for (i=0; s[i]; i++) (ORG)  vs  while (dst[i++] = *src++ & 0xff)
+        dst[i] = s[i];                (v_gtext, and contrl[3] = --i)
       case X: return V;    (ORG)  vs  case X: return V; break;
                                       (the dead break emits a second
                                        branch; the LAST arm has none

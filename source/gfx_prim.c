@@ -76,6 +76,7 @@ short                   row;
 {
         short   i;
 
+#ifdef FAITHFUL
         scrptr = (unsigned short *)
                  ((char *) scrptr + (long) row * 160);
         for (i = 0; i < 20; i = i + 1) {
@@ -85,6 +86,16 @@ short                   row;
                 scrptr[3] = 0xffff;
                 scrptr = scrptr + 4;
         }
+#else
+        /* STX: a 16-bit row multiply and post-incremented stores. */
+        (char *) scrptr += row * 160;
+        for (i = 0; i < 20; i++) {
+                *scrptr++ = 0x0000;
+                *scrptr++ = 0xffff;
+                *scrptr++ = 0xffff;
+                *scrptr++ = 0xffff;
+        }
+#endif
 }
 
 /* sc_firs: paint row with 0x0033 (2 planes) -- light-cyan status stripe.
@@ -97,6 +108,7 @@ short                   row;
 {
         short   i;
 
+#ifdef FAITHFUL
         scrptr = (unsigned short *)
                  ((char *) scrptr + (long) row * 160);
         for (i = 0; i < 20; i = i + 1) {
@@ -106,6 +118,15 @@ short                   row;
                 scrptr[3] = 0xffff;
                 scrptr = scrptr + 4;
         }
+#else
+        (char *) scrptr += row * 160;
+        for (i = 0; i < 20; i++) {
+                *scrptr++ = 0x0000;
+                *scrptr++ = 0x0000;
+                *scrptr++ = 0xffff;
+                *scrptr++ = 0xffff;
+        }
+#endif
 }
 
 /* sc_firb: paint row with 0 -> palette index 0 (black) separator.
@@ -118,12 +139,18 @@ short                   row;
 {
         short   column;
 
+#ifdef FAITHFUL
         scraddr = (unsigned short *)
                   ((char *) scraddr + (long) row * 160);
         for (column = 0; column < 80; column = column + 1) {
                 *scraddr = 0;
                 scraddr = scraddr + 1;
         }
+#else
+        (char *) scraddr += row * 160;
+        for (column = 0; column < 80; column++)
+                *scraddr++ = 0;
+#endif
 }
 
 /* initVdi: mini-game VDI setup.  Same shape as sc_sdtb but uses
