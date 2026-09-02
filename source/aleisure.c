@@ -536,13 +536,21 @@ short   value;
 void
 a_tidyh()
 {
+        /* STX tests the walk call inline -- no local, smaller frame. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -550,10 +558,18 @@ a_tidyh()
         lcp_hwt();
         a_watat();
 
+#ifdef FAITHFUL
         result = rndRng(0, 100);
         if (lcp.initiative_threshold < result ||
             introSeq != NO)
                 a_opcfc();
+#else
+        /* STX has no local at all here: both call results are used
+           in place, which is why its frame is 2 bytes smaller. */
+        if (lcp.initiative_threshold < rndRng(0, 100) ||
+            introSeq != NO)
+                a_opcfc();
+#endif
 }
 
 /* a_cleau: sweep all open doors/cabinets and close them.
