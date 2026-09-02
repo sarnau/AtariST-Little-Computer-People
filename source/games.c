@@ -77,18 +77,6 @@ exitVdi()
         Setscreen(sv_lgb, (void *)-1L, -1);     /* rez as word */
 }
 
-/* STX places wp_shwm between exitVdi (0x76d0) and the anagram
-   helpers (ag_cwda 0x7e9c). */
-/* wp_shwm: word-puzzle status message in green at (8,58).
-   addr: word_puzzle_show_status_message() */
-
-void
-wp_shwm(msg)
-char *  msg;
-{
-        plEr(0, 50, 319, 59);
-        strPr(msg, 8, 58, COLOR_green);
-}
 #endif  /* !FAITHFUL */
 
 
@@ -914,16 +902,15 @@ cleanup:
 void
 wp_solv()
 {
-        short   ch;
-        short   ri;
-        char *  psp;            /* player_answer_ptr / scratch */
-        char *  slp;            /* solution_line_ptr */
-        short   wi;
-        short   ilen;
+        /* STX's frame is -20: six locals, and ONE of them (`ch`) also
+           carries the scanned solution and answer characters, so
+           there is no ri/pci/sci/scp. */
         short   cwi;            /* current_word_index */
-        char    pci;            /* player_char_iter */
-        char *  scp;            /* scan_ptr */
-        char    sci;            /* solution_char_iter */
+        short   ilen;
+        short   wi;
+        short   ch;
+        char *  slp;            /* solution_line_ptr */
+        char *  psp;            /* player_answer_ptr */
 
         plEr(0, 10, 175, 26);
         plEr(176, 0, 319,  8);
@@ -937,66 +924,155 @@ wp_solv()
                         wi = cwi + 4;
                 wp_shwm(wp_prm[wi]);
                 ilen = 0;
-                for (;;) {
+                while (1) {
                         gameTick(0);
                         ch = mg_wkev();
                         if (ch == KEY_F10)
                                 return;
-                        if (ch == KEY_CTRL_M)
-                                break;
-                        if (ch == KEY_CURSOR_LEFT && 0 < ilen) {
-                                ilen = ilen - 1;
+                        /* The two `(long)` casts are real: they keep
+                           the muls.w result long, which puts the array
+                           base AFTER the column offset.  Without them
+                           Alcyon folds the base in first -- which is
+                           what the other two stores here do. */
+                        if (ch == KEY_CTRL_M) {
                                 wp_ans[cwi][ilen] = '\0';
+                                break;
+                        } else if (ch == KEY_CURSOR_LEFT && ilen > 0) {
+                                ilen--;
+                                wp_ans[0][cwi * 12 + (long) ilen] = '\0';
                                 plEr(ilen * 8 + 8, 60,
-                                                  ilen * 8 + 16, 68);
-                        } else if (ilen < 10 && 0x40 < ch) {
-                                ri = lcp_upp(ch);
-                                wp_ans[cwi][ilen] = (char) ri;
-                                ilen = ilen + 1;
+                                          ilen * 8 + 16, 68);
+                        } else if (ilen < 10 && ch >= 'A') {
+                                ch = lcp_upp(ch);
+                                wp_ans[0][cwi * 12 + (long) ilen] = ch;
+                                ilen++;
                                 wp_ans[cwi][ilen] = '\0';
                                 strPr(wp_ans[cwi], 8, 68, COLOR_white);
                         }
                 }
-                wp_ans[cwi][ilen] = '\0';
                 gameTick(8);
-                cwi = cwi + 1;
+                cwi++;
                 plEr(0, 60, 319, 69);
         } while (cwi < wp_blk);
 
-        slp = g_ltlp[g_wpci + g_wpci + 1];
+        slp = g_ltlp[(g_wpci << 1) + 1];
         wi  = 0;
-        for (;;) {
-                scp = slp;
-                if (wp_blk <= wi) {
-                        wp_rtmp();
-                        gameTick(8);
-                        ri = rndRng(0, 5);
-                        wp_shwm(wp_succ[ri]);
-                        return;
-                }
+        while (wi < wp_blk) {
+                /* The assignment is INSIDE the condition, so the
+                   compare uses the loaded value rather than reloading
+                   `ch` from the frame. */
                 do {
-                        slp = scp;
-                        scp = slp + 1;
-                } while (*slp < '!');
+                } while ((ch = *slp++) <= ' ');
+                slp--;
                 psp = wp_ans[wi];
-                for (;;) {
-                        sci = *slp;
-                        slp = slp + 1;
-                        if (sci < '!') break;
-                        pci = *psp;
-                        psp = psp + 1;
-                        if (pci != sci)
+                while (1) {
+                        if ((ch = *slp++) <= ' ')
+                                break;
+                        if (*psp++ != ch)
                                 goto fail;
                 }
                 if (*psp != '\0')
-                        break;
-                wi = wi + 1;
+                        goto fail;
+                wi++;
         }
+        wp_rtmp();
+        gameTick(8);
+        wp_shwm(wp_succ[rndRng(0, 5)]);
+        return;
 fail:
         wp_rtmp();
         gameTick(8);
-        ri = rndRng(0, 5);
-        wp_shwm(wp_fail[ri]);
+        wp_shwm(wp_fail[rndRng(0, 5)]);
+}
+
+/* STX links these immediately after wp_solv: wp_shwm 0x7c78,
+   wp_rtmp 0x7cac -- both bsr.s targets from it. */
+/* STX places wp_shwm between exitVdi (0x76d0) and the anagram
+   helpers (ag_cwda 0x7e9c). */
+/* wp_shwm: word-puzzle status message in green at (8,58).
+   addr: word_puzzle_show_status_message() */
+
+void
+wp_shwm(msg)
+char *  msg;
+{
+        plEr(0, 50, 319, 59);
+        strPr(msg, 8, 58, COLOR_green);
+}
+
+/* wp_rtmp: render puzzle template with player answers substituted for '@'.
+   Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at
+   (x=1, y=0x28) -- byte-comparable.
+   addr: word_puzzle_render_template_with_answers() */
+
+void
+wp_rtmp()
+{
+        short   ch;
+        char *  ap;             /* answer_ptr / scratch */
+        short   wlen;
+        short   ci;             /* char_index within an in-buffer word */
+        short   cy;
+        short   cx;
+        short   ai;             /* answer_index -> which wp_ans[] to use */
+        char    cur;
+        char *  tp;             /* template_ptr */
+
+        plEr(0, 31, 319, 49);
+        cx = 1;
+        ai = 0;
+        cy = 0x28;
+        tp = g_ltlp[g_wpci + g_wpci];
+        for (;;) {
+                for (;;) {
+                        for (;;) {
+                                ap  = tp;
+                                cur = *ap;
+                                tp  = ap + 1;
+                                if (cur < ' ')
+                                        return;
+                                if (cur != ' ') break;
+                                if (1 < cx)
+                                        cx = cx + 1;
+                        }
+                        if (cur == '@') break;
+                        wlen = 1;
+                        in_str[0] = cur;
+                        for (ap = tp; wlen < 0x10 && ' ' < *ap;
+                             ap = ap + 1) {
+                                in_str[wlen] = *ap;
+                                wlen = wlen + 1;
+                        }
+                        if (0x26 < (short)(wlen + cx)) {
+                                cx = 1;
+                                cy = cy + 8;
+                        }
+                        for (ci = 0; tp = ap, ci < wlen; ci = ci + 1) {
+                                prCh((short) in_str[ci],
+                                                cx << 3, cy, COLOR_blue);
+                                cx = cx + 1;
+                        }
+                }
+                for (wlen = 0;
+                     wlen < 0xc && ' ' < wp_ans[ai][wlen];
+                     wlen = wlen + 1) ;
+                if (0x27 < (short)(wlen + cx)) {
+                        cx = 1;
+                        cy = cy + 8;
+                }
+                strPr(wp_ans[ai], cx << 3, cy, COLOR_blue);
+                cx = wlen + cx;
+                ai = ai + 1;
+                ch = (short) ap[2];
+                if (ch < 0x20)
+                        return;
+                tp = ap + 2;
+                if (ch < 0x41) {
+                        prCh(ch, cx * 8, cy, COLOR_blue);
+                        cx = cx + 1;
+                        tp = ap + 3;
+                }
+        }
 }
 
 static void     pk_show();
@@ -3497,80 +3573,6 @@ cleanup:
 }
 
 
-/* wp_rtmp: render puzzle template with player answers substituted for '@'.
-   Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at
-   (x=1, y=0x28) -- byte-comparable.
-   addr: word_puzzle_render_template_with_answers() */
-
-void
-wp_rtmp()
-{
-        short   ch;
-        char *  ap;             /* answer_ptr / scratch */
-        short   wlen;
-        short   ci;             /* char_index within an in-buffer word */
-        short   cy;
-        short   cx;
-        short   ai;             /* answer_index -> which wp_ans[] to use */
-        char    cur;
-        char *  tp;             /* template_ptr */
-
-        plEr(0, 31, 319, 49);
-        cx = 1;
-        ai = 0;
-        cy = 0x28;
-        tp = g_ltlp[g_wpci + g_wpci];
-        for (;;) {
-                for (;;) {
-                        for (;;) {
-                                ap  = tp;
-                                cur = *ap;
-                                tp  = ap + 1;
-                                if (cur < ' ')
-                                        return;
-                                if (cur != ' ') break;
-                                if (1 < cx)
-                                        cx = cx + 1;
-                        }
-                        if (cur == '@') break;
-                        wlen = 1;
-                        in_str[0] = cur;
-                        for (ap = tp; wlen < 0x10 && ' ' < *ap;
-                             ap = ap + 1) {
-                                in_str[wlen] = *ap;
-                                wlen = wlen + 1;
-                        }
-                        if (0x26 < (short)(wlen + cx)) {
-                                cx = 1;
-                                cy = cy + 8;
-                        }
-                        for (ci = 0; tp = ap, ci < wlen; ci = ci + 1) {
-                                prCh((short) in_str[ci],
-                                                cx << 3, cy, COLOR_blue);
-                                cx = cx + 1;
-                        }
-                }
-                for (wlen = 0;
-                     wlen < 0xc && ' ' < wp_ans[ai][wlen];
-                     wlen = wlen + 1) ;
-                if (0x27 < (short)(wlen + cx)) {
-                        cx = 1;
-                        cy = cy + 8;
-                }
-                strPr(wp_ans[ai], cx << 3, cy, COLOR_blue);
-                cx = wlen + cx;
-                ai = ai + 1;
-                ch = (short) ap[2];
-                if (ch < 0x20)
-                        return;
-                tp = ap + 2;
-                if (ch < 0x41) {
-                        prCh(ch, cx * 8, cy, COLOR_blue);
-                        cx = cx + 1;
-                        tp = ap + 3;
-                }
-        }
-}
 
 
 #endif  /* FAITHFUL */
