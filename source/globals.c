@@ -638,7 +638,11 @@ short   g_sfdoc     = 0;
    everything; footsteps 0..5 at 30 lose to everything.
    Dumped verbatim from the data segment -- previous port had guessed
    values (0/5/3/8/etc) that gave wrong preemption. */
+#ifdef FAITHFUL
 short   sf_pri[32] = {
+#else
+char    sf_pri[32] = {          /* STX: one byte per entry */
+#endif
          30,  30,  30,  30,  30,  30,  15,  15,
          15,  15,  15,  15,   0,   0,  15,  15,
          15,  15,  15,  14,  16,   1,  15,   0,

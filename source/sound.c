@@ -20,9 +20,15 @@ sf_sele(sound_id, duration)
 short   sound_id;
 long    duration;
 {
+#ifdef FAITHFUL
         if (g_sfacf == NO ||
             sf_pri[sound_id] <=
             sf_pri[g_sfcur]) {
+#else
+        if (g_sfacf == NO ||
+            sf_pri[g_sfcur] >=
+            sf_pri[sound_id]) {
+#endif
                 g_sfcur     = sound_id;
                 g_sfdur    = (short) duration;
                 g_sfacf = YES;

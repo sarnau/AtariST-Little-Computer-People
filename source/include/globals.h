@@ -198,7 +198,11 @@ extern short g_sfcur;
 extern short g_sfdur;
 extern short g_sfdos;
 extern short g_sfdoc;
+#ifdef FAITHFUL
 extern short sf_pri[];
+#else
+extern char  sf_pri[];          /* STX: byte table (moveb + extw) */
+#endif
 extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];

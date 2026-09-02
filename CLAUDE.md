@@ -620,6 +620,21 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      for (;;)             (ORG)  vs  while (1)  (the while form
+                                      emits an entry bra to the
+                                      bottom jump; for(;;) does not)
+      x <<= 9              (ORG)  vs  x = x << 9  (<<= loads the
+                                      shift count first)
+      short table          (ORG)  vs  char table (moveb + extw at
+                                      the use sites -- sf_pri)
+      a static helper      (ORG)  vs  the body written out at each
+                                      call site (dv_pick)
+      if (a <= b)          (ORG)  vs  if (b >= a)  (which operand
+                                      lands in d0 gives it away)
+      Setscreen(l,p,-1L)   (ORG)  vs  Setscreen(l,p,-1)
+      Giaccess(0L, 0x88L)  (ORG)  vs  Giaccess(0, 0x88) with the
+                                      alcyon2 header's (char)/(short)
+                                      argument casts
       lcp_y = lcp_y + 9    (ORG)  vs  lcp_y += 3; ... lcp_y += 6;
                                       (STX splits the step around the
                                        state assignment -- two subq/
