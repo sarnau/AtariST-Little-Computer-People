@@ -26,6 +26,9 @@
 
 #include "dog.c"
 #include "ai.c"
+/* chk_timA (0x6210) sits between doAct and hs_posX in this
+   object, so airandom.c belongs here too. */
+#include "airandom.c"
 #include "actions.c"
 /* walk.c straddles two STX objects: lcp_path (0x470a) and
    lcp_fstp (0x4fec) live here with getFlrY, while lcp_wkD and

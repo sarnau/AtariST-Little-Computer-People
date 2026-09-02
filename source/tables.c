@@ -87,12 +87,23 @@ short   g_atrel[16] = {
 /* sch_tab[3][8] (Ghidra 0x2a230): (phase, activity_level) -> bucket.
    Indexed via *(sch_tab + hours_bucket*16 + activity_level*2).
    Row names shortened for Alcyon as68 8-char symbol truncation. */
+#ifdef FAITHFUL
 static short    schr0[8] = { 0, 0, 2, 2, 1, 1, 0, 1 };
 static short    schr1[8] = { 2, 1, 0, 1, 2, 0, 2, 0 };
 static short    schr2[8] = { 1, 2, 1, 0, 0, 2, 1, 2 };
 short *         sch_tab[3] = {
         schr0, schr1, schr2
 };
+#else
+/* LCP_STX indexes a flat array here, not a row-pointer table: its
+   chk_timA adds an immediate base and the table sits directly after
+   g_atrel in data (106960/106992/107024/107056, 32 bytes apart). */
+short           sch_tab[3][8] = {
+        { 0, 0, 2, 2, 1, 1, 0, 1 },
+        { 2, 1, 0, 1, 2, 0, 2, 0 },
+        { 1, 2, 1, 0, 0, 2, 1, 2 }
+};
+#endif
 
 /* g_rphs[49] (Ghidra 0x29F2A): Y offset from floor baseline per
    HOUSE_POS.  Entry 0 = 140 (ground-floor sentinel). */

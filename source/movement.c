@@ -63,28 +63,7 @@ short   y;
 #endif
 }
 
-/* The original references `daysInMo(dt_mon, dt_year)` inside the month
-   loop instead of `daysInMo(i, dt_year)` -- preserved for fidelity
-   though it's clearly a bug in the 1985 source.
-   addr: cWkday() */
-short
-cWkday()
-{
-        short   month_days;
-        short   i;
-        short   day_offset;
-        short   next_offset;
-
-        day_offset = 1;
-        for (i = 0; i < dt_year; i = i + 1) {
-                next_offset = day_offset + 1;
-                if ((i % 4) == 0)
-                        next_offset = day_offset + 2;
-                day_offset = next_offset;
-        }
-        for (i = 0; i < dt_mon; i = i + 1) {
-                month_days = daysInMo(dt_mon, dt_year);
-                day_offset = month_days + day_offset;
-        }
-        return (short) (date_day + day_offset) % 7;
-}
+/* cWkday -> parts/cWkday.c (STX: 0x1332e, in the 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/cWkday.c"
+#endif

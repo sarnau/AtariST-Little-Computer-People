@@ -48,6 +48,11 @@
 #include "parts/showLcp.c"
 #include "parts/sp_ssco.c"   /* 0x1203a */
 #include "parts/sp_ss02.c"   /* 0x12108 */
+/* movement.c straddles: cWkday is in this object, just ahead of
+   cl_drini (chk_timA reaches it with jsr, not bsr). */
+#include "calendar.h"
+#include "parts/daysInMo.c" /* 0x13796 */
+#include "parts/cWkday.c"   /* 0x1332e */
 #include "parts/cl_drini.c" /* 0x133b4 -- far from cl_redrH */
 #include "abathrm.c"
 #include "agames.c"   /* a_plaag 0x11860 */
