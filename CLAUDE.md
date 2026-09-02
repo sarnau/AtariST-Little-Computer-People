@@ -632,6 +632,14 @@ this build, ALL different from LCP_ORG's:
   declaration without checking every use breaks the build (a_tidyh
   used `result` twice).
 
+  **Scripted gating can strand an `#else`/`#endif`.**  Wrapping a line
+  that is already inside a `#ifdef FAITHFUL` block leaves the outer
+  `#else`/`#endif` unmatched; cp68 does NOT error -- it drops
+  everything from the unclosed `#ifdef` to EOF in the failing
+  configuration, so the build still reports OK while whole functions
+  disappear (hit in aleisure.c, 2026-09-02).  `stx_check.sh` now runs
+  `tools/ppbalance.py` first; run it after any batch edit.
+
   **Gating a declaration must not disturb the OTHER configuration's
   declaration order.**  Local offsets are assigned in declaration
   order, so wrapping only the now-unused locals in `#ifdef FAITHFUL`

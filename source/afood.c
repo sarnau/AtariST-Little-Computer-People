@@ -36,8 +36,12 @@ a_eatm()
 #ifdef FAITHFUL
         short   result;
 #endif
+#ifdef FAITHFUL
         short   counter;
         short   pick;
+#else
+        short   counter;
+#endif
 
         hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
@@ -76,6 +80,7 @@ a_eatm()
         lcp_st            = STATE_BEND_AND_REACH;
 
         /* 30..50 tick cooking animation, rotating stove frames. */
+#ifdef FAITHFUL
         counter = rndRng(30, 50);
         while (counter != 0) {
                 pick = rndRng(0, 2);
@@ -83,6 +88,13 @@ a_eatm()
                 gameTick(1);
                 counter = counter - 1;
         }
+#else
+        counter = rndRng(30, 50);
+        while (counter-- != 0) {
+                od_draw(g_obisa[rndRng(0, 2)], 6, 172);
+                gameTick(1);
+        }
+#endif
         od_draw(od_stof, 6, 172);
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;

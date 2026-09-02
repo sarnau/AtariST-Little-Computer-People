@@ -380,7 +380,7 @@ extern short od_cbit;
 #define od_tocl    25
 #define od_too1    26
 #define od_too2    27
-#define od_stof    22
+#define od_stof    42
 #define od_fdcl    16
 #define od_fdo1    17
 #define od_fdo2    18

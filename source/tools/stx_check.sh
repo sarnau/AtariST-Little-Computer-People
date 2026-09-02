@@ -22,6 +22,8 @@ for a in "$@"; do
     esac
 done
 
+python3 "$CSRC/tools/ppbalance.py" | tail -1
+
 if [ -n "$FILES_ARG" ]; then
     FILES="$FILES_ARG" "$CSRC/tools/alcyon_build.sh" >/dev/null
 fi

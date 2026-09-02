@@ -812,7 +812,6 @@ short   value;
                               &g_wtx, &g_wty);
         /* STX: -= straight to memory. */
 #ifdef FAITHFUL
-#ifdef FAITHFUL
         g_wty = g_wty - 3;
 #else
         g_wty -= 3;
@@ -820,10 +819,6 @@ short   value;
 #ifdef FAITHFUL
         g_wtx = g_wtx - 10;
 #else
-        g_wtx -= 10;
-#endif
-#else
-        g_wty -= 3;
         g_wtx -= 10;
 #endif
         g_actif = YES;
@@ -924,23 +919,17 @@ void
 a_opcuc(value)
 short   value;
 {
-        /* STX tests the call in place -- no local. */
-#ifdef FAITHFUL
+        /* STX declares result but tests the call in place -- the
+           slot is allocated and never written (link #-6). */
         short   result;
-#endif
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         /* STX tests the walk call inline. */
 #ifdef FAITHFUL
-#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
-#else
-        if (lcp_wkD() != 0)
-                return;
-#endif
 #else
         if (lcp_wkD() != 0)
                 return;
