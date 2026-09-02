@@ -31,34 +31,14 @@
 #include "parts/crFile.c"
 #endif
 
-/* addr: fr_read() */
-#ifdef FAITHFUL
-void
-#else
-short                   /* STX returns the Fread result */
-#endif
+/* addr: fr_read() -- STX returns the Fread result. */
 /* fr_read -> parts/fr_read.c (STX: 0x736c). */
 #ifdef FAITHFUL
 #include "parts/fr_read.c"
 #endif
 
-/* 4-byte header: discarded temp short, then payload size short.
-   addr: fLoad() */
-void
-fLoad(filename, buffer)
-char *  filename;
-void *  buffer;
-{
-        short   fhnd;
-        short   size;
-        short   temp;
-
-        fhnd = fOpen(filename, 0);
-        fr_read(fhnd, 2L, &temp);
-        fr_read(fhnd, 2L, &size);
-        fr_read(fhnd, (long) size, buffer);
-        Fclose(fhnd);
-}
+/* fLoad does not exist in LCP_STX: al_loal is the only asset
+   loader, and main inlines the .SCN path itself. */
 
 /* lcp_save -> parts/lcp_save.c (STX: 0xdece object, 0x1481c). */
 #ifdef FAITHFUL

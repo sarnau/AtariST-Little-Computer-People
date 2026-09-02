@@ -67,18 +67,5 @@
    addr: decompress_scn @ ROM 0x15546 (with wrapper fOpen/Malloc/etc). */
 /* unScn does not exist in LCP_STX: main inlines it. */
 
-/* al_loan: read NAMES text file (plain ASCII, newline-terminated names,
-   ~2.6 KB on the 1985 disk). */
-
-long
-al_loan(dest_buf, max_b)
-unsigned char * dest_buf;
-long            max_b;
-{
-        short   fhnd;
-
-        fhnd = fOpen("names", 0);
-        fr_read(fhnd, max_b, dest_buf);
-        Fclose(fhnd);
-        return max_b;
-}
+/* al_loan does not exist in LCP_STX: lcp_crnd inlines the NAMES
+   read (Fseek to a random 10-byte record) itself. */

@@ -6,6 +6,5 @@
 extern void ldObj();
 extern void ldSpr();
 extern void al_loal();
-extern long al_loan();
 
 #endif /* ASSETS_H */
