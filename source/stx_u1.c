@@ -31,6 +31,10 @@
 #include "calendar.c"
 #include "renderx.c"
 
+/* fillTopR (0x686c) is in this object in LCP_STX, not the 0xdece
+   one where render.c's other functions live. */
+#include "parts/fillTopR.c"
+
 /* Tail of the STX object: er_nomem (0x73ce).  alerts.c carries it
    for FAITHFUL instead. */
 #include "parts/er_nomem.c"

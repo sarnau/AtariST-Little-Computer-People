@@ -47,6 +47,7 @@
 #include "parts/sp_ss02.c"   /* 0x12108 */
 #include "abathrm.c"
 #include "agames.c"   /* a_plaag 0x11860 */
+#include "parts/a_opcfc.c" /* 0x11d9a, right after a_plaag */
 #include "ahouse.c"
 #include "parts/a_uset.c"  /* 0x101be */
 #include "parts/a_clotd.c" /* 0x10556, right after a_uset */
