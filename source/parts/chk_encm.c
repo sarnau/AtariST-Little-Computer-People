@@ -8,52 +8,55 @@ short
 chk_encm(str)
 char *  str;
 {
-        short   rnd;
-        short   entered_word;
-        short   action_index;
+        /* STX's frame is -10: no `rnd` temporary, and the priority
+           seed adds the roll FIRST. */
         short   i;
+        short   action_index;
+        short   entered_word;
 
         /* Clear the accumulated position/bit mask. */
-        for (i = 0; i < 10; i = i + 1)
+        for (i = 0; i < 10; i++)
                 g_ewb[i] = 0;
 
         /* Seed the priority from happiness + a small random nudge. */
-        rnd = rndRng(0, 3);
-        g_aprio = mood_pri[lcp.happiness] + rnd;
+        g_aprio = rndRng(0, 3) + mood_pri[lcp.happiness];
 
-        /* Tokenize and mask-accumulate. */
-        while ((str = cmd_upp(str, usr_buf)) !=
-               (char *) 0) {
-                entered_word = chk_vwd(usr_buf);
-                if (entered_word == WORD_NONE) {
+        /* Tokenize and mask-accumulate.  STX breaks out of a
+           `while (1)`; the store's own flags drive the test. */
+        while (1) {
+                if ((str = cmd_upp(str, usr_buf)) == (char *) 0)
+                        break;
+                /* STX tests the store's own flags, so the
+                   "unrecognised" sentinel here is 0 -- even though
+                   chk_vwd returns -1 when it runs off the table. */
+                if ((entered_word = chk_vwd(usr_buf)) == 0) {
                         /* Unrecognised word -- +4 priority penalty. */
-                        g_aprio = g_aprio + 4;
+                        g_aprio += 4;
                 } else if (entered_word > 0) {
-                        short   pos = ew2pos[entered_word];
-                        short   bit = g_ew2b[entered_word];
-                        g_ewb[pos] |=
-                                bm_lo[bit];
+                        /* Both index tables are char[] in STX, and
+                           there are no temporaries. */
+                        g_ewb[ew2pos[entered_word]] |=
+                                bm_lo[g_ew2b[entered_word]];
                 }
         }
 
         /* Walk the action-matching table until a row matches or we hit
-           the 0xff sentinel. */
+           the 0xff sentinel.  The walk is a `while (1)` whose sentinel
+           test breaks to the ACTION_NONE return placed after the loop;
+           a row that fails jumps straight to the increment through an
+           explicit goto, not a break plus an `i >= 10` re-test. */
         action_index = 0;
-        for (;;) {
+        while (1) {
                 if (g_ew2a[action_index].table[0] == 0xff)
-                        return ACTION_NONE;
-                for (i = 0; i < 10; i = i + 1) {
-                        unsigned char   required =
-                                g_ew2a[action_index].table[i];
-                        if ((g_ewb[i] & required) != required)
-                                break;
-                }
-                if (i >= 10) {
-                        g_aprio = g_aprio +
-                                g_ew2a[action_index].priority_offset;
-                        return (short) (char)
-                                g_ew2a[action_index].action;
-                }
-                action_index = action_index + 1;
+                        break;
+                for (i = 0; i < 10; i++)
+                        if ((g_ew2a[action_index].table[i] & g_ewb[i]) !=
+                            g_ew2a[action_index].table[i])
+                                goto next;
+                g_aprio += g_ew2a[action_index].priority_offset;
+                return g_ew2a[action_index].action;
+next:
+                action_index++;
         }
+        return ACTION_NONE;
 }

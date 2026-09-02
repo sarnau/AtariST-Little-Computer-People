@@ -11,54 +11,42 @@
 void
 dg_wkPth()
 {
-        short   target_floor;
-        short   current_floor;
-        short   dest_floor;
-        short   stair_index;
+        /* One local: every floor lookup is called inline (the first
+           result goes on the stack for the compare).  The equal case
+           is the ELSE arm, so its three assignments sit at the end. */
+        short   si;
 
-        target_floor  = getFlrY(g_dty);
-        current_floor = getFlrY(dog_y);
+        if (getFlrY(g_dty) != getFlrY(dog_y)) {
+                g_dyx = stair_wp[si = (getFlrY(dog_y) - 1) * 2];
+                g_dyy = stair_wp[si + 1];
 
-        if (current_floor == target_floor) {
+                if (getFlrY(dog_y) == 2) {
+                        if (getFlrY(dog_y) > getFlrY(g_dty)) {
+                                g_dyx = stair_ty - 3;
+                                g_dyy = stair_by;
+                        }
+                }
+
+                dg_stair = NO;
+                if (dog_x == g_dyx && dog_y == g_dyy) {
+                        if (getFlrY(dog_y) == 3)
+                                dog_x -= 8;
+                        dg_stair = YES;
+                        if (dog_y > g_dty) {
+                                g_dyx = stair_wp[si + 2];
+                                g_dyy = stair_wp[si + 3];
+                        } else {
+                                g_dyy = stair_wp[si - 1];
+                                g_dyx = stair_wp[si - 2];
+                        }
+                        if (getFlrY(dog_y) == 1) {
+                                g_dyx = stair_ty;
+                                g_dyy = stair_by;
+                        }
+                }
+        } else {
                 dg_stair = NO;
                 g_dyx = g_dtx;
                 g_dyy = g_dty;
-                return;
-        }
-
-        target_floor    = getFlrY(dog_y);
-        stair_index     = (target_floor - 1) + (target_floor - 1);
-        current_floor   = stair_index;
-        g_dyx  = stair_wp[stair_index];
-        g_dyy  = stair_wp[current_floor + 1];
-
-        target_floor = getFlrY(dog_y);
-        if (target_floor == 2) {
-                target_floor = getFlrY(g_dty);
-                dest_floor   = getFlrY(dog_y);
-                if (target_floor < dest_floor) {
-                        g_dyx = stair_ty - 3;
-                        g_dyy = stair_by;
-                }
-        }
-
-        dg_stair = NO;
-        if (dog_x == g_dyx && dog_y == g_dyy) {
-                target_floor = getFlrY(dog_y);
-                if (target_floor == 3)
-                        dog_x = dog_x - 8;
-                dg_stair = YES;
-                if (g_dty < dog_y) {
-                        g_dyx = stair_wp[current_floor + 2];
-                        g_dyy = stair_wp[current_floor + 3];
-                } else {
-                        g_dyy = stair_wp[current_floor - 1];
-                        g_dyx = stair_wp[current_floor - 2];
-                }
-                target_floor = getFlrY(dog_y);
-                if (target_floor == 1) {
-                        g_dyx = stair_ty;
-                        g_dyy = stair_by;
-                }
         }
 }

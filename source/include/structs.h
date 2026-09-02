@@ -137,14 +137,14 @@ typedef struct {
 #endif  /* FAITHFUL */
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
-   14-byte ROM layout (chk_encm @0x94e8 walks rows with muls #14):
-   `table[10]` bitmask bytes, then priority_offset as a WORD at +10,
-   then the ACTION_ID byte at +12; Alcyon pads the size to 14.  A
-   sentinel entry with `table[0] == 0xff` terminates the table. */
+   12-byte LCP_STX layout (chk_encm @0x16f9a walks rows with muls #12):
+   `table[10]` signed bitmask bytes, the ACTION_ID byte at +10, then
+   the priority offset byte at +11.  A sentinel entry with
+   `table[0] == 0xff` terminates the table. */
 typedef struct {
-        unsigned char   table[10];
-        short           priority_offset;
-        char            action;
+        char            table[10];
+        char            action;         /* +10 */
+        char            priority_offset;/* +11 */
 } WORD_TO_ACTION;
 
 /* MFDB is defined in <vdibind.h> (included above) -- do not redeclare. */

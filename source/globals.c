@@ -857,7 +857,7 @@ short   g_tpcoi[4] = { 10, 5, 7, 13 };
    Populated below by a Python generator run offline; see the parser
    test for verification that "please play a game" now matches. */
 
-unsigned char   g_ewb[10];
+char            g_ewb[10];
 /* Ghidra user_input_buffer @ 0x4b782: 42-byte ROM slot.  Port
    previously declared [32] which cmd_upp() could overflow: it walks
    input from g_cdinb (bounded < 38 chars) and writes one byte per
@@ -868,7 +868,7 @@ char            usr_buf[42];
    (accepts more), SAD (2) gives 0 (rejects most).  Port previously
    had guessed {2, 4, 6} which inverted the intended behavior. */
 short           mood_pri[3]        = { 3, 1, 0 };
-unsigned char   bm_lo[9] = {
+char            bm_lo[9] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x00
 };
 

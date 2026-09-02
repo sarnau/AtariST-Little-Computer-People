@@ -55,6 +55,9 @@
 #include "parts/strPr.c"   /* 0x16ea8 */
 #include "parts/prCh.c"    /* 0x16ede */
 #include "parts/chk_encm.c"/* 0x16f9a */
+#include "parts/cmd_upp.c" /* 0x1711c */
+#include "parts/chk_vwd.c" /* 0x171ae */
 #include "parts/prsCmd.c"  /* 0x1721c */
+#include "parts/lcp_upp.c" /* 0x172e8 */
 
 #endif  /* !FAITHFUL */
