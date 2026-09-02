@@ -84,7 +84,11 @@ a_takes()
 void
 a_brust()
 {
+#ifdef FAITHFUL
         unsigned short  brush_cycles;
+#else
+        short           brush_cycles;   /* signed in STX: no clr.w */
+#endif
         /* STX tests the call in place -- no local. */
 #ifdef FAITHFUL
         short           result;
@@ -122,6 +126,10 @@ a_brust()
         g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;
         g_sepey[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = lcp_y - 24;
 
+        /* STX drives the loop from a post-decrement, so the body
+           sees the already-decremented value and tests it directly
+           (btst #0) instead of subtracting first. */
+#ifdef FAITHFUL
         while (brush_cycles != 0) {
                 if (((brush_cycles - 1) & 1) == 0)
                         g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_right;
@@ -130,12 +138,25 @@ a_brust()
                 gameTick(0);
                 brush_cycles = brush_cycles - 1;
         }
+#else
+        while (brush_cycles--) {
+                if (brush_cycles & 1)
+                        g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;
+                else
+                        g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_right;
+                gameTick(0);
+        }
+#endif
 
         g_selaf[SPRITE_STUDY_DOOR_FRAME] = SPRITE_HIDDEN;
         sp_upds();
         lcp_face = FACING_RIGHT;
         lcp_st = STATE_STAND_FACING_SCREEN;
+#ifdef FAITHFUL
         lcp_y = lcp_y + 2;
+#else
+        lcp_y += 2;
+#endif
         gameTick(0);
 }
 
