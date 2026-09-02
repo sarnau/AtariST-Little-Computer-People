@@ -620,6 +620,14 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      case X: return V;    (ORG)  vs  case X: return V; break;
+                                      (the dead break emits a second
+                                       branch; the LAST arm has none
+                                       -- getKey)
+      if (c) return v;     (ORG)  vs  if (c) return v; else <stmt>
+                                      (the else-skip branch shows up
+                                       even though the then-arm
+                                       returns)
       for(;;){...if/else}  (ORG)  vs  a label + two explicit `goto`s
                                       (a loop whose arms each branch
                                        straight back, with no shared
