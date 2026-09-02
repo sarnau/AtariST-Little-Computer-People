@@ -75,16 +75,24 @@ a_lists()
 void
 a_playp()
 {
+        /* STX has no local: the walk result is tested in place. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         if (lcp_recP == NO)
                 return;
 
         hs_posXY(POS_TOP_DANCE_FLOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         gameTick(2);
 

@@ -127,7 +127,11 @@ a_gioob()
 void
 a_dance()
 {
+        /* STX has one local (the loop counter); the walk result is
+           tested in place. */
+#ifdef FAITHFUL
         short   result;
+#endif
         short   i;
 
         pst_arr[0] = STATE_DANCE_STEP_LEFT;
@@ -141,19 +145,32 @@ a_dance()
 
         hs_posXY(POS_TOP_DANCE_FLOOR,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         g_wty = g_wty + 8;
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        g_wty += 8;
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
         lcp_hwt();
 
+        /* STX never initialises i -- the first iteration reads
+           whatever the frame slot held.  Preserved as written. */
+#ifdef FAITHFUL
         i = 0;
         while (mi_play != NO) {
                 i = i + 1;
+#else
+        while (mi_play != NO) {
+                i++;
+#endif
                 lcp_st = pst_arr[i & 1];
                 if (g_trel[0] != ACTION_NONE)
                         break;
@@ -343,12 +360,19 @@ a_uset()
 void
 a_wakum()
 {
+        /* STX has no local: the tick count is used in place. */
+#ifdef FAITHFUL
         short   counter;
+#endif
 
         g_actif = YES;
         alarm_p = YES;
+#ifdef FAITHFUL
         counter = rndRng(40, 100);
         gameTick(counter);
+#else
+        gameTick(rndRng(40, 100));
+#endif
         if (lcp.is_sleeping == YES)
                 a_gioob();
 

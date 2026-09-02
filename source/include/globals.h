@@ -56,7 +56,11 @@ extern short lcp_food;
 extern short lcp_recP;
 extern short lcp_tv;
 extern short g_obisa[];
+#ifdef FAITHFUL
 extern BOOL16 mi_play;
+#else
+extern char mi_play;
+#endif
 extern short dg_bwlch;
 extern short g_sfplf;
 extern short g_sfpli;

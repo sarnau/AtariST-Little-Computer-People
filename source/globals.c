@@ -119,7 +119,12 @@ short   od_fdo2 = 18;           /* OBJ_FRIDGE_OPEN_2       */
 #endif
 
 
+/* STX declares this a byte flag (tst.b at its use sites). */
+#ifdef FAITHFUL
 BOOL16  mi_play                 = NO;
+#else
+char    mi_play                 = NO;
+#endif
 short   dg_bwlch            = 0;
 short   g_sfplf        = NO;
 short   g_sfpli          = 0;

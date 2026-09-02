@@ -591,6 +591,9 @@ this build, ALL different from LCP_ORG's:
       r = f(); if (r)      (ORG)  vs  if (f())       (STX)
       while (A && B){}     (ORG)  vs  while(A){if(!B)break;}
       unsigned short i     (ORG)  vs  short i        (STX)
+      BOOL16 flag          (ORG)  vs  char flag      (STX)
+                                      (tst.b at the use sites --
+                                       mi_play, mi_dvel, psg_dvol)
                                       (no clr.w zero-extension
                                        around index arithmetic)
       mask in the loop     (ORG)  vs  folded into the assignment,
@@ -620,6 +623,14 @@ this build, ALL different from LCP_ORG's:
                                       (STX splits the step around the
                                        state assignment -- two subq/
                                        addq to memory, not one addi)
+  **Compare the `link #-N` frame size FIRST.**  It says exactly how
+  many locals the function really has, before touching anything:
+  a_wandi needed an UNUSED local the port lacked, a_getd reuses one
+  variable as its loop counter, and a_tidyh/a_playp/a_wakum have
+  NONE because every call result is consumed in place.  Removing a
+  declaration without checking every use breaks the build (a_tidyh
+  used `result` twice).
+
   Declaration ORDER is evidence too: the frame offsets pin it (a_driwa
   is rnd, counter, last_pick, pick in STX; the port had rnd, pick,
   last_pick, counter).  And STX's a_driwa never initialises last_pick
