@@ -56,6 +56,7 @@
 #include <osbind.h>
 #include "parts/ldObj.c"      /* 0x524a */
 #include "parts/ldSpr.c"      /* 0x528a */
+#include "parts/fr_reac.c"    /* 0x53b8 */
 #include "movement.c"
 #include "calendar.c"
 #include "renderx.c"
@@ -65,6 +66,9 @@
 /* gfx_prim.c straddles too: cpyScr (0x64fa), stpScrB (0x6576) and
    sprites.c's sp_iniM (0x6612) are in this object, ahead of
    fillTopR. */
+/* letload.c straddles: fl_ltpl is in this object, just ahead of
+   cpyScr (its fr_reac call is a bsr). */
+#include "parts/fl_ltpl.c"  /* 0x648c */
 #include "parts/cpyScr.c"   /* 0x64fa */
 #include "parts/stpScrB.c"  /* 0x6576 */
 #include "parts/sp_iniM.c"  /* 0x6612 */
