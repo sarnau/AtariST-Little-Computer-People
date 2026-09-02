@@ -513,11 +513,11 @@ sp_lbal()
         short   index;
 
         for (index = 0; index < 98; index++)
-                sp_lbbd((unsigned short *) body_ptr[index],
-                        (unsigned short *) body_shp[index], 21);
+                sp_lbbd((short *) body_ptr[index],
+                        (short *) body_shp[index], 21);
         for (index = 0; index < 66; index++)
-                sp_lbhd((unsigned short *) pex_ptr[index],
-                        (unsigned short *) hd_shp[index], 21);
+                sp_lbhd((short *) pex_ptr[index],
+                        (short *) hd_shp[index], 21);
 }
 
 /* sp_lbhd: dilate 21-row head frame.  Same packing as sp_lbbd but:
@@ -529,49 +529,55 @@ sp_lbal()
 
 void
 sp_lbbd(src, dest, height)
-unsigned short *src;
-unsigned short *dest;
+short *         src;            /* signed: the reads sign-extend */
+short *         dest;
 short           height;
 {
-        long   img;
-        long   mask;
-        short           bit;
+        /* bit / mask / img are register variables (d7/d6/d5 in
+           declaration order); only h and flag get frame slots. */
+        register short  bit;
+        register long   mask;
+        register long   img;
         short           h;
         short           flag;
-        unsigned short *dp;
 
-        dp = dest;
-        for (h = 0; h < height; h = h + 1) {
+        for (h = 0; h < height; h++) {
                 img  = 0L;
-                mask = ((long) (src[3] | src[2]))
-                     | (((long) (src[1] | src[0])) << 16);
-                src = src + 4;
+                /* The 32-bit row is assembled by four *src++ steps,
+                   not from four subscripts. */
+                mask  = (long) *src++;
+                mask |= (long) *src++;
+                mask <<= 16;
+                mask |= (long) *src++ & 0xffffL;
+                mask |= (long) *src++ & 0xffffL;
                 flag = 0;
-                for (bit = 30; bit > 0; bit = bit - 1) {
+                for (bit = 30; bit > 0; bit--) {
                         if (flag) {
-                                img = img | bm32or[bit];
-                                if ((bm32or[bit] & mask) == 0L)
+                                img |= bm32or[bit];
+                                if ((mask & bm32or[bit]) == 0L)
                                         flag = 0;
-                        } else if ((bm32or[bit] & mask) != 0L) {
-                                img = img
-                                      | bm32or[bit - 1]
-                                      | bm32or[bit]
-                                      | bm32or[bit + 1];
+                        } else if ((mask & bm32or[bit]) != 0L) {
+                                img |= bm32or[bit + 1];
+                                img |= bm32or[bit];
+                                img |= bm32or[bit - 1];
                                 flag = 1;
                         }
                 }
-                dest[0] = (unsigned short) (img >> 16);
-                dest[1] = (unsigned short) img;
-                dest = dest + 2;
+                *dest = (img >> 16) & 0xffffL;
+                dest++;
+                *dest = img & 0xffffL;
+                dest++;
         }
         /* Vertical dilation: OR each row into the row above. */
-        dest = dest - 1;
-        for (h = 0; h < (short) (height - 1); h = h + 1) {
-                dest[0]  = dest[-2] | dest[0];
-                dest[-1] = dest[-3] | dest[-1];
-                dest = dest - 2;
+        dest--;
+        for (h = 0; height - 1 > h; h++) {
+                img = *dest | dest[-2];
+                *dest = img;
+                dest--;
+                img = *dest | dest[-2];
+                *dest = img;
+                dest--;
         }
-        (void) dp;
 }
 
 /* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
@@ -579,43 +585,48 @@ short           height;
 
 void
 sp_lbhd(src, dest, height)
-unsigned short *src;
-unsigned short *dest;
+short *         src;
+short *         dest;
 short           height;
 {
-        long   img;
-        long   mask;
-        short           bit;
+        /* bit / img / mask are register data variables (d7/d6/d5) and
+           dp a register ADDRESS variable (a5); only h gets a frame
+           slot. */
+        register short  bit;
+        register long   img;
+        register long   mask;
+        register short *dp;
         short           h;
-        unsigned short *dp;
 
         dp = dest;
-        for (h = 0; h < height; h = h + 1) {
+        for (h = 0; h < height; h++) {
                 mask = -1L;
-                img  = ((long) (src[3] | src[2]))
-                     | (((long) (src[1] | src[0])) << 16);
-                src = src + 4;
-                bit = 31;
-                while (bit > 0 &&
-                       (bm32or[bit - 1] & img) == 0L) {
-                        mask = bm32and[bit] & mask;
-                        bit = bit - 1;
+                img  = (long) *src++;
+                img |= (long) *src++;
+                img <<= 16;
+                img |= (long) *src++ & 0xffffL;
+                img |= (long) *src++ & 0xffffL;
+                for (bit = 31; bit > 0; bit--) {
+                        if ((img & bm32or[bit - 1]) != 0L)
+                                break;
+                        mask &= bm32and[bit];
                 }
-                bit = 0;
-                while (bit < 31 &&
-                       (bm32or[bit + 1] & img) == 0L) {
-                        mask = bm32and[bit] & mask;
-                        bit = bit + 1;
+                for (bit = 0; bit < 31; bit++) {
+                        if ((img & bm32or[bit + 1]) != 0L)
+                                break;
+                        mask &= bm32and[bit];
                 }
-                dest[0] = (unsigned short) (mask >> 16);
-                dest[1] = (unsigned short) mask;
-                dest = dest + 2;
+                *dest = (mask >> 16) & 0xffffL;
+                dest++;
+                *dest = mask & 0xffffL;
+                dest++;
         }
-        /* Vertical dilation: OR each row into the row BELOW. */
-        dest = dp;
-        for (h = 0; h < (short) (height - 1); h = h + 1) {
-                dest[0] = dest[2] | dest[0];
-                dest[1] = dest[3] | dest[1];
-                dest = dest + 2;
+        /* Vertical dilation: OR each row into the row BELOW, through
+           the register pointer. */
+        for (h = 0; height - 1 > h; h++) {
+                mask = *dp | dp[2];
+                *dp++ = mask;
+                mask = *dp | dp[2];
+                *dp++ = mask;
         }
 }
