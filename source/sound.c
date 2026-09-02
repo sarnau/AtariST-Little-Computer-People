@@ -13,46 +13,6 @@
 #include "save.h"
 #include "sound.h"
 
-/* Lower priority value wins.
-   addr: sf_sele() */
-void
-sf_sele(sound_id, duration)
-short   sound_id;
-long    duration;
-{
-#ifdef FAITHFUL
-        if (g_sfacf == NO ||
-            sf_pri[sound_id] <=
-            sf_pri[g_sfcur]) {
-#else
-        if (g_sfacf == NO ||
-            sf_pri[g_sfcur] >=
-            sf_pri[sound_id]) {
-#endif
-                g_sfcur     = sound_id;
-                g_sfdur    = (short) duration;
-                g_sfacf = YES;
-        }
-}
-
-/* addr: sf_so() (ROM 0xb122) */
-void
-sf_so()
-{
-#ifdef FAITHFUL
-        Giaccess(0L, 0x88L);
-        Giaccess(0L, 0x89L);
-        Giaccess(0L, 0x8aL);
-#else
-        Giaccess(0, 0x88);
-        Giaccess(0, 0x89);
-        Giaccess(0, 0x8a);
-#endif
-        g_sfdos  = 0xff;
-        g_sfdoc = 0;
-        g_sfplf    = NO;
-}
-
 /* One-line SFX wrappers.  K&R style (Alcyon 4.14). */
 
 /* STX orders these p_sftvc, p_sfgrt, p_sfhnd, p_sfspe immediately
@@ -78,11 +38,6 @@ sf_so()
 #ifdef FAITHFUL
 #include "parts/sfClick.c"
 #endif
-
-/* sgPlay: load a .sng/.org from disk (10-byte Music Studio 2.0 header,
-   then up to 20000 bytes of sequence data) and hand it to mq_inis.
-   addr: sgPlay() */
-
 
 /* sf_sl (ROM 0xb234): opens SOUNDS.LCP and immediately closes it --
    nothing in the ROM ever writes the mi_ntLp effect table (its only
@@ -131,51 +86,48 @@ sf_sl()
 }
 #endif  /* FAITHFUL */
 
+/* Lower priority value wins.
+   addr: sf_sele() */
 void
-sgPlay(filename)
-char *  filename;
+sf_sele(sound_id, duration)
+short   sound_id;
+long    duration;
 {
 #ifdef FAITHFUL
-        _DTA *   dta_ptr;
-        short           fhnd;
-        unsigned char   temp[10];
+        if (g_sfacf == NO ||
+            sf_pri[sound_id] <=
+            sf_pri[g_sfcur]) {
 #else
-        /* STX: link #-22 -- fhnd at -2, an unwritten slot at -4,
-           temp at -14 and dta_ptr at -18. */
-        short           fhnd;
-        short           unused;
-        unsigned char   temp[10];
-        _DTA *   dta_ptr;
+        if (g_sfacf == NO ||
+            sf_pri[g_sfcur] >=
+            sf_pri[sound_id]) {
 #endif
-
-        g_molof = YES;
-        mi_varR          = YES;
-
-        if (mi_play != NO) {
-                mq_inis(mi_sbuf, g_momap);
-                while (mi_play != NO)
-                        ;
+                g_sfcur     = sound_id;
+                g_sfdur    = (short) duration;
+                g_sfacf = YES;
         }
-        if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
-                mi_sbuf = (char *) 0;
-        }
-
-#ifdef FAITHFUL
-        Fsfirst(filename, 0L);
-#else
-        Fsfirst(filename, 0);
-#endif
-        dta_ptr = (_DTA *) Fgetdta();
-        mi_sbuf = (char *) Malloc(dta_ptr->d_length);
-        if (mi_sbuf == (char *) 0)
-                er_nomem();
-
-        fhnd = fOpen(filename, 0);
-        if (fhnd >= 0) {
-                fr_read(fhnd, 10L, temp);
-                fr_read(fhnd, 20000L, mi_sbuf);
-                Fclose(fhnd);
-        }
-        mq_inis(mi_sbuf, g_momap);
 }
+
+/* addr: sf_so() (ROM 0xb122) */
+void
+sf_so()
+{
+#ifdef FAITHFUL
+        Giaccess(0L, 0x88L);
+        Giaccess(0L, 0x89L);
+        Giaccess(0L, 0x8aL);
+#else
+        Giaccess(0, 0x88);
+        Giaccess(0, 0x89);
+        Giaccess(0, 0x8a);
+#endif
+        g_sfdos  = 0xff;
+        g_sfdoc = 0;
+        g_sfplf    = NO;
+}
+
+
+/* sgPlay -> parts/sgPlay.c (STX: 0xd9ea, ahead of sf_irqp). */
+#ifdef FAITHFUL
+#include "parts/sgPlay.c"
+#endif

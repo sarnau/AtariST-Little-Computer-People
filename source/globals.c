@@ -600,7 +600,7 @@ PSG_ENVELOPE    psg_envelope[3];
 
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-short           g_sfcup    = 0;
+char            g_sfcup    = 0;
 short           g_sfddh = 0;
 short           g_sfddl = 0;
 long            g_sfHz2               = 0;

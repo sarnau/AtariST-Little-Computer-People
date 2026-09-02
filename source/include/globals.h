@@ -233,7 +233,7 @@ extern short env_val;
 extern char g_mnlol;
 extern char g_mnhil;
 extern short g_mccha;
-extern short g_sfcup;
+extern char g_sfcup;
 extern short g_sfddh;
 extern short g_sfddl;
 extern long g_sfHz2;
