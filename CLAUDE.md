@@ -442,6 +442,16 @@ this build, ALL different from LCP_ORG's:
   od_* fixes -- expect more of these wherever the port carries a
   pointer variable that STX addresses as an array.
 
+  **The VDI binding layer differs in three ways** (all six simple
+  bindings recovered together): STX assigns intin[0] BEFORE filling
+  contrl, RETURNS intout[0], and reaches vdi_go with a jsr -- i.e.
+  vdi_go lived in another object there.  LCP_ORG keeps vdi_go inside
+  vdiown.o, where as68 shortens the calls to bsr on its own (the
+  build script's jsr->bsr rewrite was belt-and-braces, not the
+  cause).  The STX configuration therefore assembles vdiown_a.s as a
+  separate object and skips the injection; alcyon_link.sh adds
+  vdiown_a.o only when not FAITHFUL.
+
   **The port's file split does not match STX's.**  a_gesff (afood.c)
   sits at 0xebf8, BETWEEN two adoors.c functions -- a_clocd 0xeb54
   and a_opecf 0xec22 -- which is why its call to a_opecf is a short

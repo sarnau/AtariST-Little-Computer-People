@@ -24,12 +24,24 @@ vsl_color(handle, index)
 short   handle;
 short   index;
 {
+        /* STX assigns intin first and returns intout[0]; LCP_ORG
+           fills contrl first and returns nothing. */
+#ifdef FAITHFUL
         contrl[0] = 17;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = index;
         vdi_go();
+#else
+        intin[0]  = index;
+        contrl[0] = 17;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: vst_color() (ROM 0xd6a6) */
@@ -38,12 +50,22 @@ vst_color(handle, index)
 short   handle;
 short   index;
 {
+#ifdef FAITHFUL
         contrl[0] = 22;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = index;
         vdi_go();
+#else
+        intin[0]  = index;
+        contrl[0] = 22;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: vsf_color() (ROM 0xd6d6) */
@@ -52,12 +74,22 @@ vsf_color(handle, index)
 short   handle;
 short   index;
 {
+#ifdef FAITHFUL
         contrl[0] = 25;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = index;
         vdi_go();
+#else
+        intin[0]  = index;
+        contrl[0] = 25;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: vsf_interior() (ROM 0xd708) */
@@ -66,12 +98,22 @@ vsf_interior(handle, style)
 short   handle;
 short   style;
 {
+#ifdef FAITHFUL
         contrl[0] = 23;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = style;
         vdi_go();
+#else
+        intin[0]  = style;
+        contrl[0] = 23;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: vsf_style() (ROM 0xd73a) */
@@ -80,12 +122,22 @@ vsf_style(handle, style)
 short   handle;
 short   style;
 {
+#ifdef FAITHFUL
         contrl[0] = 24;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = style;
         vdi_go();
+#else
+        intin[0]  = style;
+        contrl[0] = 24;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: vswr_mode() (ROM 0xd76c) */
@@ -94,12 +146,22 @@ vswr_mode(handle, mode)
 short   handle;
 short   mode;
 {
+#ifdef FAITHFUL
         contrl[0] = 32;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
         intin[0]  = mode;
         vdi_go();
+#else
+        intin[0]  = mode;
+        contrl[0] = 32;
+        contrl[1] = 0;
+        contrl[3] = 1;
+        contrl[6] = handle;
+        vdi_go();
+        return intout[0];
+#endif
 }
 
 /* addr: v_pline() (ROM 0xd79e) */

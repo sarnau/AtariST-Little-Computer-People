@@ -46,6 +46,16 @@ fi
 #     `move sr,dn` instructions (raise IPL to 7 on entry, lower to 5
 #     during sub-calls) that Alcyon C 4.14 can't emit, and ends with
 #     `rte`.  Installed directly by Xbtimer -- no C wrapper needed.
+# vdiown_a.s: the STX configuration's separate vdi_go object (see the
+# file header).  Assembled always; only linked when not FAITHFUL.
+if [ ! -f vdiown_a.o ] || [ "$DK_TOOLS/vdiown_a.s" -nt vdiown_a.o ]; then
+    cp -f "$DK_TOOLS/vdiown_a.s" vdiown_a.s
+    "$ALCYON_BIN/as68" -l -u vdiown_a.s > /dev/null 2>&1 || {
+        echo "FAILED: vdiown_a assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f vdilib_a.o ] || [ "$DK_TOOLS/vdilib_a.s" -nt vdilib_a.o ]; then
     cp -f "$DK_TOOLS/vdilib_a.s" vdilib_a.s
     "$ALCYON_BIN/as68" -l -u vdilib_a.s > /dev/null 2>&1 || {
@@ -74,7 +84,8 @@ cp -f "$ATARI_DK/LIBF"       libf
 OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" \
-    ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" | sort); do
+    ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
+    ! -name "vdiown_a.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
@@ -85,6 +96,8 @@ rm -f lcp.68k LCP.PRG
 # FAITHFUL=1 drops mq_tick.o -- the ROM has no Timer-A ISR.
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
+else
+    OBJS="$OBJS vdiown_a.o"      # STX: vdi_go in its own object
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
 LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' ' ',')

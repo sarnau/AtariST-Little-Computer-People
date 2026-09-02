@@ -131,10 +131,14 @@ for ln in lines:
 open(p, 'w').write('\n'.join(out))
 "
 
-    # vdiown.c: inject the hand-assembly vdi_go (ROM 0xd664 -- c168
-    # cannot emit trap #2) at the top of the unit and shorten its
-    # calls to bsr, matching the ROM's in-object layout.
-    if [ "$stem" = "vdiown" ]; then
+    # vdiown.c: LCP_ORG keeps the hand-assembly vdi_go (ROM 0xd664 --
+    # c168 cannot emit trap #2) INSIDE this object, so as68 shortens
+    # the calls to bsr.  LCP_STX calls it with jsr, i.e. from another
+    # object, so for that configuration vdi_go is assembled into
+    # vdiown_a.s instead and nothing is injected here.
+    if [ "$stem" = "vdiown" ] && \
+       case " ${ALCYON_CPPFLAGS:-} " in *-DFAITHFUL*) true;; *) false;; esac
+    then
         python3 - "$WORK/vdiown.s" <<'PYEOF'
 import sys
 p = sys.argv[1]
