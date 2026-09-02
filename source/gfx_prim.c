@@ -248,6 +248,7 @@ aes_init()
    attributes, hide the mouse, and clear the whole screen.  The ROM
    has no resolution check and no reboot alert. */
 
+#ifdef FAITHFUL
 void
 vdi_init()
 {
@@ -273,6 +274,9 @@ vdi_init()
         graf_mouse(256, 0L);
         v_bar(vdihnd, rect);
 }
+#endif  /* FAITHFUL -- STX splits this into parts/vdi_init.c +
+           parts/vdi_cls.c, linked in the 0x400c object. */
+
 /* stpScrB -> parts/stpScrB.c (STX: 0x6576, in the 0x400c object). */
 #ifdef FAITHFUL
 #include "parts/stpScrB.c"

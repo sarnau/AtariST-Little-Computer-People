@@ -635,6 +635,13 @@ short * g_dsb = dsb_stor;
    the value is a constant. */
 short   scr_scal             = 1;
 
+#ifndef FAITHFUL
+/* LCP_STX's vdi_init opens the workstation through GLOBAL work
+   arrays, not locals (its frame is only -6). */
+short   work_in[11];
+short   wk_out[57];
+#endif
+
 /* MFDB_A (Ghidra 0x2C82A) -- source MFDB for VDI raster copies.
    fd_addr = NULL is the VDI convention for "device screen", so
    vro_cpyfm(...) copies from the visible physbase into a memory

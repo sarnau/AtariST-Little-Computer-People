@@ -237,6 +237,10 @@ extern void* g_srptr;
 extern short dsb_stor[];
 extern short* g_dsb;
 extern short scr_scal;
+#ifndef FAITHFUL
+extern short work_in[];
+extern short wk_out[];
+#endif
 extern MFDB MFDB_A;
 extern unsigned char scrbufA[];
 extern unsigned char scrbufB[];

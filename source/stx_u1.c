@@ -55,12 +55,18 @@
 #include "parts/cpyScr.c"   /* 0x64fa */
 #include "parts/stpScrB.c"  /* 0x6576 */
 #include "parts/sp_iniM.c"  /* 0x6612 */
+/* STX splits vdi_init: the opener (0x6680) and the attribute/clear
+   half (0x66fe) it reaches with bsr.s. */
+#include "parts/vdi_init.c" /* 0x6680 */
+#include "parts/vdi_cls.c"  /* 0x66fe */
 #include "parts/fillTopR.c"
 
 /* STX 0x69c6, just past getKey: the bare Random() wrapper. */
 #include "parts/rnd.c"
 
 /* save.c straddles too: fOpen and fr_read close this object. */
+#include "parts/lc_load.c"   /* 0x5ac8 */
+
 /* main.c straddles: gameLoop is in this object, between lc_load
    and chk_actT. */
 #include "parts/gameLoop.c"   /* 0x5c76 */
