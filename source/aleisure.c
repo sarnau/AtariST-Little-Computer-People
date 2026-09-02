@@ -612,12 +612,19 @@ a_tidyh()
 void
 a_cleau()
 {
+        /* STX consumes every call result in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         if (lcp_flcO != NO) {
                 hs_posXY(POS_TOP_FILING_CABINET,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -628,13 +635,22 @@ a_cleau()
         if (studyDrO != NO) {
                 hs_posXY(POS_TOP_STUDY_DOOR,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 lcp_face = FACING_RIGHT;
                 lcp_st            = STATE_STAND_FACING_SCREEN;
-                /* Ghidra shows a stray D0 = g_hatas - 12 here (Ghidra
-                   0x1e9a0), but lcp_hwt is void and never reads D0 --
-                   dead compiler artifact.  Port uses plain no-arg call. */
+                /* The original really does compute g_hatas - 12 here
+                   and throw it away (STX 0xe9a0 = the Ghidra 0x1e9a0
+                   this comment already noted).  It is an expression
+                   statement in the source, not a compiler artifact,
+                   so the STX build emits it. */
+#ifndef FAITHFUL
+                g_hatas - 12;
+#endif
                 lcp_hwt();
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
@@ -652,21 +668,33 @@ a_cleau()
         if (lcp_toiO != NO) {
                 hs_posXY(POS_MID_TOILET_DOOR,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 a_clotd();
         }
         if (lcp_clsO != NO) {
                 hs_posXY(POS_MID_BEDROOM_CLOSET,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 a_clocd();
         }
         if (lcp_drsO != NO) {
                 hs_posXY(POS_MID_DRESSER,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -677,7 +705,11 @@ a_cleau()
         if (lcp_cabO != NO) {
                 hs_posXY(POS_BTM_KITCHEN_CABINET,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 if ((result = lcp_wkD()) != 0)
+#else
+                if (lcp_wkD() != 0)
+#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
