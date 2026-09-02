@@ -1010,6 +1010,7 @@ char    idx;
    later via mq_expN + mq_snof.
    addr: midi_seq_queue_note_event() */
 
+#ifdef FAITHFUL
 void
 mq_qnne()
 {
@@ -1048,6 +1049,54 @@ mq_qnne()
                 }
         }
 }
+#else   /* STX: link #-6 -- one local for the channel byte; the
+           range test is two early returns, the two if/else pairs are
+           the other way round, and none of the byte reads is cast. */
+
+void
+mq_qnne()
+{
+        short   ch;
+
+        if (mi_evi < 58) {
+                mi_evq[mi_evi] = mi_nlp0;
+                mi_evi++;
+                if (mi_nnOn != 0) {
+                        mi_evq[mi_evi] = (mi_lasT << 1) | mi_cnot;
+                        mi_evi++;
+                } else {
+                        mi_evq[mi_evi] = 0;
+                        mi_evi++;
+                }
+                mi_evq[mi_evi] = mi_chmap[mi_ccha];
+                mi_evi++;
+        } else
+                return;
+
+        if (mi_cnot > g_mnlol)
+                return;
+        if (mi_cnot < g_mnhil)
+                return;
+
+        if (mi_slop != NO)
+                mq_spgm(mi_ccha);
+        else
+                mi_ccha = mi_varR;
+
+        if (mi_nnOf != 0)
+                mi_nOS[mi_cnot] = 0;
+        if (mi_lasT != 0)
+                mi_nOS[mi_cnot] = mi_ccha;
+        if (mi_nnOf != 0)
+                return;
+
+        ch = mi_chmap[mi_ccha];
+        g_meve[0] = (ch & 0xf) | 0x90;
+        g_meve[1] = mi_cnot;
+        g_meve[2] = mi_vel;
+        mq_dise(g_meve, (short) 3, ch);
+}
+#endif
 
 /* mq_pars: walk compact event stream at mi_sqpos.
    Byte forms:

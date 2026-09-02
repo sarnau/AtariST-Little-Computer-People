@@ -168,7 +168,11 @@ extern char mi_cnot;
 extern char mi_nmof;
 extern char mi_nlpA;
 extern short mi_nlp0;
+#ifdef FAITHFUL
 extern BOOL16 mi_slop;
+#else
+extern char   mi_slop;          /* STX: byte flag */
+#endif
 extern short mi_ndt[];
 extern short mi_evq[];
 extern short mi_evi;

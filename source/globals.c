@@ -452,7 +452,11 @@ char            mi_ccha         = 0;
 char            mi_cnot         = 0;
 char            mi_nmof         = 0;
 char            mi_nlpA         = 0;
+#ifdef FAITHFUL
 BOOL16          mi_slop         = NO;
+#else
+char            mi_slop         = NO;   /* STX: byte */
+#endif
 
 short           mi_ndt[32] = {
            0,    2,    2,    3,    4,    5,    6,    8,
