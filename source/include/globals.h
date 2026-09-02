@@ -193,7 +193,11 @@ extern short g_mcpro[];
 #else
 extern char  g_mcpro[];         /* STX: byte array */
 #endif
+#ifdef FAITHFUL
 extern short mi_pgmap[];
+#else
+extern char *mi_pgmap;          /* STX: a byte pointer, not an array */
+#endif
 extern unsigned char g_mstr[];
 extern unsigned char g_msmk[];
 extern BOOL16 g_moen;

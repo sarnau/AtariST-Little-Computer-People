@@ -255,6 +255,7 @@ unsigned char * p;
         }
 }
 
+#ifdef FAITHFUL
 /* mq_bust: (re)build 132-note transpose LUT.
    Identity, then blank chromatic non-diatonic (1,3,6,8,10) with 0xFF.
    For scale != 1, apply 7-bit chord mask g_msmk[scale] per octave,
@@ -304,6 +305,59 @@ short   value;
                         g_mstr[i]      += note_shift;
         }
 }
+#else   /* STX: the mask is reloaded each octave and shifted right
+           after every test, note_shift is a word, and the identity
+           fill carries no cast. */
+
+void
+mq_bust(value)
+short   value;
+{
+        short           i;
+        short           note_shift;
+        char            chord_mask;
+
+        for (i = 0; i < 0x84; i++)
+                g_mstr[i] = i;
+        g_mstr[1]  = -1;
+        g_mstr[3]  = -1;
+        g_mstr[6]  = -1;
+        g_mstr[8]  = -1;
+        g_mstr[10] = -1;
+
+        if (value == 1)
+                return 1;
+
+        if (value > 8)
+                note_shift = -1;
+        else
+                note_shift = 1;
+
+        for (i = 0; i < 0x84; i += 12) {
+                chord_mask = g_msmk[value];
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 11] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 9] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 7] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 5] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 4] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 2] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i] += note_shift;
+        }
+}
+#endif
 
 /* mq_sepc: dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
@@ -311,6 +365,7 @@ short   value;
    shared physical channels only get one PC per song load.
    addr: mq_sepc() */
 
+#ifdef FAITHFUL
 void
 mq_sepc(index)
 short   index;
@@ -328,6 +383,24 @@ short   index;
         g_mcpro[physical] = mi_pgmap[index];
         mq_dise(g_meve, (short) 2, (short) 0);
 }
+#else   /* STX: a char index, no local for the physical channel --
+           every lookup is written out. */
+
+void
+mq_sepc(index)
+char    index;
+{
+        if (g_mcpro[mi_chmap[index] & 0xf] == mi_pgmap[index])
+                return;
+        if (g_moen == NO)
+                return;
+
+        g_meve[0] = (mi_chmap[index] & 0xf) | 0xc0;
+        g_meve[1] = mi_pgmap[index];
+        g_mcpro[mi_chmap[index] & 0xf] = mi_pgmap[index];
+        mq_dise(g_meve, (short) 2, (short) 0);
+}
+#endif
 
 /* mq_dise: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.

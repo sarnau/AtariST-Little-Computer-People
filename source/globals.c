@@ -550,7 +550,12 @@ char            g_mcpro[16];    /* STX: byte array */
 #endif
 unsigned char   g_mstr[132];
 unsigned char   mi_chmap[16];
+#ifdef FAITHFUL
 short           mi_pgmap[16];
+#else
+char            mi_pgmapb[16];
+char *          mi_pgmap = mi_pgmapb;   /* STX: byte pointer */
+#endif
 
 BOOL16          psg_out              = YES;
 #ifdef FAITHFUL
