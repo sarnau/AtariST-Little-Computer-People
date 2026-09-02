@@ -28,91 +28,15 @@ short   sp_fidx[50] = {
    here. */
 unsigned char   sp_mbuf[14000];
 
-/* sp_genma: Ghidra spritedata_generate_mask_from_color.  For each
-   16-pixel word group (4 interleaved bitplane words), OR the planes
-   -- any non-colour-0 pixel becomes an opaque mask bit -- then
-   broadcast the result to all 4 mask planes so the mask has the same
-   MFDB stride as the image. */
-static void
-sp_genma(imgPtr, maskPtr, width, height)
-unsigned short *        imgPtr;
-unsigned short *        maskPtr;
-unsigned short          width;
-unsigned short          height;
-{
-        unsigned short  index;
-        unsigned short  m;
-        unsigned short  n;
+/* sp_genma -> parts/sp_genma.c (STX: 0x408c, right after cntSong). */
+#ifdef FAITHFUL
+#include "parts/sp_genma.c"
+#endif
 
-        n = ((unsigned short) ((width >> 2) * height)) >> 2;
-        for (index = 0; index < n; index = index + 1) {
-                m = imgPtr[3] | imgPtr[2] | imgPtr[1] | imgPtr[0];
-                imgPtr    = imgPtr + 4;
-                maskPtr[0] = m;
-                maskPtr[1] = m;
-                maskPtr[2] = m;
-                maskPtr[3] = m;
-                maskPtr   = maskPtr + 4;
-        }
-}
+/* sp_regs -> parts/sp_regs.c (STX: 0x5bdc, in the 0x400c object between lc_load and gameLoop). */
+#ifdef FAITHFUL
+#include "parts/sp_regs.c"
+#endif
 
-/* sp_regs: Ghidra spritedata_create_with_mask.  Store per-sprite
-   pointers and dimensions at slot spriteID, then auto-generate the
-   1-bit mask into maskPtr. */
-static void
-sp_regs(spriteID, imgPtr, maskPtr, height, width)
-short                   spriteID;
-unsigned short *        imgPtr;
-unsigned short *        maskPtr;
-short                   height;
-short                   width;
-{
-        g_sedim[spriteID] = (short *) imgPtr;
-        g_sedms[spriteID]   = (short *) maskPtr;
-        g_sedeh[spriteID]             = height;
-        g_sedew[spriteID]             = width;
-        sp_genma(imgPtr, maskPtr,
-                 (unsigned short) width,
-                 (unsigned short) height);
-}
-
-/* Ghidra main() at 0x1579c..0x15828. */
-void
-sp_reglp()
-{
-        long    offset;
-        long    mask_offset;
-        short   count;
-        short   width;
-        short   height;
-        long    words_per_row;
-        long    record_bytes;
-        short   id;
-
-        offset      = 0;
-        mask_offset = 0;
-        count       = 0;
-        while (offset < 14000L && count < 50) {
-                height = ((short) spr_file[offset]     << 8) |
-                                  spr_file[offset + 1];
-                width  = ((short) spr_file[offset + 2] << 8) |
-                                  spr_file[offset + 3];
-                if (height == 0 || width == 0)
-                        break;
-                offset = offset + 4;
-
-                words_per_row = (width + 15) / 16;
-                record_bytes  = (long) height * words_per_row * 4 * 2;
-
-                id = sp_fidx[count];
-                sp_regs(id,
-                        (unsigned short *) (spr_file + offset),
-                        (unsigned short *) (sp_mbuf       + mask_offset),
-                        height,
-                        (short) (words_per_row * 16));
-
-                offset      = offset      + record_bytes;
-                mask_offset = mask_offset + record_bytes;
-                count       = count + 1;
-        }
-}
+/* sp_reglp does not exist in LCP_STX: main inlines its loop and
+   calls sp_regs (parts/sp_regs.c) per sprite. */

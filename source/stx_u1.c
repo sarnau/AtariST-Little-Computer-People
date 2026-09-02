@@ -32,6 +32,7 @@
 #include "init.h"
 #include <osbind.h>
 #include "parts/cntSong.c"  /* 0x400c */
+#include "parts/sp_genma.c" /* 0x408c */
 
 #include "dog.c"
 /* dg_mvAni (0x412c) is followed directly by walk.c's dg_wkPth
@@ -56,7 +57,16 @@
 #include <osbind.h>
 #include "parts/ldObj.c"      /* 0x524a */
 #include "parts/ldSpr.c"      /* 0x528a */
+#include "parts/scn_dec.c"    /* 0x52ca */
 #include "parts/fr_reac.c"    /* 0x53b8 */
+#include "main.h"
+#include "stubs.h"
+#include "sprload.h"
+#include "sprender.h"
+#include "tables.h"
+#include "assets.h"
+#include "tick_tables.h"
+#include "parts/main.c"       /* 0x5546 */
 #include "movement.c"
 #include "calendar.c"
 #include "renderx.c"
@@ -68,6 +78,7 @@
    fillTopR. */
 /* letload.c straddles: fl_ltpl is in this object, just ahead of
    cpyScr (its fr_reac call is a bsr). */
+#include "parts/al_loal.c"  /* 0x6428 */
 #include "parts/fl_ltpl.c"  /* 0x648c */
 #include "parts/cpyScr.c"   /* 0x64fa */
 #include "parts/stpScrB.c"  /* 0x6576 */
@@ -76,6 +87,7 @@
    half (0x66fe) it reaches with bsr.s. */
 #include "parts/vdi_init.c" /* 0x6680 */
 #include "parts/vdi_cls.c"  /* 0x66fe */
+#include "parts/aes_init.c" /* 0x67aa */
 #include "parts/initBRev.c" /* 0x6804 */
 #include "parts/rv_bld.c"   /* 0x680e -- bsr.s from initBRev */
 #include "parts/fillTopR.c"
@@ -84,8 +96,12 @@
 #include "parts/rnd.c"
 #include "parts/lcp_crnd.c" /* 0x69d8 */
 
+/* st_titl (0x6d7e) is a real interactive title screen in STX. */
+#include "parts/st_titl.c"    /* 0x6d7e */
+
 /* save.c straddles too: fOpen and fr_read close this object. */
 #include "parts/lc_load.c"   /* 0x5ac8 */
+#include "parts/sp_regs.c"    /* 0x5bdc */
 
 /* main.c straddles: gameLoop is in this object, between lc_load
    and chk_actT. */

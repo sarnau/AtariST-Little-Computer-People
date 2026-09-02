@@ -3,6 +3,6 @@
 #ifndef STUBS_H
 #define STUBS_H
 
-extern short cp_main();
+extern long cp_main();
 
 #endif /* STUBS_H */

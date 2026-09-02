@@ -194,24 +194,10 @@ short   count;
    4. cpyScr physbase snapshot for first compositing frame.
    addr: stpScrB() */
 
-/* aes_init (Ghidra 0x167aa): appl_init + graf_handle + Setpalette +
-   physbase snapshot.  Does NOT call v_opnvwk (vdi_init's job). */
-
-#include <gembind.h>            /* appl_init, graf_handle, graf_mouse, form_alert */
-
-void
-aes_init()
-{
+/* aes_init -> parts/aes_init.c (STX: 0x67aa, between vdi_cls and initBRev). */
 #ifdef FAITHFUL
-        short   gr_hwchar, gr_hhchar, gr_hwbox, gr_hhbox;
+#include "parts/aes_init.c"
 #endif
-
-        appl_init();
-        vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
-                                 &gr_hwbox,  &gr_hhbox);
-        Setpalette(main_pal);
-        sv_phb = (void *) Physbase();
-}
 
 
 #define REZ_ST_MEDIUM   1

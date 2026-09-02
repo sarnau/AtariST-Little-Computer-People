@@ -7,6 +7,5 @@ extern long _stksize;
 
 extern void gameLoop();
 extern int main();
-extern void ct_clrB();
 
 #endif /* MAIN_H */

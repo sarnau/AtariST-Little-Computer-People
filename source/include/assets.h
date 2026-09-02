@@ -5,11 +5,7 @@
 
 extern void ldObj();
 extern void ldSpr();
-extern short al_loot();
-extern short al_lost();
-extern short al_loal();
-extern void al_locs();
-extern void unScn();
+extern void al_loal();
 extern long al_loan();
 
 #endif /* ASSETS_H */

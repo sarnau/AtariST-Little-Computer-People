@@ -46,32 +46,10 @@
 #endif
 
 
-/* st_titl (ROM 0x7fae): in THIS binary the "title screen" is a stub
-   that defaults the owner name to "PLAYER" and the clock to noon,
-   0-0-0 -- there is no interactive name/date/time entry.  (The
-   916-byte interactive version previously here came from the other
-   Ghidra image; its TOS v_gtext crash makes sense in hindsight.)
-   addr: st_titl() */
-
-void
-st_titl()
-{
-        short   i;
-
-        lcp.owner_name[0] = 'P';
-        lcp.owner_name[1] = 'L';
-        lcp.owner_name[2] = 'A';
-        lcp.owner_name[3] = 'Y';
-        lcp.owner_name[4] = 'E';
-        lcp.owner_name[5] = 'R';
-        for (i = 6; i < 24; i = i + 1)
-                lcp.owner_name[i] = 0;
-        dt_mon   = 0;
-        date_day = 0;
-        dt_year  = 0;
-        t_hour   = 12;
-        t_min    = 0;
-}
+/* st_titl -> parts/st_titl.c (STX: 0x6d7e, in the 0x400c object after pa_skic). */
+#ifdef FAITHFUL
+#include "parts/st_titl.c"
+#endif
 
 /* dbg_prA was a dead debug helper LCP_ORG shipped between st_titl
    and mq_intim.  LCP_STX does not have it. */

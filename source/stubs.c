@@ -43,7 +43,7 @@
    addr: (matches copyprot_main_check @ ~0x122FC, behaviourally
    equivalent to the successful-verification outcome) */
 
-short
+long
 cp_main()
 {
         return 1;

@@ -154,7 +154,7 @@ char    scn_cmn[30];
 /* PEx.LCP filename.  Ghidra pex_name @ 0x2a0f8 points to "pex.lcp"
    at 0x2a330 and main() mutates index 2 to select the character.
    Port stores the string as a mutable static char array. */
-char    pex_name[8]                  = "PE0.LCP";
+char *  pex_name                     = "PE0.LCP";
 BOOL16  fire_act                = NO;
 short   fire_dur         = 0;
 BOOL16  fire_ext            = NO;
@@ -220,7 +220,14 @@ char    in_str[256];
 /* comp_tok[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
+/* scn_dic[15]: the 15-entry word dictionary at the head of a .SCN
+   file, and the size/buffer main uses while decoding one.  LCP_STX
+   keeps all three as globals -- the .SCN file handling is inlined in
+   main and only the nibble decoder is a function. */
+short           scn_dic[15];
 unsigned char   comp_tok[15];
+short           scn_siz;
+char *          scn_buf;
 
 short * sv_bodyP           = (short *) 0;
 short * sv_headP           = (short *) 0;

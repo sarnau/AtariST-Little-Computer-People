@@ -6,6 +6,8 @@
 extern short sp_fidx[];
 extern unsigned char sp_mbuf[];
 
-extern void sp_reglp();
+
+extern void sp_genma();
+extern void sp_regs();
 
 #endif /* SPRLOAD_H */
