@@ -385,7 +385,7 @@ extern short od_cbit;
 #define od_cbcl    19
 #define od_cbo1    20
 #define od_cbo2    21
-#define od_med1    40
+#define od_med1    52
 #define od_tocl    25
 #define od_too1    26
 #define od_too2    27
