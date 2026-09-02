@@ -89,80 +89,75 @@ short   height;
 short   flipH;
 short   flipV;
 {
-        unsigned short  uVar1;
-        unsigned short  mask;
-        short *         psVar2;
-        short           x;
+        /* w / m2 / x are register variables (d7/d6/d5); the frame
+           holds only mmask, y and m1. */
+        register short  w;
+        register short  m2;
+        register short  x;
+        short           mmask;
         short           y;
-        int             iVar3;
+        short           m1;
 
         if (flipH == 0) {
-                for (y = 0; y < height; y = y + 1) {
-                        for (x = 0; x < width; x = x + 1) {
-                                psVar2 = destImg;
-                                if (flipV == 0) {
-                                        destImg[0] = 0;
-                                        destImg[1] = srcImg[0];
-                                        destImg[2] = srcImg[1];
+                for (y = 0; y < height; y++) {
+                        for (x = 0; x < width; x++) {
+                                if (flipV != 0) {
+                                        *destImg++ = *srcImg++;
+                                        *destImg++ = *srcImg++;
+                                        *destImg++ = 0;
                                 } else {
-                                        destImg[0] = srcImg[0];
-                                        destImg[1] = srcImg[1];
-                                        destImg[2] = 0;
+                                        *destImg++ = 0;
+                                        *destImg++ = *srcImg++;
+                                        *destImg++ = *srcImg++;
                                 }
-                                destImg = destImg + 3;
-                                srcImg  = srcImg  + 2;
-                                destImg[0] = 0;
-                                destImg    = psVar2 + 4;
+                                *destImg++ = 0;
 
-                                destMask[0] = srcMask[0];
-                                destMask[1] = srcMask[0];
-                                destMask[2] = srcMask[0];
-                                destMask[3] = srcMask[0];
-                                srcMask  = srcMask  + 1;
-                                destMask = destMask + 4;
+                                *destMask++ = *srcMask;
+                                *destMask++ = *srcMask;
+                                *destMask++ = *srcMask;
+                                *destMask++ = *srcMask++;
                         }
                 }
                 return;
         }
 
-        for (y = 0; y < height; y = y + 1) {
-                for (x = 0; x < width; x = x + 1) {
-                        psVar2 = destImg;
+        for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++) {
+                        /* The byte halves are selected with explicit
+                           `& 0xff` masks, and m2 doubles as the shift
+                           temporary for m1. */
+                        w  = srcImg[((width - 1) - x) << 1];
+                        m2 = rev_tab[w & 0xff];
+                        m2 <<= 8;
+                        m1 = m2 | rev_tab[(w >> 8) & 0xff];
+                        w  = *(srcImg + (((width - 1) - x) << 1) + 1);
+                        m2 = rev_tab[w & 0xff];
+                        m2 <<= 8;
+                        m2 |= rev_tab[(w >> 8) & 0xff];
 
-                        iVar3 = (width - 1) - x;
-                        /* Alcyon 4.14 miscompiles (unsigned char) with
-                           ext.w -- and the ROM SHIPPED that way (asr.w
-                           #8 + ext.w at 0xbd66): bytes >= 0x80 index
-                           rev_tab negatively.  Frames never set those
-                           bits, so it is benign; keep the ROM bytes. */
-                        mask  = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3] >> 8)] |
-                                rev_tab[(unsigned char) srcImg[iVar3 + iVar3]] << 8;
-                        uVar1 = rev_tab[(unsigned char) (srcImg[iVar3 + iVar3 + 1] >> 8)] |
-                                rev_tab[(unsigned char) srcImg[iVar3 + iVar3 + 1]] << 8;
-
-                        if (flipV == 0) {
-                                destImg[0] = 0;
-                                destImg[1] = mask;
-                                destImg[2] = uVar1;
+                        if (flipV != 0) {
+                                *destImg++ = m1;
+                                *destImg++ = m2;
+                                *destImg++ = 0;
                         } else {
-                                destImg[0] = mask;
-                                destImg[1] = uVar1;
-                                destImg[2] = 0;
+                                *destImg++ = 0;
+                                *destImg++ = m1;
+                                *destImg++ = m2;
                         }
-                        destImg    = destImg + 3;
-                        destImg[0] = 0;
-                        destImg    = psVar2 + 4;
+                        *destImg++ = 0;
 
-                        mask = rev_tab[(unsigned char) (srcMask[(width - 1) - x] >> 8)] |
-                               rev_tab[(unsigned char) srcMask[(width - 1) - x]] << 8;
-                        destMask[0] = mask;
-                        destMask[1] = mask;
-                        destMask[2] = mask;
-                        destMask[3] = mask;
-                        destMask = destMask + 4;
+                        w = srcMask[(width - 1) - x];
+                        mmask = rev_tab[w & 0xff] << 8;
+                        mmask |= rev_tab[(w >> 8) & 0xff];
+                        *destMask++ = mmask;
+                        *destMask++ = mmask;
+                        *destMask++ = mmask;
+                        *destMask++ = mmask;
                 }
-                srcImg  = (short *) ((char *) srcImg  + (width << 2));
-                srcMask = (short *) ((char *) srcMask + (width << 1));
+                /* Plain short* arithmetic: the compiler supplies the
+                   ×2 scaling, so the source only shifts once. */
+                srcImg  += width << 1;
+                srcMask += width;
         }
 }
 
