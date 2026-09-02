@@ -18,6 +18,11 @@
 /* STX: lcp_hwt (0x1568a) immediately precedes gameTick (0x156a6). */
 #include "parts/lcp_hwt.c"
 #include "tick.c"
+/* LCP_STX puts these after gameTick: sp_drin 0x1623c,
+   sp_updb 0x16244, sp_lchu 0x16632. */
+#include "parts/sp_drin.c"
+#include "parts/sp_updb.c"  /* 0x16244 */
+#include "parts/sp_lchu.c"  /* 0x16632 */
 #include "parts/strPr.c"   /* 0x16ea8 */
 #include "parts/prCh.c"    /* 0x16ede */
 

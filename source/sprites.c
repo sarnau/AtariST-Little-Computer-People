@@ -32,62 +32,10 @@
 #include "tables.h"
 #include "tick.h"
 
-/* sp_updb: select body pose for lcp_st -> slot 3.  When carrying an
-   object during walk states (< 25), uses arms-up frames from cy_frT.
-   X = lcp_x - 4 (right) or lcp_x - 14 (left); Y = lcp_y + body_yof[st] - 21.
-   addr: sp_updb() */
-
-void
-sp_updb()
-{
-        short   frame;
-
-        while (g_sepef[HW_SLOT_LCP_BODY] == YES)
-                ;
-
-        frame = body_frT[lcp_st];
-        /* STX spells the bound inclusively on the previous state
-           (cmpi #24/bgt) where LCP_ORG uses < 25 (cmpi #25/bge). */
+/* sp_updb -> parts/sp_updb.c (STX: 0x148fe object, after gameTick). */
 #ifdef FAITHFUL
-        if (g_lcyof != NO && lcp_st < STATE_BEND_AND_REACH)
-#else
-        if (g_lcyof != NO && lcp_st <= STATE_STR_BTM_F3)
+#include "parts/sp_updb.c"
 #endif
-                frame = cy_frT[lcp_st];
-
-        /* Ghidra 0x2669a `muls.w #0x54, D0`: stride is 168 src, 84 dest. */
-        /* STX multiplies in word width (muls.w) -- no (long) casts,
-           so no call to the long-multiply helper. */
-#ifdef FAITHFUL
-        sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
-                (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
-#else
-        sp_lcpf((short *) body_ptr[frame],
-                (short *) body_shp[frame],
-#endif
-                (short *) g_lsimg,
-                (short *) g_lsmas,
-                2, 21, lcp_face, 1);
-
-        if (lcp_face == FACING_RIGHT)
-                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 4;
-        else
-                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 14;
-
-        g_seacy[HW_SLOT_LCP_BODY] = lcp_y + body_yof[lcp_st] - 21;
-        if (dbg_hide != NO)
-                g_seacy[HW_SLOT_LCP_BODY] = 300;
-
-        g_sepeh[HW_SLOT_LCP_BODY] = 21;
-        g_sepew[HW_SLOT_LCP_BODY]  = 32;
-        g_sepim[HW_SLOT_LCP_BODY]  = g_lsimg;
-        g_sepms[HW_SLOT_LCP_BODY]   = g_lsmas;
-
-        if (g_lssh != NO)
-                g_sepim[HW_SLOT_LCP_BODY] = NULL;
-
-        g_sepef[HW_SLOT_LCP_BODY] = YES;
-}
 
 /* sp_ssco -> parts/sp_ssco.c (STX puts it in the 0xdece object;
    FAITHFUL includes it back here). */
@@ -483,52 +431,10 @@ sp_upds()
 }
 #endif
 
-/* sp_lchu: pick head frame from PEx.LCP by happiness + g_hsfra,
-   expand via sp_lcpf into slot 4.  Tracks body position; head lowers
-   1 px while carrying on stair states 13..16.
-   addr: sp_lchu() */
-
-void
-sp_lchu()
-{
-        short   headIndex;
-
-        while (g_sepef[HW_SLOT_LCP_HEAD] == YES)
-                ;
-
-        headIndex = mood_hfo[lcp.happiness] +
-                    (g_hsfra & 0x7f);
-
-        /* Same 168-src/84-dest stride as sp_updb. */
-        sp_lcpf((short *) ((char *) pex_ptr    + (long) headIndex * (long) LCP_BODY_FRAME_SIZE),
-                (short *) ((char *) hd_shp + (long) headIndex * (long) LCP_BODY_SHAPE_SIZE),
-                g_hsbuf, g_hsmas,
-                2, 21, g_hsmif, 0);
-
-        if (g_hsmif == NO)
-                g_seacx[HW_SLOT_LCP_HEAD] = lcp_x + hd_xoff[lcp_st] - 4;
-        else
-                g_seacx[HW_SLOT_LCP_HEAD] = lcp_x + hd_xoff[lcp_st] - 14;
-
-        g_seacy[HW_SLOT_LCP_HEAD] = (lcp_y + body_yof[lcp_st]) -
-                             (hd_hgt[lcp_st] + 21);
-        if (dbg_hide != NO)
-                g_seacy[HW_SLOT_LCP_HEAD] = 300;
-
-        if (g_lcyof != NO &&
-            lcp_st > STATE_STR_CLIMB_F3S && lcp_st < STATE_STR_DESC_F0)
-                g_seacy[HW_SLOT_LCP_HEAD] = g_seacy[HW_SLOT_LCP_HEAD] + 1;
-
-        g_sepeh[HW_SLOT_LCP_HEAD] = 21;
-        g_sepew[HW_SLOT_LCP_HEAD]  = 32;
-        g_sepim[HW_SLOT_LCP_HEAD]  = g_hsbuf;
-        g_sepms[HW_SLOT_LCP_HEAD]   = g_hsmas;
-
-        if (g_lssh != NO)
-                g_sepim[HW_SLOT_LCP_HEAD] = NULL;
-
-        g_sepef[HW_SLOT_LCP_HEAD] = YES;
-}
+/* sp_lchu -> parts/sp_lchu.c (STX: 0x148fe object, after gameTick). */
+#ifdef FAITHFUL
+#include "parts/sp_lchu.c"
+#endif
 
 /* sp_imfs: populate 8 per-slot MFDB pairs, wire compositor MFDB
    (g_srmfd) at scrbufA-aligned, call sp_drin.  Zeroes last_hz so
@@ -544,7 +450,11 @@ sp_imfs()
         short   i;
 
         last_hz = 0;
+#ifdef FAITHFUL
         for (i = 0; i < SPRITE_HW_SLOTS; i = i + 1) {
+#else
+        for (i = 0; i < SPRITE_HW_SLOTS; i++) {
+#endif
                 sp_iniM(0L, &g_semfi[i],
                                  (void *) g_seaim[i],
                                  g_seacw[i], g_seach[i]);
@@ -552,6 +462,7 @@ sp_imfs()
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }
+#ifdef FAITHFUL
         {
                 /* PORT DIVERGENCE FROM GHIDRA (align-UP vs align-DOWN).
                    Ghidra 0x25110 does align-DOWN of the compile-time
@@ -567,16 +478,21 @@ sp_imfs()
                         (short) (scr_scal * 320),
                         (short) (scr_scal * 200));
         }
+#else
+        /* STX has no temporary: the relocatable base is pushed and
+           masked in the argument slot (512-align), and both extents
+           are 16-bit products. */
+        sp_iniM(0L, &g_srmfd,
+                (void *) (((long) scrbufA + 0x1FFL) & ~511L),
+                scr_scal * 320, scr_scal * 200);
+#endif
         sp_drin();
 }
 
-/* sp_drin: empty in the 1985 code (dead hook).
-   addr: sp_drin() */
-
-void
-sp_drin()
-{
-}
+/* sp_drin -> parts/sp_drin.c (STX: 0x148fe object, after gameTick). */
+#ifdef FAITHFUL
+#include "parts/sp_drin.c"
+#endif
 
 /* sp_lbbd: dilate 21-row body frame -> shape data.  Source is 168 bytes
    (4 shorts/row); Ghidra packs as
