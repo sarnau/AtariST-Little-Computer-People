@@ -25,6 +25,10 @@
 #ifndef FAITHFUL
 
 #include "dog.c"
+/* dg_mvAni (0x412c) is followed directly by walk.c's dg_wkPth
+   (0x4586) -- the call between them is a bsr. */
+#include "parts/dg_mvAni.c" /* 0x412c */
+#include "parts/dg_wkPth.c" /* 0x4586 */
 #include "ai.c"
 /* chk_timA (0x6210) sits between doAct and hs_posX in this
    object, so airandom.c belongs here too. */
