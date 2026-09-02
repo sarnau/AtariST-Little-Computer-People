@@ -1094,6 +1094,11 @@ char *  str;
         strPr(str, 5, 71, COLOR_green);
 }
 
+/* STX: pk_ldCrd sits here (0xab04), ahead of pk_awp. */
+#ifndef FAITHFUL
+#include "parts/pk_ldCrd.c"
+#endif
+
 /* pk_awp: display computer money count in the top-left panel.
    Preserves the 3-digit hand-formatted, space-padded byte layout
    from Ghidra verbatim (byte-comparable).
