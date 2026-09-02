@@ -385,7 +385,11 @@ a_getd()
 {
         short   entry_current;
         short   h;
+        /* STX has only two locals: it reuses h as the loop counter
+           below, so its frame is 2 bytes smaller. */
+#ifdef FAITHFUL
         short   i;
+#endif
 
         entry_current = g_hacur;
         h = g_hacur & 7;
@@ -406,7 +410,11 @@ a_getd()
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_hwt();
 
+#ifdef FAITHFUL
         for (i = 0; i < 4; i = i + 1) {
+#else
+        for (h = 0; h < 4; h++) {
+#endif
                 g_hatas = g_hacur & 7;
                 lcp_hwt();
                 g_hatas = g_hacur | 0x10;

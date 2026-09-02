@@ -22,6 +22,12 @@
 void
 a_wandi()
 {
+#ifndef FAITHFUL
+        /* STX's frame is 2 bytes larger (link #-6 vs #-4): the
+           original declared a local here that the body never uses. */
+        short   unused;
+#endif
+
         pst_arr[0]  = STATE_IDLE_SHRUG_START;
         pst_arr[1]  = STATE_IDLE_SHRUG_HOLD;
         lcp_face   = FACING_RIGHT;
