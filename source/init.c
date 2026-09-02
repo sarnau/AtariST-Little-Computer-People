@@ -196,13 +196,8 @@ cntSong()
    render.c and gfx_prim.c. */
 
 
-/* initBRev (ROM 0x80fe): an empty stub in the ROM -- rev_tab ships
-   as initialized data (tables.c); nothing to build at runtime. */
-
-void
-initBRev()
-{
-}
+/* initBRev -> parts/initBRev.c (STX 0x6804), with the builder it
+   calls in parts/rv_bld.c right behind it; stx_u1.c includes both. */
 
 
 /* cs_mvIn (ROM 0x8106): boot-state initializer.  In this binary the

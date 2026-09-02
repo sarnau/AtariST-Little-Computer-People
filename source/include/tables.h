@@ -4,14 +4,12 @@
 #define TABLES_H
 
 extern short g_rpxs[];
-/* The STX build reads rev_tab as a plain (signed) short: its sp_flih
-   loads the table without the clr.w zero-extension LCP_ORG's build
-   emits. */
-#ifdef FAITHFUL
-extern unsigned short rev_tab[];
-#else
+/* rev_tab is a plain (signed) short array, built at boot by initBRev
+   from rv_msk/rv_val -- it is BSS, not initialised data. */
 extern short rev_tab[];
-#endif
+extern short rv_msk[];
+extern short rv_val[];
+extern void rv_bld();
 extern short g_atact[];
 extern short g_atmod[];
 extern short g_atrel[];
@@ -24,6 +22,5 @@ extern short g_rphs[];
 extern long bm32or[];
 extern long bm32and[];
 
-extern void initBM();
 
 #endif /* TABLES_H */

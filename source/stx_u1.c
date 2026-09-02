@@ -63,6 +63,8 @@
    half (0x66fe) it reaches with bsr.s. */
 #include "parts/vdi_init.c" /* 0x6680 */
 #include "parts/vdi_cls.c"  /* 0x66fe */
+#include "parts/initBRev.c" /* 0x6804 */
+#include "parts/rv_bld.c"   /* 0x680e -- bsr.s from initBRev */
 #include "parts/fillTopR.c"
 
 /* STX 0x69c6, just past getKey: the bare Random() wrapper. */
