@@ -885,24 +885,6 @@ next:
         }
 }
 
-/* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
-   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0.
-   addr: midi_seq_read_note_duration() */
-
-void
-mq_rdur()
-{
-#ifdef FAITHFUL
-        for (; *mi_sqpos == 0; mi_sqpos = mi_sqpos + 1) ;
-#else
-        for (; *mi_sqpos == 0; mi_sqpos++) ;
-#endif
-        if ((*mi_sqpos & 0x80) == 0)
-                mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
-                                                          - 1) * g_mtspb;
-        else
-                mi_nlp0 = 0;
-}
 
 /* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49).
    addr: midi_seq_push_loop() */
@@ -1163,118 +1145,114 @@ mq_qnne()
 short
 mq_pars()
 {
-        unsigned char * a;
-        unsigned char   cmd;
-        unsigned char   ebyte;
-        unsigned char * next;
-        unsigned char * pop_ptr;
+        /* No locals at all: STX walks mi_sqpos with ++ in place and
+           dispatches the command bytes through a switch. */
 
         /* Prologue: skip leading 0x00, refresh mi_nlp0, end-check. */
-        if (*mi_sqpos == 0) {
-                mi_sqpos = mi_sqpos + 1;
-                if (mi_sqpos < mi_seqE) {
-                        mi_evTf = 0;
-                        mq_rdur();
-                        if (mi_sqpos >= mi_seqE)
-                                return 0;
-                } else {
-                        return 0;
-                }
-        } else {
+        if (*mi_sqpos != 0)
                 return 0;
-        }
+        mi_sqpos++;
+        if (mi_sqpos >= mi_seqE)
+                return 0;
+        mi_evTf = 0;
+        mq_rdur();
+        if (mi_sqpos >= mi_seqE)
+                return 0;
 
-        for (;;) {
-top:
-                if (*mi_sqpos == 0)
-                        return 1;
-
+        while (*mi_sqpos != 0) {
                 if ((*mi_sqpos & 0x80) == 0) {
-                        /* Note event: unpack bytes 0..2, advance 3,
-                           queue via mq_qnne.  byte1 bit 5 = accent
-                           (max vel + max PSG vol); else defaults. */
-                        mi_evTf  = 1;
-                        mi_nnOn  = (char)(16 - (*mi_sqpos & 0x10));
-                        mi_lasT  = (char)(*mi_sqpos & 0x40);
-                        mi_nnOf  = (char)(*mi_sqpos & 0x20);
-                        mi_ccha  = (char)(*mi_sqpos & 0x0f);
+                        /* Note event: unpack bytes 0..2, advance one
+                           byte at a time, queue via mq_qnne.  byte1
+                           bit 5 = accent (max vel + max PSG vol). */
+                        mi_evTf = 1;
+                        mi_nnOn = 16 - (*mi_sqpos & 0x10);
+                        mi_lasT = *mi_sqpos & 0x40;
+                        mi_nnOf = *mi_sqpos & 0x20;
+                        mi_ccha = *mi_sqpos & 0x0f;
+                        mi_sqpos++;
 
-                        {
-                                unsigned char * loop_ptr = mi_sqpos + 1;
-                                mi_nlpA = (char)(*loop_ptr & 0x20);
-                                if (mi_nlpA == 0) {
-                                        mi_vel  = mi_dvel;
-                                        psg_cvol = psg_dvol;
-                                } else {
-                                        mi_vel  = 0x7f;
-                                        psg_cvol = 0xf;
-                                }
-                                ebyte    = *loop_ptr;
-                                mi_nmof  = (char)(ebyte & 0xc0);
-                                mi_nlp0  = (short)(mi_ndt[(short)(char) *loop_ptr & 0x1f]
-                                                                          - 1) * g_mtspb;
+                        if ((mi_nlpA = *mi_sqpos & 0x20) != 0) {
+                                mi_vel = 0x7f;
+                                psg_cvol = 0xf;
+                        } else {
+                                mi_vel = mi_dvel;
+                                psg_cvol = psg_dvol;
+                        }
+                        mi_nmof = *mi_sqpos & 0xc0;
+                        mi_nlp0 = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
+                        mi_sqpos++;
 
-                                if (((short)(char) mi_nmof & 0xc0) == 0) {
-                                        mi_cnot = g_mstr[(short)(char) mi_sqpos[2] & 0x7f];
-                                } else {
-                                        mi_cnot = mi_sqpos[2] & 0x7f;
-                                        if ((ebyte & 0x80) != 0) {
-                                                if ((ebyte & 0x40) == 0)
-                                                        mi_cnot = mi_cnot + 1;
-                                                else
-                                                        mi_cnot = mi_cnot - 1;
-                                        }
+                        if ((mi_nmof & 0xc0) != 0) {
+                                mi_cnot = *mi_sqpos & 0x7f;
+                                mi_sqpos++;
+                                if (mi_nmof & 0x80) {
+                                        if (mi_nmof & 0x40)
+                                                mi_cnot--;
+                                        else
+                                                mi_cnot++;
                                 }
+                        } else {
+                                mi_cnot = g_mstr[*mi_sqpos & 0x7f];
+                                mi_sqpos++;
                         }
 
-                        mi_sqpos = mi_sqpos + 3;
                         if (mi_nnOn != 0)
                                 mq_qnne();
-                        goto top;
-                }
-
-                cmd  = *mi_sqpos;
-                next = mi_sqpos + 1;
-
-                if (cmd == 0x82) {
-                        /* Bar marker: refresh mi_nlp0 for next event
-                           only if we haven't decoded one this pass. */
-                        mi_sqpos = next;
-                        if (mi_evTf == 0) {
+                } else {
+                        switch (*mi_sqpos++ & 0xff) {
+                        case 0x82:
+                                /* Bar marker: refresh mi_nlp0 for the
+                                   next event only if none was decoded
+                                   this pass. */
+                                if (mi_evTf == 0) {
+                                        mq_rdur();
+                                        if (mi_sqpos >= mi_seqE)
+                                                return 0;
+                                }
+                                break;
+                        case 0x85:
+                                /* Loop start: byte = count, push the
+                                   return address. */
+                                mq_pshl(mi_sqpos + 1, *mi_sqpos);
+                                mi_sqpos++;
                                 mq_rdur();
                                 if (mi_sqpos >= mi_seqE)
                                         return 0;
+                                break;
+                        case 0x86:
+                                /* Loop end: pop, jump back if nonzero. */
+                                if ((mi_dptr = mq_popl()) != 0)
+                                        mi_sqpos = mi_dptr;
+                                mq_rdur();
+                                if (mi_sqpos >= mi_seqE)
+                                        return 0;
+                                break;
+                        case 0xff:
+                                return 0;
+                                break;
                         }
-                        goto top;
                 }
-                if (cmd == 0x85) {
-                        /* Loop start: mi_sqpos[1]=count, push return. */
-                        a = mi_sqpos + 2;
-                        mi_sqpos = next;
-                        mq_pshl((void *) a, (short)(char) *next);
-                        mi_sqpos = mi_sqpos + 1;
-                        mq_rdur();
-                        if (mi_sqpos >= mi_seqE)
-                                return 0;
-                        goto top;
-                }
-                if (cmd == 0x86) {
-                        /* Loop end: pop, jump back if nonzero. */
-                        mi_sqpos = next;
-                        pop_ptr = mq_popl();
-                        mi_dptr = pop_ptr;
-                        if (pop_ptr != (unsigned char *) 0)
-                                mi_sqpos = pop_ptr;
-                        mq_rdur();
-                        if (mi_sqpos >= mi_seqE)
-                                return 0;
-                        goto top;
-                }
-                if (cmd == 0xff)
-                        return 0;
-
-                mi_sqpos = next;
         }
+        return 1;
+}
+
+/* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
+   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0.
+   addr: midi_seq_read_note_duration() */
+
+void
+mq_rdur()
+{
+#ifdef FAITHFUL
+        for (; *mi_sqpos == 0; mi_sqpos = mi_sqpos + 1) ;
+#else
+        for (; *mi_sqpos == 0; mi_sqpos++) ;
+#endif
+        if ((*mi_sqpos & 0x80) == 0)
+                mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
+                                                          - 1) * g_mtspb;
+        else
+                mi_nlp0 = 0;
 }
 
 /* mq_stop (Ghidra midi_seq_stop @ 0x1103c): stop sequencer.
