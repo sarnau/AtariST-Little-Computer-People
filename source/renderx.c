@@ -126,6 +126,43 @@ sc_sctd()
 #include "parts/prCh.c"
 #endif
 
+/* rp_anim: sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
+   If music playing and not browsing records, roll random VU LED (0..6)
+   at y=47 and toggle lit/unlit (red if new mask overlaps g_ltpac, else black).
+   g_ltlic/g_ltpac are 1985 shared-storage: also record-player state
+   when no letter is being written.
+   addr: rp_anim() */
+
+void
+rp_anim()
+{
+        unsigned short  rnd;
+        short           col;
+
+        if (g_ltlic >= 0)
+                drwPixel(g_ltlic + 70, 42, COLOR_white);
+        g_ltlic = g_ltlic - 2;
+        if (g_ltlic < 0)
+                g_ltlic = 13;
+        drwPixel(g_ltlic + 70, 42, COLOR_black);
+
+        if (mi_play == NO || g_rbact != NO)
+                return;
+
+        rnd = (unsigned short) Random();
+        rnd = rnd & 7;
+        if (rnd < 7) {
+                g_ltpac = rec_ledt[rnd] ^
+                                         g_ltpac;
+                if ((rec_ledt[rnd] &
+                     g_ltpac) == 0)
+                        col = COLOR_black;
+                else
+                        col = COLOR_red;
+                drwPixel(rnd * 2 + 66, 47, col);
+        }
+}
+
 /* strPr: paint NUL-terminated string at (x,y) via prCh, 8px/char advance
    (8x8 system font used by status strip / game menu).
    addr: strPr() */

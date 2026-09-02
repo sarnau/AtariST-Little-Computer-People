@@ -14,51 +14,26 @@ short   color;
         char    str[2];
         void *  saved_log;
 
+#ifdef FAITHFUL
         str[0] = (char) ch;
+#else
+        str[0] = ch;
+#endif
         str[1] = 0;
 
         saved_log = (void *) Logbase();
+#ifdef FAITHFUL
         Setscreen(g_dscp, (void *)-1L, -1L);
+#else
+        Setscreen(g_dscp, (void *)-1L, -1);
+#endif
         vst_color(vdihnd, vdi_colt[color]);
         vswr_mode(vdihnd, MD_TRANS);
         v_gtext(vdihnd, x, y, str);
         vswr_mode(vdihnd, MD_REPLACE);
+#ifdef FAITHFUL
         Setscreen(saved_log, (void *)-1L, -1L);
-}
-
-/* rp_anim: sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
-   If music playing and not browsing records, roll random VU LED (0..6)
-   at y=47 and toggle lit/unlit (red if new mask overlaps g_ltpac, else black).
-   g_ltlic/g_ltpac are 1985 shared-storage: also record-player state
-   when no letter is being written.
-   addr: rp_anim() */
-
-void
-rp_anim()
-{
-        unsigned short  rnd;
-        short           col;
-
-        if (g_ltlic >= 0)
-                drwPixel(g_ltlic + 70, 42, COLOR_white);
-        g_ltlic = g_ltlic - 2;
-        if (g_ltlic < 0)
-                g_ltlic = 13;
-        drwPixel(g_ltlic + 70, 42, COLOR_black);
-
-        if (mi_play == NO || g_rbact != NO)
-                return;
-
-        rnd = (unsigned short) Random();
-        rnd = rnd & 7;
-        if (rnd < 7) {
-                g_ltpac = rec_ledt[rnd] ^
-                                         g_ltpac;
-                if ((rec_ledt[rnd] &
-                     g_ltpac) == 0)
-                        col = COLOR_black;
-                else
-                        col = COLOR_red;
-                drwPixel(rnd * 2 + 66, 47, col);
-        }
+#else
+        Setscreen(saved_log, (void *)-1L, -1);
+#endif
 }
