@@ -81,18 +81,10 @@ lcp_upal()
 #include "parts/td_line.c"
 #endif
 
-/* td_nois: random-colour antenna each frame while TV on.
-   Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette.
-   addr: td_nois() */
-
-void
-td_nois()
-{
-        long    rnd;
-
-        rnd = Random();
-        td_line((short) rnd & COLOR_dk_brown);
-}
+/* td_nois -> parts/td_nois.c (STX: 0x13c74, immediately before td_line). */
+#ifdef FAITHFUL
+#include "parts/td_nois.c"
+#endif
 
 /* sc_sctd: 1-row block scroll on top text strip (letter typewriter wrap).
    Copies 13 rows of 40 words each downward, blanks top two rows to white.

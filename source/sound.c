@@ -69,12 +69,10 @@ sf_so()
 #include "parts/p_dobls.c"
 #endif
 
-/* addr: lt_sets(), sfClick() */
-void
-lt_sets()
-{
-        sf_sele(SFX_TYPEWRITER_KEY, 4L);
-}
+/* lt_sets -> parts/lt_sets.c (STX: 0x1476c, immediately before sfClick). */
+#ifdef FAITHFUL
+#include "parts/lt_sets.c"
+#endif
 
 /* sfClick -> parts/sfClick.c (STX: 0xdece object, 0x14786, just before lcp_wkD). */
 #ifdef FAITHFUL

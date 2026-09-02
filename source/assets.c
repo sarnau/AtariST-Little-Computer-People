@@ -24,31 +24,15 @@
 #include "sprites.h"
 
 
-/* ldObj: read the 14000-byte OBJECTS file into obj_file[].
-   addr: ldObj() */
+/* ldObj -> parts/ldObj.c (STX: 0x524a). */
+#ifdef FAITHFUL
+#include "parts/ldObj.c"
+#endif
 
-void
-ldObj()
-{
-        short   fhnd;
-
-        fhnd = fOpen("objects", 0);
-        fr_read(fhnd, 14000L, obj_file);
-        Fclose(fhnd);
-}
-
-/* ldSpr: read the 14000-byte SPRITES file into spr_file[].
-   addr: ldSpr() */
-
-void
-ldSpr()
-{
-        short   fhnd;
-
-        fhnd = fOpen("sprites", 0);
-        fr_read(fhnd, 14000L, spr_file);
-        Fclose(fhnd);
-}
+/* ldSpr -> parts/ldSpr.c (STX: 0x528a). */
+#ifdef FAITHFUL
+#include "parts/ldSpr.c"
+#endif
 
 /* Parse OBJECTS/SPRITES buffer -> per-record MFDB + w/h arrays.
    Stops at buffer end / height==0 / 64 records. */

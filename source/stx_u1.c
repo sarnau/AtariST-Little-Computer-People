@@ -35,6 +35,11 @@
 #include "parts/setHTgt.c"
 #include "parts/lcp_path.c"  /* 0x470a */
 #include "parts/lcp_fstp.c"  /* 0x4fec */
+/* assets.c straddles: the two asset loaders are in this object,
+   right after getFlrY.  They need the trap bindings. */
+#include <osbind.h>
+#include "parts/ldObj.c"      /* 0x524a */
+#include "parts/ldSpr.c"      /* 0x528a */
 #include "movement.c"
 #include "calendar.c"
 #include "renderx.c"
@@ -48,6 +53,13 @@
 #include "parts/stpScrB.c"  /* 0x6576 */
 #include "parts/sp_iniM.c"  /* 0x6612 */
 #include "parts/fillTopR.c"
+
+/* STX 0x69c6, just past getKey: the bare Random() wrapper. */
+#include "parts/rnd.c"
+
+/* save.c straddles too: fOpen and fr_read close this object. */
+#include "parts/fOpen.c"      /* 0x730e */
+#include "parts/fr_read.c"    /* 0x736c */
 
 /* Tail of the STX object: er_nomem (0x73ce).  alerts.c carries it
    for FAITHFUL instead. */
