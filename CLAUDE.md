@@ -513,9 +513,23 @@ this build, ALL different from LCP_ORG's:
 
   Recurring source-shape rules recovered so far, all gated:
       i = i + 1            (ORG)  vs  i++            (STX)
+      x = x - 5            (ORG)  vs  x -= 5         (STX)
       *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)
       do{d--;if(!d)break;  (ORG)  vs  while(--d){body;
         body}while(cond)              if(!cond)break;}
+      r = f(); if (r)      (ORG)  vs  if (f())       (STX)
+      while (A && B){}     (ORG)  vs  while(A){if(!B)break;}
+      unsigned short i     (ORG)  vs  short i        (STX)
+                                      (no clr.w zero-extension
+                                       around index arithmetic)
+      mask in the loop     (ORG)  vs  folded into the assignment,
+        condition                     computed once
+      gameTick(3)          (ORG)  vs  t = 3; ... gameTick(t)
+  a_sitae alone needed six of these; expect several per function.
+  A narrowing cast changes the operand width: `(Random() & 0x7f) | 8`
+  gives or.l, `(unsigned short)(Random() & 0x7f) | 8` gives or.w
+  (Alcyon's int is 16-bit).  Verify each guess by compiling both
+  spellings before editing -- it is faster than re-running a sweep.
   **Do NOT mass-apply these rules (tested and reverted
   2026-09-01).**  Converting all 147 `x = x + 1` for-loop
   increments to a gated STEP() macro across 31 files moved the
