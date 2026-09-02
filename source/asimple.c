@@ -22,12 +22,20 @@
 void
 a_wakfa()
 {
+        /* STX tests the walk call inline -- no local, so its frame
+           is 2 bytes smaller. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_MID_BEDROOM_WALK,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result == 0) {
+#else
+        if (lcp_wkD() == 0) {
+#endif
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
@@ -252,12 +260,21 @@ a_petd()
 void
 a_calld()
 {
+        /* STX tests the walk call inline -- no local, so its frame
+           is 2 bytes smaller. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_BTM_DOG_FOOD, &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
         lcp_st              = STATE_STAND_SIDE_VIEW;
         lcp_face   = FACING_RIGHT;
         g_hatas = 8;

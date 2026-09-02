@@ -75,6 +75,11 @@ a_clocd()
         gameTick(0);
 }
 
+/* STX: a_gesff sits here (0xebf8), just before a_opecf. */
+#ifndef FAITHFUL
+#include "parts/a_gesff.c"
+#endif
+
 /* a_opecf: open, look inside, close.  Both SFX are
    SFX_DOOR_OPEN in the original -- preserved verbatim; whether the
    1985 source meant SFX_DOOR_CLOSE at the tail is a judgement call.

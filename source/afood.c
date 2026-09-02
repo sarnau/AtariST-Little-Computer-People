@@ -334,17 +334,8 @@ short   value;
         g_actif = NO;
 }
 
-/* a_gesff: walk to fridge, then trampoline into a_opecf.
-   addr: a_gesff() */
-
-void
-a_gesff()
-{
-        short   result;
-
-        hs_posXY(POS_BTM_FRIDGE,
-                              &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result == 0)
-                a_opecf();
-}
+/* a_gesff -> parts/a_gesff.c (STX places it between a_clocd
+   and a_opecf in the 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/a_gesff.c"
+#endif

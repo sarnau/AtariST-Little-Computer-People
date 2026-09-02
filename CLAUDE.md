@@ -442,6 +442,14 @@ this build, ALL different from LCP_ORG's:
   od_* fixes -- expect more of these wherever the port carries a
   pointer variable that STX addresses as an array.
 
+  **The port's file split does not match STX's.**  a_gesff (afood.c)
+  sits at 0xebf8, BETWEEN two adoors.c functions -- a_clocd 0xeb54
+  and a_opecf 0xec22 -- which is why its call to a_opecf is a short
+  bsr.  So the STX sources grouped these differently again; per-
+  function parts/ placement, not file ordering, is what reproduces
+  it.  `stx_addrs.py` plus a short-vs-word bsr is usually enough to
+  pin where a function belongs.
+
   **Clusters are LOWER bounds -- objects start earlier.**  lcp_lgt
   (0xde80) and lcp_rgt (0xdf66) sit in the gap BEFORE the 0xdece
   cluster, yet both reach lcp_wkD (0x147a0) and sp_ssco (0x1203a)
