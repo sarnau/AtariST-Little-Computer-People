@@ -431,16 +431,10 @@ ag_cgpa()
         exitVdi();
 }
 
-/* ag_sgp: draw "Guess #N?" for the current attempt.
-   addr: anagram_show_guess_prompt() */
-
-void
-ag_sgp(guess)
-short   guess;
-{
-        ag_cgpa();
-        strPr(g_aggpr[guess - 1], 166, 57, COLOR_black);
-}
+/* ag_sgp -> parts/ag_sgp.c (STX: 0x8052, after ag_intr). */
+#ifdef FAITHFUL
+#include "parts/ag_sgp.c"
+#endif
 
 /* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch.
    addr: anagram_display_word_large() */
@@ -474,6 +468,10 @@ ag_intr()
         strPr("See if you can ",   5, 41, COLOR_black);
         strPr("guess what it is.", 5, 49, COLOR_black);
 }
+
+#ifndef FAITHFUL
+#include "parts/ag_sgp.c"   /* STX: 0x8052, after ag_intr */
+#endif
 
 /* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
    at 0x7f84); see parts/plEr.c. */
