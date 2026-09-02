@@ -105,9 +105,17 @@ extern short g_seslm[];
 extern short body_frT[];
 extern short cy_frT[];
 extern short body_yof[];
+#ifdef FAITHFUL
 extern short* body_ptr;
+#else
+extern unsigned char body_ptr[][168];   /* LCP_BODY_FRAME_SIZE */
+#endif
+#ifdef FAITHFUL
 extern short* body_shp;
 extern short bshdbuf[];
+#else
+extern unsigned char body_shp[][84];    /* LCP_BODY_SHAPE_SIZE */
+#endif
 extern short g_lsimg[];
 extern short g_lsmas[];
 extern short g_dwanf[];

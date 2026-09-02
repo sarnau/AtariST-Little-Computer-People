@@ -62,8 +62,8 @@ sp_updb()
         sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
                 (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
 #else
-        sp_lcpf((short *) ((char *) body_ptr    + frame * LCP_BODY_FRAME_SIZE),
-                (short *) ((char *) body_shp  + frame * LCP_BODY_SHAPE_SIZE),
+        sp_lcpf((short *) body_ptr[frame],
+                (short *) body_shp[frame],
 #endif
                 (short *) g_lsimg,
                 (short *) g_lsmas,

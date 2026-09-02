@@ -167,9 +167,14 @@ al_locs()
         short   which;
 
         /* ROM passes round buffer caps, not exact file sizes. */
+#ifdef FAITHFUL
         al_loal("body.lcp", (unsigned char *) body_buf, 20000L);
         body_ptr    = (short *) body_buf;
         body_shp  = bshdbuf;
+#else
+        /* STX reads straight into the global array. */
+        al_loal("body.lcp", (unsigned char *) body_ptr, 20000L);
+#endif
 
         which = lcp.character_sprite_id;
         if (which < 2 || which > 6)
