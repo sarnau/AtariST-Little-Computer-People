@@ -338,6 +338,18 @@ Tooling: all comparison tools (verify_bytes.py, prg_diff.py,
 fn_diff.py, rom_map.py) now honor `LCP_REF=<path>` to select the
 reference binary; default stays DATA/LCP_ORG.PRG.
 
+Locating a divergent function is its own problem: verify_bytes hunts
+with the first 24 bytes and gives up when the prologue differs.  Two
+tools solve it:
+  * `stx_addrs.py` reads callee addresses out of the relocated call
+    sites inside functions that already match (and inside the matching
+    PREFIX of divergent ones).  Authoritative.
+  * `stx_locate.py` slides a 40-byte window over the port's bytes and
+    looks for a stretch that occurs exactly once in LCP_STX.  It
+    located 36 further functions, but its start address assumes the
+    code before the window is the same length in both revisions --
+    treat it as a lead and expect to nudge the address.
+
 First fn_diff findings (sf_sl vs STX 0xdcc4) -- structural rules of
 this build, ALL different from LCP_ORG's:
 - **sf_sl is a REAL SOUNDS.LCP block loader** in the STX revision

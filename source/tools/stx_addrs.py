@@ -89,7 +89,7 @@ def sweep():
                 pass
     finally:
         sys.argv = argv
-    matched, divergent, located = {}, [], set()
+    matched, divergent, located, pspan = {}, [], set(), {}
     cur = None
     for l in buf.getvalue().splitlines():
         m = re.match(r'MATCH\s+(\S+)\s+port=0x([0-9a-f]+)\s+orig=0x([0-9a-f]+)'
@@ -98,12 +98,15 @@ def sweep():
             matched[m.group(1)] = (int(m.group(2), 16), int(m.group(4)),
                                    int(m.group(3), 16))
             continue
-        m = re.match(r'DIVERGENT\s+(\S+)', l)
+        m = re.match(r'DIVERGENT\s+(\S+)\s+port=0x([0-9a-f]+)\s+len=(\d+)', l)
         if m:
-            cur = m.group(1); divergent.append(cur); continue
+            cur = m.group(1)
+            divergent.append(cur)
+            pspan[cur] = (int(m.group(2), 16), int(m.group(3)))
+            continue
         if cur and 'candidate orig=' in l:
             located.add(cur); cur = None
-    return matched, divergent, located
+    return matched, divergent, located, pspan, vb
 
 
 def main():
@@ -118,29 +121,55 @@ def main():
         j = bisect.bisect_right(addrs, a) - 1
         return (names[j], a - addrs[j]) if j >= 0 else (None, None)
 
-    matched, divergent, located = sweep()
-    # port text offset -> (name, size, stx offset) for matched functions
+    matched, divergent, located, pspan, vb = sweep()
+    # A DIVERGENT function still contributes: everything before its
+    # first hard mismatch is byte-identical, so the relocated call
+    # sites in that prefix name their callees' STX addresses too.
+    # Each newly-placed function widens the next pass's prefix, so
+    # iterate to a fixed point.
     spans = sorted((v[0], v[1], v[2], k) for k, v in matched.items())
-    starts = [s[0] for s in spans]
-
     found, conflict = {}, {}
-    for pos in sites(prel):
-        j = bisect.bisect_right(starts, pos) - 1
-        if j < 0:
-            continue
-        p0, size, o0, _fn = spans[j]
-        if not (p0 <= pos < p0 + size):
-            continue                            # not inside a matched fn
-        pv = struct.unpack('>I', pd[pos:pos + 4])[0]
-        ov = struct.unpack('>I', od[pos - p0 + o0:pos - p0 + o0 + 4])[0]
-        if pv >= pt:                            # data/bss target
-            continue
-        name, off = sym_at(pv)
-        if not name or off != 0:
-            continue
-        if name in found and found[name] != ov:
-            conflict.setdefault(name, {found[name]}).add(ov)
-        found[name] = ov
+    reloc = list(sites(prel))
+
+    def harvest(spans):
+        starts = [s[0] for s in spans]
+        for pos in reloc:
+            j = bisect.bisect_right(starts, pos) - 1
+            if j < 0:
+                continue
+            p0, size, o0, _fn = spans[j]
+            if not (p0 <= pos < p0 + size):
+                continue
+            pv = struct.unpack('>I', pd[pos:pos + 4])[0]
+            ov = struct.unpack('>I', od[pos - p0 + o0:pos - p0 + o0 + 4])[0]
+            if pv >= pt:                        # data/bss target
+                continue
+            name, off = sym_at(pv)
+            if not name or off != 0:
+                continue
+            if name in found and found[name] != ov:
+                conflict.setdefault(name, {found[name]}).add(ov)
+            found[name] = ov
+
+    harvest(spans)
+    relset = set(reloc)
+    ptext, otext = pd, od
+    for _round in range(6):
+        extra = []
+        for name in divergent:
+            a = found.get(name)
+            if a is None or name not in pspan:
+                continue
+            poff, size = pspan[name]
+            code = ptext[poff:poff + size]
+            j_any, j = vb.first_mismatch(code, poff, relset, otext, a)
+            good = size if j < 0 else j
+            if good > 8:
+                extra.append((poff, good, a, name))
+        before = dict(found)
+        harvest(sorted(spans + extra))
+        if found == before:
+            break
 
     want = [n for n in divergent if n not in located]
     rows = [(found[n], n) for n in (found if show_all else want) if n in found]
