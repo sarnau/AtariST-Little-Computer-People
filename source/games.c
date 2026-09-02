@@ -1171,20 +1171,20 @@ char *  str;
 void
 pk_awp()
 {
-        char    str[12];
+        char    str[10];
+        short   rem;
 
         plEr(5, 10, 31, 20);
         str[3] = '\0';
-        str[8] = (char)((int) g_pcmon / 100);
-        str[0] = str[8] + '0';
+        str[0] = (str[8] = g_pcmon / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (char)((int)(g_pcmon % 100) / 10);
+        str[6] = (rem = g_pcmon % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
                 str[1] = str[6] + '0';
-        str[4] = (char)((int)(g_pcmon % 100) % 10);
+        str[4] = rem % 10;
         str[2] = str[4] + '0';
         strPr(str, 5, 18, COLOR_black);
 }
@@ -1195,20 +1195,20 @@ pk_awp()
 void
 pk_dppm()
 {
-        char    str[12];
+        char    str[10];
+        short   rem;
 
         plEr(5, 50, 31, 60);
         str[3] = '\0';
-        str[8] = (char)((int) g_ppmon / 100);
-        str[0] = str[8] + '0';
+        str[0] = (str[8] = g_ppmon / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (char)((int)(g_ppmon % 100) / 10);
+        str[6] = (rem = g_ppmon % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
                 str[1] = str[6] + '0';
-        str[4] = (char)((int)(g_ppmon % 100) % 10);
+        str[4] = rem % 10;
         str[2] = str[4] + '0';
         strPr(str, 5, 58, COLOR_black);
 }
@@ -1219,20 +1219,20 @@ pk_dppm()
 void
 pk_dpot()
 {
-        char    str[14];
+        char    str[10];
+        short   rem;
 
         plEr(31, 30, 57, 40);
         str[3] = '\0';
-        str[8] = (char)((int) g_ppppa / 100);
-        str[0] = str[8] + '0';
+        str[0] = (str[8] = g_ppppa / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (char)((int)(g_ppppa % 100) / 10);
+        str[6] = (rem = g_ppppa % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
                 str[1] = str[6] + '0';
-        str[4] = (char)((int)(g_ppppa % 100) % 10);
+        str[4] = rem % 10;
         str[2] = str[4] + '0';
         strPr(str, 31, 38, COLOR_black);
 }

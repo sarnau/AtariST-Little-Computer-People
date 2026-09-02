@@ -478,6 +478,18 @@ this build, ALL different from LCP_ORG's:
   the payload read.  So the kept build's sound loading is no longer
   a reconstruction: it is the original's code.
 
+  **Embedded-assignment rule (2026-09-01).**  Where the port writes
+  two statements, LCP_STX often nests the assignment in the
+  expression, which Alcyon compiles WITHOUT the reload:
+      x = a / b;  y = x + '0';      ->  move.b d0,x / move.b x,d0 /
+                                        ext.w / add / move.b d0,y
+      y = (x = a / b) + '0';        ->  move.b d0,x / add / move.b d0,y
+  The same holds for `s[6] = (rem = v % 100) / 10;`.  Confirmed by
+  compiling both spellings (t1/t2/t4 probes) and comparing to the
+  binary.  This recovered pk_awp / pk_dppm / pk_dpot, whose STX
+  versions also use `char str[10]` plus a `short rem` temp and carry
+  no (char)/(int) casts at all.
+
   Recurring source-shape rules recovered so far, all gated:
       i = i + 1            (ORG)  vs  i++            (STX)
       *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)
