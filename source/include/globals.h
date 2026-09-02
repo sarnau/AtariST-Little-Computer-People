@@ -106,9 +106,17 @@ extern unsigned char* mi_sqpos;
 extern long g_msmap;
 extern long mi_env;
 extern short mi_vel;
+#ifdef FAITHFUL
 extern short mi_dvel;
+#else
+extern char mi_dvel;
+#endif
 extern short psg_cvol;
+#ifdef FAITHFUL
 extern short psg_dvol;
+#else
+extern char psg_dvol;
+#endif
 extern short g_mchcn;
 extern short g_mtspb;
 extern short mi_temp;

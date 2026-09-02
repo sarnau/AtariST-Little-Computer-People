@@ -325,9 +325,19 @@ long            mi_env = 0;
      psg_dvol       @ 0x29a26 = 0x0F (15)  -- max PSG volume
    Port previously had mi_vel/default at 100 (guess). */
 short           mi_vel           = 127;
+/* STX declares these two as char (byte compares/stores; Alcyon
+   word-aligns them, hence the 2-byte spacing). */
+#ifdef FAITHFUL
 short           mi_dvel   = 127;
+#else
+char            mi_dvel   = 127;
+#endif
 short           psg_cvol      = 15;
+#ifdef FAITHFUL
 short           psg_dvol      = 15;
+#else
+char            psg_dvol      = 15;
+#endif
 /* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),
    with mi_evcn initialized to 9. */
 short           mi_evi          = 0;

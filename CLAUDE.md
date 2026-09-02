@@ -591,6 +591,24 @@ this build, ALL different from LCP_ORG's:
   order.  Rule: a parts/ file may hold several functions only if
   both revisions order them identically.
 
+  **STX inlines what the port factored into static helpers.**
+  mq_parh's switch case bodies ARE the mh_chac/mh_temp/mh_volu/
+  mh_scat/mh_proc code (the jump-table targets 0x1246/0x1264/0x129c/
+  0x12a4/0x132c all lie inside mq_parh) -- the port's own comments
+  even carry those addresses, because its author read them there and
+  factored them out.  Since the helpers are `static`, they emit no
+  symbols and verify_bytes never reported them; the divergence only
+  showed up as mq_parh's shape.  Expect more of this: a port helper
+  whose comment cites an address INSIDE another function's range is
+  inlined in STX.
+
+  Two more type findings from the same function: STX's switch selector
+  is masked (`switch (*p & 0xff)`), and mi_dvel/psg_dvol are `char`,
+  not short -- byte compares and stores, word-aligned by Alcyon so
+  they still sit 2 bytes apart.  Its scale-table ladder also emits the
+  final `mi_dvel < 0x80` arm that LCP_ORG's comment calls dead (Alcyon
+  narrows 0x80 to a signed byte, making the compare trivially true).
+
   A narrowing cast changes the operand width: `(Random() & 0x7f) | 8`
   gives or.l, `(unsigned short)(Random() & 0x7f) | 8` gives or.w
   (Alcyon's int is 16-bit).  Verify each guess by compiling both
