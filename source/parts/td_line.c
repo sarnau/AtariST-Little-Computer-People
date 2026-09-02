@@ -10,7 +10,11 @@ short   color;
 {
         short   i;
 
+#ifdef FAITHFUL
         for (i = 0; i < 5; i = i + 1)
+#else
+        for (i = 0; i < 5; i++)
+#endif
                 drwLine(i + 44, 51 - (i >> 1),
                           i + 44, 57 - (i >> 1),
                           color);

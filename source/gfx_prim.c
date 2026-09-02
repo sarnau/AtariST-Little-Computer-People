@@ -46,25 +46,18 @@ short   color;
    vsl_color silently falls back to pen 15 (dark brown) -- water tank
    renders brown.  Launch LCP.PRG directly (GEM desktop or --auto). */
 
-void
-sc_sdtb()
-{
-        g_srlgb = (void *) Logbase();
-        Setscreen(g_srptr, (void *)-1L, -1L);
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 1);        /* ROM: FIS_SOLID, not PATTERN */
-        vsf_style(vdihnd, 1);           /* ROM: 1, not 8 */
-        vsf_color(vdihnd, 0);
-}
+/* sc_sdtb -> parts/sc_sdtb.c (STX: 0xdece object, in the 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/sc_sdtb.c"
+#endif
 
 /* sc_sdtf: restore log-base after sc_sdtb.
    addr: sc_sdtf() */
 
-void
-sc_sdtf()
-{
-        Setscreen(g_srlgb, (void *)-1L, -1L);
-}
+/* sc_sdtf -> parts/sc_sdtf.c (STX: 0xdece object, in the 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/sc_sdtf.c"
+#endif
 
 /* sc_firw: paint row (160 B) with 0x0FFF (palette entry 0xF, white).
    addr: sc_firw() */
@@ -181,26 +174,10 @@ exitVdi()
 }
 #endif  /* FAITHFUL -- the STX build keeps it in games.c */
 
-/* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
-   addr: draw_pixel @ 0x23930 */
-
-void
-drwPixel(x, y, color)
-short   x;
-short   y;
-short   color;
-{
-        short   pts[4];
-
-        sc_sdtb();
-        vsl_color(vdihnd, vdi_colt[color]);
-        pts[0] = x;
-        pts[1] = y;
-        pts[2] = x;
-        pts[3] = y;
-        v_pline(vdihnd, 2, pts);
-        sc_sdtf();
-}
+/* drwPixel -> parts/drwPixel.c (STX: 0x13930). */
+#ifdef FAITHFUL
+#include "parts/drwPixel.c"
+#endif
 
 /* blkcp32: unrolled 32-byte block copy (count * 32 bytes, 8 longs at a
    time -- MOVEM.L target).  Kept for byte-comparability.

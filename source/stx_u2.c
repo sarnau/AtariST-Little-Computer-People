@@ -20,6 +20,7 @@
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
 #include "types.h"
+#include <osbind.h>       /* the sc_sdt* parts use Setscreen/Logbase */
 #include "structs.h"
 #include "enums.h"
 #include "globals.h"
@@ -34,6 +35,8 @@
 #include "parts/lcp_rgt.c"   /* 0xdf66 */
 #include "parts/sp_sprs.c"   /* 0xe0b2, before od_draw */
 #include "render.c"
+#include "parts/sc_sdtb.c"  /* 0xe292 */
+#include "parts/sc_sdtf.c"  /* 0xe310 */
 #include "delivery.c"
 #include "adoors.c"
 #include "aleisure.c"
@@ -59,6 +62,14 @@
 #include "health.c"
 /* wkFrDr reaches lcp_wkD (STX 0x147a0, inside this cluster) with a
    bsr, so the walk engine is part of this object too. */
+/* The clock/line group: LCP_STX links these in this object.
+   cl_drini 0x133b4, cl_redrH 0x137d4, drwLine 0x138d4,
+   drwPixel 0x13930. */
+#include "parts/cl_drini.c" /* 0x133b4 */
+#include "parts/cl_redrH.c" /* 0x137d4 */
+#include "parts/cl_drwH.c"
+#include "parts/drwLine.c"  /* 0x138d4 */
+#include "parts/drwPixel.c" /* 0x13930 */
 #include "parts/a_toggt.c"  /* 0x13bb2 */
 #include "parts/tt_on.c"    /* 0x13bc8 */
 #include "parts/tt_off.c"   /* 0x13c1e */
