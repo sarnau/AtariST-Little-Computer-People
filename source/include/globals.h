@@ -89,6 +89,12 @@ extern short* sv_bodyP;
 extern short* sv_headP;
 extern short vdihnd;
 extern short vdi_hnd;
+#ifndef FAITHFUL
+extern short gr_hwchar;
+extern short gr_hhchar;
+extern short gr_hwbox;
+extern short gr_hhbox;
+#endif
 extern short vdi_colt[];
 extern short contrl[];
 extern short intin[];

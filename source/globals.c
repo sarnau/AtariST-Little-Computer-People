@@ -221,6 +221,14 @@ short * sv_headP           = (short *) 0;
    sentinel handle that the VDI stubs ignore. */
 short   vdihnd                       = 0;
 short   vdi_hnd                      = 0;    /* physical from graf_handle */
+#ifndef FAITHFUL
+/* LCP_STX's aes_init has an empty frame: graf_handle writes its four
+   cell/box metrics into globals, not into locals. */
+short   gr_hwchar;
+short   gr_hhchar;
+short   gr_hwbox;
+short   gr_hhbox;
+#endif
 /* vdi_colt (Ghidra vdi_color_table @ 0x29b64): color_enum ->
    VDI-color permutation.  ROM data at 0x29b64 (verified via
    /read_memory) is {0,2,3,6,4,7,5,8,9,10,11,14,12,15,13,1} -- exactly

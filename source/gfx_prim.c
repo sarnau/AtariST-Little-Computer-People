@@ -227,7 +227,9 @@ short   count;
 void
 aes_init()
 {
+#ifdef FAITHFUL
         short   gr_hwchar, gr_hhchar, gr_hwbox, gr_hhbox;
+#endif
 
         appl_init();
         vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
@@ -279,32 +281,14 @@ vdi_init()
 /* vst_h20: save VDI attrs to sv_vqta; set text height 20 px.
    addr: vdi_save_and_set_text_height_20() */
 
-#ifndef FAITHFUL
-void
-vst_h20()
-{
-        short   ta, tb, tc, td;
-        vqt_attributes(vdihnd, sv_vqta);
-        /* STX passes the four out-pointers in declaration order. */
-        vst_height(vdihnd, 20, &ta, &tb, &tc, &td);
-}
-#endif
+/* vst_h20 is a kept-only helper and lives in the games object in
+   LCP_STX -- games.c includes parts/vst_h20.c. */
 
 /* rst_vsth: restore VDI text height from sv_vqta[7] (cell height).
    addr: reset_vst_height() */
 
-#ifndef FAITHFUL
-void
-rst_vsth()
-{
-        short   ta, tb, tc, td;
-#ifdef FAITHFUL
-        vst_height(vdihnd, sv_vqta[7], &td, &tc, &tb, &ta);
-#else
-        vst_height(vdihnd, sv_vqta[7], &ta, &tb, &tc, &td);
-#endif
-}
-#endif
+/* rst_vsth is a kept-only helper and lives in the games object in
+   LCP_STX -- games.c includes parts/rst_vsth.c. */
 
 
 /* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
@@ -318,6 +302,20 @@ moff()
         if (moff_f == NO) {
                 graf_mouse(M_OFF, (void *) 0);
                 moff_f = YES;
+        }
+}
+
+/* mon (STX 0xde5c): the counterpart moff guards against, immediately
+   after it in the same object.  LCP_ORG has no such function. */
+
+#define M_ON            257
+
+void
+mon()
+{
+        if (moff_f != NO) {
+                graf_mouse(M_ON, (void *) 0);
+                moff_f = NO;
         }
 }
 #endif

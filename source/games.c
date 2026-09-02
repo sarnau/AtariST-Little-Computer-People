@@ -57,6 +57,9 @@ mg_stp()
    this object (ag_* and wp_* reach them with bsr).  FAITHFUL keeps
    them in gfx_prim.c. */
 #ifndef FAITHFUL
+#include "parts/vst_h20.c"     /* 0x75dc */
+#include "parts/rst_vsth.c"    /* 0x761e */
+
 void
 initVdi()
 {
@@ -449,10 +452,20 @@ short   text_color;
         ag_cwda();
         vst_h20();
         x = 0;
+#ifdef FAITHFUL
         for (; *word != '\0'; word = word + 1) {
                 prCh((short) *word, x + 162, 37, text_color);
                 x = x + 12;
         }
+#else
+        /* STX steps the pointer inside the body, before the pitch,
+           and both steps are memory-direct. */
+        while (*word != '\0') {
+                prCh((short) *word, x + 162, 37, text_color);
+                word++;
+                x += 12;
+        }
+#endif
         rst_vsth();
 }
 
@@ -1233,19 +1246,37 @@ pk_rmch(pile, count)
 short * pile;
 short * count;
 {
+#ifdef FAITHFUL
         short   card;
         short   n;
         short   i;
+#else
+        /* STX's frame is 12 bytes: `card` and `i` are followed by two
+           more declared shorts the body never touches. */
+        short   card;
+        short   i;
+        short   unused1;
+        short   unused2;
+#endif
 
         if (*count == 0)
                 return CARD_NONE;
         card    = *pile;
+#ifdef FAITHFUL
         n       = *count;
         *count  = n - 1;
         if ((short)(n - 1) != 0) {
                 for (i = 0; i < 51; i = i + 1)
                         pile[i] = pile[i + 1];
         }
+#else
+        /* STX decrements the count in place and returns early when the
+           pile is emptied, so `card` is returned from two places. */
+        if (--*count == 0)
+                return card;
+        for (i = 0; i < 51; i++)
+                *(pile + i) = *(pile + i + 1);
+#endif
         return card;
 }
 

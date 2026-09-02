@@ -255,9 +255,12 @@ unsigned char * p;
                 mi_pgmap[i] = p[i + 14] - 1;
         }
 #else
+        /* STX writes the offset arithmetic inside the dereference,
+           which makes the pointer the INDEX register and the loop
+           counter the base -- `p[i - 1]` gives the other way round. */
         for (i = 1; i < 16; i++) {
-                mi_chmap[i] = i[p - 1]  - 1;
-                mi_pgmap[i] = i[p + 14] - 1;
+                mi_chmap[i] = *(p + i - 1)  - 1;
+                mi_pgmap[i] = *(p + i + 14) - 1;
         }
 #endif
 }
