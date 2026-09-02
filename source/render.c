@@ -102,51 +102,19 @@ short   max_y;
    Returns -1 on walk failure, 0 otherwise.
    addr: tt_on() */
 
-short
-tt_on()
-{
-        short   result;
-
-        if (lcp_tv != NO)
-                return 0;
-
-        hs_posXY(POS_TOP_LIVING_ROOM,
-                              &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result != 0)
-                return -1;
-
-        gameTick(2);
-        li_lool();
-        lcp_tv = YES;
-        p_sftvc();
-        return 0;
-}
+/* tt_on -> parts/tt_on.c (STX: 0xdece object, 0x13bc8, immediately after a_toggt). */
+#ifdef FAITHFUL
+#include "parts/tt_on.c"
+#endif
 
 /* tt_off: same walk, clear flag, redraw antenna in off state.
    Note: no SFX_TV_CLICK on off in the 1985 binary -- preserved verbatim.
    addr: tt_off() */
 
-short
-tt_off()
-{
-        short   result;
-
-        if (lcp_tv == NO)
-                return 0;
-
-        hs_posXY(POS_TOP_LIVING_ROOM,
-                              &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result != 0)
-                return -1;
-
-        gameTick(2);
-        li_lool();
-        lcp_tv = NO;
-        td_line(COLOR_white);
-        return 0;
-}
+/* tt_off -> parts/tt_off.c (STX: 0xdece object, 0x13c1e, immediately after tt_on). */
+#ifdef FAITHFUL
+#include "parts/tt_off.c"
+#endif
 
 /* -- Kitchen food-cabinet overlay -- */
 

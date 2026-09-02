@@ -53,6 +53,10 @@
 #include "health.c"
 /* wkFrDr reaches lcp_wkD (STX 0x147a0, inside this cluster) with a
    bsr, so the walk engine is part of this object too. */
+#include "parts/a_toggt.c"  /* 0x13bb2 */
+#include "parts/tt_on.c"    /* 0x13bc8 */
+#include "parts/tt_off.c"   /* 0x13c1e */
+#include "parts/td_line.c"  /* 0x13c8a */
 #include "parts/sfClick.c" /* 0x14786 */
 #include "walk.c"
 

@@ -75,17 +75,11 @@ lcp_upal()
    Colour: COLOR_white when off, random when on (static effect).
    addr: td_line() */
 
-void
-td_line(color)
-short   color;
-{
-        short   i;
-
-        for (i = 0; i < 5; i = i + 1)
-                drwLine(i + 44, 51 - (i >> 1),
-                          i + 44, 57 - (i >> 1),
-                          color);
-}
+/* td_line -> parts/td_line.c (STX: 0xdece object, 0x13c8a,
+   immediately after tt_off). */
+#ifdef FAITHFUL
+#include "parts/td_line.c"
+#endif
 
 /* td_nois: random-colour antenna each frame while TV on.
    Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette.
