@@ -757,13 +757,13 @@ new_word:
 validate:
                 if (word_complete != NO)
                         goto new_word;
+                /* The second test is a bare truthiness test, which
+                   is what makes Alcyon reach it with an indexed EA
+                   (movea.w idx,a0 / movea.l #base,a1 /
+                   tst.b (0,a0,a1.l)); spelling it `!= '\0'` emits the
+                   base+add form instead. */
                 for (index = 0;
-                     g_aginb[index] != ' ' &&
-                     /* STX addresses this one with an indexed EA
-                        (movea.l #base,a1 / tst.b (0,a0,a1.l)) that no
-                        spelling reproduces here -- the only byte still
-                        divergent in ag_main. */
-                     *(index + g_aginb) != '\0';
+                     g_aginb[index] != ' ' && g_aginb[index];
                      index++) ;
                 if (g_aginb[index] == ' ')
                         g_aginb[index] = '\0';
@@ -774,19 +774,17 @@ validate:
                         gameTick(0x1e);
                         ag_csb();
                         goto new_word;
-                }
-                if (g_aggun <= 7) {
-                        g_aggun     = g_aggun + 1;
-                        walk_result = rndRng(0, 2);
-                        strPr(g_agwgm[walk_result], 5, 69, COLOR_black);
+                /* The guess counter steps in the condition itself,
+                   so both arms see it incremented. */
+                } else if (g_aggun++ < 8) {
+                        strPr(g_agwgm[rndRng(0, 2)], 5, 69, COLOR_black);
                         gameTick(0x14);
                         ag_csb();
                         goto new_word;
-                }
+                } else {
 
                 /* Too many wrong guesses: show the answer, start a
                    new word. */
-                g_aggun = g_aggun + 1;
                 strPr("Sorry, too many guesses!",
                              5, 69, COLOR_black);
                 gameTick(0x14);
@@ -797,6 +795,7 @@ validate:
                 gameTick(0x1e);
                 ag_cwda();
                 goto new_word;
+                }
         }
 }
 
