@@ -89,6 +89,7 @@
 #include "parts/tt_off.c"   /* 0x13c1e */
 #include "parts/td_nois.c" /* 0x13c74 */
 #include "parts/td_line.c"  /* 0x13c8a */
+#include "aletter.c"      /* a_writl 0x13cd6, lt_tysa, lt_tyca */
 #include "parts/lt_sets.c" /* 0x1476c */
 #include "parts/sfClick.c" /* 0x14786 */
 #include "walk.c"

@@ -320,14 +320,13 @@ void
 lt_tyca(ch)
 short   ch;
 {
-        short   pick;
+        /* One local: STX consumes every rndRng result in place. */
         short   i;
 
         if (ch < ' ') {                 /* CR */
                 lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
-                pick = rndRng(0, 5);
-                if (pick == 0) {
+                if (rndRng(0, 5) == 0) {
                         lcp_st = STATE_DESK_TYPE_R;
                         gameTick(0);
                         lcp_st = STATE_DESK_TYPE_L;
@@ -372,8 +371,7 @@ short   ch;
                 lcp_face = rndRng(0, 1);
                 lcp_st = STATE_DESK_TYPE_L;
                 gameTick(0);
-                pick = rndRng(0, 5);
-                if (pick == 0) {
+                if (rndRng(0, 5) == 0) {
                         lcp_st = STATE_DESK_TYPE_R;
                         gameTick(0);
                         lcp_st = STATE_DESK_TYPE_L;
@@ -385,7 +383,7 @@ short   ch;
         sfClick();
         gameTick(0);
         prCh(ch, g_cdibp << 3, 23, COLOR_black);
-        g_cdibp = g_cdibp + 1;
+        g_cdibp++;
 
         g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
         g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
@@ -404,9 +402,6 @@ short   ch;
         g_sepey[g_seslm[g_ltcwt[i]]] =  44;
 
         /* 1/21 chance of a short pause between keystrokes. */
-        pick = rndRng(0, 20);
-        if (pick == 0) {
-                pick = rndRng(0, 3);
-                gameTick(pick);
-        }
+        if (rndRng(0, 20) == 0)
+                gameTick(rndRng(0, 3));
 }
