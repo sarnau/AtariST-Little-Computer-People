@@ -902,27 +902,10 @@ mq_popl()
 #endif
 }
 
-/* mq_rmev: remove 3-word entry at mi_evq[val]; shift later down.
-   Returns 1 if more remain, 0 if empty.
-   addr: midi_seq_remove_event() */
-
-short
-mq_rmev(val)
-short   val;
-{
-        short   res;
-        short   i;
-
-        if ((short)(val + 3) == mi_evi)
-                res = 0;
-        else {
-                for (i = val; i < (short)(mi_evi - 3); i = i + 1)
-                        mi_evq[i] = mi_evq[i + 3];
-                res = 1;
-        }
-        mi_evi = mi_evi - 3;
-        return res;
-}
+/* mq_rmev -> parts/mq_rmev.c (STX: 0xe64, right after mq_expN). */
+#ifdef FAITHFUL
+#include "parts/mq_rmev.c"
+#endif
 
 /* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
@@ -952,6 +935,7 @@ void
 mq_expN(val)
 short   val;
 {
+#ifdef FAITHFUL
         short   r;
         short   i;
 
@@ -964,7 +948,26 @@ short   val;
                                 i = i - 3;
                 }
         }
+#else
+        /* STX: one local, memory-direct steps, the removal result
+           tested in place, and mq_snof gets &mi_evq[i]. */
+        short   i;
+
+        for (i = 0; i < mi_evi; i += 3) {
+                mi_evq[i] -= val;
+                if (mi_evq[i] <= 0) {
+                        mq_snof(&mi_evq[i]);
+                        if (mq_rmev(i) != 0)
+                                i -= 3;
+                }
+        }
+#endif
 }
+
+#ifndef FAITHFUL
+/* STX links mq_rmev immediately after mq_expN (0xe64). */
+#include "parts/mq_rmev.c"
+#endif
 
 /* mq_spgm: send Program Change (0xCn) if not already cached + MIDI enabled.
    addr: midi_seq_send_program_change() */
