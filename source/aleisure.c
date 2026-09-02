@@ -37,14 +37,19 @@
 void
 a_lists()
 {
-        /* STX tests the call in place -- no local. */
 #ifdef FAITHFUL
         short   result;
-#endif
         short   index;
         _DTA *   dta_ptr;
         char *  filename;
         short   i;
+#else
+        /* STX: link #-12 -- a temporary, index (reused as the '.'
+           scan counter) and the name pointer. */
+        short   tmp;
+        short   index;
+        char *  filename;
+#endif
 
         if (lcp_recP != NO)
                 return;
@@ -64,6 +69,7 @@ a_lists()
         li_loor();
         lcp_recP = YES;
 
+#ifdef FAITHFUL
         index = rndRng(0, lcp_food - 1) + 1;
         Fsfirst("*.sng", 0L);
         while ((index = index - 1) != 0)
@@ -73,6 +79,17 @@ a_lists()
         for (i = 0; filename[i] != '.'; i = i + 1)
                 ;
         filename[i + 4] = '\0';
+#else
+        tmp = rndRng(0, lcp_food - 1);
+        index = tmp + 1;
+        Fsfirst("*.sng", 0);
+        while (--index != 0)
+                Fsnext();
+        filename = ((_DTA *) Fgetdta())->d_fname;
+        for (index = 0; filename[index] != '.'; index++)
+                ;
+        filename[index + 4] = '\0';
+#endif
         sgPlay(filename);
 }
 

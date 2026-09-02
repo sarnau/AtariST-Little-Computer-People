@@ -44,6 +44,7 @@
 #include "parts/hideLcp.c"
 #include "parts/showLcp.c"
 #include "parts/sp_ssco.c"   /* 0x1203a */
+#include "parts/sp_ss02.c"   /* 0x12108 */
 #include "abathrm.c"
 #include "ahouse.c"
 #include "health.c"

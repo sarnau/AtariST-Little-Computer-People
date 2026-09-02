@@ -175,7 +175,11 @@ a_gioob()
 #else
                 lcp_x += 10;
 #endif
+#ifdef FAITHFUL
                 lcp_st = STATE_LIE_DOWN_GETTING_IN; gameTick(2);
+#else
+                lcp_st = pst_arr[1]; gameTick(2);
+#endif
 #ifdef FAITHFUL
                 lcp_x = lcp_x + 10;
 #else

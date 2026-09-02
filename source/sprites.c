@@ -117,25 +117,11 @@ sp_updb()
 #include "parts/showLcp.c"
 #endif
 
-/* sp_ss02: same as sp_ssco but in the in-front-of-LCP layer.
-   addr: sp_ss02() */
-
-void
-sp_ss02(g_seix)
-short   g_seix;
-{
-        short   slot;
-
-        g_selaf[g_seix] = SPRITE_IN_FRONT;
-        sp_upds();
-        slot = g_seslm[g_seix];
-        g_seaim[slot]  = g_sedim[g_seix];
-        g_seams[slot]   = g_sedms[g_seix];
-        g_seach[slot] = g_sedeh[g_seix];
-        g_seacw[slot]  = g_sedew[g_seix];
-        g_lcyof = YES;
-        g_lcieo       = g_seix;
-}
+/* sp_ss02 -> parts/sp_ss02.c (STX: 0xdece object, 0x12108 --
+   a_kitcc reaches it with a bsr). */
+#ifdef FAITHFUL
+#include "parts/sp_ss02.c"
+#endif
 
 /* sp_lcpf: expand 2-word (32-px) LCP source frame into 4-word (64-px)
    dest row, with optional horizontal mirror.  flipV picks left- vs
