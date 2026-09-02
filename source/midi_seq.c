@@ -851,12 +851,21 @@ mq_pshl(a, b)
 void *  a;
 short   b;
 {
+#ifdef FAITHFUL
         if (mi_evcn < 49) {
                 mi_lstk[mi_evcn] = (long) a;
                 mi_evcn = mi_evcn + 1;
                 mi_lstk[mi_evcn] = (long)(short)(b - 1);
                 mi_evcn = mi_evcn + 1;
         }
+#else
+        if (mi_evcn < 49) {
+                mi_lstk[mi_evcn] = (long) a;
+                mi_evcn++;
+                mi_lstk[mi_evcn] = (long)(short)(b - 1);
+                mi_evcn++;
+        }
+#endif
 }
 
 /* mq_popl: pop/decrement top of loop stack.  Returns loop-start ptr
