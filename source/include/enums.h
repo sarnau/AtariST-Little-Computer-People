@@ -545,6 +545,7 @@
    keys (function + cursor) live above the 0..0xff ASCII range at
    0x100 | scancode -- keeps them within positive-short territory. */
 #define KEY_NONE                        (-1)
+#ifdef FAITHFUL
 #define KEY_CURSOR_LEFT                 0x14B
 #define KEY_F1                          0x13B
 #define KEY_F2                          0x13C
@@ -556,6 +557,21 @@
 #define KEY_F8                          0x142
 #define KEY_F9                          0x143
 #define KEY_F10                         0x144
+#else
+/* LCP_STX's getKey maps the extended keys to its own small codes
+   (cursor-left -> 8, F1..F10 -> 241..250) instead of 0x100|scan. */
+#define KEY_CURSOR_LEFT                 8
+#define KEY_F1                          241
+#define KEY_F2                          242
+#define KEY_F3                          243
+#define KEY_F4                          244
+#define KEY_F5                          245
+#define KEY_F6                          246
+#define KEY_F7                          247
+#define KEY_F8                          248
+#define KEY_F9                          249
+#define KEY_F10                         250
+#endif
 #define KEY_CTRL_A_ALARM                0x01
 #define KEY_CTRL_B_BOOK                 0x02
 #define KEY_CTRL_C_CALL                 0x03

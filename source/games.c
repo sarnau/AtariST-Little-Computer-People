@@ -267,6 +267,7 @@ pk_bjMn()
    addr: minigame_wait_for_key_with_events() */
 
 short
+#ifdef FAITHFUL
 mg_wkev()
 {
         short           key;
@@ -321,6 +322,58 @@ mg_wkev()
         mg_tofl = YES;
         return KEY_F10;
 }
+
+#else   /* STX: link #-8 -- key and idle only; the event id, the drain
+           key and the timeout test are all consumed in place. */
+
+mg_wkev()
+{
+        short           key;
+        unsigned short  idle;
+
+        idle    = 0;
+        mg_tofl = NO;
+
+        /* Drain any keys the game accidentally left in the buffer. */
+        do ; while (getKey() != KEY_NONE);
+
+        while ((key = getKey()) == KEY_NONE) {
+                if (alarm_p != NO) {
+                        lcp_lgt();
+                        a_wakfa();
+                        lcp_rgt();
+                }
+                if (lcp.bathroom_need != NO) {
+                        lcp_lgt();
+                        a_uset();
+                        lcp_rgt();
+                }
+                if (lcp.thirst_level > 0 && lcp.water_level != 0) {
+                        lcp_lgt();
+                        a_drink();
+                        lcp_rgt();
+                }
+                if (idle++ > 7200) {
+                        mg_tofl = YES;
+                        return KEY_F10;
+                }
+                if (g_trel[0] != ACTION_NONE) {
+                        lcp_lgt();
+                        execEv(getEv());
+                        lcp_rgt();
+                }
+                gameTick(0);
+        }
+        if (key == KEY_CTRL_A_ALARM  ||
+            key == KEY_CTRL_B_BOOK    ||
+            key == KEY_CTRL_C_CALL     ||
+            key == KEY_CTRL_D_DOGFOOD    ||
+            key == KEY_CTRL_F_FOOD  ||
+            key == KEY_CTRL_W_WATER)
+                deal_kc(key);
+        return key;
+}
+#endif
 
 /* ag_csb: clear the bottom info bar (5,62)-(319,75).
    addr: anagram_clear_status_bar() */
@@ -1249,7 +1302,11 @@ short   c;
 {
         short   ch;
 
+#ifdef FAITHFUL
         for (;;) {
+#else
+        while (1) {
+#endif
                 gameTick(0);
                 ch = mg_wkev();
                 if (ch == a) return 1;
