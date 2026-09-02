@@ -5,7 +5,11 @@
 
 extern short fOpen();
 extern void crFile();
+#ifdef FAITHFUL
 extern void fr_read();
+#else
+extern short fr_read();         /* STX returns the Fread result */
+#endif
 extern void fLoad();
 extern void lcp_save();
 extern short lc_load();

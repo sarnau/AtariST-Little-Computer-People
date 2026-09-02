@@ -29,10 +29,16 @@ fOpen(filename, rwmode)
 char *  filename;
 short   rwmode;
 {
+#ifdef FAITHFUL
         short   fhandle;
         short   retry;
+#else
+        short   retry;          /* STX declares the counter first */
+        short   fhandle;
+#endif
 
         retry = 0;
+#ifdef FAITHFUL
         for (;;) {
                 fhandle = Fopen(filename, rwmode);
                 if (fhandle >= 0)
@@ -44,6 +50,22 @@ short   rwmode;
                         form_alert(0,
                                 "[1][Bad file open.|Try re-booting.][RETRY]");
         }
+#else
+        /* STX: an explicit backward goto from both arms -- neither
+           branch goes through a shared loop-back. */
+again:
+        fhandle = Fopen(filename, rwmode);
+        if (fhandle >= 0)
+                return fhandle;
+        retry++;
+        if (retry < 3) {
+                evnt_timer(1000, 0);
+                goto again;
+        }
+        form_alert(0,
+                "[1][Bad file open.|Try re-booting.][RETRY]");
+        goto again;
+#endif
 }
 
 /* addr: crFile() */
@@ -68,16 +90,26 @@ char *  filename;
 }
 
 /* addr: fr_read() */
+#ifdef FAITHFUL
 void
+#else
+short                   /* STX returns the Fread result */
+#endif
 fr_read(fhnd, count, buffer)
 short   fhnd;
 long    count;
 void *  buffer;
 {
+#ifdef FAITHFUL
         short   err;
         short   retry;
+#else
+        short   retry;          /* STX declares the counter first */
+        short   err;
+#endif
 
         retry = 0;
+#ifdef FAITHFUL
         for (;;) {
                 /* Fread expects handle as word; a (long) cast here pushes
                    4 bytes where TOS wants 2 and silently reads from
@@ -92,6 +124,22 @@ void *  buffer;
                         form_alert(0,
                                 "[1][Bad file read.|Try re-booting.][RETRY]");
         }
+#else
+        /* STX: same explicit-goto retry loop as fOpen, returning the
+           Fread result. */
+again:
+        err = Fread(fhnd, count, buffer);
+        if (err >= 0)
+                return err;
+        retry++;
+        if (retry < 3) {
+                evnt_timer(1000, 0);
+                goto again;
+        }
+        form_alert(0,
+                "[1][Bad file read.|Try re-booting.][RETRY]");
+        goto again;
+#endif
 }
 
 /* 4-byte header: discarded temp short, then payload size short.

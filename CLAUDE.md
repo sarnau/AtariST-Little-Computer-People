@@ -620,6 +620,13 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      for(;;){...if/else}  (ORG)  vs  a label + two explicit `goto`s
+                                      (a loop whose arms each branch
+                                       straight back, with no shared
+                                       loop-back branch: fOpen,
+                                       fr_read)
+      void f()             (ORG)  vs  short f() returning the value
+                                      the ORG version discards
       for (;;)             (ORG)  vs  while (1)  (the while form
                                       emits an entry bra to the
                                       bottom jump; for(;;) does not)
