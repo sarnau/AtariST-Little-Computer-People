@@ -339,7 +339,7 @@ fn_diff.py, rom_map.py) now honor `LCP_REF=<path>` to select the
 reference binary; default stays DATA/LCP_ORG.PRG.
 
 Locating a divergent function is its own problem: verify_bytes hunts
-with the first 24 bytes and gives up when the prologue differs.  Two
+with the first 24 bytes and gives up when the prologue differs.  Four
 tools solve it:
   * `stx_addrs.py` reads callee addresses out of the relocated call
     sites inside functions that already match (and inside the matching
@@ -349,6 +349,17 @@ tools solve it:
     located 36 further functions, but its start address assumes the
     code before the window is the same length in both revisions --
     treat it as a lead and expect to nudge the address.
+  * `stx_neighbor.py` infers a function's address from the matched
+    function that precedes it: where a unity unit already reproduces
+    LCP_STX's order, the next function starts where that match ends.
+    It reports the matching prefix so a wrong guess is obvious.
+  * `stx_whatis.py` goes the other way -- given an STX address it
+    ranks the divergent port functions by length and similarity.
+
+  A `bsr`'s TARGET inside a matched function is the most reliable
+  evidence of all: mq_advs's call pinned mq_pars at 0x338, sp_imfs's
+  pinned sp_iniM at 0x6612, and er_food's pinned a_opecc/a_opcfd.
+  Always prefer a harvested address over a window or neighbour guess.
 
 First fn_diff findings (sf_sl vs STX 0xdcc4) -- structural rules of
 this build, ALL different from LCP_ORG's:
@@ -644,6 +655,25 @@ this build, ALL different from LCP_ORG's:
                                       routines all carry a 10-short
                                       point buffer and write all four
                                       coordinates
+      x = x + 1; if (x > N) (ORG)  vs  if (++x > N)  (the pre-increment
+                                      form loads the value back for
+                                      the compare: add.q then move to
+                                      a register, where the compare on
+                                      the plain variable is cmpi #N,mem)
+      a = 0; b = 0; c = 0; (ORG)  vs  a = b = c = 0 (one value computed
+                                      into d0 and stored right to
+                                      left -- the FIRST store is the
+                                      RIGHTMOST variable, so the store
+                                      widths give the declaration
+                                      types away)
+      helper C function    (ORG)  vs  hand-assembly (psg_wr, psg_mix
+                                      and mowrit are frameless
+                                      absolute-long pokes in LCP_STX;
+                                      source/psg_asm.s carries them)
+      f(&d, &c, &b, &a)    (ORG)  vs  f(&a, &b, &c, &d)
+      short table          (ORG)  vs  char table (sf_pri, g_mcpro),
+                                      and mi_nxTk/mi_lpTk are LONG
+                                      tick counters
       int field             (ORG)  vs  unsigned field (clr.w before
                                       every load -- cpyScr's MFDB
                                       extents; `(unsigned short) f`
@@ -782,8 +812,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 236 matched / 121 divergent, 38 986 of
-104 156 STX text bytes (37.4%) proven byte-identical.**  The FAITHFUL
+**Status (2026-09-02): 253 matched / 104 divergent, 41 082 of
+104 156 STX text bytes (39.4%) proven byte-identical.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
 tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG
