@@ -407,7 +407,7 @@ extern short od_cbit;
 #define od_drcl    10
 #define od_dro1    11
 #define od_dro2    12
-#define od_cbit    44
+#define od_cbit    53
 #endif
 
 #endif /* GLOBALS_H */
