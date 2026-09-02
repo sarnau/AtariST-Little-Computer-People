@@ -139,6 +139,7 @@ extern long     xbios();
 #define Fread(h, n, b)          gemdos(0x3F, h, n, b)
 #define Fwrite(h, n, b)         gemdos(0x40, h, n, b)
 #define Fclose(h)               gemdos(0x3E, h)
+#define Fseek(o, h, m)          gemdos(0x42, o, h, m)
 #define Malloc(sz)              gemdos(0x48, sz)
 #define Mfree(p)                gemdos(0x49, p)
 #define Fgetdta()               gemdos(0x2F)

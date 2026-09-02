@@ -82,6 +82,7 @@
 
 /* STX 0x69c6, just past getKey: the bare Random() wrapper. */
 #include "parts/rnd.c"
+#include "parts/lcp_crnd.c" /* 0x69d8 */
 
 /* save.c straddles too: fOpen and fr_read close this object. */
 #include "parts/lc_load.c"   /* 0x5ac8 */

@@ -35,57 +35,10 @@
 #include "walk.h"
 
 
-/* lcp_crnd (Ghidra 0x169D8): populate PLAYER for a new game.
-   1985 code also picks a random name from "names"; skipped here
-   (avoids fOpen); character_name left NUL. */
-
-void
-lcp_crnd()
-{
-        lcp.character_sprite_id       = rndRng(2, 6);
-        lcp.character_name[0]         = 0;
-        lcp.water_level               = 7;
-        lcp_watr               = 7;
-        lcp.clothing_color            = rndRng(0, 15);
-        lcp.skin_color                = rndRng(0, 7);
-        lcp.bedtime_hour              = rndRng(22, 24);
-        if (lcp.bedtime_hour > 23)
-                lcp.bedtime_hour = lcp.bedtime_hour - 24;
-        lcp.wake_hour                 = lcp.bedtime_hour + 6;
-        if (lcp.wake_hour > 23)
-                lcp.wake_hour = lcp.bedtime_hour - 18;
-        lcp.lunch_hour                = rndRng(11, 13);
-        lcp.dinner_hour               = rndRng(17, 19);
-        lcp.personality_type          = rndRng(0, 3);
-        lcp.activity_level            = rndRng(0, 7);
-        lcp.happiness                 = MOOD_CONTENT;
-        lcp.happiness_initial_countdown = rndRng(6, 24);
-        lcp.happiness_duration_happy    = rndRng(6, 24);
-        lcp.happiness_duration_content  = rndRng(6, 12);
-        lcp.happiness_duration_active   = lcp.happiness_duration_happy;
-        lcp.happiness_direction       = -1;             /* DIR_IMPROVING */
-        lcp.sickness_level            = 0;              /* SICKNESS_HEALTHY */
-        lcp.sickness_countdown        = 0;
-        lcp.sickness_direction        = 0;              /* DIR_STABLE */
-        lcp.is_sleeping               = NO;
-        lcp.initiative_threshold      = rndRng(20, 80);
-        lcp.thirst_level              = 0;              /* NEED_SATISFIED */
-        lcp.thirst_timer_max          = rndRng(45, 75);
-        lcp.thirst_timer              = lcp.thirst_timer_max;
-        lcp.hunger_level              = 0;
-        lcp.hunger_timer_max          = rndRng(75, 120);
-        lcp.hunger_timer              = lcp.hunger_timer_max;
-        lcp.bathroom_need             = NO;
-        lcp.bathroom_timer_max        = rndRng(20, 40);
-        lcp.bathroom_timer            = lcp.bathroom_timer_max;
-        lcp.record_playing            = NO;
-        lcp_recP            = NO;
-        lcp.tv_on                     = NO;
-        lcp_tv                     = NO;
-        lcp.food_supply               = 4;
-        lcp_food                = 4;
-        lcp.door_states_and_flags     = 0x0800;         /* DSF_INIT_FOOD_FULL */
-}
+/* lcp_crnd -> parts/lcp_crnd.c (STX: 0x69d8, in the 0x400c object after rnd). */
+#ifdef FAITHFUL
+#include "parts/lcp_crnd.c"
+#endif
 
 /* cl_drini -> parts/cl_drini.c (STX: 0x133b4). */
 #ifdef FAITHFUL
