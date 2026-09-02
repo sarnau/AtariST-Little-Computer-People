@@ -16,8 +16,8 @@ sp_lchu()
         while (g_sepef[HW_SLOT_LCP_HEAD] == YES)
                 ;
 
-        headIndex = mood_hfo[lcp.happiness] +
-                    (g_hsfra & 0x7f);
+        headIndex = (g_hsfra & 0x7f) +
+                    mood_hfo[lcp.happiness];
 
         /* Same 168-src/84-dest stride as sp_updb. */
         sp_lcpf((short *) pex_ptr[headIndex],
@@ -35,9 +35,10 @@ sp_lchu()
         if (dbg_hide != NO)
                 g_seacy[HW_SLOT_LCP_HEAD] = 300;
 
+        /* STX spells the stair range inclusively and steps in place. */
         if (g_lcyof != NO &&
-            lcp_st > STATE_STR_CLIMB_F3S && lcp_st < STATE_STR_DESC_F0)
-                g_seacy[HW_SLOT_LCP_HEAD] = g_seacy[HW_SLOT_LCP_HEAD] + 1;
+            lcp_st >= STATE_STR_TOP_F0 && lcp_st <= STATE_STR_TOP_F3S)
+                g_seacy[HW_SLOT_LCP_HEAD]++;
 
         g_sepeh[HW_SLOT_LCP_HEAD] = 21;
         g_sepew[HW_SLOT_LCP_HEAD]  = 32;
