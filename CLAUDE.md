@@ -886,8 +886,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 289 matched / 54 divergent, 47 144 of
-104 156 STX text bytes (45.3%) proven byte-identical -- 49.8% of the
+**Status (2026-09-02): 293 matched / 50 divergent, 48 950 of
+104 156 STX text bytes (47.0%) proven byte-identical -- 51.7% of the
 94 736 bytes that are the game's own code.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
