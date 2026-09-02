@@ -51,6 +51,16 @@ fi
 #     `rte`.  Installed directly by Xbtimer -- no C wrapper needed.
 # vdiown_a.s: the STX configuration's separate vdi_go object (see the
 # file header).  Assembled always; only linked when not FAITHFUL.
+# psg_asm.s: LCP_STX's hand-assembly psg_wr/psg_mix/mowrit.  Linked
+# only for the default build; FAITHFUL keeps psg_io.c's C versions.
+if [ ! -f psg_asm.o ] || [ "$DK_TOOLS/psg_asm.s" -nt psg_asm.o ]; then
+    cp -f "$DK_TOOLS/psg_asm.s" psg_asm.s
+    "$ALCYON_BIN/as68" -l -u psg_asm.s > /dev/null 2>&1 || {
+        echo "FAILED: psg_asm assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f vdiown_a.o ] || [ "$DK_TOOLS/vdiown_a.s" -nt vdiown_a.o ]; then
     cp -f "$DK_TOOLS/vdiown_a.s" vdiown_a.s
     "$ALCYON_BIN/as68" -l -u vdiown_a.s > /dev/null 2>&1 || {
@@ -102,7 +112,7 @@ OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
-    ! -name "vdiown_a.o" | sort); do
+    ! -name "vdiown_a.o" ! -name "psg_asm.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
@@ -114,7 +124,7 @@ rm -f lcp.68k LCP.PRG
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
 else
-    OBJS="$OBJS vdiown_a.o"      # STX: vdi_go in its own object
+    OBJS="$OBJS vdiown_a.o psg_asm.o"   # STX: vdi_go + PSG asm
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
 LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' ' ',')

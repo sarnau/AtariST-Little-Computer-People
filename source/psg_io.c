@@ -21,6 +21,8 @@ volatile unsigned char  g_hgiw    = 0;
 /* Poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE is
    preseeded to 1 so the poll returns immediately.
    addr: mowrit() */
+/* mowrit: LCP_STX has this as hand-assembly (psg_asm.s). */
+#ifdef FAITHFUL
 void
 mowrit(byte)
 char    byte;
@@ -32,6 +34,7 @@ char    byte;
         } while ((status & 2) == 0);
         midi = byte;
 }
+#endif
 
 /* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
    addr: psg_cpE() */
@@ -52,6 +55,8 @@ short           count;
 /* ST quirk: the 1985 source stores `val` into giselect and `reg` into
    giwrite (YM2149 two-stage latch).  Preserved verbatim.
    addr: psg_wr() */
+/* psg_wr: LCP_STX has this as hand-assembly (psg_asm.s). */
+#ifdef FAITHFUL
 void
 psg_wr(reg, val)
 char    reg;
@@ -60,9 +65,12 @@ char    val;
         giselect = (unsigned char) val;
         giwrite  = (unsigned char) reg;
 }
+#endif
 
 /* Read-modify-write on YM2149 mixer register 7.
    addr: psg_mix() */
+/* psg_mix: LCP_STX has this as hand-assembly (psg_asm.s). */
+#ifdef FAITHFUL
 void
 psg_mix(or_mask, and_mask)
 char    or_mask;
@@ -75,3 +83,4 @@ char    and_mask;
         giwrite  = (unsigned char)
                 (or_mask | (and_mask & current));
 }
+#endif
