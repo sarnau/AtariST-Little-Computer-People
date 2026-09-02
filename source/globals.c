@@ -539,7 +539,11 @@ unsigned char   mi_noSt[128];
 
 /* Referenced by the ROM text (bss 0x3df96 / 0x4549a / 0x1dc7c /
    0x48bce). */
+#ifdef FAITHFUL
 short           g_mcpro[16];
+#else
+char            g_mcpro[16];    /* STX: byte array */
+#endif
 unsigned char   g_mstr[132];
 unsigned char   mi_chmap[16];
 short           mi_pgmap[16];

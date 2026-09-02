@@ -184,7 +184,11 @@ extern short mi_evst[];
 extern unsigned char psg_rot[];
 extern unsigned char mi_chmap[];
 extern unsigned char mi_noSt[];
+#ifdef FAITHFUL
 extern short g_mcpro[];
+#else
+extern char  g_mcpro[];         /* STX: byte array */
+#endif
 extern short mi_pgmap[];
 extern unsigned char g_mstr[];
 extern unsigned char g_msmk[];

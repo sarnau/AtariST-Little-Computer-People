@@ -11,9 +11,16 @@
 void
 mq_resp()
 {
+#ifdef FAITHFUL
         short   channel;
         short   ch_index;
+#else
+        /* STX: byte counters, ch_index declared first. */
+        char    ch_index;
+        char    channel;
+#endif
 
+#ifdef FAITHFUL
         for (channel = 0; channel < 16; channel = channel + 1) {
                 for (ch_index = 1; ch_index < 16;
                      ch_index = ch_index + 1) {
@@ -24,4 +31,17 @@ mq_resp()
                         }
                 }
         }
+#else
+        /* STX ends the inner scan by forcing the counter, not with
+           a break. */
+        for (channel = 0; channel < 16; channel++) {
+                for (ch_index = 1; ch_index < 16; ch_index++) {
+                        if ((mi_chmap[ch_index] & 0xf) == channel) {
+                                g_mcpro[ch_index] = -1;
+                                mq_sepc(ch_index);
+                                ch_index = 15;
+                        }
+                }
+        }
+#endif
 }
