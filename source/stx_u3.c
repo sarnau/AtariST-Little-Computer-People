@@ -9,10 +9,16 @@
 
 #ifndef FAITHFUL
 
+/* prCh needs obdefs.h (MD_TRANS/MD_REPLACE); renderx.c pulls it
+   in for the FAITHFUL build. */
+#include <obdefs.h>
+
 #include "alerts.c"
 #include "sprites.c"
 /* STX: lcp_hwt (0x1568a) immediately precedes gameTick (0x156a6). */
 #include "parts/lcp_hwt.c"
+#include "parts/strPr.c"   /* 0x16ea8 */
+#include "parts/prCh.c"    /* 0x16ede */
 #include "tick.c"
 
 #endif  /* !FAITHFUL */

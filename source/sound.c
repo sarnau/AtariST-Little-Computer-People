@@ -33,9 +33,15 @@ long    duration;
 void
 sf_so()
 {
+#ifdef FAITHFUL
         Giaccess(0L, 0x88L);
         Giaccess(0L, 0x89L);
         Giaccess(0L, 0x8aL);
+#else
+        Giaccess(0, 0x88);
+        Giaccess(0, 0x89);
+        Giaccess(0, 0x8a);
+#endif
         g_sfdos  = 0xff;
         g_sfdoc = 0;
         g_sfplf    = NO;

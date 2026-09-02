@@ -45,11 +45,22 @@ short
 getFlrY(y)
 short   y;
 {
+#ifdef FAITHFUL
         if (y < 78)
                 return 3;
         if (y < 141)
                 return 2;
         return 1;
+#else
+        /* STX: one if/else-if/else chain -- each arm's return is
+           followed by the else-skip branch. */
+        if (y > 140)
+                return 1;
+        else if (y > 77)
+                return 2;
+        else
+                return 3;
+#endif
 }
 
 /* The original references `daysInMo(dt_mon, dt_year)` inside the month

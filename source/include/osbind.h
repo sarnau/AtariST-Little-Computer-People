@@ -151,7 +151,7 @@ extern long     xbios();
 #define Pterm(rc)               gemdos(0x4C, rc)
 #define Super(ssp)              gemdos(0x20, ssp)
 #define Dsetpath(p)             gemdos(0x3B, p)
-#define Giaccess(d, r)          xbios(28, d, r)
+#define Giaccess(d, r)          xbios(28, (char) (d), (short) (r))
 #define Dosound(p)              xbios(32, p)
 #define Physbase()              xbios(2)
 #define Logbase()               xbios(3)
