@@ -572,6 +572,10 @@ this build, ALL different from LCP_ORG's:
         n = n - 1;}
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      lcp_y = lcp_y + 9    (ORG)  vs  lcp_y += 3; ... lcp_y += 6;
+                                      (STX splits the step around the
+                                       state assignment -- two subq/
+                                       addq to memory, not one addi)
   Declaration ORDER is evidence too: the frame offsets pin it (a_driwa
   is rnd, counter, last_pick, pick in STX; the port had rnd, pick,
   last_pick, counter).  And STX's a_driwa never initialises last_pick

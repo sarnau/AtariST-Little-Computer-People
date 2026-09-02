@@ -315,6 +315,9 @@ a_socwd()
                 return;
         }
 
+        /* STX splits the +9 into +3 and +6 around the state
+           assignment, and uses += / -= straight to memory. */
+#ifdef FAITHFUL
         lcp_st = STATE_SIT_COUCH_UPRIGHT;
         lcp_y = lcp_y + 9;
         g_hatas = 8;
@@ -322,6 +325,16 @@ a_socwd()
         gameTick(3);
 
         lcp_y = lcp_y - 3;
+#else
+        lcp_y += 3;
+        lcp_st = STATE_SIT_COUCH_UPRIGHT;
+        lcp_y += 6;
+        g_hatas = 8;
+        lcp_hwt();
+        gameTick(3);
+
+        lcp_y -= 3;
+#endif
         g_selaf[SPRITE_READING_1] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_READING_1);
         g_sepex[g_seslm[SPRITE_READING_1]] = 221;
@@ -329,6 +342,10 @@ a_socwd()
 
         ticks = rndRng(30, 50);
         lcp_st = STATE_SIT_COUCH_PETTING_DOG;
+        /* STX drives it from a post-decrement with the break in the
+           body, and splits the trailing +3 / state assignment the
+           same way as the entry sequence. */
+#ifdef FAITHFUL
         while (ticks != 0 && g_trel[0] == ACTION_NONE) {
                 gameTick(3);
                 ticks = ticks - 1;
@@ -336,13 +353,29 @@ a_socwd()
 
         lcp_y = lcp_y + 3;
         lcp_st = STATE_SIT_COUCH_UPRIGHT;
+#else
+        while (ticks--) {
+                if (g_trel[0] != ACTION_NONE)
+                        break;
+                gameTick(3);
+        }
+
+        lcp_y += 3;
+        lcp_st = STATE_SIT_COUCH_UPRIGHT;
+#endif
         g_selaf[SPRITE_READING_1] = SPRITE_HIDDEN;
         sp_upds();
         g_hatas = 8;
         lcp_hwt();
         gameTick(3);
 
+        /* STX splits the -9 into two subq steps. */
+#ifdef FAITHFUL
         lcp_y = lcp_y - 9;
+#else
+        lcp_y -= 3;
+        lcp_y -= 6;
+#endif
         lcp_st = STATE_CROUCH_DOWN;
         gameTick(8);
         while (g_ptdoa != NO)
