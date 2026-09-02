@@ -102,8 +102,13 @@ extern short main_pal[];
 extern short g_clcop[];
 extern short g_clcos[];
 extern short skin_pal[];
+#ifdef FAITHFUL
 extern BOOL16 g_molof;
 extern BOOL16 mi_varR;
+#else
+extern char   g_molof;          /* STX: byte flags (moveb) */
+extern char   mi_varR;
+#endif
 extern short g_mspha;
 extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;

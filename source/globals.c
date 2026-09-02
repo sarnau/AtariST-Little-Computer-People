@@ -312,9 +312,15 @@ short   skin_pal[8] = {
         0x745, 0x145, 0x160, 0x565
 };
 
+/* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO.
+   LCP_STX declares both as char -- sgPlay writes them with moveb. */
+#ifdef FAITHFUL
 BOOL16  g_molof             = NO;
-/* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO. */
 BOOL16  mi_varR                      = YES;
+#else
+char    g_molof             = NO;
+char    mi_varR                      = YES;
+#endif
 short   g_mspha                  = 0;
 unsigned char * mi_dbase      = (unsigned char *) 0;
 
