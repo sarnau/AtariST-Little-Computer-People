@@ -632,6 +632,18 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      (Random() & 7) + 293 (ORG)  vs  (int)(Random() & 7) + 293
+                                      (the cast makes the ADD word-
+                                       sized: and.l then add.w, where
+                                       the uncast form adds long)
+      f((x & 15) | 1)      (ORG)  vs  f((int)((x & 15) | 1))
+                                      (uncast, Alcyon computes in the
+                                       argument slot: move.l d0,(sp) /
+                                       andi.l #15,(sp))
+      RECT16/short[4]      (ORG)  vs  short pts[10] -- the STX TV
+                                      routines all carry a 10-short
+                                      point buffer and write all four
+                                      coordinates
       int field             (ORG)  vs  unsigned field (clr.w before
                                       every load -- cpyScr's MFDB
                                       extents; `(unsigned short) f`
@@ -770,8 +782,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 225 matched / 132 divergent, 36 686 of
-104 156 STX text bytes (35.2%) proven byte-identical.**  The FAITHFUL
+**Status (2026-09-02): 236 matched / 121 divergent, 38 986 of
+104 156 STX text bytes (37.4%) proven byte-identical.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
 tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG

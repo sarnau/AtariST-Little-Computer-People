@@ -60,8 +60,8 @@
 #include "parts/a_kitcc.c" /* 0x11354 */
 #include "parts/a_playc.c" /* 0x12e86 */
 #include "parts/tv_scrc.c" /* 0x13074 */
+#include "tvanim.c"       /* tv_boul 0x130d6 */
 #include "parts/tv_patl.c" /* 0x13204 */
-#include "tvanim.c"       /* tv_boul */
 #include "health.c"
 /* wkFrDr reaches lcp_wkD (STX 0x147a0, inside this cluster) with a
    bsr, so the walk engine is part of this object too. */
