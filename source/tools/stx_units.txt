@@ -9,4 +9,4 @@
 # Membership is evidence-driven -- see stx_objmap.py --members.
 
 stx_u1.c dog.c ai.c actions.c movement.c calendar.c renderx.c
-stx_u2.c render.c delivery.c adoors.c aleisure.c afood.c aidle.c asimple.c abathrm.c ahouse.c health.c
+stx_u2.c render.c delivery.c adoors.c aleisure.c afood.c aidle.c asimple.c abathrm.c ahouse.c health.c walk.c
