@@ -21,18 +21,10 @@
 #include "parts/er_nomem.c"
 #endif
 
-/* Single-shot RETRY alert; caller is expected to retry the file op.
-   addr: er_write() */
-void
-er_write()
-{
-#ifdef HOST
-        fprintf(stderr,
-                "WARN: Unable to write to disk.\n");
-#else
-        form_alert(0, "[1][Unable to write.|Check disk.][RETRY]");
+/* er_write -> parts/er_write.c (STX: 0x148e6, right after crFile). */
+#ifdef FAITHFUL
+#include "parts/er_write.c"
 #endif
-}
 
 /* ---- STX-revision grouping --------------------------------------
    In LCP_STX.PRG, sp_spud and sp_flih follow er_write in this

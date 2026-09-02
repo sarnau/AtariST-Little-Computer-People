@@ -79,5 +79,7 @@
 
 /* lcp_save (0x1481c) closes the STX object. */
 #include "parts/lcp_save.c"
+#include "parts/crFile.c"   /* 0x1488e */
+#include "parts/er_write.c" /* 0x148e6 */
 
 #endif  /* !FAITHFUL */

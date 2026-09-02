@@ -68,26 +68,10 @@ again:
 #endif
 }
 
-/* addr: crFile() */
-void
-crFile(filename)
-char *  filename;
-{
-        short   rval;
-        short   iVar1;
-
-        rval = access(filename, 4);
-        if (rval == 0)
-                return;
-
-        for (;;) {
-                iVar1 = Fcreate(filename, 0L);
-                if (iVar1 >= 0)
-                        break;
-                er_write();
-        }
-        Fclose(iVar1);
-}
+/* crFile -> parts/crFile.c (STX: 0x1488e, right after lcp_save). */
+#ifdef FAITHFUL
+#include "parts/crFile.c"
+#endif
 
 /* addr: fr_read() */
 #ifdef FAITHFUL

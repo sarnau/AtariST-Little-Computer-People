@@ -908,7 +908,11 @@ next:
 void
 mq_rdur()
 {
+#ifdef FAITHFUL
         for (; *mi_sqpos == 0; mi_sqpos = mi_sqpos + 1) ;
+#else
+        for (; *mi_sqpos == 0; mi_sqpos++) ;
+#endif
         if ((*mi_sqpos & 0x80) == 0)
                 mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
                                                           - 1) * g_mtspb;
@@ -946,12 +950,24 @@ mq_popl()
                 return (unsigned char *) 0;
         ret = (unsigned char *) mi_lstk[mi_evcn - 2];
         cnt = mi_lstk[mi_evcn - 1];
+#ifdef FAITHFUL
         mi_lstk[mi_evcn - 1] = mi_lstk[mi_evcn - 1] - 1;
+#else
+        mi_lstk[mi_evcn - 1]--;
+#endif
+#ifdef FAITHFUL
         if (cnt == 0) {
                 mi_evcn = mi_evcn - 2;
                 ret = (unsigned char *) 0;
         }
         return ret;
+#else
+        if (cnt == 0) {
+                mi_evcn -= 2;
+                return (unsigned char *) 0;
+        } else
+                return ret;
+#endif
 }
 
 /* mq_rmev: remove 3-word entry at mi_evq[val]; shift later down.

@@ -16,7 +16,11 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
+#ifdef FAITHFUL
                 filehandle = Fopen(filename, 1L);
+#else
+                filehandle = Fopen(filename, 1);
+#endif
                 if (filehandle >= 0)
                         break;
                 er_write();
