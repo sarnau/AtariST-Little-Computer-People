@@ -86,27 +86,10 @@ lcp_upal()
 #include "parts/td_nois.c"
 #endif
 
-/* sc_sctd: 1-row block scroll on top text strip (letter typewriter wrap).
-   Copies 13 rows of 40 words each downward, blanks top two rows to white.
-   addr: sc_sctd() */
-
-void
-sc_sctd()
-{
-        short   row;
-        char *  dest_ptr;
-        char *  src_ptr;
-
-        dest_ptr = (char *) g_dscp;
-        src_ptr  = (char *) g_dscp;
-        for (row = 0; row < 13; row = row + 1) {
-                src_ptr = src_ptr + 320;
-                blkcp32(src_ptr, dest_ptr, 10);
-                dest_ptr = dest_ptr + 320;
-        }
-        sc_firw(g_dscp, 24);
-        sc_firw(g_dscp, 25);
-}
+/* sc_sctd -> parts/sc_sctd.c (STX: 0x16d5a, in the 0x148fe object ahead of sc_firw). */
+#ifdef FAITHFUL
+#include "parts/sc_sctd.c"
+#endif
 
 /* prCh: render one char via VDI.
    Sets logbase to backbuffer, MD_TRANS overlay via v_gtext, restores state.

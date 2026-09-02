@@ -61,6 +61,16 @@ if [ ! -f psg_asm.o ] || [ "$DK_TOOLS/psg_asm.s" -nt psg_asm.o ]; then
     }
 fi
 
+# blkcp_a.s: LCP_STX's hand-assembly blkcp32 (0x17310).  Linked only
+# for the default build; FAITHFUL keeps gfx_prim.c's C version.
+if [ ! -f blkcp_a.o ] || [ "$DK_TOOLS/blkcp_a.s" -nt blkcp_a.o ]; then
+    cp -f "$DK_TOOLS/blkcp_a.s" blkcp_a.s
+    "$ALCYON_BIN/as68" -l -u blkcp_a.s > /dev/null 2>&1 || {
+        echo "FAILED: blkcp_a assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f vdiown_a.o ] || [ "$DK_TOOLS/vdiown_a.s" -nt vdiown_a.o ]; then
     cp -f "$DK_TOOLS/vdiown_a.s" vdiown_a.s
     "$ALCYON_BIN/as68" -l -u vdiown_a.s > /dev/null 2>&1 || {
@@ -112,7 +122,8 @@ OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
-    ! -name "vdiown_a.o" ! -name "psg_asm.o" | sort); do
+    ! -name "vdiown_a.o" ! -name "psg_asm.o" \
+    ! -name "blkcp_a.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
@@ -124,7 +135,7 @@ rm -f lcp.68k LCP.PRG
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
 else
-    OBJS="$OBJS vdiown_a.o psg_asm.o"   # STX: vdi_go + PSG asm
+    OBJS="$OBJS vdiown_a.o psg_asm.o blkcp_a.o"  # STX: vdi_go + asm
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
 # LCP_STX contains no LIBF code: its __pftoa/__petoa call _ftoa and

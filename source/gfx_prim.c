@@ -59,37 +59,10 @@ short   color;
 #include "parts/sc_sdtf.c"
 #endif
 
-/* sc_firw: paint row (160 B) with 0x0FFF (palette entry 0xF, white).
-   addr: sc_firw() */
-
-void
-sc_firw(scrptr, row)
-unsigned short *        scrptr;
-short                   row;
-{
-        short   i;
-
+/* sc_firw -> parts/sc_firw.c (STX: 0x16dcc, immediately after sc_sctd (bsr.s)). */
 #ifdef FAITHFUL
-        scrptr = (unsigned short *)
-                 ((char *) scrptr + (long) row * 160);
-        for (i = 0; i < 20; i = i + 1) {
-                scrptr[0] = 0x0000;
-                scrptr[1] = 0xffff;
-                scrptr[2] = 0xffff;
-                scrptr[3] = 0xffff;
-                scrptr = scrptr + 4;
-        }
-#else
-        /* STX: a 16-bit row multiply and post-incremented stores. */
-        (char *) scrptr += row * 160;
-        for (i = 0; i < 20; i++) {
-                *scrptr++ = 0x0000;
-                *scrptr++ = 0xffff;
-                *scrptr++ = 0xffff;
-                *scrptr++ = 0xffff;
-        }
+#include "parts/sc_firw.c"
 #endif
-}
 
 /* sc_firs: paint row with 0x0033 (2 planes) -- light-cyan status stripe.
    addr: sc_firs() */
@@ -183,6 +156,7 @@ exitVdi()
    time -- MOVEM.L target).  Kept for byte-comparability.
    addr: blkcp32() */
 
+#ifdef FAITHFUL
 void
 blkcp32(src, dst, count)
 void *  src;
@@ -206,6 +180,7 @@ short   count;
                 remaining = remaining - 1;
         } while (remaining != -1);
 }
+#endif  /* FAITHFUL -- STX's blkcp32 is hand-assembly (blkcp_a.s). */
 
 /* cpyScr -> parts/cpyScr.c (STX: 0x64fa, in the 0x400c object). */
 #ifdef FAITHFUL

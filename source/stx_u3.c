@@ -43,6 +43,10 @@
 #include "parts/sp_drin.c"
 #include "parts/sp_updb.c"  /* 0x16244 */
 #include "parts/sp_lchu.c"  /* 0x16632 */
+/* renderx.c and gfx_prim.c straddle: sc_sctd and sc_firw sit in
+   this object, and sc_firw must follow sc_sctd (bsr.s). */
+#include "parts/sc_sctd.c"  /* 0x16d5a */
+#include "parts/sc_firw.c"  /* 0x16dcc */
 #include "parts/strPr.c"   /* 0x16ea8 */
 #include "parts/prCh.c"    /* 0x16ede */
 #include "parts/chk_encm.c"/* 0x16f9a */
