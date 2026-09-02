@@ -13,7 +13,11 @@
 #include "globals.h"
 #include "sprglobs.h"
 
+#ifdef FAITHFUL
 short   ani_cnt  = 0;
+#else
+unsigned short  ani_cnt = 0;    /* STX: the & 7 test zero-extends */
+#endif
 short   g_secs    = 0;
 
 short   t_min            = 0;

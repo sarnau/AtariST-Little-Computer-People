@@ -50,10 +50,15 @@
 #include "parts/sp_ss02.c"   /* 0x12108 */
 /* movement.c straddles: cWkday is in this object, just ahead of
    cl_drini (chk_timA reaches it with jsr, not bsr). */
-#include "calendar.h"
-#include "parts/daysInMo.c" /* 0x13796 */
 #include "parts/cWkday.c"   /* 0x1332e */
 #include "parts/cl_drini.c" /* 0x133b4 -- far from cl_redrH */
+/* gameSim1 (0x133da) is followed directly by health.c's
+   lcp_sick (0x13630) and lcp_upal (0x13692), then by
+   calendar.c's daysInMo (0x13796): all bsr targets. */
+#include "sim.c"
+#include "health.c"
+#include "calendar.h"
+#include "parts/daysInMo.c" /* 0x13796 */
 #include "abathrm.c"
 #include "agames.c"   /* a_plaag 0x11860 */
 #include "parts/a_opcfc.c" /* 0x11d9a, right after a_plaag */
@@ -67,7 +72,6 @@
 #include "parts/tv_scrc.c" /* 0x13074 */
 #include "tvanim.c"       /* tv_boul 0x130d6 */
 #include "parts/tv_patl.c" /* 0x13204 */
-#include "health.c"
 /* wkFrDr reaches lcp_wkD (STX 0x147a0, inside this cluster) with a
    bsr, so the walk engine is part of this object too. */
 /* The clock/line group: LCP_STX links these in this object.

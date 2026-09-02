@@ -6,7 +6,11 @@
 #include "types.h"
 #include "structs.h"
 
+#ifdef FAITHFUL
 extern short ani_cnt;
+#else
+extern unsigned short ani_cnt;
+#endif
 extern short g_secs;
 extern short t_min;
 extern short t_hour;
