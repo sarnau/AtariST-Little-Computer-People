@@ -196,7 +196,11 @@ extern BOOL16 g_moen;
 extern unsigned char g_meve[];
 extern long g_momap;
 extern BOOL16 psg_out;
+#ifdef FAITHFUL
 extern BOOL16 psg_ntAc;
+#else
+extern char   psg_ntAc;         /* STX: byte flag */
+#endif
 extern unsigned char psg_chNt[];
 extern PSG_ENVELOPE psg_envelope[];
 extern short env_val;

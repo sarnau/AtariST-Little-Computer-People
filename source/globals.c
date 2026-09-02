@@ -549,7 +549,11 @@ unsigned char   mi_chmap[16];
 short           mi_pgmap[16];
 
 BOOL16          psg_out              = YES;
+#ifdef FAITHFUL
 BOOL16          psg_ntAc                = NO;
+#else
+char            psg_ntAc                = NO;   /* STX: byte */
+#endif
 short           env_val            = 5;    /* octave-5 baseline */
 char            g_mnlol      = 0x17; /* A#0 */
 char           g_mnhil       = 0x7f; /* MIDI max         */

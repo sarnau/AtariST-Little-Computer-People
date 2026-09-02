@@ -526,14 +526,25 @@ mq_advs()
         short   res;
 
         if (g_mspha == SEQ_PHASE_WAIT_NOTE_EXPIRE) {
+#ifdef FAITHFUL
                 mq_expN((short) g_mtcou - (short) mi_lpTk);
+#else
+                res = g_mtcou - mi_lpTk;
+                mq_expN(res);
+#endif
                 mi_lpTk    = g_mtcou;
                 g_mtpre    = aes_intO[7];
                 g_mspha    = SEQ_PHASE_PARSE_NEXT_EVENT;
+#ifdef FAITHFUL
                 mi_nxTk    = aes_intO[7] + mi_nxTk;
+#else
+                mi_nxTk   += aes_intO[7];
+                return;                 /* STX: explicit return */
+#endif
         } else if (g_mspha == SEQ_PHASE_PARSE_NEXT_EVENT) {
                 g_mspha    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
                 mi_nlp0    = -1;
+#ifdef FAITHFUL
                 res        = mq_pars();
                 if (res == 0) {
                         g_mspha    = SEQ_PHASE_SONG_ENDING;
@@ -545,21 +556,61 @@ mq_advs()
                         if (mi_nlp0 > 0)
                                 g_mtpre = mi_nlp0;
                 }
+#else
+                /* STX wraps the parse in a loop and returns from both
+                   arms. */
+                while (mi_nlp0 < 0) {
+                        if (mq_pars() != 0) {
+                                mi_nxTk += mi_nlp0;
+                                mi_nlp0 = mi_nxTk - g_mtcou;
+                                if (mi_nlp0 > 0)
+                                        g_mtpre = mi_nlp0;
+                                return;
+                        } else {
+                                g_mspha = SEQ_PHASE_SONG_ENDING;
+                                g_mtpre = aes_intO[7];
+                                mi_nxTk += g_mtpre;
+                                return;
+                        }
+                }
+#endif
         } else {
+#ifdef FAITHFUL
                 mq_expN((short) g_mtcou - (short) mi_lpTk);
+#else
+                res = g_mtcou - mi_lpTk;
+                mq_expN(res);
+#endif
                 mi_lpTk    = g_mtcou;
                 g_mtpre    = aes_intO[7];
+#ifdef FAITHFUL
                 mi_nxTk    = aes_intO[7] + mi_nxTk;
+#else
+                mi_nxTk   += aes_intO[7];
+#endif
                 if (mi_evi == 0) {
+#ifdef FAITHFUL
                         psg_envelope[2].phase = ENV_IDLE;
                         psg_envelope[1].phase = ENV_IDLE;
                         psg_envelope[0].phase = ENV_IDLE;
                         g_msmsa    = NO;
                         psg_ntAc   = NO;
                         mi_play    = NO;
+#else
+                        psg_envelope[0].phase =
+                        psg_envelope[1].phase =
+                        psg_envelope[2].phase = ENV_IDLE;
+                        mi_play = psg_ntAc = g_msmsa = NO;
+#endif
+#ifdef FAITHFUL
                         psg_wr((char) 0, (char) 8);
                         psg_wr((char) 0, (char) 9);
                         psg_wr((char) 0, (char) 10);
+#else
+                        psg_wr(0, 8);
+                        psg_wr(0, 9);
+                        psg_wr(0, 10);
+#endif
                 }
         }
 }
