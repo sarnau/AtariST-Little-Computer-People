@@ -808,6 +808,57 @@ this build, ALL different from LCP_ORG's:
                                       resolution.][REBOOT]" alert loop
                                       before bsr.s-ing into the
                                       attribute/clear half
+      arr[i] != '\0'       (ORG)  vs  arr[i]  -- a BARE truthiness
+                                      test is what makes Alcyon reach
+                                      the array with an indexed EA
+                                      (movea.w idx,a0 / movea.l
+                                      #base,a1 / tst.b (0,a0,a1.l));
+                                      the explicit `!= '\0'` emits the
+                                      base+add form (ag_main)
+      c = *p; if (c==' ')  (ORG)  vs  while ((c = *p++) == ' ')
+                                      (Alcyon saves the flags across
+                                       the pointer increment:
+                                       cmp / move sr,d0 / addq to
+                                       memory / move d0,ccr / branch)
+      x = x + 1; if (x<N)  (ORG)  vs  if (x++ < N)  -- the same
+                                      flag-save trick around a global
+                                      (ag_main's guess counter), so
+                                      BOTH arms see the increment
+      pk_dppm();           (ORG)  vs  pk_dppm;  -- a real 1985 typo in
+                                      pk_wrMn: the parentheses were
+                                      left off, so Alcyon just emits
+                                      move.l #_pk_dppm,d0 and drops
+                                      it.  Preserved.
+      switch with default: (ORG)  vs  no default arm -- the
+                                      out-of-range branch goes to the
+                                      switch END, not to a body
+      a = f(); b = g();    (ORG)  vs  if ((a = f()) > (b = g()))
+        if (a > b)                    (both values stay in d0/d1, so
+                                      the compare is register-to-
+                                      register with no reload)
+      for(;;){...continue} (ORG)  vs  a label + `goto` -- `continue`
+                                      branches to the loop's BOTTOM
+                                      edge, a goto branches straight
+                                      to the label, and the two are
+                                      distinguishable whenever the
+                                      loop is longer than a short
+                                      branch (pk_wrMn)
+      (long) x             (ORG)  vs  (long) x & 0xffffL  (the cast
+                                      forces ext.l into d0 followed by
+                                      and.l; without it Alcyon just
+                                      sign-extends through an address
+                                      register -- sf_irqp)
+      short table row      (ORG)  vs  12-byte WORD_TO_ACTION: ten
+                                      signed mask bytes, the action id
+                                      at +10 and the priority at +11,
+                                      with ew2pos/g_ew2b/bm_lo/g_ewb
+                                      all char (chk_encm)
+      concat22/rd_hz       (ORG)  vs  written out inline: sf_irqp
+        helpers                       builds the 32-bit duration from
+                                      its two halves and keeps its own
+                                      Super block, with an UNUSED
+                                      short in the frame between the
+                                      counter pointer and the value
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -886,17 +937,39 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 296 matched / 47 divergent, 53 166 of
-104 156 STX text bytes (51.0%) proven byte-identical -- 56.1% of the
+**Status (2026-09-03): 327 matched / 9 divergent, 66 664 of
+104 156 STX text bytes (64.0%) proven byte-identical -- 70.4% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
 LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
-the LCP_ORG byte-identity check is no longer run.  The FAITHFUL
-build stays byte-identical to LCP_ORG.PRG after every step -- run
-`ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
-tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG
-DATA/LCP_ORG.PRG` before every commit.
+the LCP_ORG byte-identity check is no longer run.
+
+Still divergent (all located): pk_main 0x8d10, pk_bjMn 0xbc72,
+psg_upE 0x15ae, mq_dise 0x918, lcp_pat 0x470a, a_writl 0x13cd6, plus
+three functions the port has only as stubs and that must be written
+from scratch -- st_titl 0x6d7e (1040 B, a real interactive title
+screen), cs_mvIn 0xe500 (968 B, the move-in cutscene) and cp_main
+0x22c0 (7500 B, the uncracked copy protection).
+
+Functions DELETED because LCP_STX has no counterpart: al_loan and
+fLoad (lcp_crnd inlines the NAMES read, main inlines the .SCN path),
+mq_spgm (a duplicate of mq_sepc), concat22 and rd_hz (inlined into
+sf_irqp).
+
+A fifth unity unit exists now: **stx_u4.c** for the sound object that
+sits just ahead of the big 0xdece one -- sgPlay 0xd9ea < sf_irqp
+0xdafc < sf_sl 0xdcc4 < sf_sele 0xdd88 < sf_so 0xddd8.  The evidence
+is that sf_irqp reaches sf_so with a bsr while lt_sets (inside the
+0xdece object) reaches sf_sele with a jsr.  aletter.c joined stx_u2
+between td_line and lt_sets; lcp_flwp and getFlrY joined stx_u1 as
+adjacent parts.
+
+**Watch out for the duplicated minigame mains.**  games.c carries the
+ROM banner stubs (ag_main, wp_main, pk_main, pk_wrMn, pk_bjMn) inside
+`#ifdef FAITHFUL` at lines ~110-241 AND the real implementations
+below the `#else`.  A unique-string edit can silently land in the
+stub -- check the line number against that range before editing.
 
   Object membership is as much of the work as source shape.  A call
   that is `jsr` in the port but `bsr` in STX means the callee is in
