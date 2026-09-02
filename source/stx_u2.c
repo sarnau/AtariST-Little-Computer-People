@@ -38,7 +38,7 @@
 #include "adoors.c"
 #include "aleisure.c"
 #include "parts/lcp_std.c"   /* 0xf534, right after a_opcuc */
-#include "afood.c"      /* a_kitcc 0x11354 */
+#include "afood.c"      /* a_eatm 0x0ff14 */
 #include "aidle.c"
 #include "asimple.c"
 #include "parts/hideLcp.c"
@@ -48,6 +48,11 @@
 #include "abathrm.c"
 #include "agames.c"   /* a_plaag 0x11860 */
 #include "ahouse.c"
+#include "parts/a_uset.c"  /* 0x101be */
+#include "parts/a_clotd.c" /* 0x10556, right after a_uset */
+#include "parts/a_drink.c" /* 0x121d6 */
+#include "parts/updWtLv.c" /* 0x122fa, right after a_drink */
+#include "parts/a_kitcc.c" /* 0x11354 */
 #include "parts/a_playc.c" /* 0x12e86 */
 #include "parts/tv_scrc.c" /* 0x13074 */
 #include "health.c"

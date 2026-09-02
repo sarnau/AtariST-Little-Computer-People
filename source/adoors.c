@@ -26,28 +26,10 @@
 /* a_clotd: 2-frame close animation.
    addr: a_clotd() */
 
-void
-a_clotd()
-{
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
-
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_BEND_AND_REACH;
-        gameTick(2);
-        od_draw(od_too1, 187, 87);
-        gameTick(2);
-        od_draw(od_tocl, 187, 87);
-        sf_sele(SFX_DOOR_CLOSE, 6L);
-        gameTick(2);
-        lcp_toiO = NO;
-
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(0);
-}
+/* a_clotd -> parts/a_clotd.c (STX: 0xdece object, 0x10556, immediately after a_uset). */
+#ifdef FAITHFUL
+#include "parts/a_clotd.c"
+#endif
 
 /* a_clocd: 2-frame close animation.
    addr: a_clocd() */
