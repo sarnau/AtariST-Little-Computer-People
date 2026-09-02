@@ -677,8 +677,14 @@ short   value;
 
         hs_posXY(POS_MID_BEDROOM_CLOSET,
                               &g_wtx, &g_wty);
+        /* STX: -= straight to memory. */
+#ifdef FAITHFUL
         g_wty = g_wty - 3;
         g_wtx = g_wtx - 10;
+#else
+        g_wty -= 3;
+        g_wtx -= 10;
+#endif
         g_actif = YES;
         lcp_wkD();
         saved_x = lcp_x;
@@ -767,9 +773,15 @@ short   value;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
+        /* STX tests the walk call inline. */
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         g_hamod         = HEAD_ANIM_DISABLED;
         lcp_face   = FACING_RIGHT;
@@ -800,8 +812,14 @@ short   value;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
+        /* STX: -= straight to memory. */
+#ifdef FAITHFUL
         g_wty = g_wty - 3;
         g_wtx = g_wtx - 10;
+#else
+        g_wty -= 3;
+        g_wtx -= 10;
+#endif
         g_actif = YES;
         lcp_wkD();
         g_actif = NO;

@@ -408,6 +408,19 @@ this build, ALL different from LCP_ORG's:
   orig=` addresses verify_bytes reports for divergent ones -- is
   the natural next evidence step before any restructuring.
 
+  **Merging a straddler wholesale is a REGRESSION (measured
+  2026-09-01).**  Adding sprites.c to unit 2 -- on the evidence that
+  sp_sprs and sp_ssco are bsr targets from inside that object --
+  dropped the count 130 -> 120, because most of sprites.c actually
+  lives in the 0x148fe sprite object and the merge turned its
+  cross-object jsr calls into bsr.  Reverted.  The right move is
+  per-FUNCTION extraction through parts/: sp_sprs, sp_ssco, hideLcp
+  and showLcp now have shared bodies included by sprites.c under
+  FAITHFUL and by stx_u2.c otherwise, at their STX addresses.  A
+  unity unit also needs the constituent headers at its top (they
+  emit no code, so the layout is unaffected) or the parts/ bodies
+  compile with nothing in scope.
+
   **Membership map (done -- `stx_objmap.py --members`).**  Folding
   in the candidate addresses, only FIVE port files straddle STX
   cluster boundaries and therefore need splitting; every other file

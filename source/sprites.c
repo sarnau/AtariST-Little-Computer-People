@@ -76,45 +76,17 @@ sp_updb()
         g_sepef[HW_SLOT_LCP_BODY] = YES;
 }
 
-/* sp_ssco: activate sprite as carried object in behind-LCP layer.
-   Per-frame X/Y update happens in update_carried_object_sprite().
-   addr: sp_ssco() */
+/* sp_ssco -> parts/sp_ssco.c (STX puts it in the 0xdece object;
+   FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/sp_ssco.c"
+#endif
 
-void
-sp_ssco(g_seix)
-short   g_seix;
-{
-        short   slot;
-
-        g_selaf[g_seix] = SPRITE_BEHIND_LCP;
-        sp_upds();
-        slot = g_seslm[g_seix];
-        g_seaim[slot]  = g_sedim[g_seix];
-        g_seams[slot]   = g_sedms[g_seix];
-        g_seach[slot] = g_sedeh[g_seix];
-        g_seacw[slot]  = g_sedew[g_seix];
-        g_lcyof = YES;
-        g_lcieo       = g_seix;
-}
-
-/* sp_sprs: generic sprite activator (save.c, pet animations).
-   Recomputes 8-slot layout, copies definition into active slot.
-   Bypasses the pending double-buffer.
-   addr: sp_sprs() */
-
-void
-sp_sprs(g_seix)
-short   g_seix;
-{
-        short   slot;
-
-        sp_upds();
-        slot = g_seslm[g_seix];
-        g_seaim[slot]  = g_sedim[g_seix];
-        g_seams[slot]   = g_sedms[g_seix];
-        g_seach[slot] = g_sedeh[g_seix];
-        g_seacw[slot]  = g_sedew[g_seix];
-}
+/* sp_sprs -> parts/sp_sprs.c (STX puts it in the 0xdece object;
+   FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/sp_sprs.c"
+#endif
 
 /* lcp_hwt: tick until g_hacur == g_hatas.
    addr: lcp_hwt() */
@@ -126,29 +98,15 @@ lcp_hwt()
                 gameTick(0);
 }
 
-/* hideLcp: stash body/head image pointers, NULL them, raise g_lssh.
-   addr: hideLcp() */
+/* hideLcp -> parts/hideLcp.c (STX: 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/hideLcp.c"
+#endif
 
-void
-hideLcp()
-{
-        sv_bodyP  = g_seaim[HW_SLOT_LCP_BODY];
-        sv_headP  = g_seaim[HW_SLOT_LCP_HEAD];
-        g_seaim[HW_SLOT_LCP_BODY] = NULL;
-        g_seaim[HW_SLOT_LCP_HEAD] = NULL;
-        g_lssh     = YES;
-}
-
-/* showLcp: restore the pointers hideLcp() stashed.
-   addr: showLcp() */
-
-void
-showLcp()
-{
-        g_seaim[HW_SLOT_LCP_BODY] = sv_bodyP;
-        g_seaim[HW_SLOT_LCP_HEAD] = sv_headP;
-        g_lssh     = NO;
-}
+/* showLcp -> parts/showLcp.c (STX: 0xdece object). */
+#ifdef FAITHFUL
+#include "parts/showLcp.c"
+#endif
 
 /* sp_ss02: same as sp_ssco but in the in-front-of-LCP layer.
    addr: sp_ss02() */

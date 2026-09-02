@@ -218,13 +218,22 @@ short   value;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
+        /* STX folds the mask into the assignment (computed once). */
+#ifdef FAITHFUL
         rnd = (unsigned short) Random();
+#else
+        rnd = (unsigned short)(Random() & 0x1f) | 4;
+#endif
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
         last_pick = 0;
+#ifdef FAITHFUL
         for (counter = 0;
              counter < (short) ((rnd & 0x1f) | 4);
              counter = counter + 1) {
+#else
+        for (counter = 0; counter < rnd; counter++) {
+#endif
                 pick = (unsigned short) Random();
                 while ((pick & 3) == last_pick)
                         pick = (unsigned short) Random();

@@ -17,6 +17,20 @@
 
 #ifndef FAITHFUL
 
+/* Headers first: they emit no code, so the object layout is
+   unaffected, but the parts/ bodies below need them in scope. */
+#include "types.h"
+#include "structs.h"
+#include "enums.h"
+#include "globals.h"
+#include "sprender.h"
+#include "sprglobs.h"
+#include "sprhead.h"
+#include "sprites.h"
+#include "tables.h"
+#include "tick.h"
+
+#include "parts/sp_sprs.c"   /* 0xe0b2, before od_draw */
 #include "render.c"
 #include "delivery.c"
 #include "adoors.c"
@@ -24,6 +38,9 @@
 #include "afood.c"      /* a_kitcc 0x11354 */
 #include "aidle.c"
 #include "asimple.c"
+#include "parts/hideLcp.c"
+#include "parts/showLcp.c"
+#include "parts/sp_ssco.c"   /* 0x1203a */
 #include "abathrm.c"
 #include "ahouse.c"
 #include "health.c"
