@@ -1021,69 +1021,73 @@ char *  msg;
 void
 wp_rtmp()
 {
-        short   ch;
-        char *  ap;             /* answer_ptr / scratch */
-        short   wlen;
-        short   ci;             /* char_index within an in-buffer word */
-        short   cy;
+        /* Seven locals in this order; `cur` is a short, and there is
+           no separate scan pointer -- tp is stepped in place. */
+        short   ai;
         short   cx;
-        short   ai;             /* answer_index -> which wp_ans[] to use */
-        char    cur;
-        char *  tp;             /* template_ptr */
+        short   cy;
+        short   ci;
+        short   wlen;
+        short   cur;
+        char *  tp;
 
         plEr(0, 31, 319, 49);
+        tp = g_ltlp[g_wpci << 1];
         cx = 1;
         ai = 0;
         cy = 0x28;
-        tp = g_ltlp[g_wpci + g_wpci];
-        for (;;) {
-                for (;;) {
-                        for (;;) {
-                                ap  = tp;
-                                cur = *ap;
-                                tp  = ap + 1;
-                                if (cur < ' ')
-                                        return;
-                                if (cur != ' ') break;
-                                if (1 < cx)
-                                        cx = cx + 1;
-                        }
-                        if (cur == '@') break;
-                        wlen = 1;
-                        in_str[0] = cur;
-                        for (ap = tp; wlen < 0x10 && ' ' < *ap;
-                             ap = ap + 1) {
-                                in_str[wlen] = *ap;
-                                wlen = wlen + 1;
-                        }
-                        if (0x26 < (short)(wlen + cx)) {
-                                cx = 1;
-                                cy = cy + 8;
-                        }
-                        for (ci = 0; tp = ap, ci < wlen; ci = ci + 1) {
-                                prCh((short) in_str[ci],
-                                                cx << 3, cy, COLOR_blue);
-                                cx = cx + 1;
-                        }
-                }
-                for (wlen = 0;
-                     wlen < 0xc && ' ' < wp_ans[ai][wlen];
-                     wlen = wlen + 1) ;
-                if (0x27 < (short)(wlen + cx)) {
-                        cx = 1;
-                        cy = cy + 8;
-                }
-                strPr(wp_ans[ai], cx << 3, cy, COLOR_blue);
-                cx = wlen + cx;
-                ai = ai + 1;
-                ch = (short) ap[2];
-                if (ch < 0x20)
+        while (1) {
+                cur = *tp;
+                tp++;
+                if (cur < ' ')
                         return;
-                tp = ap + 2;
-                if (ch < 0x41) {
-                        prCh(ch, cx * 8, cy, COLOR_blue);
-                        cx = cx + 1;
-                        tp = ap + 3;
+                if (cur == ' ') {
+                        if (cx > 1)
+                                cx++;
+                        continue;
+                }
+                if (cur == '@') {
+                        for (wlen = 0; wlen < 12; wlen++)
+                                if (wp_ans[ai][wlen] <= ' ')
+                                        break;
+                        if (cx + wlen > 0x27) {
+                                cx = 1;
+                                cy += 8;
+                        }
+                        strPr(wp_ans[ai], cx << 3, cy, COLOR_blue);
+                        cx += wlen;
+                        tp++;
+                        ai++;
+                        cur = *tp;
+                        if (cur < ' ')
+                                return;
+                        if (cur < 'A') {
+                                prCh(cur, cx << 3, cy, COLOR_blue);
+                                cx++;
+                                tp++;
+                        }
+                        continue;
+                }
+
+                /* Literal word. */
+                in_str[0] = cur;
+                for (wlen = 1; wlen < 0x10; wlen++) {
+                        /* if/else, not an early break: the else arm's
+                           `break` becomes a branch past the body's own
+                           jump to the increment. */
+                        if ((cur = *tp) > ' ') {
+                                in_str[wlen] = cur;
+                                tp++;
+                        } else
+                                break;
+                }
+                if (cx + wlen > 0x26) {
+                        cx = 1;
+                        cy += 8;
+                }
+                for (ci = 0; ci < wlen; ci++) {
+                        prCh(in_str[ci], cx << 3, cy, COLOR_blue);
+                        cx++;
                 }
         }
 }
