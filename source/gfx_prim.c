@@ -207,28 +207,10 @@ short   count;
         } while (remaining != -1);
 }
 
-/* cpyScr (Ghidra 0x164FA): vro_cpyfm the physbase screen into pdesMFDB.
-   Source MFDB_A.fd_addr=NULL is VDI "device screen" -- reads visible
-   video RAM.  Mode ALL_WHITE (=0) irrelevant on ST with fd_addr=NULL.
-   addr: cpyScr() */
-
-void
-cpyScr(handle, pdesMFDB)
-short   handle;
-MFDB *  pdesMFDB;
-{
-        short   points[8];
-
-        points[0] = 0;
-        points[1] = 0;
-        points[2] = pdesMFDB->fd_w - 1;
-        points[3] = pdesMFDB->fd_h - 1;
-        points[4] = 0;
-        points[5] = 0;
-        points[6] = pdesMFDB->fd_w - 1;
-        points[7] = pdesMFDB->fd_h - 1;
-        vro_cpyfm(handle, ALL_WHITE, points, &MFDB_A, pdesMFDB);
-}
+/* cpyScr -> parts/cpyScr.c (STX: 0x64fa, in the 0x400c object). */
+#ifdef FAITHFUL
+#include "parts/cpyScr.c"
+#endif
 
 /* stpScrB (Ghidra 0x16576): init double-buffered compositing screen.
    1. MFDB_A.fd_addr=NULL (future vro_cpyfm read device screen).
@@ -289,26 +271,10 @@ vdi_init()
         graf_mouse(256, 0L);
         v_bar(vdihnd, rect);
 }
-
-void
-stpScrB()
-{
-        long    buf;
-
-        MFDB_A.fd_addr = (void *) 0;
-        buf = (long) scrbufB + 0x12FL;
-        buf = (buf + 0x200L) & ~0x1FFL;
-        g_srptr = (void *) buf;
-        /* ROM 0x7c84: the fillTopR base is simply g_srptr - 254;
-           fillTopR adds the 254 back before drawing, so the top strip
-           renders into the SAME buffer -- the ROM has no separate
-           compositing buffer. */
-        g_dsb = (short *) ((long) g_srptr + -254L);
-        sp_iniM(0x1D00L, &mf_scrp, g_srptr,
-                         (short) (scr_scal * 0x140),
-                         (short) (scr_scal * 200));
-        cpyScr(vdihnd, &mf_scrp);
-}
+/* stpScrB -> parts/stpScrB.c (STX: 0x6576, in the 0x400c object). */
+#ifdef FAITHFUL
+#include "parts/stpScrB.c"
+#endif
 
 /* vst_h20: save VDI attrs to sv_vqta; set text height 20 px.
    addr: vdi_save_and_set_text_height_20() */

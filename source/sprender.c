@@ -13,24 +13,10 @@
 #include "vdiown.h"
 #include "sprglobs.h"
 
-/* First parameter is unused (was `nplanes`, hardcoded to 4).
-   addr: sp_iniM() */
-void
-sp_iniM(unused, mfdb, addr, width, height)
-long    unused;
-MFDB *  mfdb;
-void *  addr;
-short   width;
-short   height;
-{
-        (void) unused;
-        mfdb->fd_addr    = addr;
-        mfdb->fd_w       = width;
-        mfdb->fd_h       = height;
-        mfdb->fd_wdwidth = width / 16;
-        mfdb->fd_stand   = 0;
-        mfdb->fd_nplanes = 4;
-}
+/* sp_iniM -> parts/sp_iniM.c (STX: 0x6612, right after stpScrB). */
+#ifdef FAITHFUL
+#include "parts/sp_iniM.c"
+#endif
 
 /* addr: sp_draw() */
 void

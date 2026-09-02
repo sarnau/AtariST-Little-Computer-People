@@ -41,6 +41,12 @@
 
 /* fillTopR (0x686c) is in this object in LCP_STX, not the 0xdece
    one where render.c's other functions live. */
+/* gfx_prim.c straddles too: cpyScr (0x64fa), stpScrB (0x6576) and
+   sprites.c's sp_iniM (0x6612) are in this object, ahead of
+   fillTopR. */
+#include "parts/cpyScr.c"   /* 0x64fa */
+#include "parts/stpScrB.c"  /* 0x6576 */
+#include "parts/sp_iniM.c"  /* 0x6612 */
 #include "parts/fillTopR.c"
 
 /* Tail of the STX object: er_nomem (0x73ce).  alerts.c carries it
