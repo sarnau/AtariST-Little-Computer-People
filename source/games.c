@@ -809,10 +809,16 @@ validate:
 void
 wp_main()
 {
-        short   key;
-        char *  parse_ptr;
+        /* STX's frame is -18: an unused short ahead of line_index,
+           then ONE short reused for both the scanned character and
+           the mini-game key, the parse pointer, and four more
+           unreferenced bytes. */
+        short   unused1;
         short   line_index;
-        char    cur;
+        short   cur;
+        char *  parse_ptr;
+        long    unused2;
+#define key     cur
 
         g_wpdb = (char *) Malloc(2000L);
         if (g_wpdb == (char *) 0)
@@ -823,79 +829,174 @@ wp_main()
 
         /* Index the 66 lines. */
         parse_ptr = g_wpdb;
-        for (line_index = 0; line_index < 0x42;
-             line_index = line_index + 1) {
+        for (line_index = 0; line_index < 0x42; line_index++) {
                 g_ltlp[line_index] = parse_ptr;
-                do {
-                        parse_ptr = parse_ptr + 1;
-                } while ((unsigned char) *parse_ptr > 31);
-                while ((unsigned char) *parse_ptr < ' ')
-                        parse_ptr = parse_ptr + 1;
+                /* STX steps once, then runs a plain `while` -- two
+                   increment sites, not a do/while's one. */
+                parse_ptr++;
+                while (*parse_ptr >= ' ')
+                        parse_ptr++;
+                while (*parse_ptr < ' ')
+                        parse_ptr++;
         }
 
         g_wpci = 0;
         strPr("**WORD PUZZLE #  **", 8, 8, COLOR_black);
 
+        /* STX has no outer loop: `next_puzzle` is a plain label and
+           every arm of the key switch jumps back to it explicitly. */
 next_puzzle:
-        for (;;) {
-                strPr("Choose the puzzle",   8,  16, COLOR_black);
-                strPr("you wish to solve.",  8,  24, COLOR_black);
-                strPr("F1 Next, F5 Solve", 176,  8, COLOR_red);
-                strPr("F2 Last, F10 Quit", 176, 16, COLOR_red);
-                plEr(128,  0, 143,  8);
-                plEr(  0, 50, 319, 69);
+        strPr("Choose the puzzle",   8,  16, COLOR_black);
+        strPr("you wish to solve.",  8,  24, COLOR_black);
+        strPr("F1 Next, F5 Solve", 176,  8, COLOR_red);
+        strPr("F2 Last, F10 Quit", 176, 16, COLOR_red);
+        plEr(128,  0, 143,  8);
+        plEr(  0, 50, 319, 69);
 
-                /* Count '@' blanks; seed wp_ans[i][0] with char after '@'. */
-                parse_ptr = g_ltlp[g_wpci + g_wpci];
-                wp_blk = 0;
-                for (;;) {
-                        cur = *parse_ptr;
-                        parse_ptr = parse_ptr + 1;
-                        if (cur < ' ') break;
-                        if (cur == '@') {
-                                wp_ans[wp_blk][0] = *parse_ptr;
-                                wp_ans[wp_blk][1] = '\0';
-                                wp_blk = wp_blk + 1;
-                        }
+        /* Count '@' blanks; seed wp_ans[i][0] with char after '@'. */
+        parse_ptr = g_ltlp[g_wpci << 1];
+        wp_blk = 0;
+        while (1) {
+                cur = *parse_ptr;
+                parse_ptr++;
+                if (cur < ' ') break;
+                if (cur == '@') {
+                        wp_ans[wp_blk][0] = *parse_ptr;
+                        wp_ans[wp_blk][1] = '\0';
+                        wp_blk++;
                 }
+        }
 
-                plEr(128, 0, 135, 8);
-                sprintf(in_str, "%2d", g_wpci + 1);
-                strPr(in_str, 128, 8, COLOR_black);
-                wp_rtmp();
+        plEr(128, 0, 135, 8);
+        sprintf(in_str, "%2d", g_wpci + 1);
+        strPr(in_str, 128, 8, COLOR_black);
+        wp_rtmp();
 
-                for (;;) {
-                        gameTick(0);
-                        key = mg_wkev();
-                        if (key == KEY_F1)
-                                break;
-                        if (key == KEY_F2) {
-                                g_wpci = g_wpci - 1;
-                                if (g_wpci < 0)
-                                        g_wpci = 0x20;
-                                goto next_puzzle;
-                        }
-                        if (key == KEY_F5) {
-                                wp_solv();
-                                if (mg_tofl != NO)
-                                        goto cleanup;
-                                gameTick(0x28);
-                                goto next_puzzle;
-                        }
-                        if (key == KEY_F10)
+        while (1) {
+                gameTick(0);
+                key = mg_wkev();
+                switch (key) {
+                case KEY_F1:
+                        g_wpci++;
+                        if (g_wpci >= 33)
+                                g_wpci = 0;
+                        goto next_puzzle;
+                case KEY_F2:
+                        g_wpci--;
+                        if (g_wpci < 0)
+                                g_wpci = 0x20;
+                        goto next_puzzle;
+                case KEY_F5:
+                        wp_solv();
+                        if (mg_tofl != NO)
                                 goto cleanup;
+                        gameTick(0x28);
+                        goto next_puzzle;
+                case KEY_F10:
+                        goto cleanup;
                 }
-                g_wpci = g_wpci + 1;
-                if (0x20 < g_wpci)
-                        g_wpci = 0;
         }
 
 cleanup:
         no_keyin = NO;
         tx_sctm  = 0;
-        Mfree(g_wpdb);
-        g_wpdb = (char *) 0;
-        return;
+        Mfree(g_wpdb);          /* STX does not clear g_wpdb here */
+}
+#undef key
+
+/* STX links wp_solv immediately after wp_main (0x799e): the
+   call from the key switch is a bsr.s. */
+/* wp_solv: solve phase.  Per blank: prompt, read A-Z (10-char max),
+   Enter confirms, F10 quits.  Then walk solution line, compare
+   token-by-token; show wp_succ or wp_fail.  Preserves LAB_00017c4a.
+   addr: word_puzzle_solve_phase() */
+
+void
+wp_solv()
+{
+        short   ch;
+        short   ri;
+        char *  psp;            /* player_answer_ptr / scratch */
+        char *  slp;            /* solution_line_ptr */
+        short   wi;
+        short   ilen;
+        short   cwi;            /* current_word_index */
+        char    pci;            /* player_char_iter */
+        char *  scp;            /* scan_ptr */
+        char    sci;            /* solution_char_iter */
+
+        plEr(0, 10, 175, 26);
+        plEr(176, 0, 319,  8);
+        plEr(176, 8, 248, 18);
+        cwi = 0;
+        do {
+                plEr(0, 60, 319, 69);
+                if (cwi == 0)
+                        wi = rndRng(0, 4);
+                else
+                        wi = cwi + 4;
+                wp_shwm(wp_prm[wi]);
+                ilen = 0;
+                for (;;) {
+                        gameTick(0);
+                        ch = mg_wkev();
+                        if (ch == KEY_F10)
+                                return;
+                        if (ch == KEY_CTRL_M)
+                                break;
+                        if (ch == KEY_CURSOR_LEFT && 0 < ilen) {
+                                ilen = ilen - 1;
+                                wp_ans[cwi][ilen] = '\0';
+                                plEr(ilen * 8 + 8, 60,
+                                                  ilen * 8 + 16, 68);
+                        } else if (ilen < 10 && 0x40 < ch) {
+                                ri = lcp_upp(ch);
+                                wp_ans[cwi][ilen] = (char) ri;
+                                ilen = ilen + 1;
+                                wp_ans[cwi][ilen] = '\0';
+                                strPr(wp_ans[cwi], 8, 68, COLOR_white);
+                        }
+                }
+                wp_ans[cwi][ilen] = '\0';
+                gameTick(8);
+                cwi = cwi + 1;
+                plEr(0, 60, 319, 69);
+        } while (cwi < wp_blk);
+
+        slp = g_ltlp[g_wpci + g_wpci + 1];
+        wi  = 0;
+        for (;;) {
+                scp = slp;
+                if (wp_blk <= wi) {
+                        wp_rtmp();
+                        gameTick(8);
+                        ri = rndRng(0, 5);
+                        wp_shwm(wp_succ[ri]);
+                        return;
+                }
+                do {
+                        slp = scp;
+                        scp = slp + 1;
+                } while (*slp < '!');
+                psp = wp_ans[wi];
+                for (;;) {
+                        sci = *slp;
+                        slp = slp + 1;
+                        if (sci < '!') break;
+                        pci = *psp;
+                        psp = psp + 1;
+                        if (pci != sci)
+                                goto fail;
+                }
+                if (*psp != '\0')
+                        break;
+                wi = wi + 1;
+        }
+fail:
+        wp_rtmp();
+        gameTick(8);
+        ri = rndRng(0, 5);
+        wp_shwm(wp_fail[ri]);
 }
 
 static void     pk_show();
@@ -3471,97 +3572,5 @@ wp_rtmp()
         }
 }
 
-/* wp_solv: solve phase.  Per blank: prompt, read A-Z (10-char max),
-   Enter confirms, F10 quits.  Then walk solution line, compare
-   token-by-token; show wp_succ or wp_fail.  Preserves LAB_00017c4a.
-   addr: word_puzzle_solve_phase() */
-
-void
-wp_solv()
-{
-        short   ch;
-        short   ri;
-        char *  psp;            /* player_answer_ptr / scratch */
-        char *  slp;            /* solution_line_ptr */
-        short   wi;
-        short   ilen;
-        short   cwi;            /* current_word_index */
-        char    pci;            /* player_char_iter */
-        char *  scp;            /* scan_ptr */
-        char    sci;            /* solution_char_iter */
-
-        plEr(0, 10, 175, 26);
-        plEr(176, 0, 319,  8);
-        plEr(176, 8, 248, 18);
-        cwi = 0;
-        do {
-                plEr(0, 60, 319, 69);
-                if (cwi == 0)
-                        wi = rndRng(0, 4);
-                else
-                        wi = cwi + 4;
-                wp_shwm(wp_prm[wi]);
-                ilen = 0;
-                for (;;) {
-                        gameTick(0);
-                        ch = mg_wkev();
-                        if (ch == KEY_F10)
-                                return;
-                        if (ch == KEY_CTRL_M)
-                                break;
-                        if (ch == KEY_CURSOR_LEFT && 0 < ilen) {
-                                ilen = ilen - 1;
-                                wp_ans[cwi][ilen] = '\0';
-                                plEr(ilen * 8 + 8, 60,
-                                                  ilen * 8 + 16, 68);
-                        } else if (ilen < 10 && 0x40 < ch) {
-                                ri = lcp_upp(ch);
-                                wp_ans[cwi][ilen] = (char) ri;
-                                ilen = ilen + 1;
-                                wp_ans[cwi][ilen] = '\0';
-                                strPr(wp_ans[cwi], 8, 68, COLOR_white);
-                        }
-                }
-                wp_ans[cwi][ilen] = '\0';
-                gameTick(8);
-                cwi = cwi + 1;
-                plEr(0, 60, 319, 69);
-        } while (cwi < wp_blk);
-
-        slp = g_ltlp[g_wpci + g_wpci + 1];
-        wi  = 0;
-        for (;;) {
-                scp = slp;
-                if (wp_blk <= wi) {
-                        wp_rtmp();
-                        gameTick(8);
-                        ri = rndRng(0, 5);
-                        wp_shwm(wp_succ[ri]);
-                        return;
-                }
-                do {
-                        slp = scp;
-                        scp = slp + 1;
-                } while (*slp < '!');
-                psp = wp_ans[wi];
-                for (;;) {
-                        sci = *slp;
-                        slp = slp + 1;
-                        if (sci < '!') break;
-                        pci = *psp;
-                        psp = psp + 1;
-                        if (pci != sci)
-                                goto fail;
-                }
-                if (*psp != '\0')
-                        break;
-                wi = wi + 1;
-        }
-fail:
-        wp_rtmp();
-        gameTick(8);
-        ri = rndRng(0, 5);
-        wp_shwm(wp_fail[ri]);
-}
 
 #endif  /* FAITHFUL */
