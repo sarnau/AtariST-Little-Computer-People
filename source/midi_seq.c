@@ -1236,6 +1236,7 @@ top:
    clear g_msmsa.  Not called yet -- present for ROM parity.
    addr: mq_stop() */
 
+#ifdef FAITHFUL
 void
 mq_stop()
 {
@@ -1266,6 +1267,45 @@ mq_stop()
 
         g_msmsa = NO;
 }
+#else   /* STX: link #-10 -- note, hadPend and a channel temp; the
+           note-off loop latches each lookup in that temp and the
+           tick counters are stepped with +=. */
+
+void
+mq_stop()
+{
+        short   note;
+        short   hadPend;
+        short   ch;
+
+        if (mi_evi > 0)
+                hadPend = 1;
+        else
+                hadPend = 0;
+
+        while (mi_evi > 0) {
+                mi_nlp0 = g_mtcou - mi_nxTk;
+                if (mi_nlp0 > 0) {
+                        mq_expN(mi_nlp0);
+                        mi_nxTk += mi_nlp0;
+                }
+        }
+
+        if (hadPend != NO) {
+                g_meve[2] = 0;
+                for (note = 0; note < 0x80; note++) {
+                        if ((ch = mi_noSt[note]) != 0) {
+                                ch = mi_chmap[ch];
+                                g_meve[0] = (ch & 0x0f) | 0x90;
+                                g_meve[1] = note;
+                                mq_dise(g_meve, 3, ch);
+                        }
+                }
+        }
+
+        g_msmsa = NO;
+}
+#endif
 
 /* mq_extm (Ghidra midi_seq_exit_timer @ 0x11162): tear down MFP
    Timer-A hook; Xbtimer(0,...) reinstalls saved ISR from mi_svtv.
