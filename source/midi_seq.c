@@ -916,6 +916,7 @@ void
 mq_snof(nptr)
 short * nptr;
 {
+#ifdef FAITHFUL
         if ((nptr[0] & 0x80) == 0) {
                 g_meve[1] = (unsigned char) nptr[0];
                 if ((char) g_meve[1] >= g_mnlol &&
@@ -925,6 +926,23 @@ short * nptr;
                         mq_dise(g_meve, (short) 3, (short) nptr[1]);
                 }
         }
+#else
+        /* STX is called with &mi_evq[i] and walks the pointer forward;
+           the range test is one bitwise OR of two comparisons and each
+           rejection returns. */
+        if ((nptr[1] & 0x80) != 0)
+                return;
+        nptr++;
+        g_meve[1] = nptr[0];
+        if ((char) g_meve[1] > g_mnlol | (char) g_meve[1] < g_mnhil)
+                return 1;
+        if (g_meve[1] == 0)
+                return 1;
+        nptr++;
+        g_meve[0] = (nptr[0] & 0xf) + 0x90;
+        g_meve[2] = 0;
+        mq_dise(g_meve, (short) 3, (short) nptr[0]);
+#endif
 }
 
 /* mq_expN: subtract val from each queued event's remaining duration;
