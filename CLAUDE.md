@@ -467,6 +467,17 @@ this build, ALL different from LCP_ORG's:
   toolchain is codegen-equivalent to the one that built LCP_STX, so
   the campaign never needs to run the period compiler under Hatari.
 
+  **sf_sl is byte-recovered (2026-09-01).**  The kept build's
+  SOUNDS.LCP block loader -- restored earlier from the port's own
+  history because LCP_ORG's cracked stub crashes on the first sound
+  effect -- now matches LCP_STX byte for byte at 0xdcc4.  The real
+  1985 loader declares `fhandle, size, block, index` in that order,
+  assigns the Malloc result straight into `mi_ntLp[index]` and reads
+  it back into `block`, widens with `(long) size + 4` (not
+  `(long)(size + 4)`), and walks the buffer with `block++` before
+  the payload read.  So the kept build's sound loading is no longer
+  a reconstruction: it is the original's code.
+
   Recurring source-shape rules recovered so far, all gated:
       i = i + 1            (ORG)  vs  i++            (STX)
       *idx = *idx + 1      (ORG)  vs  (*idx)++       (STX)

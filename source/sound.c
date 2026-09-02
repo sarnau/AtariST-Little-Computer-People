@@ -93,21 +93,22 @@ void
 sf_sl()
 {
         short           fhandle;
-        short           index;
         short           size;
         short *         block;
+        short           index;
 
         fhandle = fOpen("sounds.lcp", 0);
-        for (index = 0; index < 500; index = index + 1) {
+        for (index = 0; index < 500; index++) {
                 fr_read(fhandle, 2L, &size);
                 if (size == 0)
                         break;
-                block = (short *) Malloc((long) (size + 4));
-                mi_ntLp[index] = (unsigned char *) block;
+                mi_ntLp[index] = (unsigned char *) Malloc((long) size + 4);
+                block = (short *) mi_ntLp[index];
                 if (block == (short *) 0)
                         er_nomem();
                 *block = size;
-                fr_read(fhandle, (long) size, block + 1);
+                block++;
+                fr_read(fhandle, (long) size, block);
         }
         Fclose(fhandle);
 }
