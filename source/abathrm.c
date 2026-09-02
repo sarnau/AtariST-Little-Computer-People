@@ -85,22 +85,34 @@ void
 a_brust()
 {
         unsigned short  brush_cycles;
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short           result;
+#endif
         short           x_left;
         short           x_right;
 
         brush_cycles = (unsigned short) rndRng(24, 35);
         hs_posXY(POS_MID_BATHROOM_SINK,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_face = FACING_RIGHT;
         lcp_st = STATE_BRUSH_TEETH;
         g_hatas = 10;
+#ifdef FAITHFUL
         lcp_y = lcp_y - 2;
+#else
+        lcp_y -= 2;
+#endif
         lcp_hwt();
 
         g_selaf[SPRITE_STUDY_DOOR_FRAME] = SPRITE_BEHIND_LCP;
@@ -134,7 +146,10 @@ a_brust()
 void
 a_washh()
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short           result;
+#endif
         unsigned short  rnd;
         unsigned short  val;
         unsigned short  last_pick;
@@ -146,16 +161,25 @@ a_washh()
 
         hs_posXY(POS_MID_BATHROOM_SINK,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
+#ifdef FAITHFUL
         rnd = (unsigned short) Random();
+#else
+        rnd = (unsigned short)(Random() & 0x7f) | 4;
+#endif
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
         counter   = 0;
