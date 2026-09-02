@@ -28,168 +28,6 @@
 #include "walk.h"
 
 
-/* lt_tyca: emit one char.  CR (< space) scrolls the pane; else plays a
-   random click, blits via prCh, swaps in the g_ltcwt width sprite
-   per buffer position.
-   addr: lt_tyca() */
-
-void
-lt_tyca(ch)
-short   ch;
-{
-        short   pick;
-        short   i;
-
-        if (ch < ' ') {                 /* CR */
-                lcp_st = STATE_DESK_TYPE_L;
-                gameTick(0);
-                pick = rndRng(0, 5);
-                if (pick == 0) {
-                        lcp_st = STATE_DESK_TYPE_R;
-                        gameTick(0);
-                        lcp_st = STATE_DESK_TYPE_L;
-                        gameTick(0);
-                }
-                lcp_face = FACING_RIGHT;
-                lcp_st = STATE_WRITE_AT_DESK;
-                gameTick(0);
-
-                g_srsdc = 4;
-                g_cdibp = 0;
-
-                g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-                g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-                g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-                g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
-                sp_upds();
-
-                /* Width-bracket sprite for buffer_pos (0..9/10..19/20..29/30+).
-                   i resolves to 0 here (buffer_pos just cleared);
-                   preserved verbatim. */
-                i = 3;
-                if (g_cdibp < 10)      i = 0;
-                else if (g_cdibp < 20) i = 1;
-                else if (g_cdibp < 30) i = 2;
-
-                g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
-                sp_sprs(g_ltcwt[i]);
-                g_sepex[g_seslm[g_ltcwt[i]]] = 211;
-                g_sepey[g_seslm[g_ltcwt[i]]] =  44;
-                lt_sets();
-                gameTick(6);
-                return;
-        }
-
-        /* Printable char. */
-        if (ch == ' ') {
-                lcp_face = FACING_RIGHT;
-                lcp_st = STATE_DESK_TYPE_L;
-                gameTick(0);
-        } else {
-                lcp_face = rndRng(0, 1);
-                lcp_st = STATE_DESK_TYPE_L;
-                gameTick(0);
-                pick = rndRng(0, 5);
-                if (pick == 0) {
-                        lcp_st = STATE_DESK_TYPE_R;
-                        gameTick(0);
-                        lcp_st = STATE_DESK_TYPE_L;
-                        gameTick(0);
-                }
-        }
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_WRITE_AT_DESK;
-        sfClick();
-        gameTick(0);
-        prCh(ch, g_cdibp << 3, 23, COLOR_black);
-        g_cdibp = g_cdibp + 1;
-
-        g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
-        sp_upds();
-
-        i = 3;
-        if (g_cdibp < 10)      i = 0;
-        else if (g_cdibp < 20) i = 1;
-        else if (g_cdibp < 30) i = 2;
-
-        g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
-        sp_sprs(g_ltcwt[i]);
-        g_sepex[g_seslm[g_ltcwt[i]]] = 211;
-        g_sepey[g_seslm[g_ltcwt[i]]] =  44;
-
-        /* 1/21 chance of a short pause between keystrokes. */
-        pick = rndRng(0, 20);
-        if (pick == 0) {
-                pick = rndRng(0, 3);
-                gameTick(pick);
-        }
-}
-
-/* lt_tysa: word-wrapped string typer.
-   val: leading-space indent (< 0 always; > 0 only if prev line mid).
-   Returns last char emitted.
-   addr: lt_tysa() */
-
-short
-lt_tysa(str, val)
-char *  str;
-short   val;
-{
-        short   line_remaining;
-        short   word_length;
-        short   i;
-        BOOL16  word_wrap_needed;
-
-        if (str == (char *) 0)          /* ROM 0x4e02: NULL guard */
-                return 0;
-
-        if (val < 0 || g_cdibp > 0) {
-                if (val < 0)
-                        val = -val;
-                for (i = 0; i < val; i = i + 1)
-                        lt_tyca(' ');
-        }
-
-        word_wrap_needed = NO;
-        line_remaining   = 0;
-        while (word_wrap_needed == NO) {
-                /* Skip inter-word spaces (emit if line already started). */
-                while (*str == ' ') {
-                        str = str + 1;
-                        if (g_cdibp > 0)
-                                lt_tyca(' ');
-                }
-
-                i = 0;
-                for (;;) {
-                        line_remaining = (short) *str;
-                        if (line_remaining < 0x21)      /* < '!' */
-                                break;
-                        g_ltscb[i] = *str;
-                        i = i + 1;
-                        str = str + 1;
-                }
-
-                if (line_remaining != ' ') {
-                        word_wrap_needed = YES;
-                        str = str + 1;
-                }
-
-                /* Word-wrap at 40 columns. */
-                if ((short) (i + g_cdibp) > 0x27)
-                        lt_tyca('\r');
-
-                for (word_length = 0; word_length < i; word_length = word_length + 1) {
-                        line_remaining = (short) g_ltscb[word_length];
-                        lt_tyca(line_remaining);
-                }
-        }
-        return line_remaining;
-}
-
 /* a_writl: walk, malloc letter buffer, assemble body from shuffled
    template sections (2..4 paragraphs, each 3 lines picked from 4
    alternates via section_id * 96 + mood offset), free, walk out.
@@ -411,4 +249,164 @@ a_writl()
         g_selaf[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
         sp_upds();
         g_actif = NO;
+}
+
+/* lt_tysa: word-wrapped string typer.
+   val: leading-space indent (< 0 always; > 0 only if prev line mid).
+   Returns last char emitted.
+   addr: lt_tysa() */
+
+short
+lt_tysa(str, val)
+char *  str;
+short   val;
+{
+        /* STX declares the g_ltscb index first and has no NULL guard;
+           both scan loops are `while ((ch = *str++) <op> ' ')`, which
+           Alcyon compiles by saving the flags across the pointer
+           increment. */
+        short   i;
+        short   word_length;
+        short   ch;
+        BOOL16  word_wrap_needed;
+
+        if (val < 0 || g_cdibp > 0) {
+                if (val < 0)
+                        val = -val;
+                for (i = 0; i < val; i++)
+                        lt_tyca(' ');
+        }
+
+        word_wrap_needed = NO;
+        while (word_wrap_needed == NO) {
+                /* Skip inter-word spaces (emit if line already started),
+                   then step back onto the first non-space. */
+                while ((ch = *str++) == ' ')
+                        if (g_cdibp > 0)
+                                lt_tyca(ch);
+                str--;
+
+                i = 0;
+                while ((ch = *str++) > ' ') {
+                        /* Index first: Alcyon folds the base into the
+                           address register (add.l #g_ltscb,a1). */
+                        *(i + g_ltscb) = ch;
+                        i++;
+                }
+                if (ch != ' ')
+                        word_wrap_needed = YES;
+                else
+                        str--;
+
+                /* Word-wrap at 40 columns. */
+                if (g_cdibp + i > 39)
+                        lt_tyca(13);
+
+                for (word_length = 0; word_length < i; word_length++) {
+                        ch = g_ltscb[word_length];
+                        lt_tyca(ch);
+                }
+        }
+        return ch;
+}
+
+
+/* lt_tyca: emit one char.  CR (< space) scrolls the pane; else plays a
+   random click, blits via prCh, swaps in the g_ltcwt width sprite
+   per buffer position.
+   addr: lt_tyca() */
+
+void
+lt_tyca(ch)
+short   ch;
+{
+        short   pick;
+        short   i;
+
+        if (ch < ' ') {                 /* CR */
+                lcp_st = STATE_DESK_TYPE_L;
+                gameTick(0);
+                pick = rndRng(0, 5);
+                if (pick == 0) {
+                        lcp_st = STATE_DESK_TYPE_R;
+                        gameTick(0);
+                        lcp_st = STATE_DESK_TYPE_L;
+                        gameTick(0);
+                }
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_WRITE_AT_DESK;
+                gameTick(0);
+
+                g_srsdc = 4;
+                g_cdibp = 0;
+
+                g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+                g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+                sp_upds();
+
+                /* Width-bracket sprite for buffer_pos (0..9/10..19/20..29/30+).
+                   i resolves to 0 here (buffer_pos just cleared);
+                   preserved verbatim. */
+                i = 3;
+                if (g_cdibp < 10)      i = 0;
+                else if (g_cdibp < 20) i = 1;
+                else if (g_cdibp < 30) i = 2;
+
+                g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
+                sp_sprs(g_ltcwt[i]);
+                g_sepex[g_seslm[g_ltcwt[i]]] = 211;
+                g_sepey[g_seslm[g_ltcwt[i]]] =  44;
+                lt_sets();
+                gameTick(6);
+                return;
+        }
+
+        /* Printable char. */
+        if (ch == ' ') {
+                lcp_face = FACING_RIGHT;
+                lcp_st = STATE_DESK_TYPE_L;
+                gameTick(0);
+        } else {
+                lcp_face = rndRng(0, 1);
+                lcp_st = STATE_DESK_TYPE_L;
+                gameTick(0);
+                pick = rndRng(0, 5);
+                if (pick == 0) {
+                        lcp_st = STATE_DESK_TYPE_R;
+                        gameTick(0);
+                        lcp_st = STATE_DESK_TYPE_L;
+                        gameTick(0);
+                }
+        }
+        lcp_face = FACING_RIGHT;
+        lcp_st = STATE_WRITE_AT_DESK;
+        sfClick();
+        gameTick(0);
+        prCh(ch, g_cdibp << 3, 23, COLOR_black);
+        g_cdibp = g_cdibp + 1;
+
+        g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+        sp_upds();
+
+        i = 3;
+        if (g_cdibp < 10)      i = 0;
+        else if (g_cdibp < 20) i = 1;
+        else if (g_cdibp < 30) i = 2;
+
+        g_selaf[g_ltcwt[i]] = SPRITE_IN_FRONT;
+        sp_sprs(g_ltcwt[i]);
+        g_sepex[g_seslm[g_ltcwt[i]]] = 211;
+        g_sepey[g_seslm[g_ltcwt[i]]] =  44;
+
+        /* 1/21 chance of a short pause between keystrokes. */
+        pick = rndRng(0, 20);
+        if (pick == 0) {
+                pick = rndRng(0, 3);
+                gameTick(pick);
+        }
 }
