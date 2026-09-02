@@ -30,6 +30,9 @@
 
 #include "alerts.c"
 #include "sprites.c"
+/* renderf.c straddles: sc_ren8 is in this object (0x15138), ahead
+   of lcp_hwt. */
+#include "parts/sc_ren8.c"  /* 0x15138 */
 /* STX: lcp_hwt (0x1568a) immediately precedes gameTick (0x156a6). */
 #include "parts/lcp_hwt.c"
 #include "tick.c"
@@ -42,7 +45,8 @@
 #include "parts/putEv.c"    /* 0x15fb4 */
 #include "parts/sp_drin.c"
 #include "parts/sp_updb.c"  /* 0x16244 */
-#include "parts/sp_lchu.c"  /* 0x16632 */
+#include "parts/sp_lcha.c"  /* 0x16368 */
+#include "parts/sp_lchu.c"  /* 0x1664c */
 /* renderx.c and gfx_prim.c straddle: sc_sctd and sc_firw sit in
    this object, and sc_firw must follow sc_sctd (bsr.s). */
 #include "parts/sc_sctd.c"  /* 0x16d5a */

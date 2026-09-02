@@ -20,27 +20,6 @@
 #include "tick_tables.h"
 
 
-/* cy_yoff: Y offset applied to the carried-object sprite; 32767 =
-   not a carried object.  ROM 0xcdfa -- Alcyon compiles this switch to
-   the value/handler table at data 0x13518. */
-static short
-cy_yoff(id)
-short   id;
-{
-        switch (id) {
-        case SPRITE_GLASS:
-        case SPRITE_GAME_BOX:
-        case SPRITE_FOOD_PACKAGE:
-        case SPRITE_FIREWOOD:
-        case SPRITE_COOKING_POT:
-        case SPRITE_SUITCASE:
-        case SPRITE_BOOK:
-        case SPRITE_VINYL_CARRY:
-        case SPRITE_COOKED_MEAL:
-                return -20;
-        }
-        return 32767;
-}
 
 /* addr: gameTick() (ROM 0xce28).  Carrying mode (g_lcyof) repositions
    the carried sprite and RETURNS -- in this binary Path B does not
@@ -49,48 +28,106 @@ void
 gameTick(counter)
 short   counter;
 {
-        short   count;
-        short   index;
-        short   slot;
-        short   yoff;
-        short   psi;                            /* petting sprite id */
-        short   key;
+        short           key;
+        short           index;
+        unsigned short  count;
+        short           psi;    /* petting sprite id / scratch */
 
-        if (g_lcyof == NO) {
+        /* The carrying-mode arm comes FIRST and the test is inverted.
+           There is no `slot` local: g_seslm[g_lcieo] is recomputed at
+           every use, the inner tests re-check g_lcyof redundantly (both
+           arms of the first pair assign the same thing), the clamp
+           indexes g_sepex with g_lcieo rather than the slot, and
+           cy_yoff is INLINED as a switch. */
+        if (g_lcyof != NO) {
+                if (lcp_face == FACING_RIGHT) {
+                        if (g_lcyof == NO)
+                                g_sepex[g_seslm[g_lcieo]] = lcp_x + 10;
+                        else
+                                g_sepex[g_seslm[g_lcieo]] = lcp_x + 10;
+                } else {
+                        if (g_lcyof == NO)
+                                g_sepex[g_seslm[g_lcieo]] =
+                                        lcp_x - g_seacw[g_seslm[g_lcieo]] + 8;
+                        else
+                                g_sepex[g_seslm[g_lcieo]] =
+                                        lcp_x - g_seacw[g_seslm[g_lcieo]] + 16;
+                }
+                if (g_sepex[g_lcieo] < 0)
+                        g_sepex[g_lcieo] = 0;
+
+                switch (g_lcieo) {
+                case SPRITE_SUITCASE:
+                        g_sepey[g_seslm[SPRITE_SUITCASE]] = lcp_y - 20;
+                        break;
+                case SPRITE_GLASS:
+                        g_sepey[g_seslm[SPRITE_GLASS]] = lcp_y - 20;
+                        break;
+                case SPRITE_GAME_BOX:
+                        g_sepey[g_seslm[SPRITE_GAME_BOX]] = lcp_y - 20;
+                        break;
+                case SPRITE_BOOK:
+                        g_sepey[g_seslm[SPRITE_BOOK]] = lcp_y - 20;
+                        break;
+                case SPRITE_FOOD_PACKAGE:
+                        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] = lcp_y - 20;
+                        break;
+                case SPRITE_FIREWOOD:
+                        g_sepey[g_seslm[SPRITE_FIREWOOD]] = lcp_y - 20;
+                        break;
+                case SPRITE_COOKING_POT:
+                        g_sepey[g_seslm[SPRITE_COOKING_POT]] = lcp_y - 20;
+                        break;
+                case SPRITE_VINYL_CARRY:
+                        g_sepey[g_seslm[SPRITE_VINYL_CARRY]] = lcp_y - 20;
+                        break;
+                case SPRITE_COOKED_MEAL:
+                        g_sepey[g_seslm[SPRITE_COOKED_MEAL]] = lcp_y - 20;
+                        break;
+                }
+        }
+
+        /* The tick loop is NOT an else arm in STX: carrying mode falls
+           straight into it. */
+        {
                 count = ani_cnt;
-                for (index = 0; index < counter + 1; index = index + 1) {
+                for (index = 0; index < counter + 1; index++) {
                         while (count == ani_cnt)
                                 sc_ren8();
                         count = ani_cnt;
 
-                        subAniC =
-                                subAniC + 1;
+                        subAniC++;
 
                         /* Clock pendulum: 4-frame animation. */
-                        od_draw(g_obcla[(subAniC >> 2) & 3],
-                                271, 92);
+                        psi = (subAniC >> 2) & 3;
+                        od_draw(g_obcla[psi], 271, 92);
                         gameSim1();
                         cl_redrH();
 
                         /* Petting-dog animation cycle. */
                         if (g_ptdoa != NO) {
-                                if (g_ptanf < 11) {
-                                        if (g_ptanf != 0) {
-                                                g_selaf[g_ptdsi[g_ptanf - 1]] =
-                                                        SPRITE_HIDDEN;
-                                        }
-                                        psi = g_ptdsi[g_ptanf];
-                                        g_selaf[psi] = SPRITE_BEHIND_LCP;
-                                        sp_sprs(psi);
-                                        g_sepex[g_seslm[psi]] = 192;
-                                        g_sepey[g_seslm[psi]] = 165;
-                                        g_ptanf =
-                                                g_ptanf + 1;
-                                } else {
+                                /* STX tests `> 10` and puts the finish
+                                   arm first. */
+                                if (g_ptanf > 10) {
                                         g_selaf[g_ptlss] =
                                                 SPRITE_HIDDEN;
                                         sp_upds();
                                         g_ptdoa = NO;
+                                } else {
+                                        if (g_ptanf != 0) {
+                                                g_selaf[g_ptdsi[g_ptanf - 1]] =
+                                                        SPRITE_HIDDEN;
+                                        }
+                                        /* No `psi` local: the lookup
+                                           is repeated at every use. */
+                                        g_selaf[g_ptdsi[g_ptanf]] =
+                                                SPRITE_BEHIND_LCP;
+                                        sp_sprs(g_ptdsi[g_ptanf]);
+                                        g_sepex[g_seslm[g_ptdsi[g_ptanf]]] =
+                                                192;
+                                        g_sepey[g_seslm[g_ptdsi[g_ptanf]]] =
+                                                165;
+                                        g_ptanf++;
                                 }
                         }
 
@@ -98,14 +135,12 @@ short   counter;
                         od_draw(g_obdea[lcp_bwlS], 8, 190);
                         if (dg_bwlch < 0) {
                                 if (lcp_bwlS != BOWL_EMPTY)
-                                        lcp_bwlS =
-                                                lcp_bwlS - 1;
+                                        lcp_bwlS--;
                                 if (lcp_bwlS < 0)
                                         lcp_bwlS = BOWL_EMPTY;
                         }
                         if (dg_bwlch > 0) {
-                                lcp_bwlS =
-                                        lcp_bwlS + 1;
+                                lcp_bwlS++;
                                 if (lcp_bwlS > 2)
                                         lcp_bwlS = BOWL_FULL;
                         }
@@ -114,9 +149,7 @@ short   counter;
                         if (fire_act != NO) {
                                 od_draw(g_obfia[subAniC & 3],
                                         257, 170);
-                                fire_dur =
-                                        fire_dur - 1;
-                                if (fire_dur == 0)
+                                if (--fire_dur == 0)
                                         fire_ext = YES;
                         }
                         if (fire_ext != NO) {
@@ -148,16 +181,15 @@ short   counter;
                                         sf_sele(SFX_PHONE_RING, 10000L);
                                         g_phrc = 26;
                                 }
-                                g_phrc =
-                                        g_phrc - 1;
-                                if (g_phrc < 11) {
+                                g_phrc--;
+                                if (g_phrc > 10) {
+                                        od_draw(g_obpha[subAniC & 3],
+                                                190, 168);
+                                } else {
                                         if (g_sfacf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
                                                 sf_so();
                                         od_draw(OBJ_PHONE_2, 190, 168);
-                                } else {
-                                        od_draw(g_obpha[subAniC & 3],
-                                                190, 168);
                                 }
                         }
                         if (ph_hu != NO) {
@@ -175,11 +207,16 @@ short   counter;
                         sp_lcha();
                         sp_lchu();
 
-                        if (g_srsdc < 1) {
+                        if (g_srsdc > 0) {
+                                sc_sctd();
+                                g_srsdc--;
+                        } else {
                                 if (no_keyin == NO &&
                                     introSeq == NO) {
                                         key = getKey();
-                                        if (key != 0)     /* ROM getKey: 0 = no key */ {
+                                        /* STX's getKey returns -1 for
+                                           "no key", not 0. */
+                                        if (key != -1) {
                                                 if (key != KEY_CTRL_W_WATER &&
                                                     key != KEY_CTRL_B_BOOK &&
                                                     key != KEY_CTRL_R_RECORD &&
@@ -197,29 +234,12 @@ short   counter;
                                                 deal_kc(key);
                                         }
                                 } else if (g_inpmd != NO) {
-                                        key = getKey();
-                                        if (key != 0)     /* ROM getKey: 0 = no key */
+                                        if ((key = getKey()) != -1)
                                                 deal_kc(key);
                                 }
-                        } else {
-                                sc_sctd();
-                                g_srsdc =
-                                        g_srsdc - 1;
                         }
 
                         sc_ren8();
                 }
-        } else {
-                slot = g_seslm[g_lcieo];
-                if (lcp_face == FACING_RIGHT) {
-                        g_sepex[slot] = lcp_x + 10;
-                } else {
-                        g_sepex[slot] = (lcp_x - g_seacw[slot]) + 16;
-                        if (g_sepex[slot] < 0)
-                                g_sepex[slot] = 0;
-                }
-                yoff = cy_yoff(g_lcieo);
-                if (yoff != 32767)
-                        g_sepey[slot] = lcp_y + yoff;
         }
 }
