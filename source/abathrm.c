@@ -150,10 +150,19 @@ a_washh()
 #ifdef FAITHFUL
         short           result;
 #endif
+        /* STX declares them rnd, counter, last_pick, val, all
+           signed -- the same layout as a_driwa. */
+#ifdef FAITHFUL
         unsigned short  rnd;
         unsigned short  val;
         unsigned short  last_pick;
         short           counter;
+#else
+        short           rnd;
+        short           counter;
+        short           last_pick;
+        short           val;
+#endif
 
         pst_arr[0] = STATE_WASH_HANDS_CENTER;
         pst_arr[1] = STATE_WASH_HANDS_LEFT;
@@ -182,6 +191,7 @@ a_washh()
 #endif
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
+#ifdef FAITHFUL
         counter   = 0;
         last_pick = 0;
         while (counter < (short) ((rnd & 0x7f) | 4) &&
@@ -199,6 +209,28 @@ a_washh()
                 gameTick(1);
                 counter = counter + 1;
         }
+#else
+        /* last_pick is never initialised in STX (as in a_driwa);
+           the counter is. */
+        counter = 0;
+        while (counter < rnd) {
+                if (g_trel[0] != ACTION_NONE)
+                        break;
+                val = Random() & 3;
+                while (val == last_pick)
+                        val = Random() & 3;
+                last_pick = val;
+                if (val != 3) {
+                        lcp_st = pst_arr[val];
+                        lcp_face = FACING_RIGHT;
+                } else {
+                        lcp_st = pst_arr[1];
+                        lcp_face = FACING_LEFT;
+                }
+                gameTick(1);
+                counter++;
+        }
+#endif
 
         if (g_sfplf != NO &&
             g_sfpli == SFX_WATER_RUNNING)
