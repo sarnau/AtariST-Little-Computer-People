@@ -19,6 +19,7 @@
 #endif
 
 /* addr: sp_draw() */
+#ifdef FAITHFUL
 void
 sp_draw(index)
 short   index;
@@ -47,3 +48,31 @@ short   index;
                 0, 0, w - 1, h - 1,
                 x1, y1, x1 + w - 1, y1 + h - 1);
 }
+#else   /* STX: link #-8 -- only the position is latched; the
+           extents are subscripted at every use. */
+
+void
+sp_draw(index)
+short   index;
+{
+        short   x1;
+        short   y1;
+
+        x1 = g_sepex[index];
+        y1 = g_sepey[index];
+
+        sp_iniM(0L, &g_semfi[index],
+                         g_seaim[index], g_seacw[index], g_seach[index]);
+        sp_iniM(0L, &g_semfm[index],
+                         g_seams[index],  g_seacw[index], g_seach[index]);
+
+        vroCpyD(vdihnd, NOTS_AND_D,
+                index * 20 + (long) g_semfm, (long) &g_srmfd,
+                0, 0, g_seacw[index] - 1, g_seach[index] - 1,
+                x1, y1, x1 + g_seacw[index] - 1, y1 + g_seach[index] - 1);
+        vroCpyD(vdihnd, S_XOR_D,
+                index * 20 + (long) g_semfi, (long) &g_srmfd,
+                0, 0, g_seacw[index] - 1, g_seach[index] - 1,
+                x1, y1, x1 + g_seacw[index] - 1, y1 + g_seach[index] - 1);
+}
+#endif
