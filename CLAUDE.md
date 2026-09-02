@@ -751,6 +751,63 @@ this build, ALL different from LCP_ORG's:
                                       (STX splits the step around the
                                        state assignment -- two subq/
                                        addq to memory, not one addi)
+      p[i - 1]             (ORG)  vs  *(p + i - 1)  (writing the
+                                      offset arithmetic inside the
+                                      dereference makes the POINTER
+                                      the index register and the
+                                      counter the base -- mq_pacm)
+      short locals for     (ORG)  vs  globals (aes_ini's graf_handle
+        out-parameters                metrics; vdi_init's work_in /
+                                      wk_out -- the frame collapses
+                                      from -150 to -6)
+      short *tab[3] = {r0, (ORG)  vs  short tab[3][8] and `tab[i][j]`
+        r1, r2}                       (two ext.l and a trailing
+                                      `add.l #base` -- chk_timA)
+      x = x - 1;           (ORG)  vs  x--; if (x <= 0)   (subq to
+        if (x < 1)                    memory then an explicit tst)
+      x = x - 1;           (ORG)  vs  if (--x == 0)      (the subq's
+        if (x == 0)                   own flags, no tst at all)
+      t = f(); if (t == v) (ORG)  vs  if (f() == ++v)    (the call
+                                      result stays in d0 across the
+                                      addq to memory -- gameSim1)
+      C helper             (ORG)  vs  hand-assembly: blkcp32 is an
+                                      unrolled `dbf` loop of eight
+                                      post-increment long moves
+                                      (source/blkcp_a.s)
+      two early returns    (ORG)  vs  one compound `if (a && b) {...}`
+                                      followed by `break` (deal_kc's
+                                      default arm -- the guards branch
+                                      to the break, not the epilogue)
+      arr[i] = v           (ORG)  vs  *(i + arr) = v  (naming the
+                                      index first folds the base into
+                                      `add.l #base,An` instead of a
+                                      second address register)
+      `return v;` in every (ORG)  vs  NO return at all in the arms:
+        arm of a ladder               the ladder's jump to the
+                                      function end leaves the last
+                                      compared value in d0 (chk_timA)
+      x = 4;               (ORG)  vs  x == 4;  -- a real 1985 typo in
+                                      gameSim1's sickness clamp; the
+                                      compiler emits the comparison
+                                      and discards it, so the clamp
+                                      never happens.  Preserved.
+      Random()             (ORG)  vs  rnd(), a global wrapper around
+                                      the bare XBIOS call that STX
+                                      routes seven call sites through
+                                      (rndRng still inlines the trap)
+      moff only            (ORG)  vs  moff AND mon -- STX has the
+                                      mouse-show counterpart right
+                                      after it
+      rev_tab as DATA      (ORG)  vs  built at run time by a 94-byte
+                                      routine behind a 10-byte wrapper
+                                      (STX 0x6804/0x680e -- not yet
+                                      ported)
+      no resolution check  (ORG)  vs  vdi_init splits in two: the
+                                      opener checks wk_out[0] and hangs
+                                      on a "[1][Must be in|low
+                                      resolution.][REBOOT]" alert loop
+                                      before bsr.s-ing into the
+                                      attribute/clear half
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -829,8 +886,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 254 matched / 86 divergent, 41 206 of
-104 156 STX text bytes (39.6%) proven byte-identical -- 43.5% of the
+**Status (2026-09-02): 289 matched / 54 divergent, 47 144 of
+104 156 STX text bytes (45.3%) proven byte-identical -- 49.8% of the
 94 736 bytes that are the game's own code.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
@@ -858,6 +915,27 @@ DATA/LCP_ORG.PRG` before every commit.
   #include "parts/..."` stub, whose relative path then no longer
   resolves).  After every extraction, check that the new parts/ file
   defines exactly one function and contains no `#include "parts/...`.
+
+  **Finding a divergent function's STX address: use the CALL GRAPH.**
+  The most reliable pairing signal is the set of already-matched
+  callees.  For each divergent port function collect its call targets
+  that are matched, translate them to STX addresses, and intersect
+  with the call targets of each unclaimed STX slot; a 1.00 score with
+  a plausible length is almost always right.  This pinned main 0x5546,
+  lc_load 0x5ac8, vdi_init 0x66fe, chk_timA 0x6210, gameSim1 0x133da,
+  rp_anim 0x13aec, sc_sctd 0x16d5a and a dozen more in one pass.
+  (stx_locate/stx_neighbor are much weaker -- stx_neighbor in
+  particular reports the function AFTER a match, which is only right
+  when the port and STX agree on what comes next, and it produced
+  several confident-looking false pairings.)
+
+  **Unclaimed-slot inventory.**  Marking every matched function's STX
+  bytes as claimed and splitting the remaining runs at `link a6`
+  prologues gives the list of STX functions still unaccounted for,
+  with exact addresses and lengths.  Disassembling a small slot is
+  often enough to name it outright (a 20-byte slot that clears two
+  globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
+  10-byte slot that just calls the next function).
 
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
