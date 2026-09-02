@@ -559,6 +559,17 @@ this build, ALL different from LCP_ORG's:
       mask in the loop     (ORG)  vs  folded into the assignment,
         condition                     computed once
       gameTick(3)          (ORG)  vs  t = 3; ... gameTick(t)
+      if (x == 3) A else B (ORG)  vs  if (x != 3) B else A
+      lcp_face = c ? L : R (ORG)  vs  the assignment duplicated
+                                      inside both branches
+      unsigned bound       (ORG)  vs  signed (bcs vs blt on the
+                                      loop comparison)
+      p = f(); q = p & 3   (ORG)  vs  p = f() & 3
+  Declaration ORDER is evidence too: the frame offsets pin it (a_driwa
+  is rnd, counter, last_pick, pick in STX; the port had rnd, pick,
+  last_pick, counter).  And STX's a_driwa never initialises last_pick
+  -- the first comparison reads whatever the slot held.  Preserved as
+  written; do not "fix" such things.
   a_sitae alone needed six of these; expect several per function.
   A narrowing cast changes the operand width: `(Random() & 0x7f) | 8`
   gives or.l, `(unsigned short)(Random() & 0x7f) | 8` gives or.w

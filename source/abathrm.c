@@ -197,10 +197,19 @@ void
 a_driwa(value)
 short   value;
 {
+        /* STX declares them rnd, counter, last_pick, pick -- the
+           frame offsets follow that order. */
+#ifdef FAITHFUL
         unsigned short  rnd;
         unsigned short  pick;
         unsigned short  last_pick;
         short           counter;
+#else
+        short           rnd;
+        short           counter;
+        short           last_pick;
+        short           pick;
+#endif
 
         pst_arr[0] = STATE_WASH_HANDS_CENTER;
         pst_arr[1] = STATE_WASH_HANDS_LEFT;
@@ -226,14 +235,11 @@ short   value;
 #endif
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
-        last_pick = 0;
 #ifdef FAITHFUL
+        last_pick = 0;
         for (counter = 0;
              counter < (short) ((rnd & 0x1f) | 4);
              counter = counter + 1) {
-#else
-        for (counter = 0; counter < rnd; counter++) {
-#endif
                 pick = (unsigned short) Random();
                 while ((pick & 3) == last_pick)
                         pick = (unsigned short) Random();
@@ -246,6 +252,25 @@ short   value;
                 lcp_face = (pick == 3) ? FACING_LEFT : FACING_RIGHT;
                 gameTick(1);
         }
+#else
+        /* STX masks at the assignment and never initialises
+           last_pick -- the first comparison reads whatever the frame
+           slot held.  Preserved as the original wrote it. */
+        for (counter = 0; counter < rnd; counter++) {
+                pick = Random() & 3;
+                while (pick == last_pick)
+                        pick = Random() & 3;
+                last_pick = pick;
+                if (pick != 3) {
+                        lcp_st = pst_arr[pick];
+                        lcp_face = FACING_RIGHT;
+                } else {
+                        lcp_st = pst_arr[1];
+                        lcp_face = FACING_LEFT;
+                }
+                gameTick(1);
+        }
+#endif
 
         if (g_sfplf != NO &&
             g_sfpli == SFX_WATER_RUNNING)
