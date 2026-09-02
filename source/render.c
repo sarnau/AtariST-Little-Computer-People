@@ -114,7 +114,11 @@ short   y;
 void
 sc_drfc()
 {
+#ifdef FAITHFUL
         unsigned short  cabinet_content;
+#else
+        short           cabinet_content;    /* STX: signed compares */
+#endif
 
         if (lcp_cabO == NO)
                 return;
@@ -122,10 +126,17 @@ sc_drfc()
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
         od_draw(od_cbo2, 46, 140);
 
+#ifdef FAITHFUL
         if (cabinet_content > 0) od_draw(od_cbit, 50, 159);
         if (cabinet_content > 1) od_draw(od_cbit, 58, 159);
         if (cabinet_content > 2) od_draw(od_cbit, 50, 151);
         if (cabinet_content > 3) od_draw(od_cbit, 58, 151);
+#else
+        if (cabinet_content >= 1) od_draw(od_cbit, 50, 159);
+        if (cabinet_content >= 2) od_draw(od_cbit, 58, 159);
+        if (cabinet_content >= 3) od_draw(od_cbit, 50, 151);
+        if (cabinet_content >= 4) od_draw(od_cbit, 58, 151);
+#endif
 }
 
 /* -- Water tank level bar (VDI polylines) -- */
