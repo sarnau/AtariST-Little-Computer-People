@@ -224,6 +224,7 @@ short   flipV;
    addr: sp_flih() */
 
 #ifdef FAITHFUL
+#ifdef FAITHFUL
 void
 sp_flih(source, dest, pixH, wdWidth)
 unsigned short *        source;
@@ -370,6 +371,117 @@ sp_upds()
                         g_seaim[spriteID] = NULL;
         }
 }
+
+#else   /* STX: link #-10 -- spriteID, index, i; the slot index is
+           recomputed at every use instead of being cached. */
+
+void
+sp_upds()
+{
+        short   spriteID;
+        short   index;
+        short   i;
+
+        if (g_selaf[SPRITE_LCP_BODY_ID] == SPRITE_HIDDEN)
+                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
+        if (g_selaf[SPRITE_LCP_HEAD_ID] == SPRITE_HIDDEN)
+                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
+
+        for (spriteID = HW_SLOT_LCP_BODY; spriteID < SPRITE_SLOTS;
+             spriteID++) {
+                if (g_selaf[spriteID] == SPRITE_HIDDEN) {
+                        g_seslm[spriteID] = HW_SLOT_NONE;
+                        continue;
+                }
+
+                if (g_selaf[spriteID] == SPRITE_IN_FRONT) {
+                        i = g_seslm[spriteID];
+                        g_seslm[spriteID] = HW_SLOT_FRONT_PRIMARY;
+
+                        for (index = 3; index < spriteID; index++) {
+                                if (g_seslm[index] == HW_SLOT_FRONT_PRIMARY) {
+                                        g_seslm[spriteID] = HW_SLOT_FRONT_OVERFLOW;
+                                        break;
+                                }
+                        }
+
+                        for (index = spriteID + 1; index < SPRITE_SLOTS;
+                             index++) {
+                                if (g_seslm[index] ==
+                                    g_seslm[spriteID]) {
+                                        g_seslm[index] = HW_SLOT_FRONT_OVERFLOW;
+                                        g_sepex[HW_SLOT_FRONT_OVERFLOW] = g_sepex[HW_SLOT_FRONT_PRIMARY];
+                                        g_sepey[HW_SLOT_FRONT_OVERFLOW] = g_sepey[HW_SLOT_FRONT_PRIMARY];
+                                        g_seaim[HW_SLOT_FRONT_OVERFLOW] = g_seaim[HW_SLOT_FRONT_PRIMARY];
+                                        g_seams[HW_SLOT_FRONT_OVERFLOW] = g_seams[HW_SLOT_FRONT_PRIMARY];
+                                        g_seach[HW_SLOT_FRONT_OVERFLOW] = g_seach[HW_SLOT_FRONT_PRIMARY];
+                                        g_seacw[HW_SLOT_FRONT_OVERFLOW] = g_seacw[HW_SLOT_FRONT_PRIMARY];
+                                }
+                        }
+
+                        if (i < SPRITE_HW_SLOTS) {
+                                g_sepex[g_seslm[spriteID]]  = g_sepex[i];
+                                g_sepey[g_seslm[spriteID]]  = g_sepey[i];
+                                g_seaim[g_seslm[spriteID]]  = g_seaim[i];
+                                g_seams[g_seslm[spriteID]]  = g_seams[i];
+                                g_seach[g_seslm[spriteID]]  = g_seach[i];
+                                g_seacw[g_seslm[spriteID]]  = g_seacw[i];
+                                if (g_seslm[spriteID] != i)
+                                        g_seaim[i] = NULL;
+                        }
+                        continue;
+                }
+
+                if (g_selaf[spriteID] == SPRITE_BEHIND_LCP) {
+                        i = g_seslm[spriteID];
+                        g_seslm[spriteID] = HW_SLOT_BEHIND_PRIMARY;
+
+                        for (index = 3; index < spriteID; index++) {
+                                if (g_seslm[index] == HW_SLOT_BEHIND_PRIMARY) {
+                                        g_seslm[spriteID] = HW_SLOT_BEHIND_OVERFLOW;
+                                        break;
+                                }
+                        }
+
+                        for (index = spriteID + 1; index < SPRITE_SLOTS;
+                             index++) {
+                                if (g_seslm[index] ==
+                                    g_seslm[spriteID]) {
+                                        g_seslm[index] = HW_SLOT_BEHIND_OVERFLOW;
+                                        g_sepex[HW_SLOT_BEHIND_OVERFLOW] = g_sepex[HW_SLOT_BEHIND_PRIMARY];
+                                        g_sepey[HW_SLOT_BEHIND_OVERFLOW] = g_sepey[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seaim[HW_SLOT_BEHIND_OVERFLOW] = g_seaim[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seams[HW_SLOT_BEHIND_OVERFLOW] = g_seams[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seach[HW_SLOT_BEHIND_OVERFLOW] = g_seach[HW_SLOT_BEHIND_PRIMARY];
+                                        g_seacw[HW_SLOT_BEHIND_OVERFLOW] = g_seacw[HW_SLOT_BEHIND_PRIMARY];
+                                }
+                        }
+
+                        if (i < SPRITE_HW_SLOTS) {
+                                g_sepex[g_seslm[spriteID]]  = g_sepex[i];
+                                g_sepey[g_seslm[spriteID]]  = g_sepey[i];
+                                g_seaim[g_seslm[spriteID]]  = g_seaim[i];
+                                g_seams[g_seslm[spriteID]]  = g_seams[i];
+                                g_seach[g_seslm[spriteID]]  = g_seach[i];
+                                g_seacw[g_seslm[spriteID]]  = g_seacw[i];
+                                if (g_seslm[spriteID] != i)
+                                        g_seaim[i] = NULL;
+                        }
+                }
+        }
+
+        /* Second pass: zero any hardware slot not currently claimed by
+           a logical sprite (prevents ghosting). */
+        for (spriteID = HW_SLOT_BEHIND_OVERFLOW; spriteID < HW_SLOT_DOG_FRONT;
+             spriteID++) {
+                for (index = 0; index < SPRITE_SLOTS; index++)
+                        if (g_seslm[index] == spriteID)
+                                break;
+                if (index == SPRITE_SLOTS)
+                        g_seaim[spriteID] = NULL;
+        }
+}
+#endif
 
 /* sp_lchu: pick head frame from PEx.LCP by happiness + g_hsfra,
    expand via sp_lcpf into slot 4.  Tracks body position; head lowers
