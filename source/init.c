@@ -120,15 +120,9 @@ st_titl()
         t_min    = 0;
 }
 
-/* dbg_prA (ROM 0x8030): dead debug helper the ROM shipped between
-   st_titl and mq_intim -- draws 'A' at (100,8) in colour 0.  Nothing
-   calls it; kept for byte-identity of init.o. */
+/* dbg_prA was a dead debug helper LCP_ORG shipped between st_titl
+   and mq_intim.  LCP_STX does not have it. */
 
-void
-dbg_prA()
-{
-        prCh(65, 100, 8, 0);
-}
 
 /* mq_intim: in THIS ROM an empty stub (0x804e) -- no Xbtimer call
    exists anywhere in the binary; its ~1.5 KB music engine (0x8cce)
@@ -157,38 +151,10 @@ mq_intim()
 #endif  /* FAITHFUL */
 }
 
-/* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
-   addr: Ghidra count_songs (main step 8). */
-
-
-void
-cntSong()
-{
-        short   result;
-        long    next;
-
-        sng_cnt = 0;
-        org_cnt = 0;
-        /* ROM shapes: one trailing 0L on Fsfirst, bare Fsnext. */
-        result = (short) gemdos(0x4E, "*.sng", 0L);
-        if (result == 0) {
-                sng_cnt = 1;
-                for (;;) {
-                        next = gemdos(0x4F);
-                        if (next != 0) break;
-                        sng_cnt = sng_cnt + 1;
-                }
-        }
-        result = (short) gemdos(0x4E, "*.org", 0L);
-        if (result == 0) {
-                org_cnt = 1;
-                for (;;) {
-                        next = gemdos(0x4F);
-                        if (next != 0) break;
-                        org_cnt = org_cnt + 1;
-                }
-        }
-}
+/* cntSong -> parts/cntSong.c (STX: 0x400c -- the FIRST function of the 0x400c object). */
+#ifdef FAITHFUL
+#include "parts/cntSong.c"
+#endif
 
 /* STX grouping: cl_redrH (0x137d4), cl_drwH and drwLine (0x138d4)
    live in the 0xdece object, so stx_u2.c includes parts/cl_redrH.c,

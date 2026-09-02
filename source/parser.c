@@ -16,9 +16,14 @@ short
 lcp_upp(ch)
 short   ch;
 {
-        if (ch > 0x60 && ch < 0x7b)
-                ch = ch - 0x20;
-        return ch;
+        /* STX returns the converted value directly rather than
+           writing it back to the parameter, and spells the range with
+           inclusive bounds -- the trailing else-skip branch after the
+           returning then-arm is Alcyon's, not a second statement. */
+        if (ch >= 'a' && ch <= 'z')
+                return ch - 0x20;
+        else
+                return ch;
 }
 
 /* addr: cmd_upp() */

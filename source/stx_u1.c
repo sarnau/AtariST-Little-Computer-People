@@ -24,6 +24,15 @@
 
 #ifndef FAITHFUL
 
+/* cntSong is the FIRST function of this object (0x400c). */
+#include "types.h"
+#include "structs.h"
+#include "enums.h"
+#include "globals.h"
+#include "init.h"
+#include <osbind.h>
+#include "parts/cntSong.c"  /* 0x400c */
+
 #include "dog.c"
 /* dg_mvAni (0x412c) is followed directly by walk.c's dg_wkPth
    (0x4586) -- the call between them is a bsr. */
