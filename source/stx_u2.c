@@ -35,6 +35,7 @@
 #include "delivery.c"
 #include "adoors.c"
 #include "aleisure.c"
+#include "parts/lcp_std.c"   /* 0xf534, right after a_opcuc */
 #include "afood.c"      /* a_kitcc 0x11354 */
 #include "aidle.c"
 #include "asimple.c"

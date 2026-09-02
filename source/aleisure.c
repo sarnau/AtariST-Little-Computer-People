@@ -837,9 +837,17 @@ short   value;
         g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
         sp_upds();
 
-        /* Continue into the study; value != 0 -> save HYBER. */
+        /* Continue into the study; value != 0 -> save HYBER.
+           STX writes the condition the other way round. */
+#ifdef FAITHFUL
         if (value == 0)
                 lcp_std(NO,  YES);
         else
                 lcp_std(YES, YES);
+#else
+        if (value != 0)
+                lcp_std(YES, YES);
+        else
+                lcp_std(NO,  YES);
+#endif
 }
