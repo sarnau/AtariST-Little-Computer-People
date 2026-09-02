@@ -214,21 +214,7 @@ chk_actT()
                 doAct();
 }
 
-/* prsCmd: called from deal_kc on Enter.  Runs chk_encm() on g_cdinb;
-   valid ACTION_ID with queue room is appended at g_aprio priority.
-   addr: prsCmd() */
-
-
-void
-prsCmd()
-{
-        short   entered;
-
-        cmd_inp = g_cdinb;
-        entered = chk_encm(g_cdinb);
-        if (entered >= 0 && g_aliss < 10) {
-                g_aqueu[g_aliss]           = entered;
-                g_apriq[g_aliss]  = g_aprio;
-                g_aliss = g_aliss + 1;
-        }
-}
+/* prsCmd -> parts/prsCmd.c (STX: 0x1721c, in the 0x148fe object after prCh). */
+#ifdef FAITHFUL
+#include "parts/prsCmd.c"
+#endif

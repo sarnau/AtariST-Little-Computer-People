@@ -249,10 +249,17 @@ unsigned char * p;
 {
         short   i;
 
+#ifdef FAITHFUL
         for (i = 1; i < 16; i = i + 1) {
                 mi_chmap[i] = p[i - 1]  - 1;
                 mi_pgmap[i] = p[i + 14] - 1;
         }
+#else
+        for (i = 1; i < 16; i++) {
+                mi_chmap[i] = i[p - 1]  - 1;
+                mi_pgmap[i] = i[p + 14] - 1;
+        }
+#endif
 }
 
 #ifdef FAITHFUL

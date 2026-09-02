@@ -11,24 +11,10 @@ short   g_trel[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE
 };
 
-/* addr: putEv() */
-void
-putEv(event)
-short   event;
-{
-        short   index;
-
-        if (introSeq != NO)
-                return;
-        if (g_trel[9] != ACTION_NONE)
-                return;                 /* queue full */
-
-        for (index = 0;
-             index < 10 && g_trel[index] != ACTION_NONE;
-             index = index + 1)
-                ;
-        g_trel[index] = event;
-}
+/* putEv -> parts/putEv.c (STX: 0x15fb4, after p_dobls). */
+#ifdef FAITHFUL
+#include "parts/putEv.c"
+#endif
 
 /* addr: getEv() */
 short

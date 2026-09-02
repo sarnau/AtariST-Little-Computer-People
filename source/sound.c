@@ -64,7 +64,10 @@ sf_so()
 #include "parts/p_sfspe.c"
 #include "parts/p_sfhnd.c"
 #endif
-void p_dobls() { sf_sele(SFX_DOORBELL,  4L); }
+/* p_dobls -> parts/p_dobls.c (STX: 0x15f9a, after deal_kc). */
+#ifdef FAITHFUL
+#include "parts/p_dobls.c"
+#endif
 
 /* addr: lt_sets(), sfClick() */
 void
