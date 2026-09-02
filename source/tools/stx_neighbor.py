@@ -33,6 +33,7 @@ def main():
     vb.KEPT_PREFIXES = tuple()
     vb.KEPT_NAMES = set()
     otext, _ot, _orel = vb.read_prg(REF)
+    ptext, _pt, prel = vb.read_prg(vb.PORT)
 
     argv, sys.argv = sys.argv, ['verify_bytes.py', '-v']
     buf = io.StringIO()
@@ -74,11 +75,17 @@ def main():
         if want and name not in want:
             continue
         gap = poff - pend
-        ok = otext[oend + gap:oend + gap + 2] == b'\x4e\x56'
+        a = oend + gap
+        ok = otext[a:a + 2] == b'\x4e\x56'
+        code = ptext[poff:poff + size]
+        _j_any, j = vb.first_mismatch(code, poff, prel, otext, a)
+        good = size if j < 0 else j
+        if not ok:
+            continue                    # not a function start at all
         n += 1
-        print(f'  {name:<10} 0x{oend + gap:05x}  after {pname}'
-              f'{"" if ok else "   (no link a6 there)"}')
-    print(f'{n} candidate(s)')
+        print(f'  {name:<10} 0x{a:05x}  after {pname}'
+              f'   (prefix {good}/{size})')
+    print(f'{n} credible candidate(s)')
 
 
 if __name__ == '__main__':
