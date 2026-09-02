@@ -101,15 +101,11 @@ sp_updb()
 #include "parts/sp_sprs.c"
 #endif
 
-/* lcp_hwt: tick until g_hacur == g_hatas.
-   addr: lcp_hwt() */
-
-void
-lcp_hwt()
-{
-        while (g_hacur != g_hatas)
-                gameTick(0);
-}
+/* lcp_hwt -> parts/lcp_hwt.c (STX places it immediately
+   before gameTick, which is why its call is a short bsr). */
+#ifdef FAITHFUL
+#include "parts/lcp_hwt.c"
+#endif
 
 /* hideLcp -> parts/hideLcp.c (STX: 0xdece object). */
 #ifdef FAITHFUL
