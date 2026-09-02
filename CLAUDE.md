@@ -632,6 +632,21 @@ this build, ALL different from LCP_ORG's:
         GET_DRESSED, DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
+      int field             (ORG)  vs  unsigned field (clr.w before
+                                      every load -- cpyScr's MFDB
+                                      extents; `(unsigned short) f`
+                                      at the use site reproduces it)
+      p->fd_addr = addr;   (ORG)  vs  the address latched, masked to
+                                      its high half and stored as two
+                                      words through a (short *) cast
+                                      (sp_iniM)
+      } else {             (ORG)  vs  } else if (arg != 0) {
+                                      (a redundant re-test of the
+                                       argument already implied by the
+                                       else -- a_opcfd/a_opecc/a_opecd,
+                                       and er_food re-tests g_dvdog)
+      one assignment       (ORG)  vs  an if/else whose two arms assign
+                                      the SAME value (stpScrB's size)
       p = (T *)((char *)p    (ORG)  vs  (char *) p += n;
         + n)                          (Alcyon C 4.14 accepts a CAST
                                        AS AN LVALUE; the compound form
@@ -755,8 +770,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-02): 199 matched / 162 divergent, 33 278 of
-104 156 STX text bytes (32.0%) proven byte-identical.**  The FAITHFUL
+**Status (2026-09-02): 225 matched / 132 divergent, 36 686 of
+104 156 STX text bytes (35.2%) proven byte-identical.**  The FAITHFUL
 build stays byte-identical to LCP_ORG.PRG after every step -- run
 `ALCYON_CPPFLAGS="-DFAITHFUL=1" tools/alcyon_build.sh && FAITHFUL=1
 tools/alcyon_link.sh && cmp source/build/alcyon/LCP.PRG
@@ -768,10 +783,15 @@ DATA/LCP_ORG.PRG` before every commit.
   be placed immediately after the caller.  Both are fixed by moving
   the function into `parts/` and including it at the right point in
   the unity file (see the `parts/` list in stx_u1.c / stx_u2.c /
-  stx_u3.c).  Discoveries so far: agames.c, sfClick, tv_scrc,
-  sp_ss02, a_toggt, tt_on, tt_off, td_line, strPr and prCh belong to
-  the STX objects, and fillTopR belongs to the 0x400c object rather
-  than the 0xdece one that holds the rest of render.c.
+  stx_u3.c).  Several port files straddle two STX objects and had to be split
+  through parts/: render.c (fillTopR -> 0x400c, the rest 0xdece),
+  gfx_prim.c (cpyScr/stpScrB -> 0x400c, sc_sdtb/sc_sdtf/drwPixel ->
+  0xdece), walk.c (lcp_path/lcp_fstp -> 0x400c with getFlrY, lcp_wkD
+  -> 0xdece), init.c (cl_drini/cl_redrH/cl_drwH/drwLine -> 0xdece),
+  sprites.c (sp_updb/sp_drin/sp_lchu after gameTick), sprender.c
+  (sp_iniM -> 0x400c), renderx.c (strPr/prCh -> 0x148fe), save.c
+  (lcp_save closes the 0xdece object), sound.c (sfClick), tvanim.c
+  (tv_scrc), and agames.c joins the 0xdece object entirely.
 
   **Extraction hazard:** a regex that stops at the first column-0 `}`
   can still sweep the NEXT function (or a following `#ifdef FAITHFUL
