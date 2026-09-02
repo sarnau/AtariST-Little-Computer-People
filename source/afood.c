@@ -254,14 +254,22 @@ void
 a_feedd(value)
 short   value;
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         if (value == 0) {
                 hs_posXY(POS_BTM_FRIDGE,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 result = lcp_wkD();
                 if (result != 0)
                         return;
+#else
+                if (lcp_wkD() != 0)
+                        return;
+#endif
 
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;

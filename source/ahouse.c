@@ -82,7 +82,10 @@ a_readn()
 void
 a_gioob()
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         pst_arr[0] = STATE_UNDRESS_AT_BED;
         pst_arr[1] = STATE_LIE_DOWN_GETTING_IN;
@@ -91,26 +94,59 @@ a_gioob()
         if (lcp.is_sleeping == NO) {
                 hs_posXY(POS_MID_BED,
                                       &g_wtx, &g_wty);
+#ifdef FAITHFUL
                 result = lcp_wkD();
                 if (result != 0)
                         return;
+#else
+                if (lcp_wkD() != 0)
+                        return;
+#endif
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_IDLE;
                 g_hatas = 10;
                 lcp_hwt();
                 lcp.is_sleeping = YES;
+#ifdef FAITHFUL
+#ifdef FAITHFUL
                 lcp_x = lcp_x - 10;
+#else
+                lcp_x -= 10;
+#endif
+#else
+                lcp_x -= 10;
+#endif
                 lcp_face = FACING_RIGHT;
                 lcp_st = pst_arr[0]; gameTick(2);
+#ifdef FAITHFUL
+#ifdef FAITHFUL
                 lcp_x = lcp_x - 8;
+#else
+                lcp_x -= 8;
+#endif
+#else
+                lcp_x -= 8;
+#endif
                 lcp_st = pst_arr[1]; gameTick(2);
+#ifdef FAITHFUL
                 lcp_x = lcp_x - 2;
+#else
+                lcp_x -= 2;
+#endif
                 lcp_st = pst_arr[2]; gameTick(2);
         } else {
                 lcp_face = FACING_RIGHT;
+#ifdef FAITHFUL
                 lcp_x = lcp_x + 10;
+#else
+                lcp_x += 10;
+#endif
                 lcp_st = STATE_LIE_DOWN_GETTING_IN; gameTick(2);
+#ifdef FAITHFUL
                 lcp_x = lcp_x + 10;
+#else
+                lcp_x += 10;
+#endif
                 lcp_st = pst_arr[0]; gameTick(2);
                 lcp.is_sleeping = NO;
                 lcp_st              = STATE_STAND_IDLE;
@@ -187,13 +223,21 @@ a_dance()
 void
 a_drink()
 {
+        /* STX tests the call in place -- no local. */
+#ifdef FAITHFUL
         short   result;
+#endif
 
         hs_posXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
+#ifdef FAITHFUL
         result = lcp_wkD();
         if (result != 0)
                 return;
+#else
+        if (lcp_wkD() != 0)
+                return;
+#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -222,7 +266,11 @@ a_drink()
                 lcp_st = STATE_DRINK_FROM_GLASS;
                 gameTick(16);
                 lcp_st = STATE_STAND_FACING_SCREEN;
+#ifdef FAITHFUL
                 lcp_y = lcp_y + 1;
+#else
+                lcp_y++;
+#endif
                 gameTick(3);
                 a_driwa(3);
         }
