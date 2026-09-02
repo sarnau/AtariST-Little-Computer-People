@@ -36,28 +36,26 @@
 void
 a_writl()
 {
-        short   result;
-        short   section_order[4];
-        short   i;
-        short   swap_a;
-        short   swap_b;
-        short   swap_temp;
-        short   paragraph_count;
-        short   section_id;
-        short   template_index;
-        short   line_spacing;
-        short   cursor_y;
-        short   char_test;
-        short   walk_result;
-        short   full_year;
+        /* Nine scalars and the section array LAST: swap_a doubles as
+           the paragraph count and line_spacing as the '-' test, and
+           every call result is consumed in place. */
+        short   section_id;             /* -2  */
+        short   i;                      /* -4  */
+        short   swap_a;                 /* -6  */
+        short   swap_b;                 /* -8  */
+        short   swap_temp;              /* -10 */
+        short   template_index;         /* -12 */
+        short   cursor_y;               /* -14 */
+        short   line_spacing;           /* -16 */
+        short   full_year;              /* -18 */
+        short   section_order[4];       /* -26 */
 
         if (lcp_recP != NO)
                 a_playp();
 
         hs_posXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result != 0)
+        if (lcp_wkD())
                 return;
 
         lcp_face   = FACING_RIGHT;
@@ -66,22 +64,19 @@ a_writl()
         lcp_hwt();
 
         a_watat();
-        walk_result = rndRng(0, 100);
-        if (lcp.initiative_threshold < walk_result)
+        if (rndRng(0, 100) > lcp.initiative_threshold)
                 a_opcfc();
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        result = lcp_wkD();
-        if (result != 0)
+        if (lcp_wkD())
                 return;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        g_wtx = g_wtx - 10;
-        g_wty = g_wty +  3;
-        result = lcp_wkD();
-        if (result != 0)
+        g_wtx -= 10;
+        g_wty += 3;
+        if (lcp_wkD())
                 return;
 
         g_actif = YES;
@@ -97,8 +92,8 @@ a_writl()
 
         hs_posXY(POS_TOP_DESK_CHAIR,
                               &g_wtx, &g_wty);
-        g_wty = g_wty -  4;
-        g_wtx = g_wtx - 14;
+        g_wty -= 4;
+        g_wtx -= 14;
         lcp_wkD();
 
         lcp_st              = STATE_STAND_SIDE_VIEW;
@@ -106,8 +101,8 @@ a_writl()
         g_hatas = 8;
         lcp_hwt();
 
-        lcp_x = lcp_x + 5;
-        lcp_y = lcp_y + 6;
+        lcp_x += 5;
+        lcp_y += 6;
         lcp_st = STATE_WRITE_AT_DESK;
         gameTick(1);
 
@@ -143,9 +138,9 @@ a_writl()
         lt_tyca('\r');
 
         /* Shuffle the 4 section indices via 16 random swaps. */
-        for (i = 0; i < 4; i = i + 1)
+        for (i = 0; i < 4; i++)
                 section_order[i] = i;
-        for (i = 0; i < 16; i = i + 1) {
+        for (i = 0; i < 16; i++) {
                 swap_a = rndRng(0, 3);
                 swap_b = rndRng(0, 3);
                 swap_temp = section_order[swap_a];
@@ -154,56 +149,51 @@ a_writl()
         }
 
         /* Body: 2..4 paragraphs from the shuffled sections. */
-        paragraph_count = rndRng(2, 4);
-        for (i = 0; i < paragraph_count; i = i + 1) {
+        swap_a = rndRng(2, 4);
+        for (i = 0; i < swap_a; i++) {
                 section_id     = section_order[i];
                 template_index = section_id * 0x60;
-                if (section_id == 3) {
-                        walk_result = rndRng(0, 5);
-                        template_index = walk_result * 0xc + template_index;
-                } else if (lcp.sickness_level < 1) {
-                        walk_result = rndRng(0, 1);
-                        template_index = lcp.happiness * 0xc +
-                                         walk_result * 0x30 +
-                                         template_index;
-                } else {
-                        walk_result = rndRng(0, 1);
-                        template_index = walk_result * 0x30 + 0x24 +
-                                         template_index;
-                }
-
-                /* Opening line -- indent 5 spaces on the first paragraph
-                   only. */
-                if (i == 0)
-                        line_spacing = -5;
+                if (section_id == 3)
+                        template_index += rndRng(0, 5) * 0xc;
+                else if (lcp.sickness_level > 0)
+                        template_index += rndRng(0, 1) * 0x30 + 0x24;
                 else
-                        line_spacing =  2;
-                walk_result = rndRng(0, 3);
-                cursor_y = lt_tysa(
-                        g_ltlp[template_index + walk_result],
-                        line_spacing);
-                char_test = (cursor_y != '-');
+                        template_index += rndRng(0, 1) * 0x30 +
+                                          lcp.happiness * 0xc;
+
+                /* Opening line -- indent 5 spaces on the first
+                   paragraph only; the whole call is duplicated. */
+                if (i == 0)
+                        cursor_y = lt_tysa(
+                                g_ltlp[rndRng(0, 3) + template_index],
+                                -5);
+                else
+                        cursor_y = lt_tysa(
+                                g_ltlp[rndRng(0, 3) + template_index],
+                                2);
 
                 /* Middle line */
-                walk_result = rndRng(0, 3);
+                if (cursor_y == '-')
+                        line_spacing = 0;
+                else
+                        line_spacing = 1;
                 cursor_y = lt_tysa(
-                        g_ltlp[template_index + walk_result + 4],
-                        char_test);
-                char_test = (cursor_y != '-');
+                        g_ltlp[rndRng(0, 3) + template_index + 4],
+                        line_spacing);
 
                 /* Ending line */
-                walk_result = rndRng(0, 3);
+                if (cursor_y == '-')
+                        line_spacing = 0;
+                else
+                        line_spacing = 1;
                 lt_tysa(
-                        g_ltlp[template_index + walk_result + 8],
-                        char_test);
+                        g_ltlp[rndRng(0, 3) + template_index + 8],
+                        line_spacing);
         }
 
         /* Sign-off. */
         lt_tyca('\r');
-        line_spacing = -8;
-        walk_result = rndRng(0, 3);
-        lt_tysa(
-                g_ltg[walk_result], line_spacing);
+        lt_tysa(g_ltg[rndRng(0, 3)], -8);
         lt_tyca('\r');
 
         sprintf(in_str, "%s", lcp.character_name);
@@ -229,14 +219,14 @@ a_writl()
 
         lcp_st      = STATE_STAND_SIDE_VIEW;
         g_hamod = HEAD_ANIM_DISABLED;
-        lcp_y = lcp_y - 6;
+        lcp_y -= 6;
         gameTick(0);
         g_actif = YES;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        g_wtx = g_wtx - 10;
-        g_wty = g_wty +  3;
+        g_wtx -= 10;
+        g_wty += 3;
         lcp_wkD();
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
