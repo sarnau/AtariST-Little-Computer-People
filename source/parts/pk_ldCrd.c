@@ -46,54 +46,49 @@
 void
 pk_ldCrd()
 {
-        short           fhnd;
-        short           suit;
-        short           rank;
-        short           i;
-        unsigned short *buf;
+        /* Four locals; the first is reused as the index of both
+           trailing loops. */
+        short   rank;
+        short   suit;
+        short   fhnd;
+        char *  buf;
 
         fhnd = fOpen("cards", 0);
-        buf = (unsigned short *) crd_dat;
+        buf  = (char *) crd_dat;
 
-        /* 4 suits x (12 face cards reverse-ranked + 1 per-suit back). */
-        for (suit = 0; suit < 4; suit = suit + 1) {
-                for (rank = 0; rank < 12; rank = rank + 1) {
+        /* 4 suits x (12 face cards reverse-ranked + 1 per-suit back).
+           The offsets are BYTE offsets added to a char*, with the
+           trailing constant folded into the argument slot. */
+        for (suit = 0; suit < 4; suit++) {
+                for (rank = 0; rank < 12; rank++)
                         fr_read(fhnd, 0xc0L,
-                                  buf + suit * 0x4e0 +
-                                        (short) (11 - rank) * 0x60);
-                }
-                /* Per-suit trailer slot at word offset 0x480. */
-                fr_read(fhnd, 0xc0L,
-                          buf + suit * 0x4e0 + 0x480);
+                                (long) (suit * 2496) +
+                                (11 - rank) * 192 + buf);
+                /* Per-suit trailer slot. */
+                fr_read(fhnd, 0xc0L, (long) (suit * 2496) + buf + 2304);
         }
 
         /* Standard face-down back at slot 52. */
-        fr_read(fhnd, 0xc0L, crd_dat + 0x1380);
+        fr_read(fhnd, 0xc0L, (char *) crd_dat + 9984);
         Fclose(fhnd);
 
-        /* Synthesize the highlight overlay at slot 53: a 4-plane
-           pattern with plane 0 blank, plane 1 blank, planes 2 and 3
-           solid.  In the low-res palette this shades everything a
-           uniform light colour that overlays cleanly on face-up
-           cards to mark the current selection. */
-        for (i = 0x13e0; i < 0x1440; i = i + 4) {
-                crd_dat[i]     = 0;
-                crd_dat[i + 1] = 0;
-                crd_dat[i + 2] = (short) 0xffff;
-                crd_dat[i + 3] = (short) 0xffff;
+        /* Synthesize the highlight overlay at slot 53: planes 0 and 1
+           blank, planes 2 and 3 solid. */
+        for (rank = 0x13e0; rank < 0x1440; ) {
+                crd_dat[rank] = 0;
+                rank++;
+                crd_dat[rank] = 0;
+                rank++;
+                crd_dat[rank] = -1;
+                rank++;
+                crd_dat[rank] = -1;
+                rank++;
         }
 
-        /* Wire the 54 MFDB descriptors: each points 96 words further
-           into crd_dat than the previous, dimensions 16 wide by
-           24 tall. */
-        for (i = 0; i < 54; i = i + 1)
-                sp_iniM(0L, &crd_mfdb[i],
-                                 crd_dat + i * 0x60,
-                                 (short) 16, (short) 24);
+        /* Wire the 54 MFDB descriptors. */
+        for (rank = 0; rank < 54; rank++)
+                sp_iniM(0L, &crd_mfdb[rank],
+                        (long) (rank * 192) + (char *) crd_dat, 16, 24);
 
-        /* Destination MFDB for the game display area (full-width strip
-           of 320 pixels by 77 rows). */
-        sp_iniM(0L, &mf_scb_c,
-                         g_dscp,
-                         (short) 320, (short) 77);
+        sp_iniM(0L, &mf_scb_c, g_dscp, 320, 77);
 }
