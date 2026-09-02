@@ -150,14 +150,28 @@ void *  buffer;
 #endif
 
 /* addr: lc_load() */
+#ifdef FAITHFUL
 short
 lc_load()
 {
+#ifdef FAITHFUL
         short   fhnd;
 
         fhnd = Fopen("hyber", 0L);      /* ROM passes the mode as 0L */
         if (fhnd < 0)
                 return 0;
+#else
+        /* STX: link #-8 -- the result goes through a second local and
+           the open mode is a word. */
+        short   fhnd;
+        short   ok;
+
+        ok = 0;
+        fhnd = Fopen("hyber", 0);
+        if (fhnd < 0)
+                return ok;
+        ok = 1;
+#endif
 
         fr_read(fhnd, 0x80L, &lcp);
         Fclose(fhnd);
@@ -176,8 +190,46 @@ lc_load()
         lcp_tv               = lcp.tv_on;
 
         lcp_upal();
+#ifdef FAITHFUL
         return 1;
+#else
+        return ok;
+#endif
 }
+#else   /* STX: link #-8 -- the result goes through a second local,
+           the open mode is a word, and the whole body hangs off the
+           open test. */
+
+short
+lc_load()
+{
+        short   fhnd;
+        short   ok;
+
+        ok = 0;
+        if ((fhnd = Fopen("hyber", 0)) >= 0) {
+                ok = 1;
+                fr_read(fhnd, 0x80L, &lcp);
+                Fclose(fhnd);
+
+                lcp_watr         = lcp.water_level;
+                lcp_frdO     = lcp.door_states_and_flags & DSF_FRONT_DOOR;
+                lcp_drsO        = (lcp.door_states_and_flags & DSF_DRESSER)          >> 4;
+                lcp_cabO        = (lcp.door_states_and_flags & DSF_KITCHEN_CABINET)  >> 3;
+                lcp_clsO    = (lcp.door_states_and_flags & DSF_CLOSET_DOOR)      >> 2;
+                studyDrO     = (lcp.door_states_and_flags & DSF_STUDY_DOOR)       >> 1;
+                lcp_toiO    = (lcp.door_states_and_flags & DSF_TOILET_DOOR)      >> 5;
+                lcp_flcO = (lcp.door_states_and_flags & DSF_FILING_CABINET)   >> 6;
+                lcp_bwlS     = (lcp.door_states_and_flags & DSF_DOG_BOWL_MASK)    >> 7;
+                lcp_food          = lcp.food_supply;
+                lcp_recP      = lcp.record_playing;
+                lcp_tv               = lcp.tv_on;
+
+                lcp_upal();
+        }
+        return ok;
+}
+#endif
 
 /* lcp_std -> parts/lcp_std.c (STX puts it immediately after
    a_opcuc in the 0xdece object). */
