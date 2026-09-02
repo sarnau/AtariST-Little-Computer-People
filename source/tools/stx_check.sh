@@ -30,7 +30,7 @@ fi
 "$CSRC/tools/alcyon_link.sh" >/dev/null
 
 cd "$OUT"
-OBJS=$(find . -maxdepth 1 -name "*.o" ! -name "gemstart.o" ! -name "main.o" \
+OBJS=$(find . -maxdepth 1 -name "*.o" ! -name "gemstart.o" ! -name "main.o" ! -name "gemstart_dk.o" \
     ! -name "osbind.o" ! -name "crt0.o" ! -name "nofloat.o" \
     ! -name "vdilib.o" ! -name "vdilib_a.o" | sort | sed 's|^\./||')
 LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a libf gemlib.a libf" | tr -s ' \n' ',,')

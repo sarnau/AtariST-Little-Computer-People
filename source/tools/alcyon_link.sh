@@ -33,12 +33,15 @@ cd "$OUT"
 # 1. Reassemble GEMSTART.S (STACK=32768 baked in, long labels truncated
 #    to <=8 chars for lo68 compatibility).  Rebuild only if missing or
 #    the source is newer.
-if [ ! -f gemstart.o ] || [ "$DK_TOOLS/gemstart.s" -nt gemstart.o ]; then
+#    Assembled to gemstart_dk.o; the active gemstart.o is chosen in
+#    step 2 (the default build uses alcyon2's GEMSTART.O verbatim).
+if [ ! -f gemstart_dk.o ] || [ "$DK_TOOLS/gemstart.s" -nt gemstart_dk.o ]; then
     cp -f "$DK_TOOLS/gemstart.s" gemstart.s
     "$ALCYON_BIN/as68" -l -u gemstart.s > /dev/null 2>&1 || {
         echo "FAILED: gemstart assembly"
         exit 1
     }
+    mv -f gemstart.o gemstart_dk.o
 fi
 
 # 1b. Assemble mq_tick.s -- the MFP Timer-A ISR, byte-faithful port of
@@ -73,17 +76,31 @@ if [ ! -f mq_tick.o ] || [ "$DK_TOOLS/mq_tick.s" -nt mq_tick.o ]; then
     }
 fi
 
-# 2. Copy DK libraries locally.
-cp -f "$ATARI_DK/OSBIND.O"   osbind.o
-cp -f "$ATARI_DK/AESBIND"    aesbind.a
-cp -f "$ATARI_DK/VDIBIND"    vdibind.a
-cp -f "$ATARI_DK/GEMLIB"     gemlib.a
-cp -f "$ATARI_DK/LIBF"       libf
+# 2. Copy the runtime libraries locally.  FAITHFUL links the Atari
+#    Developer Kit set (LCP_ORG's); the default build links the older
+#    alcyon2 distribution's, which is what LCP_STX was built against
+#    (see "Toolchain differs from LCP_ORG's" in CLAUDE.md).
+ALCYON2=${ALCYON2:-$HOME/Hatari_C/Compiler/Alcyon/alcyon2}
+if [ "${FAITHFUL:-0}" = "1" ] || [ ! -d "$ALCYON2" ]; then
+    cp -f "$ATARI_DK/OSBIND.O"   osbind.o
+    cp -f "$ATARI_DK/AESBIND"    aesbind.a
+    cp -f "$ATARI_DK/VDIBIND"    vdibind.a
+    cp -f "$ATARI_DK/GEMLIB"     gemlib.a
+    cp -f "$ATARI_DK/LIBF"       libf
+    cp -f gemstart_dk.o          gemstart.o
+else
+    cp -f "$ALCYON2/OSBIND.O"    osbind.o
+    cp -f "$ALCYON2/AESBIND"     aesbind.a
+    cp -f "$ALCYON2/VDIBIND"     vdibind.a
+    cp -f "$ALCYON2/GEMLIB"      gemlib.a
+    cp -f "$ALCYON2/LIBF"        libf
+    cp -f "$ALCYON2/GEMSTART.O"  gemstart.o
+fi
 
 # 3. Build .o list (main.o and gemstart.o handled separately).
 OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
-    ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" \
+    ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
     ! -name "vdiown_a.o" | sort); do
     OBJS="$OBJS $(basename $o)"

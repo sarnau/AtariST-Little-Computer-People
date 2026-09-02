@@ -755,7 +755,13 @@ Roadmap (mirrors campaign #1):
     natural vehicle -- it should converge to this truth.
  2. Identify the STX revision's own runtime/lib shapes (alcyon2
     osbind/gemlib) and link order; build an stx equivalent of
-    rom_data_map via rom_map.py.
+    rom_data_map via rom_map.py.  DONE for the libraries:
+    alcyon_link.sh links ~/Hatari_C/Compiler/Alcyon/alcyon2's
+    GEMSTART.O/OSBIND.O/AESBIND/VDIBIND/GEMLIB/LIBF for the default
+    build and the Atari DK set under FAITHFUL (six runtime functions
+    matched immediately).  The DK gemstart is assembled to
+    gemstart_dk.o and copied into place, so both configurations can
+    share one build tree.
  3. End state: the default build reproduces LCP_STX.PRG
     byte-identically (its own gemstart/libs/layout), while
     -DFAITHFUL keeps reproducing LCP_ORG.PRG.
