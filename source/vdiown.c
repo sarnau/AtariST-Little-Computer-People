@@ -20,246 +20,57 @@ extern short *  vdipb[];
 
 
 /* addr: vswr_mode() (ROM 0xd76c) */
-void
-vswr_mode(handle, mode)
-short   handle;
-short   mode;
-{
+/* vswr_mode -> parts/vswr_mode.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 32;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = mode;
-        vdi_go();
-#else
-        intin[0]  = mode;
-        contrl[0] = 32;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vswr_mode.c"
 #endif
-}
 
 /* addr: v_bar() (ROM 0xd872) */
-void
-v_bar(handle, pxy)
-short   handle;
-short * pxy;
-{
-        /* STX points the parameter block's ptsin entry at the
-           caller's array for the duration of the call instead of
-           copying the points, then restores it -- the same trick
-           vdilib.c's vro_cpyfm uses. */
+/* v_bar -> parts/v_bar.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 11;
-        contrl[1] = 2;
-        contrl[3] = 0;
-        contrl[5] = 1;
-        contrl[6] = handle;
-        ptsin[0]  = pxy[0];
-        ptsin[1]  = pxy[1];
-        ptsin[2]  = pxy[2];
-        ptsin[3]  = pxy[3];
-        vdi_go();
-#else
-        vdipb[2]  = pxy;
-        contrl[0] = 11;
-        contrl[1] = 2;
-        contrl[3] = 0;
-        contrl[5] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        vdipb[2]  = ptsin;
+#include "parts/v_bar.c"
 #endif
-}
 
 /* addr: v_gtext() (ROM 0xd7fc) */
-void
-v_gtext(handle, x, y, str)
-short   handle;
-short   x;
-short   y;
-char *  str;
-{
-        short   i;
-
+/* v_gtext -> parts/v_gtext.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        for (i = 0; str[i] != 0; i = i + 1)
-                intin[i] = str[i];
-        contrl[0] = 8;
-        contrl[1] = 1;
-        contrl[3] = i;
-        contrl[6] = handle;
-        ptsin[0]  = x;
-        ptsin[1]  = y;
-#else
-        /* STX sets the point first and copies with the classic
-           while (dst[i++] = *src++) idiom, masking to a byte. */
-        ptsin[0]  = x;
-        ptsin[1]  = y;
-        i = 0;
-        while (intin[i++] = *str++ & 0xff)
-                ;
-        contrl[0] = 8;
-        contrl[1] = 1;
-        contrl[3] = --i;
-        contrl[6] = handle;
+#include "parts/v_gtext.c"
 #endif
-        vdi_go();
-}
 
 /* addr: v_pline() (ROM 0xd79e) */
-void
-v_pline(handle, count, pxy)
-short   handle;
-short   count;
-short * pxy;
-{
+/* v_pline -> parts/v_pline.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        short   i;
-
-        contrl[0] = 6;
-        contrl[1] = count;
-        contrl[3] = 0;
-        contrl[6] = handle;
-        for (i = 0; count * 2 > i; i = i + 1)
-                ptsin[i] = pxy[i];
-        vdi_go();
-#else
-        /* STX aims the parameter block at the caller's points. */
-        vdipb[2]  = pxy;
-        contrl[0] = 6;
-        contrl[1] = count;
-        contrl[3] = 0;
-        contrl[6] = handle;
-        vdi_go();
-        vdipb[2]  = ptsin;
+#include "parts/v_pline.c"
 #endif
-}
 
 /* addr: vsf_color() (ROM 0xd6d6) */
-void
-vsf_color(handle, index)
-short   handle;
-short   index;
-{
+/* vsf_color -> parts/vsf_color.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 25;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = index;
-        vdi_go();
-#else
-        intin[0]  = index;
-        contrl[0] = 25;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vsf_color.c"
 #endif
-}
 
 /* addr: vsf_interior() (ROM 0xd708) */
-void
-vsf_interior(handle, style)
-short   handle;
-short   style;
-{
+/* vsf_interior -> parts/vsf_interior.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 23;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = style;
-        vdi_go();
-#else
-        intin[0]  = style;
-        contrl[0] = 23;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vsf_interior.c"
 #endif
-}
 
 /* addr: vsf_style() (ROM 0xd73a) */
-void
-vsf_style(handle, style)
-short   handle;
-short   style;
-{
+/* vsf_style -> parts/vsf_style.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 24;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = style;
-        vdi_go();
-#else
-        intin[0]  = style;
-        contrl[0] = 24;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vsf_style.c"
 #endif
-}
 /* addr: vsl_color() (ROM 0xd676) */
-void
-vsl_color(handle, index)
-short   handle;
-short   index;
-{
-        /* STX assigns intin first and returns intout[0]; LCP_ORG
-           fills contrl first and returns nothing. */
+/* vsl_color -> parts/vsl_color.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 17;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = index;
-        vdi_go();
-#else
-        intin[0]  = index;
-        contrl[0] = 17;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vsl_color.c"
 #endif
-}
 
 /* addr: vst_color() (ROM 0xd6a6) */
-void
-vst_color(handle, index)
-short   handle;
-short   index;
-{
+/* vst_color -> parts/vst_color.c (vdistx.c includes it in LCP_STX order). */
 #ifdef FAITHFUL
-        contrl[0] = 22;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        intin[0]  = index;
-        vdi_go();
-#else
-        intin[0]  = index;
-        contrl[0] = 22;
-        contrl[1] = 0;
-        contrl[3] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        return intout[0];
+#include "parts/vst_color.c"
 #endif
-}
 
 /* vroCpyD -> parts/vroCpyD.c (STX: 0x63cc, in the 0x400c object
    between hs_posXY and al_loal -- stx_u1.c includes it there). */

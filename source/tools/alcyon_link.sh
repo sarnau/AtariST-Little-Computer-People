@@ -92,6 +92,14 @@ if [ ! -f vdiown_a.o ] || [ "$DK_TOOLS/vdiown_a.s" -nt vdiown_a.o ]; then
     }
 fi
 
+if [ ! -f vdistx_a.o ] || [ "$DK_TOOLS/vdistx_a.s" -nt vdistx_a.o ]; then
+    cp -f "$DK_TOOLS/vdistx_a.s" vdistx_a.s
+    "$ALCYON_BIN/as68" -l -u vdistx_a.s > /dev/null 2>&1 || {
+        echo "FAILED: vdistx_a assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f vdilib_a.o ] || [ "$DK_TOOLS/vdilib_a.s" -nt vdilib_a.o ]; then
     cp -f "$DK_TOOLS/vdilib_a.s" vdilib_a.s
     "$ALCYON_BIN/as68" -l -u vdilib_a.s > /dev/null 2>&1 || {
@@ -135,7 +143,8 @@ OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
-    ! -name "vdiown_a.o" ! -name "psg_asm.o" \
+    ! -name "vdiown_a.o" ! -name "psg_asm.o" ! -name "vdistx.o" \
+    ! -name "vdistx_a.o" \
     ! -name "blkcp_a.o" ! -name "cp_asm.o" ! -name "mq_tick.o" \
     ! -name "vdiown.o" | sort); do
     OBJS="$OBJS $(basename $o)"
@@ -158,7 +167,7 @@ else
     # Everything not named here is an empty object (0 bytes of text)
     # and is emitted first, where it costs nothing.
     STXORDER="midi_seq.o mq_tick.o psg_asm.o cp_asm.o stx_u1.o games.o \
-              stx_u4.o stx_u2.o stx_u3.o blkcp_a.o vdiown.o vdiown_a.o"
+              stx_u4.o stx_u2.o stx_u3.o blkcp_a.o vdistx.o vdistx_a.o"
     REST=""
     for o in $OBJS; do
         case " $STXORDER " in *" $o "*) ;; *) REST="$REST $o" ;; esac
@@ -182,7 +191,10 @@ if [ "${FAITHFUL:-0}" = "1" ]; then
     LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o $TAIL" | tr -s ' ' ',')
 else
     # STX: the trap bindings sit at 0xfa, right behind gemstart.
-    LIST=$(echo "gemstart.o osbind.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a $TAIL" | tr -s ' ' ',')
+    # No vdilib.o/vdilib_a.o here -- LCP_STX folds v_opnvwk/vro_cpyfm
+    # into the one binding module (vdistx.o) and has a single
+    # dispatcher, so there is no second parameter block.
+    LIST=$(echo "gemstart.o osbind.o main.o $OBJS vdibind.a aesbind.a $TAIL" | tr -s ' ' ',')
 fi
 echo "lcp.68k=$LIST" > lcp_link.cmd
 "$ALCYON_BIN/link68" "$LINKOPT" 2>&1 | tail -5 || true
