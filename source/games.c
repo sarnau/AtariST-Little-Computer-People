@@ -1065,6 +1065,31 @@ validate:
 #ifndef FAITHFUL
 #include "parts/plEr.c"
 #include "parts/plErCol.c"   /* 0x871a, right after plEr */
+
+
+/* pk_dbet: computer call/raise decision.  Returns 'c' or 'r'.
+   On raise: pk_dpos = money/10 clamped [1,20].
+   addr: poker_computer_decide_bet() */
+
+static short
+pk_dbet()
+{
+        /* No `ch` temporary in LCP_STX: early returns, and the
+           redundant `else` is real -- Alcyon emits its skip branch
+           even though the then arm returns. */
+        if (g_pcmon == 0)
+                return 'c';
+        if (pk_bluff == NO && pk_chrk < 2)
+                return 'c';
+        else {
+                pk_dpos = g_pcmon / 10;
+                if (pk_dpos == 0)
+                        pk_dpos = 1;
+                else if (pk_dpos > 20)
+                        pk_dpos = 20;
+                return 'r';
+        }
+}
 #endif
 
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
@@ -1343,28 +1368,6 @@ pk_cace()
                 ret = 0;
         }
         return ret;
-}
-
-/* pk_dbet: computer call/raise decision.  Returns 'c' or 'r'.
-   On raise: pk_dpos = money/10 clamped [1,20].
-   addr: poker_computer_decide_bet() */
-
-static short
-pk_dbet()
-{
-        short   ch;
-
-        if (g_pcmon == 0)
-                ch = 'c';
-        else if (pk_bluff == NO && pk_chrk < 2)
-                ch = 'c';
-        else {
-                pk_dpos = g_pcmon / 10;
-                if (pk_dpos == 0)      pk_dpos = 1;
-                else if (pk_dpos > 20) pk_dpos = 20;
-                ch = 'r';
-        }
-        return ch;
 }
 
 /* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
