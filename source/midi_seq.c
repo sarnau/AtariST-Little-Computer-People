@@ -97,10 +97,15 @@ unsigned char * curPos;
 long            maxPos;
 {
         mi_sqpos     = curPos;
+        /* mi_seqE, not a separate g_msmap: the reference relocates
+           both these stores and mq_pars' `mi_sqpos >= mi_seqE` tests
+           to the SAME cell.  It is the end-of-sequence pointer, and
+           -1 is how "no limit" is spelled -- every caller passes
+           g_momap, which is 0. */
         if (maxPos == 0)
-                g_msmap = -1;
+                mi_seqE = (unsigned char *) -1L;
         else
-                g_msmap = maxPos;
+                mi_seqE = (unsigned char *) maxPos;
 
         mi_env = (long) (mi_dbase - 0x168);
         mi_vel           = mi_dvel;

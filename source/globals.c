@@ -165,7 +165,6 @@ unsigned char * mi_dbase;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
 unsigned char * mi_sqpos;
-long            g_msmap;
 long            mi_env;
 char            psg_cvol;     /* STX: byte */
 /* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),

@@ -111,7 +111,6 @@ extern char   mi_varR;
 extern char  g_mspha;           /* STX: byte (moveb/tstb) */
 extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;
-extern long g_msmap;
 extern long mi_env;
 extern char  mi_vel;            /* STX: byte */
 extern char mi_dvel;
