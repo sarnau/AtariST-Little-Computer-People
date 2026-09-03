@@ -38,6 +38,12 @@
    a forward bsr; declaring it keeps the symbol local so as68 can
    shorten the call instead of leaving an external. */
 static short pk_bjwr();
+static short pk_chsc();
+static short pk_bjr();
+static short pk_cnbj();
+static void  pk_dchd();
+static void  pk_dbhi();
+static void  pk_sbet();
 static void  pk_ante();
 static void  pk_evhs();
 static void  pk_blf();
@@ -1962,127 +1968,32 @@ pk_cdrw()
         }
 }
 
-/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
-   addr: poker_ante_phase() */
+/* pk_annr: transfer pot to winner one chip per tick
+   (winner=0 -> computer, winner=1 -> player).
+   addr: poker_ante_and_new_round() */
 
-static void
-pk_ante()
+void
+pk_annr(winner)
+short   winner;
 {
-        short   r;
-
+        /* The pot decrement is the loop condition itself -- `while
+           (n--)` loads the value, subtracts straight to memory and
+           tests the OLD copy -- so it runs one past zero and the tail
+           assignment puts the pot back to 0. */
+        while (g_ppppa--) {
+                if (winner == 0) {
+                        g_pcmon++;
+                        pk_awp();
+                        pk_dpot();
+                        gameTick(0);
+                } else {
+                        g_ppmon++;
+                        pk_dppm();
+                        pk_dpot();
+                        gameTick(0);
+                }
+        }
         g_ppppa = 0;
-        plEr(225, 10, 319, 60);
-        strPr("F1  Ante", 225, 18, COLOR_red);
-        strPr("F10 Quit", 225, 34, COLOR_red);
-        pk_pmsg("Ante up to play.");
-        pk_quit = NO;
-        r = 0;
-        while (r != 1 && r != 3 && r != -1)
-                r = pk_inph(KEY_F1, 0, KEY_F10);
-        if (r == 3 || r == -1) {
-                pk_quit = YES;
-        } else if (g_ppmon == 0) {
-                pk_pmsg("Sorry, you're all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else if (g_pcmon == 0) {
-                pk_pmsg("I'm all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else {
-                plEr(5, 63, 319, 75);
-                g_ppmon = g_ppmon - 1;
-                pk_dppm();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
-                g_pcmon = g_pcmon - 1;
-                pk_awp();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
-        }
-}
-
-/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
-   face-up, computer face-down.
-   addr: poker_evaluate_hands() */
-
-static void
-pk_evhs()
-{
-        BOOL16  dup;
-        short   j;
-        short   c;
-        short   i;
-
-        for (i = 0; i < 5; i = i + 1) {
-                pk_ch[i] = CARD_NONE;
-                pk_ph[i] = CARD_NONE;
-        }
-        for (i = 0; i < 5; i = i + 1) {
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ch[i] = c;
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ph[i] = c;
-        }
-        plEr(70, 10, 219, 62);
-        for (i = 0; i < 5; i = i + 1) {
-                pk_drcs(pk_ph[i], i, 1);
-                gameTick(3);
-                pk_drcs(CARD_BACK, i, 0);
-                gameTick(3);
-        }
-}
-
-/* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
-   Caps pk_bet at 20.
-   addr: poker_computer_draw_decision() */
-
-static void
-pk_ddec(who, n)
-short   who;
-short   n;
-{
-        short   left;
-
-        left = n;
-        if (pk_bet != 20) {
-                while (left != 0 &&
-                       (who != 0 || g_pcmon != 0) &&
-                       (who != 1 || g_ppmon != 0)) {
-                        if (who == 0) {
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
-                        left = left - 1;
-                        if (who == 1) {
-                                g_ppmon = g_ppmon - 1;
-                                pk_dppm();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
-                }
-        }
 }
 
 /* pk_cbet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
@@ -2136,336 +2047,80 @@ char *  str;
         return 0;
 }
 
-/* pk_dbhi: display bet with highlight.  sel=1 -> computer bet, else
-   player bet.  3-digit format as pk_awp/dppm/dpot.
-   addr: poker_display_bet_with_highlight() */
+/* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
+   Caps pk_bet at 20.
+   addr: poker_computer_draw_decision() */
 
 static void
-pk_dbhi(sel)
-short   sel;
+pk_ddec(who, n)
+short   who;
+short   n;
 {
-        short   val;
-        char    str[12];
+        short   left;
 
-        val = (sel == 1) ? g_pcbet : g_ppbet;
-        plEr(31, 43, 57, 53);
-        str[3] = '\0';
-        str[8] = (char)((int) val / 100);
-        str[0] = str[8] + '0';
-        if (str[0] == '0')
-                str[0] = ' ';
-        str[6] = (char)((int)(val % 100) / 10);
-        if (str[0] == ' ' && str[6] == '\0')
-                str[1] = ' ';
-        else
-                str[1] = str[6] + '0';
-        str[4] = (char)((int)(val % 100) % 10);
-        str[2] = str[4] + '0';
-        strPr(str, 31, 51, COLOR_black);
-}
-
-/* pk_chsc: blackjack card value.  ace_mode=0 all aces=1; ace_mode=1
-   one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
-   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2.
-   addr: poker_calculate_hand_score() */
-
-static short
-pk_chsc(hand, ace_mode)
-short * hand;
-short   ace_mode;
-{
-        short   score;
-        short   i;
-        BOOL16  ace_high;
-
-        ace_high = NO;
-        score    = 0;
-        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) {
-                if ((short) hand[i] % 13 == 12) {
-                        if (ace_mode == 0)
-                                score = score + 1;
-                        else if (ace_high != NO)
-                                score = score + 1;
-                        else {
-                                score    = score + 11;
-                                ace_high = YES;
+        left = n;
+        if (pk_bet != 20) {
+                while (left != 0 &&
+                       (who != 0 || g_pcmon != 0) &&
+                       (who != 1 || g_ppmon != 0)) {
+                        if (who == 0) {
+                                g_pcmon = g_pcmon - 1;
+                                pk_awp();
+                                g_ppppa = g_ppppa + 1;
+                                pk_dpot();
+                                pk_bet = pk_bet + 1;
                         }
-                } else if ((short) hand[i] % 13 < 12 &&
-                                    7 < (short) hand[i] % 13) {
-                        score = score + 10;
-                } else {
-                        score = (short) hand[i] % 13 + 2 + score;
-                }
-        }
-        return score;
-}
-
-/* pk_dchd: deal one card into hand at next CARD_NONE slot.
-   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full.
-   addr: poker_deal_card_to_hand() */
-
-static short
-pk_dchd(hand, face_down)
-short * hand;
-short   face_down;
-{
-        BOOL16                  dup;
-        unsigned short  row;
-        short                   card;
-        short                   j;
-        short                   i;
-
-        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) ;
-        if (i == 5)
-                return -1;
-
-        dup = YES;
-        while (dup != NO) {
-                card = rndRng(0, 51);
-                dup  = NO;
-                for (j = 0; j < 5; j = j + 1) {
-                        if (pk_ch[j]  == card) dup = YES;
-                        if (pk_ph[j]  == card) dup = YES;
-                        if (pk_psh[j] == card) dup = YES;
-                }
-        }
-        hand[i] = card;
-        row = (hand != pk_ch) ? 1 : 0;
-        if (face_down == 0)
-                pk_drcs(card, i, row);
-        else
-                pk_drcs(CARD_BACK, i, row);
-        gameTick(3);
-        return 0;
-}
-
-/* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two).
-   addr: poker_check_natural_blackjack() */
-
-static short
-pk_cnbj(hand)
-short * hand;
-{
-        short   r0;
-        short   r1;
-
-        r0 = (short) hand[0] % 13;
-        r1 = (short) hand[1] % 13;
-        if (r0 == 12 && r1 < 12 && r1 > 7)
-                return 1;
-        if (r1 == 12 && r0 < 12 && r0 > 7)
-                return 1;
-        return 0;
-}
-
-/* pk_sbet: settle a bet.  winner: 0=computer, 1=player.
-   mode: 0=normal, 1=natural blackjack double-collect,
-         2=split -- suppress the second (player) transfer.
-   Sets pk_quit on mid-transfer bankruptcy.
-   addr: poker_settle_bet() */
-
-static void
-pk_sbet(bet_ptr, winner, mode)
-short * bet_ptr;
-short   winner;
-short   mode;
-{
-        short   loc8;
-        short   orig;
-        short   cur;
-
-        if (winner == 0) {
-                orig = *bet_ptr;
-                while (cur = *bet_ptr,
-                       *bet_ptr = *bet_ptr - 1,
-                       cur != 0) {
-                        g_pcmon = g_pcmon + 1;
-                        pk_awp();
-                        if (bet_ptr == &g_pcbet)
-                                pk_dbhi(1);
-                        else
-                                pk_dbhi(2);
-                        gameTick(0);
-                }
-                if (mode != 0) {
-                        while (orig != 0) {
-                                if (g_ppmon == 0) {
-                                        pk_quit = YES;
-                                        return;
-                                }
+                        left = left - 1;
+                        if (who == 1) {
                                 g_ppmon = g_ppmon - 1;
                                 pk_dppm();
-                                g_pcmon = g_pcmon + 1;
-                                pk_awp();
-                                gameTick(0);
-                                orig = orig - 1;
-                        }
-                }
-        } else if (winner == 1) {
-                orig = *bet_ptr;
-                loc8 = *bet_ptr;
-                while (cur = *bet_ptr,
-                       *bet_ptr = *bet_ptr - 1,
-                       cur != 0) {
-                        g_ppmon = g_ppmon + 1;
-                        pk_dppm();
-                        if (bet_ptr == &g_pcbet)
-                                pk_dbhi(1);
-                        else
-                                pk_dbhi(2);
-                        gameTick(0);
-                }
-                if (mode != 2) {
-                        while (loc8 != 0) {
-                                if (g_pcmon == 0) {
-                                        pk_quit = YES;
-                                        break;
-                                }
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppmon = g_ppmon + 1;
-                                pk_dppm();
-                                gameTick(0);
-                                loc8 = loc8 - 1;
-                        }
-                }
-                if (mode == 1) {
-                        while (orig != 0) {
-                                if (g_pcmon == 0) {
-                                        pk_quit = YES;
-                                        return;
-                                }
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppmon = g_ppmon + 1;
-                                pk_dppm();
-                                gameTick(0);
-                                orig = orig - 1;
+                                g_ppppa = g_ppppa + 1;
+                                pk_dpot();
+                                pk_bet = pk_bet + 1;
                         }
                 }
         }
 }
 
-/* pk_bjr: play one blackjack round for `hand` at row.
-   pk_wrf/pk_wcs forced-single-hit modes auto-deal one card + return.
-   Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout.
-   addr: poker_blackjack_round() */
+/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
+   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
+   addr: poker_ante_phase() */
 
-static short
-pk_bjr(hand, row, prompt)
-short * hand;
-short   row;
-char *  prompt;
+static void
+pk_ante()
 {
-        short   res;
-        short * cnt_ptr;
-        short   score;
-        short   i;
-        short   j;
-        BOOL16  forced;
+        short   r;
 
-        cnt_ptr = &pk_pcc;
-        if (hand == pk_ph)  cnt_ptr = &pk_pcc;
-        if (hand == pk_psh) cnt_ptr = &pk_pscc;
-        if (hand == pk_ch)  cnt_ptr = &pk_ccc;
-
-        plEr(225, 10, 319, 60);
-        forced = NO;
-        if ((hand == pk_ph  && pk_wrf != NO) ||
-            (hand == pk_psh && pk_wcs != NO))
-                forced = YES;
-        else {
-                strPr("F1 Hit",   225, 18, COLOR_red);
-                strPr("F3 Stand", 225, 26, COLOR_red);
-        }
-        for (i = 0; hand[i] != CARD_NONE; i = i + 1)
-                pk_drcs(hand[i], i, row);
-
-        if (forced != NO) {
-                pk_pmsg("Here's your card.");
-                gameTick(0x10);
-                *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
-                pk_dchd(hand, 0);
-                score = 0;
-                for (j = 0; j < 5 && hand[j] != CARD_NONE;
-                     j = j + 1) {
-                        if ((short) hand[j] % 13 == 12)
-                                score = score + 1;
-                        else if ((short) hand[j] % 13 < 12 &&
-                                 (short) hand[j] % 13 > 7)
-                                score = score + 10;
-                        else
-                                score = (short) hand[j] % 13 + 2 + score;
-                }
-                return (score < 22) ? 0 : -1;
-        }
-
-        pk_pmsg(prompt);
-        do {
-                res = 0;
-                while (res != 1 && res != 2 && res != -1) {
-                        gameTick(0);
-                        res = pk_inph(KEY_F1, KEY_F3, 0);
-                }
-                if (mg_tofl != NO)
-                        return -1;
-                if (res == 2) {
-                        pk_pmsg(" ");   /* s__0002b422 verified via
-                                          Ghidra HTTP /read_memory:
-                                          the F3-stand path just
-                                          blanks the message strip. */
-                        return 0;
-                }
-                if (res == 1) {
-                        *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
-                        pk_dchd(hand, 0);
-                        score = 0;
-                        for (j = 0; j < 5 && hand[j] != CARD_NONE;
-                             j = j + 1) {
-                                if ((short) hand[j] % 13 == 12)
-                                        score = score + 1;
-                                else if ((short) hand[j] % 13 < 12 &&
-                                         (short) hand[j] % 13 > 7)
-                                        score = score + 10;
-                                else
-                                        score = (short) hand[j] % 13
-                                                            + 2 + score;
-                        }
-                        if (21 < score)
-                                return -1;
-                }
-        } while (*cnt_ptr != CARD_BJ_STOP);
-        pk_pmsg("You cannot take any more cards.");
-        gameTick(0xf);
-        return 0;
-}
-
-/* pk_annr: transfer pot to winner one chip per tick
-   (winner=0 -> computer, winner=1 -> player).
-   addr: poker_ante_and_new_round() */
-
-void
-pk_annr(winner)
-short   winner;
-{
-        /* The pot decrement is the loop condition itself -- `while
-           (n--)` loads the value, subtracts straight to memory and
-           tests the OLD copy -- so it runs one past zero and the tail
-           assignment puts the pot back to 0. */
-        while (g_ppppa--) {
-                if (winner == 0) {
-                        g_pcmon++;
-                        pk_awp();
-                        pk_dpot();
-                        gameTick(0);
-                } else {
-                        g_ppmon++;
-                        pk_dppm();
-                        pk_dpot();
-                        gameTick(0);
-                }
-        }
         g_ppppa = 0;
+        plEr(225, 10, 319, 60);
+        strPr("F1  Ante", 225, 18, COLOR_red);
+        strPr("F10 Quit", 225, 34, COLOR_red);
+        pk_pmsg("Ante up to play.");
+        pk_quit = NO;
+        r = 0;
+        while (r != 1 && r != 3 && r != -1)
+                r = pk_inph(KEY_F1, 0, KEY_F10);
+        if (r == 3 || r == -1) {
+                pk_quit = YES;
+        } else if (g_ppmon == 0) {
+                pk_pmsg("Sorry, you're all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else if (g_pcmon == 0) {
+                pk_pmsg("I'm all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else {
+                plEr(5, 63, 319, 75);
+                g_ppmon = g_ppmon - 1;
+                pk_dppm();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
+                g_pcmon = g_pcmon - 1;
+                pk_awp();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
+        }
 }
 
 /* pk_drcs: blit one card sprite (15x23) at slot xi of row yi.
@@ -2603,6 +2258,53 @@ pk_dpot()
         str[4] = rem % 10;
         str[2] = str[4] + '0';
         strPr(str, 31, 38, COLOR_black);
+}
+
+/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
+   face-up, computer face-down.
+   addr: poker_evaluate_hands() */
+
+static void
+pk_evhs()
+{
+        BOOL16  dup;
+        short   j;
+        short   c;
+        short   i;
+
+        for (i = 0; i < 5; i = i + 1) {
+                pk_ch[i] = CARD_NONE;
+                pk_ph[i] = CARD_NONE;
+        }
+        for (i = 0; i < 5; i = i + 1) {
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j = j + 1) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ch[i] = c;
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j = j + 1) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ph[i] = c;
+        }
+        plEr(70, 10, 219, 62);
+        for (i = 0; i < 5; i = i + 1) {
+                pk_drcs(pk_ph[i], i, 1);
+                gameTick(3);
+                pk_drcs(CARD_BACK, i, 0);
+                gameTick(3);
+        }
 }
 
 /* pk_pmsg: print a green status message in the bottom info bar.
@@ -3591,6 +3293,310 @@ cleanup:
                         }
                 }
         goto next_round;
+}
+
+/* pk_chsc: blackjack card value.  ace_mode=0 all aces=1; ace_mode=1
+   one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
+   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2.
+   addr: poker_calculate_hand_score() */
+
+static short
+pk_chsc(hand, ace_mode)
+short * hand;
+short   ace_mode;
+{
+        short   score;
+        short   i;
+        BOOL16  ace_high;
+
+        ace_high = NO;
+        score    = 0;
+        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) {
+                if ((short) hand[i] % 13 == 12) {
+                        if (ace_mode == 0)
+                                score = score + 1;
+                        else if (ace_high != NO)
+                                score = score + 1;
+                        else {
+                                score    = score + 11;
+                                ace_high = YES;
+                        }
+                } else if ((short) hand[i] % 13 < 12 &&
+                                    7 < (short) hand[i] % 13) {
+                        score = score + 10;
+                } else {
+                        score = (short) hand[i] % 13 + 2 + score;
+                }
+        }
+        return score;
+}
+
+/* pk_bjr: play one blackjack round for `hand` at row.
+   pk_wrf/pk_wcs forced-single-hit modes auto-deal one card + return.
+   Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout.
+   addr: poker_blackjack_round() */
+
+static short
+pk_bjr(hand, row, prompt)
+short * hand;
+short   row;
+char *  prompt;
+{
+        short   res;
+        short * cnt_ptr;
+        short   score;
+        short   i;
+        short   j;
+        BOOL16  forced;
+
+        cnt_ptr = &pk_pcc;
+        if (hand == pk_ph)  cnt_ptr = &pk_pcc;
+        if (hand == pk_psh) cnt_ptr = &pk_pscc;
+        if (hand == pk_ch)  cnt_ptr = &pk_ccc;
+
+        plEr(225, 10, 319, 60);
+        forced = NO;
+        if ((hand == pk_ph  && pk_wrf != NO) ||
+            (hand == pk_psh && pk_wcs != NO))
+                forced = YES;
+        else {
+                strPr("F1 Hit",   225, 18, COLOR_red);
+                strPr("F3 Stand", 225, 26, COLOR_red);
+        }
+        for (i = 0; hand[i] != CARD_NONE; i = i + 1)
+                pk_drcs(hand[i], i, row);
+
+        if (forced != NO) {
+                pk_pmsg("Here's your card.");
+                gameTick(0x10);
+                *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
+                pk_dchd(hand, 0);
+                score = 0;
+                for (j = 0; j < 5 && hand[j] != CARD_NONE;
+                     j = j + 1) {
+                        if ((short) hand[j] % 13 == 12)
+                                score = score + 1;
+                        else if ((short) hand[j] % 13 < 12 &&
+                                 (short) hand[j] % 13 > 7)
+                                score = score + 10;
+                        else
+                                score = (short) hand[j] % 13 + 2 + score;
+                }
+                return (score < 22) ? 0 : -1;
+        }
+
+        pk_pmsg(prompt);
+        do {
+                res = 0;
+                while (res != 1 && res != 2 && res != -1) {
+                        gameTick(0);
+                        res = pk_inph(KEY_F1, KEY_F3, 0);
+                }
+                if (mg_tofl != NO)
+                        return -1;
+                if (res == 2) {
+                        pk_pmsg(" ");   /* s__0002b422 verified via
+                                          Ghidra HTTP /read_memory:
+                                          the F3-stand path just
+                                          blanks the message strip. */
+                        return 0;
+                }
+                if (res == 1) {
+                        *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
+                        pk_dchd(hand, 0);
+                        score = 0;
+                        for (j = 0; j < 5 && hand[j] != CARD_NONE;
+                             j = j + 1) {
+                                if ((short) hand[j] % 13 == 12)
+                                        score = score + 1;
+                                else if ((short) hand[j] % 13 < 12 &&
+                                         (short) hand[j] % 13 > 7)
+                                        score = score + 10;
+                                else
+                                        score = (short) hand[j] % 13
+                                                            + 2 + score;
+                        }
+                        if (21 < score)
+                                return -1;
+                }
+        } while (*cnt_ptr != CARD_BJ_STOP);
+        pk_pmsg("You cannot take any more cards.");
+        gameTick(0xf);
+        return 0;
+}
+
+/* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two).
+   addr: poker_check_natural_blackjack() */
+
+static short
+pk_cnbj(hand)
+short * hand;
+{
+        short   r0;
+        short   r1;
+
+        r0 = (short) hand[0] % 13;
+        r1 = (short) hand[1] % 13;
+        if (r0 == 12 && r1 < 12 && r1 > 7)
+                return 1;
+        if (r1 == 12 && r0 < 12 && r0 > 7)
+                return 1;
+        return 0;
+}
+
+/* pk_dchd: deal one card into hand at next CARD_NONE slot.
+   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full.
+   addr: poker_deal_card_to_hand() */
+
+static short
+pk_dchd(hand, face_down)
+short * hand;
+short   face_down;
+{
+        BOOL16                  dup;
+        unsigned short  row;
+        short                   card;
+        short                   j;
+        short                   i;
+
+        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) ;
+        if (i == 5)
+                return -1;
+
+        dup = YES;
+        while (dup != NO) {
+                card = rndRng(0, 51);
+                dup  = NO;
+                for (j = 0; j < 5; j = j + 1) {
+                        if (pk_ch[j]  == card) dup = YES;
+                        if (pk_ph[j]  == card) dup = YES;
+                        if (pk_psh[j] == card) dup = YES;
+                }
+        }
+        hand[i] = card;
+        row = (hand != pk_ch) ? 1 : 0;
+        if (face_down == 0)
+                pk_drcs(card, i, row);
+        else
+                pk_drcs(CARD_BACK, i, row);
+        gameTick(3);
+        return 0;
+}
+
+/* pk_dbhi: display bet with highlight.  sel=1 -> computer bet, else
+   player bet.  3-digit format as pk_awp/dppm/dpot.
+   addr: poker_display_bet_with_highlight() */
+
+static void
+pk_dbhi(sel)
+short   sel;
+{
+        short   val;
+        char    str[12];
+
+        val = (sel == 1) ? g_pcbet : g_ppbet;
+        plEr(31, 43, 57, 53);
+        str[3] = '\0';
+        str[8] = (char)((int) val / 100);
+        str[0] = str[8] + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (char)((int)(val % 100) / 10);
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = (char)((int)(val % 100) % 10);
+        str[2] = str[4] + '0';
+        strPr(str, 31, 51, COLOR_black);
+}
+
+/* pk_sbet: settle a bet.  winner: 0=computer, 1=player.
+   mode: 0=normal, 1=natural blackjack double-collect,
+         2=split -- suppress the second (player) transfer.
+   Sets pk_quit on mid-transfer bankruptcy.
+   addr: poker_settle_bet() */
+
+static void
+pk_sbet(bet_ptr, winner, mode)
+short * bet_ptr;
+short   winner;
+short   mode;
+{
+        short   loc8;
+        short   orig;
+        short   cur;
+
+        if (winner == 0) {
+                orig = *bet_ptr;
+                while (cur = *bet_ptr,
+                       *bet_ptr = *bet_ptr - 1,
+                       cur != 0) {
+                        g_pcmon = g_pcmon + 1;
+                        pk_awp();
+                        if (bet_ptr == &g_pcbet)
+                                pk_dbhi(1);
+                        else
+                                pk_dbhi(2);
+                        gameTick(0);
+                }
+                if (mode != 0) {
+                        while (orig != 0) {
+                                if (g_ppmon == 0) {
+                                        pk_quit = YES;
+                                        return;
+                                }
+                                g_ppmon = g_ppmon - 1;
+                                pk_dppm();
+                                g_pcmon = g_pcmon + 1;
+                                pk_awp();
+                                gameTick(0);
+                                orig = orig - 1;
+                        }
+                }
+        } else if (winner == 1) {
+                orig = *bet_ptr;
+                loc8 = *bet_ptr;
+                while (cur = *bet_ptr,
+                       *bet_ptr = *bet_ptr - 1,
+                       cur != 0) {
+                        g_ppmon = g_ppmon + 1;
+                        pk_dppm();
+                        if (bet_ptr == &g_pcbet)
+                                pk_dbhi(1);
+                        else
+                                pk_dbhi(2);
+                        gameTick(0);
+                }
+                if (mode != 2) {
+                        while (loc8 != 0) {
+                                if (g_pcmon == 0) {
+                                        pk_quit = YES;
+                                        break;
+                                }
+                                g_pcmon = g_pcmon - 1;
+                                pk_awp();
+                                g_ppmon = g_ppmon + 1;
+                                pk_dppm();
+                                gameTick(0);
+                                loc8 = loc8 - 1;
+                        }
+                }
+                if (mode == 1) {
+                        while (orig != 0) {
+                                if (g_pcmon == 0) {
+                                        pk_quit = YES;
+                                        return;
+                                }
+                                g_pcmon = g_pcmon - 1;
+                                pk_awp();
+                                g_ppmon = g_ppmon + 1;
+                                pk_dppm();
+                                gameTick(0);
+                                orig = orig - 1;
+                        }
+                }
+        }
 }
 
 
