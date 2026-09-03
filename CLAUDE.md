@@ -1091,6 +1091,25 @@ Roadmap:
     * Deleted workin/work_out and g_setmt/g_setaw/g_setah -- duplicates
       of work_in/wk_out and the g_obt* trio, referenced by nothing.
 
+    **The code's own loop bound is the authority on an array size.**
+    main's OBJECTS walk is a literal `for (i = 0; i < 56; i++)`, so
+    g_obtmt/g_obtaw/g_obtah are [56] -- and LCP_STX's gaps for all
+    three agree (1120/112/112).  Conversely a loop bound can be a
+    generous limit rather than the size: sf_sl walks `index < 500` but
+    LCP_STX's mi_ntLp measures ~100 bytes, because the SOUNDS.LCP
+    size-0 sentinel ends it after ~25 blocks.  And LCP_BODY_DEST_WORDS
+    is 256 even though sp_lcpf only ever writes 168 of them -- four
+    independent gaps (g_lsimg/g_lsmas/g_hsbuf/g_hsmas, 512 bytes each)
+    say the original declared a round 256.
+
+    **Screen buffers are 32512, not a round 32768.**  32000 plus the
+    512 the align-up can shift.  All three align-up sites mask to 512,
+    which is visible in the binary -- sprites.c 0x15110 pushes
+    scrbufA+0x1ff then `andi.l #-512,(sp)`; stpScrB 0x65ae and
+    fillTopR 0x6880 both `addl #512` then `andl #-512`.  The ST
+    hardware only needs 256-byte alignment (which would make 32255
+    enough), but this code does not use it.
+
     **Still to do: ORDER.**  49 inversions among the mapped data
     symbols, 61 among the bss ones.  Data order is source declaration
     order -- but note Alcyon emits string literals and `static` data
