@@ -191,12 +191,13 @@ char            bm_lo[8] = {
 short           mood_pri[3]        = { 3, 1, 0 };
 
 /* ---- position not yet recovered -------------------------------------
-   Three initialized globals that NOTHING in the program relocates
+   Four initialized globals that NOTHING in the program relocates
    against, so the relocation pairing cannot place them.  Parked at the
    end of the last object's data rather than left in the middle of a
    stretch that is already byte-identical.  g_dsb carries one of the
    two DATA relocations the port is still short of LCP_STX's 402, so
-   it is probably real; env_val and g_mccha are only ever named in
+   g_dsb and g_obtmp are probably real; env_val and g_mccha are only
+   ever named in
    midi_seq.c comments.
    ------------------------------------------------------------------ */
 /* psg_ntAc is a BYTE in the text segment behind mq_tick -- see
@@ -206,3 +207,7 @@ short           env_val            = 5;    /* octave-5 baseline */
 short           g_mccha    = 1;
 
 short * g_dsb = dsb_stor;
+
+/* od_draw reads the object-MFDB table through this pointer, exactly
+   as the ROM does (initialized data 0x121b6 -> table in BSS). */
+MFDB *  g_obtmp = g_obtmt;

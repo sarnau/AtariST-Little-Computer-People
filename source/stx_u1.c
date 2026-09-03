@@ -96,6 +96,10 @@
 #include "parts/chk_actT.c"  /* 0x5ce2 -- bsr.s from gameLoop */
 #include "ai.c"              /* execEv 0x5fae */
 #include "actions.c"         /* doAct 0x6038 */
+/* execEv's and doAct's switch jump tables land in the data segment
+   right here (LCP_STX data 0xa20..0xaf3), so the globals that follow
+   them come after this point, not with the rest at the top. */
+#include "dat_u1b.c"
 /* chk_timA (0x6210) sits between doAct and hs_posXY. */
 #include "airandom.c"        /* chk_timA 0x6210 */
 #include "movement.c"        /* hs_posXY 0x635e */
