@@ -375,8 +375,15 @@ a_getd()
    addr: li_lool(), li_loor() */
 
 void
-li_lool()
+li_loor()
 {
+        /* Three locals LCP_STX never references -- the frame is
+           link #-10 where li_lool's is #-4; the 1985 source carried
+           two copies of this gesture with different declarations. */
+        short   unused1;
+        short   unused2;
+        short   unused3;
+
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
@@ -389,7 +396,7 @@ li_lool()
 }
 
 void
-li_loor()
+li_lool()
 {
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
