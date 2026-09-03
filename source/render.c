@@ -8,7 +8,7 @@
 #include "enums.h"
 #include <vdibind.h>
 #include "vdiown.h"
-#include <obdefs.h>
+#include "obdefs1.h"
 #include "ahouse.h"
 #include "clock.h"
 #include "gfx_prim.h"

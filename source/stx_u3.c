@@ -11,7 +11,7 @@
 
 /* prCh needs obdefs.h (MD_TRANS/MD_REPLACE); renderx.c pulls it
    in for the FAITHFUL build. */
-#include <obdefs.h>
+#include "obdefs1.h"
 
 /* deal_kc/putEv need the globals and prototypes their own files
    pull in. */

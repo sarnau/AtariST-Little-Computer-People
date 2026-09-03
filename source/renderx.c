@@ -11,7 +11,7 @@
 #include <osbind.h>
 
 #include <vdibind.h>
-#include <obdefs.h>
+#include "obdefs1.h"
 #include "gfx_prim.h"
 #include "globals.h"
 #include "random.h"

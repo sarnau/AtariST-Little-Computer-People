@@ -9,7 +9,7 @@
 #include <osbind.h>
 
 #include <vdibind.h>            /* v_pline, vsl_color, vsf_*, vst_*, vswr_mode, ... */
-#include <obdefs.h>
+#include "obdefs1.h"
 #include "gfx_prim.h"
 #include "globals.h"
 #include "sprender.h"

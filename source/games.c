@@ -10,7 +10,7 @@
 #include <osbind.h>
 
 #include <vdibind.h>
-#include <obdefs.h>
+#include "obdefs1.h"
 #include "ahouse.h"
 #include "ai.h"
 #include "aidle.h"
