@@ -124,5 +124,5 @@ L_ack:
 _mi_dwrm:	.ds.w	1		* 226a
 _mi_rloc:	.ds.w	1		* 226c
 _g_mtpre:	.ds.w	1		* 226e
-_g_msmsa:	.ds.b	1		* 2270
-_psg_ntA:	.ds.b	1		* 2271
+_psg_ntA:	.ds.b	1		* 2270
+_g_msmsa:	.ds.b	1		* 2271

@@ -174,15 +174,21 @@ sc_ren8()
                 g_sfacf = NO;
         }
 
-        /* Toggle the compositing buffer.  STX tests the other way
-           round and folds the alternate buffer into ONE relocatable
-           constant masked to a 512-byte boundary -- no runtime
-           alignment arithmetic and no +0x8000 add. */
+        /* Toggle the compositing buffer.  The off-screen target is
+           the SAME aligned buffer sp_iniM uses -- LCP_STX stores the
+           one relocatable constant `scrbufA + 0x1FF` here and masks
+           it to a 512-byte boundary, exactly as sprites.c does.
+           (`&scrbufA[0x8000]` is NOT that: Alcyon's int is 16-bit, so
+           0x8000 is -32768 and the constant came out as
+           scrbufA - 32768, a pointer into the TEXT segment.  The
+           relocation pairing against LCP_STX is what caught it --
+           verify_bytes and stx_txtdiff both wildcard relocated
+           longwords, so the function still "matched".) */
         if (cur_mf->fd_addr != sv_phb)
                 cur_mf->fd_addr = sv_phb;
         else
                 cur_mf->fd_addr =
-                        (void *) ((long) &scrbufA[0x8000] & ~0x1FFL);
+                        (void *) (((long) scrbufA + 0x1FFL) & ~0x1FFL);
 
         ani_cnt++;
 
