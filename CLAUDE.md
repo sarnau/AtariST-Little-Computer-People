@@ -870,6 +870,17 @@ this build, ALL different from LCP_ORG's:
                                       each in the same function
       a = 1; b = 1;        (ORG)  vs  b = a = 1  (moveq into d0, then
                                       both stores from the register)
+      char msg[] = "..."   (ORG)  vs  char *msg = "..."  (pk_bm and
+                                      pk_rm are POINTERS, so every
+                                      patch is movea.l var,a1 first)
+      x-- < 1              (ORG)  vs  x-- <= 0  -- `< 1` lets Alcyon
+                                      compare in memory and save the
+                                      flags across the decrement,
+                                      `<= 0` loads the old value into
+                                      d0 and tst's it (psg_upEn)
+      (char)((int) x / 10) (ORG)  vs  x / 10 + '0'  -- the (int) cast
+        + '0'                         adds an ext.w the original has
+                                      nowhere
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -948,19 +959,28 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 330 matched / 6 divergent, 71 848 of
-104 156 STX text bytes (69.0%) proven byte-identical -- 75.8% of the
+**Status (2026-09-03): 332 matched / 4 divergent, 78 270 of
+104 156 STX text bytes (75.1%) proven byte-identical -- 82.6% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
 LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
-Still divergent (all located): pk_main 0x8d10, pk_bjMn 0xbc72,
-psg_upE 0x15ae, plus three functions the port has only as stubs and
-that must be written from scratch -- st_titl 0x6d7e (1040 B, a real
-interactive title screen), cs_mvIn 0xe500 (968 B, the move-in
-cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy protection).
+Still divergent: pk_bjMn 0xbc72 (its round loop and increments are
+recovered; the frame still differs -- LCP_STX has ten locals, four of
+them never referenced), plus three functions the port has only as
+stubs and that must be written from scratch -- st_titl 0x6d7e
+(1040 B, a real interactive title screen), cs_mvIn 0xe500 (968 B, the
+move-in cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy
+protection).
+
+**The minigame mains share one skeleton** (pk_main and pk_bjMn both
+match it): a `goto round; next_round: gameTick(0x18); round:` label
+loop rather than a loop statement, the Mfree/moff cleanup written
+INSIDE the first exit test with every other exit `goto`-ing into it,
+each key read as its loop's condition, and pk_inph's idle sentinel
+passed as 255 rather than 0.
 
 lcp_path's three static helpers (wkCyc, setHTgt, stairCyc) do NOT
 exist in LCP_STX -- their bodies are written out at all sixteen call
