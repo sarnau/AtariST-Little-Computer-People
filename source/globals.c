@@ -601,6 +601,15 @@ BOOL16  ph_hu;
    before calling psg_wr to recover the raw register number. */
 unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
 
+/* Three pointers at psg_env[0..2], one per PSG channel.  NOTHING in
+   the program references this table -- no text relocation targets it,
+   in either binary -- but LCP_STX carries it in DATA immediately
+   behind psg_rot (its three pointers are the data relocations at
+   0x184/0x188/0x18c, 14 bytes apart = sizeof(PSG_ENVELOPE)), and
+   Alcyon emits an unreferenced initialized global just the same. */
+PSG_ENVELOPE *  psg_epp[3] = { &psg_envelope[0], &psg_envelope[1],
+                               &psg_envelope[2] };
+
 
 /* Ghidra midi_envelope_rate_table @0x2986c.  32-byte table indexed
    by phase_timer (already loaded from an ADSR duration byte). */
@@ -649,11 +658,13 @@ short           mi_temp              = 120;
 short           g_mtspb     = 20;
 
 
-short           mi_ndt[32] = {
+/* 22 entries, not 32: LCP_STX's gap here is 44 bytes.  mq_pars indexes
+   it with a 5-bit field (`mi_ndt[*mi_sqpos & 0x1f]`), so 22..31 would
+   read past the end -- the .SNG data never produces them. */
+short           mi_ndt[22] = {
            0,    2,    2,    3,    4,    5,    6,    8,
            9,   12,   16,   18,   24,   32,   36,   48,
-          64,   72,   96,  128,  144,    0,    0,    0,
-           0,    0,    0,    0,    0,    0,    0,    0
+          64,   72,   96,  128,  144,    0
 };
 
 
@@ -736,9 +747,11 @@ unsigned char   g_mstr[132] = {
    lookup.  Dumped verbatim -- previous port had guessed the values
    from Music Studio 2.0 documentation but the real ones diverge
    significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
-unsigned char   g_msmk[16] = {
+unsigned char   g_msmk[32] = {
         0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
-        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
+        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00,
+        0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+        0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11
 };
 
 
