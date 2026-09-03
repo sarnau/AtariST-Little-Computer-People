@@ -2290,10 +2290,10 @@ pk_ante()
         strPr("F1  Ante", 225, 18, COLOR_red);
         strPr("F10 Quit", 225, 34, COLOR_red);
         pk_pmsg("Ante up to play.");
-        pk_quit = NO;
         r = 0;
+        pk_quit = NO;
         while (r != 1 && r != 3 && r != -1)
-                r = pk_inph(KEY_F1, 0, KEY_F10);
+                r = pk_inph(KEY_F1, 255, KEY_F10);
         if (r == 3 || r == -1) {
                 pk_quit = YES;
         } else if (g_ppmon == 0) {
