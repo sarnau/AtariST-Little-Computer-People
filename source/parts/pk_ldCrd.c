@@ -1,6 +1,5 @@
 /*
- * parts/pk_ldCrd.c -- shared body.  LCP_ORG links it in cards.o;
- * LCP_STX in the games object at 0xab04, right before pk_awp
+ * parts/pk_ldCrd.c -- shared body; LCP_STX in the games object at 0xab04, right before pk_awp
  * (pk_main and pk_wrMn reach it with bsr).
  */
 

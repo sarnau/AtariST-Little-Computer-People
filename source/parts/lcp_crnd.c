@@ -1,6 +1,6 @@
 /*
- * parts/lcp_crnd.c -- shared body; LCP_ORG links it in init.c,
- * LCP_STX in the 0xdece object (0x69d8, in the 0x400c object after rnd).  Files under parts/
+ * parts/lcp_crnd.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x69d8, in the 0x400c object after rnd). Files under parts/
  * are never compiled standalone.
  */
 /* lcp_crnd (Ghidra 0x169D8): populate PLAYER for a new game.

@@ -6,14 +6,10 @@
 #include "types.h"
 #include "structs.h"
 
-#ifdef FAITHFUL
-extern short ani_cnt;
-#else
 extern short bj_key;
 extern char psg_ovol;
 extern unsigned short g_wkadj;
 extern unsigned short ani_cnt;
-#endif
 extern short g_secs;
 extern short t_min;
 extern short t_hour;
@@ -34,11 +30,7 @@ extern short g_trac;
 extern short lcp_x;
 extern short lcp_y;
 extern BOOL16 g_lcldd;
-#ifdef FAITHFUL
-extern short cprot_r;
-#else
 extern long cprot_r;
-#endif
 extern short g_spdc;
 extern BOOL16 alarm_p;
 extern short lcp_watr;
@@ -67,11 +59,7 @@ extern short lcp_food;
 extern short lcp_recP;
 extern short lcp_tv;
 extern short g_obisa[];
-#ifdef FAITHFUL
-extern BOOL16 mi_play;
-#else
 extern char mi_play;
-#endif
 extern short dg_bwlch;
 extern short g_sfplf;
 extern short g_sfpli;
@@ -104,12 +92,10 @@ extern short* sv_bodyP;
 extern short* sv_headP;
 extern short vdihnd;
 extern short vdi_hnd;
-#ifndef FAITHFUL
 extern short gr_hwchar;
 extern short gr_hhchar;
 extern short gr_hwbox;
 extern short gr_hhbox;
-#endif
 extern short vdi_colt[];
 extern short contrl[];
 extern short intin[];
@@ -123,42 +109,17 @@ extern short main_pal[];
 extern short g_clcop[];
 extern short g_clcos[];
 extern short skin_pal[];
-#ifdef FAITHFUL
-extern BOOL16 g_molof;
-extern BOOL16 mi_varR;
-#else
 extern char   g_molof;          /* STX: byte flags (moveb) */
 extern char   mi_varR;
-#endif
-#ifdef FAITHFUL
-extern short g_mspha;
-#else
 extern char  g_mspha;           /* STX: byte (moveb/tstb) */
-#endif
 extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;
 extern long g_msmap;
 extern long mi_env;
-#ifdef FAITHFUL
-extern short mi_vel;
-#else
 extern char  mi_vel;            /* STX: byte */
-#endif
-#ifdef FAITHFUL
-extern short mi_dvel;
-#else
 extern char mi_dvel;
-#endif
-#ifdef FAITHFUL
-extern short psg_cvol;
-#else
 extern char  psg_cvol;          /* STX: byte */
-#endif
-#ifdef FAITHFUL
-extern short psg_dvol;
-#else
 extern char psg_dvol;
-#endif
 extern short g_mchcn;
 extern short g_mtspb;
 extern short mi_temp;
@@ -167,15 +128,9 @@ extern long g_mtcou;
 extern short mi_dwrm;
 extern short g_mtdiv;
 extern short g_mtpre;
-#ifdef FAITHFUL
-extern short mi_nxTk;
-extern short mi_lpTk;
-extern BOOL16 g_msmsa;
-#else
 extern long  mi_nxTk;           /* STX: long tick counters */
 extern long  mi_lpTk;
 extern char  g_msmsa;           /* STX: byte flag */
-#endif
 extern short mi_rlock;
 extern long mi_svtv;
 extern unsigned char* mi_seqE;
@@ -189,11 +144,7 @@ extern char mi_cnot;
 extern char mi_nmof;
 extern char mi_nlpA;
 extern short mi_nlp0;
-#ifdef FAITHFUL
-extern BOOL16 mi_slop;
-#else
 extern char   mi_slop;          /* STX: byte flag */
-#endif
 extern short mi_ndt[];
 extern short mi_evq[];
 extern short mi_evi;
@@ -209,27 +160,15 @@ extern short mi_evst[];
 extern unsigned char psg_rot[];
 extern unsigned char mi_chmap[];
 extern unsigned char mi_noSt[];
-#ifdef FAITHFUL
-extern short g_mcpro[];
-#else
 extern char  g_mcpro[];         /* STX: byte array */
-#endif
-#ifdef FAITHFUL
-extern short mi_pgmap[];
-#else
 extern char *mi_pgmap;          /* STX: a byte pointer, not an array */
-#endif
 extern unsigned char g_mstr[];
 extern unsigned char g_msmk[];
 extern BOOL16 g_moen;
 extern unsigned char g_meve[];
 extern long g_momap;
 extern BOOL16 psg_out;
-#ifdef FAITHFUL
-extern BOOL16 psg_ntAc;
-#else
 extern char   psg_ntAc;         /* STX: byte flag */
-#endif
 extern unsigned char psg_chNt[];
 extern PSG_ENVELOPE psg_envelope[];
 extern short env_val;
@@ -248,10 +187,8 @@ extern void* g_srptr;
 extern short dsb_stor[];
 extern short* g_dsb;
 extern short scr_scal;
-#ifndef FAITHFUL
 extern short work_in[];
 extern short wk_out[];
-#endif
 extern MFDB MFDB_A;
 extern unsigned char scrbufA[];
 extern unsigned char scrbufB[];
@@ -262,11 +199,7 @@ extern short g_sfcur;
 extern short g_sfdur;
 extern short g_sfdos;
 extern short g_sfdoc;
-#ifdef FAITHFUL
-extern short sf_pri[];
-#else
 extern char  sf_pri[];          /* STX: byte table (moveb + extw) */
-#endif
 extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];
@@ -401,40 +334,10 @@ extern MFDB mf_scb_c;
 extern BOOL16 g_dvdog;
 extern BOOL16 ph_hu;
 extern BOOL16 g_ptdoa;
-/* The od_* frame ids are DATA globals in LCP_ORG (od_draw
+/* The od_* frame ids are DATA globals (od_draw
    reads them from memory) but compile-time constants in the
    STX revision, which pushes the numbers as immediates.
    Nothing writes them at runtime, so a macro is exact. */
-#ifdef FAITHFUL
-extern short od_stcl;
-extern short od_sto1;
-extern short od_sto2;
-extern short od_frcl;
-extern short od_fro1;
-extern short od_fro2;
-extern short od_cbcl;
-extern short od_cbo1;
-extern short od_cbo2;
-extern short od_med1;
-extern short od_tocl;
-extern short od_too1;
-extern short od_too2;
-extern short od_stof;
-extern short od_fdcl;
-extern short od_fdo1;
-extern short od_fdo2;
-extern short od_clcl;
-extern short od_clo1;
-extern short od_clo2;
-extern short od_fir0;
-extern short od_ficl;
-extern short od_fio1;
-extern short od_fio2;
-extern short od_drcl;
-extern short od_dro1;
-extern short od_dro2;
-extern short od_cbit;
-#else
 #define od_stcl    46
 #define od_sto1    47
 #define od_sto2    48
@@ -463,6 +366,5 @@ extern short od_cbit;
 #define od_dro1    11
 #define od_dro2    12
 #define od_cbit    53
-#endif
 
 #endif /* GLOBALS_H */

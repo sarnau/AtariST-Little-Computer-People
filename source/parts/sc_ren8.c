@@ -1,7 +1,7 @@
 /*
- * parts/sc_ren8.c -- shared body; LCP_ORG links it in renderf.c,
- * LCP_STX in the 0xdece object (0x15138, in the sprite object ahead of lcp_hwt).  Files under parts/
- * are never compiled standalone.
+ * parts/sc_ren8.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x15138, in the sprite object ahead of lcp_hwt). Files under
+ * parts/ are never compiled standalone.
  */
 /* addr: sc_ren8() */
 

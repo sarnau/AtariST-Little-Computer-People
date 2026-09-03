@@ -1,8 +1,7 @@
 /*
  * parts/a_cleau.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from aleisure.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in aleisure.c.
+ * address inside the 0xdece object, far from the port's other
+ * aleisure functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -10,18 +9,11 @@ void
 a_cleau()
 {
         /* STX consumes every call result in place -- no local. */
-#ifdef FAITHFUL
-        short   result;
-#endif
 
         if (lcp_flcO != NO) {
                 hs_posXY(POS_TOP_FILING_CABINET,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -32,11 +24,7 @@ a_cleau()
         if (studyDrO != NO) {
                 hs_posXY(POS_TOP_STUDY_DOOR,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 lcp_face = FACING_RIGHT;
                 lcp_st            = STATE_STAND_FACING_SCREEN;
@@ -45,9 +33,7 @@ a_cleau()
                    this comment already noted).  It is an expression
                    statement in the source, not a compiler artifact,
                    so the STX build emits it. */
-#ifndef FAITHFUL
                 g_hatas - 12;
-#endif
                 lcp_hwt();
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
@@ -65,33 +51,21 @@ a_cleau()
         if (lcp_toiO != NO) {
                 hs_posXY(POS_MID_TOILET_DOOR,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 a_clotd();
         }
         if (lcp_clsO != NO) {
                 hs_posXY(POS_MID_BEDROOM_CLOSET,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 a_clocd();
         }
         if (lcp_drsO != NO) {
                 hs_posXY(POS_MID_DRESSER,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -102,11 +76,7 @@ a_cleau()
         if (lcp_cabO != NO) {
                 hs_posXY(POS_BTM_KITCHEN_CABINET,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                if ((result = lcp_wkD()) != 0)
-#else
                 if (lcp_wkD() != 0)
-#endif
                         return;
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;

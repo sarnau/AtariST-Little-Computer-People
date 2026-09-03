@@ -12,22 +12,10 @@
 #include "vocab.h"
 
 /* lcp_upp -> parts/lcp_upp.c (STX: 0x172e8, the last function of the sprite object). */
-#ifdef FAITHFUL
-#include "parts/lcp_upp.c"
-#endif
 
 /* addr: cmd_upp() */
 /* cmd_upp -> parts/cmd_upp.c (STX: 0x1711c, after chk_encm). */
-#ifdef FAITHFUL
-#include "parts/cmd_upp.c"
-#endif
 
 /* chk_vwd -> parts/chk_vwd.c (STX: 0x171ae, after cmd_upp). */
-#ifdef FAITHFUL
-#include "parts/chk_vwd.c"
-#endif
 
 /* chk_encm -> parts/chk_encm.c (STX: 0x16f9a, in the 0x148fe object between prCh and prsCmd). */
-#ifdef FAITHFUL
-#include "parts/chk_encm.c"
-#endif

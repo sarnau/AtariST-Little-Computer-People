@@ -77,56 +77,6 @@ extern long     gemdos();
 extern long     bios();
 extern long     xbios();
 
-#ifdef FAITHFUL
-
-/* GEMDOS: LCP_ORG's binding macros padded every call to the opcode
-   plus THREE arguments (0L fills unused slots), and applied NO
-   casts -- each argument is pushed at the width of the source
-   expression.  Byte-verified against LCP_ORG.PRG (verify_bytes.py):
-   Fopen/Fcreate/Fsfirst carry one trailing 0L, one-arg calls carry
-   two, zero-arg calls three, and Fread/Fwrite are already full.
-   Callers must therefore pass each argument at the ROM's width
-   (e.g. a word rwmode vs. Fopen("hyber", 0L) in lc_load). */
-#define Fopen(n, m)             gemdos(0x3D, n, m, 0L)
-#define Fcreate(n, a)           gemdos(0x3C, n, a, 0L)
-#define Fread(h, n, b)          gemdos(0x3F, h, n, b)
-#define Fwrite(h, n, b)         gemdos(0x40, h, n, b)
-#define Fclose(h)               gemdos(0x3E, h, 0L, 0L)
-#define Malloc(sz)              gemdos(0x48, sz, 0L, 0L)
-#define Mfree(p)                gemdos(0x49, p, 0L, 0L)
-#define Fgetdta()               gemdos(0x2F, 0L, 0L, 0L)
-#define Fsfirst(p, a)           gemdos(0x4E, p, a, 0L)
-#define Fsnext()                gemdos(0x4F, 0L, 0L, 0L)
-#define Cconin()                gemdos(0x01, 0L, 0L, 0L)
-#define Cconws(s)               gemdos(0x09, s, 0L, 0L)
-#define Cconis()                gemdos(0x0B, 0L, 0L, 0L)
-#define Crawcin()               gemdos(0x07, 0L, 0L, 0L)
-#define Pterm(rc)               gemdos(0x4C, rc, 0L, 0L)
-#define Super(ssp)              gemdos(0x20, ssp, 0L, 0L)
-#define Dsetpath(p)             gemdos(0x3B, p, 0L, 0L)
-#define Giaccess(d, r)          xbios(0x1C, d, r, 0L)
-#define Dosound(p)              xbios(0x20, p, 0L, 0L)
-
-/* XBIOS, padded by the same ROM rule (opcode + three args). */
-#define Physbase()              xbios(2, 0L, 0L, 0L)
-#define Logbase()               xbios(3, 0L, 0L, 0L)
-#define Setscreen(l, p, r)      xbios(5, l, p, r)
-#define Setpalette(p)           xbios(6, p, 0L, 0L)
-#define Midiws(n, b)            xbios(12, n, b, 0L)
-#define Random()                xbios(17)       /* ROM: bare, no padding */
-#define Vsync()                 xbios(37, 0L, 0L, 0L)
-
-/* BIOS #5 -- Setexc(vector, handler): install/query an exception vector.
-   Passing handler = -1 queries the current vector without installing. */
-#define Setexc(v, h)            ((long) bios(5, (short)(v), (long)(h)))
-
-/* XBIOS #31 -- Xbtimer(timer, ctrl_reg, data_reg, vector): install an
-   MFP timer handler.  timer 0 = Timer-A, 1 = Timer-B, 2 = Timer-C,
-   3 = Timer-D; ctrl/data are the initial MFP prescaler and data
-   register values.  Used by mq_intim to install the Timer-A ISR. */
-#define Xbtimer(t, c, d, v)     ((long) xbios(31, (short)(t), (short)(c), (short)(d), (long)(v)))
-
-#else   /* !FAITHFUL: the STX revision's convention */
 
 /* LCP_STX.PRG was built against the older Alcyon distribution's
    OSBIND.H (alcyon2, 1985-05-30), whose macros pass ONLY the real
@@ -164,7 +114,6 @@ extern long     xbios();
 #define Setexc(v, h)            bios(5, v, h)
 #define Xbtimer(t, c, d, v)     xbios(31, t, c, d, v)
 
-#endif  /* FAITHFUL */
 
 #endif  /* HOST */
 

@@ -1,8 +1,7 @@
 /*
  * parts/a_watat.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from adoors.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in adoors.c.
+ * address inside the 0xdece object, far from the port's other
+ * adoors functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -30,11 +29,7 @@ a_watat()
         lcp_st = STATE_STOKE_FIREPLACE;
         gameTick(1);
         /* STX writes i++ here (addq straight to the frame slot). */
-#ifdef FAITHFUL
-        for (i = 0; i < 10; i = i + 1) {
-#else
         for (i = 0; i < 10; i++) {
-#endif
                 lcp_face = rndRng(0, 1);
                 gameTick(0);
         }

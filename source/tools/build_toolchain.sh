@@ -10,8 +10,8 @@
 #   $DEST/src/          patched working copy of the sources
 #   $DEST/TOOLS/INCLUDE DK system headers (+_DTA/MFDB, ^Z stripped)
 #
-# Host patches applied to the working copy (validated 2026-09-01 by a
-# clean FAITHFUL rebuild coming out BYTE-IDENTICAL to LCP_ORG.PRG):
+# Host patches applied to the working copy (validated by a clean
+# rebuild whose TEXT comes out byte-identical to DATA/LCP_STX.PRG):
 #   - SSIZE 8 -> 32 in cpp/preproc.h + parser/icode.h + cgen/icode.h:
 #     the port needs >8-char macro/identifier significance (the .s
 #     post-processing in alcyon_build.sh still truncates linkage
@@ -197,7 +197,7 @@ HEOF
 mkdir -p "$DEST/GAME"
 for f in "$CSRC/../DATA"/*; do
     b=$(basename "$f")
-    case "$b" in LCP_ORG.PRG|LCP_STX.PRG|stx_extracted) ;; *)
+    case "$b" in LCP_STX.PRG|stx_extracted) ;; *)
         cp -f "$f" "$DEST/GAME/" ;;
     esac
 done

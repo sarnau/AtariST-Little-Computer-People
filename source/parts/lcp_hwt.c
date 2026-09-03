@@ -1,6 +1,5 @@
 /*
- * parts/lcp_hwt.c -- shared body.  LCP_ORG links it in sprites.o;
- * LCP_STX puts it at 0x1568a, directly before gameTick (0x156a6),
+ * parts/lcp_hwt.c -- shared body; LCP_STX puts it at 0x1568a, directly before gameTick (0x156a6),
  * so its call to gameTick is a SHORT bsr.
  */
 

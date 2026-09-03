@@ -53,244 +53,21 @@ static short pk_cbet();
 static void  pk_cdrw();
 
 
-
-
 /* gamePlWQ is only reached from the ROM banner stubs; the default
    build must not emit it (Alcyon lays a static down regardless). */
-#ifdef FAITHFUL
-static short
-gamePlWQ()
-{
-        short   key;
-        for (;;) {
-                key = getKey();
-                gameTick(0);
-                if (key == KEY_F10)
-                        return 1;
-                if (g_trel[0] != ACTION_NONE)
-                        return 1;
-        }
-}
-#endif
 
-#ifdef FAITHFUL
-#include "parts/plEr.c"
-#include "parts/mg_stp.c"
-#include "parts/vst_h20.c"
-#include "parts/rst_vsth.c"
-#include "parts/initVdi.c"
-#include "parts/exitVdi.c"
-#include "parts/gameCln.c"
-/* ---- ROM minigame stubs (games.o 0x72ac-0x769a) ----------------
-   The ST original has NO playable minigames: each handler loads its
-   assets, prints a banner, waits at the table (gamePlWQ), and frees.
-   The full minigames below the #else come from the other, larger
-   game revision and are the default build. ---------------------- */
-
-/* addr: ag_main() (ROM 0x72ac) */
-void
-ag_main()
-{
-        g_agwb = (char *) Malloc(10000L);
-        if (g_agwb == (char *) 0)
-                er_nomem();
-        fr_reac("words", (unsigned char *) g_agwb, 10000);
-        mg_stp();
-        strPr("***ANAGRAMS***", 5, 8, 0);
-        gamePlWQ();
-        gameCln(g_agwb);
-        g_agwb = (char *) 0;
-}
-
-/* addr: wp_main() (ROM 0x732a).  Reuses g_ltlp as the line table. */
-void
-wp_main()
-{
-        char *  i;
-        short   linecount;
-
-        g_wpdb = (char *) Malloc(2000L);
-        if (g_wpdb == (char *) 0)
-                er_nomem();
-        mg_stp();
-        fr_reac("wordpz.txt", (unsigned char *) g_wpdb, 1536);
-        i = g_wpdb;
-        for (linecount = 0; linecount < 66; linecount = linecount + 1) {
-                g_ltlp[linecount] = i;
-                do {
-                        i = i + 1;
-                } while (*i > 31);
-                while (*i < ' ')
-                        i = i + 1;
-        }
-        g_wpci = 0;
-        strPr("**WORD PUZZLE #  **", 8, 8, 0);
-        gamePlWQ();
-        gameCln(g_wpdb);
-        g_wpdb = (char *) 0;
-}
-
-/* addr: pk_main() (ROM 0x740a) */
-void
-pk_main()
-{
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCr();
-        mg_stp();
-        g_pcbet = 0;
-        g_ppbet = 0;
-        g_pcmon = 400;
-        g_ppmon = 400;
-        g_ppppa = 0;
-        strPr("***POKER***", 5, 8, 0);
-        gamePlWQ();
-        gameCln(crd_dat);
-        crd_dat = (short *) 0;
-}
-
-/* addr: pk_wrMn() (ROM 0x7498, WAR).  Shuffles a 52-card deck with
-   400 random swaps and splits it into the two hands. */
-void
-pk_wrMn()
-{
-        short   a;
-        short   b;
-        short   t;
-        short   i;
-        short   swaps;
-        short   j;
-
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCr();
-        mg_stp();
-        g_pcmon = 26;
-        g_ppmon = 26;
-        g_ppppa = 0;
-        for (i = 0; i < 52; i = i + 1)
-                pk_dsc[i] = i;
-        swaps = 400;
-        while (swaps != 0) {
-                a = rndRng(0, 51);
-                do {
-                        b = rndRng(0, 51);
-                } while (a == b);
-                t = pk_dsc[b];
-                pk_dsc[b] = pk_dsc[a];
-                pk_dsc[a] = t;
-                swaps = swaps - 1;
-        }
-        j = 0;
-        for (i = 0; i < 52; i = i + 2) {
-                pk_ch[j] = pk_dsc[i];
-                pk_ph[j] = pk_dsc[i + 1];
-                j = j + 1;
-        }
-        strPr("***WAR***", 5, 8, 0);
-        gamePlWQ();
-        gameCln(crd_dat);
-        crd_dat = (short *) 0;
-}
-
-
-
-/* addr: pk_bjMn() (ROM 0x761e) */
-void
-pk_bjMn()
-{
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCr();
-        mg_stp();
-        g_pcmon = 400;
-        g_ppmon = 400;
-        strPr("***BLACKJACK***", 5, 8, 0);
-        gamePlWQ();
-        gameCln(crd_dat);
-        crd_dat = (short *) 0;
-}
-
-#else   /* !FAITHFUL: the kept other-revision minigames */
 
 /* lcp_lgt -> parts/lcp_lgt.c (STX puts it at the head of the
    0xdece object, ahead of sp_sprs). */
-#ifdef FAITHFUL
-#include "parts/lcp_lgt.c"
-#endif
 
 /* lcp_rgt -> parts/lcp_rgt.c (STX puts it at the head of the
    0xdece object, ahead of sp_sprs). */
-#ifdef FAITHFUL
-#include "parts/lcp_rgt.c"
-#endif
 
 /* mg_wkev: wait for a key while processing urgent game events.
    On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10.
    addr: minigame_wait_for_key_with_events() */
 
 short
-#ifdef FAITHFUL
-mg_wkev()
-{
-        short           key;
-        short           event;
-        unsigned short  idle;
-
-        idle    = 0;
-        mg_tofl = NO;
-
-        /* Drain any keys the game accidentally left in the buffer. */
-        do {
-                key = getKey();
-        } while (key != KEY_NONE);
-
-        for (;;) {
-                key = getKey();
-                if (key != KEY_NONE) {
-                        if (key == KEY_CTRL_A_ALARM  ||
-                            key == KEY_CTRL_B_BOOK    ||
-                            key == KEY_CTRL_C_CALL     ||
-                            key == KEY_CTRL_D_DOGFOOD    ||
-                            key == KEY_CTRL_F_FOOD  ||
-                            key == KEY_CTRL_W_WATER)
-                                deal_kc(key);
-                        return key;
-                }
-                if (alarm_p != NO) {
-                        lcp_lgt();
-                        a_wakfa();
-                        lcp_rgt();
-                }
-                if (lcp.bathroom_need != NO) {
-                        lcp_lgt();
-                        a_uset();
-                        lcp_rgt();
-                }
-                if (lcp.thirst_level > 0 && lcp.water_level != 0) {
-                        lcp_lgt();
-                        a_drink();
-                        lcp_rgt();
-                }
-                if (idle > 7200) break;
-                if (g_trel[0] != ACTION_NONE) {
-                        lcp_lgt();
-                        event = getEv();
-                        execEv(event);
-                        lcp_rgt();
-                }
-                gameTick(0);
-                idle = idle + 1;
-        }
-        mg_tofl = YES;
-        return KEY_F10;
-}
-
-#else   /* STX: link #-8 -- key and idle only; the event id, the drain
-           key and the timeout test are all consumed in place. */
 
 mg_wkev()
 {
@@ -340,13 +117,9 @@ mg_wkev()
         return key;
 }
 
-/* rndRng -> parts/rndRng.c: LCP_STX links it here (0x74fc), right
-   after mg_wkev, so the minigames reach it with bsr.  random.c keeps
-   it for FAITHFUL. */
-#ifndef FAITHFUL
+/* rndRng -> parts/rndRng.c: linked here (0x74fc), right after
+   mg_wkev, so the minigames reach it with bsr. */
 #include "parts/rndRng.c"
-#endif
-#endif
 
 
 /* ag_matc: character-by-character equality test for two C strings.
@@ -359,24 +132,6 @@ ag_matc(a, b)
 char *  a;
 char *  b;
 {
-#ifdef FAITHFUL
-        BOOL16  mismatch;
-        char    ca;
-        char    cb;
-
-        mismatch = NO;
-        while (*a != '\0' && *b != '\0') {
-                ca = *a;
-                cb = *b;
-                b = b + 1;
-                a = a + 1;
-                if (ca != cb)
-                        mismatch = YES;
-        }
-        if (mismatch != NO || *a != '\0' || *b != '\0')
-                return 0;
-        return 1;
-#else
         /* STX keeps no character temporaries: it compares through the
            post-increments, which makes Alcyon save and restore the
            condition codes around them (move sr,d0 / move d0,ccr).
@@ -393,7 +148,6 @@ char *  b;
                 return 0;
         else
                 return 1;
-#endif
 }
 #include "parts/mg_stp.c"    /* 0x759c */
 #include "parts/gameCln.c"   /* 0x75c8 */
@@ -777,12 +531,6 @@ short   text_color;
         ag_cwda();
         vst_h20();
         x = 0;
-#ifdef FAITHFUL
-        for (; *word != '\0'; word = word + 1) {
-                prCh((short) *word, x + 162, 37, text_color);
-                x = x + 12;
-        }
-#else
         /* STX steps the pointer inside the body, before the pitch,
            and both steps are memory-direct. */
         while (*word != '\0') {
@@ -790,18 +538,12 @@ short   text_color;
                 word++;
                 x += 12;
         }
-#endif
         rst_vsth();
 }
 
 /* ag_sgp -> parts/ag_sgp.c (STX: 0x8052, after ag_intr). */
-#ifdef FAITHFUL
-#include "parts/ag_sgp.c"
-#endif
 
-#ifndef FAITHFUL
 #include "parts/ag_sgp.c"   /* STX: 0x8052, after ag_intr */
-#endif
 
 /* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
    copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
@@ -811,43 +553,6 @@ short   text_color;
 void
 ag_ssw()
 {
-#ifdef FAITHFUL
-        short   idx;
-        short   pos;
-        short   n;
-        char *  wp;
-        short   ia;
-        short   ib;
-        char    tmp;
-
-        idx      = rndRng(0, 0x95);            /* 0..149 */
-        pos      = 0;
-        g_agorw  = g_agwb + (short)(idx * 11);
-        for (wp = g_agorw; *wp > ' ' && *wp != '.'; wp = wp + 1) {
-                g_agscw[pos] = *wp;
-                pos          = pos + 1;
-        }
-        g_agscw[pos] = '\0';
-        *wp          = '\0';
-        g_agwol      = pos;
-
-        for (;;) {
-                if (ag_matc(g_agscw, g_agorw) == 0)
-                        break;
-                n = 0;
-                for (;;) {
-                        if (rndRng(10, 0x14) <= n)
-                                break;
-                        ia  = rndRng(0, g_agwol - 1);
-                        ib  = rndRng(0, g_agwol - 1);
-                        tmp = g_agscw[ib];
-                        g_agscw[ib] = g_agscw[ia];
-                        g_agscw[ia] = tmp;
-                        n = n + 1;
-                }
-        }
-        ag_dwl(g_agscw, COLOR_green);
-#else
         /* STX's frame is -18: no `idx`, one counter reused for the
            copy index and the shuffle round, and a local copy of the
            word length that the shuffle reads instead of g_agwol. */
@@ -883,7 +588,6 @@ ag_ssw()
                 }
         }
         ag_dwl(g_agscw, COLOR_green);
-#endif
 }
 
 /* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
@@ -1075,7 +779,6 @@ validate:
 
 /* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
    at 0x7f84); see parts/plEr.c. */
-#ifndef FAITHFUL
 #include "parts/plEr.c"
 #include "parts/plErCol.c"   /* 0x871a, right after plEr */
 
@@ -1103,7 +806,6 @@ pk_dbet()
                 return 'r';
         }
 }
-#endif
 
 /* pk_evh: evaluate a 5-card hand.  *hand_rank <- 0=high card..9=royal flush.
    rank_flags[i]=1 for winning combo cards.  suit_flags: rank-sorted hand copy.
@@ -2169,9 +1871,7 @@ short   yi;
 }
 
 /* STX: pk_ldCrd sits here (0xab04), ahead of pk_awp. */
-#ifndef FAITHFUL
 #include "parts/pk_ldCrd.c"
-#endif
 
 /* pk_inph: wait for one of F-keys a/b/c or digits 1..5.
    Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout.
@@ -2185,11 +1885,7 @@ short   c;
 {
         short   ch;
 
-#ifdef FAITHFUL
-        for (;;) {
-#else
         while (1) {
-#endif
                 gameTick(0);
                 ch = mg_wkev();
                 if (ch == a) return 1;
@@ -2341,37 +2037,22 @@ pk_rmch(pile, count)
 short * pile;
 short * count;
 {
-#ifdef FAITHFUL
-        short   card;
-        short   n;
-        short   i;
-#else
         /* STX's frame is 12 bytes: `card` and `i` are followed by two
            more declared shorts the body never touches. */
         short   card;
         short   i;
         short   unused1;
         short   unused2;
-#endif
 
         if (*count == 0)
                 return -1;
         card    = *pile;
-#ifdef FAITHFUL
-        n       = *count;
-        *count  = n - 1;
-        if ((short)(n - 1) != 0) {
-                for (i = 0; i < 51; i = i + 1)
-                        pile[i] = pile[i + 1];
-        }
-#else
         /* STX decrements the count in place and returns early when the
            pile is emptied, so `card` is returned from two places. */
         if (--*count == 0)
                 return card;
         for (i = 0; i < 51; i++)
                 *(pile + i) = *(pile + i + 1);
-#endif
         return card;
 }
 
@@ -3631,6 +3312,3 @@ short   mode;
 }
 
 
-
-
-#endif  /* FAITHFUL */

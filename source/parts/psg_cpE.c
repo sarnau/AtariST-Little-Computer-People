@@ -6,20 +6,6 @@
 /* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
    addr: psg_cpE() */
 void
-#ifdef FAITHFUL
-psg_cpE(src, dest, count)
-unsigned char * src;
-unsigned char * dest;
-short           count;
-{
-        while (count != 0) {
-                *dest = *src;
-                src   = src  + 1;
-                dest  = dest + 1;
-                count = count - 1;
-        }
-}
-#else
 /* STX: a long count, tested by post-decrement, pointers stepped in
    place. */
 psg_cpE(src, dest, count)
@@ -33,4 +19,3 @@ long            count;
                 dest++;
         }
 }
-#endif

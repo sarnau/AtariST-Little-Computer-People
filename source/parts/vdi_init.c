@@ -3,9 +3,8 @@
  * this half (0x6680) opens the virtual workstation through global
  * work arrays, refuses anything but low resolution, and tail-calls
  * the attribute/clear half (parts/vdi_cls.c, 0x66fe, which must sit
- * immediately after it -- the call is a bsr.s).  LCP_ORG has neither
- * the split nor the resolution check, and keeps its own vdi_init in
- * gfx_prim.c.  Files under parts/ are never compiled standalone.
+ * immediately after it -- the call is a bsr.s).  Files under parts/
+ * are never compiled standalone.
  */
 void
 vdi_init()

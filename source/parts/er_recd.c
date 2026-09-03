@@ -1,23 +1,17 @@
 /*
  * parts/er_recd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from delivery.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in delivery.c.
+ * address inside the 0xdece object, far from the port's other
+ * delivery functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
 void
 er_recd()
 {
-#ifndef FAITHFUL
         short   unused;         /* STX: link #-6, the slot is never written */
-#endif
 
         g_actif = YES;
         wkFrDr();
-#ifdef FAITHFUL
-        dv_pick();
-#else
         /* STX writes the pick-up sequence out in each handler --
            there is no dv_pick helper in that revision. */
         lcp_face   = FACING_RIGHT;
@@ -37,7 +31,6 @@ er_recd()
 
         if (lcp.initiative_threshold < rndRng(0, 100))
                 a_opcfd(1);
-#endif
 
         sp_ssco(SPRITE_VINYL_CARRY);
         hs_posXY(POS_TOP_DANCE_FLOOR,
@@ -58,10 +51,6 @@ er_recd()
         lcp_st = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-#ifdef FAITHFUL
-        lcp_food = lcp_food + 1;    /* 1985 typo, preserved */
-#else
         lcp_food++;                 /* 1985 typo, preserved */
-#endif
         g_actif = NO;
 }

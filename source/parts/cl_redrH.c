@@ -1,7 +1,6 @@
 /*
- * parts/cl_redrH.c -- shared body; LCP_ORG links it in init.c,
- * LCP_STX in the 0xdece object (0x137d4).  Files under parts/
- * are never compiled standalone.
+ * parts/cl_redrH.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x137d4). Files under parts/ are never compiled standalone.
  */
 void
 cl_redrH()

@@ -30,19 +30,6 @@
    addr: cl_redrH() */
 
 
-#ifdef FAITHFUL
-void
-cl_redrH()
-{
-        if (g_cmmin == t_min)
-                return;
-        cl_drwH(g_cmmin, g_chhou, COLOR_white);
-        g_cmmin = t_min;
-        g_chhou   = t_hour;
-        cl_drwH(t_min, t_hour, COLOR_grey);
-}
-#endif  /* FAITHFUL -- STX groups it with cl_drini in init.c */
-
 /* od_draw: blit background object at (x,y) through the game's own
    vro_cpy binding (ROM 0x97d0 -> 0xd8d2).
    addr: od_draw() */
@@ -55,13 +42,9 @@ short   x;
 short   y;
 {
         vroCpyD(vdihnd, 3,
-                /* LCP_ORG goes through the g_obtmp pointer variable;
+                /* The other revision goes through a pointer variable;
                    the STX revision addresses the MFDB array itself. */
-#ifdef FAITHFUL
-                g_oiidx * 20 + (long) g_obtmp,
-#else
                 g_oiidx * 20 + (long) g_obtmt,
-#endif
                 (long) &mf_scrp,
                 0, 0,
                 g_obtaw[g_oiidx] - 1,
@@ -78,9 +61,6 @@ short   y;
 
 
 /* fillTopR -> parts/fillTopR.c (STX: 0xdece object, 0x686c -- in LCP_STX this is the 0x400c object, not 0xdece). */
-#ifdef FAITHFUL
-#include "parts/fillTopR.c"
-#endif
 
 /* sc_sctd, td_nois, rp_anim -> renderx.c */
 
@@ -91,18 +71,12 @@ short   y;
    addr: tt_on() */
 
 /* tt_on -> parts/tt_on.c (STX: 0xdece object, 0x13bc8, immediately after a_toggt). */
-#ifdef FAITHFUL
-#include "parts/tt_on.c"
-#endif
 
 /* tt_off: same walk, clear flag, redraw antenna in off state.
    Note: no SFX_TV_CLICK on off in the 1985 binary -- preserved verbatim.
    addr: tt_off() */
 
 /* tt_off -> parts/tt_off.c (STX: 0xdece object, 0x13c1e, immediately after tt_on). */
-#ifdef FAITHFUL
-#include "parts/tt_off.c"
-#endif
 
 /* -- Kitchen food-cabinet overlay -- */
 
@@ -114,11 +88,7 @@ short   y;
 void
 sc_drfc()
 {
-#ifdef FAITHFUL
-        unsigned short  cabinet_content;
-#else
         short           cabinet_content;    /* STX: signed compares */
-#endif
 
         if (lcp_cabO == NO)
                 return;
@@ -126,17 +96,10 @@ sc_drfc()
         cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
         od_draw(od_cbo2, 46, 140);
 
-#ifdef FAITHFUL
-        if (cabinet_content > 0) od_draw(od_cbit, 50, 159);
-        if (cabinet_content > 1) od_draw(od_cbit, 58, 159);
-        if (cabinet_content > 2) od_draw(od_cbit, 50, 151);
-        if (cabinet_content > 3) od_draw(od_cbit, 58, 151);
-#else
         if (cabinet_content >= 1) od_draw(od_cbit, 50, 159);
         if (cabinet_content >= 2) od_draw(od_cbit, 58, 159);
         if (cabinet_content >= 3) od_draw(od_cbit, 50, 151);
         if (cabinet_content >= 4) od_draw(od_cbit, 58, 151);
-#endif
 }
 
 /* -- Water tank level bar (VDI polylines) -- */
@@ -150,6 +113,3 @@ sc_drfc()
    addr: updWtLv() */
 
 /* updWtLv -> parts/updWtLv.c (STX: 0xdece object, 0x122fa, immediately after a_drink). */
-#ifdef FAITHFUL
-#include "parts/updWtLv.c"
-#endif

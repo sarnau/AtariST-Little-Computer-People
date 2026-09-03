@@ -41,9 +41,6 @@
 #include "tick_tables.h"
 
 /* gameLoop -> parts/gameLoop.c (STX: 0x5c76, in the 0x400c object between lc_load and chk_actT). */
-#ifdef FAITHFUL
-#include "parts/gameLoop.c"
-#endif
 
 #ifndef HOST
 /* _stksize -- consulted by Alcyon's gemstart.o at boot to decide the

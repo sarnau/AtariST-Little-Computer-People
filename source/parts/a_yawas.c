@@ -1,8 +1,7 @@
 /*
  * parts/a_yawas.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from asimple.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in asimple.c.
+ * address inside the 0xdece object, far from the port's other
+ * asimple functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -18,13 +17,8 @@ a_yawas()
         g_hatas = 8;
         lcp_hwt();
 
-        /* LCP_ORG's source uses the register form; the STX revision
-           writes i++ (addq straight to the frame slot). */
-#ifdef FAITHFUL
-        for (i = 0; i < 15; i = i + 1) {
-#else
+        /* i++ -- addq straight to the frame slot. */
         for (i = 0; i < 15; i++) {
-#endif
                 lcp_st = pst_arr[i & 1];
                 gameTick(1);
         }

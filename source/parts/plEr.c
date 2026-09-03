@@ -1,11 +1,10 @@
 /*
  * parts/plEr.c -- plEr's body, shared between configurations.
  *
- * The two revisions place it differently inside the games object:
- * LCP_ORG right after mg_stp, LCP_STX at 0x86e0, past the anagram
- * helpers (ag_intr 0x7f84) -- and that distance is what makes its
- * initVdi call a bsr.w instead of a bsr.s.  Files under parts/ are
- * never compiled standalone.
+ * LCP_STX puts it at 0x86e0, past the anagram helpers (ag_intr
+ * 0x7f84) -- and that distance is what makes its initVdi call a
+ * bsr.w instead of a bsr.s.  Files under parts/ are never compiled
+ * standalone.
  */
 
 /* plEr: clear a rectangle via VDI v_bar.

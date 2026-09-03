@@ -25,14 +25,8 @@
 
 
 /* ldObj -> parts/ldObj.c (STX: 0x524a). */
-#ifdef FAITHFUL
-#include "parts/ldObj.c"
-#endif
 
 /* ldSpr -> parts/ldSpr.c (STX: 0x528a). */
-#ifdef FAITHFUL
-#include "parts/ldSpr.c"
-#endif
 
 /* Parse OBJECTS/SPRITES buffer -> per-record MFDB + w/h arrays.
    Stops at buffer end / height==0 / 64 records. */
@@ -46,9 +40,6 @@
 /* al_lost does not exist in LCP_STX: main inlines it. */
 
 /* al_loal -> parts/al_loal.c (STX: 0x6428, in the 0x400c object ahead of fl_ltpl). */
-#ifdef FAITHFUL
-#include "parts/al_loal.c"
-#endif
 
 /* al_locs: load BODY.LCP + PEx.LCP (x = character_sprite_id, 2..6,
    clamped to 2).  Wires body_ptr and pex_ptr.  Static buffers

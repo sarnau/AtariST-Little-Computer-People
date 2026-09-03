@@ -1,7 +1,7 @@
 /*
- * parts/fr_reac.c -- shared body; LCP_ORG links it in letload.c,
- * LCP_STX in the 0xdece object (0x53b8, in the 0x400c object ahead of main).  Files under parts/
- * are never compiled standalone.
+ * parts/fr_reac.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x53b8, in the 0x400c object ahead of main). Files under
+ * parts/ are never compiled standalone.
  */
 /* outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
    addr: fr_reac() */

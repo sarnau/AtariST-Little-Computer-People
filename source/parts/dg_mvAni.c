@@ -1,7 +1,6 @@
 /*
- * parts/dg_mvAni.c -- shared body; LCP_ORG links it in dog.c,
- * LCP_STX in the 0xdece object (0x412c).  Files under parts/
- * are never compiled standalone.
+ * parts/dg_mvAni.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x412c). Files under parts/ are never compiled standalone.
  */
 /* dg_mvAni: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y

@@ -1,7 +1,7 @@
 /*
- * parts/vst_h20.c -- shared body; LCP_ORG links it in gfx_prim.c,
- * LCP_STX in the 0xdece object (0x75dc, in the games object between mg_stp and rst_vsth).  Files under parts/
- * are never compiled standalone.
+ * parts/vst_h20.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x75dc, in the games object between mg_stp and rst_vsth).
+ * Files under parts/ are never compiled standalone.
  */
 void
 vst_h20()

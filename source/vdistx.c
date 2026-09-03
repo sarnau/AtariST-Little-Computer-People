@@ -15,17 +15,12 @@
  *
  * There is also just ONE trap dispatcher and ONE parameter block:
  * every binding here reaches gsx1 (vdistx_a.s, 0x1772e, right behind
- * wr_src/wr_dst) and every one of them aims `vdipb` -- LCP_ORG's
- * vdi_go/vdipb and vdilib.c's vdi_go2/vdipb2 are two extra copies of
- * the same 22-byte routine, which is the whole of the port's former
- * +44-byte text surplus.  vdiown.h maps both names onto gsx1 for this
- * configuration.
+ * wr_src/wr_dst) and every one of them aims `vdipb`.  vdiown.h maps
+ * the older vdi_go / vdi_go2 spellings onto gsx1.
  *
- * tools/stx_units.txt makes the default build compile this file and
- * skip vdiown.c and vdilib.c; FAITHFUL does the reverse.
+ * This is the port's only VDI binding module.
  */
 
-#ifndef FAITHFUL
 
 #include "types.h"
 #include "globals.h"
@@ -132,4 +127,3 @@ short * cell_h;
         *cell_h = ptsout[3];
 }
 
-#endif  /* !FAITHFUL */

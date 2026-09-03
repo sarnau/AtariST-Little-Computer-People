@@ -27,7 +27,7 @@
 * valid instructions on disk, only after the decrypt loop has run.
 *
 * alcyon_link.sh links this file only for the default (LCP_STX)
-* build; LCP_ORG's cp_main is the crack's 10-byte stub in stubs.c.
+* build.
 *
 ******************************************************************************
 

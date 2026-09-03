@@ -2,7 +2,7 @@
 """ppbalance.py -- check #ifdef/#else/#endif balance in the port sources.
 
 Campaign #2 gates nearly every recovered source shape behind
-`#ifdef FAITHFUL`, and a scripted edit that wraps a line already
+a conditional, and a scripted edit that wraps a line already
 inside such a block leaves the outer `#else`/`#endif` stranded.
 Alcyon's cp68 does not complain: it silently drops everything from
 the unclosed `#ifdef` to EOF in the configuration that fails the

@@ -1,6 +1,6 @@
 /*
- * parts/showLcp.c -- shared body; LCP_ORG links it in sprites.o,
- * LCP_STX in the 0xdece object (see stx_u2.c).
+ * parts/showLcp.c -- shared body; LCP_STX links it in the 0xdece
+ * object (see stx_u2.c).
  */
 
 /* showLcp: restore the pointers hideLcp() stashed.

@@ -14,25 +14,18 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* er_nomem lives in THIS object only in LCP_ORG; the STX revision
+/* er_nomem lives elsewhere: the STX revision
    puts it at the end of its 0x400c object (see stx_u1.c).  The body
    is shared via parts/ so neither configuration duplicates it. */
-#ifdef FAITHFUL
-#include "parts/er_nomem.c"
-#endif
 
 /* er_write -> parts/er_write.c (STX: 0x148e6, right after crFile). */
-#ifdef FAITHFUL
-#include "parts/er_write.c"
-#endif
 
 /* ---- STX-revision grouping --------------------------------------
    In LCP_STX.PRG, sp_spud and sp_flih follow er_write in this
-   object (sp_spud reaches sp_flih with a bsr).  The FAITHFUL twins
-   live in dog.c / sprites.c.  The STX sp_spud also splits the tail
+   object (sp_spud reaches sp_flih with a bsr).  The STX sp_spud also
+   splits the tail
    into two successive if/else pairs (mask pair first, then image
-   pair) instead of LCP_ORG's single combined one. */
-#ifndef FAITHFUL
+   pair) instead of a single combined one. */
 
 #include "structs.h"
 #include "enums.h"
@@ -122,4 +115,3 @@ short                   wdWidth;
         }
 }
 
-#endif  /* !FAITHFUL */

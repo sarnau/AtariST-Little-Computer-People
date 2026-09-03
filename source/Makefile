@@ -17,61 +17,42 @@
 #
 # Add new source files to the SOURCES list.  Header dependencies are
 # tracked with -MMD so incremental rebuilds are correct.
+#
+# NOTE: files under source/parts/ are never listed -- they are bodies
+# #included by the unity units (see tools/stx_units.txt), and the
+# units' constituents are not listed either.
 
 # ---- Source list ---------------------------------------------------------
-SOURCES         := globals.c \
-                   sprglobs.c \
-                   tables.c \
-                   sim.c \
-                   calendar.c \
-                   random.c \
-                   events.c \
-                   health.c \
-                   ai.c \
-                   movement.c \
-                   walk.c \
-                   sprites.c \
-                   sprhead.c \
-                   dog.c \
-                   actions.c \
-                   astubs.c \
-                   asimple.c \
-                   aidle.c \
-                   ahouse.c \
-                   afood.c \
-                   abathrm.c \
-                   aleisure.c \
-                   aletter.c \
-                   adoors.c \
-                   letload.c \
-                   renderx.c \
-                   gfx_prim.c \
-                   clock.c \
-                   keyboard.c \
-                   renderf.c \
-                   parser.c \
-                   agames.c \
-                   sprender.c \
-                   tvanim.c \
-                   games.c \
+SOURCES         := assets.c \
                    cards.c \
-                   midi_seq.c \
-                   psg_io.c \
-                   sfx_irq.c \
-                   vdi.c \
-                   vocab.c \
-                   psgfreq.c \
-                   assets.c \
-                   alerts.c \
-                   delivery.c \
-                   airandom.c \
-                   save.c \
-                   savehost.c \
-                   render.c \
-                   sound.c \
-                   tick.c \
-                   stubs.c \
+                   clock.c \
+                   events.c \
+                   games.c \
+                   gfx_prim.c \
+                   globals.c \
                    init.c \
+                   keyboard.c \
+                   letload.c \
+                   midi_seq.c \
+                   parser.c \
+                   psg_io.c \
+                   psgfreq.c \
+                   random.c \
+                   renderf.c \
+                   save.c \
+                   sprender.c \
+                   sprglobs.c \
+                   sprhead.c \
+                   sprload.c \
+                   stubs.c \
+                   stx_u1.c \
+                   stx_u2.c \
+                   stx_u3.c \
+                   stx_u4.c \
+                   tables.c \
+                   tick_tables.c \
+                   vdistx.c \
+                   vocab.c \
                    main.c
 
 # ---- Directory layout ----------------------------------------------------

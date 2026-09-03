@@ -1,7 +1,7 @@
 /*
- * parts/cWkday.c -- shared body; LCP_ORG links it in movement.c,
- * LCP_STX in the 0xdece object (0x1332e, in the 0xdece object).  Files under parts/
- * are never compiled standalone.
+ * parts/cWkday.c -- shared body; LCP_STX links it in the 0xdece object
+ * (0x1332e, in the 0xdece object). Files under parts/ are never
+ * compiled standalone.
  */
 /* The original references `daysInMo(dt_mon, dt_year)` inside the month
    loop instead of `daysInMo(i, dt_year)` -- preserved for fidelity
@@ -10,25 +10,6 @@
 short
 cWkday()
 {
-#ifdef FAITHFUL
-        short   month_days;
-        short   i;
-        short   day_offset;
-        short   next_offset;
-
-        day_offset = 1;
-        for (i = 0; i < dt_year; i = i + 1) {
-                next_offset = day_offset + 1;
-                if ((i % 4) == 0)
-                        next_offset = day_offset + 2;
-                day_offset = next_offset;
-        }
-        for (i = 0; i < dt_mon; i = i + 1) {
-                month_days = daysInMo(dt_mon, dt_year);
-                day_offset = month_days + day_offset;
-        }
-        return (short) (date_day + day_offset) % 7;
-#else
         /* STX carries only two locals (frame -8): it steps day_offset
            in place rather than routing it through `next_offset`, and
            accumulates the month lengths straight into it. */
@@ -46,5 +27,4 @@ cWkday()
         day_offset += date_day;
         day_offset %= 7;
         return day_offset;
-#endif
 }

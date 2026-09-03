@@ -12,12 +12,6 @@ short   g_trel[10] = {
 };
 
 /* putEv -> parts/putEv.c (STX: 0x15fb4, after p_dobls). */
-#ifdef FAITHFUL
-#include "parts/putEv.c"
-#endif
 
 /* getEv -> parts/getEv.c (STX: 0x16002, right after putEv in the
    0x148fe object -- stx_u3.c includes it there). */
-#ifdef FAITHFUL
-#include "parts/getEv.c"
-#endif

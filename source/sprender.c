@@ -14,9 +14,6 @@
 #include "sprglobs.h"
 
 /* sp_iniM -> parts/sp_iniM.c (STX: 0x6612, right after stpScrB). */
-#ifdef FAITHFUL
-#include "parts/sp_iniM.c"
-#endif
 
 /* sp_draw -> parts/sp_draw.c (STX 0x1605c, in the sprite object;
    stx_u3.c includes it there). */

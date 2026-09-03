@@ -1,8 +1,12 @@
 # source/ port status
 
-Snapshot of what is ported for real vs. still a stub.  Update as
-functions move from `astubs.c` / `stubs.c` into real
-translation units.
+> **Stale.**  This table predates the LCP_STX restructuring: the
+> action files it names (ahouse.c, aleisure.c, adoors.c, ...) no
+> longer exist -- every body now lives in `source/parts/` and is
+> included by a unity unit in LCP_STX's own order.  The file column
+> is therefore historical.  The live status is in CLAUDE.md.
+
+Snapshot of what is ported for real vs. still a stub.
 
 Total Ghidra functions in `LCP.PRG`: ~395.
 Ported for real (Ghidra-verified): **188 table rows** across **54

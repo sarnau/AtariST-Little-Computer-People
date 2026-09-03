@@ -1,7 +1,7 @@
 /*
- * parts/chk_encm.c -- shared body; LCP_ORG links it in parser.c,
- * LCP_STX in the 0xdece object (0x16f9a, in the 0x148fe object between prCh and prsCmd).  Files under parts/
- * are never compiled standalone.
+ * parts/chk_encm.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x16f9a, in the 0x148fe object between prCh and prsCmd).
+ * Files under parts/ are never compiled standalone.
  */
 /* addr: chk_encm() */
 short

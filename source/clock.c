@@ -9,26 +9,3 @@
 /* Y offset uses index + 3 (quarter-turn phase shift) so the same
    15-entry table serves both axes.
    addr: cl_drwH() */
-#ifdef FAITHFUL
-void
-cl_drwH(minute, hour, color)
-short   minute;
-short   hour;
-short   color;
-{
-        short   m;
-        short   h;
-
-        m = minute / 5;
-        h = hour % 12;
-
-        drwLine(278, 85,
-                  278 + g_cmmip[m],
-                   85 - g_cmmip[m + 3],
-                  color);
-        drwLine(278, 85,
-                  278 + g_chhop[h],
-                   85 - g_chhop[h + 3],
-                  color);
-}
-#endif  /* FAITHFUL -- STX groups it with the clock object in init.c */

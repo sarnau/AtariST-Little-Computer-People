@@ -7,10 +7,7 @@
 * post-increment long moves per iteration, driven by `dbf` on the
 * count.  It still carries the C calling frame, so the arguments sit
 * at the usual offsets (src 8, dst 12, count 16).
-*
-* LCP_ORG has a C version instead -- gfx_prim.c keeps that under
-* FAITHFUL, and alcyon_link.sh links this file only for the default
-* build.
+
 *
 ******************************************************************************
 

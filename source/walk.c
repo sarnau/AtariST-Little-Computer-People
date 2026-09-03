@@ -19,31 +19,6 @@
    Returns 0 on arrival, -1 on preemption when idle.
    addr: lcp_wkD() */
 
-#ifdef FAITHFUL
-short
-lcp_wkD()
-{
-        g_hamod       = HEAD_ANIM_WALKING;
-        g_hastl = 0;
-
-        do {
-                if (g_wtx == 0 && g_wty == 0)
-                        return 0;
-                lcp_path();
-        } while (in_evrt != NO ||
-                 g_trel[0] == ACTION_NONE ||
-                 g_lcyof != NO ||
-                 introSeq != NO ||
-                 lcp_stR != NO ||
-                 g_actif != NO);
-
-        g_wty = 0;
-        g_wtx = 0;
-        return -1;
-}
-#else   /* STX: link #-6 -- the return value goes through a local,
-           the loop is a while on the target coordinates, and each
-           guard is its own continue. */
 
 short
 lcp_wkD()
@@ -75,33 +50,12 @@ lcp_wkD()
         }
         return result;
 }
-#endif
 
 /* lcp_flwp -> parts/lcp_flwp.c (STX: 0x50bc, just before getFlrY). */
-#ifdef FAITHFUL
-#include "parts/lcp_flwp.c"
-#endif
 
 /* dg_wkPth -> parts/dg_wkPth.c (STX: 0x4586, immediately after dg_mvAni). */
-#ifdef FAITHFUL
-#include "parts/dg_wkPth.c"
-#endif
 
 /* lcp_fstp -> parts/lcp_fstp.c (STX: 0x4fec, in the 0x400c object with getFlrY). */
-#ifdef FAITHFUL
-#include "parts/lcp_fstp.c"
-#endif
 
-#ifdef FAITHFUL
-#endif
-
-#ifdef FAITHFUL
-#endif
-
-#ifdef FAITHFUL
-#endif
 
 /* lcp_path -> parts/lcp_path.c (STX: 0x470a, in the 0x400c object). */
-#ifdef FAITHFUL
-#include "parts/lcp_path.c"
-#endif

@@ -1,6 +1,6 @@
 /*
- * parts/mq_parh.c -- shared body; LCP_ORG links it in midi_seq.c,
- * LCP_STX at 0x11fa, near the end of the MIDI object.  Files under parts/ are never compiled
+ * parts/mq_parh.c -- shared body; LCP_STX links it in at 0x11fa, near
+ * the end of the MIDI object. Files under parts/ are never compiled
  * standalone.
  */
 /* mq_parh: walk header from mi_dbase to first 0xFF.
@@ -19,63 +19,22 @@ unsigned char * p;
            channel-map block is padded to an even boundary). */
         /* STX: p++ straight to the frame slot, and the scan is a
            `while (*p)` with the test at the bottom. */
-#ifdef FAITHFUL
-        if (*p == 0)
-                p = p + 1;
-
-        for (;;) {
-                if (*p == 0)
-                        return;
-
-#else
         if (*p == 0)
                 p++;
 
         while (*p != 0) {
-#endif
                 /* Bytes in the note-event range 0x01..0x7F -- and
                    0xA0..0xFE via the & 0x9f mask that the 1985 code
                    used -- are 3-byte note events.  Skip past them. */
                 /* STX tests only the upper bound (the while already
                    excludes 0) and advances with p += 3. */
-#ifdef FAITHFUL
-                if ((*p & 0x9f) < 0x20 && (*p & 0x9f) != 0) {
-                        p = p + 3;
-                        continue;
-                }
-#else
                 if ((*p & 0x9f) < 0x20) {
                         p += 3;
                         continue;
                 }
-#endif
 
                 /* Config-command dispatch.  STX masks the selector
                    to a byte (and.w #255 before the compare chain). */
-#ifdef FAITHFUL
-                switch (*p) {
-                case MIDI_HDR_SET_CHANNEL_COUNT:
-                        p = mh_chac(p);
-                        break;
-                case MIDI_HDR_SET_TEMPO:
-                        p = mh_temp(p);
-                        break;
-                case MIDI_HDR_SET_VOLUME:
-                        p = mh_volu(p);
-                        break;
-                case MIDI_HDR_BUILD_SCALE_TABLE:
-                        p = mh_scat(p);
-                        break;
-                case MIDI_HDR_PROGRAM_CHANGE:
-                        p = mh_proc(p);
-                        break;
-                case MIDI_HDR_END:
-                        return;
-                default:
-                        p = p + 1;
-                        break;
-                }
-#else
                 /* STX writes the handlers INLINE as the case bodies
                    (the jump table targets 0x1246/0x1264/0x129c/
                    0x12a4/0x132c are inside mq_parh), and has no
@@ -119,6 +78,5 @@ unsigned char * p;
                 default:
                         break;
                 }
-#endif
         }
 }

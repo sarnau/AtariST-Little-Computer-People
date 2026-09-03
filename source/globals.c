@@ -13,14 +13,10 @@
 #include "globals.h"
 #include "sprglobs.h"
 
-#ifdef FAITHFUL
-short   ani_cnt  = 0;
-#else
 short           bj_key;         /* pk_bjMn's key variable (a global in STX) */
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
 unsigned short  ani_cnt = 0;    /* STX: the & 7 test zero-extends */
-#endif
 short   g_secs    = 0;
 
 short   t_min            = 0;
@@ -53,11 +49,7 @@ short   g_trac                  = ACTION_NONE;
 short   lcp_x                           = 0;
 short   lcp_y                           = 0;
 BOOL16  g_lcldd                      = 0;
-#ifdef FAITHFUL
-short   cprot_r           = 0;      /* Ghidra: set by copyprot_main_check() during boot */
-#else
 long    cprot_r           = 0;      /* STX tests it with tst.l */
-#endif
 short   g_spdc              = 5;
 
 BOOL16  alarm_p       = NO;
@@ -84,11 +76,7 @@ short   g_wty                   = 0;
    like `i & 3`.  Port previously declared [4], which was one byte
    short of a real out-of-bounds write via `pst_arr[4]` writes in the
    bathroom/food/house paths -- the fifth slot overlapped lcp_frdO. */
-#ifdef FAITHFUL
-short   pst_arr[4];
-#else
 short   pst_arr[10];
-#endif
 
 short   lcp_frdO             = 0;
 short   studyDrO             = 0;
@@ -106,36 +94,11 @@ short   lcp_tv                       = 0;
    (0x11758-0x1177e): study/front/cabinet/medicine/toilet doors,
    stove-off, the 3-slot stove-on table (g_obisa), then the fridge.
    od_draw sites read these slots, never enum constants. */
-#ifdef FAITHFUL   /* STX compiles these ids as literals */
-short   od_stcl = 46;           /* OBJ_DOOR_STUDY_CLOSED   */
-short   od_sto1 = 47;           /* OBJ_DOOR_STUDY_OPEN_1   */
-short   od_sto2 = 48;           /* OBJ_DOOR_STUDY_OPEN_2   */
-short   od_frcl = 36;           /* OBJ_DOOR_FRONT_CLOSED   */
-short   od_fro1 = 37;           /* OBJ_DOOR_FRONT_OPEN_1   */
-short   od_fro2 = 38;           /* OBJ_DOOR_FRONT_OPEN_2   */
-short   od_cbcl = 19;           /* OBJ_CABINET_CLOSED      */
-short   od_cbo1 = 20;           /* OBJ_CABINET_OPEN_1      */
-short   od_cbo2 = 21;           /* OBJ_CABINET_OPEN_2      */
-short   od_med1 = 40;           /* OBJ_MEDICINE_OPEN_1     */
-short   od_tocl = 25;           /* OBJ_DOOR_TOILET_CLOSED  */
-short   od_too1 = 26;           /* OBJ_DOOR_TOILET_OPEN_1  */
-short   od_too2 = 27;           /* OBJ_DOOR_TOILET_OPEN_2  */
-short   od_stof = 22;           /* stove-off frame slot    */
-#endif
 short   g_obisa[3]    = { 23, 24, 25 };  /* stove-on frame slots */
-#ifdef FAITHFUL   /* STX compiles these ids as literals */
-short   od_fdcl = 16;           /* OBJ_FRIDGE_CLOSED       */
-short   od_fdo1 = 17;           /* OBJ_FRIDGE_OPEN_1       */
-short   od_fdo2 = 18;           /* OBJ_FRIDGE_OPEN_2       */
-#endif
 
 
 /* STX declares this a byte flag (tst.b at its use sites). */
-#ifdef FAITHFUL
-BOOL16  mi_play                 = NO;
-#else
 char    mi_play                 = NO;
-#endif
 short   dg_bwlch            = 0;
 short   g_sfplf        = NO;
 short   g_sfpli          = 0;
@@ -201,23 +164,6 @@ short   g_ltcwt[4]      = {
 
 /* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
    fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
-#ifdef FAITHFUL   /* STX compiles these ids as literals */
-short   od_clcl = 28;           /* OBJ_DOOR_CLOSET_CLOSED  */
-short   od_clo1 = 29;           /* OBJ_DOOR_CLOSET_OPEN_1  */
-short   od_clo2 = 30;           /* OBJ_DOOR_CLOSET_OPEN_2  */
-short   od_fir0 = 31;           /* OBJ_FIRE_OFF            */
-short   od_fir1 = 32;           /* OBJ_FIRE_1 (unreferenced slots */
-short   od_fir2 = 33;           /* OBJ_FIRE_2  the ROM carries    */
-short   od_fir3 = 34;           /* OBJ_FIRE_3  alongside fire-off)*/
-short   od_fir4 = 35;           /* OBJ_FIRE_4              */
-short   od_ficl = 0;            /* OBJ_FILING_CABINET_CLOSED */
-short   od_fio1 = 1;            /* OBJ_FILING_CAB_OPEN_1   */
-short   od_fio2 = 2;            /* OBJ_FILING_CAB_OPEN_2   */
-short   od_drcl = 10;           /* OBJ_DRESSER_CLOSED      */
-short   od_dro1 = 11;           /* OBJ_DRESSER_OPEN_1      */
-short   od_dro2 = 12;           /* OBJ_DRESSER_OPEN_2      */
-short   od_cbit = 44;           /* cabinet food-marker slot */
-#endif
 char    g_ltscb[64];
 char    in_str[256];
 /* comp_tok[15]: the 15 most common byte values in the
@@ -239,14 +185,12 @@ short * sv_headP           = (short *) 0;
    sentinel handle that the VDI stubs ignore. */
 short   vdihnd                       = 0;
 short   vdi_hnd                      = 0;    /* physical from graf_handle */
-#ifndef FAITHFUL
 /* LCP_STX's aes_init has an empty frame: graf_handle writes its four
    cell/box metrics into globals, not into locals. */
 short   gr_hwchar;
 short   gr_hhchar;
 short   gr_hwbox;
 short   gr_hhbox;
-#endif
 /* vdi_colt (Ghidra vdi_color_table @ 0x29b64): color_enum ->
    VDI-color permutation.  ROM data at 0x29b64 (verified via
    /read_memory) is {0,2,3,6,4,7,5,8,9,10,11,14,12,15,13,1} -- exactly
@@ -288,9 +232,7 @@ short   ptsout[128];
    stack locals -- vdi_init only allocates 6 bytes on the stack
    (link.w A6,-0x6 at 0x16680), enough for the loop counter only. */
 short   workin[11];
-#ifndef FAITHFUL
 short   work_out[57];
-#endif
 
 void *  g_dscp             = (void *) 0;
 
@@ -340,18 +282,9 @@ short   skin_pal[8] = {
 
 /* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO.
    LCP_STX declares both as char -- sgPlay writes them with moveb. */
-#ifdef FAITHFUL
-BOOL16  g_molof             = NO;
-BOOL16  mi_varR                      = YES;
-#else
 char    g_molof             = NO;
 char    mi_varR                      = YES;
-#endif
-#ifdef FAITHFUL
-short   g_mspha                  = 0;
-#else
 char    g_mspha                  = 0;   /* STX: byte */
-#endif
 unsigned char * mi_dbase      = (unsigned char *) 0;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
@@ -365,28 +298,12 @@ long            mi_env = 0;
      mi_dvel    @ 0x29a24 = 0x7F (127)
      psg_dvol       @ 0x29a26 = 0x0F (15)  -- max PSG volume
    Port previously had mi_vel/default at 100 (guess). */
-#ifdef FAITHFUL
-short           mi_vel           = 127;
-#else
 char            mi_vel           = 127; /* STX: byte */
-#endif
 /* STX declares these two as char (byte compares/stores; Alcyon
    word-aligns them, hence the 2-byte spacing). */
-#ifdef FAITHFUL
-short           mi_dvel   = 127;
-#else
 char            mi_dvel   = 127;
-#endif
-#ifdef FAITHFUL
-short           psg_cvol      = 15;
-#else
 char            psg_cvol      = 15;     /* STX: byte */
-#endif
-#ifdef FAITHFUL
-short           psg_dvol      = 15;
-#else
 char            psg_dvol      = 15;
-#endif
 /* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),
    with mi_evcn initialized to 9. */
 short           mi_evi          = 0;
@@ -403,26 +320,14 @@ short           mi_temp              = 120;
 short           aes_intO[16];
 
 long            g_mtcou       = 0;
-#ifdef FAITHFUL
-short           mi_dwrm  = 0;
-#endif
 short           g_mtdiv       = 100;
-#ifdef FAITHFUL
-short           g_mtpre     = 100;
-#endif
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
    mq_stap resets it at song start. */
 short           mi_nlp0         = 100;
-#ifdef FAITHFUL
-short           mi_nxTk    = 100;
-short           mi_lpTk= 100;
-BOOL16          g_msmsa   = NO;
-#else
 long            mi_nxTk    = 100;       /* STX: long tick counters */
 long            mi_lpTk= 100;
 /* g_msmsa is a BYTE and lives in the text segment behind mq_tick --
    see source/mq_tick.s. */
-#endif
 /* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
    lookup.  Dumped verbatim -- previous port had guessed the values
    from Music Studio 2.0 documentation but the real ones diverge
@@ -444,10 +349,8 @@ unsigned char   g_meve[4];
    Renamed from Ghidra's placeholder gSongMaxPosition_0. */
 long            g_momap  = 0;
 
-/* The remaining sequencer/PSG working state below exists only in the
-   other-revision music engine kept in the default build; LCP_ORG.PRG
-   has none of it in its data segment. */
-#ifndef FAITHFUL
+/* The remaining sequencer/PSG working state below belongs to the
+   Timer-A music engine. */
 
 /* Timer-A interrupt state.
    mi_rlock -- reentrancy guard so the tick handler doesn't recurse
@@ -458,9 +361,6 @@ long            g_momap  = 0;
                         path can restore it (currently we install for the
                         lifetime of the process, but the slot is here
                         for future symmetry with the ROM's teardown). */
-#ifdef FAITHFUL
-short           mi_rlock                = 0;
-#endif
 long            mi_svtv                    = 0;
 
 /* ---- MIDI sequencer parse state -----------------------------------
@@ -485,11 +385,7 @@ char            mi_ccha         = 0;
 char            mi_cnot         = 0;
 char            mi_nmof         = 0;
 char            mi_nlpA         = 0;
-#ifdef FAITHFUL
-BOOL16          mi_slop         = NO;
-#else
 char            mi_slop         = NO;   /* STX: byte */
-#endif
 
 short           mi_ndt[32] = {
            0,    2,    2,    3,    4,    5,    6,    8,
@@ -572,31 +468,18 @@ unsigned char   mi_noSt[128];
 
 
 /* ---- PSG channel state ---------------------------------------------- */
-#endif  /* !FAITHFUL */
 
 /* Referenced by the ROM text (bss 0x3df96 / 0x4549a / 0x1dc7c /
    0x48bce). */
-#ifdef FAITHFUL
-short           g_mcpro[16];
-#else
 char            g_mcpro[16];    /* STX: byte array */
-#endif
 unsigned char   g_mstr[132];
 unsigned char   mi_chmap[16];
-#ifdef FAITHFUL
-short           mi_pgmap[16];
-#else
 char            mi_pgmapb[16];
 char *          mi_pgmap = mi_pgmapb;   /* STX: byte pointer */
-#endif
 
 BOOL16          psg_out              = YES;
-#ifdef FAITHFUL
-BOOL16          psg_ntAc                = NO;
-#else
 /* psg_ntAc is a BYTE in the text segment behind mq_tick -- see
    source/mq_tick.s. */
-#endif
 short           env_val            = 5;    /* octave-5 baseline */
 char            g_mnlol      = 0x17; /* A#0 */
 char           g_mnhil       = 0x7f; /* MIDI max         */
@@ -644,11 +527,7 @@ void *  g_srptr                      = (void *) 0;
    fillTopR at 0x1686c) + margin.  The ROM statically points g_dsb at
    the raw buffer base (relocated data 0x1214e -> bss 0x1dcc6);
    stpScrB re-points it to the ALIGNED start at runtime. */
-#ifdef FAITHFUL
-short   dsb_stor[16256];
-#else
 short   dsb_stor[17408];
-#endif
 short * g_dsb = dsb_stor;
 
 /* scr_scal (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
@@ -657,12 +536,10 @@ short * g_dsb = dsb_stor;
    the value is a constant. */
 short   scr_scal             = 1;
 
-#ifndef FAITHFUL
 /* LCP_STX's vdi_init opens the workstation through GLOBAL work
    arrays, not locals (its frame is only -6). */
 short   work_in[11];
 short   wk_out[57];
-#endif
 
 /* MFDB_A (Ghidra 0x2C82A) -- source MFDB for VDI raster copies.
    fd_addr = NULL is the VDI convention for "device screen", so
@@ -720,11 +597,7 @@ short   g_sfdoc     = 0;
    everything; footsteps 0..5 at 30 lose to everything.
    Dumped verbatim from the data segment -- previous port had guessed
    values (0/5/3/8/etc) that gave wrong preemption. */
-#ifdef FAITHFUL
-short   sf_pri[32] = {
-#else
 char    sf_pri[32] = {          /* STX: one byte per entry */
-#endif
          30,  30,  30,  30,  30,  30,  15,  15,
          15,  15,  15,  15,   0,   0,  15,  15,
          15,  15,  15,  14,  16,   1,  15,   0,
@@ -904,7 +777,6 @@ char *          g_agwgm[3] = {
 
 /* anagram_guess_prompt_strings: shown per attempt (0..8 -> "Guess #1?"..
    "Guess #9?").  Rendered by ag_sgp at (166, 57). */
-#ifndef FAITHFUL
 char *          g_aggpr[9] = {
         "Guess #1?",
         "Guess #2?",
@@ -916,7 +788,6 @@ char *          g_aggpr[9] = {
         "Guess #8?",
         "Guess #9?"
 };
-#endif  /* !FAITHFUL */
 
 /* Mini-game shared state.
    mg_tofl: set YES by mg_wkev when the 7200-frame (~15 min) idle
@@ -925,17 +796,11 @@ char *          g_aggpr[9] = {
    sv_vqta: 10-short buffer holding the pre-mini-game VDI text
             attributes so rst_vsth can restore them after temporarily
             switching to 20-pixel height for the title/answer render. */
-#ifndef FAITHFUL
 BOOL16          mg_tofl                    = NO;
-#endif
-#ifndef FAITHFUL
 short           sv_vqta[10];
-#endif
 
-#ifndef FAITHFUL
 short           pk_round              = 0;
 BOOL16          pk_quit                 = NO;
-#endif
 short           g_pcbet              = 0;
 short           g_ppbet                = 0;
 short           g_pcmon            = 400;
@@ -947,7 +812,6 @@ short           g_ppppa                = 0;
 char *          g_agorw           = (char *) 0;
 short           pk_phase                = 0;
 short           pk_dsc[52];
-#ifndef FAITHFUL
 /* Ghidra poker_computer_draw_pile @ 0x47e24 and poker_player_draw_pile
    @ 0x3f712: 52-short ROM slots (104 bytes each).  Port previously
    declared [26], which pk_rmch's unconditional
@@ -966,19 +830,12 @@ short           pk_cwc[52];             /* poker_computer_war_cards */
 short           g_pchc;  /* poker_computer_hand_cards */
 
 BOOL16          moff_f;
-#endif  /* !FAITHFUL */
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
    at the start of each round in pk_ante / pk_evhs / pk_show.
    In the ROM pk_ch / pk_ph are the WAR hands: 26 shorts each. */
-#ifdef FAITHFUL
-short           pk_ch[26];
-short           pk_ph[26];
-#else
 short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
 short           pk_ph[5];           /* player_hand */
-#endif
-#ifndef FAITHFUL
 short           pk_hrf[5];          /* hand_rank_flags   -- which cards
                                        form computer's pair/trip/etc */
 short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
@@ -1001,17 +858,14 @@ short           pk_phv;     /* player_hand_value -- saved bet */
 short           pk_bet;     /* current bet accumulator (shared) */
 BOOL16          pk_bluff;    /* computer intends to bluff */
 BOOL16          pk_pass;    /* computer passed on the bet loop */
-#endif  /* !FAITHFUL */
 
 /* Editable poker prompts.  pk_bm / pk_rm have single-space digit
    slots at fixed offsets; pk_tcm's card count digit + trailing
    period/'s.' get patched in by pk_cdrw.  Buffer widths sized so
    the biggest overwrite (a 2-digit prefix like "20") still fits. */
-#ifndef FAITHFUL
 char *          pk_bm     = "I'll bet 00.  ";
 char *          pk_rm     = "I'll raise 00.";
 char *          pk_tcm    = "I'll take 0 cards.";
-#endif
 
 /* Blackjack per-hand state.
    pk_psh[]  -- 3rd hand slot used when the player elects to split
@@ -1036,7 +890,6 @@ char *          pk_tcm    = "I'll take 0 cards.";
                 Ghidra reused poker_display_x_offset and
                 midi_dma_start_lo.
 */
-#ifndef FAITHFUL
 short           pk_psh[5];      /* player_split_hand */
 short           pk_pcc; /* player_card_count       */
 short           pk_ccc; /* computer_card_count     */
@@ -1050,7 +903,6 @@ BOOL16          pk_bs1;
 BOOL16          pk_bs2;
 short           pk_cscore;
 short           pk_pscore;
-#endif  /* !FAITHFUL */
 
 /* Word Puzzle state.
    wp_ans[i][12]  -- player's typed answer for blank i.  Max 10
@@ -1064,12 +916,9 @@ short           pk_pscore;
                                                         for word slots 2..5)
       wp_succ @ 0x2a490   6 entries, random on solve
       wp_fail @ 0x2a4a8   6 entries, random on wrong answer  */
-#ifndef FAITHFUL
 char            wp_ans[10][12];
 short           wp_blk;
-#endif
 
-#ifndef FAITHFUL
 char *          wp_prm[9] = {
         "OK, what's the first word?",
         "Good luck! What's the first word?",
@@ -1099,18 +948,15 @@ char *          wp_fail[6] = {
         "Nope.",
         "Not quite."
 };
-#endif  /* !FAITHFUL */
 
 /* Card display positions -- 5 slots per row, extracted from Ghidra
    memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns
    are spaced 28 pixels apart (15-px card + 13-px gutter). */
-#ifndef FAITHFUL
 short           crd_xa[5]         = { 70, 98, 126, 154, 182 };
 short           crd_ya[5]         = { 11, 11, 11, 11, 11 };
 short           crd_xb[5]         = { 70, 98, 126, 154, 182 };
 short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
-#endif
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share crd_dat as their bitmap backing. */
@@ -1120,7 +966,6 @@ MFDB            mf_scb_c      = { 0 };
 BOOL16  g_dvdog             = NO;
 BOOL16  ph_hu               = NO;
 BOOL16  g_ptdoa              = NO;
-
 
 
 /* (gameTick animation tables + frame-state globals live

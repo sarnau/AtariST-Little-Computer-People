@@ -1,7 +1,7 @@
 /*
- * parts/main.c -- shared body; LCP_ORG links it in main.c,
- * LCP_STX in the 0xdece object (0x5546, in the 0x400c object between fr_reac and dg_ipos).  Files under parts/
- * are never compiled standalone.
+ * parts/main.c -- shared body; LCP_STX links it in the 0xdece object
+ * (0x5546, in the 0x400c object between fr_reac and dg_ipos). Files
+ * under parts/ are never compiled standalone.
  */
 int
 main(argc, argv)

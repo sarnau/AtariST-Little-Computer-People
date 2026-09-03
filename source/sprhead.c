@@ -24,6 +24,3 @@
 #define HEAD_MODE_V_OVERRIDE            0x80
 
 /* sp_lcha -> parts/sp_lcha.c (STX: 0x16368, between sp_updb and sp_lchu). */
-#ifdef FAITHFUL
-#include "parts/sp_lcha.c"
-#endif

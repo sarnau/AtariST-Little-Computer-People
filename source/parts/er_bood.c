@@ -1,8 +1,7 @@
 /*
  * parts/er_bood.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from delivery.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in delivery.c.
+ * address inside the 0xdece object, far from the port's other
+ * delivery functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -11,9 +10,6 @@ er_bood()
 {
         g_actif = YES;
         wkFrDr();
-#ifdef FAITHFUL
-        dv_pick();
-#else
         /* STX writes the pick-up sequence out in each handler --
            there is no dv_pick helper in that revision. */
         lcp_face   = FACING_RIGHT;
@@ -33,7 +29,6 @@ er_bood()
 
         if (lcp.initiative_threshold < rndRng(0, 100))
                 a_opcfd(1);
-#endif
 
         sp_ssco(SPRITE_BOOK);
         hs_posXY(POS_MID_BATHROOM_ENTRANCE,

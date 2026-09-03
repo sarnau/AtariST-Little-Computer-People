@@ -17,13 +17,9 @@ lcp_sick()
         lcp.sickness_direction  = DIR_WORSENING;
         lcp.happiness_direction = DIR_WORSENING;
         if (lcp.happiness < 2)
-                /* LCP_ORG compiles the register-form add; the STX
+                /* The other revision compiles the register-form add; the STX
                    revision's addq shape comes from +=. */
-#ifdef FAITHFUL
-                lcp.happiness = lcp.happiness + MOOD_CONTENT;
-#else
                 lcp.happiness += MOOD_CONTENT;
-#endif
         lcp_upal();
 }
 
@@ -38,10 +34,8 @@ lcp_rcov()
         }
 }
 
-/* In the STX revision lcp_upal lives HERE (after lcp_rcov, same
-   object -- lcp_sick reaches it with a bsr).  LCP_ORG links it in
-   renderx.c instead; see the #ifdef FAITHFUL twin there. */
-#ifndef FAITHFUL
+/* lcp_upal lives HERE (after lcp_rcov, same object -- lcp_sick
+   reaches it with a bsr). */
 void
 lcp_upal()
 {
@@ -51,4 +45,3 @@ lcp_upal()
                 main_pal[6] = ST_SICK_GREEN;
         Setpalette(main_pal);
 }
-#endif

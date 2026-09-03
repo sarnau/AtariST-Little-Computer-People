@@ -25,22 +25,16 @@ WORK=$OUT/work
 
 mkdir -p "$OUT" "$WORK"
 
-# STX unity units (tools/stx_units.txt): the default build compiles
-# each unit and skips its constituents, reproducing LCP_STX's object
-# partition so as68 emits its bsr call shapes.  FAITHFUL does the
-# reverse -- LCP_ORG's partition is the port's own file list.
-UNITS=""; PARTS=""
+# STX unity units (tools/stx_units.txt): the build compiles each unit
+# and skips its constituents, reproducing LCP_STX's object partition
+# so as68 emits its bsr call shapes.
+SKIP=""
 if [ -f "$CSRC/tools/stx_units.txt" ]; then
     while read -r unit rest; do
         case "$unit" in ''|'#'*) continue;; esac
-        UNITS="$UNITS $unit"
-        PARTS="$PARTS $rest"
+        SKIP="$SKIP $rest"
     done < "$CSRC/tools/stx_units.txt"
 fi
-case " ${ALCYON_CPPFLAGS:-} " in
-    *-DFAITHFUL*) SKIP="$UNITS" ;;   # units off, constituents on
-    *)            SKIP="$PARTS" ;;   # units on, constituents off
-esac
 
 # Which files to build?
 if [ -n "${FILES:-}" ]; then
@@ -130,34 +124,6 @@ for ln in lines:
     out.append(ln)
 open(p, 'w').write('\n'.join(out))
 "
-
-    # vdiown.c: LCP_ORG keeps the hand-assembly vdi_go (ROM 0xd664 --
-    # c168 cannot emit trap #2) INSIDE this object, so as68 shortens
-    # the calls to bsr.  LCP_STX calls it with jsr, i.e. from another
-    # object, so for that configuration vdi_go is assembled into
-    # vdiown_a.s instead and nothing is injected here.
-    if [ "$stem" = "vdiown" ] && \
-       case " ${ALCYON_CPPFLAGS:-} " in *-DFAITHFUL*) true;; *) false;; esac
-    then
-        python3 - "$WORK/vdiown.s" <<'PYEOF'
-import sys
-p = sys.argv[1]
-s = open(p).read()
-s = s.replace('jsr _vdi_go', 'bsr _vdi_go')
-inj = """.text
-.globl _vdi_go
-_vdi_go:
-link a6,#-4
-move.l #_vdipb,d1
-moveq #115,d0
-trap #2
-unlk a6
-rts
-"""
-s = s.replace('.text', inj, 1)
-open(p, 'w').write(s)
-PYEOF
-    fi
 
     # as68: assemble.  Runs FROM the work dir so its temp files land there.
     (cd "$WORK" && "$ALCYON_BIN/as68" -l -u "$stem.s") > /dev/null 2>&1 || {

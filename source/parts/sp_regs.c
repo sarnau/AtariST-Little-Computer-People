@@ -1,7 +1,7 @@
 /*
- * parts/sp_regs.c -- shared body; LCP_ORG links it in sprload.c,
- * LCP_STX in the 0xdece object (0x5bdc, in the 0x400c object between lc_load and gameLoop).  Files under parts/
- * are never compiled standalone.
+ * parts/sp_regs.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x5bdc, in the 0x400c object between lc_load and gameLoop).
+ * Files under parts/ are never compiled standalone.
  */
 /* sp_regs: Ghidra spritedata_create_with_mask.  Store per-sprite
    pointers and dimensions at slot spriteID, then auto-generate the

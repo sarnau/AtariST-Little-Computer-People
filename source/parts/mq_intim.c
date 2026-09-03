@@ -15,9 +15,6 @@
 void
 mq_intim()
 {
-#ifdef FAITHFUL
-        /* ROM 0x804e: empty. */
-#else
 #ifdef SKIP_MIDI
         /* Test builds: Timer-A jitter breaks frame-hash goldens. */
         (void) 0;
@@ -27,5 +24,4 @@ mq_intim()
         mi_svtv = Setexc(0x4d, -1L);
         Xbtimer(0, 5, 0x28, (long) mq_tick);
 #endif
-#endif  /* FAITHFUL */
 }

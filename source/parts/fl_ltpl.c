@@ -1,7 +1,7 @@
 /*
- * parts/fl_ltpl.c -- shared body; LCP_ORG links it in letload.c,
- * LCP_STX in the 0xdece object (0x648c, just before cpyScr).  Files under parts/
- * are never compiled standalone.
+ * parts/fl_ltpl.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x648c, just before cpyScr). Files under parts/ are never
+ * compiled standalone.
  */
 /* addr: fl_ltpl() */
 void

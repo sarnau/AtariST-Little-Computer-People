@@ -1,7 +1,7 @@
 /*
- * parts/sp_lchu.c -- shared body; LCP_ORG links it in sprites.c,
- * LCP_STX in the 0xdece object (0x148fe object, after gameTick).  Files under parts/
- * are never compiled standalone.
+ * parts/sp_lchu.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x148fe object, after gameTick). Files under parts/ are
+ * never compiled standalone.
  */
 /* sp_lchu: pick head frame from PEx.LCP by happiness + g_hsfra,
    expand via sp_lcpf into slot 4.  Tracks body position; head lowers

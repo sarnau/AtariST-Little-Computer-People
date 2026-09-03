@@ -1,8 +1,7 @@
 /*
  * parts/a_eatm.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from afood.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in afood.c.
+ * address inside the 0xdece object, far from the port's other
+ * afood functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -10,26 +9,12 @@ void
 a_eatm()
 {
         /* STX tests the call in place -- no local. */
-#ifdef FAITHFUL
-        short   result;
-#endif
-#ifdef FAITHFUL
         short   counter;
-        short   pick;
-#else
-        short   counter;
-#endif
 
         hs_posXY(POS_BTM_KITCHEN_CABINET,
                               &g_wtx, &g_wty);
-#ifdef FAITHFUL
-        result = lcp_wkD();
-        if (result != 0)
-                return;
-#else
         if (lcp_wkD() != 0)
                 return;
-#endif
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
@@ -57,21 +42,11 @@ a_eatm()
         lcp_st            = STATE_BEND_AND_REACH;
 
         /* 30..50 tick cooking animation, rotating stove frames. */
-#ifdef FAITHFUL
-        counter = rndRng(30, 50);
-        while (counter != 0) {
-                pick = rndRng(0, 2);
-                od_draw(g_obisa[pick], 6, 172);
-                gameTick(1);
-                counter = counter - 1;
-        }
-#else
         counter = rndRng(30, 50);
         while (counter-- != 0) {
                 od_draw(g_obisa[rndRng(0, 2)], 6, 172);
                 gameTick(1);
         }
-#endif
         od_draw(od_stof, 6, 172);
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;

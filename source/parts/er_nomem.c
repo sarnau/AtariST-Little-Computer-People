@@ -1,8 +1,6 @@
 /*
  * parts/er_nomem.c -- er_nomem's body, shared between configurations.
  *
- * The two game revisions put this function in DIFFERENT objects:
- * LCP_ORG links it in alerts.o next to er_write (FAITHFUL), while
  * LCP_STX has it at the end of the 0x400c object, after the
  * dog/ai/actions/movement/calendar/renderx code (stx_u1.c).  Files
  * under parts/ are never compiled standalone -- alcyon_build.sh only

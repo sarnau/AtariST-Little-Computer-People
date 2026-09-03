@@ -1,8 +1,7 @@
 /*
  * parts/a_opcfd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from delivery.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in delivery.c.
+ * address inside the 0xdece object, far from the port's other
+ * delivery functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -22,11 +21,7 @@ short   door_st;
                 od_draw(od_fro2, 294, 151);
                 gameTick(2);
                 lcp_frdO = YES;
-#ifdef FAITHFUL
-        } else {
-#else
         } else if (door_st != 0) {      /* STX re-tests the argument */
-#endif
                 if (lcp_frdO == NO)
                         return;
                 od_draw(od_fro1, 294, 151);

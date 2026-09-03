@@ -1,6 +1,6 @@
 /*
- * parts/sp_lcha.c -- shared body; LCP_ORG links it in sprhead.c,
- * LCP_STX in the 0xdece object (0x16368, between sp_updb and sp_lchu).  Files under parts/
+ * parts/sp_lcha.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x16368, between sp_updb and sp_lchu). Files under parts/
  * are never compiled standalone.
  */
 

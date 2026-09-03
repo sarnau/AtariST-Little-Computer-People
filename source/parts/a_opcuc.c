@@ -1,8 +1,7 @@
 /*
  * parts/a_opcuc.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from aleisure.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in aleisure.c.
+ * address inside the 0xdece object, far from the port's other
+ * aleisure functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -17,14 +16,8 @@ short   value;
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         /* STX tests the walk call inline. */
-#ifdef FAITHFUL
-        result = lcp_wkD();
-        if (result != 0)
-                return;
-#else
         if (lcp_wkD() != 0)
                 return;
-#endif
 
         g_hamod         = HEAD_ANIM_DISABLED;
         lcp_face   = FACING_RIGHT;
@@ -56,21 +49,8 @@ short   value;
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
         /* STX: -= straight to memory. */
-#ifdef FAITHFUL
-#ifdef FAITHFUL
-        g_wty = g_wty - 3;
-#else
-        g_wty -= 3;
-#endif
-#ifdef FAITHFUL
-        g_wtx = g_wtx - 10;
-#else
-        g_wtx -= 10;
-#endif
-#else
         g_wty -= 3;
         g_wtx -= 10;
-#endif
         g_actif = YES;
         lcp_wkD();
         g_actif = NO;
@@ -90,15 +70,8 @@ short   value;
 
         /* Continue into the study; value != 0 -> save HYBER.
            STX writes the condition the other way round. */
-#ifdef FAITHFUL
-        if (value == 0)
-                lcp_std(NO,  YES);
-        else
-                lcp_std(YES, YES);
-#else
         if (value != 0)
                 lcp_std(YES, YES);
         else
                 lcp_std(NO,  YES);
-#endif
 }

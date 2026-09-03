@@ -1,7 +1,7 @@
 /*
- * parts/a_clotd.c -- shared body; LCP_ORG links it in adoors.c,
- * LCP_STX in the 0xdece object (0x10556, immediately after a_uset).  Files under parts/
- * are never compiled standalone.
+ * parts/a_clotd.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x10556, immediately after a_uset). Files under parts/ are
+ * never compiled standalone.
  */
 
 void

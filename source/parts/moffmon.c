@@ -22,8 +22,8 @@ moff()
         }
 }
 
-/* mon (STX 0xde5c): the counterpart moff guards against, immediately
-   after it in the same object.  LCP_ORG has no such function. */
+/* mon (0xde5c): the counterpart moff guards against, immediately
+   after it in the same object. */
 
 #ifndef M_ON
 #define M_ON            257

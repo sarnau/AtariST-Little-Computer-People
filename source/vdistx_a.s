@@ -7,8 +7,7 @@
 * gsx1) -- 22 bytes each, the port's whole text surplus.  Defining
 * _gsx1 here keeps VDIBIND's own gsx1 member (and its private pblock)
 * out of the link, so `vdipb` in globals.c is the one parameter block.
-*
-* FAITHFUL does not use this file: it links vdiown_a.s + vdilib_a.s.
+
 
 	.globl	_wr_src
 	.globl	_wr_dst

@@ -10,7 +10,6 @@
  *     < sf_sele 0xdd88 < sf_so 0xddd8
  */
 
-#ifndef FAITHFUL
 
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ body below needs them in scope. */
@@ -29,4 +28,3 @@
 #include "sfx_irq.c"         /* sf_irqp 0xdafc */
 #include "sound.c"           /* sf_sl 0xdcc4 < sf_sele < sf_so */
 
-#endif  /* !FAITHFUL */

@@ -12,8 +12,7 @@ The disk carries the same DATA/ assets as the repo (all 32 files
 byte-identical) plus the UNCRACKED LCP.PRG of the LARGER game
 revision (123352 bytes; playable minigames + Timer-A MIDI + real
 copy-protection) -- checked in as DATA/LCP_STX.PRG.  This is the
-physical binary behind the "other Ghidra image"; DATA/LCP_ORG.PRG
-(the cracked, smaller revision) remains the FAITHFUL build's
+physical binary behind the "other Ghidra image" and the port's
 byte-identity reference.
 
 Usage: python3 source/tools/stx_extract.py [image.stx] [outdir]

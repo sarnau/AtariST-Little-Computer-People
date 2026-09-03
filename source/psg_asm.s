@@ -8,9 +8,7 @@
 * before the Timer-A ISR in the same object (0x2272, 0x2284, 0x22a6,
 * mq_tick at 0x22c0).
 *
-* LCP_ORG has C versions instead -- psg_io.c keeps those under
-* FAITHFUL, and alcyon_link.sh links this file only for the default
-* build.
+* c168 cannot emit the frameless absolute-long pokes these use.
 *
 ******************************************************************************
 

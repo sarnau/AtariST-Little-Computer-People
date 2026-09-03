@@ -1,7 +1,7 @@
 /*
- * parts/al_loal.c -- shared body; LCP_ORG links it in assets.c,
- * LCP_STX in the 0xdece object (0x6428, in the 0x400c object ahead of fl_ltpl).  Files under parts/
- * are never compiled standalone.
+ * parts/al_loal.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x6428, in the 0x400c object ahead of fl_ltpl). Files under
+ * parts/ are never compiled standalone.
  */
 /* al_loal: load BODY.LCP / PE2..6.LCP into caller buffer.
    Header: {count:BE16, total_bytes:BE16, payload}.  Returns frame count. */

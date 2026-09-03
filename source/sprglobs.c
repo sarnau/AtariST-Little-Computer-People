@@ -173,23 +173,15 @@ short   body_yof[109] = {
 };
 
 /* LCP_STX indexes the body and shape buffers as ARRAYS (muls.w
-   stride plus an immediate base, no ext.l); LCP_ORG goes through
+   stride plus an immediate base, no ext.l); the other revision goes through
    pointer variables that al_locs wires to the buffers.  See the
    sp_updb note in CLAUDE.md. */
-#ifdef FAITHFUL
-short * body_ptr;
-short * body_shp;
-#else
 unsigned char   body_ptr[120][168];     /* LCP_BODY_FRAME_SIZE */
 unsigned char   body_shp[98][84];       /* LCP_BODY_SHAPE_SIZE */
-#endif
 /* body_shp buffer (Ghidra 0x3D23C, 98 * 84 = 8232 bytes):
    destination for sprite_lcp_build_all_body's 30-bit dilation of the
    raw 168-byte body frames.  84 bytes = 21 rows * 2 words per row.
    BSS-resident so it survives to game end without heap traffic. */
-#ifdef FAITHFUL
-short   bshdbuf[98 * (LCP_BODY_SHAPE_SIZE / 2)]; /* one short per 2 shape bytes */
-#endif
 short   g_lsimg[LCP_BODY_DEST_WORDS];    /* sp_lcpf dest: image plane pair */
 short   g_lsmas[LCP_BODY_DEST_WORDS];    /* sp_lcpf dest: mask plane pair */
 

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""rom_map.py -- reconstruct the ROM's symbol/address map from matches.
+"""stx_map.py -- reconstruct LCP_STX's symbol/address map from matches.
 
-For the byte-identical build target we must reproduce the ROM's exact
+For the byte-identical build target we must reproduce LCP_STX's exact
 layout.  Every byte-matched function gives us two kinds of evidence:
 
-  * its own ROM text address (where the pattern matched), and
+  * its own text address in the reference (where it matched), and
   * at every relocation site, a pairing between the port operand
-    (port symbol + offset) and the ROM operand (a ROM address).
+    (port symbol + offset) and the reference operand (an address).
 
 Aggregating those pairs over all matched functions yields the ROM
 address of every referenced global -- i.e. the target DATA/BSS layout
--- and the per-object function ordering yields the ROM link order.
+-- and the per-object function ordering yields the link order.
 
 Usage:
-  python3 source/tools/rom_map.py            # summary + conflicts
-  python3 source/tools/rom_map.py --data     # symbol -> ROM addr table
-  python3 source/tools/rom_map.py --objects  # ROM link-order report
+  python3 source/tools/stx_map.py            # summary + conflicts
+  python3 source/tools/stx_map.py --data     # symbol -> address table
+  python3 source/tools/stx_map.py --objects  # link-order report
 """
 import glob, os, re, struct, sys
 

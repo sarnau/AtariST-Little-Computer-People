@@ -1,7 +1,7 @@
 /*
- * parts/a_opcfc.c -- shared body; LCP_ORG links it in adoors.c,
- * LCP_STX in the 0xdece object (0x11d9a, immediately after a_plaag).  Files under parts/
- * are never compiled standalone.
+ * parts/a_opcfc.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x11d9a, immediately after a_plaag). Files under parts/ are
+ * never compiled standalone.
  */
 
 void

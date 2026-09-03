@@ -6,9 +6,7 @@
  * as68 shortens a call only when the callee is in the SAME assembly
  * unit, reproducing the STX call shapes requires reproducing its
  * object partition -- so the DEFAULT build compiles these sources as
- * one unit instead of individually.  FAITHFUL still compiles them
- * separately: LCP_ORG's partition is the port's own file list and is
- * already proven byte-identical.
+ * one unit instead of individually.
  *
  * Membership and order come from stx_objmap.py's cluster report plus
  * the STX addresses of the byte-matched functions:
@@ -18,11 +16,9 @@
  * so it can be refined without affecting matching.
  *
  * alcyon_build.sh skips the constituents listed in
- * tools/stx_units.txt while building this file, and skips this file
- * under FAITHFUL.
+ * tools/stx_units.txt while building this file.
  */
 
-#ifndef FAITHFUL
 
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
@@ -133,8 +129,6 @@
 /* save.c's file helpers close this object. */
 #include "parts/fOpen.c"     /* 0x730e */
 #include "parts/fr_read.c"   /* 0x736c */
-/* Tail of the STX object: er_nomem (0x73ce).  alerts.c carries it
-   for FAITHFUL instead. */
+/* Tail of the STX object: er_nomem (0x73ce). */
 #include "parts/er_nomem.c"  /* 0x73ce */
 
-#endif  /* !FAITHFUL */

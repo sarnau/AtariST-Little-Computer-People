@@ -1,7 +1,7 @@
 /*
- * parts/cntSong.c -- shared body; LCP_ORG links it in init.c,
- * LCP_STX in the 0xdece object (0x400c -- the FIRST function of the 0x400c object).  Files under parts/
- * are never compiled standalone.
+ * parts/cntSong.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x400c -- the FIRST function of the 0x400c object). Files
+ * under parts/ are never compiled standalone.
  */
 /* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
    addr: Ghidra count_songs (main step 8). */

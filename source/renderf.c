@@ -43,6 +43,3 @@
    directly into sc_ren8 (parts/sc_ren8.c), so they are gone. */
 
 /* sc_ren8 -> parts/sc_ren8.c (STX: 0x15138, in the sprite object ahead of lcp_hwt). */
-#ifdef FAITHFUL
-#include "parts/sc_ren8.c"
-#endif

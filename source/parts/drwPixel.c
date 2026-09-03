@@ -1,7 +1,6 @@
 /*
- * parts/drwPixel.c -- shared body; LCP_ORG links it in gfx_prim.c,
- * LCP_STX in the 0xdece object (0x13930).  Files under parts/
- * are never compiled standalone.
+ * parts/drwPixel.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x13930). Files under parts/ are never compiled standalone.
  */
 /* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
    addr: draw_pixel @ 0x23930 */

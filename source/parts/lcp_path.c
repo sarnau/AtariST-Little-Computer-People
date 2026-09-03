@@ -1,7 +1,7 @@
 /*
- * parts/lcp_path.c -- shared body; LCP_ORG links it in walk.c,
- * LCP_STX in the 0xdece object (0x470a, in the 0x400c object).  Files under parts/
- * are never compiled standalone.
+ * parts/lcp_path.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x470a, in the 0x400c object). Files under parts/ are never
+ * compiled standalone.
  */
 /* lcp_path: one 8Hz step along current waypoint.
    Waypoint reached -> done or pick next.  Not on stairs -> flat walk

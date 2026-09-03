@@ -1,7 +1,7 @@
 /*
- * parts/lcp_upp.c -- shared body; LCP_ORG links it in parser.c,
- * LCP_STX in the 0xdece object (0x172e8, the last function of the sprite object).  Files under parts/
- * are never compiled standalone.
+ * parts/lcp_upp.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x172e8, the last function of the sprite object). Files
+ * under parts/ are never compiled standalone.
  */
 /* addr: lcp_upp() */
 short

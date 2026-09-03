@@ -13,11 +13,7 @@ extern void rv_bld();
 extern short g_atact[];
 extern short g_atmod[];
 extern short g_atrel[];
-#ifdef FAITHFUL
-extern short* sch_tab[];
-#else
 extern short sch_tab[][8];
-#endif
 extern short g_rphs[];
 extern long bm32or[];
 extern long bm32and[];

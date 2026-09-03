@@ -1,8 +1,7 @@
 /*
  * parts/a_wakum.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from ahouse.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in ahouse.c.
+ * address inside the 0xdece object, far from the port's other
+ * ahouse functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -10,18 +9,10 @@ void
 a_wakum()
 {
         /* STX has no local: the tick count is used in place. */
-#ifdef FAITHFUL
-        short   counter;
-#endif
 
         g_actif = YES;
         alarm_p = YES;
-#ifdef FAITHFUL
-        counter = rndRng(40, 100);
-        gameTick(counter);
-#else
         gameTick(rndRng(40, 100));
-#endif
         if (lcp.is_sleeping == YES)
                 a_gioob();
 

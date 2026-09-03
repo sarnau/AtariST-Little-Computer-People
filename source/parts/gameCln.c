@@ -8,21 +8,9 @@
    argument and does not free -- the minigame mains free their own
    buffer inline -- and nothing in that build actually calls it. */
 
-#ifdef FAITHFUL
-static void
-gameCln(buffer)
-void *  buffer;
-{
-        tx_sctm      = 0;
-        no_keyin = NO;
-        if (buffer != (void *) 0)
-                Mfree(buffer);
-}
-#else
 static void
 gameCln()
 {
         tx_sctm  = 0;
         no_keyin = NO;
 }
-#endif

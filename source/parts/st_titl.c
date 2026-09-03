@@ -1,7 +1,7 @@
 /*
- * parts/st_titl.c -- shared body; LCP_ORG links it in init.c,
- * LCP_STX in the 0xdece object (0x6d7e, in the 0x400c object after pa_skic).  Files under parts/
- * are never compiled standalone.
+ * parts/st_titl.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x6d7e, in the 0x400c object after pa_skic). Files under
+ * parts/ are never compiled standalone.
  */
 /* st_titl: the interactive title screen -- decode TITLE.SCN onto the
    spare screen buffer, then take the owner's name, the date and the

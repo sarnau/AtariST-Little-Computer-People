@@ -1,7 +1,7 @@
 /*
- * parts/sp_genma.c -- shared body; LCP_ORG links it in sprload.c,
- * LCP_STX in the 0xdece object (0x408c, right after cntSong).  Files under parts/
- * are never compiled standalone.
+ * parts/sp_genma.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x408c, right after cntSong). Files under parts/ are never
+ * compiled standalone.
  */
 /* sp_genma: Ghidra spritedata_generate_mask_from_color.  For each
    16-pixel word group (4 interleaved bitplane words), OR the planes

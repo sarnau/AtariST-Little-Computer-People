@@ -1,8 +1,7 @@
 /*
  * parts/a_feedd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from afood.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in afood.c.
+ * address inside the 0xdece object, far from the port's other
+ * afood functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -11,21 +10,12 @@ a_feedd(value)
 short   value;
 {
         /* STX tests the call in place -- no local. */
-#ifdef FAITHFUL
-        short   result;
-#endif
 
         if (value == 0) {
                 hs_posXY(POS_BTM_FRIDGE,
                                       &g_wtx, &g_wty);
-#ifdef FAITHFUL
-                result = lcp_wkD();
-                if (result != 0)
-                        return;
-#else
                 if (lcp_wkD() != 0)
                         return;
-#endif
 
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_FACING_SCREEN;

@@ -1,8 +1,7 @@
 /*
  * parts/a_getd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, away from ahouse.c's other
- * functions, so the default build includes it from stx_u2.c in
- * STX order; FAITHFUL includes it back in ahouse.c.
+ * address inside the 0xdece object, far from the port's other
+ * ahouse functions, so stx_u2.c includes it in LCP_STX order.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -13,9 +12,6 @@ a_getd()
         short   h;
         /* STX has only two locals: it reuses h as the loop counter
            below, so its frame is 2 bytes smaller. */
-#ifdef FAITHFUL
-        short   i;
-#endif
 
         entry_current = g_hacur;
         h = g_hacur & 7;
@@ -36,11 +32,7 @@ a_getd()
         g_hamod = HEAD_ANIM_DISABLED;
         lcp_hwt();
 
-#ifdef FAITHFUL
-        for (i = 0; i < 4; i = i + 1) {
-#else
         for (h = 0; h < 4; h++) {
-#endif
                 g_hatas = g_hacur & 7;
                 lcp_hwt();
                 g_hatas = g_hacur | 0x10;

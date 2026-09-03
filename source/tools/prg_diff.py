@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""prg_diff.py -- whole-file comparison of the FAITHFUL build vs the ROM.
+"""prg_diff.py -- whole-file comparison of the build vs DATA/LCP_STX.PRG.
 
 The end-state check for the byte-identical goal: compares header
 section sizes, then text, data, and relocation streams byte-for-byte
@@ -18,7 +18,7 @@ PORT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         ROOT, 'build', 'alcyon', 'LCP.PRG')
 ORIG = sys.argv[2] if len(sys.argv) > 2 else \
        os.environ.get('LCP_REF') or os.path.join(
-        ROOT, '..', 'DATA', 'LCP_ORG.PRG')
+        ROOT, '..', 'DATA', 'LCP_STX.PRG')
 
 
 def load(path):

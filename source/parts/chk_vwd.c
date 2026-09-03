@@ -1,7 +1,7 @@
 /*
- * parts/chk_vwd.c -- shared body; LCP_ORG links it in parser.c,
- * LCP_STX in the 0xdece object (0x171ae, after cmd_upp).  Files under parts/
- * are never compiled standalone.
+ * parts/chk_vwd.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x171ae, after cmd_upp). Files under parts/ are never
+ * compiled standalone.
  */
 /* addr: chk_vwd() */
 short

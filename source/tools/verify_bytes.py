@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""verify_bytes.py -- prove each ported function byte-faithful vs LCP_ORG.PRG.
+"""verify_bytes.py -- prove each ported function byte-faithful vs LCP_STX.PRG.
 
 For every text symbol in the port (lcp_sym.68k, linked without -s), take
 its code bytes from the built LCP.PRG, wildcard every layout-dependent
@@ -36,24 +36,10 @@ ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD  = os.path.join(ROOT, 'build', 'alcyon')
 PORT   = os.path.join(BUILD, 'LCP.PRG')
 SYM68K = os.path.join(BUILD, 'lcp_sym.68k')
-ORIG   = os.environ.get('LCP_REF') or os.path.join(ROOT, '..', 'DATA', 'LCP_ORG.PRG')
+ORIG   = os.environ.get('LCP_REF') or os.path.join(ROOT, '..', 'DATA', 'LCP_STX.PRG')
 
 MIN_UNIQUE = 10   # fixed bytes needed before we trust a match
 PROBE      = 24   # prefix length used to hunt a candidate site
-
-# Functions intentionally KEPT from the other (larger) game revision:
-# the minigame suite + its support helpers, and the Timer-A MIDI
-# sequencer (this ROM's ~1.5KB polled engine at 0x8cce is not yet
-# recovered; without the ISR the port engine would deadlock).  Plus
-# ct_clrB, a port-side helper for code the ROM inlines in main.
-# These are reported as KEPT, not DIVERGENT.
-KEPT_PREFIXES = ('_pk_', '_wp_', '_ag_', '_mq_', '_psg_')
-KEPT_NAMES = {'_mg_wkev', '_lcp_lgt', '_lcp_rgt', '_vst_h20',
-              '_rst_vst', '_moff', '_vqt_att', '_vst_hei'}
-
-
-def is_kept(name):
-    return name in KEPT_NAMES or name.startswith(KEPT_PREFIXES)
 
 
 def read_prg(path):
@@ -179,7 +165,7 @@ def main():
     syms = read_syms(SYM68K, ptsize)
 
     bounds = syms + [(ptsize, '<end>')]
-    matched, divergent, skipped, kept = [], [], [], []
+    matched, divergent, skipped = [], [], []
     claimed = bytearray(otsize)
 
     for k, (off, name) in enumerate(syms):
@@ -217,11 +203,6 @@ def main():
                 extra = '' if len(hits) == 1 else f'  ({len(hits)} sites)'
                 print(f'MATCH     {name:<10} port=0x{off:05x} '
                       f'orig=0x{oo:05x} len={size}{extra}')
-        elif is_kept(name):
-            kept.append((name, off, size))
-            if verbose:
-                print(f'KEPT      {name:<10} port=0x{off:05x} len={size} '
-                      f'(other-image feature, retained)')
         else:
             ppat, pfx = pattern(code[:min(PROBE, size)], off, prelocs)
             cand = [m.start() for m in re.finditer(ppat, otext, re.DOTALL)] \
@@ -243,7 +224,6 @@ def main():
 
     cov = sum(1 for b in claimed if b) if matched else 0
     print(f'\n{len(matched)} matched, {len(divergent)} divergent, '
-          f'{len(kept)} kept (other-image features), '
           f'{len(skipped)} too-small-to-verify; '
           f'original text coverage {cov}/{otsize} bytes '
           f'({100.0 * cov / otsize:.1f}%)')

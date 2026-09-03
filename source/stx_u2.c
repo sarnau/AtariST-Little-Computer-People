@@ -7,15 +7,13 @@
  * pairing every LCP_STX prologue span in 0xde36..0x148fe against the
  * port's byte-identical counterpart.  LCP_STX did not group this
  * object by source file -- aleisure's nine functions alone are spread
- * from 0xe338 to 0x12ca0 -- so the port's action files are now only
- * FAITHFUL-side gated includes and every body lives in parts/.
+ * from 0xe338 to 0x12ca0 -- so the port has no action .c files left at
+ * all: every body lives in parts/ and this list is the order.
  *
  * alcyon_build.sh skips the constituents listed in
- * tools/stx_units.txt while building this file, and skips this file
- * under FAITHFUL.
+ * tools/stx_units.txt while building this file.
  */
 
-#ifndef FAITHFUL
 
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
@@ -169,4 +167,3 @@
 #include "parts/crFile.c"      /* 0x1488e */
 #include "parts/er_write.c"    /* 0x148e6 */
 
-#endif  /* !FAITHFUL */

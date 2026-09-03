@@ -1,7 +1,6 @@
 /*
- * parts/lcp_std.c -- shared body; LCP_ORG links it in save.o,
- * LCP_STX right after a_opcuc in the 0xdece object (a_opcuc
- * reaches it with a short bsr).
+ * parts/lcp_std.c -- shared body; LCP_STX links it in right after
+ * a_opcuc in the 0xdece object (a_opcuc reaches it with a short bsr).
  */
 
 /* Study-door save flow: close door, optionally write HYBER, reopen,
@@ -13,13 +12,8 @@ lcp_std(do_save, p_dosnd)
 BOOL16  do_save;
 BOOL16  p_dosnd;
 {
-#ifdef FAITHFUL
-        short   saved_x;
-        short   counter;
-#else
         short   saved_x;        /* STX: link #-6, the delay is not
                                    latched */
-#endif
 
         saved_x = lcp_x;
 
@@ -34,28 +28,11 @@ BOOL16  p_dosnd;
                 sf_sele(SFX_DOOR_CLOSE, 6L);
 
         gameTick(1);
-#ifdef FAITHFUL
-        counter = rndRng(15, 30);
-        gameTick(counter);
-#else
         gameTick(rndRng(15, 30));
-#endif
 
         /* Phase 2: repack door state and write HYBER. */
         if (do_save != NO) {
                 lcp.water_level = lcp_watr;
-#ifdef FAITHFUL
-                lcp.door_states_and_flags =
-                        lcp_frdO |
-                        (lcp_bwlS     << 7) |
-                        (lcp_flcO << 6) |
-                        (lcp_toiO    << 5) |
-                        (lcp_drsO        << 4) |
-                        (lcp_cabO        << 3) |
-                        (lcp_clsO    << 2) |
-                        (studyDrO     << 1) |
-                        (lcp.door_states_and_flags & DSF_PRESERVE_UPPER_MASK);
-#else
                 /* STX masks in place and ORs the bits back, lowest
                    shift first with the front door last. */
                 lcp.door_states_and_flags &= DSF_PRESERVE_UPPER_MASK;
@@ -68,7 +45,6 @@ BOOL16  p_dosnd;
                         (lcp_flcO << 6) |
                         (lcp_bwlS     << 7) |
                         lcp_frdO;
-#endif
                 lcp.record_playing = lcp_recP;
                 lcp.tv_on          = lcp_tv;
                 lcp.food_supply    = lcp_food;

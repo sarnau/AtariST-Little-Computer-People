@@ -1,7 +1,7 @@
 /*
- * parts/dg_wkPth.c -- shared body; LCP_ORG links it in walk.c,
- * LCP_STX in the 0xdece object (0x4586, immediately after dg_mvAni).  Files under parts/
- * are never compiled standalone.
+ * parts/dg_wkPth.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x4586, immediately after dg_mvAni). Files under parts/ are
+ * never compiled standalone.
  */
 /* dg_wkPth: dog waypoint math.  Same shape as lcp_flwp but uses
    dog_x/y and applies -3 X on middle-floor landing + -8 X on stair

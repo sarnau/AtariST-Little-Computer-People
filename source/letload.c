@@ -23,11 +23,5 @@
 
 
 /* fr_reac -> parts/fr_reac.c (STX: 0x53b8, in the 0x400c object ahead of main). */
-#ifdef FAITHFUL
-#include "parts/fr_reac.c"
-#endif
 
 /* fl_ltpl -> parts/fl_ltpl.c (STX: 0x648c, just before cpyScr). */
-#ifdef FAITHFUL
-#include "parts/fl_ltpl.c"
-#endif

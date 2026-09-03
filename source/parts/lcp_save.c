@@ -1,7 +1,7 @@
 /*
- * parts/lcp_save.c -- shared body; LCP_ORG links it in save.o,
- * LCP_STX at 0x1481c, the last function in the 0xdece object.
- * Files under parts/ are never compiled standalone.
+ * parts/lcp_save.c -- shared body; LCP_STX links it in at 0x1481c, the
+ * last function in the 0xdece object. Files under parts/ are never
+ * compiled standalone.
  */
 /* addr: lcp_save() */
 void
@@ -16,11 +16,7 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
-#ifdef FAITHFUL
-                filehandle = Fopen(filename, 1L);
-#else
                 filehandle = Fopen(filename, 1);
-#endif
                 if (filehandle >= 0)
                         break;
                 er_write();

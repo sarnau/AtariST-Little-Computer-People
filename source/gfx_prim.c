@@ -17,27 +17,6 @@
 /* drwLine: single-segment line via VDI v_pline (backbuffer, restore).
    addr: drwLine() */
 
-#ifdef FAITHFUL
-void
-drwLine(x1, y1, x2, y2, color)
-short   x1;
-short   y1;
-short   x2;
-short   y2;
-short   color;
-{
-        short   pts[4];
-
-        sc_sdtb();
-        vsl_color(vdihnd, vdi_colt[color]);
-        pts[0] = x1;
-        pts[1] = y1;
-        pts[2] = x2;
-        pts[3] = y2;
-        v_pline(vdihnd, 2, pts);
-        sc_sdtf();
-}
-#endif  /* FAITHFUL -- STX groups it with cl_drini in init.c */
 
 /* sc_sdtb: stash Logbase, Setscreen->g_srptr, reset fill to solid black.
    addr: sc_sdtb()
@@ -47,97 +26,35 @@ short   color;
    renders brown.  Launch LCP.PRG directly (GEM desktop or --auto). */
 
 /* sc_sdtb -> parts/sc_sdtb.c (STX: 0xdece object, in the 0xdece object). */
-#ifdef FAITHFUL
-#include "parts/sc_sdtb.c"
-#endif
 
 /* sc_sdtf: restore log-base after sc_sdtb.
    addr: sc_sdtf() */
 
 /* sc_sdtf -> parts/sc_sdtf.c (STX: 0xdece object, in the 0xdece object). */
-#ifdef FAITHFUL
-#include "parts/sc_sdtf.c"
-#endif
 
 /* sc_firw -> parts/sc_firw.c (STX: 0x16dcc, immediately after sc_sctd (bsr.s)). */
-#ifdef FAITHFUL
-#include "parts/sc_firw.c"
-#endif
 
 /* sc_firs/sc_firb -> parts/sc_firsb.c (STX: 0x16e22/0x16e76, in
    the 0x148fe object after sc_firw -- stx_u3.c includes them). */
-#ifdef FAITHFUL
-#include "parts/sc_firsb.c"
-#endif
 
 
 /* initVdi: mini-game VDI setup.  Same shape as sc_sdtb but uses
    sv_lgb (nestable) and default fill = palette 0xC (light green).
    addr: initVdi() */
 
-#ifdef FAITHFUL
-void
-initVdi()
-{
-        sv_lgb = (void *) Logbase();
-        Setscreen(g_dscp, (void *)-1L, -1L);
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 1);        /* ROM 0x791c: 1, not PATTERN */
-        vsf_style(vdihnd, 1);           /* ROM 0x792e: 1, not 8 */
-        vsf_color(vdihnd, vdi_colt[0xc]);
-}
-#endif  /* FAITHFUL -- the STX build keeps it in games.c */
 
 /* exitVdi: restore pre-mini-game log-base.
    addr: exitVdi() */
 
-#ifdef FAITHFUL
-void
-exitVdi()
-{
-        Setscreen(sv_lgb, (void *)-1L, -1L);
-}
-#endif  /* FAITHFUL -- the STX build keeps it in games.c */
 
 /* drwPixel -> parts/drwPixel.c (STX: 0x13930). */
-#ifdef FAITHFUL
-#include "parts/drwPixel.c"
-#endif
 
 /* blkcp32: unrolled 32-byte block copy (count * 32 bytes, 8 longs at a
    time -- MOVEM.L target).  Kept for byte-comparability.
    addr: blkcp32() */
 
-#ifdef FAITHFUL
-void
-blkcp32(src, dst, count)
-void *  src;
-void *  dst;
-short   count;
-{
-        long *  sp;
-        long *  dp;
-        short   remaining;
-
-        sp = (long *) src;
-        dp = (long *) dst;
-        remaining = count - 1;
-        do {
-                dp[0] = sp[0]; dp[1] = sp[1];
-                dp[2] = sp[2]; dp[3] = sp[3];
-                dp[4] = sp[4]; dp[5] = sp[5];
-                dp[6] = sp[6]; dp[7] = sp[7];
-                sp = sp + 8;
-                dp = dp + 8;
-                remaining = remaining - 1;
-        } while (remaining != -1);
-}
-#endif  /* FAITHFUL -- STX's blkcp32 is hand-assembly (blkcp_a.s). */
 
 /* cpyScr -> parts/cpyScr.c (STX: 0x64fa, in the 0x400c object). */
-#ifdef FAITHFUL
-#include "parts/cpyScr.c"
-#endif
 
 /* stpScrB (Ghidra 0x16576): init double-buffered compositing screen.
    1. MFDB_A.fd_addr=NULL (future vro_cpyfm read device screen).
@@ -147,9 +64,6 @@ short   count;
    addr: stpScrB() */
 
 /* aes_init -> parts/aes_init.c (STX: 0x67aa, between vdi_cls and initBRev). */
-#ifdef FAITHFUL
-#include "parts/aes_init.c"
-#endif
 
 
 #define REZ_ST_MEDIUM   1
@@ -161,39 +75,8 @@ short   count;
    attributes, hide the mouse, and clear the whole screen.  The ROM
    has no resolution check and no reboot alert. */
 
-#ifdef FAITHFUL
-void
-vdi_init()
-{
-        short   work_in[11];
-        short   wk_out[57];
-        short   i;
-        short   rect[4];
-
-        vdihnd = vdi_hnd;
-        for (i = 0; i < 10; i = i + 1)
-                work_in[i] = 1;
-        work_in[10] = 2;
-        v_opnvwk(work_in, &vdihnd, wk_out);
-        scr_scal = 1;
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 1);
-        vsf_style(vdihnd, 1);
-        vsf_color(vdihnd, 0);
-        rect[0] = 0;
-        rect[1] = 0;
-        rect[2] = 319;
-        rect[3] = 199;
-        graf_mouse(256, 0L);
-        v_bar(vdihnd, rect);
-}
-#endif  /* FAITHFUL -- STX splits this into parts/vdi_init.c +
-           parts/vdi_cls.c, linked in the 0x400c object. */
 
 /* stpScrB -> parts/stpScrB.c (STX: 0x6576, in the 0x400c object). */
-#ifdef FAITHFUL
-#include "parts/stpScrB.c"
-#endif
 
 /* vst_h20: save VDI attrs to sv_vqta; set text height 20 px.
    addr: vdi_save_and_set_text_height_20() */

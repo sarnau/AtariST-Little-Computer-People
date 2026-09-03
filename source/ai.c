@@ -37,29 +37,6 @@ short   event;
            31->0x600c, 32->0x5fce, 35->0x6004) put BOOK_DELIVERY
            first and DOG_FOOD last -- and passes 0 to the phone
            handler. */
-#ifdef FAITHFUL
-        switch (event) {
-        case ACTION_EVENT_RECORD_DELIVERY:
-                er_recd();
-                break;
-        case ACTION_EVENT_FOOD_DELIVERY:
-                if (((lcp.door_states_and_flags >> 9) & 7) != 4)
-                        er_food();
-                break;
-        case ACTION_EVENT_PHONE_CALL:
-                ev_ansPh();
-                break;
-        case ACTION_EVENT_DOG_FOOD:
-                er_dogf();
-                break;
-        case ACTION_EVENT_BOOK_DELIVERY:
-                er_bood();
-                break;
-        case ACTION_GET_DRESSED:
-                a_getd();
-                break;
-        }
-#else
         switch (event) {
         case ACTION_EVENT_BOOK_DELIVERY:        /* 0x5fce */
                 er_bood();
@@ -82,17 +59,10 @@ short   event;
                 er_dogf();
                 break;
         }
-#endif
 
         in_evrt = NO;
 }
 
 /* chk_actT -> parts/chk_actT.c (STX: 0x5ce2, immediately after gameLoop). */
-#ifdef FAITHFUL
-#include "parts/chk_actT.c"
-#endif
 
 /* prsCmd -> parts/prsCmd.c (STX: 0x1721c, in the 0x148fe object after prCh). */
-#ifdef FAITHFUL
-#include "parts/prsCmd.c"
-#endif

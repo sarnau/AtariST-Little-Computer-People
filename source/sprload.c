@@ -29,14 +29,8 @@ short   sp_fidx[50] = {
 unsigned char   sp_mbuf[14000];
 
 /* sp_genma -> parts/sp_genma.c (STX: 0x408c, right after cntSong). */
-#ifdef FAITHFUL
-#include "parts/sp_genma.c"
-#endif
 
 /* sp_regs -> parts/sp_regs.c (STX: 0x5bdc, in the 0x400c object between lc_load and gameLoop). */
-#ifdef FAITHFUL
-#include "parts/sp_regs.c"
-#endif
 
 /* sp_reglp does not exist in LCP_STX: main inlines its loop and
    calls sp_regs (parts/sp_regs.c) per sprite. */

@@ -1,6 +1,5 @@
 /*
- * parts/lcp_lgt.c -- shared body.  LCP_ORG links it in games.o;
- * LCP_STX places it at the head of the 0xdece object (it
+ * parts/lcp_lgt.c -- shared body; LCP_STX places it at the head of the 0xdece object (it
  * reaches lcp_wkD and sp_ssco there with bsr).
  */
 

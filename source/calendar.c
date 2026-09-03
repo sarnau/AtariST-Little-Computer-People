@@ -9,9 +9,6 @@ short days_pmo[12] = {
 };
 
 /* daysInMo -> parts/daysInMo.c (STX: 0x13796, in the 0xdece object just ahead of cWkday). */
-#ifdef FAITHFUL
-#include "parts/daysInMo.c"
-#endif
 
 /* addr: daily_rs() */
 void

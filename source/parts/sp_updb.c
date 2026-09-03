@@ -1,7 +1,7 @@
 /*
- * parts/sp_updb.c -- shared body; LCP_ORG links it in sprites.c,
- * LCP_STX in the 0xdece object (0x148fe object, after gameTick).  Files under parts/
- * are never compiled standalone.
+ * parts/sp_updb.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x148fe object, after gameTick). Files under parts/ are
+ * never compiled standalone.
  */
 /* sp_updb: select body pose for lcp_st -> slot 3.  When carrying an
    object during walk states (< 25), uses arms-up frames from cy_frT.
@@ -17,25 +17,16 @@ sp_updb()
                 ;
 
         frame = body_frT[lcp_st];
-        /* STX spells the bound inclusively on the previous state
-           (cmpi #24/bgt) where LCP_ORG uses < 25 (cmpi #25/bge). */
-#ifdef FAITHFUL
-        if (g_lcyof != NO && lcp_st < STATE_BEND_AND_REACH)
-#else
+        /* The bound is spelled inclusively on the previous state
+           (cmpi #24/bgt), not < 25. */
         if (g_lcyof != NO && lcp_st <= STATE_STR_BTM_F3)
-#endif
                 frame = cy_frT[lcp_st];
 
         /* Ghidra 0x2669a `muls.w #0x54, D0`: stride is 168 src, 84 dest. */
         /* STX multiplies in word width (muls.w) -- no (long) casts,
            so no call to the long-multiply helper. */
-#ifdef FAITHFUL
-        sp_lcpf((short *) ((char *) body_ptr    + (long) frame * (long) LCP_BODY_FRAME_SIZE),
-                (short *) ((char *) body_shp  + (long) frame * (long) LCP_BODY_SHAPE_SIZE),
-#else
         sp_lcpf((short *) body_ptr[frame],
                 (short *) body_shp[frame],
-#endif
                 (short *) g_lsimg,
                 (short *) g_lsmas,
                 2, 21, lcp_face, 1);

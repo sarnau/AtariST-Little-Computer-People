@@ -6,7 +6,7 @@ Usage:
   python3 source/tools/fn_diff.py NAME [orig_hex_addr]
 
 Locates NAME (port symbol, with or without leading _) in lcp_sym.68k,
-finds the candidate site in LCP_ORG.PRG (escalating prefix probe with
+finds the candidate site in the reference binary (escalating prefix probe with
 relocation + PC-relative wildcards, same rules as verify_bytes.py),
 and prints both disassemblies interleaved via m68k-elf-objdump.
 Pass orig_hex_addr to pin the original location manually.

@@ -3,7 +3,7 @@
 #
 # Rebuilds the given source files (default build), relinks LCP.PRG and
 # the lcp_sym.68k side link, then runs verify_bytes against
-# DATA/LCP_STX.PRG with the kept-classification disabled.  Extra
+# DATA/LCP_STX.PRG.  Extra
 # function names (without leading underscore) limit the report.
 #
 #   source/tools/stx_check.sh movement.c hs_posX
@@ -46,8 +46,6 @@ spec = importlib.util.spec_from_file_location(
 vb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(vb)
 vb.ORIG = 'DATA/LCP_STX.PRG'
-vb.KEPT_PREFIXES = tuple()
-vb.KEPT_NAMES = set()
 sys.argv = ['verify_bytes.py', '-v'] + sorted(names)
 buf = io.StringIO()
 with contextlib.redirect_stdout(buf):

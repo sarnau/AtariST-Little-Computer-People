@@ -1,15 +1,14 @@
-# stx_units.txt -- STX object partition for the DEFAULT build.
+# stx_units.txt -- LCP_STX's object partition.
 #
 # One line per unity unit: <unit.c> <constituent.c>...
-# alcyon_build.sh compiles the unit and skips the constituents when
-# FAITHFUL is not set; under FAITHFUL it does the opposite (the
-# constituents are compiled individually and the units skipped),
-# because LCP_ORG's object partition IS the port's own file list.
+# alcyon_build.sh compiles the unit and skips the constituents.  The
+# unit reproduces LCP_STX's object grouping, so as68 shortens the
+# intra-object calls to bsr exactly as the 1985 link did.
 #
 # Membership is evidence-driven -- see stx_objmap.py --members.
 
 stx_u1.c dog.c ai.c airandom.c actions.c movement.c calendar.c renderx.c
-stx_u2.c aletter.c render.c delivery.c adoors.c aleisure.c afood.c aidle.c asimple.c abathrm.c ahouse.c agames.c health.c sim.c walk.c tvanim.c
+stx_u2.c render.c agames.c health.c sim.c walk.c tvanim.c
 stx_u3.c alerts.c sprites.c tick.c
 stx_u4.c sound.c sfx_irq.c
-vdistx.c vdiown.c vdilib.c
+vdistx.c

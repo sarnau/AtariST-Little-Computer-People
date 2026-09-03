@@ -61,11 +61,7 @@
    keeps every slot-9 write in-bounds and inert regardless of link
    order.  Real-slot loops/bounds checks still use SPRITE_HW_SLOTS (8),
    matching the ROM's `i < 8`. */
-#ifdef FAITHFUL
-#define SPRITE_HW_SLOTS_ALLOC   SPRITE_HW_SLOTS
-#else
 #define SPRITE_HW_SLOTS_ALLOC   (HW_SLOT_NONE + 1)
-#endif
 
 extern short lcp_st;
 extern short lcp_face;
@@ -105,17 +101,8 @@ extern short g_seslm[];
 extern short body_frT[];
 extern short cy_frT[];
 extern short body_yof[];
-#ifdef FAITHFUL
-extern short* body_ptr;
-#else
 extern unsigned char body_ptr[][168];   /* LCP_BODY_FRAME_SIZE */
-#endif
-#ifdef FAITHFUL
-extern short* body_shp;
-extern short bshdbuf[];
-#else
 extern unsigned char body_shp[][84];    /* LCP_BODY_SHAPE_SIZE */
-#endif
 extern short g_lsimg[];
 extern short g_lsmas[];
 extern short g_dwanf[];

@@ -1,7 +1,6 @@
 /*
- * parts/v_gtext.c -- shared body.  the VDI binding module is ordered
- * differently in the two revisions, so vdistx.c includes these in
- * LCP_STX order and vdiown.c in LCP_ORG's.
+ * parts/v_gtext.c -- shared body.  vdistx.c includes it at its LCP_STX
+ * position in the binding module.
  * Files under parts/ are never compiled standalone.
  */
 
@@ -14,16 +13,6 @@ char *  str;
 {
         short   i;
 
-#ifdef FAITHFUL
-        for (i = 0; str[i] != 0; i = i + 1)
-                intin[i] = str[i];
-        contrl[0] = 8;
-        contrl[1] = 1;
-        contrl[3] = i;
-        contrl[6] = handle;
-        ptsin[0]  = x;
-        ptsin[1]  = y;
-#else
         /* STX sets the point first and copies with the classic
            while (dst[i++] = *src++) idiom, masking to a byte. */
         ptsin[0]  = x;
@@ -35,6 +24,5 @@ char *  str;
         contrl[1] = 1;
         contrl[3] = --i;
         contrl[6] = handle;
-#endif
         vdi_go();
 }

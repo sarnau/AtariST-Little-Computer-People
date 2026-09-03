@@ -1,7 +1,7 @@
 /*
- * parts/cmd_upp.c -- shared body; LCP_ORG links it in parser.c,
- * LCP_STX in the 0xdece object (0x1711c, after chk_encm).  Files under parts/
- * are never compiled standalone.
+ * parts/cmd_upp.c -- shared body; LCP_STX links it in the 0xdece
+ * object (0x1711c, after chk_encm). Files under parts/ are never
+ * compiled standalone.
  */
 char *
 cmd_upp(str, dest)

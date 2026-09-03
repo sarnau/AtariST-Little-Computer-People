@@ -7,10 +7,8 @@
  * stx_u1.c for the mechanism and CLAUDE.md for the cluster report.
  */
 
-#ifndef FAITHFUL
 
-/* prCh needs obdefs.h (MD_TRANS/MD_REPLACE); renderx.c pulls it
-   in for the FAITHFUL build. */
+/* prCh needs obdefs.h (MD_TRANS/MD_REPLACE). */
 #include "obdefs1.h"
 
 /* deal_kc/putEv need the globals and prototypes their own files
@@ -69,4 +67,3 @@
 #include "parts/cmd_num.c" /* 0x17278 */
 #include "parts/lcp_upp.c" /* 0x172e8 */
 
-#endif  /* !FAITHFUL */

@@ -36,40 +36,24 @@
 
 
 /* lcp_crnd -> parts/lcp_crnd.c (STX: 0x69d8, in the 0x400c object after rnd). */
-#ifdef FAITHFUL
-#include "parts/lcp_crnd.c"
-#endif
 
 /* cl_drini -> parts/cl_drini.c (STX: 0x133b4). */
-#ifdef FAITHFUL
-#include "parts/cl_drini.c"
-#endif
 
 
 /* st_titl -> parts/st_titl.c (STX: 0x6d7e, in the 0x400c object after pa_skic). */
-#ifdef FAITHFUL
-#include "parts/st_titl.c"
-#endif
 
-/* dbg_prA was a dead debug helper LCP_ORG shipped between st_titl
+/* dbg_prA was a dead debug helper shipped between st_titl
    and mq_intim.  LCP_STX does not have it. */
 
 
 /* mq_intim -> parts/mq_intim.c (STX: 0x1112, in the 0x12a MIDI
    object between mq_stop and mq_extm -- midi_seq.c includes it). */
-#ifdef FAITHFUL
-#include "parts/mq_intim.c"
-#endif
 
 /* cntSong -> parts/cntSong.c (STX: 0x400c -- the FIRST function of the 0x400c object). */
-#ifdef FAITHFUL
-#include "parts/cntSong.c"
-#endif
 
 /* STX grouping: cl_redrH (0x137d4), cl_drwH and drwLine (0x138d4)
    live in the 0xdece object, so stx_u2.c includes parts/cl_redrH.c,
-   parts/cl_drwH.c and parts/drwLine.c.  Their FAITHFUL twins are in
-   render.c and gfx_prim.c. */
+   parts/cl_drwH.c and parts/drwLine.c. */
 
 
 /* initBRev -> parts/initBRev.c (STX 0x6804), with the builder it
@@ -78,6 +62,3 @@
 
 /* cs_mvIn -> parts/cs_mvIn.c (STX: 0xe500, right after showLcp
    in the 0xdece object -- stx_u2.c includes it there). */
-#ifdef FAITHFUL
-#include "parts/cs_mvIn.c"
-#endif
