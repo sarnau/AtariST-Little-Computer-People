@@ -2004,7 +2004,10 @@ static short
 pk_cbet(str)
 char *  str;
 {
-        short   r;
+        /* Two locals: the key and a flag that ends the first prompt
+           loop; the second loop is a plain while (1). */
+        short   r;      /* -2 */
+        short   go;     /* -4 */
 
         pk_bet  = 0;
         pk_pass = NO;
@@ -2013,38 +2016,43 @@ char *  str;
         strPr("F1 Bet",       225, 18, COLOR_red);
         strPr("F3 Enter",     225, 26, COLOR_red);
         strPr("F5 Pass/Clr", 225, 34, COLOR_red);
-        for (;;) {
+        go = 0;
+        while (!go) {
                 r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                if (r == -1) return -1;
-                if (r == 3)  break;
-                if (r == 1) {
-                        if (g_ppmon != 0) {
-                                pk_ddec(1, 1);
-                                for (;;) {
-                                        r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                        if (r == -1) return -1;
-                                        if (r == 2 && pk_bet != 0)
-                                                return 0;
-                                        if (r == 1)
-                                                pk_ddec(1, 1);
-                                        if (r == 3) {
-                                                if (pk_bet == 0) {
-                                                        pk_pass = YES;
-                                                        return 0;
-                                                }
-                                                g_ppmon = g_ppmon + pk_bet;
-                                                g_ppppa = g_ppppa - pk_bet;
-                                                pk_bet  = 0;
-                                                pk_dppm();
-                                                pk_dpot();
-                                        }
-                                }
-                        }
+                if (r == -1)
                         return -1;
+                if (r == 3) {
+                        pk_pass = YES;
+                        return 0;
+                }
+                if (r == 1) {
+                        if (g_ppmon == 0)
+                                return -1;
+                        pk_ddec(1, 1);
+                        go = 1;
+                        break;
                 }
         }
-        pk_pass = YES;
-        return 0;
+        while (1) {
+                r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                if (r == -1)
+                        return -1;
+                if (r == 2 && pk_bet != 0)
+                        return 0;
+                if (r == 1)
+                        pk_ddec(1, 1);
+                if (r == 3) {
+                        if (pk_bet == 0) {
+                                pk_pass = YES;
+                                return 0;
+                        }
+                        g_ppmon += pk_bet;
+                        g_ppppa -= pk_bet;
+                        pk_bet   = 0;
+                        pk_dppm();
+                        pk_dpot();
+                }
+        }
 }
 
 /* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
@@ -2056,70 +2064,78 @@ pk_ddec(who, n)
 short   who;
 short   n;
 {
-        short   left;
-
-        left = n;
-        if (pk_bet != 20) {
-                while (left != 0 &&
-                       (who != 0 || g_pcmon != 0) &&
-                       (who != 1 || g_ppmon != 0)) {
-                        if (who == 0) {
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
-                        left = left - 1;
-                        if (who == 1) {
-                                g_ppmon = g_ppmon - 1;
-                                pk_dppm();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
+        /* No local: the count is decremented in the loop condition
+           (the argument itself), and the two side branches are
+           written out in order. */
+        if (pk_bet == 20)
+                return;
+        while (n--) {
+                if (who == 0 && g_pcmon == 0)
+                        return;
+                if (who == 1 && g_ppmon == 0)
+                        return;
+                if (who == 0) {
+                        g_pcmon--;
+                        pk_awp();
+                        g_ppppa++;
+                        pk_dpot();
+                        pk_bet++;
+                }
+                if (who == 1) {
+                        g_ppmon--;
+                        pk_dppm();
+                        g_ppppa++;
+                        pk_dpot();
+                        pk_bet++;
                 }
         }
 }
 
-/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
-   addr: poker_ante_phase() */
+/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
+   face-up, computer face-down.
+   addr: poker_evaluate_hands() */
 
 static void
-pk_ante()
+pk_evhs()
 {
-        short   r;
+        /* Counter first in LCP_STX. */
+        short   i;      /* -2 */
+        short   dup;    /* -4 */
+        short   c;      /* -6 */
+        short   j;      /* -8 */
 
-        g_ppppa = 0;
-        plEr(225, 10, 319, 60);
-        strPr("F1  Ante", 225, 18, COLOR_red);
-        strPr("F10 Quit", 225, 34, COLOR_red);
-        pk_pmsg("Ante up to play.");
-        pk_quit = NO;
-        r = 0;
-        while (r != 1 && r != 3 && r != -1)
-                r = pk_inph(KEY_F1, 0, KEY_F10);
-        if (r == 3 || r == -1) {
-                pk_quit = YES;
-        } else if (g_ppmon == 0) {
-                pk_pmsg("Sorry, you're all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else if (g_pcmon == 0) {
-                pk_pmsg("I'm all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else {
-                plEr(5, 63, 319, 75);
-                g_ppmon = g_ppmon - 1;
-                pk_dppm();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
-                g_pcmon = g_pcmon - 1;
-                pk_awp();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
+        for (i = 0; i < 5; i++) {
+                pk_ch[i] = CARD_NONE;
+                pk_ph[i] = CARD_NONE;
+        }
+        for (i = 0; i < 5; i++) {
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j++) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ch[i] = c;
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j++) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ph[i] = c;
+        }
+        plEr(70, 10, 219, 62);
+        for (i = 0; i < 5; i++) {
+                pk_drcs(pk_ph[i], i, 1);
+                gameTick(3);
+                pk_drcs(CARD_BACK, i, 0);
+                gameTick(3);
         }
 }
 
@@ -2260,50 +2276,44 @@ pk_dpot()
         strPr(str, 31, 38, COLOR_black);
 }
 
-/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
-   face-up, computer face-down.
-   addr: poker_evaluate_hands() */
+/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
+   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
+   addr: poker_ante_phase() */
 
 static void
-pk_evhs()
+pk_ante()
 {
-        BOOL16  dup;
-        short   j;
-        short   c;
-        short   i;
+        short   r;
 
-        for (i = 0; i < 5; i = i + 1) {
-                pk_ch[i] = CARD_NONE;
-                pk_ph[i] = CARD_NONE;
-        }
-        for (i = 0; i < 5; i = i + 1) {
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ch[i] = c;
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ph[i] = c;
-        }
-        plEr(70, 10, 219, 62);
-        for (i = 0; i < 5; i = i + 1) {
-                pk_drcs(pk_ph[i], i, 1);
-                gameTick(3);
-                pk_drcs(CARD_BACK, i, 0);
-                gameTick(3);
+        g_ppppa = 0;
+        plEr(225, 10, 319, 60);
+        strPr("F1  Ante", 225, 18, COLOR_red);
+        strPr("F10 Quit", 225, 34, COLOR_red);
+        pk_pmsg("Ante up to play.");
+        pk_quit = NO;
+        r = 0;
+        while (r != 1 && r != 3 && r != -1)
+                r = pk_inph(KEY_F1, 0, KEY_F10);
+        if (r == 3 || r == -1) {
+                pk_quit = YES;
+        } else if (g_ppmon == 0) {
+                pk_pmsg("Sorry, you're all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else if (g_pcmon == 0) {
+                pk_pmsg("I'm all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else {
+                plEr(5, 63, 319, 75);
+                g_ppmon = g_ppmon - 1;
+                pk_dppm();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
+                g_pcmon = g_pcmon - 1;
+                pk_awp();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
         }
 }
 
