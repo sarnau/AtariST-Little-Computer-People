@@ -34,6 +34,9 @@
 #include "tick.h"
 #include "walk.h"
 
+#include "dat_games.c"
+
+
 /* LCP_STX defines pk_bjwr AFTER pk_wrMn (0xb784) and reaches it with
    a forward bsr; declaring it keeps the symbol local so as68 can
    shorten the call instead of leaving an external. */

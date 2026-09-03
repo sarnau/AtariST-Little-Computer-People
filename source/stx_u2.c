@@ -63,6 +63,9 @@
 #include "vdiown.h"
 #include "walk.h"
 
+#include "dat_u2.c"
+
+
 #include "parts/moffmon.c"     /* moff 0xde36, mon 0xde5c */
 #include "parts/lcp_lgt.c"     /* 0xde80 */
 #include "parts/lcp_rgt.c"     /* 0xdf66 */

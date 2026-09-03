@@ -55,6 +55,9 @@
 #include "sprites.h"
 #include "walk.h"
 
+#include "dat_u1.c"
+
+
 #include "parts/cntSong.c"  /* 0x400c */
 #include "parts/sp_genma.c" /* 0x408c */
 /* dg_mvAni (0x412c) is followed directly by walk.c's dg_wkPth

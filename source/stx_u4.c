@@ -24,6 +24,9 @@
 #include "sound.h"
 #include "sfx_irq.h"
 
+#include "dat_u4.c"
+
+
 #include "parts/sgPlay.c"    /* 0xd9ea, first of the object */
 #include "sfx_irq.c"         /* sf_irqp 0xdafc */
 #include "sound.c"           /* sf_sl 0xdcc4 < sf_sele < sf_so */

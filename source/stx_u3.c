@@ -10,6 +10,7 @@
 
 /* prCh needs obdefs.h (MD_TRANS/MD_REPLACE). */
 #include "obdefs1.h"
+#include "sprglobs.h"
 
 /* deal_kc/putEv need the globals and prototypes their own files
    pull in. */
@@ -25,6 +26,9 @@
 #include "renderx.h"
 #include "parser.h"
 #include "vocab.h"
+
+#include "dat_u3a.c"
+
 
 #include "alerts.c"
 #include "sprites.c"
@@ -67,3 +71,4 @@
 #include "parts/cmd_num.c" /* 0x17278 */
 #include "parts/lcp_upp.c" /* 0x172e8 */
 
+#include "dat_u3b.c"
