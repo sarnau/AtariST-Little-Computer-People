@@ -859,6 +859,17 @@ this build, ALL different from LCP_ORG's:
                                       Super block, with an UNUSED
                                       short in the frame between the
                                       counter pointer and the value
+      Giaccess(d, r)       (ORG)  vs  xbios(28, d, r) written out --
+                                      mq_dise's PSG writes skip the
+                                      macro's (char) cast on the data
+                                      argument (sf_so still uses the
+                                      macro, so do NOT change it)
+      x &= 0xf             both       -- but `x = x & 0xff` is a
+                                      DIFFERENT shape (load/and/store
+                                      vs andi to memory); mq_dise uses
+                                      each in the same function
+      a = 1; b = 1;        (ORG)  vs  b = a = 1  (moveq into d0, then
+                                      both stores from the register)
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -937,8 +948,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 329 matched / 7 divergent, 70 590 of
-104 156 STX text bytes (67.8%) proven byte-identical -- 74.5% of the
+**Status (2026-09-03): 330 matched / 6 divergent, 71 848 of
+104 156 STX text bytes (69.0%) proven byte-identical -- 75.8% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
@@ -946,8 +957,7 @@ LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
 Still divergent (all located): pk_main 0x8d10, pk_bjMn 0xbc72,
-psg_upE 0x15ae, mq_dise 0x918 (its MIDI OUT half is recovered; the
-PSG half is not), plus three functions the port has only as stubs and
+psg_upE 0x15ae, plus three functions the port has only as stubs and
 that must be written from scratch -- st_titl 0x6d7e (1040 B, a real
 interactive title screen), cs_mvIn 0xe500 (968 B, the move-in
 cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy protection).
