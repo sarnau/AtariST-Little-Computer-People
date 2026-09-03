@@ -894,6 +894,32 @@ this build, ALL different from LCP_ORG's:
         i++) body;
       dealer stands > 16   (ORG)  vs  >= 17 (the literal in the cmpi
                                       is 17, not 16)
+      p_sfgrt then p_sfspe (ORG) vs  p_sfspe then p_sfgrt (a_hello's
+                                      random arm -- the wrapper ids
+                                      settle which is which)
+      } else if (k == 1) { (ORG)  vs  goto next_round; } if (k == 1) {
+                                      (the minigame mains close each
+                                      arm with an explicit goto and
+                                      start a fresh if; sizes are the
+                                      same, only the branch TARGET
+                                      differs -- the chain end vs the
+                                      loop label)
+      ...} goto next_round; (ORG) vs  ...goto next_round; } (the
+                                      trailing goto INSIDE the deepest
+                                      block, which makes every
+                                      end-of-if jump target the
+                                      epilogue instead of the goto)
+      x < 12 && x > 7      (ORG)  vs  x <= 11 && x >= 8  (the literal
+                                      in the cmpi and the branch
+                                      condition both change)
+      while ((*p)-- != 0)  (ORG)  vs  while ((*p)--)
+      short off = g*6      (ORG)  vs  arr[i + g * 4] written inline --
+                                      `arr[idx + g * 4]` is exactly
+                                      what emits moveaw g,a0 / addaw
+                                      a0,a0 / addaw a0,a0 / addaw idx
+                                      (probe-confirmed); a temp with
+                                      the same arithmetic does not
+
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -972,15 +998,10 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 339 matched / ZERO divergent, 93 738 of
-104 156 STX text bytes (90.0%) proven byte-identical.  Every function
-in the binary now matches; what is left is the library region
-(9 420 bytes) and a handful of sub-48-byte stubs verify_bytes
-skips.**  LCP_ORG.PRG is NO
-LONGER the reference (maintainer, 2026-09-02: it was a temporary
-hack, not the original game).  New work is written directly in
-LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
-the LCP_ORG byte-identity check is no longer run.
+**Status (2026-09-03): the TEXT segment is BYTE-IDENTICAL to
+DATA/LCP_STX.PRG -- 104 156 bytes on both sides, zero differing bytes
+modulo relocations.  All that remains is the data (+3008) and bss
+(+53884) layout; see "Byte-identity phase" below.**
 
 cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
 (`source/cp_asm.s`), not C -- the maintainer confirmed the whole
@@ -1089,66 +1110,95 @@ stub -- check the line number against that range before editing.
   globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
   10-byte slot that just calls the next function).
 
-## Byte-identity phase (2026-09-03)
+## Byte-identity phase (2026-09-03) -- TEXT IS DONE
 
-With every function matching, the remaining work is LAYOUT.  Sizes
-against LCP_STX: text +644, data +3006, bss +53924.
+**The TEXT segment is byte-identical to DATA/LCP_STX.PRG: 104 156
+bytes on both sides, zero differing bytes anywhere modulo
+relocations.**  Remaining: data +3008, bss +53884.
 
-**verify_bytes is not sufficient here.**  It wildcards relocations AND
-PC-relative displacements, so a function can report MATCH while its
-internal branch targets differ -- psg_upEn and ag_main both did.  Use
-`source/tools/stx_txtdiff.py`, which wildcards relocations only and
-walks the whole text segment; that is what this phase iterates on.
+Reproduce with:
 
-Two layout levers, in order:
+    source/tools/alcyon_build.sh
+    bash source/tools/stx_check.sh
+    LCP_REF=DATA/LCP_STX.PRG python3 source/tools/prg_diff.py
 
- 1. **Object order.**  alcyon_link.sh now names LCP_STX's object order
-    explicitly for the default build (midi_seq 0x12a, mq_tick 0x219a,
-    psg_asm 0x2272, cp_asm 0x22c0, stx_u1 0x400c, games 0x73e8,
-    stx_u4 0xd9ea, stx_u2 0xde36, stx_u3 0x148fe, blkcp_a 0x17310,
-    then the library), with osbind.o right behind gemstart where the
-    trap bindings sit at 0xfa.  stx_check.sh reuses that list verbatim
-    -- if the symbol side-link disagrees with LCP.PRG about object
-    order, every symbol extent comes out wrong and the sweep reports
-    mass divergence that is not real.
- 2. **Function order inside each object.**  midi_seq.c, stx_u1.c and
-    games.c are done; stx_u2.c (26 order breaks), stx_u3.c (2) and
-    vdiown.c (4) are not.  For a unity unit this is just reordering
-    the #include lines -- but the unit then needs every header at the
-    top, and obdefs.h has no include guard of its own, so port sources
-    include `obdefs1.h` instead.
+**verify_bytes is not sufficient for this phase.**  It wildcards
+relocations AND PC-relative displacements, so a function can report
+MATCH while its internal branch targets differ (psg_upEn and ag_main
+both did), and it walks the port's SYMBOL table, so `static` helpers
+-- which Alcyon emits without a symbol -- were never compared at all
+(`source/tools/stx_unverified.py` prints those runs).  Two tools
+carried this phase instead:
+  * `source/tools/stx_txtdiff.py` -- whole-text compare, relocations
+    only wildcarded.  `[START] [COUNT]` to focus.
+  * a prologue-span pairing pass: split both images at `link a6`
+    prologues that follow an rts, then match each LCP_STX span to the
+    port span of the same length with zero differing bytes.  That is
+    what produced stx_u2's function order and what proves the
+    inventory complete -- **265 LCP_STX spans against 265 port spans,
+    one to one.**
 
-Text is byte-identical from 0 through **0x8d3c** (35%), and every
-static up to pk_annr (0xa664) is byte-exact apart from call
-displacements that still depend on later, unrecovered helpers, i.e. the whole
-MIDI object, cp_main, the 0x400c object and the minigame object up to
-poker's static helpers.
+Three layout levers, all now applied:
 
-**Recovered statics so far** (all byte-exact, all found with
+ 1. **Object order** -- alcyon_link.sh names LCP_STX's explicitly for
+    the default build: midi_seq 0x12a, mq_tick 0x219a, psg_asm 0x2272,
+    cp_asm 0x22c0, stx_u1 0x400c, games 0x73e8, stx_u4 0xd9ea,
+    stx_u2 0xde36, stx_u3 0x148fe, blkcp_a 0x17310, vdistx 0x1733a,
+    then the library, with osbind.o right behind gemstart (the trap
+    bindings sit at 0xfa).  stx_check.sh reuses that list verbatim --
+    if the symbol side-link disagrees with LCP.PRG about object order,
+    every symbol extent comes out wrong and the sweep reports mass
+    divergence that is not real.
+ 2. **Function order inside each object.**  For a unity unit this is
+    just reordering the #include lines -- but the unit then needs
+    every header at the top (they emit no code, so layout is
+    unaffected), and obdefs.h has no include guard of its own, so port
+    sources include `obdefs1.h` instead.
+    **LCP_STX did NOT group stx_u2 by source file**: aleisure's nine
+    functions alone run from 0xe338 to 0x12ca0.  So the port's action
+    files (aleisure, asimple, adoors, delivery, afood, abathrm, aidle,
+    ahouse, aletter) are now nothing but FAITHFUL-gated
+    `#include "parts/..."` lines, every body lives in parts/, and
+    **stx_u2.c's include list IS the object's function order**.
+ 3. **The VDI binding module.**  LCP_STX has ONE trap dispatcher and
+    ONE parameter block where the port carried three copies of the
+    same 22-byte routine (vdiown_a.s's vdi_go on vdipb, vdilib_a.s's
+    vdi_go2 on vdipb2, VDIBIND's gsx1 on its private pblock) -- the
+    port's entire +44-byte text surplus.  Its module is one object:
+
+        vswr_mode 0x1733a < v_bar < v_gtext < v_opnvwk 0x17426
+        < v_pline < vqt_attributes 0x174e4 < vro_cpyfm 0x1753a
+        < vsf_color < vsf_interior < vsf_style < vsl_color
+        < vst_color < vst_height 0x176b8 < wr_src < wr_dst
+        < gsx1 0x1772e
+
+    vqt_attributes and vst_height sitting BETWEEN Activision's own
+    bindings proves they are not linked from VDIBIND there: the 1985
+    source copied the DRI bodies in, as it did with the rest of the
+    layer.  The default build therefore compiles `source/vdistx.c`
+    (module in STX order; the nine shared bindings come from parts/,
+    the four library-shaped bodies are written out) plus
+    `source/vdistx_a.s` (wr_src, wr_dst and the single `_gsx1` on
+    `_vdipb` -- defining `_gsx1` keeps VDIBIND's gsx1 member and its
+    private pblock out of the link).  vdiown.h maps vdi_go/vdi_go2
+    onto gsx1 for this configuration, tools/stx_units.txt skips
+    vdiown.c and vdilib.c, and alcyon_link.sh drops
+    vdilib.o/vdilib_a.o from the default LIST.
+
+**Statics recovered in this phase** (all byte-exact, all found with
 stx_txtdiff.py): pk_dbet 0x87a0, pk_evh 0x8804, pk_show 0x9a3a,
-pk_cace 0xa1bc, pk_blf 0xa24a, pk_cdrw 0xa27a.  Recurring findings in
-this class: the counter is declared FIRST and the inner loops reuse
-it; one local often doubles as two things (pk_evh's j is the
-bubble-sort flag, its tmp is both the swap temporary and the wheel
-flag); comparisons put the computer's side on the left; scan loops
-are written body-first with a break, not with a compound for
-condition; flag arrays are tested bare; and a helper often has NO
-explicit return on its success path, leaving the last compared value
-in d0 (pk_cace, the chk_timA pattern).  pk_tcm joins pk_bm and pk_rm
-as a char POINTER.
-
-**The blocker from here is a class of code verify_bytes has never
-looked at.**  It walks the port's SYMBOL table, and Alcyon emits a
-`static` without a symbol, so every static helper in the port is
-unverified -- `source/tools/stx_unverified.py` prints the runs.
-9 472 bytes of the game's 94 736 (10.0%) are in that state, and the
-big runs are exactly where the text delta lives: the poker helpers
-around pk_main (3 114 + 1 392 + 1 262 + 940 + 324 bytes) and 2 102
-bytes at 0xd1b4.  They are not merely misordered -- the port spends
-9 846 bytes on statics where LCP_STX spends 7 032, so their source
-shapes have to be recovered one at a time like any other function.
-Only pk_dbet (0x87a0) and pk_evh (0x8804) precede pk_main; the port
-had nine helpers there.
+pk_cace 0xa1bc, pk_blf 0xa24a, pk_cdrw 0xa27a, pk_ante 0xaf66,
+pk_chsc 0xd1b4, pk_bjr 0xd294, pk_cnbj 0xd608, pk_dchd 0xd67c,
+pk_dbhi 0xd78e, pk_sbet 0xd864, pk_bjwr 0xb784, cmd_num 0x17278.
+Recurring findings in this class: the counter is declared FIRST and
+the inner loops reuse it; one local often doubles as two things
+(pk_evh's j is the bubble-sort flag, its tmp is both the swap
+temporary and the wheel flag); comparisons put the computer's side on
+the left; scan loops are written body-first with a break, not with a
+compound for condition; flag arrays are tested bare; and a helper
+often has NO explicit return on its success path, leaving the last
+compared value in d0 (pk_cace, the chk_timA pattern).  pk_tcm joins
+pk_bm and pk_rm as a char POINTER.
 
 A static defined AFTER its caller needs a file-scope forward
 declaration or Alcyon treats the call as an external and the linker
@@ -1159,33 +1209,54 @@ Things that cost bytes the original does not have: a `static` Alcyon
 emits even when nothing calls it (midi_seq.c's five mh_* header
 handlers, games.c's gamePlWQ), and helpers whose LCP_STX version is
 smaller (gameCln takes no argument there and does not free).  Both
-classes are now gated.
+classes are now gated.  The converse also happens: **LCP_STX emits
+statics nothing calls** -- cmd_num (0x17278) has no jsr or bsr
+anywhere in the image -- so an unreferenced helper in the 1985 source
+still costs its bytes.
 
 Two more findings from this phase: LCP_STX keeps mi_dwrm, mi_rlock,
 g_mtpre, g_msmsa and psg_ntAc in the TEXT segment immediately behind
 mq_tick (0x226a-0x2271), and the last two are real BYTES, not BOOL16
-words -- mq_tick.s defines all five itself now.  And a static defined
-AFTER its caller needs a file-scope forward declaration, or Alcyon
-treats the call as an external and the linker resolves it to 0
-(pk_bjwr, which LCP_STX places behind pk_wrMn at 0xb784).
+words -- mq_tick.s defines all five itself now.
 
-Roadmap (mirrors campaign #1):
- 1. Function-level recovery: iterate fn_diff/verify_bytes with
-    LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
-    recovering exact literals/shapes.  The kept build is the
-    natural vehicle -- it should converge to this truth.
- 2. Identify the STX revision's own runtime/lib shapes (alcyon2
-    osbind/gemlib) and link order; build an stx equivalent of
-    rom_data_map via rom_map.py.  DONE for the libraries:
-    alcyon_link.sh links ~/Hatari_C/Compiler/Alcyon/alcyon2's
-    GEMSTART.O/OSBIND.O/AESBIND/VDIBIND/GEMLIB/LIBF for the default
-    build and the Atari DK set under FAITHFUL (six runtime functions
-    matched immediately).  The DK gemstart is assembled to
-    gemstart_dk.o and copied into place, so both configurations can
-    share one build tree.
- 3. End state: the default build reproduces LCP_STX.PRG
-    byte-identically (its own gemstart/libs/layout), while
-    -DFAITHFUL keeps reproducing LCP_ORG.PRG.
+**Duplicated bodies are real.**  LCP_STX carries the "stand and look"
+gesture twice -- 0x12c08 with `link #-10` (three locals it never
+references) and 0x12c54 with `link #-4` -- and the callers name them:
+a_lists/a_playp reach the first (li_loor), tt_on/tt_off the second
+(li_lool).  Beware the mirror-image trap: two functions with identical
+bodies make length+content pairing report a duplicate that is not one.
+0xe310 is sc_sdtf, NOT a second exitVdi, even though their bodies are
+the same `Setscreen(g_srlgb, -1L, -1)`; verify_bytes had simply never
+compared it, because it skips functions under 48 bytes.
+
+Source shapes recovered late in this phase:
+  - The four SFX wrappers are ordered tvc, spe, hnd, grt (ids in the
+    0xf91e SPEECH/3 and 0xf952 GREETING/2 bodies), and a_hello's
+    random arm plays SPEECH on the non-zero roll, GREETING on zero.
+  - gameTick's `if (g_sepex[g_lcieo] < 0) g_sepex[g_lcieo] = 0;` clamp
+    is INSIDE the non-carrying arm -- the 0x1570e end-of-then jump
+    (to 0x157bc, the epilogue, not to 0x1579a) is what says so.
+  - pk_main's round loop: three `else if` chains are separate `if`s
+    whose preceding arm closes with `goto next_round;`, and the
+    trailing `goto next_round;` lives INSIDE the deepest block, which
+    is why every end-of-if jump in the function targets the epilogue.
+  - `x <= 11 && x >= 8` (not `< 12 && > 7`) for the face-card range.
+
+Roadmap:
+ 1. ~~Function-level recovery~~ DONE -- 265/265 spans, zero code
+    differences.
+ 2. ~~Object and function order~~ DONE -- text is byte-identical.
+ 3. **DATA layout (+3008) and BSS layout (+53884).**  Mirrors campaign
+    #1 phases 2-3: reorder globals.c to LCP_STX's declaration order
+    and build an STX equivalent of rom_bss_layout.tsv.  Every
+    remaining TEXT byte difference reported by prg_diff.py is a
+    relocated address, so these two are all that stand between the
+    port and a byte-identical LCP_STX.PRG.
+
+**FAITHFUL is retired.**  DATA/LCP_ORG.PRG is no longer in the repo,
+and the FAITHFUL configuration does not currently compile (midi_seq.c
+and walk.c fail in c068 -- pre-existing, unrelated to the STX work).
+Its gated code is kept as historical record, not as a build target.
 
 ## Issue log -- ALL CLOSED (2026-09-01)
 
