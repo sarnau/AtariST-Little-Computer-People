@@ -2589,54 +2589,58 @@ no_cards:
 static short
 pk_bjwr()
 {
-        short   drawn;
-        short   res;
-        short   idx;
-        short   off;      /* (g_pchc << 2) + g_pchc + g_pchc == g_pchc*6 */
+        short   idx;            /* -2  */
+        short   drawn;          /* -4  */
+        short   pot;            /* -6  */
+        short   prank;          /* -8  */
+        short   crank;          /* -10 */
+        short   unused;         /* -12 */
 
         g_pchc = 0;
-        for (idx = 1; idx < 52; idx = idx + 1) {
-                pk_cwc[idx] = CARD_NONE;
-                pk_pwc[idx] = CARD_NONE;
+        for (idx = 1; idx < 52; idx++) {
+                pk_cwc[idx] = -1;
+                pk_pwc[idx] = -1;
         }
         for (;;) {
                 pk_pmsg("... WAR!! ...");
                 gameTick(10);
-                if (g_pcmon == 0) return -1;
-                if (g_ppmon == 0) return -2;
+                if (g_pcmon == 0)
+                        return -1;
+                if (g_ppmon == 0)
+                        return -2;
 
-                idx = 1;
-                while (idx < 4 && g_ppmon != 1 && g_pcmon != 1) {
-                        off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
+                for (idx = 1; idx < 4; idx++) {
+                        if (g_ppmon == 1)
+                                break;
+                        if (g_pcmon == 1)
+                                break;
                         drawn = pk_rmch(g_ppdrp, &g_ppmon);
-                        pk_pwc[idx + off] = drawn;
-                        g_ppppa = g_ppppa + 1;
+                        pk_pwc[g_pchc * 4 + idx] = drawn;
+                        g_ppppa++;
                         pk_drcs(CARD_BACK, idx, 1);
                         pk_dpot();
                         pk_dppm();
                         gameTick(3);
                         drawn = pk_rmch(g_pcdrp, &g_pcmon);
-                        pk_cwc[idx + off] = drawn;
-                        g_ppppa = g_ppppa + 1;
+                        pk_cwc[g_pchc * 4 + idx] = drawn;
+                        g_ppppa++;
                         pk_drcs(CARD_BACK, idx, 0);
                         pk_dpot();
                         pk_awp();
                         gameTick(3);
-                        idx = idx + 1;
                 }
 
                 /* Final face-up card each. */
-                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
                 drawn = pk_rmch(g_ppdrp, &g_ppmon);
-                pk_pwc[idx + off] = drawn;
-                g_ppppa = g_ppppa + 1;
+                pk_pwc[g_pchc * 4 + idx] = drawn;
+                g_ppppa++;
                 pk_drcs(CARD_BACK, idx, 1);
                 pk_dpot();
                 pk_dppm();
                 gameTick(3);
                 drawn = pk_rmch(g_pcdrp, &g_pcmon);
-                pk_cwc[idx + off] = drawn;
-                g_ppppa = g_ppppa + 1;
+                pk_cwc[g_pchc * 4 + idx] = drawn;
+                g_ppppa++;
                 pk_drcs(drawn, idx, 0);
                 pk_dpot();
                 pk_awp();
@@ -2644,56 +2648,54 @@ pk_bjwr()
 
                 pk_pmsg("Let's see what you've got...");
                 strPr("F1 Show", 225, 18, COLOR_red);
-                while ((res = pk_inph(KEY_F1, 0, 0)) != 1) {
+                while (pk_inph(KEY_F1, 255, 255) != 1) {
                         if (mg_tofl != NO)
                                 return -1;
                 }
-                pk_drcs(pk_pwc[idx + off], idx, 1);
+                pk_drcs(pk_pwc[g_pchc * 4 + idx], idx, 1);
                 plEr(225, 10, 319, 60);
                 gameTick(5);
 
-                if ((short)((short) pk_cwc[idx + off] % 13) <
-                    (short)((short) pk_pwc[idx + off] % 13)) {
+                if ((prank = pk_pwc[g_pchc * 4 + idx] % 13) >
+                    (crank = pk_cwc[g_pchc * 4 + idx] % 13)) {
                         /* Player wins the war round. */
                         pk_pmsg("You win the war!!!");
                         gameTick(8);
-                        while (idx = idx - 1, idx != 0) {
-                                pk_drcs(pk_cwc[idx + off], idx, 0);
+                        while (--idx) {
+                                pk_drcs(pk_cwc[g_pchc * 4 + idx], idx, 0);
                                 gameTick(1);
                         }
                         gameTick(10);
-                        res = g_ppppa;
+                        pot = g_ppppa;
                         pk_annr(1);
-                        g_ppmon = g_ppmon - res;
-                        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
+                        g_ppmon -= pot;
+                        for (idx = 0; pk_cwc[idx] != -1; idx++) {
                                 pk_actd(g_ppdrp, &g_ppmon, pk_pwc[idx]);
                                 pk_actd(g_ppdrp, &g_ppmon, pk_cwc[idx]);
                         }
                         return 0;
                 }
-                if ((short)((short) pk_pwc[idx + off] % 13) <
-                    (short)((short) pk_cwc[idx + off] % 13))
-                        break;
-                g_pchc = g_pchc + 1;
+                if ((prank = pk_pwc[g_pchc * 4 + idx] % 13) <
+                    (crank = pk_cwc[g_pchc * 4 + idx] % 13)) {
+                        /* Computer wins the war round. */
+                        pk_pmsg("I win the war!!!");
+                        gameTick(8);
+                        while (--idx) {
+                                pk_drcs(pk_pwc[g_pchc * 4 + idx], idx, 1);
+                                gameTick(1);
+                        }
+                        gameTick(10);
+                        pot = g_ppppa;
+                        pk_annr(0);
+                        g_pcmon -= pot;
+                        for (idx = 0; pk_cwc[idx] != -1; idx++) {
+                                pk_actd(g_pcdrp, &g_pcmon, pk_pwc[idx]);
+                                pk_actd(g_pcdrp, &g_pcmon, pk_cwc[idx]);
+                        }
+                        return 0;
+                }
+                g_pchc++;
         }
-
-        /* Computer wins the war round. */
-        pk_pmsg("I win the war!!!");
-        gameTick(8);
-        while (idx = idx - 1, idx != 0) {
-                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
-                pk_drcs(pk_pwc[idx + off], idx, 1);
-                gameTick(1);
-        }
-        gameTick(10);
-        res = g_ppppa;
-        pk_annr(0);
-        g_pcmon = g_pcmon - res;
-        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
-                pk_actd(g_pcdrp, &g_pcmon, pk_pwc[idx]);
-                pk_actd(g_pcdrp, &g_pcmon, pk_cwc[idx]);
-        }
-        return 0;
 }
 
 /* pk_bjMn: BLACKJACK main game loop.
@@ -3353,14 +3355,16 @@ short * hand;
 short   row;
 char *  prompt;
 {
-        short   res;
-        short * cnt_ptr;
-        short   score;
-        short   i;
-        short   j;
-        BOOL16  forced;
+        /* Seven declarations in LCP_STX, two of them never referenced,
+           and no `res`; the pointer is not pre-seeded. */
+        short   i;              /* -2  */
+        short   unused1;        /* -4  */
+        short   j;              /* -6  */
+        short   unused2;        /* -8  */
+        short   score;          /* -10 */
+        short * cnt_ptr;        /* -14 */
+        short   forced;         /* -16 */
 
-        cnt_ptr = &pk_pcc;
         if (hand == pk_ph)  cnt_ptr = &pk_pcc;
         if (hand == pk_psh) cnt_ptr = &pk_pscc;
         if (hand == pk_ch)  cnt_ptr = &pk_ccc;
@@ -3374,66 +3378,71 @@ char *  prompt;
                 strPr("F1 Hit",   225, 18, COLOR_red);
                 strPr("F3 Stand", 225, 26, COLOR_red);
         }
-        for (i = 0; hand[i] != CARD_NONE; i = i + 1)
+        for (i = 0; hand[i] != CARD_NONE; i++)
                 pk_drcs(hand[i], i, row);
 
-        if (forced != NO) {
+        if (forced == NO)
+                pk_pmsg(prompt);
+        else
                 pk_pmsg("Here's your card.");
+        if (forced != NO) {
                 gameTick(0x10);
-                *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
+                (*cnt_ptr)--;
                 pk_dchd(hand, 0);
                 score = 0;
-                for (j = 0; j < 5 && hand[j] != CARD_NONE;
-                     j = j + 1) {
+                for (j = 0; j < 5; j++) {
+                        if (hand[j] == CARD_NONE)
+                                break;
                         if ((short) hand[j] % 13 == 12)
-                                score = score + 1;
-                        else if ((short) hand[j] % 13 < 12 &&
-                                 (short) hand[j] % 13 > 7)
-                                score = score + 10;
+                                score++;
+                        else if ((short) hand[j] % 13 <= 11 &&
+                                 (short) hand[j] % 13 >= 8)
+                                score += 10;
                         else
-                                score = (short) hand[j] % 13 + 2 + score;
+                                score += hand[j] % 13 + 2;
                 }
-                return (score < 22) ? 0 : -1;
-        }
-
-        pk_pmsg(prompt);
-        do {
-                res = 0;
-                while (res != 1 && res != 2 && res != -1) {
+                if (score > 21)
+                        return -1;
+                else
+                        return 0;
+        } else while (1) {
+                bj_key = 0;
+                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
                         gameTick(0);
-                        res = pk_inph(KEY_F1, KEY_F3, 0);
+                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
                 }
                 if (mg_tofl != NO)
                         return -1;
-                if (res == 2) {
+                if (bj_key == 2) {
                         pk_pmsg(" ");   /* s__0002b422 verified via
                                           Ghidra HTTP /read_memory:
                                           the F3-stand path just
                                           blanks the message strip. */
                         return 0;
-                }
-                if (res == 1) {
-                        *cnt_ptr = *cnt_ptr - CARD_BJ_STEP;
+                } else if (bj_key == 1) {
+                        (*cnt_ptr)--;
                         pk_dchd(hand, 0);
                         score = 0;
-                        for (j = 0; j < 5 && hand[j] != CARD_NONE;
-                             j = j + 1) {
+                        for (j = 0; j < 5; j++) {
+                                if (hand[j] == CARD_NONE)
+                                        break;
                                 if ((short) hand[j] % 13 == 12)
-                                        score = score + 1;
-                                else if ((short) hand[j] % 13 < 12 &&
-                                         (short) hand[j] % 13 > 7)
-                                        score = score + 10;
+                                        score++;
+                                else if ((short) hand[j] % 13 <= 11 &&
+                                         (short) hand[j] % 13 >= 8)
+                                        score += 10;
                                 else
-                                        score = (short) hand[j] % 13
-                                                            + 2 + score;
+                                        score += hand[j] % 13 + 2;
                         }
-                        if (21 < score)
+                        if (score > 21)
                                 return -1;
                 }
-        } while (*cnt_ptr != CARD_BJ_STOP);
-        pk_pmsg("You cannot take any more cards.");
-        gameTick(0xf);
-        return 0;
+                if (*cnt_ptr == CARD_BJ_STOP) {
+                        pk_pmsg("You cannot take any more cards.");
+                        gameTick(0xf);
+                        return 0;
+                }
+        }
 }
 
 /* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two).
@@ -3443,16 +3452,18 @@ static short
 pk_cnbj(hand)
 short * hand;
 {
+        short   result;
         short   r0;
         short   r1;
 
+        result = 0;
         r0 = (short) hand[0] % 13;
         r1 = (short) hand[1] % 13;
-        if (r0 == 12 && r1 < 12 && r1 > 7)
-                return 1;
-        if (r1 == 12 && r0 < 12 && r0 > 7)
-                return 1;
-        return 0;
+        if (r0 == 12 && r1 <= 11 && r1 >= 8)
+                result = 1;
+        else if (r1 == 12 && r0 <= 11 && r0 >= 8)
+                result = 1;
+        return result;
 }
 
 /* pk_dchd: deal one card into hand at next CARD_NONE slot.
@@ -3464,32 +3475,39 @@ pk_dchd(hand, face_down)
 short * hand;
 short   face_down;
 {
-        BOOL16                  dup;
-        unsigned short  row;
-        short                   card;
-        short                   j;
-        short                   i;
+        short   i;              /* -2  */
+        short   dup;            /* -4  */
+        short   j;              /* -6  */
+        short   card;           /* -8  */
+        short   row;            /* -10 */
 
-        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) ;
+        for (i = 0; i < 5; i++) {
+                if (hand[i] == CARD_NONE)
+                        break;
+        }
         if (i == 5)
                 return -1;
 
-        dup = YES;
-        while (dup != NO) {
+        dup = 1;
+        while (dup) {
                 card = rndRng(0, 51);
-                dup  = NO;
-                for (j = 0; j < 5; j = j + 1) {
-                        if (pk_ch[j]  == card) dup = YES;
-                        if (pk_ph[j]  == card) dup = YES;
-                        if (pk_psh[j] == card) dup = YES;
+                dup  = 0;
+                for (j = 0; j < 5; j++) {
+                        if (pk_ch[j]  == card ||
+                            pk_ph[j]  == card ||
+                            pk_psh[j] == card)
+                                dup = 1;
                 }
         }
         hand[i] = card;
-        row = (hand != pk_ch) ? 1 : 0;
-        if (face_down == 0)
-                pk_drcs(card, i, row);
+        if (hand == pk_ch)
+                row = 0;
         else
+                row = 1;
+        if (face_down)
                 pk_drcs(CARD_BACK, i, row);
+        else
+                pk_drcs(card, i, row);
         gameTick(3);
         return 0;
 }
@@ -3502,23 +3520,29 @@ static void
 pk_dbhi(sel)
 short   sel;
 {
-        short   val;
-        char    str[12];
+        char    hund;           /* -2  */
+        char    tens;           /* -4  */
+        char    ones;           /* -6  */
+        char    str[4];         /* -10 */
+        short   rem;            /* -12 */
+        short   val;            /* -14 */
 
-        val = (sel == 1) ? g_pcbet : g_ppbet;
+        if (sel == 1)
+                val = g_pcbet;
+        else
+                val = g_ppbet;
         plEr(31, 43, 57, 53);
         str[3] = '\0';
-        str[8] = (char)((int) val / 100);
-        str[0] = str[8] + '0';
+        str[0] = (hund = val / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (char)((int)(val % 100) / 10);
-        if (str[0] == ' ' && str[6] == '\0')
+        tens = (rem = val % 100) / 10;
+        if (str[0] == ' ' && tens == 0)
                 str[1] = ' ';
         else
-                str[1] = str[6] + '0';
-        str[4] = (char)((int)(val % 100) % 10);
-        str[2] = str[4] + '0';
+                str[1] = tens + '0';
+        ones = rem % 10;
+        str[2] = ones + '0';
         strPr(str, 31, 51, COLOR_black);
 }
 
@@ -3534,16 +3558,13 @@ short * bet_ptr;
 short   winner;
 short   mode;
 {
-        short   loc8;
-        short   orig;
-        short   cur;
+        short   orig;           /* -2 */
+        short   loc8;           /* -4 */
 
         if (winner == 0) {
                 orig = *bet_ptr;
-                while (cur = *bet_ptr,
-                       *bet_ptr = *bet_ptr - 1,
-                       cur != 0) {
-                        g_pcmon = g_pcmon + 1;
+                while ((*bet_ptr)--) {
+                        g_pcmon++;
                         pk_awp();
                         if (bet_ptr == &g_pcbet)
                                 pk_dbhi(1);
@@ -3552,26 +3573,23 @@ short   mode;
                         gameTick(0);
                 }
                 if (mode != 0) {
-                        while (orig != 0) {
+                        while (orig--) {
                                 if (g_ppmon == 0) {
                                         pk_quit = YES;
                                         return;
                                 }
-                                g_ppmon = g_ppmon - 1;
+                                g_ppmon--;
                                 pk_dppm();
-                                g_pcmon = g_pcmon + 1;
+                                g_pcmon++;
                                 pk_awp();
                                 gameTick(0);
-                                orig = orig - 1;
                         }
                 }
         } else if (winner == 1) {
                 orig = *bet_ptr;
                 loc8 = *bet_ptr;
-                while (cur = *bet_ptr,
-                       *bet_ptr = *bet_ptr - 1,
-                       cur != 0) {
-                        g_ppmon = g_ppmon + 1;
+                while ((*bet_ptr)--) {
+                        g_ppmon++;
                         pk_dppm();
                         if (bet_ptr == &g_pcbet)
                                 pk_dbhi(1);
@@ -3580,31 +3598,29 @@ short   mode;
                         gameTick(0);
                 }
                 if (mode != 2) {
-                        while (loc8 != 0) {
+                        while (loc8--) {
                                 if (g_pcmon == 0) {
                                         pk_quit = YES;
                                         break;
                                 }
-                                g_pcmon = g_pcmon - 1;
+                                g_pcmon--;
                                 pk_awp();
-                                g_ppmon = g_ppmon + 1;
+                                g_ppmon++;
                                 pk_dppm();
                                 gameTick(0);
-                                loc8 = loc8 - 1;
                         }
                 }
                 if (mode == 1) {
-                        while (orig != 0) {
+                        while (orig--) {
                                 if (g_pcmon == 0) {
                                         pk_quit = YES;
                                         return;
                                 }
-                                g_pcmon = g_pcmon - 1;
+                                g_pcmon--;
                                 pk_awp();
-                                g_ppmon = g_ppmon + 1;
+                                g_ppmon++;
                                 pk_dppm();
                                 gameTick(0);
-                                orig = orig - 1;
                         }
                 }
         }
