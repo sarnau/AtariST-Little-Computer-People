@@ -972,19 +972,28 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 333 matched / 3 divergent, 83 712 of
-104 156 STX text bytes (80.4%) proven byte-identical -- 88.4% of the
+**Status (2026-09-03): 338 matched / 1 divergent, 86 238 of
+104 156 STX text bytes (82.8%) proven byte-identical -- 91.0% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
 LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
-Still divergent: only the three functions the port has as stubs,
-which must be written from scratch -- st_titl 0x6d7e (1040 B, a real
-interactive title screen), cs_mvIn 0xe500 (968 B, the move-in
-cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy protection).
-**Every function the port actually implements now matches.**
+Still divergent: **only cp_main** (0x22c0, 7500 B, the uncracked copy
+protection).  The maintainer confirms the whole region up to Ghidra
+0x1400b (= STX 0x400b) is hand-written ASSEMBLY, so it has to be
+recovered as a .s file, not as C.
+
+st_titl (0x6d7e) and cs_mvIn (0xe500) were written from scratch and
+both match.  st_titl brought three helpers the port never had:
+plErCol (0x871a -- plEr with an explicit fill colour, the four VDI
+attribute calls written out instead of initVdi/exitVdi), erChr
+(0x72e6 -- blank one 8x8 character cell) and stEnter (0x718e -- the
+fixed-width numeric field reader, which skips every third column so
+the separators in MM/DD/YY and HH:MM cannot be typed over).  cs_mvIn
+is a full walking tour of the house, and it is where the protection
+result is consumed: `if (cprot_r == 0) while (1) a_sleep(-1);`.
 
 **The minigame mains share one skeleton** (pk_main and pk_bjMn both
 match it): a `goto round; next_round: gameTick(0x18); round:` label
