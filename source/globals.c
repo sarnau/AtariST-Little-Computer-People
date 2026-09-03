@@ -573,18 +573,22 @@ MFDB    MFDB_A;
    at +0x8000, see parts/sc_ren8.c), scrbufB the decompressed
    house.scn background.
 
-   Sized the way an ST program allocates a screen: declare a round
-   32768 and align the base up inside it, leaving 32768 - slack >=
-   32000 usable.  (The hardware needs 256-byte alignment; this code
-   aligns to 512 -- `(base + 0x200) & ~0x1FF`.)
+   Sized as screen + alignment slack, not as a round power of two.
+   The ST hardware only needs a 256-byte-aligned base, which would
+   make 32000 + 255 enough -- but all three align-up sites in this
+   program mask to 512, verified in the binary:
 
-   scrbufB cannot be 32768: LCP_STX puts pk_quit 32600 bytes after it
-   (25 relocation sites agree on that address), so the round
-   allocation does not fit there.  32512 is 32000 + the 512 the
-   align-up can shift, and leaves 88 bytes for globals the port does
-   not have.  scrbufA has 33045 bytes of room, so the round 32768
-   fits it with 277 to spare. */
-unsigned char   scrbufA[32768];
+       sprites.c  0x15110  push scrbufA+0x1ff ; andi.l #-512,(sp)
+       stpScrB    0x65ae   addl #512,d0 ; andl #-512,d0
+       fillTopR   0x6880   addl #512,d0 ; andl #-512,d0
+
+   so the base can move up by 511 (the +0x1ff form) or 512 (the +512
+   forms) and the buffer needs 32000 + 512 = 32512.
+
+   Both fit LCP_STX's room for them -- scrbufA has 33045 bytes before
+   mi_dptr, scrbufB has 32600 before pk_quit -- with 533 and 88 bytes
+   over for globals the port does not have. */
+unsigned char   scrbufA[32512];
 unsigned char   scrbufB[32512];
 
 /* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
