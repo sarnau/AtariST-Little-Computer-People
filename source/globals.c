@@ -16,6 +16,7 @@
 #ifdef FAITHFUL
 short   ani_cnt  = 0;
 #else
+unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
 unsigned short  ani_cnt = 0;    /* STX: the & 7 test zero-extends */
 #endif
 short   g_secs    = 0;

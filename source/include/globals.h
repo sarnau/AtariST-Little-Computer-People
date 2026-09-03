@@ -9,6 +9,7 @@
 #ifdef FAITHFUL
 extern short ani_cnt;
 #else
+extern unsigned short g_wkadj;
 extern unsigned short ani_cnt;
 #endif
 extern short g_secs;

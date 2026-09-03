@@ -92,19 +92,13 @@ lcp_wkD()
 #include "parts/lcp_fstp.c"
 #endif
 
-/* wkCyc -> parts/wkCyc.c (STX: 0x400c object, with lcp_path). */
 #ifdef FAITHFUL
-#include "parts/wkCyc.c"
 #endif
 
-/* stairCyc -> parts/stairCyc.c (STX: 0x400c object, with lcp_path). */
 #ifdef FAITHFUL
-#include "parts/stairCyc.c"
 #endif
 
-/* setHTgt -> parts/setHTgt.c (STX: 0x400c object, with lcp_path). */
 #ifdef FAITHFUL
-#include "parts/setHTgt.c"
 #endif
 
 /* lcp_path -> parts/lcp_path.c (STX: 0x470a, in the 0x400c object). */

@@ -47,9 +47,6 @@
 /* walk.c straddles two STX objects: lcp_path (0x470a) and
    lcp_fstp (0x4fec) live here with getFlrY, while lcp_wkD and
    friends stay in the 0xdece object (stx_u2.c). */
-#include "parts/wkCyc.c"
-#include "parts/stairCyc.c"
-#include "parts/setHTgt.c"
 #include "parts/lcp_path.c"  /* 0x470a */
 #include "parts/lcp_fstp.c"  /* 0x4fec */
 #include "parts/lcp_flwp.c"  /* 0x50bc */
