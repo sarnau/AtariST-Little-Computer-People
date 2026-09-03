@@ -3,6 +3,6 @@
 #ifndef PSGFREQ_H
 #define PSGFREQ_H
 
-extern unsigned short psg_freq[];
+extern short psg_freq[];
 
 #endif /* PSGFREQ_H */

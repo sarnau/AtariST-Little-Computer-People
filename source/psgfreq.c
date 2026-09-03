@@ -3,7 +3,7 @@
 /* psg_freq[132]: YM2149 tone-period LUT for MIDI notes 0..131.
    period = 2000000 / (16 * midi_note_freq).
    Entries below A#0 (index 23) are 0 -- flagged too-low by mq_dise. */
-unsigned short  psg_freq[132] = {
+short           psg_freq[132] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0fd2, 

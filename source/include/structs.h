@@ -129,10 +129,10 @@ typedef struct {
         unsigned char   sustain_duration;       /* off 6                  */
         unsigned char   sustain_target_vol;     /* off 7                  */
         unsigned char   release_duration;       /* off 8                  */
-        char            ramp_direction;         /* off 9  +1 or -1        */
+        unsigned char   max_volume;             /* off 9  vel-derived cap */
         short           phase_timer;            /* off 10 ticks until step*/
         unsigned char   current_volume;         /* off 12 live PSG volume */
-        unsigned char   max_volume;             /* off 13 vel-derived cap */
+        char            ramp_direction;         /* off 13 +1 or -1        */
 } PSG_ENVELOPE;
 #endif  /* FAITHFUL */
 
