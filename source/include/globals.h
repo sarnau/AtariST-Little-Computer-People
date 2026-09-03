@@ -195,7 +195,7 @@ extern short g_sfcur;
 extern short g_sfdur;
 extern short g_sfdos;
 extern short g_sfdoc;
-extern char  sf_pri[];          /* STX: byte table (moveb + extw) */
+extern char  sf_pri[];          /* STX: 26-byte table (moveb + extw) */
 extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];

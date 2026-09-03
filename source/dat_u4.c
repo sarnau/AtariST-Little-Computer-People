@@ -14,19 +14,41 @@
  */
 
 
-/* sf_pri (Ghidra 0x2b44c, 32-byte array indexed
-   by SOUND_EFFECT_ID).  Lower value = higher priority (a new SFX
-   preempts the current if the new one's priority <= the current's).
-   Notable: SFX 12/13 (DOORBELL, DOORBELL_ECHO) at priority 0 beat
-   everything; footsteps 0..5 at 30 lose to everything.
-   Dumped verbatim from the data segment -- previous port had guessed
-   values (0/5/3/8/etc) that gave wrong preemption. */
-char    sf_pri[32] = {          /* STX: one byte per entry */
+/* The first item of this object's data, at LCP_STX 0x1d68, and
+   nothing in the program relocates it -- so its meaning rests on the
+   bytes alone: 08 00 09 00 0a 00 ff 00.  8, 9 and 10 are the PSG's
+   three amplitude registers and 0xff reads as the terminator, each
+   entry followed by a zero byte.  Kept verbatim; do not "simplify" it
+   to a short[4], which would lay the bytes down as 00 08 00 09 ...  */
+char            psg_vrg[8] = { 8, 0, 9, 0, 10, 0, -1, 0 };
+
+
+/* sf_pri: SOUND_EFFECT_ID -> priority, one byte per entry.  Lower
+   value = higher priority (a new effect preempts the current one when
+   its priority is <= the current one's).  SFX 12/13 (DOORBELL,
+   DOORBELL_ECHO) at 0 beat everything; footsteps 0..5 at 30 lose to
+   everything.
+
+   TWENTY-SIX entries, not 32.  The port's table was dumped from the
+   data segment with the wrong extent and swallowed the first six
+   bytes of the file signature below -- which is why it ended in
+   205, 77, 115, 116, 117, 100, i.e. "\315Mstud".  The reference puts
+   g_momap 38 bytes after sf_pri, and those 38 are 26 + the
+   signature's 12. */
+char    sf_pri[26] = {
          30,  30,  30,  30,  30,  30,  15,  15,
          15,  15,  15,  15,   0,   0,  15,  15,
          15,  15,  15,  14,  16,   1,  15,   0,
-          0,   0, 205,  77, 115, 116, 117, 100
+          0,   0
 };
+
+
+/* The ten-byte header every SOUNDS.LCP and .SNG file starts with:
+   0xCD, "Mstudio", 0xCD, 0x02 -- Activision's Music Studio signature.
+   Declared but never referenced: sf_sl and mq_inti skip the header by
+   a fixed byte count rather than comparing it.  Eleven bytes with the
+   terminator, which Alcyon pads to twelve. */
+char            mi_sig[12] = "\315Mstudio\315\002";
 
 
 

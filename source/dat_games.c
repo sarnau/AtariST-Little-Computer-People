@@ -99,15 +99,17 @@ short           crd_xb[5]         = { 70, 98, 126, 154, 182 };
 short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
 
 
-char *          pk_rm     = "I'll raise 00.";
+char *          pk_rm     = "I'll raise __.";
 
 
 
-/* Editable poker prompts.  pk_bm / pk_rm have single-space digit
-   slots at fixed offsets; pk_tcm's card count digit + trailing
-   period/'s.' get patched in by pk_cdrw.  Buffer widths sized so
-   the biggest overwrite (a 2-digit prefix like "20") still fits. */
-char *          pk_bm     = "I'll bet 00.  ";
+/* Editable poker prompts, patched in place before each is shown.  The
+   underscores are the digit slots the original ships -- pk_dbet and
+   pk_dppm overwrite the two in pk_bm/pk_rm, pk_cdrw the one in
+   pk_tcm (and the trailing "." becomes "s." for a plural draw).
+   They are POINTERS, not arrays, so every patch goes through a
+   movea.l of the variable first. */
+char *          pk_bm     = "I'll bet __.";
 
 
-char *          pk_tcm    = "I'll take 0 cards.";
+char *          pk_tcm    = "I'll take _ cards.";
