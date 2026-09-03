@@ -904,11 +904,13 @@ adjacent parts.
   globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
   10-byte slot that just calls the next function).
 
-## Byte-identity phase (2026-09-03) -- TEXT IS DONE
+## Byte-identity phase (2026-09-03) -- TEXT AND DATA ARE DONE
 
-**The TEXT segment is byte-identical to DATA/LCP_STX.PRG: 104 156
-bytes on both sides, zero differing bytes anywhere modulo
-relocations.**  Remaining: data +3008, bss +53884.
+**The TEXT and DATA segments are byte-identical to DATA/LCP_STX.PRG:
+104 156 and 12 260 bytes on both sides, with identical relocation site
+lists.  The only bytes that still differ anywhere are NINE, in three
+pointers whose targets are BSS addresses.**  Remaining: bss -1268 and
+unordered.
 
 Reproduce with:
 
@@ -1124,23 +1126,93 @@ Roadmap:
     hardware only needs 256-byte alignment (which would make 32255
     enough), but this code does not use it.
 
-    **Still to do: ORDER.**  49 inversions among the mapped data
-    symbols, 61 among the bss ones.  Data order is source declaration
-    order -- but note Alcyon emits string literals and `static` data
-    with NO symbol, so a named symbol's extent swallows the anonymous
-    blob that follows it; that is why days_pm and g_ptdoa look
-    thousands of bytes too big.  BSS order is the LINKER's `.comm`
-    allocation, which matches no surviving tool, so it will need a
-    post-link remap driven by a checked-in spec (recover the technique
-    from git history: `bss_remap.py` did exactly this before it was
-    deleted with the rest of the LCP_ORG material -- pair the reloc
-    streams site-by-site, verify a consistent 1:1 mapping, rewrite the
-    relocated longwords).  Until the order is right, every derived
-    "LCP_STX size" is only an UPPER bound: a gap absorbs whatever
-    unreferenced symbols happen to follow.  The residual -44 / -580
-    lives in that uncertainty -- the leads are g_lsimg / g_lsmas /
-    g_hsbuf / g_hsmas (port 336 each, gaps 512), mi_lstk (200 vs 688)
-    and g_sfdoc (2 vs 342).
+    **DATA IS DONE (2026-09-03).**  12 260 == 12 260, the relocation
+    site lists are IDENTICAL, and only NINE bytes differ: the low three
+    bytes of each of psg_epp's three pointers into BSS, whose 14-byte
+    stride already matches and whose base moves once BSS is laid out.
+
+    Getting there needed one more idea beyond relocation pairing:
+    **a compilation unit's .data comes out in source order, and its
+    string bodies come out in the order c168 met them.**  Both streams
+    therefore record where each declaration sits relative to the
+    functions around it, and the two constraints together pin a global
+    exactly:
+      * A global's own bytes land among the globals of the file that
+        declares it, in declaration order.
+      * A string literal it names lands in the unit's literal pool,
+        after the literals of every function compiled before that
+        point.
+    So a pointer whose string is late in the pool was declared late in
+    the source -- e.g. pex_name ("pex.lcp", not "PE0.LCP") sits between
+    ldSpr and main, and g_ltg's four sign-offs between a_lists and
+    a_writl.  Moving such a declaration moves BOTH its bytes and its
+    string, so a neighbour sometimes has to move with it (g_ltcwt
+    followed g_ltg).  The port carries this as per-object data files
+    included at the right points: dat_u1.c/dat_u1b.c/dat_u1c.c/
+    dat_u1d.c, dat_u2.c/dat_u2b.c, dat_u3a.c/dat_u3b.c, dat_u4.c and
+    dat_games.c/2/3/4, all listed in tools/stx_units.txt.
+
+    **A switch jump table splits a data file.**  Alcyon emits the table
+    into the .data of the object holding the function, so anything
+    declared after that function lands after the table: execEv's and
+    doAct's occupy 0xa20..0xaf3 and getKey's 0xba4..0xbe7, which is
+    why stx_u1's globals come in three pieces.  A table's targets all
+    point inside one function, which is how to tell it from a string
+    pointer array.
+
+    Content recoveries that fell out of the same comparison, each
+    settled by the reference's own bytes:
+      * sf_pri is 26 entries, not 32.  The port's dump had swallowed
+        six bytes of mi_sig, the ten-byte Music Studio file signature
+        (0xCD "Mstudio" 0xCD 0x02) that every SOUNDS.LCP and .SNG
+        starts with -- a declared global nothing references.
+      * mi_pgtab: sixteen bytes of initialized program map that the
+        port had swallowed as g_msmk's second half while pointing
+        mi_pgmap at a same-named EMPTY BSS array.  _mi_pgmapb and
+        _mi_pgmap both truncate to _mi_pgma, so the pointer had been
+        initialized to its own address.
+      * ew2pos is 161 bytes: it ends in -1 and Alcyon pads the odd
+        length to 162.  That 0xff had been mistaken for a {255, 0}
+        sentinel at the head of g_ew2b.
+      * g_ddipt and g_ddyot are nine entries (the picker's index is
+        rndRng(base, 8)), g_ddxot eleven.
+      * mo_names holds three-letter abbreviations, so the calendar
+        reads "Sep 4, 1985"; g_ltg's sign-offs are real strings, not
+        the four NULLs an LCP_ORG-era comment claimed; the anagram
+        prompts are padded to 19 characters so each overwrites the
+        last; g_aggpr[10] and g_agwgm[5] are declared past their
+        initializer lists and Alcyon zero-fills the tails.
+      * env_val, g_mccha, g_dsb and g_obtmp do not exist.  They were
+        referenced by no code -- only by prose in comments -- and with
+        them parked at the end the port carried 404 data relocations
+        against 402.
+      * mq_parh has no default arm.  Its default slot pointed at a
+        `bra` that the text (already byte-identical) still contains;
+        writing `break;` after the MIDI_HDR_END arm's `return;` keeps
+        that unreachable branch and sends the default straight to the
+        switch end.
+
+    **Still to do: BSS.**  186 182 against 187 450 (-1268), 285
+    symbols, and the order is unrelated: only 3 of 284 paired symbols
+    land at their reference offset and 140 of 283 adjacent pairs are
+    inverted.  Two separate problems:
+      * SIZES.  35 symbols whose reference gap differs from the port's
+        span; until the order is right each gap is only an UPPER bound,
+        because it absorbs whatever unreferenced symbols follow.  The
+        big leads are scrbufA (32512 vs a 33045 gap), mi_lstk (200 vs
+        688), g_sfdoc (2 vs 342) against g_sfDoB (256 vs 56 -- these
+        two are adjacent and sum to 398 against the port's 258),
+        scrbufB (32512 vs 32600), g_sfplf (32 vs 2), g_ltscb (64 vs
+        40), pst_arr (20 vs 40) and work_in (22 vs 40).
+      * ORDER.  This is the LINKER's `.comm` allocation and matches no
+        surviving tool, so it needs a post-link remap driven by a
+        checked-in spec.  Recover the technique from git history:
+        `bss_remap.py` did exactly this before it was deleted with the
+        rest of the LCP_ORG material -- pair the relocation streams
+        site by site, verify the mapping is a consistent 1:1, then
+        rewrite the relocated longwords.  The site-by-site pairing
+        doubles as the proof that the port's reference structure
+        matches the original's.
 
     **Relocation pairing catches what byte comparison cannot.**  Both
     verify_bytes and stx_txtdiff wildcard relocated longwords, so a
