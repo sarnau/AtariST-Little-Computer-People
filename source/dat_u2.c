@@ -18,10 +18,14 @@
 BOOL16  g_rbact          = NO;
 
 
+/* Three-letter abbreviations, not full names: the reference spends 48
+   bytes here (twelve 4-byte strings, 0x1ef2..0x1f21), where the full
+   names would take 86.  So the calendar and the letter date line read
+   "Sep 4, 1985". */
 char *  mo_names[12] = {
-        "January", "February", "March",     "April",
-        "May",     "June",     "July",      "August",
-        "September","October", "November",  "December"
+        "Jan", "Feb", "Mar", "Apr",
+        "May", "Jun", "Jul", "Aug",
+        "Sep", "Oct", "Nov", "Dec"
 };
 
 
@@ -134,13 +138,11 @@ unsigned short  rec_ledt[8] = {
 };
 
 
-/* g_ltg[4]: letter sign-off pointers.  In THIS ROM they are four
-   NULL pointers in DATA (0x11fb2) -- the sign-off strings do not
-   exist in the binary, and a_writl's pick hits lt_tysa's NULL guard,
-   so letters simply end without one.  (The static "Sincerely," set
-   belongs to the other game revision.) */
+/* g_ltg[4]: the letter sign-off a_writl picks at random.  The four
+   pointers are real here -- the reference relocates all of them, to
+   strings this object emits after "*.sng". */
 char *  g_ltg[4]        = {
-        (char *) 0, (char *) 0, (char *) 0, (char *) 0
+        "Sincerely,", "Cordially,", "Yours Truly,", "Love,"
 };
 
 
