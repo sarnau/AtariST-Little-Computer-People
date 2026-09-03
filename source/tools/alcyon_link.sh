@@ -145,11 +145,29 @@ if [ ! -f lcp.68k ]; then
     exit 1
 fi
 
+# 4b. The same link again WITH symbols, as lcp_sym.68k.  bss_remap
+#     resolves its spec against this side link (the shipped LCP.PRG
+#     carries no symbol table), and stx_check.sh reuses it.
+sed 's/^lcp\.68k=/lcp_sym.68k=/' lcp_link.cmd > lcp_sym.cmd
+"$ALCYON_BIN/link68" "[SYMBOLS,UNDEFINED,COMMAND[lcp_sym.cmd]]" >/dev/null 2>&1 || true
+if [ ! -f lcp_sym.68k ]; then
+    echo "FAILED: link68 didn't produce lcp_sym.68k"
+    exit 1
+fi
+
 # 5. relmod: .68k -> GEMDOS PRG.
 "$ALCYON_BIN/relmod" lcp.68k LCP.PRG 2>&1 | tail -3
 if [ ! -f LCP.PRG ]; then
     echo "FAILED: relmod didn't produce LCP.PRG"
     exit 1
 fi
+
+# 6. bss_remap: re-lay BSS to the original linker's .comm allocation.
+#    lo68 and the 1985 linker pack the same commons at different
+#    offsets, so TEXT, DATA and the relocation stream come out
+#    identical but every relocated BSS longword points somewhere else.
+#    The allocation is carried as a checked-in spec (the reference
+#    binary is NOT read here); see tools/stx_bss_layout.tsv.
+python3 "$CSRC/tools/bss_remap.py" LCP.PRG || exit 1
 
 echo "SUCCESS: $OUT/LCP.PRG ($(stat -f%z LCP.PRG) bytes)"

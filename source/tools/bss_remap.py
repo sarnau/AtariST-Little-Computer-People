@@ -143,12 +143,17 @@ def gen():
             sys.exit(f'inconsistent mapping for port {pv:#x}: '
                      f'{mapping[pv]:#x} vs {ov:#x} at site +{pos:#x}')
         mapping[pv] = ov
+    # Many-to-one IS allowed: the original aliased storage in places the
+    # port cannot spell in C without changing the codegen (last_hz and
+    # the sequencer's mi_lasT are one cell there).  One-to-many is not,
+    # and the loop above already rejects it.
     rev = {}
-    for k, v in mapping.items():
-        if v in rev:
-            sys.exit(f'two port addresses ({rev[v]:#x}, {k:#x}) map to '
-                     f'reference {v:#x}')
-        rev[v] = k
+    for k, v in sorted(mapping.items()):
+        rev.setdefault(v, []).append(k)
+    for v, ks in sorted(rev.items()):
+        if len(ks) > 1:
+            print('  alias: ' + ', '.join(f'{k:#x}' for k in ks) +
+                  f' -> {v:#x}')
 
     sym_of = resolver(load_syms(SYM))
     rows = []
@@ -196,13 +201,6 @@ def apply():
                      f'not in {os.path.basename(TSV)} -- layout drift; '
                      f'regenerate with --gen and review the diff')
         mapping[pv] = spec[key]
-    rev = {}
-    for k, v in mapping.items():
-        if v in rev:
-            sys.exit(f'two port addresses ({rev[v]:#x}, {k:#x}) map to '
-                     f'reference {v:#x}')
-        rev[v] = k
-
     n = 0
     for pos in sites(preloc):
         pv = struct.unpack('>I', pd[0x1C + pos:0x1C + pos + 4])[0]
