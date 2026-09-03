@@ -904,19 +904,32 @@ adjacent parts.
   globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
   10-byte slot that just calls the next function).
 
-## Byte-identity phase (2026-09-03) -- TEXT AND DATA ARE DONE
+## GOAL ACHIEVED (2026-09-03): BYTE-IDENTICAL to LCP_STX.PRG
 
-**The TEXT and DATA segments are byte-identical to DATA/LCP_STX.PRG:
-104 156 and 12 260 bytes on both sides, with identical relocation site
-lists.  The only bytes that still differ anywhere are NINE, in three
-pointers whose targets are BSS addresses.**  Remaining: bss -1268 and
-unordered.
+**The build reproduces `DATA/LCP_STX.PRG` exactly -- MD5
+eae52d14023b51d7ac459a90d37eed10, 123 352 bytes: text 104 156, data
+12 260, bss 187 450, relocations 6 908.**  Reproduce from a clean tree:
 
-Reproduce with:
-
+    rm -rf source/build/alcyon
     source/tools/alcyon_build.sh
-    bash source/tools/stx_check.sh
+    source/tools/alcyon_link.sh
     LCP_REF=DATA/LCP_STX.PRG python3 source/tools/prg_diff.py
+
+The final step is `tools/bss_remap.py`.  lo68 and the 1985 linker pack
+the same `.comm` blocks at different offsets (and the original does not
+even align them -- scrbufA lands on an odd address), so TEXT, DATA and
+the relocation stream come out identical while every relocated BSS
+longword points somewhere else.  The original allocation is carried as
+a checked-in spec, `tools/stx_bss_layout.tsv` (417 rows, port
+symbol+offset -> address, bss size in the header).  alcyon_link.sh
+takes a second SYMBOLS link as `lcp_sym.68k`, resolves the spec against
+it, and rewrites the 3 842 affected sites; **the reference binary is
+not read at link time.**  `bss_remap.py --gen` regenerates the spec
+after a layout-affecting change, and its site-by-site pairing is the
+proof that the port's reference structure matches the original's.
+
+Keep the invariant: run prg_diff.py after any change.  Regenerate the
+spec only when the layout really moved, and read the diff.
 
 **verify_bytes is not sufficient for this phase.**  It wildcards
 relocations AND PC-relative displacements, so a function can report
@@ -1192,27 +1205,49 @@ Roadmap:
         that unreachable branch and sends the default straight to the
         switch end.
 
-    **Still to do: BSS.**  186 182 against 187 450 (-1268), 285
-    symbols, and the order is unrelated: only 3 of 284 paired symbols
-    land at their reference offset and 140 of 283 adjacent pairs are
-    inverted.  Two separate problems:
-      * SIZES.  35 symbols whose reference gap differs from the port's
-        span; until the order is right each gap is only an UPPER bound,
-        because it absorbs whatever unreferenced symbols follow.  The
-        big leads are scrbufA (32512 vs a 33045 gap), mi_lstk (200 vs
-        688), g_sfdoc (2 vs 342) against g_sfDoB (256 vs 56 -- these
-        two are adjacent and sum to 398 against the port's 258),
-        scrbufB (32512 vs 32600), g_sfplf (32 vs 2), g_ltscb (64 vs
-        40), pst_arr (20 vs 40) and work_in (22 vs 40).
-      * ORDER.  This is the LINKER's `.comm` allocation and matches no
-        surviving tool, so it needs a post-link remap driven by a
-        checked-in spec.  Recover the technique from git history:
-        `bss_remap.py` did exactly this before it was deleted with the
-        rest of the LCP_ORG material -- pair the relocation streams
-        site by site, verify the mapping is a consistent 1:1, then
-        rewrite the relocated longwords.  The site-by-site pairing
-        doubles as the proof that the port's reference structure
-        matches the original's.
+    **BSS: DONE.**  Its layout is the LINKER's `.comm` allocation and
+    matches no surviving tool, so it is not reproduced -- it is
+    REMAPPED after the link from a checked-in spec (see the top of
+    this section).  What the port had to fix first was not sizes but
+    REFERENCES: pairing every relocation target and demanding the same
+    SEGMENT, and the same address for text and data targets, turned up
+    nine bugs no byte comparison can see.
+
+      * dg_wkPth and lcp_flwp had their first comparison's operands
+        the wrong way round.  Alcyon evaluates the RIGHT operand
+        first, so `getFlrY(dog_y) != getFlrY(g_dty)` reaches dog_y in
+        the second relocation -- the port compared the same two values
+        but loaded them in the other order.
+      * gameTick's four sound guards test g_sfplf, the "an effect is
+        playing" flag sfx_irq sets, not g_sfacf.
+      * mg_wkev reads the global lcp_watr, not lcp.water_level.
+      * MFDB_A is a `short[10]`, not an MFDB, and stpScrB clears its
+        first two words -- the halves of fd_addr -- where the port set
+        fd_w/fd_h and passed the base four bytes below what cpyScr
+        used.  (Alcyon rejects `((short *) &MFDB_A)[0] = 0` outright,
+        "no code table for =", which is its own argument that the
+        original declared an array.)
+      * g_msmap and mi_seqE are one variable: the end-of-sequence
+        pointer, with -1 for "no limit".
+      * mi_ndur is a SECOND duration cell -- mq_pars writes it and
+        only mq_qnne reads it, while mq_rdur's identical expression
+        goes to mi_nlp0, which drives the tick counters.
+      * g_mnhi / g_mnlo were named backwards (0x60 is the TOP of the
+        playable note range), and mq_dise's guard tests the low limit
+        first.
+      * lcp_lgt and lcp_rgt write g_inpmd, not no_keyin.
+      * cl_redrH's second cl_drwH call reads the cached g_cmmin and
+        g_chhou back rather than t_min/t_hour.
+
+    One alias remains and is deliberate: last_hz and the sequencer's
+    mi_lasT are ONE cell in the original (word accesses from the
+    compositor, byte accesses from the sequencer, and a byte write
+    lands on the word's high half).  Spelling that in C as
+    `#define mi_lasT (*(char *) &last_hz)` changes the codegen --
+    Alcyon takes the width from `&last_hz` and emits move.w where the
+    original has move.b -- so the port keeps two symbols and the spec
+    maps both onto the one address.  bss_remap.py allows many-to-one
+    and prints the alias; one-to-many it still rejects.
 
     **Relocation pairing catches what byte comparison cannot.**  Both
     verify_bytes and stx_txtdiff wildcard relocated longwords, so a
