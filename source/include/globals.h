@@ -119,7 +119,7 @@ extern char psg_dvol;
 extern short g_mchcn;
 extern short g_mtspb;
 extern short mi_temp;
-extern short aes_intO[];
+extern short mi_tpb;
 extern long g_mtcou;
 extern short mi_dwrm;
 extern short g_mtdiv;

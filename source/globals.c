@@ -115,7 +115,9 @@ char *  g_ltlp[360];
 
 /* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
    fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
-char    g_ltscb[64];
+/* FORTY bytes -- the reference's next used cell is 40 past this one,
+   not 64. */
+char    g_ltscb[40];
 char    in_str[80];             /* LCP_STX gap; a screen line */
 /* comp_tok[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by fr_reac
@@ -171,11 +173,16 @@ char            psg_cvol;     /* STX: byte */
    with mi_evcn initialized to 9. */
 short           mi_evi;
 short           mi_evcn;
-/* aes_intO: shared AES/VDI parameter return array (16 shorts wide),
-   used here at index 7 to communicate the current tick-per-beat back
-   to the interrupt handler. */
-short           aes_intO[16];
 
+/* Ticks per beat, published to the Timer-A handler.  ONE short: the
+   reference relocates all six accesses to a single cell, and the next
+   cell it uses is two bytes later.  The port declared aes_intO[16] and
+   wrote index 7 -- an array shape the text cannot confirm, because
+   Alcyon folds a constant subscript into the absolute address.  (The
+   cell does sit exactly 14 bytes past AESBIND's int_out, which is what
+   made "int_out[7]" tempting; declaring it that way collides with the
+   next global, since int_out is only 14 bytes.) */
+short           mi_tpb;
 long            g_mtcou;
 short           g_mtdiv;
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
@@ -289,9 +296,13 @@ long            g_sfHz2;
    bytes = 25 pointers.  The 500 is a loop limit, not the size. */
 unsigned char * mi_ntLp[25];
 /* Working buffer for the currently-playing Dosound sequence, copied
-   from mi_ntLp[g_sfcur] each time a new
-   effect starts. */
-char            g_sfDoB[256];
+   from mi_ntLp[g_sfcur] each time a new effect starts.  FIFTY-SIX
+   bytes: that is the distance to the next cell the reference uses.
+   sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and the
+   file has effects longer than that, so the original overruns this
+   buffer -- reproduced as written, not papered over with a bigger
+   one. */
+char            g_sfDoB[56];
 
 void *  g_srlgb;
 void *  sv_lgb;
@@ -449,7 +460,9 @@ short           g_aggun;
 short           ag_clue;
 short           g_agwol;
 char            g_aginb[12];
-char            g_agscw[12];
+/* TEN bytes: the reference's next used cell is 10 past this one, so
+   the scrambled word buffer holds a 9-letter word and its NUL. */
+char            g_agscw[10];
 
 /* Mini-game shared state.
    mg_tofl: set YES by mg_wkev when the 7200-frame (~15 min) idle

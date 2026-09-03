@@ -87,7 +87,7 @@ long            maxPos;
 }
 
 /* mq_setp: stash read cursor + end-of-song marker; init per-song
-   driver state; publish ticks-per-beat via aes_intO[7].
+   driver state; publish ticks-per-beat via mi_tpb.
    Envelope base = mi_dbase - 0x168 (360 bytes, ADSR block).
    addr: mq_setp() */
 
@@ -112,7 +112,7 @@ long            maxPos;
         psg_cvol      = psg_dvol;
         mi_evi    = 0;
         mi_evcn   = 9;
-        aes_intO[7]          = g_mtspb;
+        mi_tpb          = g_mtspb;
 }
 
 /* mq_stap: init timer counters + arm sequencer.
@@ -618,9 +618,9 @@ mq_advs()
                 res = g_mtcou - mi_lpTk;
                 mq_expN(res);
                 mi_lpTk    = g_mtcou;
-                g_mtpre    = aes_intO[7];
+                g_mtpre    = mi_tpb;
                 g_mspha    = SEQ_PHASE_PARSE_NEXT_EVENT;
-                mi_nxTk   += aes_intO[7];
+                mi_nxTk   += mi_tpb;
                 return;                 /* STX: explicit return */
         } else if (g_mspha == SEQ_PHASE_PARSE_NEXT_EVENT) {
                 g_mspha    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
@@ -636,7 +636,7 @@ mq_advs()
                                 return;
                         } else {
                                 g_mspha = SEQ_PHASE_SONG_ENDING;
-                                g_mtpre = aes_intO[7];
+                                g_mtpre = mi_tpb;
                                 mi_nxTk += g_mtpre;
                                 return;
                         }
@@ -645,8 +645,8 @@ mq_advs()
                 res = g_mtcou - mi_lpTk;
                 mq_expN(res);
                 mi_lpTk    = g_mtcou;
-                g_mtpre    = aes_intO[7];
-                mi_nxTk   += aes_intO[7];
+                g_mtpre    = mi_tpb;
+                mi_nxTk   += mi_tpb;
                 if (mi_evi == 0) {
                         psg_envelope[0].phase =
                         psg_envelope[1].phase =

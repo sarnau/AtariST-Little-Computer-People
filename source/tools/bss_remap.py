@@ -25,7 +25,7 @@ the header BSS size from the spec.  The reference binary is NOT read.
 Regenerate the spec (only needed after a layout-affecting source
 change) with the reference binary present:
 
-    python3 tools/bss_remap.py --gen LCP.PRG [reference.prg]
+    python3 tools/bss_remap.py --gen [LCP_nobss.PRG] [reference.prg]
 
 --gen pairs the two byte-identical relocation streams site-by-site
 and verifies the port->reference translation is a consistent
@@ -45,8 +45,12 @@ TSV  = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 GEN = '--gen' in sys.argv
 argv = [a for a in sys.argv if a != '--gen']
+# --gen must read the PRE-REMAP binary (alcyon_link.sh leaves it as
+# LCP_nobss.PRG); running it on an already-remapped LCP.PRG would pair
+# the reference against itself and freeze the drift into the spec.
 PORT = argv[1] if len(argv) > 1 else os.path.join(
-        ROOT, 'build', 'alcyon', 'LCP.PRG')
+        ROOT, 'build', 'alcyon',
+        'LCP_nobss.PRG' if GEN else 'LCP.PRG')
 ORIG = argv[2] if len(argv) > 2 else os.path.join(
         ROOT, '..', 'DATA', 'LCP_STX.PRG')
 SYM  = os.path.join(os.path.dirname(PORT) or '.', 'lcp_sym.68k')
