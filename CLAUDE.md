@@ -1040,14 +1040,72 @@ Roadmap:
  1. ~~Function-level recovery~~ DONE -- 265/265 spans, zero code
     differences.
  2. ~~Object and function order~~ DONE -- text is byte-identical.
- 3. **DATA layout (+3008) and BSS layout (+53884).**  Mirrors campaign
-    reorder globals.c to LCP_STX's declaration order, then recover
-    the 1985 linker's .comm allocation for bss.  `stx_map.py --data`
-    gives the target address of every referenced global, harvested
-    from the relocation pairings of the matched functions.  Every
-    remaining TEXT byte difference prg_diff.py reports is a relocated
-    address, so these two are all that stand between the port and a
-    byte-identical LCP_STX.PRG.
+ 3. **DATA (+3008) and BSS (+53884) layout.**  Analysed 2026-09-03 by
+    RELOCATION PAIRING: the text is byte-identical, so its 6429
+    relocation SITES are identical in both binaries, and each site's
+    stored longword gives a port-address -> LCP_STX-address pair.
+    That pairs 1073 distinct addresses and yields LCP_STX's whole
+    data/bss layout without guessing.  What it says:
+
+    * **155 port DATA symbols (3898 bytes) are BSS in LCP_STX** --
+      every `short x = 0;` in globals.c.  Alcyon puts an explicitly
+      zeroed global in .data; LCP_STX writes `short x;` and gets a
+      `.comm`.  Dropping those initializers is the single biggest
+      data fix.  List: `/tmp`-style dump via the pairing, or grep
+      globals.c for `= 0;` / `= NO;`.
+    * **8 port BSS symbols (850 bytes) are DATA in LCP_STX** and need
+      real initializers: bm32and, bm32or (128 each -- LCP_STX ships
+      the bit tables baked in rather than building them at run time),
+      g_ew2a (408), g_mstr (132), g_sepef (20), g_mcpro (16),
+      mi_chma (16), moff_f (2).
+    * 3898 - 850 = 3048 against a +3008 delta, so those two moves
+      account for essentially all of it; ~40 bytes of residual is
+      per-symbol size/padding.
+    * **124 of the 138 data->data symbols are already byte-identical**
+      in content (relocations wildcarded).  The 14 that are not:
+      mi_evst and mi_evrl hold each OTHER's contents (swapped);
+      rec_led runs backwards (LCP_STX 0x80,0x40,...,0x02); g_obisa is
+      {0x2b,0x2c,0x2d} not {0x17,0x18,0x19}; g_mnlol 0x60 not 0x17;
+      g_mnhil 0x24 not 0x7f; mi_slop and g_molof are 1 not 0;
+      g_ptdsi's last entry is 0x33; psg_freq differs at one entry
+      (0x0fc0 vs 0x0fd2).  days_pm and g_ptdoa "differ" only because
+      Alcyon emits string literals and `static` data with NO symbol,
+      so a symbol's extent swallows the anonymous blob that follows
+      it -- that is ordering, not content.
+    * **BSS is two over-allocated arrays.**  scrbufA: port 65536,
+      LCP_STX at most 33049 (+32487).  dsb_stor: port 34816, LCP_STX
+      at most 12836 (+21980).  Together 54467 against a +53884 delta;
+      everything else is noise from unreferenced symbols inflating the
+      derived gaps.  scrbufA is sized for TWO screens because the port
+      believed the alt compositing buffer was `scrbufA + 0x8000`; it
+      is not (see below), so one screen is enough.
+    * **Ordering is NOT right yet**: 49 inversions among 138 mapped
+      data symbols, 61 among 129 bss ones.  Data order is source
+      declaration order (fixable in globals.c, plus the string
+      literals' use order).  BSS order is the LINKER's `.comm`
+      allocation, which matches no surviving tool -- it will need a
+      post-link remap driven by a checked-in spec, the way
+      `bss_remap.py` did before it was deleted with the rest of the
+      LCP_ORG material (recover the technique from git history:
+      pair the reloc streams site-by-site, verify a consistent 1:1
+      mapping, rewrite the relocated longwords).
+
+    **Relocation pairing catches what byte comparison cannot.**  Both
+    verify_bytes and stx_txtdiff wildcard relocated longwords, so a
+    function can match byte for byte while the ADDRESS it loads is
+    wrong.  Two such bugs fell out of this pass:
+      - sc_ren8's alternate compositing buffer.  `&scrbufA[0x8000]`
+        does not mean what it looks like: Alcyon's int is 16-bit, so
+        0x8000 is -32768 and c168 emitted `move.l #-32768+_scrbufA` --
+        the alt screen base was a pointer into the TEXT segment.
+        LCP_STX stores `scrbufA + 0x1FF`, the same aligned buffer
+        sp_iniM uses.
+      - mq_tick.s had g_msmsa and psg_ntAc swapped (LCP_STX: psg_ntAc
+        0x2270, g_msmsa 0x2271), so seven relocations pointed one byte
+        off.
+    With both fixed, every text relocation resolves to the same
+    segment as LCP_STX's and every text->text one to the identical
+    address.
 
 ## Issue log -- ALL CLOSED
 
