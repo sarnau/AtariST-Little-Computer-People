@@ -97,31 +97,8 @@ mq_intim()
    calls in parts/rv_bld.c right behind it; stx_u1.c includes both. */
 
 
-/* cs_mvIn (ROM 0x8106): boot-state initializer.  In this binary the
-   "moves in" moment is just placing the resident at the front door
-   (300,190) and parking the dog -- there is no animated cutscene.
-   addr: cs_mvIn() */
-
-void
-cs_mvIn()
-{
-        lcp_x = 300;
-        lcp_y = 190;
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
-        g_hacur = 8;
-        g_hamod = HEAD_ANIM_DISABLED;
-        dog_x = 273;
-        dog_y = 190;
-        g_dtx = 0;
-        g_dty = 0;
-        g_dyx = 0;
-        g_dyy = 0;
-        dg_stair = NO;
-        dg_idlcd = 20;
-        dg_ltgtI = g_dgitx;
-        dg_init = 0;
-        sp_spud(SPRITE_DOG_LAY_DOWN, -1, 1);
-        introSeq = NO;
-}
+/* cs_mvIn -> parts/cs_mvIn.c (STX: 0xe500, right after showLcp
+   in the 0xdece object -- stx_u2.c includes it there). */
+#ifdef FAITHFUL
+#include "parts/cs_mvIn.c"
+#endif

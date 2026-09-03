@@ -46,6 +46,7 @@
 #include "asimple.c"
 #include "parts/hideLcp.c"
 #include "parts/showLcp.c"
+#include "parts/cs_mvIn.c"  /* 0xe500 */
 #include "parts/sp_ssco.c"   /* 0x1203a */
 #include "parts/sp_ss02.c"   /* 0x12108 */
 /* movement.c straddles: cWkday is in this object, just ahead of
