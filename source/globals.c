@@ -16,29 +16,29 @@
 short           bj_key;         /* pk_bjMn's key variable (a global in STX) */
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
-unsigned short  ani_cnt = 0;    /* STX: the & 7 test zero-extends */
-short   g_secs    = 0;
+unsigned short  ani_cnt;    /* STX: the & 7 test zero-extends */
+short   g_secs;
 
-short   t_min            = 0;
-short   t_hour              = 0;
-short   date_day                = 0;
-short   dt_mon              = 0;
-short   dt_year               = 0;
+short   t_min;
+short   t_hour;
+short   date_day;
+short   dt_mon;
+short   dt_year;
 
 PLAYER  lcp;
 
 BOOL16  ph_ans     = NO;
 BOOL16  ph_call  = NO;
-BOOL16  introSeq   = NO;
+BOOL16  introSeq;
 
 BOOL16  lunT_trg      = NO;
 BOOL16  dinT_trg     = NO;
 BOOL16  wkT_trg  = NO;
 BOOL16  bedT_trg         = NO;
 
-BOOL16  in_evrt   = NO;
+BOOL16  in_evrt;
 
-short   lastAct                     = ACTION_NONE;
+short   lastAct;
 short   g_trac                  = ACTION_NONE;
 
 /* Ghidra's gameLoop always sets these via
@@ -46,16 +46,16 @@ short   g_trac                  = ACTION_NONE;
    the cutscene sets them.  Port matches by leaving them at 0 -- the
    cutscene stub in init.c writes (300, 190) before gameLoop
    runs. */
-short   lcp_x                           = 0;
-short   lcp_y                           = 0;
-BOOL16  g_lcldd                      = 0;
-long    cprot_r           = 0;      /* STX tests it with tst.l */
-short   g_spdc              = 5;
+short   lcp_x;
+short   lcp_y;
+BOOL16  g_lcldd;
+long    cprot_r;      /* STX tests it with tst.l */
+short   g_spdc;
 
-BOOL16  alarm_p       = NO;
-short   lcp_watr                 = 7;
+BOOL16  alarm_p;
+short   lcp_watr;
 
-short   g_aliss               = 0;
+short   g_aliss;
 short   g_aqueu[10];
 short   g_apriq[10];
 
@@ -64,12 +64,12 @@ short   g_apriq[10];
 short   g_hatas                         = 8;
 short   g_hacur                         = 8;
 short   g_hamod                         = HEAD_ANIM_DISABLED;
-short   g_hsfra               = 0;
-long    g_sfret     = 0;
-BOOL16  g_actif       = NO;
+short   g_hsfra;
+long    g_sfret;
+BOOL16  g_actif;
 BOOL16  dg_petok               = NO;
-short   g_wtx                   = 0;
-short   g_wty                   = 0;
+short   g_wtx;
+short   g_wty;
 /* Ghidra triggered_event_list @ 0x2b6da: 10-short scratch buffer used
    by action handlers (bathroom, food, house, leisure, idle, simple)
    to cache a small set of state values indexed by variable expressions
@@ -78,15 +78,15 @@ short   g_wty                   = 0;
    bathroom/food/house paths -- the fifth slot overlapped lcp_frdO. */
 short   pst_arr[10];
 
-short   lcp_frdO             = 0;
-short   studyDrO             = 0;
-short   lcp_clsO            = 0;
-short   lcp_cabO                = 0;
-short   lcp_drsO                = 0;
-short   lcp_toiO            = 0;
-short   lcp_flcO         = 0;
-short   lcp_bwlS             = 1;
-short   lcp_food                  = 4;
+short   lcp_frdO;
+short   studyDrO;
+short   lcp_clsO;
+short   lcp_cabO;
+short   lcp_drsO;
+short   lcp_toiO;
+short   lcp_flcO;
+short   lcp_bwlS;
+short   lcp_food;
 short   lcp_recP              = 0;
 short   lcp_tv                       = 0;
 
@@ -98,18 +98,18 @@ short   g_obisa[3]    = { 23, 24, 25 };  /* stove-on frame slots */
 
 
 /* STX declares this a byte flag (tst.b at its use sites). */
-char    mi_play                 = NO;
-short   dg_bwlch            = 0;
-short   g_sfplf        = NO;
-short   g_sfpli          = 0;
+char    mi_play;
+short   dg_bwlch;
+short   g_sfplf;
+short   g_sfpli;
 
 BOOL16  g_rbact          = NO;
-char *  mi_sbuf                = (char *) 0;
+char *  mi_sbuf;
 /* Ghidra sng/org song file counts, set at boot by cntSong().
    BSS-zero to match Ghidra; port previously had org_cnt=8
    as a guess. */
-short   sng_cnt             = 0;
-short   org_cnt             = 0;
+short   sng_cnt;
+short   org_cnt;
 /* Six bytes of zero-initialized, completely unreferenced data the ROM
    carries between org_cnt and the PEx filename (data 0x11792). */
 short   g_unus1[3]          = { 0, 0, 0 };
@@ -122,12 +122,12 @@ char    scn_cmn[30];
    Port stores the string as a mutable static char array. */
 char *  pex_name                     = "PE0.LCP";
 BOOL16  fire_act                = NO;
-short   fire_dur         = 0;
-BOOL16  fire_ext            = NO;
+short   fire_dur;
+BOOL16  fire_ext;
 short   no_keyin          = NO;
-short   tx_sctm               = 0;
-short   g_srsdc        = 0;
-short   g_cdibp        = 0;
+short   tx_sctm;
+short   g_srsdc;
+short   g_cdibp;
 
 /* Letter subsystem storage.  g_ltlp[] and _greeting_table are
    populated at runtime from letter.txt (see fl_ltpl);
@@ -135,8 +135,8 @@ short   g_cdibp        = 0;
    host build until the template loader is ported.  360 slots covers
    the 4 sections × 96 pointers (section 3 uses 72) shape referenced by
    a_writl. */
-char *  g_lttx              = (char *) 0;
-char *  g_ltlp[512]            = { (char *) 0 };
+char *  g_lttx;
+char *  g_ltlp[512];
 /* g_ltg[4]: letter sign-off pointers.  In THIS ROM they are four
    NULL pointers in DATA (0x11fb2) -- the sign-off strings do not
    exist in the binary, and a_writl's pick hits lt_tysa's NULL guard,
@@ -178,13 +178,13 @@ unsigned char   comp_tok[15];
 short           scn_siz;
 char *          scn_buf;
 
-short * sv_bodyP           = (short *) 0;
-short * sv_headP           = (short *) 0;
+short * sv_bodyP;
+short * sv_headP;
 
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
-short   vdihnd                       = 0;
-short   vdi_hnd                      = 0;    /* physical from graf_handle */
+short   vdihnd;
+short   vdi_hnd;    /* physical from graf_handle */
 /* LCP_STX's aes_init has an empty frame: graf_handle writes its four
    cell/box metrics into globals, not into locals. */
 short   gr_hwchar;
@@ -213,7 +213,7 @@ short   vdi_colt[16]            = {
 
 /* The ROM's VDI parameter block (data 0x12054): the game-local
    arrays used by vdiown.c's bindings and vdi_go. */
-short * vdipb[5] = { contrl, intin, ptsin, intout, ptsout };
+short * vdipb[5];
 
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
    defines these in vdi.o, but the pre-compiled Atari DK vdibind.a we
@@ -227,14 +227,7 @@ short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
 
-/* v_opnvwk in/out arrays.  Ghidra: workin at 0x47ea8 (11 shorts),
-   work_out at 0x4d218 (57 shorts).  Both are globals in the ROM, not
-   stack locals -- vdi_init only allocates 6 bytes on the stack
-   (link.w A6,-0x6 at 0x16680), enough for the loop counter only. */
-short   workin[11];
-short   work_out[57];
-
-void *  g_dscp             = (void *) 0;
+void *  g_dscp;
 
 /* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.  Values
@@ -284,13 +277,13 @@ short   skin_pal[8] = {
    LCP_STX declares both as char -- sgPlay writes them with moveb. */
 char    g_molof             = NO;
 char    mi_varR                      = YES;
-char    g_mspha                  = 0;   /* STX: byte */
-unsigned char * mi_dbase      = (unsigned char *) 0;
+char    g_mspha;   /* STX: byte */
+unsigned char * mi_dbase;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * mi_sqpos       = (unsigned char *) 0;
-long            g_msmap   = -1;
-long            mi_env = 0;
+unsigned char * mi_sqpos;
+long            g_msmap;
+long            mi_env;
 /* MIDI/PSG defaults.  Ghidra stores these as BYTES (not shorts) at their
    addresses; the code accesses them via move.b / cmp.b instructions.
    Values verified via disassembly at 0x101f4 / 0x10420 / 0x112a8 etc.
@@ -302,12 +295,12 @@ char            mi_vel           = 127; /* STX: byte */
 /* STX declares these two as char (byte compares/stores; Alcyon
    word-aligns them, hence the 2-byte spacing). */
 char            mi_dvel   = 127;
-char            psg_cvol      = 15;     /* STX: byte */
+char            psg_cvol;     /* STX: byte */
 char            psg_dvol      = 15;
 /* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),
    with mi_evcn initialized to 9. */
-short           mi_evi          = 0;
-short           mi_evcn         = 9;
+short           mi_evi;
+short           mi_evcn;
 /* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
    writes p[2] here and passes through mq_bust. */
 short           g_mchcn                 = 1;
@@ -319,13 +312,13 @@ short           mi_temp              = 120;
    to the interrupt handler. */
 short           aes_intO[16];
 
-long            g_mtcou       = 0;
-short           g_mtdiv       = 100;
+long            g_mtcou;
+short           g_mtdiv;
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
    mq_stap resets it at song start. */
-short           mi_nlp0         = 100;
-long            mi_nxTk    = 100;       /* STX: long tick counters */
-long            mi_lpTk= 100;
+short           mi_nlp0;
+long            mi_nxTk;       /* STX: long tick counters */
+long            mi_lpTk;
 /* g_msmsa is a BYTE and lives in the text segment behind mq_tick --
    see source/mq_tick.s. */
 /* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
@@ -361,7 +354,7 @@ long            g_momap  = 0;
                         path can restore it (currently we install for the
                         lifetime of the process, but the slot is here
                         for future symmetry with the ROM's teardown). */
-long            mi_svtv                    = 0;
+long            mi_svtv;
 
 /* ---- MIDI sequencer parse state -----------------------------------
    The sequencer walks a 3-byte-per-event compact stream inside
@@ -375,16 +368,16 @@ long            mi_svtv                    = 0;
    each note event; values pulled from ROM 0x298f6 (21 real
    entries, rest are zero). */
 
-unsigned char * mi_seqE      = (unsigned char *) 0;
-unsigned char * mi_dptr      = (unsigned char *) 0;
-char            mi_evTf         = 0;
-char            mi_nnOn        = 0;
-char            mi_lasT         = 0;
-char            mi_nnOf         = 0;
-char            mi_ccha         = 0;
-char            mi_cnot         = 0;
-char            mi_nmof         = 0;
-char            mi_nlpA         = 0;
+unsigned char * mi_seqE;
+unsigned char * mi_dptr;
+char            mi_evTf;
+char            mi_nnOn;
+char            mi_lasT;
+char            mi_nnOf;
+char            mi_ccha;
+char            mi_cnot;
+char            mi_nmof;
+char            mi_nlpA;
 char            mi_slop         = NO;   /* STX: byte */
 
 short           mi_ndt[32] = {
@@ -471,9 +464,24 @@ unsigned char   mi_noSt[128];
 
 /* Referenced by the ROM text (bss 0x3df96 / 0x4549a / 0x1dc7c /
    0x48bce). */
-char            g_mcpro[16];    /* STX: byte array */
-unsigned char   g_mstr[132];
-unsigned char   mi_chmap[16];
+char            g_mcpro[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+/* LCP_STX's static content is 0..99 then 110..127, with the last 14
+   entries zero -- the row 100..109 is simply missing from the 1985
+   table.  Harmless: mq_bust rewrites all 132 entries (`g_mstr[i] = i`
+   for i < 0x84) before anything reads them. */
+unsigned char   g_mstr[132] = {
+          0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,
+         12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,
+         24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,
+         36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,
+         48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+         60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,
+         72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,
+         84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,
+         96,  97,  98,  99, 110, 111, 112, 113, 114, 115, 116, 117,
+        118, 119, 120, 121, 122, 123, 124, 125, 126, 127
+};
+unsigned char   mi_chmap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 char            mi_pgmapb[16];
 char *          mi_pgmap = mi_pgmapb;   /* STX: byte pointer */
 
@@ -494,10 +502,10 @@ PSG_ENVELOPE    psg_envelope[3];
 
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-char            g_sfcup    = 0;
-short           g_sfddh = 0;
-short           g_sfddl = 0;
-long            g_sfHz2               = 0;
+char            g_sfcup;
+short           g_sfddh;
+short           g_sfddl;
+long            g_sfHz2;
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from the SOUNDS.LCP file.
@@ -512,9 +520,9 @@ unsigned char * mi_ntLp[64];
    effect starts. */
 char            g_sfDoB[256];
 
-void *  g_srlgb                  = (void *) 0;
-void *  sv_lgb                    = (void *) 0;
-void *  g_srptr                      = (void *) 0;
+void *  g_srlgb;
+void *  sv_lgb;
+void *  g_srptr;
 /* dsb_stor: dedicated 32 KB offscreen buffer where the
    letter-typing status strip composites, kept separate from the
    main house buffer.  fillTopR(27) writes rows
@@ -522,19 +530,20 @@ void *  g_srptr                      = (void *) 0;
    for the typewriter animation; screen_render_8hz blkcp32's the
    content into the compositor screen when the letter overlay is
    active.
-   Sized 32000 (one ST low-res screen) + 512 (worst-case align-up
-   slack from `(base + 0x200) & ~0x1FF`, verified via raw disasm of
-   fillTopR at 0x1686c) + margin.  The ROM statically points g_dsb at
-   the raw buffer base (relocated data 0x1214e -> bss 0x1dcc6);
-   stpScrB re-points it to the ALIGNED start at runtime. */
-short   dsb_stor[17408];
+   Sized from what fillTopR can actually write: its largest caller is
+   mg_stp's fillTopR(0x4d), 77 rows of 160 bytes = 12320, and the
+   align-up `(base + 512) & ~511` moves the start by at most 512 --
+   so 12832 bytes, 6416 shorts.  (LCP_STX's own gap here is 12836.)
+   g_dsb points at the raw base; stpScrB re-points it to the ALIGNED
+   start at run time. */
+short   dsb_stor[6416];
 short * g_dsb = dsb_stor;
 
 /* scr_scal (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
    Multiplier for the 320x200 low-res screen dimensions in
    sprite_init_MFDB, matching the shape of the 1985 code even though
    the value is a constant. */
-short   scr_scal             = 1;
+short   scr_scal;
 
 /* LCP_STX's vdi_init opens the workstation through GLOBAL work
    arrays, not locals (its frame is only -6). */
@@ -545,7 +554,7 @@ short   wk_out[57];
    fd_addr = NULL is the VDI convention for "device screen", so
    vro_cpyfm(...) copies from the visible physbase into a memory
    buffer instead of another off-screen bitmap. */
-MFDB    MFDB_A                          = { 0 };
+MFDB    MFDB_A;
 
 /* scrbufA / scrbufB (Ghidra SCREEN_BUFFER_A / _B) -- BSS scratch
    for the two double-buffer compositing screens.
@@ -559,18 +568,12 @@ MFDB    MFDB_A                          = { 0 };
    offsets ("+0x12F", "+0x7F", "+0xCD", "0x2CA00") which the port
    MUST NOT reproduce -- our BSS placement is different.
 
-   scrbufB (~33 KB): holds the decompressed house.scn background.
-     Uses one aligned screen at (scrbufB + 0x200) & ~0x1FF.
-     Worst-case shift = 512 bytes, so size >= 32000 + 512 = 32512.
-
-   scrbufA (64 KB): holds TWO 32 KB screens for the sprite
-     compositor and the alt page-flip target.
-       compositor = (scrbufA + 0x200) & ~0x1FF   (sp_imfs)
-       alt        = compositor + 0x8000          (renderf.c)
-     Worst-case footprint = 512 (align) + 0x8000 (alt offset)
-     + 32000 (alt screen) = 65280 bytes; scrbufA[65536] fits. */
-unsigned char   scrbufA[65536];
-unsigned char   scrbufB[33280];
+   Each holds ONE aligned screen: scrbufA the sprite compositor (also
+   sc_ren8's alternate page-flip target -- there is no second screen
+   at +0x8000, see parts/sc_ren8.c), scrbufB the decompressed
+   house.scn background.  32000 + 511 worst-case shift = 32511. */
+unsigned char   scrbufA[32512];
+unsigned char   scrbufB[32512];
 
 /* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
    per-slot 8-way sprite MFDBs.  Our port already had them under the
@@ -585,11 +588,11 @@ unsigned char   scrbufB[33280];
 short   g_cmmin                         = 5;
 short   g_chhou                         = 6;
 
-BOOL16  g_sfacf         = NO;
-short   g_sfcur             = 0;
-short   g_sfdur            = 0;
-short   g_sfdos      = 0;
-short   g_sfdoc     = 0;
+BOOL16  g_sfacf;
+short   g_sfcur;
+short   g_sfdur;
+short   g_sfdos;
+short   g_sfdoc;
 /* sf_pri (Ghidra 0x2b44c, 32-byte array indexed
    by SOUND_EFFECT_ID).  Lower value = higher priority (a new SFX
    preempts the current if the new one's priority <= the current's).
@@ -617,12 +620,9 @@ MFDB    g_obtmt[64];
 /* od_draw reads the object-MFDB table through this pointer, exactly
    as the ROM does (initialized data 0x121b6 -> table in BSS). */
 MFDB *  g_obtmp = g_obtmt;
-MFDB    g_setmt[64];
 
 short   g_obtaw[64];
 short   g_obtah[64];
-short   g_setaw[64];
-short   g_setah[64];
 /* mf_scrp now defined below with the rest of the frame-timing
    MFDB descriptors. */
 
@@ -652,26 +652,26 @@ short   g_chhop[15] = {
         -2,  -2,  -2,  -1,   0,   1,   2
 };
 
-BOOL16  g_inpmd            = NO;
+BOOL16  g_inpmd;
 char    g_cdinb[64];
-BOOL16  food_dlv         = NO;
-short   g_ptanf              = 0;
+BOOL16  food_dlv;
+short   g_ptanf;
 
-unsigned short  last_hz              = 0;   /* STX: clr.w zero-extension at every use */
-long    last_vbc                    = 0;
+unsigned short  last_hz;   /* STX: clr.w zero-extension at every use */
+long    last_vbc;
 /* sv_phb: TOS's original Physbase, captured once at boot by
    aes_init via Physbase().  BSS-zero to match Ghidra's
    binary (the port previously initialised it to 0x28000L which put it
    in .data with a bogus fallback -- aes_init runs early so the
    fallback was never read, but matching Ghidra's memory layout keeps
    any future .data / BSS-boundary bug from being silently absorbed). */
-void *  sv_phb                   = (void *) 0;
+void *  sv_phb;
 
 /* g_srmfd / mf_scrp: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
-MFDB    g_srmfd                     = { 0 };
-MFDB    mf_scrp                 = { 0 };
-MFDB *  cur_mf             = (MFDB *) 0;
+MFDB    g_srmfd;
+MFDB    mf_scrp;
+MFDB *  cur_mf;
 
 /* 200 Hz clock hi/lo halves.  The ST reads this atomically via a
    supervisor-mode long read at 0x4BA; we split the halves here so a
@@ -680,12 +680,12 @@ short   g_hzhi                      = 0;
 short   g_hzlo                      = 0;
 long    _vbclock                        = 0;
 
-BOOL16  dg_vis                     = NO;
-short   dg_idlcd              = 0;
-BOOL16  dg_nrbwl              = NO;
-BOOL16  g_deact               = NO;
-short   g_decou            = 0;
-short   dg_ltgtI           = 0;
+BOOL16  dg_vis;
+short   dg_idlcd;
+BOOL16  dg_nrbwl;
+BOOL16  g_deact;
+short   g_decou;
+short   dg_ltgtI;
 /* Ghidra g_dgitx @ 0x2b8f0 = POS_BTM_SCREEN_EDGE.  Used by cutscene
    at startup to seed the dog's first wander target -- the dog walks
    in from the bottom-screen edge. */
@@ -713,12 +713,12 @@ short   g_ddipt[10] = {
 short   g_ddxot[10]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0 };
 short   g_ddyot[10]     = { 3, 9, 2, 10, 6, 0, 0, 11, 3, 3 };
 
-char *  cmd_inp              = (char *) 0;
-short   g_aprio                = 5;
+char *  cmd_inp;
+short   g_aprio;
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
-MFDB    g_semfi[SPRITE_HW_SLOTS] = { { 0 } };
-MFDB    g_semfm[SPRITE_HW_SLOTS] = { { 0 } };
+MFDB    g_semfi[SPRITE_HW_SLOTS];
+MFDB    g_semfm[SPRITE_HW_SLOTS];
 
 /* TV pattern animation (Ghidra tv_pattern_N_x_coords / _y_coords).
    Four vertical scanlines drawn inside the TV screen -- each is a
@@ -757,16 +757,16 @@ char            bm_lo[9] = {
 };
 
 /* ---- Mini-game storage ----------------------------------------------- */
-char *          g_agwb            = (char *) 0;
-char *          g_wpdb         = (char *) 0;
-short *         crd_dat                      = (short *) 0;
+char *          g_agwb;
+char *          g_wpdb;
+short *         crd_dat;
 
-short           g_wpci       = 0;
-short           g_agclc              = 0;
-short           g_aggun            = 1;
+short           g_wpci;
+short           g_agclc;
+short           g_aggun;
 short           g_agacu          = 0;
-short           ag_clue   = 0;
-short           g_agwol             = 0;
+short           ag_clue;
+short           g_agwol;
 char            g_aginb[12];
 char            g_agscw[12];
 char *          g_agwgm[3] = {
@@ -796,21 +796,21 @@ char *          g_aggpr[9] = {
    sv_vqta: 10-short buffer holding the pre-mini-game VDI text
             attributes so rst_vsth can restore them after temporarily
             switching to 20-pixel height for the title/answer render. */
-BOOL16          mg_tofl                    = NO;
+BOOL16          mg_tofl;
 short           sv_vqta[10];
 
-short           pk_round              = 0;
-BOOL16          pk_quit                 = NO;
-short           g_pcbet              = 0;
-short           g_ppbet                = 0;
-short           g_pcmon            = 400;
-short           g_ppmon              = 400;
-short           g_ppppa                = 0;
+short           pk_round;
+BOOL16          pk_quit;
+short           g_pcbet;
+short           g_ppbet;
+short           g_pcmon;
+short           g_ppmon;
+short           g_ppppa;
 /* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
    set by ag_ssw when a word is picked.  Ghidra treats it as char *.
    The ROM places it between g_ppppa and pk_phase (data 0x124aa). */
-char *          g_agorw           = (char *) 0;
-short           pk_phase                = 0;
+char *          g_agorw;
+short           pk_phase;
 short           pk_dsc[52];
 /* Ghidra poker_computer_draw_pile @ 0x47e24 and poker_player_draw_pile
    @ 0x3f712: 52-short ROM slots (104 bytes each).  Port previously
@@ -829,7 +829,7 @@ short           pk_pwc[52];             /* poker_player_war_cards */
 short           pk_cwc[52];             /* poker_computer_war_cards */
 short           g_pchc;  /* poker_computer_hand_cards */
 
-BOOL16          moff_f;
+BOOL16          moff_f = 1;
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
    at the start of each round in pk_ante / pk_evhs / pk_show.
@@ -960,11 +960,11 @@ short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share crd_dat as their bitmap backing. */
-MFDB            crd_mfdb[54]           = { { 0 } };
-MFDB            mf_scb_c      = { 0 };
+MFDB            crd_mfdb[54];
+MFDB            mf_scb_c;
 
-BOOL16  g_dvdog             = NO;
-BOOL16  ph_hu               = NO;
+BOOL16  g_dvdog;
+BOOL16  ph_hu;
 BOOL16  g_ptdoa              = NO;
 
 

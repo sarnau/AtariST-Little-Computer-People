@@ -63,6 +63,6 @@ short   g_cotbl[19]    = {
    limit. */
 /* Ghidra petting_last_sprite_slot @ 0x2b952 = SPRITE_PET_HAND_1 (0x1b). */
 short   g_ptlss                         = SPRITE_PET_HAND_1;
-BOOL16  g_alsts                         = NO;   /* alarm_sound_started */
-short   g_phrc                          = 0;    /* phone_ring_countdown */
+BOOL16  g_alsts;   /* alarm_sound_started */
+short   g_phrc;    /* phone_ring_countdown */
 /* g_srsdc (screen_scroll_down_count) lives in globals.c. */

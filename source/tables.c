@@ -79,5 +79,74 @@ short   g_rphs[49] = {
    reads them is still being recovered; expect the reads to go away.)
    addr: bm32or, bm32and */
 
-long    bm32or[32];
-long    bm32and[32];
+/* LCP_STX ships both tables as initialized DATA rather than
+   building them at run time. */
+long    bm32or[32] = {
+        0x00000001L,
+        0x00000002L,
+        0x00000004L,
+        0x00000008L,
+        0x00000010L,
+        0x00000020L,
+        0x00000040L,
+        0x00000080L,
+        0x00000100L,
+        0x00000200L,
+        0x00000400L,
+        0x00000800L,
+        0x00001000L,
+        0x00002000L,
+        0x00004000L,
+        0x00008000L,
+        0x00010000L,
+        0x00020000L,
+        0x00040000L,
+        0x00080000L,
+        0x00100000L,
+        0x00200000L,
+        0x00400000L,
+        0x00800000L,
+        0x01000000L,
+        0x02000000L,
+        0x04000000L,
+        0x08000000L,
+        0x10000000L,
+        0x20000000L,
+        0x40000000L,
+        0x80000000L
+};
+
+long    bm32and[32] = {
+        0xfffffffeL,
+        0xfffffffdL,
+        0xfffffffbL,
+        0xfffffff7L,
+        0xffffffefL,
+        0xffffffdfL,
+        0xffffffbfL,
+        0xffffff7fL,
+        0xfffffeffL,
+        0xfffffdffL,
+        0xfffffbffL,
+        0xfffff7ffL,
+        0xffffefffL,
+        0xffffdfffL,
+        0xffffbfffL,
+        0xffff7fffL,
+        0xfffeffffL,
+        0xfffdffffL,
+        0xfffbffffL,
+        0xfff7ffffL,
+        0xffefffffL,
+        0xffdfffffL,
+        0xffbfffffL,
+        0xff7fffffL,
+        0xfeffffffL,
+        0xfdffffffL,
+        0xfbffffffL,
+        0xf7ffffffL,
+        0xefffffffL,
+        0xdfffffffL,
+        0xbfffffffL,
+        0x7fffffffL
+};

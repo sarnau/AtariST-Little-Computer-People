@@ -52,16 +52,15 @@
    carrying path writes g_sepex/g_sepey[g_seslm[g_lcieo]] every frame,
    and sp_ssco/sp_ss02 write g_seaim/g_seams/g_seach/g_seacw the same
    way -- so any of these arrays can be indexed at HW_SLOT_NONE when a
-   carried sprite is momentarily hidden.  The ROM's 8-entry arrays
-   tolerate the [9] write only because it overflows into the adjacent
-   array (g_sepey[9] == g_seacw[1], a harmless short).  The port's
-   linker instead places g_obtmt[0].fd_addr right after g_sepey, so the
-   same stray write corrupts an MFDB bitmap pointer -> odd address ->
-   TOS VDI bus error (~30 min in).  Allocating through HW_SLOT_NONE
-   keeps every slot-9 write in-bounds and inert regardless of link
-   order.  Real-slot loops/bounds checks still use SPRITE_HW_SLOTS (8),
-   matching the ROM's `i < 8`. */
-#define SPRITE_HW_SLOTS_ALLOC   (HW_SLOT_NONE + 1)
+   carried sprite is momentarily hidden.  LCP_STX's 8-entry arrays
+   tolerate the [9] write because it overflows into the ADJACENT array
+   (g_sepey[9] == g_seacw[1], a harmless short) -- which is only true
+   while the link order is the original's.  The port used to allocate
+   10 entries to make the stray write inert regardless of layout; that
+   costs 4 bytes per array against LCP_STX, so the allocation is back
+   to 8 and the safety now rests on reproducing the original's array
+   adjacency.  Loops and bounds checks use SPRITE_HW_SLOTS (8). */
+#define SPRITE_HW_SLOTS_ALLOC   SPRITE_HW_SLOTS
 
 extern short lcp_st;
 extern short lcp_face;
