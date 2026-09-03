@@ -9,6 +9,7 @@
 #ifdef FAITHFUL
 extern short ani_cnt;
 #else
+extern char psg_ovol;
 extern unsigned short g_wkadj;
 extern unsigned short ani_cnt;
 #endif
