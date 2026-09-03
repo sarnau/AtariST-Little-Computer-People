@@ -937,8 +937,8 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 327 matched / 9 divergent, 66 664 of
-104 156 STX text bytes (64.0%) proven byte-identical -- 70.4% of the
+**Status (2026-09-03): 329 matched / 7 divergent, 70 590 of
+104 156 STX text bytes (67.8%) proven byte-identical -- 74.5% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
@@ -946,11 +946,16 @@ LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
 Still divergent (all located): pk_main 0x8d10, pk_bjMn 0xbc72,
-psg_upE 0x15ae, mq_dise 0x918, lcp_pat 0x470a, a_writl 0x13cd6, plus
-three functions the port has only as stubs and that must be written
-from scratch -- st_titl 0x6d7e (1040 B, a real interactive title
-screen), cs_mvIn 0xe500 (968 B, the move-in cutscene) and cp_main
-0x22c0 (7500 B, the uncracked copy protection).
+psg_upE 0x15ae, mq_dise 0x918 (its MIDI OUT half is recovered; the
+PSG half is not), plus three functions the port has only as stubs and
+that must be written from scratch -- st_titl 0x6d7e (1040 B, a real
+interactive title screen), cs_mvIn 0xe500 (968 B, the move-in
+cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy protection).
+
+lcp_path's three static helpers (wkCyc, setHTgt, stairCyc) do NOT
+exist in LCP_STX -- their bodies are written out at all sixteen call
+sites -- and every stair state machine WRAPS to its F0 frame instead
+of clamping at F3S.  Expect more of both.
 
 Functions DELETED because LCP_STX has no counterpart: al_loan and
 fLoad (lcp_crnd inlines the NAMES read, main inlines the .SCN path),
