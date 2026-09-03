@@ -124,6 +124,9 @@
    one where render.c's other functions live. */
 #include "parts/fillTopR.c"  /* 0x686c */
 #include "parts/getKey.c"    /* 0x68ee */
+/* getKey's jump table occupies LCP_STX data 0xba4..0xbe7, so the last
+   two globals of this unit are declared behind it. */
+#include "dat_u1c.c"
 /* STX 0x69c6, just past getKey: the bare Random() wrapper. */
 #include "parts/rnd.c"       /* 0x69c6 */
 #include "parts/lcp_crnd.c"  /* 0x69d8 */
