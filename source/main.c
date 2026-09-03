@@ -43,16 +43,12 @@
 /* gameLoop -> parts/gameLoop.c (STX: 0x5c76, in the 0x400c object between lc_load and chk_actT). */
 
 #ifndef HOST
-/* _stksize -- consulted by Alcyon's gemstart.o at boot to decide the
-   memory model.
-     +N     keep N bytes for stack+heap, return rest to OS
-     -1     keep ALL memory (INCOMPATIBLE WITH GEMDOS Malloc, AES, VDI)
-     -N     return N bytes to OS, keep the rest
-   The 1985 game uses GEMDOS Malloc heavily (screen buffer, song
-   buffer, letter template, per-SFX blocks) which needs the OS free
-   pool -- so we keep 64 KB for our stack + C-heap and hand the rest
-   (~440 KB) back to GEMDOS for Malloc to draw from. */
-long _stksize = 65536L;
+/* No `_stksize` here.  That global is the ATARI DK gemstart's
+   memory-model hook; alcyon2's GEMSTART.O -- the startup LCP_STX
+   links -- has the stack size baked in and contains no reference to
+   it (neither does its GEMLIB).  Defining it only put 4 dead bytes at
+   the head of the data segment, ahead of psg_rot, which LCP_STX has
+   at 0x180. */
 
 /* main -- C entry point for the Alcyon build (target only).
    Ported line-by-line from Ghidra 0x15546; see the per-step comments

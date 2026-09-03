@@ -3,7 +3,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-extern long _stksize;
 
 extern void gameLoop();
 extern int main();
