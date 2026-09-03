@@ -66,6 +66,7 @@
 #include "parts/cmd_upp.c" /* 0x1711c */
 #include "parts/chk_vwd.c" /* 0x171ae */
 #include "parts/prsCmd.c"  /* 0x1721c */
+#include "parts/cmd_num.c" /* 0x17278 */
 #include "parts/lcp_upp.c" /* 0x172e8 */
 
 #endif  /* !FAITHFUL */

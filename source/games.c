@@ -1470,7 +1470,9 @@ discard_loop:
                                         pk_pmsg("My pot.");
                                         gameTick(8);
                                         pk_annr(0);
-                                } else if (ikey == 1) {
+                                        goto next_round;
+                                }
+                                if (ikey == 1) {
                                         loc8   = pk_phv;
                                         pk_bet = 0;
                                         while (loc8--) {
@@ -1543,8 +1545,9 @@ discard_loop:
                                 gameTick(8);
                                 pk_pmsg("Your pot.");
                                 pk_annr(1);
-                        } else {
-                                if (g_pcmon < pk_bet) {
+                                goto next_round;
+                        }
+                        if (g_pcmon < pk_bet) {
                                         pk_pmsg("Sorry, I'm all out!");
                                         gameTick(10);
                                         goto cleanup;
@@ -1586,8 +1589,9 @@ discard_loop:
                                                 pk_pmsg("My pot.");
                                                 gameTick(8);
                                                 pk_annr(0);
-                                        } else {
-                                                if (ikey != 1) return;
+                                                goto next_round;
+                                        }
+                                        if (ikey == 1) {
                                                 loc8   = pk_phv;
                                                 pk_bet = 0;
                                                 while (loc8--) {
@@ -1650,12 +1654,10 @@ discard_loop:
                                                 pk_pmsg("I'll call.");
                                                 gameTick(8);
                                                 pk_show();
+                                                goto next_round;
                                         }
                                 }
                         }
-                }
-
-        goto next_round;
 }
 
 /* pk_show: showdown.  Reveal computer hand, evaluate both, walk the
@@ -1940,21 +1942,21 @@ pk_cdrw()
 
         for (i = 0; i < 5; i++) {
                 if (pk_sel[i] == 1) {
-                        nc = YES;
-                        while (nc != NO) {
-                                n  = rndRng(0, 51);
-                                nc = NO;
-                                for (dm = 0; dm < 5; dm++) {
-                                        if (pk_ch[dm] == n) nc = YES;
-                                        if (pk_ph[dm] == n) nc = YES;
+                        dm = YES;
+                        while (dm != NO) {
+                                card = rndRng(0, 51);
+                                dm   = NO;
+                                for (n = 0; n < 5; n++) {
+                                        if (pk_ch[n] == card) dm = YES;
+                                        if (pk_ph[n] == card) dm = YES;
                                 }
-                                dm = pk_disc;
-                                while (dm--) {
-                                        if (pk_dpile[dm] == n) nc = YES;
+                                n = pk_disc;
+                                while (n--) {
+                                        if (pk_dpile[n] == card) dm = YES;
                                 }
                                 pk_dpile[pk_disc] = pk_ch[i];
                                 pk_disc++;
-                                pk_ch[i] = n;
+                                pk_ch[i] = card;
                                 pk_drcs(CARD_HIGHLIGHT, i, 0);
                                 gameTick(3);
                         }
@@ -2098,11 +2100,12 @@ short   n;
 static void
 pk_evhs()
 {
-        /* Counter first in LCP_STX. */
+        /* Counter first in LCP_STX, then the drawn card, the inner
+           counter and the duplicate flag last. */
         short   i;      /* -2 */
-        short   dup;    /* -4 */
-        short   c;      /* -6 */
-        short   j;      /* -8 */
+        short   c;      /* -4 */
+        short   j;      /* -6 */
+        short   dup;    /* -8 */
 
         for (i = 0; i < 5; i++) {
                 pk_ch[i] = CARD_NONE;
@@ -2296,6 +2299,7 @@ pk_ante()
                 r = pk_inph(KEY_F1, 255, KEY_F10);
         if (r == 3 || r == -1) {
                 pk_quit = YES;
+                return;
         } else if (g_ppmon == 0) {
                 pk_pmsg("Sorry, you're all out!!!");
                 gameTick(0x1e);
@@ -2306,13 +2310,13 @@ pk_ante()
                 pk_quit = YES;
         } else {
                 plEr(5, 63, 319, 75);
-                g_ppmon = g_ppmon - 1;
+                g_ppmon--;
                 pk_dppm();
-                g_ppppa = g_ppppa + 1;
+                g_ppppa++;
                 pk_dpot();
-                g_pcmon = g_pcmon - 1;
+                g_pcmon--;
                 pk_awp();
-                g_ppppa = g_ppppa + 1;
+                g_ppppa++;
                 pk_dpot();
         }
 }
@@ -3335,7 +3339,7 @@ short   ace_mode;
                                 ace_high = YES;
                         } else
                                 score++;
-                } else if (hand[i] % 13 <= 11 && hand[i] % 13 > 7) {
+                } else if (hand[i] % 13 <= 11 && hand[i] % 13 >= 8) {
                         score += 10;
                 } else {
                         score += hand[i] % 13 + 2;
