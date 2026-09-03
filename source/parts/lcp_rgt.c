@@ -47,6 +47,6 @@ lcp_rgt()
         lcp_y += 8;
         lcp_x += 6;
         gameTick(0);
-        no_keyin = NO;
+        g_inpmd = NO;
         g_actif  = NO;
 }

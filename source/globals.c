@@ -181,6 +181,12 @@ short           g_mtdiv;
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
    mq_stap resets it at song start. */
 short           mi_nlp0;
+
+/* The duration mq_pars computes for the event it is about to queue.
+   A SECOND cell in the reference -- mq_pars writes it and only
+   mq_qnne reads it, while mq_rdur's identical expression goes to
+   mi_nlp0, which drives the tick counters. */
+short           mi_ndur;
 long            mi_nxTk;       /* STX: long tick counters */
 long            mi_lpTk;
 unsigned char   g_meve[4];
@@ -705,9 +711,13 @@ char            mi_dvel   = 127;
 
 char            psg_dvol      = 15;
 
-char            g_mnlol      = 0x60;
+/* The note range the sequencer will play, HIGH first in the data.
+   The port had these two names swapped: 0x60 is the top of the range
+   and 0x24 the bottom, and mq_dise rejects a note above the first and
+   below the second. */
+char            g_mnhi      = 0x60;
 
-char           g_mnhil       = 0x24;
+char           g_mnlo       = 0x24;
 
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number

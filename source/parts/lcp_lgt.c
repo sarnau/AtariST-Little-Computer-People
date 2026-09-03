@@ -15,7 +15,10 @@ lcp_lgt()
         short   save_x;
         short   save_y;
 
-        no_keyin = YES;
+        /* g_inpmd, not no_keyin -- the reference relocates this store
+           and lcp_rgt's matching clear to the keyboard-input-mode
+           flag deal_kc and gameTick already test. */
+        g_inpmd  = YES;
         g_actif  = YES;
         g_lcyof  = NO;
         lcp_y   -= 8;

@@ -140,6 +140,7 @@ extern char mi_cnot;
 extern char mi_nmof;
 extern char mi_nlpA;
 extern short mi_nlp0;
+extern short mi_ndur;
 extern char   mi_slop;          /* STX: byte flag */
 extern short mi_ndt[];
 extern short mi_evq[];
@@ -167,8 +168,8 @@ extern BOOL16 psg_out;
 extern char   psg_ntAc;         /* STX: byte flag */
 extern unsigned char psg_chNt[];
 extern PSG_ENVELOPE psg_envelope[];
-extern char g_mnlol;
-extern char g_mnhil;
+extern char g_mnhi;
+extern char g_mnlo;
 extern char g_sfcup;
 extern short g_sfddh;
 extern short g_sfddl;

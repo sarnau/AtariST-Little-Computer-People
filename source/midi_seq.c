@@ -221,7 +221,12 @@ mq_pars()
                                 psg_cvol = psg_dvol;
                         }
                         mi_nmof = *mi_sqpos & 0xc0;
-                        mi_nlp0 = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
+                        /* mi_ndur, not mi_nlp0: the reference stores
+                           this one in a second cell that only mq_qnne
+                           reads.  mq_rdur computes the same expression
+                           into mi_nlp0, which the tick counters use --
+                           the port had merged the two. */
+                        mi_ndur = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
                         mi_sqpos++;
 
                         if ((mi_nmof & 0xc0) != 0) {
@@ -308,7 +313,7 @@ mq_qnne()
         short   ch;
 
         if (mi_evi < 58) {
-                mi_evq[mi_evi] = mi_nlp0;
+                mi_evq[mi_evi] = mi_ndur;
                 mi_evi++;
                 if (mi_nnOn != 0) {
                         mi_evq[mi_evi] = (mi_lasT << 1) | mi_cnot;
@@ -322,9 +327,9 @@ mq_qnne()
         } else
                 return;
 
-        if (mi_cnot > g_mnlol)
+        if (mi_cnot > g_mnhi)
                 return;
-        if (mi_cnot < g_mnhil)
+        if (mi_cnot < g_mnlo)
                 return;
 
         if (mi_slop != NO)
@@ -348,7 +353,7 @@ mq_qnne()
 
 /* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
-   Fires only if note in [g_mnlol, g_mnhil] and non-zero.
+   Fires only if note in [g_mnhi, g_mnlo] and non-zero.
    addr: midi_seq_send_note_off() */
 
 void
@@ -362,7 +367,7 @@ short * nptr;
                 return;
         nptr++;
         g_meve[1] = nptr[0];
-        if ((char) g_meve[1] > g_mnlol | (char) g_meve[1] < g_mnhil)
+        if ((char) g_meve[1] > g_mnhi | (char) g_meve[1] < g_mnlo)
                 return 1;
         if (g_meve[1] == 0)
                 return 1;
@@ -401,7 +406,7 @@ char    index;
    PSG path (Note-On 0x9n only):
      vel=0 -> Note-Off: find channel by note, ENV_RELEASE.
      vel>0 -> Note-On: alloc silent channel, else voice-steal by
-       highest phase; guard [g_mnlol, g_mnhil]; copy 8 ADSR bytes from
+       highest phase; guard [g_mnhi, g_mnlo]; copy 8 ADSR bytes from
        mi_env + (g_mccha-1)*8; compute (2 - hi_nib(attack_dur))*12
        octave offset; write PSG tone/mixer/noise; if freq<0x17 use
        ENV_FADEOUT instead of ENV_ATTACK; set psg_ntAc.
@@ -478,8 +483,11 @@ char            midi_ch;
                         chosen = best;
                 }
 
-                /* Range guard: the whole note-on body is inside it. */
-                if (*midiEvP >= g_mnlol && *midiEvP <= g_mnhil) {
+                /* Range guard: the whole note-on body is inside it.
+                   LOW first -- the reference compares against 0x34e
+                   (36) and branches lt, then against 0x34c (96) and
+                   branches gt. */
+                if (*midiEvP >= g_mnlo && *midiEvP <= g_mnhi) {
 
                 /* Copy 8 bytes of ADSR params from the .SNG envelope
                    block; the source address lands in a local first. */
