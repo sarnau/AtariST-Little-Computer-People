@@ -485,6 +485,7 @@ ag_intr()
    at 0x7f84); see parts/plEr.c. */
 #ifndef FAITHFUL
 #include "parts/plEr.c"
+#include "parts/plErCol.c"   /* 0x871a, right after plEr */
 #endif
 
 

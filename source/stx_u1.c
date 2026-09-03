@@ -91,12 +91,16 @@
 #include "parts/rv_bld.c"   /* 0x680e -- bsr.s from initBRev */
 #include "parts/fillTopR.c"
 
+#include "parts/getKey.c"   /* 0x68ee */
+
 /* STX 0x69c6, just past getKey: the bare Random() wrapper. */
 #include "parts/rnd.c"
 #include "parts/lcp_crnd.c" /* 0x69d8 */
 
 /* st_titl (0x6d7e) is a real interactive title screen in STX. */
 #include "parts/st_titl.c"    /* 0x6d7e */
+#include "parts/stEnter.c"    /* 0x718e */
+#include "parts/erChr.c"      /* 0x72e6 */
 
 /* save.c straddles too: fOpen and fr_read close this object. */
 #include "parts/lc_load.c"   /* 0x5ac8 */
