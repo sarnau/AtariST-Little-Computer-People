@@ -132,11 +132,13 @@ short   g_cdibp;
 /* Letter subsystem storage.  g_ltlp[] and _greeting_table are
    populated at runtime from letter.txt (see fl_ltpl);
    NULL entries make lt_tysa a safe no-op on the
-   host build until the template loader is ported.  360 slots covers
-   the 4 sections × 96 pointers (section 3 uses 72) shape referenced by
-   a_writl. */
+   host build until the template loader is ported.  360 slots: that is
+   fl_ltpl's literal `for (linecount = 0; linecount < 360; ...)`, it is
+   the 4 sections x 96 pointers (section 3 uses 72) shape a_writl
+   indexes, LETTER.TXT decodes to 361 line segments, and LCP_STX's own
+   gap here is 1440 bytes = 360 pointers. */
 char *  g_lttx;
-char *  g_ltlp[512];
+char *  g_ltlp[360];
 /* g_ltg[4]: letter sign-off pointers.  In THIS ROM they are four
    NULL pointers in DATA (0x11fb2) -- the sign-off strings do not
    exist in the binary, and a_writl's pick hits lt_tysa's NULL guard,
@@ -165,7 +167,7 @@ short   g_ltcwt[4]      = {
 /* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
    fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
 char    g_ltscb[64];
-char    in_str[256];
+char    in_str[80];             /* LCP_STX gap; a screen line */
 /* comp_tok[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
@@ -396,8 +398,9 @@ short           mi_evq[60];
    nested loops (48 entries + 2 slack). */
 long            mi_lstk[50];
 
-/* Per-MIDI-note bookkeeping (128 possible notes -- one byte each). */
-unsigned char   mi_nOS[128];
+/* mi_nOS was a second name for mi_noSt below -- one is written by the
+   note-on/off handler, the other read by mq_stop, and both map to the
+   SAME LCP_STX address (bss 0x27738).  Merged into mi_noSt. */
 
 /* ---- PSG envelope processor state -----------------------------------
    Bresenham-style integer ramp accumulator + delta, per channel.
@@ -514,7 +517,10 @@ long            g_sfHz2;
    next symbol).  sf_sl loops up to 500 iterations breaking on size==0,
    so the array should be sized for the max number of entries in
    SOUNDS.LCP; 64 gives plenty of headroom. */
-unsigned char * mi_ntLp[64];
+/* 25 slots: SOUNDS.LCP holds 23 blocks before the size-0 sentinel
+   that ends sf_sl's `index < 500` loop, and LCP_STX's gap here is 100
+   bytes = 25 pointers.  The 500 is a loop limit, not the size. */
+unsigned char * mi_ntLp[25];
 /* Working buffer for the currently-playing Dosound sequence, copied
    from mi_ntLp[g_sfcur] each time a new
    effect starts. */
@@ -867,7 +873,10 @@ short           pk_phrk;     /* player_hand_rank */
 short           pk_dslot;     /* winner (0=comp, 1=player) */
 short           pk_sel[5];          /* card_selected -- 1 = discard */
 short           pk_disc;     /* discard_count */
-short           pk_dpile[52];       /* discard_pile of already-seen cards */
+short           pk_dpile[13];       /* discard_pile of already-seen cards:
+                                       at most 5 + 5 discards plus the
+                                       explicit pk_dpile[10] write, and
+                                       LCP_STX's gap here is 26 bytes */
 short           pk_dpos;     /* deck_position -- reused as
                                        raise amount / draw counter */
 short           pk_phv;     /* player_hand_value -- saved bet */
@@ -932,7 +941,9 @@ short           pk_pscore;
                                                         for word slots 2..5)
       wp_succ @ 0x2a490   6 entries, random on solve
       wp_fail @ 0x2a4a8   6 entries, random on wrong answer  */
-char            wp_ans[10][12];
+/* Five blanks, not ten: the decoded WORDPZ.TXT has at most five '@'
+   markers on a line, and LCP_STX's gap here is 60 bytes. */
+char            wp_ans[5][12];
 short           wp_blk;
 
 char *          wp_prm[9] = {

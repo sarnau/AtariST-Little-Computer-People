@@ -328,9 +328,9 @@ mq_qnne()
                 mi_ccha = mi_varR;
 
         if (mi_nnOf != 0)
-                mi_nOS[mi_cnot] = 0;
+                mi_noSt[mi_cnot] = 0;
         if (mi_lasT != 0)
-                mi_nOS[mi_cnot] = mi_ccha;
+                mi_noSt[mi_cnot] = mi_ccha;
         if (mi_nnOf != 0)
                 return;
 
