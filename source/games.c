@@ -3082,11 +3082,11 @@ cleanup:
                 strPr("F10 Quit",  225, 34, COLOR_lt_grey);
                 strPr("F5  Clear", 225, 34, COLOR_red);
 
-bet_loop:
-                do {
+                bj_key = 0;
+                while (1) {
                         bj_key = 0;
                         while (bj_key != 1 && bj_key != 2 &&
-                                 bj_key != 3 && bj_key != -1) {
+                               bj_key != 3 && bj_key != -1) {
                                 gameTick(0);
                                 bj_key = pk_inph(KEY_F1, KEY_F3, KEY_F5);
                         }
@@ -3106,506 +3106,507 @@ bet_loop:
                                         pk_quit = YES;
                                         break;
                                 }
-                                if (pk_bet == 20) goto bet_loop;
+                                if (pk_bet == 20)
+                                        continue;
                                 g_ppmon--;
                                 pk_dppm();
                                 g_pcbet++;
                                 pk_dbhi(1);
                                 pk_bet++;
                         }
-                } while (bj_key != 2);
+                        if (bj_key == 2) {
+                                break;
+                        }
+                }
 
-                if (pk_dpile[10] == CARD_BJ_STOP) {
+                if (pk_dpile[10] != CARD_BJ_STOP) {
+                        pk_dpile[10] = CARD_BJ_STOP;
+                        goto round;
+                }
+                if (pk_quit != NO) {
+                        gameTick(20);
+                        goto cleanup;
+                }
+                pk_pmsg(" ");
+                plEr(225, 10, 319, 60);
+                pk_dchd(pk_ph, 0);
+                pk_dchd(pk_ch, 1);
+                pk_dchd(pk_ph, 0);
+                pk_dchd(pk_ch, 0);
+                gameTick(10);
+                br = pk_cnbj(pk_ph);
+                hit  = pk_cnbj(pk_ch);
+                if (br != 0 && hit != 0) {
+                        pk_pmsg("You have BLACKJACK...but so do I !!");
+                        pk_drcs(pk_ch[0], 0, 0);
+                        gameTick(0x14);
+                        pk_sbet(&g_pcbet, 1, 2);
                         if (pk_quit != NO) {
-                                gameTick(20);
+                                pk_pmsg("Game's over. I win.");
+                                gameTick(0x14);
                                 goto cleanup;
                         }
-                        pk_pmsg(" ");
-                        plEr(225, 10, 319, 60);
-                        pk_dchd(pk_ph, 0);
-                        pk_dchd(pk_ch, 1);
-                        pk_dchd(pk_ph, 0);
-                        pk_dchd(pk_ch, 0);
+                        goto next_round;
+                } else if (br != 0) {
+                        pk_pmsg("You have BLACKJACK!!");
+                        gameTick(0x14);
+                        phase_snap = g_pcbet;
+                        pk_sbet(&g_pcbet, 1, 1);
+                        if (pk_quit != NO) {
+                                pk_pmsg("I'm all out!!");
+                                gameTick(0x14);
+                                goto cleanup;
+                        }
+                        goto next_round;
+                } else if (hit != 0) {
+                        pk_pmsg("I have BLACKJACK!!");
                         gameTick(10);
-                        res = pk_cnbj(pk_ph);
-                        rv  = pk_cnbj(pk_ch);
-                        if (res != 0 && rv != 0) {
-                                pk_pmsg("You have BLACKJACK...but so do I !!");
-                                pk_drcs(pk_ch[0], 0, 0);
+                        pk_drcs(pk_ch[0], 0, 0);
+                        gameTick(0x14);
+                        pk_pmsg("I win double the bet.");
+                        gameTick(0x14);
+                        pk_sbet(&g_pcbet, 0, 1);
+                        if (pk_quit != NO) {
+                                pk_pmsg("Game's over. I win.");
                                 gameTick(0x14);
-                                pk_sbet(&g_pcbet, 1, 0);
-                                if (pk_quit != NO) {
-                                        pk_pmsg("Game's over. I win.");
-                                        gameTick(0x14);
-                                        goto cleanup;
-                                }
-                        } else if (res != 0) {
-                                pk_pmsg("You have BLACKJACK!!");
-                                gameTick(0x14);
-                                pk_sbet(&g_pcbet, 1, 0);
-                                if (pk_quit != NO) {
-                                        pk_pmsg("I'm all out!!");
-                                        gameTick(0x14);
-                                        goto cleanup;
-                                }
-                        } else if (rv != 0) {
-                                pk_pmsg("I have BLACKJACK!!");
-                                gameTick(10);
-                                pk_drcs(pk_ch[0], 0, 0);
-                                gameTick(0x14);
-                                pk_pmsg("I win double the bet.");
-                                gameTick(0x14);
-                                pk_sbet(&g_pcbet, 0, 0);
-                                if (pk_quit != NO) {
-                                        pk_pmsg("Game's over. I win.");
-                                        gameTick(0x14);
-                                        goto cleanup;
-                                }
-                        } else {
-                                /* Neither had a natural.  Split, double-down,
-                                   hit/stand, dealer -- the meat of the game. */
-                                pk_phase = 0;
-                                if ((short) pk_ph[0] % 13 ==
-                                    (short) pk_ph[1] % 13) {
-                                        pk_pmsg("Do you wish to split?");
-                                        plEr(225, 10, 319, 60);
-                                        strPr("F1 Split",    225, 18, COLOR_red);
-                                        strPr("F3 No split", 225, 26, COLOR_red);
-                                        bj_key = 0;
-                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
-                                                gameTick(0);
-                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
-                                        }
-                                        if (mg_tofl != NO) goto cleanup;
-                                        if (bj_key == 1) {
-                                                pk_phase = 1;
-                                                pk_psh[0] = pk_ph[1];
-                                                pk_ph[1]  = CARD_NONE;
-                                                pk_pmsg("Here is your first hand.");
-                                                pk_wpr = g_pcbet;
-                                                pk_drcs(CARD_HIGHLIGHT, 1, 1);
-                                                gameTick(8);
-                                                pk_dchd(pk_ph, 0);
-                                                pk_c1bj = NO;
-                                                pk_c2bj = NO;
-                                                res = pk_cnbj(pk_ph);
-                                                if (res != 0) {
-                                                        pk_pmsg("You have BLACKJACK!!");
-                                                        gameTick(0x14);
-                                                        pk_sbet(&g_pcbet, 1, 0);
-                                                        if (pk_quit != NO) {
-                                                                pk_pmsg("I'm all out!!");
-                                                                gameTick(20);
-                                                                goto cleanup;
-                                                        }
-                                                        pk_c1bj = YES;
-                                                }
-                                                gameTick(20);
-                                                pk_drcs(CARD_HIGHLIGHT, 0, 1);
-                                                pk_drcs(CARD_HIGHLIGHT, 1, 1);
-                                                g_ppbet = 0;
-                                                pk_dbhi(2);
-                                                pk_pmsg("Here is your second hand.");
-                                                pk_drcs(pk_psh[0], 0, 1);
-                                                gameTick(10);
-                                                pk_dchd(pk_psh, 0);
-                                                while (g_ppbet != pk_wpr) {
-                                                        if (g_ppmon == 0) {
-                                                                pk_quit = YES;
-                                                                break;
-                                                        }
-                                                        g_ppmon--;
-                                                        pk_dppm();
-                                                        g_ppbet++;
-                                                        pk_dbhi(2);
-                                                        gameTick(0);
-                                                }
-                                                if (pk_quit != NO) {
-                                                        pk_pmsg("Sorry, you're all out!!");
-                                                        gameTick(20);
-                                                        goto cleanup;
-                                                }
-                                                res = pk_cnbj(pk_psh);
-                                                if (res != 0) {
-                                                        pk_pmsg("You have BLACKJACK!!");
-                                                        gameTick(20);
-                                                        pk_sbet(&g_ppbet, 1, 0);
-                                                        if (pk_quit != NO) {
-                                                                pk_pmsg("I'm all out!!");
-                                                                gameTick(0x14);
-                                                                goto cleanup;
-                                                        }
-                                                        pk_c2bj = YES;
-                                                }
-                                                gameTick(0x14);
-                                        }
-                                }
-
-                                /* Double-down / hit-loop phase. */
-                                if (pk_phase == 0 ||
-                                    pk_c1bj == NO || pk_c2bj == NO) {
-                                        pk_wrf = NO;
-                                        pk_wcs = NO;
-                                        pk_pcc  = CARD_BJ_MAX;
-                                        pk_pscc = CARD_BJ_MAX;
-                                        plEr(225, 10, 319, 60);
-                                        strPr("F1 Double",    225, 18, COLOR_red);
-                                        strPr("F3 No double", 225, 26, COLOR_red);
-                                        if (pk_phase == 0) {
-                                                if (g_ppmon < g_pcbet) bj_key = 2;
-                                                else {
-                                                        pk_pmsg("Do you wish to double-down?");
-                                                        bj_key = 0;
-                                                }
-                                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
-                                                        gameTick(0);
-                                                        bj_key = pk_inph(KEY_F1, KEY_F3, 0);
-                                                }
-                                                if (mg_tofl != NO) goto cleanup;
-                                                if (bj_key == 1) {
-                                                        pk_pcc = CARD_BJ_STEP;
-                                                        br      = g_pcbet;
-                                                        pk_wrf = YES;
-                                                        while (br != 0) {
-                                                                if (g_ppmon == 0) {
-                                                                        pk_quit = YES;
-                                                                        break;
-                                                                }
-                                                                g_ppmon--;
-                                                                pk_dppm();
-                                                                g_pcbet++;
-                                                                pk_dbhi(1);
-                                                                gameTick(0);
-                                                                br--;
-                                                        }
-                                                        if (pk_quit != NO) {
-                                                                pk_pmsg("Game's over. I win.");
-                                                                gameTick(0x14);
-                                                                goto cleanup;
-                                                        }
-                                                }
-                                        } else {
-                                                if (pk_c1bj == NO) {
-                                                        if (g_ppmon < g_pcbet) bj_key = 2;
-                                                        else {
-                                                                pk_pmsg("Double-down on your first hand?");
-                                                                pk_drcs(pk_ph[0], 0, 1);
-                                                                pk_drcs(pk_ph[1], 1, 1);
-                                                                gameTick(0);
-                                                                bj_key = 0;
-                                                        }
-                                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
-                                                                gameTick(0);
-                                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
-                                                        }
-                                                        if (mg_tofl != NO) goto cleanup;
-                                                        if (bj_key == 1) {
-                                                                pk_pcc = CARD_BJ_STEP;
-                                                                br      = g_pcbet;
-                                                                pk_wrf = YES;
-                                                                while (br != 0) {
-                                                                        if (g_ppmon == 0) {
-                                                                                pk_quit = YES;
-                                                                                break;
-                                                                        }
-                                                                        g_ppmon--;
-                                                                        pk_dppm();
-                                                                        g_pcbet++;
-                                                                        pk_dbhi(1);
-                                                                        gameTick(0);
-                                                                        br--;
-                                                                }
-                                                                if (pk_quit != NO) {
-                                                                        pk_pmsg("Games over. I win.");
-                                                                        gameTick(0x14);
-                                                                        goto cleanup;
-                                                                }
-                                                        }
-                                                }
-                                                if (pk_c2bj == NO) {
-                                                        gameTick(10);
-                                                        if (g_ppmon < g_ppbet) bj_key = 2;
-                                                        else {
-                                                                pk_pmsg("Double-down on your second hand?");
-                                                                pk_drcs(pk_psh[0], 0, 1);
-                                                                pk_drcs(pk_psh[1], 1, 1);
-                                                                gameTick(0);
-                                                                bj_key = 0;
-                                                        }
-                                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
-                                                                gameTick(0);
-                                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
-                                                        }
-                                                        if (mg_tofl != NO) goto cleanup;
-                                                        if (bj_key == 1) {
-                                                                pk_pscc = CARD_BJ_STEP;
-                                                                pk_wcs  = YES;
-                                                                br       = g_ppbet;
-                                                                while (br != 0) {
-                                                                        if (g_ppmon == 0) {
-                                                                                pk_quit = YES;
-                                                                                break;
-                                                                        }
-                                                                        g_ppmon--;
-                                                                        pk_dppm();
-                                                                        g_ppbet++;
-                                                                        pk_dbhi(2);
-                                                                        gameTick(0);
-                                                                        br--;
-                                                                }
-                                                                if (pk_quit != NO) {
-                                                                        pk_pmsg("Game's over. I win.");
-                                                                        gameTick(0x14);
-                                                                        goto cleanup;
-                                                                }
-                                                        }
-                                                }
-                                        }
-
-                                        /* Hit/stand rounds. */
-                                        if (pk_phase == 0) {
-                                                res = pk_bjr(pk_ph, 1, "Do you want a hit?");
-                                                if (res == -1) {
-                                                        if (mg_tofl == NO) {
-                                                                pk_pmsg("You've busted!!!");
-                                                                gameTick(10);
-                                                                while (g_pcbet != 0) {
-                                                                        g_pcmon++;
-                                                                        g_pcbet--;
-                                                                        pk_awp();
-                                                                        pk_dbhi(1);
-                                                                        gameTick(0);
-                                                                }
-                                                                g_pcbet = -1;
-                                                                goto next_round;
-                                                        }
-                                                        goto cleanup;
-                                                }
-                                                plEr(225, 10, 319, 60);
-                                        } else {
-                                                for (br = 0; br < 5; br++)
-                                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                pk_bs1 = NO;
-                                                pk_bs2 = NO;
-                                                if (pk_c1bj == NO) {
-                                                        for (br = 0;
-                                                             br < 5 && pk_ph[br] != CARD_NONE;
-                                                             br++)
-                                                                pk_drcs(pk_ph[br], br, 1);
-                                                        pk_dbhi(1);
-                                                        res = pk_bjr(pk_ph, 1,
-                                                                              "Need a hit on your first hand?");
-                                                        if (res == -1) {
-                                                                if (mg_tofl != NO) goto cleanup;
-                                                                pk_pmsg("Your first hand is busted !!");
-                                                                gameTick(20);
-                                                                pk_bs1 = YES;
-                                                                while (g_pcbet--) {
-                                                                        g_pcmon++;
-                                                                        pk_awp();
-                                                                        pk_dbhi(1);
-                                                                        gameTick(0);
-                                                                }
-                                                        }
-                                                }
-                                                if (pk_c2bj == NO) {
-                                                        for (br = 0; br < 5; br++)
-                                                                pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                        for (br = 0;
-                                                             br < 5 && pk_psh[br] != CARD_NONE;
-                                                             br++)
-                                                                pk_drcs(pk_psh[br], br, 1);
-                                                        pk_dbhi(2);
-                                                        res = pk_bjr(pk_psh, 1,
-                                                                              "Need a hit on your second hand?");
-                                                        if (res == -1) {
-                                                                if (mg_tofl != NO) goto cleanup;
-                                                                pk_pmsg("Your second hand is busted!!");
-                                                                gameTick(0x14);
-                                                                pk_bs2 = YES;
-                                                                while (g_ppbet--) {
-                                                                        g_pcmon++;
-                                                                        pk_awp();
-                                                                        pk_dbhi(2);
-                                                                        gameTick(0);
-                                                                }
-                                                        }
-                                                }
-                                        }
-                                        plEr(225, 10, 319, 60);
-
-                                        /* Dealer turn + settle. */
-                                        if (pk_phase == 0 ||
-                                            (pk_bs1 == NO && pk_c1bj == NO) ||
-                                            (pk_bs2 == NO && pk_c2bj == NO)) {
-                                                if (pk_phase != 0 && pk_bs1 == NO && pk_c1bj == NO) {
-                                                        /* nothing extra */
-                                                } else if (pk_phase != 0 &&
-                                                           pk_bs2 == NO && pk_c2bj == NO) {
-                                                        for (br = 0; br < 5; br++)
-                                                                pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                        pk_pmsg("Here is your second hand.");
-                                                        gameTick(0x14);
-                                                        for (br = 0;
-                                                             br < 5 && pk_psh[br] != CARD_NONE;
-                                                             br++)
-                                                                pk_drcs(pk_psh[br], br, 1);
-                                                        pk_dbhi(2);
-                                                } else if (pk_phase != 0) {
-                                                        for (br = 0; br < 5; br++)
-                                                                pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                        pk_pmsg("Here is your first hand again.");
-                                                        gameTick(0x14);
-                                                        for (br = 0;
-                                                             br < 5 && pk_ph[br] != CARD_NONE;
-                                                             br++)
-                                                                pk_drcs(pk_ph[br], br, 1);
-                                                        pk_dbhi(1);
-                                                }
-
-                                                pk_pmsg("Now here's my down card.");
-                                                gameTick(10);
-                                                pk_drcs(pk_ch[0], 0, 0);
-                                                gameTick(0x14);
-
-                                                round_ctr = 0;
-                                                for (br = 0; br < 3; br++) {
-                                                        pk_cscore = 0;
-                                                        round_ctr = 0;
-                                                        res = pk_chsc(pk_ch, 0);
-                                                        rv  = pk_chsc(pk_ch, 1);
-                                                        if (0x15 < res && 0x15 < rv) {
-                                                                round_ctr = 1;
-                                                                break;
-                                                        }
-                                                        pk_cscore = res;
-                                                        if (rv < 0x16)
-                                                                pk_cscore = rv;
-                                                        if (0x10 < pk_cscore) {
-                                                                pk_pmsg("I'll stand.");
-                                                                gameTick(0x14);
-                                                                break;
-                                                        }
-                                                        if (br == 0)
-                                                                pk_pmsg("I'll take a hit.");
-                                                        else if (br == 1)
-                                                                pk_pmsg("I'll take another hit.");
-                                                        else if (br == 2)
-                                                                pk_pmsg("I'll take one more.");
-                                                        gameTick(10);
-                                                        pk_dchd(pk_ch, 0);
-                                                }
-                                                if (br == 3 && round_ctr == 0) {
-                                                        pk_cscore = 0;
-                                                        res = pk_chsc(pk_ch, 0);
-                                                        pk_cscore = pk_chsc(pk_ch, 1);
-                                                        if (res < 0x16) {
-                                                                if (0x15 < pk_cscore) {
-                                                                        pk_cscore = res;
-                                                                        pk_pmsg("I'll stand.");
-                                                                        gameTick(0x14);
-                                                                }
-                                                        } else {
-                                                                round_ctr = 1;
-                                                                pk_cscore = res;
-                                                        }
-                                                }
-                                                if (round_ctr != 0) {
-                                                        pk_pmsg("I've busted !!");
-                                                        gameTick(0x14);
-                                                }
-
-                                                plEr(225, 10, 319, 60);
-                                                if (pk_phase == 0) {
-                                                        res = pk_chsc(pk_ph, 0);
-                                                        rv  = pk_chsc(pk_ph, 1);
-                                                        pk_pscore = res;
-                                                        if (rv < 0x16)
-                                                                pk_pscore = rv;
-                                                        if (round_ctr == 0 &&
-                                                            pk_pscore <= pk_cscore) {
-                                                                if (pk_cscore == pk_pscore) {
-                                                                        pk_pmsg("It's a tie and nobody wins.");
-                                                                        gameTick(0x14);
-                                                                        pk_sbet(&g_pcbet, 1, 0);
-                                                                } else {
-                                                                        pk_pmsg("I win.");
-                                                                        gameTick(0x14);
-                                                                        pk_sbet(&g_pcbet, 0, 0);
-                                                                }
-                                                        } else {
-                                                                pk_pmsg("You win.");
-                                                                gameTick(0x14);
-                                                                pk_sbet(&g_pcbet, 1, 0);
-                                                        }
-                                                } else {
-                                                        if (pk_bs1 == NO && pk_c1bj == NO) {
-                                                                for (br = 0; br < 5; br++)
-                                                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                                for (br = 0;
-                                                                     br < 5 && pk_ph[br] != CARD_NONE;
-                                                                     br++)
-                                                                        pk_drcs(pk_ph[br], br, 1);
-                                                                pk_dbhi(1);
-                                                                res = pk_chsc(pk_ph, 0);
-                                                                rv  = pk_chsc(pk_ph, 1);
-                                                                pk_pscore = res;
-                                                                if (rv < 0x16)
-                                                                        pk_pscore = rv;
-                                                                if (round_ctr == 0 &&
-                                                                    pk_pscore <= pk_cscore) {
-                                                                        if (pk_cscore == pk_pscore) {
-                                                                                pk_pmsg("First hand ties, nobody wins.");
-                                                                                gameTick(0x14);
-                                                                                pk_sbet(&g_pcbet, 1, 0);
-                                                                        } else {
-                                                                                pk_pmsg("Your first hand loses.");
-                                                                                gameTick(0x14);
-                                                                                pk_sbet(&g_pcbet, 0, 0);
-                                                                        }
-                                                                } else {
-                                                                        pk_pmsg("You win with your first hand.");
-                                                                        gameTick(0x14);
-                                                                        pk_sbet(&g_pcbet, 1, 0);
-                                                                }
-                                                        }
-                                                        if (pk_bs2 == NO && pk_c2bj == NO) {
-                                                                for (br = 0; br < 5; br++)
-                                                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
-                                                                for (br = 0;
-                                                                     br < 5 && pk_psh[br] != CARD_NONE;
-                                                                     br++)
-                                                                        pk_drcs(pk_psh[br], br, 1);
-                                                                pk_dbhi(2);
-                                                                res = pk_chsc(pk_psh, 0);
-                                                                rv  = pk_chsc(pk_psh, 1);
-                                                                pk_pscore = res;
-                                                                if (rv < 0x16)
-                                                                        pk_pscore = rv;
-                                                                if (round_ctr == 0 &&
-                                                                    pk_pscore <= pk_cscore) {
-                                                                        if (pk_cscore == pk_pscore) {
-                                                                                pk_pmsg("Second hand ties, nobody wins.");
-                                                                                gameTick(0x14);
-                                                                                pk_sbet(&g_ppbet, 1, 0);
-                                                                        } else {
-                                                                                pk_pmsg("Your second hand loses.");
-                                                                                gameTick(0x14);
-                                                                                pk_sbet(&g_ppbet, 0, 0);
-                                                                        }
-                                                                } else {
-                                                                        pk_pmsg("You win with your second hand.");
-                                                                        gameTick(0x14);
-                                                                        pk_sbet(&g_ppbet, 1, 0);
-                                                                }
-                                                        }
-                                                }
-                                        }
-                                }
+                                goto cleanup;
                         }
                         goto next_round;
                 }
-                pk_dpile[10] = CARD_BJ_STOP;
+                /* Neither had a natural.  Split, double-down,
+                   hit/stand, dealer -- the meat of the game. */
+                pk_phase = 0;
+                if ((short) pk_ph[0] % 13 ==
+                    (short) pk_ph[1] % 13) {
+                        pk_pmsg("Do you wish to split?");
+                        plEr(225, 10, 319, 60);
+                        strPr("F1 Split",    225, 18, COLOR_red);
+                        strPr("F3 No split", 225, 26, COLOR_red);
+                        bj_key = 0;
+                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                gameTick(0);
+                                bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                        }
+                        if (mg_tofl != NO) goto cleanup;
+                        if (bj_key == 1) {
+                                pk_phase = 1;
+                                pk_psh[0] = pk_ph[1];
+                                pk_ph[1]  = CARD_NONE;
+                                pk_pmsg("Here is your first hand.");
+                                pk_wpr = g_pcbet;
+                                pk_drcs(CARD_HIGHLIGHT, 1, 1);
+                                gameTick(8);
+                                pk_dchd(pk_ph, 0);
+                                pk_c1bj = NO;
+                                pk_c2bj = NO;
+                                if (pk_cnbj(pk_ph)) {
+                                        pk_pmsg("You have BLACKJACK!!");
+                                        gameTick(0x14);
+                                        pk_sbet(&g_pcbet, 1, 1);
+                                        if (pk_quit != NO) {
+                                                pk_pmsg("I'm all out!!");
+                                                gameTick(20);
+                                                goto cleanup;
+                                        }
+                                        pk_c1bj = YES;
+                                }
+                                gameTick(20);
+                                pk_drcs(CARD_HIGHLIGHT, 0, 1);
+                                pk_drcs(CARD_HIGHLIGHT, 1, 1);
+                                g_ppbet = 0;
+                                pk_dbhi(2);
+                                pk_pmsg("Here is your second hand.");
+                                pk_drcs(pk_psh[0], 0, 1);
+                                gameTick(10);
+                                pk_dchd(pk_psh, 0);
+                                while (g_ppbet != pk_wpr) {
+                                        if (g_ppmon == 0) {
+                                                pk_quit = YES;
+                                                break;
+                                        }
+                                        g_ppmon--;
+                                        pk_dppm();
+                                        g_ppbet++;
+                                        pk_dbhi(2);
+                                        gameTick(0);
+                                }
+                                if (pk_quit != NO) {
+                                        pk_pmsg("Sorry, you're all out!!");
+                                        gameTick(20);
+                                        goto cleanup;
+                                }
+                                if (pk_cnbj(pk_psh)) {
+                                        pk_pmsg("You have BLACKJACK!!");
+                                        gameTick(20);
+                                        pk_sbet(&g_ppbet, 1, 1);
+                                        if (pk_quit != NO) {
+                                                pk_pmsg("I'm all out!!");
+                                                gameTick(0x14);
+                                                goto cleanup;
+                                        }
+                                        pk_c2bj = YES;
+                                }
+                                gameTick(0x14);
+                        }
+                }
+
+                /* Double-down / hit-loop phase. */
+                if (pk_phase != 0 && pk_c1bj != NO && pk_c2bj != NO) {
+                        goto next_round;
+                }
+                pk_wrf = NO;
+                pk_wcs = NO;
+                pk_pcc  = CARD_BJ_MAX;
+                pk_pscc = CARD_BJ_MAX;
+                plEr(225, 10, 319, 60);
+                strPr("F1 Double",    225, 18, COLOR_red);
+                strPr("F3 No double", 225, 26, COLOR_red);
+                if (pk_phase == 0) {
+                        if (g_ppmon < g_pcbet) bj_key = 2;
+                        else {
+                                pk_pmsg("Do you wish to double-down?");
+                                bj_key = 0;
+                        }
+                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                gameTick(0);
+                                bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                        }
+                        if (mg_tofl != NO) goto cleanup;
+                        if (bj_key == 1) {
+                                pk_pcc = CARD_BJ_STEP;
+                                br      = g_pcbet;
+                                pk_wrf = YES;
+                                while (br--) {
+                                        if (g_ppmon == 0) {
+                                                pk_quit = YES;
+                                                break;
+                                        }
+                                        g_ppmon--;
+                                        pk_dppm();
+                                        g_pcbet++;
+                                        pk_dbhi(1);
+                                        gameTick(0);
+                                }
+                                if (pk_quit != NO) {
+                                        pk_pmsg("Game's over. I win.");
+                                        gameTick(0x14);
+                                        goto cleanup;
+                                }
+                        }
+                        /* A redundant re-test of pk_phase, already
+                           implied by the else. */
+                } else if (pk_phase != 0) {
+                        if (pk_c1bj == NO) {
+                                if (g_ppmon < g_pcbet) bj_key = 2;
+                                else {
+                                        pk_pmsg("Double-down on your first hand?");
+                                        pk_drcs(pk_ph[0], 0, 1);
+                                        pk_drcs(pk_ph[1], 1, 1);
+                                        gameTick(0);
+                                        bj_key = 0;
+                                }
+                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                        gameTick(0);
+                                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                }
+                                if (mg_tofl != NO) goto cleanup;
+                                if (bj_key == 1) {
+                                        pk_pcc = CARD_BJ_STEP;
+                                        br      = g_pcbet;
+                                        pk_wrf = YES;
+                                        while (br--) {
+                                                if (g_ppmon == 0) {
+                                                        pk_quit = YES;
+                                                        break;
+                                                }
+                                                g_ppmon--;
+                                                pk_dppm();
+                                                g_pcbet++;
+                                                pk_dbhi(1);
+                                                gameTick(0);
+                                        }
+                                        if (pk_quit != NO) {
+                                                pk_pmsg("Games over. I win.");
+                                                gameTick(0x14);
+                                                goto cleanup;
+                                        }
+                                }
+                        }
+                        if (pk_c2bj == NO) {
+                                gameTick(10);
+                                if (g_ppmon < g_ppbet) bj_key = 2;
+                                else {
+                                        pk_pmsg("Double-down on your second hand?");
+                                        pk_drcs(pk_psh[0], 0, 1);
+                                        pk_drcs(pk_psh[1], 1, 1);
+                                        gameTick(0);
+                                        bj_key = 0;
+                                }
+                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                        gameTick(0);
+                                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                }
+                                if (mg_tofl != NO) goto cleanup;
+                                if (bj_key == 1) {
+                                        pk_pscc = CARD_BJ_STEP;
+                                        pk_wcs  = YES;
+                                        br       = g_ppbet;
+                                        while (br--) {
+                                                if (g_ppmon == 0) {
+                                                        pk_quit = YES;
+                                                        break;
+                                                }
+                                                g_ppmon--;
+                                                pk_dppm();
+                                                g_ppbet++;
+                                                pk_dbhi(2);
+                                                gameTick(0);
+                                        }
+                                        if (pk_quit != NO) {
+                                                pk_pmsg("Game's over. I win.");
+                                                gameTick(0x14);
+                                                goto cleanup;
+                                        }
+                                }
+                        }
+                }
+
+                /* Hit/stand rounds. */
+                if (pk_phase == 0) {
+                        if (pk_bjr(pk_ph, 1, "Do you want a hit?") == -1) {
+                                if (mg_tofl != NO)
+                                        goto cleanup;
+                                pk_pmsg("You've busted!!!");
+                                gameTick(10);
+                                while (g_pcbet--) {
+                                        g_pcmon++;
+                                        pk_awp();
+                                        pk_dbhi(1);
+                                        gameTick(0);
+                                }
+                                goto next_round;
+                        }
+                        plEr(225, 10, 319, 60);
+                } else {
+                        for (br = 0; br < 5; br++)
+                                pk_drcs(CARD_HIGHLIGHT, br, 1);
+                        pk_bs1 = NO;
+                        pk_bs2 = NO;
+                        if (pk_c1bj == NO) {
+                                for (br = 0; br < 5; br++) {
+                                        if (pk_ph[br] == CARD_NONE)
+                                                break;
+                                        pk_drcs(pk_ph[br], br, 1);
+                                }
+                                pk_dbhi(1);
+                                if (pk_bjr(pk_ph, 1,
+                                                      "Need a hit on your first hand?") == -1) {
+                                        if (mg_tofl != NO) goto cleanup;
+                                        pk_pmsg("Your first hand is busted !!");
+                                        gameTick(20);
+                                        pk_bs1 = YES;
+                                        while (g_pcbet--) {
+                                                g_pcmon++;
+                                                pk_awp();
+                                                pk_dbhi(1);
+                                                gameTick(0);
+                                        }
+                                }
+                        }
+                        if (pk_c2bj == NO) {
+                                for (br = 0; br < 5; br++)
+                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
+                                for (br = 0; br < 5; br++) {
+                                        if (pk_psh[br] == CARD_NONE)
+                                                break;
+                                        pk_drcs(pk_psh[br], br, 1);
+                                }
+                                pk_dbhi(2);
+                                if (pk_bjr(pk_psh, 1,
+                                                      "Need a hit on your second hand?") == -1) {
+                                        if (mg_tofl != NO) goto cleanup;
+                                        pk_pmsg("Your second hand is busted!!");
+                                        gameTick(0x14);
+                                        pk_bs2 = YES;
+                                        while (g_ppbet--) {
+                                                g_pcmon++;
+                                                pk_awp();
+                                                pk_dbhi(2);
+                                                gameTick(0);
+                                        }
+                                }
+                        }
+                }
+                plEr(225, 10, 319, 60);
+
+                /* Dealer turn + settle. */
+                if (pk_phase != 0 && (pk_bs1 != NO || pk_c1bj != NO) &&
+                    (pk_bs2 != NO || pk_c2bj != NO))
+                        goto next_round;
+                if (pk_phase != 0 && pk_bs1 == NO && pk_c1bj == NO) {
+                        for (br = 0; br < 5; br++)
+                                pk_drcs(CARD_HIGHLIGHT, br, 1);
+                        pk_pmsg("Here is your first hand again.");
+                        gameTick(0x14);
+                        for (br = 0; br < 5; br++) {
+                                if (pk_ph[br] == CARD_NONE)
+                                        break;
+                                pk_drcs(pk_ph[br], br, 1);
+                        }
+                        pk_dbhi(1);
+                } else if (pk_phase != 0 &&
+                           pk_bs2 == NO && pk_c2bj == NO) {
+                        for (br = 0; br < 5; br++)
+                                pk_drcs(CARD_HIGHLIGHT, br, 1);
+                        pk_pmsg("Here is your second hand.");
+                        gameTick(0x14);
+                        for (br = 0; br < 5; br++) {
+                                if (pk_psh[br] == CARD_NONE)
+                                        break;
+                                pk_drcs(pk_psh[br], br, 1);
+                        }
+                        pk_dbhi(2);
+                }
+
+                pk_pmsg("Now here's my down card.");
+                gameTick(10);
+                pk_drcs(pk_ch[0], 0, 0);
+                gameTick(0x14);
+
+                for (br = 0; br < 3; br++) {
+                        pk_cscore = 0;
+                        round_ctr = 0;
+                        res = pk_chsc(pk_ch, 0);
+                        rv  = pk_chsc(pk_ch, 1);
+                        if (0x15 < res && 0x15 < rv) {
+                                round_ctr = 1;
+                                break;
+                        }
+                        if (rv <= 21)
+                                pk_cscore = rv;
+                        else
+                                pk_cscore = res;
+                        if (pk_cscore >= 17) {
+                                pk_pmsg("I'll stand.");
+                                gameTick(0x14);
+                                break;
+                        }
+                        if (br == 0)
+                                pk_pmsg("I'll take a hit.");
+                        else if (br == 1)
+                                pk_pmsg("I'll take another hit.");
+                        else if (br == 2)
+                                pk_pmsg("I'll take one more.");
+                        gameTick(10);
+                        pk_dchd(pk_ch, 0);
+                }
+                if (br == 3 && round_ctr == 0) {
+                        pk_cscore = 0;
+                        res = pk_chsc(pk_ch, 0);
+                        rv  = pk_chsc(pk_ch, 1);
+                        pk_cscore = res;
+                        if (res > 21)
+                                round_ctr = 1;
+                        else if (rv <= 21)
+                                pk_cscore = rv;
+                        else {
+                                pk_pmsg("I'll stand.");
+                                gameTick(0x14);
+                        }
+                }
+                if (round_ctr != 0) {
+                        pk_pmsg("I've busted !!");
+                        gameTick(0x14);
+                }
+
+                plEr(225, 10, 319, 60);
+                if (pk_phase == 0) {
+                        res = pk_chsc(pk_ph, 0);
+                        rv  = pk_chsc(pk_ph, 1);
+                        if (rv <= 21)
+                                pk_pscore = rv;
+                        else
+                                pk_pscore = res;
+                        if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                pk_pmsg("You win.");
+                                gameTick(0x14);
+                                pk_sbet(&g_pcbet, 1, 0);
+                        } else if (pk_cscore == pk_pscore) {
+                                pk_pmsg("It's a tie and nobody wins.");
+                                gameTick(0x14);
+                                pk_sbet(&g_pcbet, 1, 2);
+                        } else {
+                                pk_pmsg("I win.");
+                                gameTick(0x14);
+                                pk_sbet(&g_pcbet, 0, 0);
+                        }
+                        goto next_round;
+                } else {
+                        if (pk_bs1 == NO && pk_c1bj == NO) {
+                                for (br = 0; br < 5; br++)
+                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
+                                for (br = 0; br < 5; br++) {
+                                        if (pk_ph[br] == CARD_NONE)
+                                                break;
+                                        pk_drcs(pk_ph[br], br, 1);
+                                }
+                                pk_dbhi(1);
+                                res = pk_chsc(pk_ph, 0);
+                                rv  = pk_chsc(pk_ph, 1);
+                                if (rv <= 21)
+                                        pk_pscore = rv;
+                                else
+                                        pk_pscore = res;
+                                if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                                pk_pmsg("You win with your first hand.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_pcbet, 1, 0);
+
+                                } else if (pk_cscore == pk_pscore) {
+                                                pk_pmsg("First hand ties, nobody wins.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_pcbet, 1, 2);
+
+                                } else {
+                                                pk_pmsg("Your first hand loses.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_pcbet, 0, 0);
+
+                                }
+                        }
+                        if (pk_bs2 == NO && pk_c2bj == NO) {
+                                for (br = 0; br < 5; br++)
+                                        pk_drcs(CARD_HIGHLIGHT, br, 1);
+                                for (br = 0; br < 5; br++) {
+                                        if (pk_psh[br] == CARD_NONE)
+                                                break;
+                                        pk_drcs(pk_psh[br], br, 1);
+                                }
+                                pk_dbhi(2);
+                                res = pk_chsc(pk_psh, 0);
+                                rv  = pk_chsc(pk_psh, 1);
+                                if (rv <= 21)
+                                        pk_pscore = rv;
+                                else
+                                        pk_pscore = res;
+                                if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                                pk_pmsg("You win with your second hand.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_ppbet, 1, 0);
+
+                                } else if (pk_cscore == pk_pscore) {
+                                                pk_pmsg("Second hand ties, nobody wins.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_ppbet, 1, 2);
+
+                                } else {
+                                                pk_pmsg("Your second hand loses.");
+                                                gameTick(0x14);
+                                                pk_sbet(&g_ppbet, 0, 0);
+
+                                }
+                        }
+                }
         goto next_round;
 }
 
