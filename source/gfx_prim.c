@@ -64,60 +64,12 @@ short   color;
 #include "parts/sc_firw.c"
 #endif
 
-/* sc_firs: paint row with 0x0033 (2 planes) -- light-cyan status stripe.
-   addr: sc_firs() */
-
-void
-sc_firs(scrptr, row)
-unsigned short *        scrptr;
-short                   row;
-{
-        short   i;
-
+/* sc_firs/sc_firb -> parts/sc_firsb.c (STX: 0x16e22/0x16e76, in
+   the 0x148fe object after sc_firw -- stx_u3.c includes them). */
 #ifdef FAITHFUL
-        scrptr = (unsigned short *)
-                 ((char *) scrptr + (long) row * 160);
-        for (i = 0; i < 20; i = i + 1) {
-                scrptr[0] = 0x0000;
-                scrptr[1] = 0x0000;
-                scrptr[2] = 0xffff;
-                scrptr[3] = 0xffff;
-                scrptr = scrptr + 4;
-        }
-#else
-        (char *) scrptr += row * 160;
-        for (i = 0; i < 20; i++) {
-                *scrptr++ = 0x0000;
-                *scrptr++ = 0x0000;
-                *scrptr++ = 0xffff;
-                *scrptr++ = 0xffff;
-        }
+#include "parts/sc_firsb.c"
 #endif
-}
 
-/* sc_firb: paint row with 0 -> palette index 0 (black) separator.
-   addr: sc_firb() */
-
-void
-sc_firb(scraddr, row)
-unsigned short *        scraddr;
-short                   row;
-{
-        short   column;
-
-#ifdef FAITHFUL
-        scraddr = (unsigned short *)
-                  ((char *) scraddr + (long) row * 160);
-        for (column = 0; column < 80; column = column + 1) {
-                *scraddr = 0;
-                scraddr = scraddr + 1;
-        }
-#else
-        (char *) scraddr += row * 160;
-        for (column = 0; column < 80; column++)
-                *scraddr++ = 0;
-#endif
-}
 
 /* initVdi: mini-game VDI setup.  Same shape as sc_sdtb but uses
    sv_lgb (nestable) and default fill = palette 0xC (light green).
@@ -256,32 +208,7 @@ vdi_init()
    LCP_STX -- games.c includes parts/rst_vsth.c. */
 
 
-/* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
-   addr: mouse_off() */
+/* moff/mon -> parts/moffmon.c (STX: 0xde36/0xde5c, at the head of
+   the 0xdece object -- stx_u2.c includes them there). */
 
-
-#ifndef FAITHFUL
-void
-moff()
-{
-        if (moff_f == NO) {
-                graf_mouse(M_OFF, (void *) 0);
-                moff_f = YES;
-        }
-}
-
-/* mon (STX 0xde5c): the counterpart moff guards against, immediately
-   after it in the same object.  LCP_ORG has no such function. */
-
-#define M_ON            257
-
-void
-mon()
-{
-        if (moff_f != NO) {
-                graf_mouse(M_ON, (void *) 0);
-                moff_f = NO;
-        }
-}
-#endif
 

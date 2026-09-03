@@ -51,9 +51,9 @@ _mq_tick:
 	ori.w	#$0700,sr		* 1219a  mask all interrupts (IPL=7)
 	addq.l	#1,_g_mtcou		* 1219e  ++g_mtcou
 
-	tst.b	_g_msmsa+1		* 121a4  test g_msmsa (low byte)
+	tst.b	_g_msmsa		* 121a4  test g_msmsa (a BYTE here)
 	bne.s	L_seqA			* 121aa  sequencer active
-	tst.b	_psg_ntA+1		* 121ac  test psg_ntAc (low byte)
+	tst.b	_psg_ntA		* 121ac  test psg_ntAc (a BYTE here)
 	beq	L_ack			* 121b2  psg idle -> just ack
 	subq.w	#1,_g_mtdiv		* 121b6  --g_mtdiv
 	bne	L_ack			* 121bc  not yet -> ack
@@ -112,3 +112,17 @@ L_seq2:
 L_ack:
 	bclr.b	#5,$fffffa0f		* 12260  final ISRA ack
 	rte				* 12268  return from exception
+
+* -----------------------------------------------------------------------
+* LCP_STX keeps these five in the TEXT segment, immediately behind the
+* ISR at 0x226a-0x2271, rather than in data with the other globals --
+* so they are defined here and globals.c leaves them out of the
+* default build.  The last two are real bytes, not BOOL16 words,
+* which is why the tests above address them directly.
+* -----------------------------------------------------------------------
+
+_mi_dwrm:	.ds.w	1		* 226a
+_mi_rloc:	.ds.w	1		* 226c
+_g_mtpre:	.ds.w	1		* 226e
+_g_msmsa:	.ds.b	1		* 2270
+_psg_ntA:	.ds.b	1		* 2271

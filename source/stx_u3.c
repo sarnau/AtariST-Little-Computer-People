@@ -43,6 +43,7 @@
 #include "parts/deal_kc.c"  /* 0x15d72 */
 #include "parts/p_dobls.c"  /* 0x15f9a */
 #include "parts/putEv.c"    /* 0x15fb4 */
+#include "parts/getEv.c"    /* 0x16002 */
 #include "parts/sp_draw.c"  /* 0x1605c */
 #include "parts/sp_drin.c"
 #include "parts/sp_updb.c"  /* 0x16244 */
@@ -52,6 +53,7 @@
    this object, and sc_firw must follow sc_sctd (bsr.s). */
 #include "parts/sc_sctd.c"  /* 0x16d5a */
 #include "parts/sc_firw.c"  /* 0x16dcc */
+#include "parts/sc_firsb.c" /* sc_firs 0x16e22, sc_firb 0x16e76 */
 #include "parts/strPr.c"   /* 0x16ea8 */
 #include "parts/prCh.c"    /* 0x16ede */
 #include "parts/chk_encm.c"/* 0x16f9a */

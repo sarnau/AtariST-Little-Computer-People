@@ -261,55 +261,8 @@ short * pxy;
 #endif
 }
 
-/* addr: vroCpyD() (ROM 0xd8d2) -- discrete-argument vro_cpyfm. */
-void
-vroCpyD(handle, mode, src, dst, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2)
-short   handle;
-short   mode;
-long    src;
-long    dst;
-short   sx1;
-short   sy1;
-short   sx2;
-short   sy2;
-short   dx1;
-short   dy1;
-short   dx2;
-short   dy2;
-{
-        /* LCP_ORG writes the parameter block directly; STX builds a
-           pxy array on the stack and defers to the array-form
-           vro_cpyfm in vdilib.c. */
+/* vroCpyD -> parts/vroCpyD.c (STX: 0x63cc, in the 0x400c object
+   between hs_posXY and al_loal -- stx_u1.c includes it there). */
 #ifdef FAITHFUL
-        contrl[0]  = 109;
-        contrl[1]  = 4;
-        contrl[3]  = 1;
-        contrl[6]  = handle;
-        contrl[7]  = (short) (src >> 16);
-        contrl[8]  = (short) src;
-        contrl[9]  = (short) (dst >> 16);
-        contrl[10] = (short) dst;
-        intin[0]   = mode;
-        ptsin[0] = sx1;
-        ptsin[1] = sy1;
-        ptsin[2] = sx2;
-        ptsin[3] = sy2;
-        ptsin[4] = dx1;
-        ptsin[5] = dy1;
-        ptsin[6] = dx2;
-        ptsin[7] = dy2;
-        vdi_go();
-#else
-        short   pxy[8];
-
-        pxy[0] = sx1;
-        pxy[1] = sy1;
-        pxy[2] = sx2;
-        pxy[3] = sy2;
-        pxy[4] = dx1;
-        pxy[5] = dy1;
-        pxy[6] = dx2;
-        pxy[7] = dy2;
-        vro_cpyfm(handle, mode, pxy, src, dst);
+#include "parts/vroCpyD.c"
 #endif
-}

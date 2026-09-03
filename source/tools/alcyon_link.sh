@@ -136,7 +136,8 @@ for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
     ! -name "vdiown_a.o" ! -name "psg_asm.o" \
-    ! -name "blkcp_a.o" ! -name "cp_asm.o" | sort); do
+    ! -name "blkcp_a.o" ! -name "cp_asm.o" ! -name "mq_tick.o" \
+    ! -name "vdiown.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
@@ -148,7 +149,21 @@ rm -f lcp.68k LCP.PRG
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
 else
-    OBJS="$OBJS vdiown_a.o psg_asm.o blkcp_a.o cp_asm.o"  # STX: vdi_go + asm
+    # STX object order.  The 1985 link laid the game objects down in
+    # this order, and every function's address depends on it:
+    #   0x0012a midi_seq   0x0219a mq_tick   0x02272 psg_asm
+    #   0x022c0 cp_asm     0x0400c stx_u1    0x073e8 games
+    #   0x0d9ea stx_u4     0x0de36 stx_u2    0x148fe stx_u3
+    #   0x17310 blkcp_a    0x1733a library
+    # Everything not named here is an empty object (0 bytes of text)
+    # and is emitted first, where it costs nothing.
+    STXORDER="midi_seq.o mq_tick.o psg_asm.o cp_asm.o stx_u1.o games.o \
+              stx_u4.o stx_u2.o stx_u3.o blkcp_a.o vdiown.o vdiown_a.o"
+    REST=""
+    for o in $OBJS; do
+        case " $STXORDER " in *" $o "*) ;; *) REST="$REST $o" ;; esac
+    done
+    OBJS="$REST $STXORDER"
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
 # LCP_STX contains no LIBF code: its __pftoa/__petoa call _ftoa and
@@ -163,7 +178,12 @@ else
     TAIL="gemlib.a gemlib.a"
     LINKOPT="[PRGFLAGS[0],UNDEFINED,COMMAND[lcp_link.cmd]]"
 fi
-LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o $TAIL" | tr -s ' ' ',')
+if [ "${FAITHFUL:-0}" = "1" ]; then
+    LIST=$(echo "gemstart.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o $TAIL" | tr -s ' ' ',')
+else
+    # STX: the trap bindings sit at 0xfa, right behind gemstart.
+    LIST=$(echo "gemstart.o osbind.o main.o $OBJS vdilib.o vdilib_a.o vdibind.a aesbind.a $TAIL" | tr -s ' ' ',')
+fi
 echo "lcp.68k=$LIST" > lcp_link.cmd
 "$ALCYON_BIN/link68" "$LINKOPT" 2>&1 | tail -5 || true
 

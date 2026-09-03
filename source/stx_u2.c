@@ -31,6 +31,7 @@
 #include "tables.h"
 #include "tick.h"
 
+#include "parts/moffmon.c"  /* moff 0xde36, mon 0xde5c */
 #include "parts/lcp_lgt.c"   /* 0xde80 */
 #include "parts/lcp_rgt.c"   /* 0xdf66 */
 #include "parts/sp_sprs.c"   /* 0xe0b2, before od_draw */

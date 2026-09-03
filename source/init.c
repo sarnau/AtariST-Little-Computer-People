@@ -55,32 +55,11 @@
    and mq_intim.  LCP_STX does not have it. */
 
 
-/* mq_intim: in THIS ROM an empty stub (0x804e) -- no Xbtimer call
-   exists anywhere in the binary; its ~1.5 KB music engine (0x8cce)
-   runs without a Timer-A ISR.  The port KEEPS the other-image
-   Timer-A sequencer for now (same policy as the minigames: retained
-   working features), because the port's mq_* engine needs the ISR --
-   without it a_plawr's wait-for-mi_play spins forever.  INTENTIONAL
-   non-fidelity until the ROM's polled engine is recovered.
-   addr: mq_intim() */
-
-void
-mq_intim()
-{
+/* mq_intim -> parts/mq_intim.c (STX: 0x1112, in the 0x12a MIDI
+   object between mq_stop and mq_extm -- midi_seq.c includes it). */
 #ifdef FAITHFUL
-        /* ROM 0x804e: empty. */
-#else
-#ifdef SKIP_MIDI
-        /* Test builds: Timer-A jitter breaks frame-hash goldens. */
-        (void) 0;
-#else
-        g_mtpre = 100;
-        g_mtdiv = 4;
-        mi_svtv = Setexc(0x4d, -1L);
-        Xbtimer(0, 5, 0x28, (long) mq_tick);
+#include "parts/mq_intim.c"
 #endif
-#endif  /* FAITHFUL */
-}
 
 /* cntSong -> parts/cntSong.c (STX: 0x400c -- the FIRST function of the 0x400c object). */
 #ifdef FAITHFUL

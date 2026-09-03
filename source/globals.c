@@ -403,9 +403,13 @@ short           mi_temp              = 120;
 short           aes_intO[16];
 
 long            g_mtcou       = 0;
+#ifdef FAITHFUL
 short           mi_dwrm  = 0;
+#endif
 short           g_mtdiv       = 100;
+#ifdef FAITHFUL
 short           g_mtpre     = 100;
+#endif
 /* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
    mq_stap resets it at song start. */
 short           mi_nlp0         = 100;
@@ -416,7 +420,8 @@ BOOL16          g_msmsa   = NO;
 #else
 long            mi_nxTk    = 100;       /* STX: long tick counters */
 long            mi_lpTk= 100;
-char            g_msmsa   = NO;         /* STX: byte flag */
+/* g_msmsa is a BYTE and lives in the text segment behind mq_tick --
+   see source/mq_tick.s. */
 #endif
 /* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
    lookup.  Dumped verbatim -- previous port had guessed the values
@@ -453,7 +458,9 @@ long            g_momap  = 0;
                         path can restore it (currently we install for the
                         lifetime of the process, but the slot is here
                         for future symmetry with the ROM's teardown). */
+#ifdef FAITHFUL
 short           mi_rlock                = 0;
+#endif
 long            mi_svtv                    = 0;
 
 /* ---- MIDI sequencer parse state -----------------------------------
@@ -587,7 +594,8 @@ BOOL16          psg_out              = YES;
 #ifdef FAITHFUL
 BOOL16          psg_ntAc                = NO;
 #else
-char            psg_ntAc                = NO;   /* STX: byte */
+/* psg_ntAc is a BYTE in the text segment behind mq_tick -- see
+   source/mq_tick.s. */
 #endif
 short           env_val            = 5;    /* octave-5 baseline */
 char            g_mnlol      = 0x17; /* A#0 */

@@ -53,8 +53,12 @@
 
 
 /* Header-command handlers, dispatched by mq_parh on
-   0x80/0x81/0x83/0x84/0xC0/0xFF. */
-
+   0x80/0x81/0x83/0x84/0xC0/0xFF.  LCP_STX has no such helpers: their
+   bodies are written out inside mq_parh's switch, so the default
+   build must not emit them at all -- Alcyon still lays a static
+   function down even when nothing calls it, and these five cost 244
+   bytes the original does not have. */
+#ifdef FAITHFUL
 /* mh_chac: MIDI header 0x80 -- set channel count.
    Ghidra 0x11246: g_mchcn <- p[2], call mq_bust, advance 3. */
 static unsigned char *
@@ -118,6 +122,8 @@ unsigned char * p;
 {
         return p + 3;
 }
+
+#endif  /* FAITHFUL */
 
 #ifndef FAITHFUL
 /* STX links mq_skip first in this object (0x12a). */
@@ -1305,6 +1311,12 @@ mq_stop()
 
         g_msmsa = NO;
 }
+#endif
+
+/* mq_intim (0x1112) sits here in LCP_STX -- between mq_stop and
+   mq_extm; init.c keeps it under FAITHFUL. */
+#ifndef FAITHFUL
+#include "parts/mq_intim.c"
 #endif
 
 /* mq_extm (Ghidra midi_seq_exit_timer @ 0x11162): tear down MFP

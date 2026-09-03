@@ -77,6 +77,7 @@
    fillTopR. */
 /* letload.c straddles: fl_ltpl is in this object, just ahead of
    cpyScr (its fr_reac call is a bsr). */
+#include "parts/vroCpyD.c"  /* 0x63cc, after hs_posXY */
 #include "parts/al_loal.c"  /* 0x6428 */
 #include "parts/fl_ltpl.c"  /* 0x648c */
 #include "parts/cpyScr.c"   /* 0x64fa */
