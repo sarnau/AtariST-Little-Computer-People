@@ -571,8 +571,20 @@ MFDB    MFDB_A;
    Each holds ONE aligned screen: scrbufA the sprite compositor (also
    sc_ren8's alternate page-flip target -- there is no second screen
    at +0x8000, see parts/sc_ren8.c), scrbufB the decompressed
-   house.scn background.  32000 + 511 worst-case shift = 32511. */
-unsigned char   scrbufA[32512];
+   house.scn background.
+
+   Sized the way an ST program allocates a screen: declare a round
+   32768 and align the base up inside it, leaving 32768 - slack >=
+   32000 usable.  (The hardware needs 256-byte alignment; this code
+   aligns to 512 -- `(base + 0x200) & ~0x1FF`.)
+
+   scrbufB cannot be 32768: LCP_STX puts pk_quit 32600 bytes after it
+   (25 relocation sites agree on that address), so the round
+   allocation does not fit there.  32512 is 32000 + the 512 the
+   align-up can shift, and leaves 88 bytes for globals the port does
+   not have.  scrbufA has 33045 bytes of room, so the round 32768
+   fits it with 277 to spare. */
+unsigned char   scrbufA[32768];
 unsigned char   scrbufB[32512];
 
 /* sprite_mfdb_image / sprite_mfdb_mask are Ghidra's names for the
