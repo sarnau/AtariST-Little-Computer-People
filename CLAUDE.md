@@ -1091,6 +1091,20 @@ Roadmap:
     * Deleted workin/work_out and g_setmt/g_setaw/g_setah -- duplicates
       of work_in/wk_out and the g_obt* trio, referenced by nothing.
 
+    **A 2-D array's ROW STRIDE is written down in the text.**  Alcyon
+    indexes `T a[N][M]` as `base + i * sizeof(T[M])` and emits that
+    scale as a literal `muls.w #K,Dn` (or a shift for a power of two),
+    so `source/tools/stx_strides.py` reads every array's stride back
+    out of the disassembly.  Combined with the relocation gap it gives
+    the OTHER dimension for free: N = gap / K.  It independently
+    confirmed g_obtmt[56] (stride 20, gap 1120), wp_ans[5][12] (stride
+    12, gap 60) and SPRITE_HW_SLOTS = 8 (g_semfi/g_semfm, stride 20,
+    gap 160), each of which had been derived a different way -- and it
+    checks a declaration outright: if the port says `a[N][M]` and the
+    text multiplies by anything but M, one of them is wrong.  Watch for
+    false positives: a `muls.w #10` next to a reference to a char
+    buffer is decimal arithmetic (`d[1]*10 + d[2]`), not indexing.
+
     **The code's own loop bound is the authority on an array size.**
     main's OBJECTS walk is a literal `for (i = 0; i < 56; i++)`, so
     g_obtmt/g_obtaw/g_obtah are [56] -- and LCP_STX's gaps for all
