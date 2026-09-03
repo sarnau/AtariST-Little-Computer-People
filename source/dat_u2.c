@@ -28,6 +28,21 @@
  * Not compiled standalone -- included by stx_u2.
  */
 
+/*
+ * dat_u2.c -- the initialized globals that belong to the stx_u2
+ * OBJECT, in LCP_STX data order.
+ *
+ * The 1985 sources declared their globals in the file that used them,
+ * so each object's data segment is its own globals followed by the
+ * string literals and switch tables its code emits.  The object that
+ * owns a stretch of anonymous data is not a guess: a switch table's
+ * relocation points into its own function, and a string is emitted in
+ * the object that references it.  See CLAUDE.md, "DATA and BSS
+ * layout".
+ *
+ * Not compiled standalone -- included by stx_u2.
+ */
+
 
 
 BOOL16  g_rbact          = NO;
@@ -124,11 +139,4 @@ short   g_ltpac          = 0;
    here is 16 bytes. */
 unsigned short  rec_ledt[8] = {
         0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01
-};
-
-/* g_ltcwt[4]: sprite IDs used to hide previously-typed
-   characters as the buffer position advances (SPRITE_TYPING_1..4). */
-short   g_ltcwt[4]      = {
-        SPRITE_TYPING_1, SPRITE_TYPING_2,
-        SPRITE_TYPING_3, SPRITE_TYPING_4
 };

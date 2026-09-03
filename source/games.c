@@ -598,6 +598,8 @@ ag_ssw()
    goto LAB_00018210 / LAB_00018562 jumps in the 1985 source.
    addr: ag_main() (== anagram_main) */
 
+#include "dat_games2.c"
+
 void
 ag_main()
 {
@@ -977,6 +979,8 @@ rank_from_hc_bp:
    showdown.  Preserves goto LAB_00018da0 (cleanup), LAB_00018d72,
    LAB_00019082, LAB_00019514, LAB_00019950 verbatim.
    addr: pk_main() (== poker_main) */
+
+#include "dat_games3.c"
 
 void
 pk_main()
@@ -1567,6 +1571,8 @@ pk_blf()
    Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
    replacements and animates the swap.
    addr: poker_computer_draw_cards() */
+
+#include "dat_games4.c"
 
 static void
 pk_cdrw()

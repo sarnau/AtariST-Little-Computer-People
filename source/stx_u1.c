@@ -84,6 +84,7 @@
 #include "tables.h"
 #include "assets.h"
 #include "tick_tables.h"
+#include "dat_u1d.c"
 #include "parts/main.c"      /* 0x5546 */
 #include "dog.c"             /* dg_ipos 0x5aa0 */
 /* save.c straddles too: lc_load and sp_regs sit between dg_ipos and

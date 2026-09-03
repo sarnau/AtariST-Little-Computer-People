@@ -7,7 +7,11 @@
  * (a_lists, 0x1398c) and "%s %d, %4d" (a_writl, 0x13cd6), which puts
  * the declaration between those two functions rather than at the head
  * of the unit with the other globals -- the 1985 habit of declaring a
- * global just above its only user.  Never compiled standalone.
+ * global just above its only user.  g_ltcwt follows it here because
+ * the reference puts g_ltg's pointers at 0x1eda and g_ltcwt at
+ * 0x1eea: whatever order the .data definitions come in, they come in
+ * source order, so g_ltcwt has to be declared after this point too.
+ * Never compiled standalone.
  */
 
 #include "types.h"
@@ -17,4 +21,11 @@
    strings this object emits after "*.sng". */
 char *  g_ltg[4]        = {
         "Sincerely,", "Cordially,", "Yours Truly,", "Love,"
+};
+
+/* g_ltcwt[4]: sprite IDs used to hide previously-typed
+   characters as the buffer position advances (SPRITE_TYPING_1..4). */
+short   g_ltcwt[4]      = {
+        SPRITE_TYPING_1, SPRITE_TYPING_2,
+        SPRITE_TYPING_3, SPRITE_TYPING_4
 };

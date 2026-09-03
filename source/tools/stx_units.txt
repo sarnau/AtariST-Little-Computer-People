@@ -7,10 +7,10 @@
 #
 # Membership is evidence-driven -- see stx_objmap.py --members.
 
-stx_u1.c dat_u1.c dat_u1b.c dat_u1c.c dog.c ai.c airandom.c actions.c movement.c calendar.c renderx.c
+stx_u1.c dat_u1.c dat_u1b.c dat_u1c.c dat_u1d.c dog.c ai.c airandom.c actions.c movement.c calendar.c renderx.c
 stx_u2.c dat_u2.c dat_u2b.c render.c agames.c health.c sim.c walk.c tvanim.c
 stx_u3.c dat_u3a.c dat_u3b.c alerts.c sprites.c tick.c
 stx_u4.c dat_u4.c sound.c sfx_irq.c
 vdistx.c
 globals.c midi_seq.c
-games.c dat_games.c
+games.c dat_games.c dat_games2.c dat_games3.c dat_games4.c

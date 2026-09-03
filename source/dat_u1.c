@@ -43,6 +43,21 @@
  * Not compiled standalone -- included by stx_u1.
  */
 
+/*
+ * dat_u1.c -- the initialized globals that belong to the stx_u1
+ * OBJECT, in LCP_STX data order.
+ *
+ * The 1985 sources declared their globals in the file that used them,
+ * so each object's data segment is its own globals followed by the
+ * string literals and switch tables its code emits.  The object that
+ * owns a stretch of anonymous data is not a guess: a switch table's
+ * relocation points into its own function, and a string is emitted in
+ * the object that references it.  See CLAUDE.md, "DATA and BSS
+ * layout".
+ *
+ * Not compiled standalone -- included by stx_u1.
+ */
+
 
 
 
@@ -349,8 +364,3 @@ short   g_dwanf[8] = {
         SPRITE_DOG_WLK_R5, SPRITE_DOG_WLK_R7,
         SPRITE_DOG_WLK_R8, SPRITE_DOG_WLK_R9
 };
-
-/* PEx.LCP filename.  Ghidra pex_name @ 0x2a0f8 points to "pex.lcp"
-   at 0x2a330 and main() mutates index 2 to select the character.
-   Port stores the string as a mutable static char array. */
-char *  pex_name                     = "PE0.LCP";
