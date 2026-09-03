@@ -38,6 +38,13 @@
    a forward bsr; declaring it keeps the symbol local so as68 can
    shorten the call instead of leaving an external. */
 static short pk_bjwr();
+static void  pk_ante();
+static void  pk_evhs();
+static void  pk_blf();
+static short pk_cace();
+static void  pk_ddec();
+static short pk_cbet();
+static void  pk_cdrw();
 
 
 
@@ -1252,338 +1259,6 @@ rank_from_hc_bp:
         *hand_rank = 1;                                          /* one pair */
 }
 
-/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
-   addr: poker_ante_phase() */
-
-static void
-pk_ante()
-{
-        short   r;
-
-        g_ppppa = 0;
-        plEr(225, 10, 319, 60);
-        strPr("F1  Ante", 225, 18, COLOR_red);
-        strPr("F10 Quit", 225, 34, COLOR_red);
-        pk_pmsg("Ante up to play.");
-        pk_quit = NO;
-        r = 0;
-        while (r != 1 && r != 3 && r != -1)
-                r = pk_inph(KEY_F1, 0, KEY_F10);
-        if (r == 3 || r == -1) {
-                pk_quit = YES;
-        } else if (g_ppmon == 0) {
-                pk_pmsg("Sorry, you're all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else if (g_pcmon == 0) {
-                pk_pmsg("I'm all out!!!");
-                gameTick(0x1e);
-                pk_quit = YES;
-        } else {
-                plEr(5, 63, 319, 75);
-                g_ppmon = g_ppmon - 1;
-                pk_dppm();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
-                g_pcmon = g_pcmon - 1;
-                pk_awp();
-                g_ppppa = g_ppppa + 1;
-                pk_dpot();
-        }
-}
-
-/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
-   face-up, computer face-down.
-   addr: poker_evaluate_hands() */
-
-static void
-pk_evhs()
-{
-        BOOL16  dup;
-        short   j;
-        short   c;
-        short   i;
-
-        for (i = 0; i < 5; i = i + 1) {
-                pk_ch[i] = CARD_NONE;
-                pk_ph[i] = CARD_NONE;
-        }
-        for (i = 0; i < 5; i = i + 1) {
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ch[i] = c;
-                dup = YES;
-                while (dup != NO) {
-                        c   = rndRng(0, 51);
-                        dup = NO;
-                        for (j = 0; j < 5; j = j + 1) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
-                                        dup = YES;
-                        }
-                }
-                pk_ph[i] = c;
-        }
-        plEr(70, 10, 219, 62);
-        for (i = 0; i < 5; i = i + 1) {
-                pk_drcs(pk_ph[i], i, 1);
-                gameTick(3);
-                pk_drcs(CARD_BACK, i, 0);
-                gameTick(3);
-        }
-}
-
-/* pk_blf: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff.
-   addr: poker_computer_decide_bluff() */
-
-static void
-pk_blf()
-{
-        short   r;
-
-        pk_bluff = NO;
-        r = rndRng(0, 14);
-        if (r == 0 && pk_chrk < 2)
-                pk_bluff = YES;
-}
-
-/* pk_cace: should the computer open?  Bluffing -> yes (0).
-   Otherwise "Jacks or better" -- returns best rank >= Q, else -1.
-   addr: poker_computer_check_ace() */
-
-static short
-pk_cace()
-{
-        short   ret;
-        short   best;
-        short   i;
-
-        if (pk_bluff == NO && pk_chrk == 0) {
-                best = 0;
-                for (i = 0; i < 5; i = i + 1) {
-                        if ((short) pk_ch[best] % 13 <
-                            (short) pk_ch[i]    % 13)
-                                best = i;
-                }
-                ret = (short) pk_ch[best] % 13;
-                if (ret < 12)
-                        ret = -1;
-        } else {
-                ret = 0;
-        }
-        return ret;
-}
-
-/* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
-   Caps pk_bet at 20.
-   addr: poker_computer_draw_decision() */
-
-static void
-pk_ddec(who, n)
-short   who;
-short   n;
-{
-        short   left;
-
-        left = n;
-        if (pk_bet != 20) {
-                while (left != 0 &&
-                       (who != 0 || g_pcmon != 0) &&
-                       (who != 1 || g_ppmon != 0)) {
-                        if (who == 0) {
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
-                        left = left - 1;
-                        if (who == 1) {
-                                g_ppmon = g_ppmon - 1;
-                                pk_dppm();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                pk_bet = pk_bet + 1;
-                        }
-                }
-        }
-}
-
-/* pk_cbet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
-   Returns 0 normally, -1 on timeout.
-   addr: poker_computer_bet_decision() */
-
-static short
-pk_cbet(str)
-char *  str;
-{
-        short   r;
-
-        pk_bet  = 0;
-        pk_pass = NO;
-        pk_pmsg(str);
-        plEr(225, 10, 319, 60);
-        strPr("F1 Bet",       225, 18, COLOR_red);
-        strPr("F3 Enter",     225, 26, COLOR_red);
-        strPr("F5 Pass/Clr", 225, 34, COLOR_red);
-        for (;;) {
-                r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                if (r == -1) return -1;
-                if (r == 3)  break;
-                if (r == 1) {
-                        if (g_ppmon != 0) {
-                                pk_ddec(1, 1);
-                                for (;;) {
-                                        r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                        if (r == -1) return -1;
-                                        if (r == 2 && pk_bet != 0)
-                                                return 0;
-                                        if (r == 1)
-                                                pk_ddec(1, 1);
-                                        if (r == 3) {
-                                                if (pk_bet == 0) {
-                                                        pk_pass = YES;
-                                                        return 0;
-                                                }
-                                                g_ppmon = g_ppmon + pk_bet;
-                                                g_ppppa = g_ppppa - pk_bet;
-                                                pk_bet  = 0;
-                                                pk_dppm();
-                                                pk_dpot();
-                                        }
-                                }
-                        }
-                        return -1;
-                }
-        }
-        pk_pass = YES;
-        return 0;
-}
-
-/* pk_cdrw: computer AI draw phase.
-   Discard count by rank: 0->4, 1->3, 2->1, 3->2, >=4->stay.
-   Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
-   replacements and animates the swap.
-   addr: poker_computer_draw_cards() */
-
-static void
-pk_cdrw()
-{
-        short   nc;                  /* card_in_use flag -> BOOL16 */
-        short   dm;                  /* draw_message_count / scratch */
-        short   dc;                  /* discard count seed / temp */
-        short   card;
-        short   n;                   /* new_card */
-        short   i;
-        short   r;
-
-        for (i = 0; i < 5; i = i + 1)
-                pk_sel[i] = 0;
-        pk_evh(pk_ch, pk_hrf, pk_hsf, &pk_chrk);
-        pk_blf();
-
-        if (pk_bluff == NO) {
-                if (pk_chrk < 4) {
-                        if (pk_chrk == 3) {
-                                card = 2;
-                                for (i = 0; i < 5; i = i + 1)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == 2) {
-                                card = 1;
-                                for (i = 0; i < 5; i = i + 1)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == 1) {
-                                card = 3;
-                                for (i = 0; i < 5; i = i + 1)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == 0) {
-                                card = 4;
-                                dc   = 0;
-                                for (i = 0; i < 5; i = i + 1) {
-                                        if ((short) pk_ch[dc] % 13 <
-                                            (short) pk_ch[i]  % 13)
-                                                dc = i;
-                                }
-                                for (i = 0; i < 5; i = i + 1)
-                                        if (i != dc)
-                                                pk_sel[i] = 1;
-                        } else {
-                                card = 0;
-                        }
-                } else {
-                        card = 0;
-                }
-        } else {
-                card = rndRng(0, 2);
-                dc = 0;
-                i  = card;
-                while (dc < 5 && i != 0) {
-                        if (pk_hrf[dc] == 0) {
-                                pk_sel[dc] = 1;
-                                i = i - 1;
-                        }
-                        dc = dc + 1;
-                }
-        }
-
-        if (card == 0) {
-                pk_pmsg("I'll stay!");
-                gameTick(8);
-                return;
-        }
-
-        pk_tcm[10] = (char) card + '0';
-        if (card == 1) {
-                pk_tcm[16] = '.';
-                pk_tcm[17] = '\0';
-        } else {
-                pk_tcm[16] = 's';
-                pk_tcm[17] = '.';
-        }
-        pk_pmsg(pk_tcm);
-        gameTick(8);
-
-        for (i = 0; i < 5; i = i + 1) {
-                if (pk_sel[i] == 1) {
-                        nc = YES;
-                        while (nc != NO) {
-                                n  = rndRng(0, 51);
-                                nc = NO;
-                                for (dm = 0; dm < 5; dm = dm + 1) {
-                                        if (pk_ch[dm] == n) nc = YES;
-                                        if (pk_ph[dm] == n) nc = YES;
-                                }
-                                dm = pk_disc;
-                                while (r = dm - 1, dm != 0) {
-                                        dm = r;
-                                        if (pk_dpile[r] == n) nc = YES;
-                                }
-                                pk_dpile[pk_disc] = pk_ch[i];
-                                pk_disc = pk_disc + 1;
-                                pk_ch[i] = n;
-                                pk_drcs(CARD_HIGHLIGHT, i, 0);
-                                gameTick(3);
-                        }
-                }
-        }
-        for (i = 0; i < 5; i = i + 1) {
-                if (pk_sel[i] == 1) {
-                        pk_drcs(CARD_BACK, i, 0);
-                        gameTick(1);
-                }
-        }
-}
-
 
 /* pk_main: 5-card draw poker main loop.
    Init: Malloc, load cards, mg_stp, money=400 each.
@@ -2140,6 +1815,338 @@ pk_show()
                 for (j = 0; j < 5; j = j + 1)
                         pk_drcs(pk_ph[j], j, 1);
                 pk_annr(1);
+        }
+}
+
+/* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
+   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
+   addr: poker_ante_phase() */
+
+static void
+pk_ante()
+{
+        short   r;
+
+        g_ppppa = 0;
+        plEr(225, 10, 319, 60);
+        strPr("F1  Ante", 225, 18, COLOR_red);
+        strPr("F10 Quit", 225, 34, COLOR_red);
+        pk_pmsg("Ante up to play.");
+        pk_quit = NO;
+        r = 0;
+        while (r != 1 && r != 3 && r != -1)
+                r = pk_inph(KEY_F1, 0, KEY_F10);
+        if (r == 3 || r == -1) {
+                pk_quit = YES;
+        } else if (g_ppmon == 0) {
+                pk_pmsg("Sorry, you're all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else if (g_pcmon == 0) {
+                pk_pmsg("I'm all out!!!");
+                gameTick(0x1e);
+                pk_quit = YES;
+        } else {
+                plEr(5, 63, 319, 75);
+                g_ppmon = g_ppmon - 1;
+                pk_dppm();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
+                g_pcmon = g_pcmon - 1;
+                pk_awp();
+                g_ppppa = g_ppppa + 1;
+                pk_dpot();
+        }
+}
+
+/* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
+   face-up, computer face-down.
+   addr: poker_evaluate_hands() */
+
+static void
+pk_evhs()
+{
+        BOOL16  dup;
+        short   j;
+        short   c;
+        short   i;
+
+        for (i = 0; i < 5; i = i + 1) {
+                pk_ch[i] = CARD_NONE;
+                pk_ph[i] = CARD_NONE;
+        }
+        for (i = 0; i < 5; i = i + 1) {
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j = j + 1) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ch[i] = c;
+                dup = YES;
+                while (dup != NO) {
+                        c   = rndRng(0, 51);
+                        dup = NO;
+                        for (j = 0; j < 5; j = j + 1) {
+                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                        dup = YES;
+                        }
+                }
+                pk_ph[i] = c;
+        }
+        plEr(70, 10, 219, 62);
+        for (i = 0; i < 5; i = i + 1) {
+                pk_drcs(pk_ph[i], i, 1);
+                gameTick(3);
+                pk_drcs(CARD_BACK, i, 0);
+                gameTick(3);
+        }
+}
+
+/* pk_blf: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff.
+   addr: poker_computer_decide_bluff() */
+
+static void
+pk_blf()
+{
+        short   r;
+
+        pk_bluff = NO;
+        r = rndRng(0, 14);
+        if (r == 0 && pk_chrk < 2)
+                pk_bluff = YES;
+}
+
+/* pk_cace: should the computer open?  Bluffing -> yes (0).
+   Otherwise "Jacks or better" -- returns best rank >= Q, else -1.
+   addr: poker_computer_check_ace() */
+
+static short
+pk_cace()
+{
+        short   ret;
+        short   best;
+        short   i;
+
+        if (pk_bluff == NO && pk_chrk == 0) {
+                best = 0;
+                for (i = 0; i < 5; i = i + 1) {
+                        if ((short) pk_ch[best] % 13 <
+                            (short) pk_ch[i]    % 13)
+                                best = i;
+                }
+                ret = (short) pk_ch[best] % 13;
+                if (ret < 12)
+                        ret = -1;
+        } else {
+                ret = 0;
+        }
+        return ret;
+}
+
+/* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
+   Caps pk_bet at 20.
+   addr: poker_computer_draw_decision() */
+
+static void
+pk_ddec(who, n)
+short   who;
+short   n;
+{
+        short   left;
+
+        left = n;
+        if (pk_bet != 20) {
+                while (left != 0 &&
+                       (who != 0 || g_pcmon != 0) &&
+                       (who != 1 || g_ppmon != 0)) {
+                        if (who == 0) {
+                                g_pcmon = g_pcmon - 1;
+                                pk_awp();
+                                g_ppppa = g_ppppa + 1;
+                                pk_dpot();
+                                pk_bet = pk_bet + 1;
+                        }
+                        left = left - 1;
+                        if (who == 1) {
+                                g_ppmon = g_ppmon - 1;
+                                pk_dppm();
+                                g_ppppa = g_ppppa + 1;
+                                pk_dpot();
+                                pk_bet = pk_bet + 1;
+                        }
+                }
+        }
+}
+
+/* pk_cbet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
+   Returns 0 normally, -1 on timeout.
+   addr: poker_computer_bet_decision() */
+
+static short
+pk_cbet(str)
+char *  str;
+{
+        short   r;
+
+        pk_bet  = 0;
+        pk_pass = NO;
+        pk_pmsg(str);
+        plEr(225, 10, 319, 60);
+        strPr("F1 Bet",       225, 18, COLOR_red);
+        strPr("F3 Enter",     225, 26, COLOR_red);
+        strPr("F5 Pass/Clr", 225, 34, COLOR_red);
+        for (;;) {
+                r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                if (r == -1) return -1;
+                if (r == 3)  break;
+                if (r == 1) {
+                        if (g_ppmon != 0) {
+                                pk_ddec(1, 1);
+                                for (;;) {
+                                        r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                        if (r == -1) return -1;
+                                        if (r == 2 && pk_bet != 0)
+                                                return 0;
+                                        if (r == 1)
+                                                pk_ddec(1, 1);
+                                        if (r == 3) {
+                                                if (pk_bet == 0) {
+                                                        pk_pass = YES;
+                                                        return 0;
+                                                }
+                                                g_ppmon = g_ppmon + pk_bet;
+                                                g_ppppa = g_ppppa - pk_bet;
+                                                pk_bet  = 0;
+                                                pk_dppm();
+                                                pk_dpot();
+                                        }
+                                }
+                        }
+                        return -1;
+                }
+        }
+        pk_pass = YES;
+        return 0;
+}
+
+/* pk_cdrw: computer AI draw phase.
+   Discard count by rank: 0->4, 1->3, 2->1, 3->2, >=4->stay.
+   Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
+   replacements and animates the swap.
+   addr: poker_computer_draw_cards() */
+
+static void
+pk_cdrw()
+{
+        short   nc;                  /* card_in_use flag -> BOOL16 */
+        short   dm;                  /* draw_message_count / scratch */
+        short   dc;                  /* discard count seed / temp */
+        short   card;
+        short   n;                   /* new_card */
+        short   i;
+        short   r;
+
+        for (i = 0; i < 5; i = i + 1)
+                pk_sel[i] = 0;
+        pk_evh(pk_ch, pk_hrf, pk_hsf, &pk_chrk);
+        pk_blf();
+
+        if (pk_bluff == NO) {
+                if (pk_chrk < 4) {
+                        if (pk_chrk == 3) {
+                                card = 2;
+                                for (i = 0; i < 5; i = i + 1)
+                                        if (pk_hrf[i] == 0)
+                                                pk_sel[i] = 1;
+                        } else if (pk_chrk == 2) {
+                                card = 1;
+                                for (i = 0; i < 5; i = i + 1)
+                                        if (pk_hrf[i] == 0)
+                                                pk_sel[i] = 1;
+                        } else if (pk_chrk == 1) {
+                                card = 3;
+                                for (i = 0; i < 5; i = i + 1)
+                                        if (pk_hrf[i] == 0)
+                                                pk_sel[i] = 1;
+                        } else if (pk_chrk == 0) {
+                                card = 4;
+                                dc   = 0;
+                                for (i = 0; i < 5; i = i + 1) {
+                                        if ((short) pk_ch[dc] % 13 <
+                                            (short) pk_ch[i]  % 13)
+                                                dc = i;
+                                }
+                                for (i = 0; i < 5; i = i + 1)
+                                        if (i != dc)
+                                                pk_sel[i] = 1;
+                        } else {
+                                card = 0;
+                        }
+                } else {
+                        card = 0;
+                }
+        } else {
+                card = rndRng(0, 2);
+                dc = 0;
+                i  = card;
+                while (dc < 5 && i != 0) {
+                        if (pk_hrf[dc] == 0) {
+                                pk_sel[dc] = 1;
+                                i = i - 1;
+                        }
+                        dc = dc + 1;
+                }
+        }
+
+        if (card == 0) {
+                pk_pmsg("I'll stay!");
+                gameTick(8);
+                return;
+        }
+
+        pk_tcm[10] = (char) card + '0';
+        if (card == 1) {
+                pk_tcm[16] = '.';
+                pk_tcm[17] = '\0';
+        } else {
+                pk_tcm[16] = 's';
+                pk_tcm[17] = '.';
+        }
+        pk_pmsg(pk_tcm);
+        gameTick(8);
+
+        for (i = 0; i < 5; i = i + 1) {
+                if (pk_sel[i] == 1) {
+                        nc = YES;
+                        while (nc != NO) {
+                                n  = rndRng(0, 51);
+                                nc = NO;
+                                for (dm = 0; dm < 5; dm = dm + 1) {
+                                        if (pk_ch[dm] == n) nc = YES;
+                                        if (pk_ph[dm] == n) nc = YES;
+                                }
+                                dm = pk_disc;
+                                while (r = dm - 1, dm != 0) {
+                                        dm = r;
+                                        if (pk_dpile[r] == n) nc = YES;
+                                }
+                                pk_dpile[pk_disc] = pk_ch[i];
+                                pk_disc = pk_disc + 1;
+                                pk_ch[i] = n;
+                                pk_drcs(CARD_HIGHLIGHT, i, 0);
+                                gameTick(3);
+                        }
+                }
+        }
+        for (i = 0; i < 5; i = i + 1) {
+                if (pk_sel[i] == 1) {
+                        pk_drcs(CARD_BACK, i, 0);
+                        gameTick(1);
+                }
         }
 }
 
