@@ -26,8 +26,17 @@ short   g_rpxs[48] = {
    LSB-first), so the array lives in BSS. */
 short           rev_tab[256];
 
-short           rv_msk[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
-short           rv_val[8] = {   1,  2,  4,  8, 16, 32, 64, 128 };
+/* g_rphs[48]: Y offset from floor baseline per HOUSE_POS.  There is
+   no leading 140 "ground-floor sentinel" -- LCP_STX's table starts at
+   9 and its data gap here is 96 bytes = 48 shorts. */
+short   g_rphs[48] = {
+          9,  14,   9,  10,  11,  14,  12,  13,
+         12,  12,  12,   6,  15,  10,  14,   3,
+          3,   3,   8,  15,  13,  13,  12,  13,
+         14,  12,   8,  14,  13,  14,  13,   5,
+          8,   3,  10,  13,  13,  14,  10,  14,
+         14,  12,  13,   7,  14,  12,  13,   2
+};
 
 
 /* AI action tables: 16 ACTION_IDs each, picked by chk_timA() at the
@@ -61,17 +70,8 @@ short           sch_tab[3][8] = {
         { 1, 2, 1, 0, 0, 2, 1, 2 }
 };
 
-/* g_rphs[48]: Y offset from floor baseline per HOUSE_POS.  There is
-   no leading 140 "ground-floor sentinel" -- LCP_STX's table starts at
-   9 and its data gap here is 96 bytes = 48 shorts. */
-short   g_rphs[48] = {
-          9,  14,   9,  10,  11,  14,  12,  13,
-         12,  12,  12,   6,  15,  10,  14,   3,
-          3,   3,   8,  15,  13,  13,  12,  13,
-         14,  12,   8,  14,  13,  14,  13,   5,
-          8,   3,  10,  13,  13,  14,  10,  14,
-         14,  12,  13,   7,  14,  12,  13,   2
-};
+short           rv_msk[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+short           rv_val[8] = {   1,  2,  4,  8, 16, 32, 64, 128 };
 
 /* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  LCP_STX has no builder for
    these -- there is not a single `not.l` in its whole text -- because

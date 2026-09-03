@@ -815,31 +815,31 @@ psg_upEn()
                                                  (short) psg_envelope[(short) i].attack_duration;
                         if (psg_envelope[i].attack_start_vol >
                             psg_envelope[i].attack_target_vol) {
-                                psg_rmpD[(short) i] =
+                                psg_rdel[(short) i] =
                                                           (short) psg_envelope[(short) i].attack_start_vol -
                                                           (short) psg_envelope[(short) i].attack_target_vol;
                                 psg_envelope[(short) i].ramp_direction = -1;
                         } else {
                                 psg_envelope[(short) i].ramp_direction = 1;
-                                psg_rmpD[(short) i] =
+                                psg_rdel[(short) i] =
                                                           (short) psg_envelope[(short) i].attack_target_vol -
                                                           (short) psg_envelope[(short) i].attack_start_vol;
                         }
-                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                        psg_rdel[(short) i] = psg_rdel[(short) i] *
                                              mi_evrt[psg_envelope[(short) i].phase_timer];
                         psg_envelope[(short) i].phase_timer =
                                              mi_evtt[psg_envelope[(short) i].phase_timer];
-                        psg_rmpA[(short) i] = 0;
+                        psg_racc[(short) i] = 0;
                         break;
 
                 case ENV_DECAY:
 do_decay:
                         if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
+                                psg_racc[i] += psg_rdel[i];
+                                while (psg_racc[i] > 0x168) {
                                         psg_envelope[i].current_volume +=
                                                 psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
+                                        psg_racc[i] -= 0x168;
                                 }
                                 break;
                         } else {
@@ -854,32 +854,32 @@ do_decay:
                                                                  (short) psg_envelope[(short) i].decay_duration;
                                 if (psg_envelope[i].attack_target_vol >
                                     psg_envelope[i].decay_target_vol) {
-                                        psg_rmpD[(short) i] =
+                                        psg_rdel[(short) i] =
                                                                   (short) psg_envelope[(short) i].attack_target_vol -
                                                                   (short) psg_envelope[(short) i].decay_target_vol;
                                         psg_envelope[(short) i].ramp_direction = -1;
                                 } else {
                                         psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rmpD[(short) i] =
+                                        psg_rdel[(short) i] =
                                                                   (short) psg_envelope[(short) i].decay_target_vol -
                                                                   (short) psg_envelope[(short) i].attack_target_vol;
                                 }
-                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                psg_rdel[(short) i] = psg_rdel[(short) i] *
                                                                           mi_evrt[psg_envelope[(short) i].phase_timer];
                                 psg_envelope[(short) i].phase_timer =
                                                                           mi_evtt[psg_envelope[(short) i].phase_timer];
-                                psg_rmpA[(short) i] = 0;
+                                psg_racc[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_SUSTAIN:
 do_sustain:
                         if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
+                                psg_racc[i] += psg_rdel[i];
+                                while (psg_racc[i] > 0x168) {
                                         psg_envelope[i].current_volume +=
                                                 psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
+                                        psg_racc[i] -= 0x168;
                                 }
                                 break;
                         } else {
@@ -894,30 +894,30 @@ do_sustain:
                                                                  mi_evst[(short) psg_envelope[(short) i].sustain_duration];
                                 if (psg_envelope[i].decay_target_vol >
                                     psg_envelope[i].sustain_target_vol) {
-                                        psg_rmpD[(short) i] =
+                                        psg_rdel[(short) i] =
                                                                   (short) psg_envelope[(short) i].decay_target_vol -
                                                                   (short) psg_envelope[(short) i].sustain_target_vol;
                                         psg_envelope[(short) i].ramp_direction = -1;
                                 } else {
                                         psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rmpD[(short) i] =
+                                        psg_rdel[(short) i] =
                                                                   (short) psg_envelope[(short) i].sustain_target_vol -
                                                                   (short) psg_envelope[(short) i].decay_target_vol;
                                 }
-                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                psg_rdel[(short) i] = psg_rdel[(short) i] *
                                                                           mi_evrl[(short) psg_envelope[(short) i].sustain_duration];
-                                psg_rmpA[(short) i] = 0;
+                                psg_racc[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_RELEASE:
 do_release:
                         if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
+                                psg_racc[i] += psg_rdel[i];
+                                while (psg_racc[i] > 0x168) {
                                         psg_envelope[i].current_volume +=
                                                 psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
+                                        psg_racc[i] -= 0x168;
                                 }
                                 break;
                         } else {
@@ -925,14 +925,14 @@ do_release:
                                         psg_envelope[(short) i].phase = ENV_FADEOUT;
                                         psg_envelope[(short) i].phase_timer =
                                                          (short) psg_envelope[(short) i].release_duration;
-                                        psg_rmpD[(short) i] =
+                                        psg_rdel[(short) i] =
                                                   (short) psg_envelope[(short) i].current_volume;
                                         psg_envelope[(short) i].ramp_direction = -1;
-                                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                        psg_rdel[(short) i] = psg_rdel[(short) i] *
                                                   mi_evrt[psg_envelope[(short) i].phase_timer];
                                         psg_envelope[(short) i].phase_timer =
                                                   mi_evtt[psg_envelope[(short) i].phase_timer];
-                                        psg_rmpA[(short) i] = 0;
+                                        psg_racc[(short) i] = 0;
                                         break;
                                 } else {
                                         psg_envelope[(short) i].phase_timer = 0;
@@ -945,11 +945,11 @@ do_release:
 do_fadeout:
                         if (psg_envelope[i].phase_timer-- > 0 &&
                             psg_envelope[i].current_volume) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
+                                psg_racc[i] += psg_rdel[i];
+                                while (psg_racc[i] > 0x168) {
                                         psg_envelope[i].current_volume +=
                                                 psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
+                                        psg_racc[i] -= 0x168;
                                 }
                         } else {
                                 psg_envelope[i].current_volume =

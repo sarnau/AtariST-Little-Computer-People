@@ -26,9 +26,6 @@ short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };          /* phone_animation @ 0x2B92E */
 short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };            /* fire_animation  @ 0x2B936 */
-short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
-                           OBJ_DOG_FOOD_BOWL_2,
-                           OBJ_DOG_FOOD_BOWL_1 };  /* ROM 0x13584 */
 
 /* Petting-dog sprite frames -- sprite ids the petting animation
    cycles through: ping-pong over frames 1..6 back down to 2.  TEN
@@ -63,6 +60,9 @@ short   g_cotbl[19]    = {
    limit. */
 /* Ghidra petting_last_sprite_slot @ 0x2b952 = SPRITE_PET_HAND_1 (0x1b). */
 short   g_ptlss                         = SPRITE_PET_HAND_1;
+short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
+                           OBJ_DOG_FOOD_BOWL_2,
+                           OBJ_DOG_FOOD_BOWL_1 };  /* ROM 0x13584 */
 BOOL16  g_alsts;   /* alarm_sound_started */
 short   g_phrc;    /* phone_ring_countdown */
 /* g_srsdc (screen_scroll_down_count) lives in globals.c. */
