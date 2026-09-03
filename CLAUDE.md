@@ -1118,7 +1118,27 @@ Two layout levers, in order:
     top, and obdefs.h has no include guard of its own, so port sources
     include `obdefs1.h` instead.
 
-Text is byte-identical from 0 through 0x83d5 (33%).
+Text is byte-identical from 0 through **0x8804** (35%), i.e. the whole
+MIDI object, cp_main, the 0x400c object and the minigame object up to
+poker's static helpers.
+
+**The blocker from here is a class of code verify_bytes has never
+looked at.**  It walks the port's SYMBOL table, and Alcyon emits a
+`static` without a symbol, so every static helper in the port is
+unverified -- `source/tools/stx_unverified.py` prints the runs.
+9 472 bytes of the game's 94 736 (10.0%) are in that state, and the
+big runs are exactly where the text delta lives: the poker helpers
+around pk_main (3 114 + 1 392 + 1 262 + 940 + 324 bytes) and 2 102
+bytes at 0xd1b4.  They are not merely misordered -- the port spends
+9 846 bytes on statics where LCP_STX spends 7 032, so their source
+shapes have to be recovered one at a time like any other function.
+Only pk_dbet (0x87a0) and pk_evh (0x8804) precede pk_main; the port
+had nine helpers there.
+
+A static defined AFTER its caller needs a file-scope forward
+declaration or Alcyon treats the call as an external and the linker
+resolves it to 0 -- and pk_main reaches pk_show with a bsr.s, so
+pk_show must sit immediately behind it.
 
 Things that cost bytes the original does not have: a `static` Alcyon
 emits even when nothing calls it (midi_seq.c's five mh_* header
