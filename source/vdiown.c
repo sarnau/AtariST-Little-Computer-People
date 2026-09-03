@@ -18,24 +18,23 @@
 /* The VDI parameter block lives in globals.c (ROM data 0x12054). */
 extern short *  vdipb[];
 
-/* addr: vsl_color() (ROM 0xd676) */
+
+/* addr: vswr_mode() (ROM 0xd76c) */
 void
-vsl_color(handle, index)
+vswr_mode(handle, mode)
 short   handle;
-short   index;
+short   mode;
 {
-        /* STX assigns intin first and returns intout[0]; LCP_ORG
-           fills contrl first and returns nothing. */
 #ifdef FAITHFUL
-        contrl[0] = 17;
+        contrl[0] = 32;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
-        intin[0]  = index;
+        intin[0]  = mode;
         vdi_go();
 #else
-        intin[0]  = index;
-        contrl[0] = 17;
+        intin[0]  = mode;
+        contrl[0] = 32;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
@@ -44,27 +43,100 @@ short   index;
 #endif
 }
 
-/* addr: vst_color() (ROM 0xd6a6) */
+/* addr: v_bar() (ROM 0xd872) */
 void
-vst_color(handle, index)
+v_bar(handle, pxy)
 short   handle;
-short   index;
+short * pxy;
 {
+        /* STX points the parameter block's ptsin entry at the
+           caller's array for the duration of the call instead of
+           copying the points, then restores it -- the same trick
+           vdilib.c's vro_cpyfm uses. */
 #ifdef FAITHFUL
-        contrl[0] = 22;
-        contrl[1] = 0;
-        contrl[3] = 1;
+        contrl[0] = 11;
+        contrl[1] = 2;
+        contrl[3] = 0;
+        contrl[5] = 1;
         contrl[6] = handle;
-        intin[0]  = index;
+        ptsin[0]  = pxy[0];
+        ptsin[1]  = pxy[1];
+        ptsin[2]  = pxy[2];
+        ptsin[3]  = pxy[3];
         vdi_go();
 #else
-        intin[0]  = index;
-        contrl[0] = 22;
-        contrl[1] = 0;
-        contrl[3] = 1;
+        vdipb[2]  = pxy;
+        contrl[0] = 11;
+        contrl[1] = 2;
+        contrl[3] = 0;
+        contrl[5] = 1;
         contrl[6] = handle;
         vdi_go();
-        return intout[0];
+        vdipb[2]  = ptsin;
+#endif
+}
+
+/* addr: v_gtext() (ROM 0xd7fc) */
+void
+v_gtext(handle, x, y, str)
+short   handle;
+short   x;
+short   y;
+char *  str;
+{
+        short   i;
+
+#ifdef FAITHFUL
+        for (i = 0; str[i] != 0; i = i + 1)
+                intin[i] = str[i];
+        contrl[0] = 8;
+        contrl[1] = 1;
+        contrl[3] = i;
+        contrl[6] = handle;
+        ptsin[0]  = x;
+        ptsin[1]  = y;
+#else
+        /* STX sets the point first and copies with the classic
+           while (dst[i++] = *src++) idiom, masking to a byte. */
+        ptsin[0]  = x;
+        ptsin[1]  = y;
+        i = 0;
+        while (intin[i++] = *str++ & 0xff)
+                ;
+        contrl[0] = 8;
+        contrl[1] = 1;
+        contrl[3] = --i;
+        contrl[6] = handle;
+#endif
+        vdi_go();
+}
+
+/* addr: v_pline() (ROM 0xd79e) */
+void
+v_pline(handle, count, pxy)
+short   handle;
+short   count;
+short * pxy;
+{
+#ifdef FAITHFUL
+        short   i;
+
+        contrl[0] = 6;
+        contrl[1] = count;
+        contrl[3] = 0;
+        contrl[6] = handle;
+        for (i = 0; count * 2 > i; i = i + 1)
+                ptsin[i] = pxy[i];
+        vdi_go();
+#else
+        /* STX aims the parameter block at the caller's points. */
+        vdipb[2]  = pxy;
+        contrl[0] = 6;
+        contrl[1] = count;
+        contrl[3] = 0;
+        contrl[6] = handle;
+        vdi_go();
+        vdipb[2]  = ptsin;
 #endif
 }
 
@@ -139,23 +211,24 @@ short   style;
         return intout[0];
 #endif
 }
-
-/* addr: vswr_mode() (ROM 0xd76c) */
+/* addr: vsl_color() (ROM 0xd676) */
 void
-vswr_mode(handle, mode)
+vsl_color(handle, index)
 short   handle;
-short   mode;
+short   index;
 {
+        /* STX assigns intin first and returns intout[0]; LCP_ORG
+           fills contrl first and returns nothing. */
 #ifdef FAITHFUL
-        contrl[0] = 32;
+        contrl[0] = 17;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
-        intin[0]  = mode;
+        intin[0]  = index;
         vdi_go();
 #else
-        intin[0]  = mode;
-        contrl[0] = 32;
+        intin[0]  = index;
+        contrl[0] = 17;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;
@@ -164,100 +237,27 @@ short   mode;
 #endif
 }
 
-/* addr: v_pline() (ROM 0xd79e) */
+/* addr: vst_color() (ROM 0xd6a6) */
 void
-v_pline(handle, count, pxy)
+vst_color(handle, index)
 short   handle;
-short   count;
-short * pxy;
+short   index;
 {
 #ifdef FAITHFUL
-        short   i;
-
-        contrl[0] = 6;
-        contrl[1] = count;
-        contrl[3] = 0;
+        contrl[0] = 22;
+        contrl[1] = 0;
+        contrl[3] = 1;
         contrl[6] = handle;
-        for (i = 0; count * 2 > i; i = i + 1)
-                ptsin[i] = pxy[i];
+        intin[0]  = index;
         vdi_go();
 #else
-        /* STX aims the parameter block at the caller's points. */
-        vdipb[2]  = pxy;
-        contrl[0] = 6;
-        contrl[1] = count;
-        contrl[3] = 0;
+        intin[0]  = index;
+        contrl[0] = 22;
+        contrl[1] = 0;
+        contrl[3] = 1;
         contrl[6] = handle;
         vdi_go();
-        vdipb[2]  = ptsin;
-#endif
-}
-
-/* addr: v_gtext() (ROM 0xd7fc) */
-void
-v_gtext(handle, x, y, str)
-short   handle;
-short   x;
-short   y;
-char *  str;
-{
-        short   i;
-
-#ifdef FAITHFUL
-        for (i = 0; str[i] != 0; i = i + 1)
-                intin[i] = str[i];
-        contrl[0] = 8;
-        contrl[1] = 1;
-        contrl[3] = i;
-        contrl[6] = handle;
-        ptsin[0]  = x;
-        ptsin[1]  = y;
-#else
-        /* STX sets the point first and copies with the classic
-           while (dst[i++] = *src++) idiom, masking to a byte. */
-        ptsin[0]  = x;
-        ptsin[1]  = y;
-        i = 0;
-        while (intin[i++] = *str++ & 0xff)
-                ;
-        contrl[0] = 8;
-        contrl[1] = 1;
-        contrl[3] = --i;
-        contrl[6] = handle;
-#endif
-        vdi_go();
-}
-
-/* addr: v_bar() (ROM 0xd872) */
-void
-v_bar(handle, pxy)
-short   handle;
-short * pxy;
-{
-        /* STX points the parameter block's ptsin entry at the
-           caller's array for the duration of the call instead of
-           copying the points, then restores it -- the same trick
-           vdilib.c's vro_cpyfm uses. */
-#ifdef FAITHFUL
-        contrl[0] = 11;
-        contrl[1] = 2;
-        contrl[3] = 0;
-        contrl[5] = 1;
-        contrl[6] = handle;
-        ptsin[0]  = pxy[0];
-        ptsin[1]  = pxy[1];
-        ptsin[2]  = pxy[2];
-        ptsin[3]  = pxy[3];
-        vdi_go();
-#else
-        vdipb[2]  = pxy;
-        contrl[0] = 11;
-        contrl[1] = 2;
-        contrl[3] = 0;
-        contrl[5] = 1;
-        contrl[6] = handle;
-        vdi_go();
-        vdipb[2]  = ptsin;
+        return intout[0];
 #endif
 }
 

@@ -71,95 +71,12 @@
 #include "parts/sp_ss02.c"
 #endif
 
-/* sp_lcpf: expand 2-word (32-px) LCP source frame into 4-word (64-px)
-   dest row, with optional horizontal mirror.  flipV picks left- vs
-   right-half so mirrored frames land at the same screen X.
-   Called from sp_updb and sp_lchu.
-   addr: sp_lcpf() */
+/* sp_lcpf -> parts/sp_lcpf.c (STX places it late in the 0x148fe
+   object -- stx_u3.c includes it there). */
+#ifdef FAITHFUL
+#include "parts/sp_lcpf.c"
+#endif
 
-void
-sp_lcpf(srcImg, srcMask, destImg, destMask,
-                width, height, flipH, flipV)
-short * srcImg;
-short * srcMask;
-short * destImg;
-short * destMask;
-short   width;
-short   height;
-short   flipH;
-short   flipV;
-{
-        /* w / m2 / x are register variables (d7/d6/d5); the frame
-           holds only mmask, y and m1. */
-        register short  w;
-        register short  m2;
-        register short  x;
-        short           mmask;
-        short           y;
-        short           m1;
-
-        if (flipH == 0) {
-                for (y = 0; y < height; y++) {
-                        for (x = 0; x < width; x++) {
-                                if (flipV != 0) {
-                                        *destImg++ = *srcImg++;
-                                        *destImg++ = *srcImg++;
-                                        *destImg++ = 0;
-                                } else {
-                                        *destImg++ = 0;
-                                        *destImg++ = *srcImg++;
-                                        *destImg++ = *srcImg++;
-                                }
-                                *destImg++ = 0;
-
-                                *destMask++ = *srcMask;
-                                *destMask++ = *srcMask;
-                                *destMask++ = *srcMask;
-                                *destMask++ = *srcMask++;
-                        }
-                }
-                return;
-        }
-
-        for (y = 0; y < height; y++) {
-                for (x = 0; x < width; x++) {
-                        /* The byte halves are selected with explicit
-                           `& 0xff` masks, and m2 doubles as the shift
-                           temporary for m1. */
-                        w  = srcImg[((width - 1) - x) << 1];
-                        m2 = rev_tab[w & 0xff];
-                        m2 <<= 8;
-                        m1 = m2 | rev_tab[(w >> 8) & 0xff];
-                        w  = *(srcImg + (((width - 1) - x) << 1) + 1);
-                        m2 = rev_tab[w & 0xff];
-                        m2 <<= 8;
-                        m2 |= rev_tab[(w >> 8) & 0xff];
-
-                        if (flipV != 0) {
-                                *destImg++ = m1;
-                                *destImg++ = m2;
-                                *destImg++ = 0;
-                        } else {
-                                *destImg++ = 0;
-                                *destImg++ = m1;
-                                *destImg++ = m2;
-                        }
-                        *destImg++ = 0;
-
-                        w = srcMask[(width - 1) - x];
-                        mmask = rev_tab[w & 0xff] << 8;
-                        mmask |= rev_tab[(w >> 8) & 0xff];
-                        *destMask++ = mmask;
-                        *destMask++ = mmask;
-                        *destMask++ = mmask;
-                        *destMask++ = mmask;
-                }
-                /* Plain short* arithmetic: the compiler supplies the
-                   ×2 scaling, so the source only shifts once. */
-                srcImg  += width << 1;
-                srcMask += width;
-        }
-}
 
 /* sp_flih: mirror sprite in place, preserving width (no expansion).
    The STX revision links it in the alerts object right after
@@ -498,130 +415,23 @@ sp_imfs()
    addr: sp_lcp_build_all_body() */
 
 
-/* STX order: sp_lbal (0x167b0) is followed directly by sp_lbbd
-   (0x1682e, a bsr.s target) and then sp_lbhd (0x169b4). */
-void
-sp_lbal()
-{
-        /* One local: STX subscripts the four arrays directly instead
-           of walking char* accumulators. */
-        short   index;
-
-        for (index = 0; index < 98; index++)
-                sp_lbbd((short *) body_ptr[index],
-                        (short *) body_shp[index], 21);
-        for (index = 0; index < 66; index++)
-                sp_lbhd((short *) pex_ptr[index],
-                        (short *) hd_shp[index], 21);
-}
-
-/* sp_lbhd: dilate 21-row head frame.  Same packing as sp_lbbd but:
-   start with mask = 0xFFFFFFFF, shrink from bit 31 down and bit 0 up
-   until the next bit hits set img pixels -- convex-hull outline plus
-   1 bit slack.  Then vertical-OR merge (opposite direction to sp_lbbd).
-   addr: sp_lcp_build_all_head() */
+/* sp_lbal -> parts/sp_lbal.c (STX places it late in the 0x148fe
+   object -- stx_u3.c includes it there). */
+#ifdef FAITHFUL
+#include "parts/sp_lbal.c"
+#endif
 
 
-void
-sp_lbbd(src, dest, height)
-short *         src;            /* signed: the reads sign-extend */
-short *         dest;
-short           height;
-{
-        /* bit / mask / img are register variables (d7/d6/d5 in
-           declaration order); only h and flag get frame slots. */
-        register short  bit;
-        register long   mask;
-        register long   img;
-        short           h;
-        short           flag;
+/* sp_lbbd -> parts/sp_lbbd.c (STX places it late in the 0x148fe
+   object -- stx_u3.c includes it there). */
+#ifdef FAITHFUL
+#include "parts/sp_lbbd.c"
+#endif
 
-        for (h = 0; h < height; h++) {
-                img  = 0L;
-                /* The 32-bit row is assembled by four *src++ steps,
-                   not from four subscripts. */
-                mask  = (long) *src++;
-                mask |= (long) *src++;
-                mask <<= 16;
-                mask |= (long) *src++ & 0xffffL;
-                mask |= (long) *src++ & 0xffffL;
-                flag = 0;
-                for (bit = 30; bit > 0; bit--) {
-                        if (flag) {
-                                img |= bm32or[bit];
-                                if ((mask & bm32or[bit]) == 0L)
-                                        flag = 0;
-                        } else if ((mask & bm32or[bit]) != 0L) {
-                                img |= bm32or[bit + 1];
-                                img |= bm32or[bit];
-                                img |= bm32or[bit - 1];
-                                flag = 1;
-                        }
-                }
-                *dest = (img >> 16) & 0xffffL;
-                dest++;
-                *dest = img & 0xffffL;
-                dest++;
-        }
-        /* Vertical dilation: OR each row into the row above. */
-        dest--;
-        for (h = 0; height - 1 > h; h++) {
-                img = *dest | dest[-2];
-                *dest = img;
-                dest--;
-                img = *dest | dest[-2];
-                *dest = img;
-                dest--;
-        }
-}
 
-/* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
-   addr: sp_lcp_build_all() */
+/* sp_lbhd -> parts/sp_lbhd.c (STX places it late in the 0x148fe
+   object -- stx_u3.c includes it there). */
+#ifdef FAITHFUL
+#include "parts/sp_lbhd.c"
+#endif
 
-void
-sp_lbhd(src, dest, height)
-short *         src;
-short *         dest;
-short           height;
-{
-        /* bit / img / mask are register data variables (d7/d6/d5) and
-           dp a register ADDRESS variable (a5); only h gets a frame
-           slot. */
-        register short  bit;
-        register long   img;
-        register long   mask;
-        register short *dp;
-        short           h;
-
-        dp = dest;
-        for (h = 0; h < height; h++) {
-                mask = -1L;
-                img  = (long) *src++;
-                img |= (long) *src++;
-                img <<= 16;
-                img |= (long) *src++ & 0xffffL;
-                img |= (long) *src++ & 0xffffL;
-                for (bit = 31; bit > 0; bit--) {
-                        if ((img & bm32or[bit - 1]) != 0L)
-                                break;
-                        mask &= bm32and[bit];
-                }
-                for (bit = 0; bit < 31; bit++) {
-                        if ((img & bm32or[bit + 1]) != 0L)
-                                break;
-                        mask &= bm32and[bit];
-                }
-                *dest = (mask >> 16) & 0xffffL;
-                dest++;
-                *dest = mask & 0xffffL;
-                dest++;
-        }
-        /* Vertical dilation: OR each row into the row BELOW, through
-           the register pointer. */
-        for (h = 0; height - 1 > h; h++) {
-                mask = *dp | dp[2];
-                *dp++ = mask;
-                mask = *dp | dp[2];
-                *dp++ = mask;
-        }
-}

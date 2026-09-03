@@ -49,6 +49,12 @@
 #include "parts/sp_updb.c"  /* 0x16244 */
 #include "parts/sp_lcha.c"  /* 0x16368 */
 #include "parts/sp_lchu.c"  /* 0x1664c */
+/* sprites.c straddles within this object: these four sit past
+   sp_lchu, not with sp_upds/sp_imfs at the front. */
+#include "parts/sp_lbal.c"  /* 0x167b0 */
+#include "parts/sp_lbbd.c"  /* 0x1682e */
+#include "parts/sp_lbhd.c"  /* 0x169b4 */
+#include "parts/sp_lcpf.c"  /* 0x16ae4 */
 /* renderx.c and gfx_prim.c straddle: sc_sctd and sc_firw sit in
    this object, and sc_firw must follow sc_sctd (bsr.s). */
 #include "parts/sc_sctd.c"  /* 0x16d5a */
