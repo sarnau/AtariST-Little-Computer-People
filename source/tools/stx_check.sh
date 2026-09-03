@@ -32,8 +32,9 @@ fi
 cd "$OUT"
 OBJS=$(find . -maxdepth 1 -name "*.o" ! -name "gemstart.o" ! -name "main.o" ! -name "gemstart_dk.o" \
     ! -name "osbind.o" ! -name "crt0.o" ! -name "nofloat.o" \
-    ! -name "vdilib.o" ! -name "vdilib_a.o" ! -name "psg_asm.o" ! -name "blkcp_a.o" | sort | sed 's|^\./||')
-LIST=$(echo "gemstart.o main.o $OBJS psg_asm.o blkcp_a.o vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a gemlib.a" | tr -s ' \n' ',,')
+    ! -name "vdilib.o" ! -name "vdilib_a.o" ! -name "psg_asm.o" ! -name "blkcp_a.o" \
+    ! -name "cp_asm.o" | sort | sed 's|^\./||')
+LIST=$(echo "gemstart.o main.o $OBJS psg_asm.o blkcp_a.o cp_asm.o vdilib.o vdilib_a.o vdibind.a aesbind.a osbind.o gemlib.a gemlib.a" | tr -s ' \n' ',,')
 echo "lcp_sym.68k=$LIST" > lcp_sym.cmd
 ~/Hatari_C/hatari-c/bin/link68 "[SYMBOLS,UNDEFINED,COMMAND[lcp_sym.cmd]]" >/dev/null 2>&1
 cd "$CSRC/.."

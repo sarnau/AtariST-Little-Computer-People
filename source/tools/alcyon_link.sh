@@ -71,6 +71,19 @@ if [ ! -f blkcp_a.o ] || [ "$DK_TOOLS/blkcp_a.s" -nt blkcp_a.o ]; then
     }
 fi
 
+# cp_asm.s: LCP_STX's hand-assembly copy protection, cp_main
+# (0x22c0-0x400b).  Assembled with -n (no branch optimization) because
+# the original picks bsr.w in places where bsr.s would fit -- every
+# branch in the file carries its own explicit size.  Linked only for
+# the default build; FAITHFUL keeps stubs.c's 10-byte crack stub.
+if [ ! -f cp_asm.o ] || [ "$DK_TOOLS/cp_asm.s" -nt cp_asm.o ]; then
+    cp -f "$DK_TOOLS/cp_asm.s" cp_asm.s
+    "$ALCYON_BIN/as68" -l -u -n cp_asm.s > /dev/null 2>&1 || {
+        echo "FAILED: cp_asm assembly"
+        exit 1
+    }
+fi
+
 if [ ! -f vdiown_a.o ] || [ "$DK_TOOLS/vdiown_a.s" -nt vdiown_a.o ]; then
     cp -f "$DK_TOOLS/vdiown_a.s" vdiown_a.s
     "$ALCYON_BIN/as68" -l -u vdiown_a.s > /dev/null 2>&1 || {
@@ -123,7 +136,7 @@ for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" ! -name "gemstart_dk.o" \
     ! -name "crt0.o" ! -name "nofloat.o" ! -name "vdilib.o" ! -name "vdilib_a.o" \
     ! -name "vdiown_a.o" ! -name "psg_asm.o" \
-    ! -name "blkcp_a.o" | sort); do
+    ! -name "blkcp_a.o" ! -name "cp_asm.o" | sort); do
     OBJS="$OBJS $(basename $o)"
 done
 
@@ -135,7 +148,7 @@ rm -f lcp.68k LCP.PRG
 if [ "${FAITHFUL:-0}" = "1" ]; then
     OBJS=$(echo " $OBJS " | sed 's/ mq_tick.o / /')
 else
-    OBJS="$OBJS vdiown_a.o psg_asm.o blkcp_a.o"  # STX: vdi_go + asm
+    OBJS="$OBJS vdiown_a.o psg_asm.o blkcp_a.o cp_asm.o"  # STX: vdi_go + asm
 fi
 # link68 (DRI CLI) with a response file; same object order as lo68 had.
 # LCP_STX contains no LIBF code: its __pftoa/__petoa call _ftoa and

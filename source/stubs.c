@@ -43,8 +43,13 @@
    addr: (matches copyprot_main_check @ ~0x122FC, behaviourally
    equivalent to the successful-verification outcome) */
 
+/* LCP_STX has the real thing in hand-written assembly -- see
+   source/cp_asm.s, which alcyon_link.sh links for the default build.
+   This stub is the crack's, and FAITHFUL keeps it. */
+#ifdef FAITHFUL
 long
 cp_main()
 {
         return 1;
 }
+#endif
