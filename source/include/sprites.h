@@ -17,12 +17,11 @@
 
 /* Expanded-sprite buffer size in SHORTS (image or mask, one plane
    set) that sp_lcpf writes into g_lsimg / g_lsmas / g_hsbuf /
-   g_hsmas: height=21 rows, width=2 source columns, 4 dest shorts
-   per column (horizontal 2x expansion into a 4-plane MFDB slot).
-   Numerically equals LCP_BODY_FRAME_SIZE by coincidence -- the
-   2x expansion in shorts cancels the 2 bytes/short factor -- but
-   the unit is shorts, not bytes. */
-#define LCP_BODY_DEST_WORDS     (21 * 4 * 2)
+   g_hsmas.  Both call sites pass width=2, height=21 and sp_lcpf
+   writes 4 shorts per (x,y), so only 21*2*4 = 168 are ever touched --
+   but LCP_STX declares a round 256, which is what the relocation
+   pairing measures for all four buffers (gaps of 512 bytes). */
+#define LCP_BODY_DEST_WORDS     256
 
 extern void sp_updb();
 extern void sp_ssco();

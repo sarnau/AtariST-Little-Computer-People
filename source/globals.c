@@ -629,16 +629,16 @@ char    sf_pri[32] = {          /* STX: one byte per entry */
 unsigned char   obj_file[14000];
 unsigned char   spr_file[14000];
 
-/* Per-record MFDB tables + dimensions.  Sized to comfortably cover
-   the 50 or so records in each file (spritedata_index_table in the
-   Python reader tops out at index 0x37). */
-MFDB    g_obtmt[64];
+/* Per-record MFDB tables + dimensions.  56 entries: main's OBJECTS
+   walk is a fixed `for (i = 0; i < 56; i++)`, and LCP_STX's gaps for
+   all three of these agree (1120 / 112 / 112). */
+MFDB    g_obtmt[56];
 /* od_draw reads the object-MFDB table through this pointer, exactly
    as the ROM does (initialized data 0x121b6 -> table in BSS). */
 MFDB *  g_obtmp = g_obtmt;
 
-short   g_obtaw[64];
-short   g_obtah[64];
+short   g_obtaw[56];
+short   g_obtah[56];
 /* mf_scrp now defined below with the rest of the frame-timing
    MFDB descriptors. */
 
