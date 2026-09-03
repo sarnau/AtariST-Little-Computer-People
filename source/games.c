@@ -911,9 +911,10 @@ new_word:
         ag_ssw();
 
         /* STX runs the round prologue ONCE per word and folds the
-           guess-count guard into a `while` condition; the
-           "too many guesses" tail lives inside the loop and ends with
-           `goto new_word`. */
+           guess-count guard into a `while` condition.  A wrong guess
+           re-enters HERE, past the prologue, so the word is kept --
+           only a solved or abandoned word goes back to new_word. */
+same_word:
         g_agacu = 0;
         ag_clue = 0;
         strPr("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
@@ -962,8 +963,12 @@ new_word:
                                 /* Braced: a bare `continue` folds into
                                    the conditional branch, braces make
                                    Alcyon emit beq-over-bra. */
+                                /* Not `continue`: LCP_STX jumps to a
+                                   label sitting ON the else arm's
+                                   statement, one test ahead of the
+                                   loop's own condition. */
                                 if (ag_matc(g_agorw, g_agscw) != 0) {
-                                        continue;
+                                        goto again;
                                 }
                                 /* Clue path: reveal one letter. */
                                 g_agclc++;
@@ -1005,8 +1010,9 @@ new_word:
                                 }
                                 if (word_complete != NO)
                                         goto validate;
-                        } else if (word_complete != NO)
-                                goto validate;
+                        } else
+again:                          if (word_complete != NO)
+                                        goto validate;
                 }
 
 validate:
@@ -1035,7 +1041,7 @@ validate:
                         strPr(g_agwgm[rndRng(0, 2)], 5, 69, COLOR_black);
                         gameTick(0x14);
                         ag_csb();
-                        goto new_word;
+                        goto same_word;
                 } else {
 
                 /* Too many wrong guesses: show the answer, start a
