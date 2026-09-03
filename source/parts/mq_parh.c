@@ -39,7 +39,7 @@ unsigned char * p;
                    (the jump table targets 0x1246/0x1264/0x129c/
                    0x12a4/0x132c are inside mq_parh), and has no
                    default arm -- an unknown byte falls straight to
-                   the loop test.  The port factored the same code
+                   the loop test (see the dead break below).  The port factored the same code
                    into the static mh_* helpers, which is why they
                    carry other-image addresses in their comments. */
                 switch (*p & 0xff) {
@@ -75,7 +75,13 @@ unsigned char * p;
                         break;
                 case MIDI_HDR_END:                      /* 0x1332 */
                         return;
-                default:
+                        /* Unreachable, and the reference emits it: the
+                           dead break puts a second `bra` to the switch
+                           end at 0x1334.  With no default arm, the
+                           table's default slot points straight at the
+                           end (0x134e) instead of at that branch --
+                           which is the only way to get both the
+                           branch and the target right. */
                         break;
                 }
         }
