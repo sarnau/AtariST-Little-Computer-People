@@ -1734,11 +1734,10 @@ MFDB *  g_obtmp = g_obtmt;
 short   g_unus1[3]          = { 0, 0, 0 };
 
 
-/* 200 Hz clock hi/lo halves.  The ST reads this atomically via a
-   supervisor-mode long read at 0x4BA; we split the halves here so a
-   short-sized access still compiles cleanly on the host. */
-short   g_hzhi                      = 0;
-
-short   g_hzlo                      = 0;
-
-long    _vbclock                        = 0;
+/* No globals here for the 200 Hz clock or the VBL counter.  Both are
+   ATARI ST SYSTEM VARIABLES in low memory -- _hz_200 at $04BA/$04BC
+   and _vbclock at $0462 -- and the code reads them there directly,
+   under Super, in sf_irqp and sc_ren8.  The port used to define
+   g_hzhi/g_hzlo/_vbclock as its own storage as well; nothing ever
+   relocated against them, so they were eight dead bytes in the data
+   segment. */
