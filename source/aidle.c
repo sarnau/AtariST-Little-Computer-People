@@ -19,76 +19,25 @@
 #include "walk.h"
 
 /* addr: a_wandi() */
-void
-a_wandi()
-{
-#ifndef FAITHFUL
-        /* STX's frame is 2 bytes larger (link #-6 vs #-4): the
-           original declared a local here that the body never uses. */
-        short   unused;
+/* a_wandi -> parts/a_wandi.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/a_wandi.c"
 #endif
-
-        pst_arr[0]  = STATE_IDLE_SHRUG_START;
-        pst_arr[1]  = STATE_IDLE_SHRUG_HOLD;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
-        lcp_hwt();
-
-        lcp_st = pst_arr[0]; gameTick(2);
-        lcp_st = pst_arr[1]; gameTick(5);
-        lcp_st = pst_arr[0]; gameTick(2);
-        lcp_st = STATE_STAND_SIDE_VIEW; gameTick(0);
-}
 
 /* addr: a_peeka() */
-void
-a_peeka()
-{
-        short   saved_frame;
-
-        g_hatas = 8;
-        g_hamod         = HEAD_ANIM_DISABLED;
-        lcp_hwt();
-
-        saved_frame            = g_hsfra;
-        g_hatas = HEAD_ANIM_DISABLED;
-        g_hacur      = HEAD_ANIM_DISABLED;
-        g_hsfra      = 2;
-        gameTick(6);
-
-        g_hatas = 8;
-        g_hacur      = 8;
-        g_hsfra      = saved_frame;
-        gameTick(0);
-}
+/* a_peeka -> parts/a_peeka.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/a_peeka.c"
+#endif
 
 /* addr: a_pacen() */
-void
-a_pacen()
-{
-        short   i;
-
-        pst_arr[0]  = STATE_PACE_SHIFT_LEFT;
-        pst_arr[1]  = STATE_PACE_SHIFT_RIGHT;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
-        lcp_hwt();
-
-        /* LCP_ORG's source uses the register form; the STX revision
-           writes i++ (addq straight to the frame slot). */
+/* a_pacen -> parts/a_pacen.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
 #ifdef FAITHFUL
-        for (i = 0; i < 15; i = i + 1) {
-#else
-        for (i = 0; i < 15; i++) {
+#include "parts/a_pacen.c"
 #endif
-                lcp_st = pst_arr[i & 1];
-                gameTick(1);
-        }
-        lcp_st = STATE_STAND_SIDE_VIEW;
-        gameTick(0);
-}
 
 /* a_toggt -> parts/a_toggt.c (STX: 0xdece object, 0x13bb2, immediately before tt_on). */
 #ifdef FAITHFUL
@@ -98,104 +47,8 @@ a_pacen()
 /* value == -1 is the copy-protection punishment path (sleep forever);
    the resident first walks to the current floor's center Y before lying down.
    addr: a_sleep() */
+/* a_sleep -> parts/a_sleep.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
 #ifdef FAITHFUL
-void
-a_sleep(value)
-short   value;
-{
-        short   duration;
-        short   i;
-        short   floor;
-
-        pst_arr[0] = STATE_SLP_BREATHE_I;
-        pst_arr[1] = STATE_SLP_BREATHE_O;
-
-        if (lcp_stR != NO)
-                return;
-
-        if (value == -1) {
-                g_wtx = lcp_x;
-                floor = getFlrY(lcp_y);
-                g_wty = flr_cy[floor - 1];
-                if (lcp_wkD() != 0)
-                        return;
-                lcp_face   = FACING_RIGHT;
-                lcp_st              = STATE_STAND_SIDE_VIEW;
-                g_hatas = 8;
-                lcp_hwt();
-        }
-
-        duration = rndRng(7, 15);
-        if (value != -1)
-                duration = value;
-
-        i = 0;
-        while (i < duration &&
-               g_trel[0] == ACTION_NONE) {
-                lcp_st = pst_arr[0]; gameTick(1);
-                lcp_st = pst_arr[1]; gameTick(0);
-                sf_sele(SFX_SNORING, 3L);
-                gameTick(1);
-                lcp_st = pst_arr[0]; gameTick(1);
-#ifdef FAITHFUL
-                i = i + 1;
-#else
-                i += 1;
-#endif
-        }
-
-        if (value == -1) {
-                lcp_st = STATE_STAND_SIDE_VIEW;
-                gameTick(0);
-        }
-}
-
-#else   /* STX: link #-8 -- i then duration; the floor index and the
-           break condition are consumed in place. */
-
-void
-a_sleep(value)
-short   value;
-{
-        short   i;
-        short   duration;
-
-        pst_arr[0] = STATE_SLP_BREATHE_I;
-        pst_arr[1] = STATE_SLP_BREATHE_O;
-
-        if (lcp_stR != NO)
-                return;
-
-        if (value == -1) {
-                g_wtx = lcp_x;
-                g_wty = flr_cy[getFlrY(lcp_y) - 1];
-                if (lcp_wkD() != 0)
-                        return;
-                lcp_face   = FACING_RIGHT;
-                lcp_st              = STATE_STAND_SIDE_VIEW;
-                g_hatas = 8;
-                lcp_hwt();
-        }
-
-        duration = rndRng(7, 15);
-        if (value != -1)
-                duration = value;
-
-        i = 0;
-        while (i < duration) {
-                if (g_trel[0] != ACTION_NONE)
-                        break;
-                lcp_st = pst_arr[0]; gameTick(1);
-                lcp_st = pst_arr[1]; gameTick(0);
-                sf_sele(SFX_SNORING, 3L);
-                gameTick(1);
-                lcp_st = pst_arr[0]; gameTick(1);
-                i++;
-        }
-
-        if (value == -1) {
-                lcp_st = STATE_STAND_SIDE_VIEW;
-                gameTick(0);
-        }
-}
+#include "parts/a_sleep.c"
 #endif

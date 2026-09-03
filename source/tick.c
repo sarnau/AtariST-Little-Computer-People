@@ -37,8 +37,9 @@ short   counter;
            There is no `slot` local: g_seslm[g_lcieo] is recomputed at
            every use, the inner tests re-check g_lcyof redundantly (both
            arms of the first pair assign the same thing), the clamp
-           indexes g_sepex with g_lcieo rather than the slot, and
-           cy_yoff is INLINED as a switch. */
+           indexes g_sepex with g_lcieo rather than the slot and lives
+           INSIDE the non-carrying arm (the 0x1570e end-of-then jump
+           clears it), and cy_yoff is INLINED as a switch. */
         if (g_lcyof != NO) {
                 if (lcp_face == FACING_RIGHT) {
                         if (g_lcyof == NO)
@@ -52,9 +53,9 @@ short   counter;
                         else
                                 g_sepex[g_seslm[g_lcieo]] =
                                         lcp_x - g_seacw[g_seslm[g_lcieo]] + 16;
+                        if (g_sepex[g_lcieo] < 0)
+                                g_sepex[g_lcieo] = 0;
                 }
-                if (g_sepex[g_lcieo] < 0)
-                        g_sepex[g_lcieo] = 0;
 
                 switch (g_lcieo) {
                 case SPRITE_SUITCASE:

@@ -34,75 +34,26 @@
 /* a_clocd: 2-frame close animation.
    addr: a_clocd() */
 
-void
-a_clocd()
-{
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
-
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_BEND_AND_REACH;
-        gameTick(2);
-        od_draw(od_clo1, 75, 87);
-        gameTick(2);
-        od_draw(od_clcl, 75, 87);
-        sf_sele(SFX_DOOR_CLOSE, 6L);
-        gameTick(2);
-        lcp_clsO = NO;
-
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(0);
-}
-
-/* STX: a_gesff sits here (0xebf8), just before a_opecf. */
-#ifndef FAITHFUL
-#include "parts/a_gesff.c"
+/* a_clocd -> parts/a_clocd.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/a_clocd.c"
 #endif
+
+/* STX: a_gesff sits here (0xebf8), just before a_opecf -- the default
+   build includes it from stx_u2.c in STX order; FAITHFUL keeps it in
+   afood.c. */
 
 /* a_opecf: open, look inside, close.  Both SFX are
    SFX_DOOR_OPEN in the original -- preserved verbatim; whether the
    1985 source meant SFX_DOOR_CLOSE at the tail is a judgement call.
    addr: a_opecf() */
 
-void
-a_opecf()
-{
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
-
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_REACH_INTO_CABINET;
-        od_draw(od_fdcl, 24, 153);
-        gameTick(1);
-        od_draw(od_fdo1, 24, 153);
-        sf_sele(SFX_DOOR_OPEN, 6L);
-        gameTick(1);
-        od_draw(od_fdo2, 24, 153);
-        gameTick(1);
-
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(2);
-
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_REACH_INTO_CABINET;
-        gameTick(3);
-
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(8);
-
-        od_draw(od_fdo1, 24, 153);
-        gameTick(1);
-        od_draw(od_fdcl, 24, 153);
-        sf_sele(SFX_DOOR_OPEN, 6L);   /* verbatim */
-        gameTick(1);
-}
+/* a_opecf -> parts/a_opecf.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
+#ifdef FAITHFUL
+#include "parts/a_opecf.c"
+#endif
 
 /* a_opcfc: sequential open animation used by
    the write-letter and tidy-house flows.  Note that the original always
@@ -119,78 +70,19 @@ a_opecf()
    drawer with 2-frame sprite animation.
    addr: a_opecd() */
 
-void
-a_opecd(oc_stat)
-short   oc_stat;
-{
-        if (oc_stat == 0) {
-                if (lcp_drsO != NO)
-                        return;
-                lcp_drsO = YES;
-                lcp_st = STATE_BEND_DOWN;    gameTick(1);
-                lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(od_dro1, 97, 115);
-                gameTick(2);
-                od_draw(od_dro2, 97, 115);
-                gameTick(2);
+/* a_opecd -> parts/a_opecd.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
 #ifdef FAITHFUL
-        } else {
-#else
-        } else if (oc_stat != 0) {      /* STX re-tests the argument */
+#include "parts/a_opecd.c"
 #endif
-                if (lcp_drsO == NO)
-                        return;
-                lcp_drsO = NO;
-                lcp_st = STATE_BEND_DOWN;    gameTick(1);
-                lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(od_dro1, 97, 115);
-                gameTick(2);
-                od_draw(od_drcl, 97, 115);
-                gameTick(2);
-        }
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(0);
-}
 
 /* a_watat: filing-cabinet interaction helper -- opens
    the cabinet if closed, or reaches into it if already open, then
    nervously shifts facing direction 10 times.
    addr: a_watat() */
 
-void
-a_watat()
-{
-        short   i;
-
-        lcp_st = STATE_BEND_DOWN;
-        gameTick(1);
-
-        if (lcp_flcO == NO) {
-                lcp_flcO = YES;
-                lcp_st = STATE_REACH_FORWARD;
-                od_draw(od_fio1, 258, 47);
-                gameTick(2);
-                lcp_st = STATE_PICK_UP_FROM_FLOOR;
-                od_draw(od_fio2, 258, 47);
-                gameTick(2);
-        } else {
-                lcp_st = STATE_REACH_FORWARD;
-                gameTick(1);
-        }
-
-        lcp_st = STATE_STOKE_FIREPLACE;
-        gameTick(1);
-        /* STX writes i++ here (addq straight to the frame slot). */
+/* a_watat -> parts/a_watat.c (STX orders the 0xdece object by
+   function, not by file; FAITHFUL includes it back here). */
 #ifdef FAITHFUL
-        for (i = 0; i < 10; i = i + 1) {
-#else
-        for (i = 0; i < 10; i++) {
+#include "parts/a_watat.c"
 #endif
-                lcp_face = rndRng(0, 1);
-                gameTick(0);
-        }
-
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        gameTick(0);
-}
