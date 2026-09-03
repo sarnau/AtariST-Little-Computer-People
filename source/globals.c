@@ -94,7 +94,9 @@ short   lcp_tv                       = 0;
    (0x11758-0x1177e): study/front/cabinet/medicine/toilet doors,
    stove-off, the 3-slot stove-on table (g_obisa), then the fridge.
    od_draw sites read these slots, never enum constants. */
-short   g_obisa[3]    = { 23, 24, 25 };  /* stove-on frame slots */
+/* Six slots, and not the ids the port guessed: LCP_STX has
+   { 43, 44, 45, 30, 31, 32 } here and a 12-byte gap. */
+short   g_obisa[6]    = { 43, 44, 45, 30, 31, 32 };
 
 
 /* STX declares this a byte flag (tst.b at its use sites). */
@@ -380,7 +382,7 @@ char            mi_ccha;
 char            mi_cnot;
 char            mi_nmof;
 char            mi_nlpA;
-char            mi_slop         = NO;   /* STX: byte */
+char            mi_slop         = 1;    /* STX: byte */
 
 short           mi_ndt[32] = {
            0,    2,    2,    3,    4,    5,    6,    8,
@@ -434,15 +436,15 @@ short           mi_evtt[16] = {
 /* midi_envelope_release_table @0x298ac.  Applied to ramp_delta
    during the sustain->release transition. */
 short           mi_evrl[16] = {
-             0,    1,    2,    4,    8,   18,   24,   40,
-            45,   60,   72,   90,  120,  180,  360, 30000
+             0,  360,  180,   90,   45,   20,   15,    9,
+             8,    6,    5,    4,    3,    2,    1,    0
 };
 
 /* midi_envelope_sustain_table @0x298cc.  Reload for phase_timer
    during the sustain->release transition. */
 short           mi_evst[16] = {
-             0,  360,  180,   90,   45,   20,   15,    9,
-             8,    6,    5,    4,    3,    2,    1,    0
+             0,    1,    2,    4,    8,   18,   24,   40,
+            45,   60,   72,   90,  120,  180,  360, 30000
 };
 
 /* psg_register_offset_table @0x2985c.  Amp registers 8/9/10 with
@@ -492,8 +494,8 @@ BOOL16          psg_out              = YES;
 /* psg_ntAc is a BYTE in the text segment behind mq_tick -- see
    source/mq_tick.s. */
 short           env_val            = 5;    /* octave-5 baseline */
-char            g_mnlol      = 0x17; /* A#0 */
-char           g_mnhil       = 0x7f; /* MIDI max         */
+char            g_mnlol      = 0x60;
+char           g_mnhil       = 0x24;
 short           g_mccha    = 1;
 unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psg_envelope[3];
@@ -653,9 +655,11 @@ short   g_obtah[56];
    is < 0, then decrements to -3, then wraps to 13.  Port had 0. */
 short   g_ltlic                         = -1;
 short   g_ltpac          = 0;
-/* rec_ledt[7]: bit-mask toggles for the 7 VU-meter LEDs. */
-unsigned short  rec_ledt[7] = {
-        0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40
+/* rec_ledt[8]: bit-mask toggles for the VU-meter LEDs, high bit
+   FIRST -- LCP_STX's table runs 0x80 down to 0x01 and its data gap
+   here is 16 bytes. */
+unsigned short  rec_ledt[8] = {
+        0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01
 };
 
 /* g_cmmip (Ghidra clock_minute_position @ 0x2B566, 15 shorts):
@@ -774,8 +778,9 @@ char            usr_buf[42];
    (accepts more), SAD (2) gives 0 (rejects most).  Port previously
    had guessed {2, 4, 6} which inverted the intended behavior. */
 short           mood_pri[3]        = { 3, 1, 0 };
-char            bm_lo[9] = {
-        0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x00
+/* Eight entries, not nine: LCP_STX's gap here is 8 bytes. */
+char            bm_lo[8] = {
+        0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 };
 
 /* ---- Mini-game storage ----------------------------------------------- */

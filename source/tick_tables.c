@@ -31,14 +31,14 @@ short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_1 };  /* ROM 0x13584 */
 
 /* Petting-dog sprite frames -- sprite ids the petting animation
-   cycles through (ROM data 0x1358a, referenced from tick at
-   0xced0/0xceec): ping-pong over frames 1..6 back down to 1,
-   closed by a 0 terminator. */
-short   g_ptdsi[12]    = {
+   cycles through: ping-pong over frames 1..6 back down to 2.  TEN
+   entries, with no trailing SPRITE_PET_HAND_1 and no 0 terminator --
+   LCP_STX's data gap here is 20 bytes. */
+short   g_ptdsi[10]    = {
         SPRITE_PET_HAND_1, SPRITE_PET_HAND_2, SPRITE_PET_HAND_3,
         SPRITE_PET_HAND_4, SPRITE_PET_HAND_5, SPRITE_PET_HAND_6,
         SPRITE_PET_HAND_5, SPRITE_PET_HAND_4, SPRITE_PET_HAND_3,
-        SPRITE_PET_HAND_2, SPRITE_PET_HAND_1, 0
+        SPRITE_PET_HAND_2
 };
 
 /* Carried-object sprite table (Ghidra carried_object_id_table

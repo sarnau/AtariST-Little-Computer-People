@@ -61,22 +61,21 @@ short           sch_tab[3][8] = {
         { 1, 2, 1, 0, 0, 2, 1, 2 }
 };
 
-/* g_rphs[49] (Ghidra 0x29F2A): Y offset from floor baseline per
-   HOUSE_POS.  Entry 0 = 140 (ground-floor sentinel). */
-short   g_rphs[49] = {
-        140,   9,  14,   9,  10,  11,  14,  12,
-         13,  12,  12,  12,   6,  15,  10,  14,
-          3,   3,   3,   8,  15,  13,  13,  12,
-         13,  14,  12,   8,  14,  13,  14,  13,
-          5,   8,   3,  10,  13,  13,  14,  10,
-         14,  14,  12,  13,   7,  14,  12,  13,
-          2
+/* g_rphs[48]: Y offset from floor baseline per HOUSE_POS.  There is
+   no leading 140 "ground-floor sentinel" -- LCP_STX's table starts at
+   9 and its data gap here is 96 bytes = 48 shorts. */
+short   g_rphs[48] = {
+          9,  14,   9,  10,  11,  14,  12,  13,
+         12,  12,  12,   6,  15,  10,  14,   3,
+          3,   3,   8,  15,  13,  13,  12,  13,
+         14,  12,   8,  14,  13,  14,  13,   5,
+          8,   3,  10,  13,  13,  14,  10,  14,
+         14,  12,  13,   7,  14,  12,  13,   2
 };
 
-/* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  LCP_STX has NO builder for
-   these -- there is not a single `not.l` in its whole text -- so they
-   stay zero, exactly as in the shipped binary.  (The sprite code that
-   reads them is still being recovered; expect the reads to go away.)
+/* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  LCP_STX has no builder for
+   these -- there is not a single `not.l` in its whole text -- because
+   it ships them as initialized DATA instead.
    addr: bm32or, bm32and */
 
 /* LCP_STX ships both tables as initialized DATA rather than
