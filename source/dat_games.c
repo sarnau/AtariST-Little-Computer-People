@@ -51,28 +51,34 @@ char *          wp_fail[6] = {
 
 
 
-/* anagram_guess_prompt_strings: shown per attempt (0..8 -> "Guess #1?"..
+/* anagram_guess_prompt_strings: shown per attempt.  Each is padded to
+   19 characters so it overwrites the previous prompt in place.
+   (0..8 -> "Guess #1?"..
    "Guess #9?").  Rendered by ag_sgp at (166, 57). */
-char *          g_aggpr[9] = {
-        "Guess #1?",
-        "Guess #2?",
-        "Guess #3?",
-        "Guess #4?",
-        "Guess #5?",
-        "Guess #6?",
-        "Guess #7?",
-        "Guess #8?",
-        "Guess #9?"
+/* Ten slots for nine prompts and five for three messages: LCP_STX
+   sizes both arrays past their initializer lists and Alcyon zero-fills
+   the tail (data 0xe08 and 0xe1a..0xe21 are NULL).  Do not shrink them
+   to the initializer count. */
+char *          g_aggpr[10] = {
+        "Guess #1?          ",
+        "Guess #2?          ",
+        "Guess #3?          ",
+        "Guess #4?          ",
+        "Guess #5?          ",
+        "Guess #6?          ",
+        "Guess #7?          ",
+        "Guess #8?          ",
+        "Guess #9?          "
 };
 
 
 short           g_agacu          = 0;
 
 
-char *          g_agwgm[3] = {
-        "Nope, try again!",
-        "Not quite...",
-        "Sorry, wrong guess."
+char *          g_agwgm[5] = {
+        "Nope, have another try.",
+        "Sorry, try again.",
+        "Missed, try again."
 };
 
 
