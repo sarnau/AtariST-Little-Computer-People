@@ -407,12 +407,15 @@ char    index;
 
 short
 mq_dise(midiEvP, midiEvS, midi_ch)
-unsigned char * midiEvP;
-short           midiEvS;
-short           midi_ch;
+char *          midiEvP;
+char            midiEvS;
+char            midi_ch;
 {
-        unsigned char * saved_ptr = midiEvP;
-        unsigned char   saved_note;
+        /* Both byte arguments are saved and restored around the MIDI
+           OUT path, which walks them destructively. */
+        char            saved_note;             /* -2  */
+        unsigned char * saved_ptr;              /* -12 */
+        char            saved_size;             /* -14 */
         unsigned char * note_ptr;
         short           channel_idx;
         short           chosen;
@@ -425,23 +428,23 @@ short           midi_ch;
         unsigned short  freq_index;
         short           ret;
 
+        saved_ptr  = midiEvP;
+        saved_size = midiEvS;
+
         /* ---- MIDI OUT path ---- */
         if (g_moen != NO) {
-                saved_note = midiEvP[1];
-                if (midi_ch != 0) {
-                        short   octave_delta = env_val -
-                                        ((midi_ch >> 4) & 0xf);
-                        midiEvP[1] = (unsigned char)
-                                (midiEvP[1] + (short) octave_delta * -12);
-                }
+                saved_note = saved_ptr[1];
+                if (midi_ch != 0)
+                        midiEvP[1] = (midiEvP[1] & 0xff) -
+                                (((3 - ((midi_ch >> 4) & 0xf)) * 12) & 0xff);
                 if (mi_dwrm == 1) {
-                        while (midiEvS != 0) {
+                        while (midiEvS) {
                                 mowrit(*midiEvP);
-                                midiEvP = midiEvP + 1;
-                                midiEvS = midiEvS - 1;
+                                midiEvP++;
+                                midiEvS--;
                         }
                 } else {
-                        Midiws((long) (midiEvS - 1), midiEvP);
+                        Midiws(midiEvS - 1, midiEvP);
                 }
                 saved_ptr[1] = saved_note;
         }
@@ -449,6 +452,9 @@ short           midi_ch;
         /* ---- PSG path ---- */
         if (psg_out == NO)
                 return 1;
+
+        midiEvP  = saved_ptr;
+        midiEvS  = saved_size;
 
         note_ptr = saved_ptr + 1;
         if ((*saved_ptr & 0xf0) != 0x90)
