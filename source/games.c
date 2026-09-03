@@ -3315,27 +3315,28 @@ pk_chsc(hand, ace_mode)
 short * hand;
 short   ace_mode;
 {
-        short   score;
-        short   i;
-        BOOL16  ace_high;
+        /* Counter first; the scan terminates inside the loop body. */
+        short   i;              /* -2 */
+        short   ace_high;       /* -4 */
+        short   score;          /* -6 */
 
         ace_high = NO;
         score    = 0;
-        for (i = 0; i < 5 && hand[i] != CARD_NONE; i = i + 1) {
-                if ((short) hand[i] % 13 == 12) {
+        for (i = 0; i < 5; i++) {
+                if (hand[i] == CARD_NONE)
+                        return score;
+                if (hand[i] % 13 == 12) {
                         if (ace_mode == 0)
-                                score = score + 1;
-                        else if (ace_high != NO)
-                                score = score + 1;
-                        else {
-                                score    = score + 11;
+                                score++;
+                        else if (ace_high == NO) {
+                                score += 11;
                                 ace_high = YES;
-                        }
-                } else if ((short) hand[i] % 13 < 12 &&
-                                    7 < (short) hand[i] % 13) {
-                        score = score + 10;
+                        } else
+                                score++;
+                } else if (hand[i] % 13 <= 11 && hand[i] % 13 > 7) {
+                        score += 10;
                 } else {
-                        score = (short) hand[i] % 13 + 2 + score;
+                        score += hand[i] % 13 + 2;
                 }
         }
         return score;
