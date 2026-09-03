@@ -1092,6 +1092,166 @@ pk_dbet()
 }
 #endif
 
+/* pk_evh: evaluate a 5-card hand.  *hand_rank <- 0=high card..9=royal flush.
+   rank_flags[i]=1 for winning combo cards.  suit_flags: rank-sorted hand copy.
+   Preserves Ghidra shape (two goto exits) -- byte-comparable.
+   addr: poker_evaluate_hand() */
+
+static void
+pk_evh(hand, rank_flags, suit_flags, hand_rank)
+short * hand;
+short * rank_flags;
+short * suit_flags;
+short * hand_rank;
+{
+        /* LCP_STX's frame is -42: eleven declarations, four of them
+           zeroed on entry, and `j` doubles as the bubble-sort flag. */
+        short    straight;          /* -2  */
+        short    flush;             /* -4  */
+        short    unused;            /* -6, written once, never read */
+        short    ace_high;          /* -8  */
+        short    i;                 /* -10 */
+        short    j;                 /* -12, doubles as the sort flag */
+        short    tmp;               /* -14, doubles as the wheel flag */
+        short    rc[5];             /* -24 rank_flags scratch */
+        unsigned short  sc[5];      /* -34 pair-slot flag scratch */
+        short    hc;                /* -36 */
+        short    bp;                /* -38 */
+
+        straight = 0;
+        flush    = 0;
+        unused   = 0;
+        ace_high = 0;
+        *hand_rank = 0;
+        for (i = 0; i < 5; i++)
+                suit_flags[i] = hand[i];
+
+        /* Bubble sort suit_flags[] by rank ascending. */
+        j = 1;
+        while (j) {
+                j = 0;
+                for (i = 0; i < 4; i++) {
+                        if (suit_flags[i]     % 13 >
+                            suit_flags[i + 1] % 13) {
+                                tmp = suit_flags[i + 1];
+                                suit_flags[i + 1] = suit_flags[i];
+                                suit_flags[i] = tmp;
+                                j = 1;
+                        }
+                }
+        }
+
+        /* Ace-high is latched BEFORE the straight scan in LCP_STX, and
+           the wheel flag borrows the sort's tmp slot. */
+        if (suit_flags[4] % 13 == 12)
+                ace_high = 1;
+        straight = 1;
+        for (i = 0; i < 3; i++) {
+                if (suit_flags[i] % 13 != suit_flags[i + 1] % 13 - 1)
+                        straight = 0;
+        }
+        tmp = 0;
+        /* Wheel straight A-2-3-4-5 lives with Ace-high sorted last. */
+        if (ace_high != 0 && straight != 0 && suit_flags[0] % 13 == 0)
+                tmp = 1;
+        if (tmp == 0 &&
+            suit_flags[3] % 13 != suit_flags[4] % 13 - 1)
+                straight = 0;
+
+        /* Flush: all same suit (card / 13). */
+        flush = YES;
+        for (i = 0; i < 4; i++) {
+                if (suit_flags[i]     / 13 !=
+                    suit_flags[i + 1] / 13)
+                        flush = NO;
+        }
+        if (straight != NO) *hand_rank = 4;
+        if (flush != NO)    *hand_rank = 5;
+        if (straight != NO && flush != NO)
+                *hand_rank = 8;
+        /* Royal: T-J-Q-K-A of one suit -- rank[0] == 8 (ten). */
+        if (*hand_rank == 8 && suit_flags[0] % 13 == 8)
+                *hand_rank = 9;
+        if (*hand_rank != 0)
+                return;
+
+        for (i = 0; i < 5; i++) {
+                rank_flags[i] = 0;
+                rc[i]         = 0;
+                sc[i]         = 0;
+        }
+
+        hc = 0;                 /* first-hit rank (pair/trip/quad) */
+        bp = 0;                 /* second-hit rank (two pair / full) */
+        i = 0;
+        while (i < 13) {
+                tmp = 0;
+                for (j = 0; j < 5; j++) {
+                        if ((short) hand[j] % 13 == i) {
+                                if (hc == 0)
+                                        rc[j] = 1;
+                                else if (bp == 0)
+                                        sc[j] = 1;
+                                tmp++;
+                        }
+                }
+                /* Four of a kind: rank 7, flags = rc (the 4 matched
+                   cards).  LCP_STX handles it inline and jumps out
+                   rather than breaking to a tail block. */
+                if (tmp == 4) {
+                        hc = 7;
+                        for (i = 0; i < 5; i++)
+                                rank_flags[i] = rc[i];
+                        goto rank_from_hc_bp;
+                }
+                if (tmp == 3) {
+                        if (hc == 0) {
+                                hc = 3;
+                                for (j = 0; j < 5; j++)
+                                        rank_flags[j] = rc[j];
+                        } else if (bp == 0) {
+                                bp = 3;
+                                for (j = 0; j < 5; j++)
+                                        rank_flags[j] = sc[j];
+                                goto rank_from_hc_bp;
+                        }
+                }
+                if (tmp == 1) {
+                        if (hc == 0) {
+                                for (j = 0; j < 5; j++)
+                                        rc[j] = 0;
+                        } else if (bp == 0) {
+                                for (j = 0; j < 5; j++)
+                                        sc[j] = 0;
+                        }
+                }
+                if (tmp == 2) {
+                        if (hc == 0) {
+                                hc = 1;
+                                for (j = 0; j < 5; j++)
+                                        rank_flags[j] = rc[j];
+                        } else if (bp == 0) {
+                                if (hc == 1) {
+                                        bp = 1;
+                                        for (j = 0; j < 5; j++)
+                                                rank_flags[j] |= sc[j];
+                                } else if (hc == 3) {
+                                        bp = 1;
+                                }
+                        }
+                }
+                i++;
+        }
+
+rank_from_hc_bp:
+        if (hc + bp == 7) *hand_rank = 7;   /* 4-of-kind */
+        if (hc + bp == 3) *hand_rank = 3;   /* tmp */
+        if (hc + bp == 4) *hand_rank = 6;   /* full house */
+        if (hc + bp == 2) *hand_rank = 2;   /* two pair */
+        if (hc + bp != 1) return;
+        *hand_rank = 1;                                          /* one pair */
+}
+
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
    On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
    addr: poker_ante_phase() */
@@ -1131,155 +1291,6 @@ pk_ante()
                 g_ppppa = g_ppppa + 1;
                 pk_dpot();
         }
-}
-
-/* pk_evh: evaluate a 5-card hand.  *hand_rank <- 0=high card..9=royal flush.
-   rank_flags[i]=1 for winning combo cards.  suit_flags: rank-sorted hand copy.
-   Preserves Ghidra shape (two goto exits) -- byte-comparable.
-   addr: poker_evaluate_hand() */
-
-static void
-pk_evh(hand, rank_flags, suit_flags, hand_rank)
-short * hand;
-short * rank_flags;
-short * suit_flags;
-short * hand_rank;
-{
-        short    bp;
-        short    hc;
-        unsigned short  sc[5];      /* pair-slot flag scratch */
-        short    rc[5];             /* rank_flags scratch */
-        short    trips;
-        short    i, j;
-        BOOL16   flush;
-        BOOL16   straight;
-        short    tmp;
-
-        *hand_rank = 0;
-        for (i = 0; i < 5; i = i + 1)
-                suit_flags[i] = hand[i];
-
-        /* Bubble sort suit_flags[] by rank ascending. */
-        straight = YES;
-        while (straight) {
-                straight = NO;
-                for (i = 0; i < 4; i = i + 1) {
-                        if (suit_flags[i + 1] % 13 <
-                            suit_flags[i]     % 13) {
-                                tmp = suit_flags[i + 1];
-                                suit_flags[i + 1] = suit_flags[i];
-                                suit_flags[i] = tmp;
-                                straight = YES;
-                        }
-                }
-        }
-
-        /* Straight detection: 0..3 monotonic +1 in rank. */
-        straight = YES;
-        for (i = 0; i < 3; i = i + 1) {
-                if ((short)(suit_flags[i] % 13) !=
-                    (short)(suit_flags[i + 1] % 13 - 1))
-                        straight = NO;
-        }
-        flush = NO;
-        /* Wheel straight A-2-3-4-5 lives with Ace-high sorted last. */
-        if (suit_flags[4] % 13 == 12 && straight != NO &&
-            suit_flags[0] % 13 ==  0)
-                flush = YES;
-        if (flush == NO &&
-            (short)(suit_flags[3] % 13) !=
-            (short)(suit_flags[4] % 13 - 1))
-                straight = NO;
-
-        /* Flush: all same suit (card / 13). */
-        flush = YES;
-        for (i = 0; i < 4; i = i + 1) {
-                if (suit_flags[i]     / 13 !=
-                    suit_flags[i + 1] / 13)
-                        flush = NO;
-        }
-        if (straight != NO) *hand_rank = 4;
-        if (flush != NO)    *hand_rank = 5;
-        if (straight != NO && flush != NO)
-                *hand_rank = 8;
-        /* Royal: T-J-Q-K-A of one suit -- rank[0] == 8 (ten). */
-        if (*hand_rank == 8 && suit_flags[0] % 13 == 8)
-                *hand_rank = 9;
-        if (*hand_rank != 0)
-                return;
-
-        for (i = 0; i < 5; i = i + 1) {
-                rank_flags[i] = 0;
-                rc[i]         = 0;
-                sc[i]         = 0;
-        }
-
-        hc = 0;                 /* first-hit rank (pair/trip/quad) */
-        bp = 0;                 /* second-hit rank (two pair / full) */
-        i = 0;
-        while (i <= 12) {
-                trips = 0;
-                for (j = 0; j < 5; j = j + 1) {
-                        if ((short) hand[j] % 13 == i) {
-                                if (hc == 0)
-                                        rc[j] = 1;
-                                else if (bp == 0)
-                                        sc[j] = 1;
-                                trips = trips + 1;
-                        }
-                }
-                if (trips == 4)
-                        break;
-                if (trips == 3) {
-                        if (hc == 0) {
-                                hc = 3;
-                                for (j = 0; j < 5; j = j + 1)
-                                        rank_flags[j] = rc[j];
-                        } else if (bp == 0) {
-                                bp = 3;
-                                for (j = 0; j < 5; j = j + 1)
-                                        rank_flags[j] = sc[j];
-                                goto rank_from_hc_bp;
-                        }
-                }
-                if (trips == 1) {
-                        if (hc == 0) {
-                                for (j = 0; j < 5; j = j + 1)
-                                        rc[j] = 0;
-                        } else if (bp == 0) {
-                                for (j = 0; j < 5; j = j + 1)
-                                        sc[j] = 0;
-                        }
-                }
-                if (trips == 2) {
-                        if (hc == 0) {
-                                hc = 1;
-                                for (j = 0; j < 5; j = j + 1)
-                                        rank_flags[j] = rc[j];
-                        } else if (bp == 0) {
-                                if (hc == 1) {
-                                        bp = 1;
-                                        for (j = 0; j < 5; j = j + 1)
-                                                rank_flags[j] = sc[j] | rank_flags[j];
-                                } else if (hc == 3) {
-                                        bp = 1;
-                                }
-                        }
-                }
-                i = i + 1;
-        }
-        /* Four of a kind: rank 7, flags = rc (the 4 matched cards). */
-        hc = 7;
-        for (i = 0; i < 5; i = i + 1)
-                rank_flags[i] = rc[i];
-
-rank_from_hc_bp:
-        if ((short)(bp + hc) == 7) *hand_rank = 7;   /* 4-of-kind */
-        if ((short)(bp + hc) == 3) *hand_rank = 3;   /* trips */
-        if ((short)(bp + hc) == 4) *hand_rank = 6;   /* full house */
-        if ((short)(bp + hc) == 2) *hand_rank = 2;   /* two pair */
-        if ((short)(bp + hc) != 1) return;
-        *hand_rank = 1;                                          /* one pair */
 }
 
 /* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
