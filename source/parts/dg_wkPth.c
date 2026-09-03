@@ -13,10 +13,13 @@ dg_wkPth()
 {
         /* One local: every floor lookup is called inline (the first
            result goes on the stack for the compare).  The equal case
-           is the ELSE arm, so its three assignments sit at the end. */
+           is the ELSE arm, so its three assignments sit at the end.
+           Alcyon evaluates the RIGHT operand first, so the order of
+           the two arguments here is visible in which global the first
+           relocation names. */
         short   si;
 
-        if (getFlrY(g_dty) != getFlrY(dog_y)) {
+        if (getFlrY(dog_y) != getFlrY(g_dty)) {
                 g_dyx = stair_wp[si = (getFlrY(dog_y) - 1) * 2];
                 g_dyy = stair_wp[si + 1];
 

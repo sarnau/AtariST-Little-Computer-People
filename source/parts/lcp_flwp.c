@@ -15,7 +15,7 @@ lcp_flwp()
            the stair-table index into the first subscript. */
         short   stair_index;
 
-        if (getFlrY(g_wty) != getFlrY(lcp_y)) {
+        if (getFlrY(lcp_y) != getFlrY(g_wty)) {
                 g_wyx = stair_wp[stair_index =
                                  (getFlrY(lcp_y) - 1) * 2];
                 g_wyy = stair_wp[stair_index + 1];

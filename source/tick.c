@@ -164,7 +164,7 @@ short   counter;
                                 if (g_alsts == NO) {
                                         sf_sele(SFX_ALARM_CLOCK, 100000L);
                                         g_alsts = YES;
-                                } else if (g_sfacf == NO) {
+                                } else if (g_sfplf == NO) {
                                         sf_sele(SFX_ALARM_CLOCK, 100000L);
                                 }
                                 od_draw(g_obala[subAniC & 1],
@@ -172,7 +172,7 @@ short   counter;
                         }
                         if (alarm_p == NO) {
                                 g_alsts = NO;
-                                if (g_sfacf != NO && g_sfpli == SFX_ALARM_CLOCK)
+                                if (g_sfplf != NO && g_sfpli == SFX_ALARM_CLOCK)
                                         sf_so();
                         }
 
@@ -187,7 +187,7 @@ short   counter;
                                         od_draw(g_obpha[subAniC & 3],
                                                 190, 168);
                                 } else {
-                                        if (g_sfacf != NO &&
+                                        if (g_sfplf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
                                                 sf_so();
                                         od_draw(OBJ_PHONE_2, 190, 168);
@@ -196,7 +196,7 @@ short   counter;
                         if (ph_hu != NO) {
                                 od_draw(OBJ_PHONE_2, 190, 168);
                                 ph_hu = NO;
-                                if (g_sfacf != NO && g_sfpli == SFX_PHONE_RING)
+                                if (g_sfplf != NO && g_sfpli == SFX_PHONE_RING)
                                         sf_so();
                                 g_phrc = 0;
                         }
