@@ -1118,9 +1118,24 @@ Two layout levers, in order:
     top, and obdefs.h has no include guard of its own, so port sources
     include `obdefs1.h` instead.
 
-Text is byte-identical from 0 through **0x8804** (35%), i.e. the whole
+Text is byte-identical from 0 through **0x8d3c** (35%), and every
+static up to pk_annr (0xa664) is byte-exact apart from call
+displacements that still depend on later, unrecovered helpers, i.e. the whole
 MIDI object, cp_main, the 0x400c object and the minigame object up to
 poker's static helpers.
+
+**Recovered statics so far** (all byte-exact, all found with
+stx_txtdiff.py): pk_dbet 0x87a0, pk_evh 0x8804, pk_show 0x9a3a,
+pk_cace 0xa1bc, pk_blf 0xa24a, pk_cdrw 0xa27a.  Recurring findings in
+this class: the counter is declared FIRST and the inner loops reuse
+it; one local often doubles as two things (pk_evh's j is the
+bubble-sort flag, its tmp is both the swap temporary and the wheel
+flag); comparisons put the computer's side on the left; scan loops
+are written body-first with a break, not with a compound for
+condition; flag arrays are tested bare; and a helper often has NO
+explicit return on its success path, leaving the last compared value
+in d0 (pk_cace, the chk_timA pattern).  pk_tcm joins pk_bm and pk_rm
+as a char POINTER.
 
 **The blocker from here is a class of code verify_bytes has never
 looked at.**  It walks the port's SYMBOL table, and Alcyon emits a
