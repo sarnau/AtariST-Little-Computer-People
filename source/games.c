@@ -34,65 +34,17 @@
 #include "tick.h"
 #include "walk.h"
 
-/* mg_stp: prep the top status strip for the game menu.
-   Freezes text-scroll pane and disables keyboard input so keys
-   don't leak into the parser while a mini-game is running.
-   addr: mg_stp() */
+/* LCP_STX defines pk_bjwr AFTER pk_wrMn (0xb784) and reaches it with
+   a forward bsr; declaring it keeps the symbol local so as68 can
+   shorten the call instead of leaving an external. */
+static short pk_bjwr();
 
-void
-mg_stp()
-{
-        gameTick(5);
-        fillTopR(0x4d);
-        tx_sctm      = -1;
-        no_keyin = YES;
-}
 
-/* LCP_ORG keeps plEr here; the STX build includes it further down. */
+
+
+/* gamePlWQ is only reached from the ROM banner stubs; the default
+   build must not emit it (Alcyon lays a static down regardless). */
 #ifdef FAITHFUL
-#include "parts/plEr.c"
-#endif
-
-/* STX grouping: the mini-game window enter/leave helpers live in
-   this object (ag_* and wp_* reach them with bsr).  FAITHFUL keeps
-   them in gfx_prim.c. */
-#ifndef FAITHFUL
-#include "parts/vst_h20.c"     /* 0x75dc */
-#include "parts/rst_vsth.c"    /* 0x761e */
-
-void
-initVdi()
-{
-        sv_lgb = (void *) Logbase();
-        Setscreen(g_dscp, (void *)-1L, -1);     /* rez as word */
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 2);        /* STX: FILL_PATTERN */
-        vsf_style(vdihnd, 8);           /* STX: style 8 */
-        vsf_color(vdihnd, vdi_colt[0xc]);
-}
-
-void
-exitVdi()
-{
-        Setscreen(sv_lgb, (void *)-1L, -1);     /* rez as word */
-}
-
-#endif  /* !FAITHFUL */
-
-
-/* Shared cleanup at exit from any game. */
-
-static void
-gameCln(buffer)
-void *  buffer;
-{
-        tx_sctm      = 0;
-        no_keyin = NO;
-        if (buffer != (void *) 0)
-                Mfree(buffer);
-}
-
-
 static short
 gamePlWQ()
 {
@@ -106,8 +58,16 @@ gamePlWQ()
                         return 1;
         }
 }
+#endif
 
 #ifdef FAITHFUL
+#include "parts/plEr.c"
+#include "parts/mg_stp.c"
+#include "parts/vst_h20.c"
+#include "parts/rst_vsth.c"
+#include "parts/initVdi.c"
+#include "parts/exitVdi.c"
+#include "parts/gameCln.c"
 /* ---- ROM minigame stubs (games.o 0x72ac-0x769a) ----------------
    The ST original has NO playable minigames: each handler loads its
    assets, prints a banner, waits at the table (gamePlWQ), and frees.
@@ -221,6 +181,8 @@ pk_wrMn()
         gameCln(crd_dat);
         crd_dat = (short *) 0;
 }
+
+
 
 /* addr: pk_bjMn() (ROM 0x761e) */
 void
@@ -373,121 +335,6 @@ mg_wkev()
 #endif
 #endif
 
-/* ag_csb: clear the bottom info bar (5,62)-(319,75).
-   addr: anagram_clear_status_bar() */
-
-void
-ag_csb()
-{
-        short   rect[4];
-        rect[0] = 5;   rect[1] = 62;
-        rect[2] = 319; rect[3] = 75;
-        initVdi();
-        v_bar(vdihnd, rect);
-        exitVdi();
-}
-
-/* ag_cwda: clear the right-panel word display area (162,10)-(319,49).
-   addr: anagram_clear_word_display_area() */
-
-void
-ag_cwda()
-{
-        short   rect[4];
-        rect[0] = 162; rect[1] = 10;
-        rect[2] = 319; rect[3] = 49;
-        initVdi();
-        v_bar(vdihnd, rect);
-        exitVdi();
-}
-
-/* ag_cswa: clear the left-panel intro/instructions area (5,10)-(160,60).
-   addr: anagram_clear_scrambled_word_area() */
-
-void
-ag_cswa()
-{
-        short   rect[4];
-        rect[0] = 5;   rect[1] = 10;
-        rect[2] = 160; rect[3] = 60;
-        initVdi();
-        v_bar(vdihnd, rect);
-        exitVdi();
-}
-
-/* ag_cgpa: clear the "Guess #N?" prompt bar (166,50)-(319,65).
-   addr: anagram_clear_guess_prompt_area() */
-
-void
-ag_cgpa()
-{
-        short   rect[4];
-        rect[0] = 166; rect[1] = 50;
-        rect[2] = 319; rect[3] = 65;
-        initVdi();
-        v_bar(vdihnd, rect);
-        exitVdi();
-}
-
-/* ag_sgp -> parts/ag_sgp.c (STX: 0x8052, after ag_intr). */
-#ifdef FAITHFUL
-#include "parts/ag_sgp.c"
-#endif
-
-/* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch.
-   addr: anagram_display_word_large() */
-
-void
-ag_dwl(word, text_color)
-char *  word;
-short   text_color;
-{
-        short   x;
-
-        ag_cwda();
-        vst_h20();
-        x = 0;
-#ifdef FAITHFUL
-        for (; *word != '\0'; word = word + 1) {
-                prCh((short) *word, x + 162, 37, text_color);
-                x = x + 12;
-        }
-#else
-        /* STX steps the pointer inside the body, before the pitch,
-           and both steps are memory-direct. */
-        while (*word != '\0') {
-                prCh((short) *word, x + 162, 37, text_color);
-                word++;
-                x += 12;
-        }
-#endif
-        rst_vsth();
-}
-
-/* ag_intr: draw the 5-line intro text in the left panel.
-   addr: anagram_show_intro_text() */
-
-void
-ag_intr()
-{
-        strPr("I am thinking of",  5, 17, COLOR_black);
-        strPr("a word.  Here it",  5, 25, COLOR_black);
-        strPr("is jumbled up...",  5, 33, COLOR_black);
-        strPr("See if you can ",   5, 41, COLOR_black);
-        strPr("guess what it is.", 5, 49, COLOR_black);
-}
-
-#ifndef FAITHFUL
-#include "parts/ag_sgp.c"   /* STX: 0x8052, after ag_intr */
-#endif
-
-/* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
-   at 0x7f84); see parts/plEr.c. */
-#ifndef FAITHFUL
-#include "parts/plEr.c"
-#include "parts/plErCol.c"   /* 0x871a, right after plEr */
-#endif
-
 
 /* ag_matc: character-by-character equality test for two C strings.
    Preserves 1985 shape: walks both strings after mismatch, reports
@@ -535,270 +382,13 @@ char *  b;
                 return 1;
 #endif
 }
+#include "parts/mg_stp.c"    /* 0x759c */
+#include "parts/gameCln.c"   /* 0x75c8 */
+#include "parts/vst_h20.c"   /* 0x75dc */
+#include "parts/rst_vsth.c"  /* 0x761e */
+#include "parts/initVdi.c"   /* 0x764e */
+#include "parts/exitVdi.c"   /* 0x76d0 */
 
-/* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
-   copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
-   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string.
-   addr: anagram_select_and_scramble_word() */
-
-void
-ag_ssw()
-{
-#ifdef FAITHFUL
-        short   idx;
-        short   pos;
-        short   n;
-        char *  wp;
-        short   ia;
-        short   ib;
-        char    tmp;
-
-        idx      = rndRng(0, 0x95);            /* 0..149 */
-        pos      = 0;
-        g_agorw  = g_agwb + (short)(idx * 11);
-        for (wp = g_agorw; *wp > ' ' && *wp != '.'; wp = wp + 1) {
-                g_agscw[pos] = *wp;
-                pos          = pos + 1;
-        }
-        g_agscw[pos] = '\0';
-        *wp          = '\0';
-        g_agwol      = pos;
-
-        for (;;) {
-                if (ag_matc(g_agscw, g_agorw) == 0)
-                        break;
-                n = 0;
-                for (;;) {
-                        if (rndRng(10, 0x14) <= n)
-                                break;
-                        ia  = rndRng(0, g_agwol - 1);
-                        ib  = rndRng(0, g_agwol - 1);
-                        tmp = g_agscw[ib];
-                        g_agscw[ib] = g_agscw[ia];
-                        g_agscw[ia] = tmp;
-                        n = n + 1;
-                }
-        }
-        ag_dwl(g_agscw, COLOR_green);
-#else
-        /* STX's frame is -18: no `idx`, one counter reused for the
-           copy index and the shuffle round, and a local copy of the
-           word length that the shuffle reads instead of g_agwol. */
-        short   pos;
-        short   len;
-        short   ia;
-        short   ib;
-        char    tmp;
-        char *  wp;
-
-        g_agorw = g_agwb + rndRng(0, 0x95) * 11;        /* 0..149 */
-        pos     = 0;
-        for (wp = g_agorw; *wp > ' ' && *wp != '.'; ) {
-                /* index first: the base folds into add.l #base,An */
-                *(pos + g_agscw) = *wp;
-                wp++;
-                pos++;
-        }
-        g_agscw[pos] = '\0';
-        *wp          = '\0';
-        len     = pos;
-        g_agwol = len;
-
-        while (ag_matc(g_agscw, g_agorw) != 0) {
-                pos = 0;
-                while (rndRng(10, 0x14) > pos) {
-                        ia  = rndRng(0, len - 1);
-                        ib  = rndRng(0, len - 1);
-                        tmp = g_agscw[ib];
-                        g_agscw[ib] = g_agscw[ia];
-                        g_agscw[ia] = tmp;
-                        pos++;
-                }
-        }
-        ag_dwl(g_agscw, COLOR_green);
-#endif
-}
-
-/* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
-   inner per-keypress.  Labels new_word/validate mirror the two
-   goto LAB_00018210 / LAB_00018562 jumps in the 1985 source.
-   addr: ag_main() (== anagram_main) */
-
-void
-ag_main()
-{
-        /* STX's frame is -28: twelve shorts, only six of which the
-           body touches. */
-        short   index;
-        short   unused1;
-        short   unused2;
-        short   key_pressed;
-        short   unused3;
-        short   walk_result;
-        char    typed_char;
-        short   clue_count;
-        short   guess_count;
-        short   unused5;
-        short   unused6;
-        BOOL16  word_complete;
-
-        g_agwb = (char *) Malloc(10000L);
-        if (g_agwb == (char *) 0)
-                er_nomem();
-        fr_reac("words", (unsigned char *) g_agwb, 10000);
-        mg_stp();
-        strPr("***ANAGRAMS***", 5, 8, COLOR_black);
-        ag_intr();
-
-new_word:
-        ag_csb();
-        g_agclc = 0;
-        g_aggun = 1;
-        ag_ssw();
-
-        /* STX runs the round prologue ONCE per word and folds the
-           guess-count guard into a `while` condition; the
-           "too many guesses" tail lives inside the loop and ends with
-           `goto new_word`. */
-        g_agacu = 0;
-        ag_clue = 0;
-        strPr("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
-        ag_sgp(g_aggun);
-        for (index = 0; index < 10; index++)
-                g_aginb[index] = ' ';
-        g_aginb[10]   = '\0';
-        gameTick(0);
-        word_complete = NO;
-        while (g_aggun < 9 || (g_aggun < 10 && g_agacu != 0)) {
-                index         = 0;
-                key_pressed   = 0;
-                while (key_pressed != KEY_CTRL_M) {
-                        strPr(g_aginb, 239, 57, COLOR_green);
-                        key_pressed = mg_wkev();
-                        if (key_pressed >= 'A' && key_pressed <= 'Z')
-                                key_pressed += 0x20;
-                        if (key_pressed <= 'z' && key_pressed >= 'a') {
-                                g_aginb[index] = key_pressed;
-                                if (++index >= 10) {
-                                        index = 9;
-                                        ag_sgp(g_aggun);
-                                }
-                        }
-                        if (key_pressed == KEY_CURSOR_LEFT) {
-                                if (index != 0) {
-                                        if (index == 9 &&
-                                            g_aginb[index] != ' ')
-                                                g_aginb[index] = ' ';
-                                        else {
-                                                index--;
-                                                *(index + g_aginb) = ' ';
-                                        }
-                                } else
-                                        g_aginb[index] = ' ';
-                                ag_sgp(g_aggun);
-                                continue;
-                        }
-                        if (key_pressed == KEY_F10) {
-                                tx_sctm  = 0;
-                                no_keyin = NO;
-                                Mfree(g_agwb);
-                                return;
-                        }
-                        if (key_pressed == KEY_F1 && ag_clue == 0) {
-                                /* Braced: a bare `continue` folds into
-                                   the conditional branch, braces make
-                                   Alcyon emit beq-over-bra. */
-                                if (ag_matc(g_agorw, g_agscw) != 0) {
-                                        continue;
-                                }
-                                /* Clue path: reveal one letter. */
-                                g_agclc++;
-                                g_aggun++;
-                                ag_sgp(g_aggun);
-                                if (g_aggun == 9)
-                                        g_agacu = 1;
-                                ag_clue = 1;
-                                plEr(182, 0, 319, 9);
-                                strPr("         F10 Quit", 183, 8,
-                                      COLOR_blue);
-                                for (guess_count = 0;
-                                     guess_count < g_agwol;
-                                     guess_count++)
-                                        if (g_agorw[guess_count] !=
-                                            g_agscw[guess_count])
-                                                break;
-                                if (guess_count != g_agwol) {
-                                        clue_count = g_agwol - 1;
-                                        for (;;) {
-                                                if (g_agorw[guess_count] ==
-                                                    g_agscw[clue_count])
-                                                        break;
-                                                clue_count--;
-                                        }
-                                        typed_char = g_agscw[clue_count];
-                                        g_agscw[clue_count] =
-                                                g_agscw[guess_count];
-                                        g_agscw[guess_count] = typed_char;
-                                }
-                                ag_dwl(g_agscw, COLOR_green);
-                                if (ag_matc(g_agorw, g_agscw) != 0) {
-                                        ag_csb();
-                                        strPr("You took too many clues!",
-                                              5, 69, COLOR_black);
-                                        ag_dwl(g_agorw, COLOR_black);
-                                        gameTick(0x14);
-                                        word_complete = YES;
-                                }
-                                if (word_complete != NO)
-                                        goto validate;
-                        } else if (word_complete != NO)
-                                goto validate;
-                }
-
-validate:
-                if (word_complete != NO)
-                        goto new_word;
-                /* The second test is a bare truthiness test, which
-                   is what makes Alcyon reach it with an indexed EA
-                   (movea.w idx,a0 / movea.l #base,a1 /
-                   tst.b (0,a0,a1.l)); spelling it `!= '\0'` emits the
-                   base+add form instead. */
-                for (index = 0;
-                     g_aginb[index] != ' ' && g_aginb[index];
-                     index++) ;
-                if (g_aginb[index] == ' ')
-                        g_aginb[index] = '\0';
-                if (ag_matc(g_aginb, g_agorw) != 0) {
-                        strPr("YOU GOT IT!!!!!!",
-                                             5, 69, COLOR_black);
-                        ag_dwl(g_agorw, COLOR_black);
-                        gameTick(0x1e);
-                        ag_csb();
-                        goto new_word;
-                /* The guess counter steps in the condition itself,
-                   so both arms see it incremented. */
-                } else if (g_aggun++ < 8) {
-                        strPr(g_agwgm[rndRng(0, 2)], 5, 69, COLOR_black);
-                        gameTick(0x14);
-                        ag_csb();
-                        goto new_word;
-                } else {
-
-                /* Too many wrong guesses: show the answer, start a
-                   new word. */
-                strPr("Sorry, too many guesses!",
-                             5, 69, COLOR_black);
-                gameTick(0x14);
-                ag_csb();
-                strPr("Here is the word.",
-                             5, 69, COLOR_black);
-                ag_dwl(g_agorw, COLOR_black);
-                gameTick(0x1e);
-                ag_cwda();
-                goto new_word;
-                }
-        }
-}
 
 /* wp_main: WORD PUZZLE main loop.
    Loads wordpz.txt into a 2000-byte buffer, indexes 66 line pointers
@@ -1092,549 +682,384 @@ wp_rtmp()
         }
 }
 
-static void     pk_show();
-
-
-/* pk_wrMn: WAR mini-game main loop.
-   Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
-   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
-   addr: pk_wrMn() (== poker_war_main) */
+/* ag_cwda: clear the right-panel word display area (162,10)-(319,49).
+   addr: anagram_clear_word_display_area() */
 
 void
-pk_wrMn()
+ag_cwda()
 {
-        /* Seven locals: ikey and cidx double as the shuffle's and the
-           deal loop's indices, and ikey also carries the war round's
-           result. */
-        short   ikey;
-        short   cidx;
-        short   j;
-        short   t;
-        char *  sp;
-        short   saved_head_frame;
-        short   saved_head_mode;
-
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCrd();
-        mg_stp();
-
-        g_pcmon = 26;
-        g_ppmon = 26;
-        g_ppppa = 0;
-
-        /* Deck 0..51 then Fisher-Yates-lite 400-swap shuffle. */
-        for (ikey = 0; ikey < 52; ikey++)
-                pk_dsc[ikey] = ikey;
-        j = 400;
-        while (j--) {
-                ikey = rndRng(0, 51);
-                do {
-                        cidx = rndRng(0, 51);
-                } while (ikey == cidx);
-                t = pk_dsc[cidx];
-                pk_dsc[cidx] = pk_dsc[ikey];
-                pk_dsc[ikey] = t;
-        }
-        ikey = 0;
-        for (cidx = 0; ikey < 52; cidx++) {
-                g_pcdrp[cidx] = pk_dsc[ikey];
-                ikey++;
-                g_ppdrp[cidx] = pk_dsc[ikey];
-                ikey++;
-        }
-
-        pk_awp();
-        pk_dppm();
-        pk_dpot();
-
-        /* Per-round loop (Ghidra LAB_0001b29c): a label and explicit
-           gotos, not a for(;;) -- every round-end branches straight
-           back here rather than to a loop-bottom edge.  The bare
-           `pk_dppm;` is in the original: a call whose parentheses
-           were left off, so Alcyon just loads its address into d0. */
-round:
-                pk_awp();
-                pk_dppm;
-                pk_dpot();
-                plEr(5, 63, 319, 75);
-                plEr(225, 10, 319, 60);
-                plEr(70, 10, 219, 62);
-
-                /* Every exit is a goto: the two message blocks and
-                   the cleanup are labels the war round jumps back
-                   into, and the cleanup returns. */
-                if (g_pcmon == 0) {
-out_of_cards:
-                        pk_pmsg("I'm out of cards! You're too good!");
-                        gameTick(0x14);
-cleanup:
-                        tx_sctm  = 0;
-                        no_keyin = NO;
-                        Mfree(crd_dat);
-                        moff();
-                        return;
-                }
-                if (g_ppmon == 0) {
-no_cards:
-                        pk_pmsg("No cards, huh? Better luck next time.");
-                        gameTick(0x14);
-                        goto cleanup;
-                }
-
-                gameTick(5);
-                pk_pwc[0] = pk_rmch(g_ppdrp, &g_ppmon);
-                g_ppppa++;
-                pk_drcs(CARD_BACK, 0, 1);
-                pk_dpot();
-                pk_dppm();
-                gameTick(3);
-                pk_cwc[0] = pk_rmch(g_pcdrp, &g_pcmon);
-                g_ppppa++;
-                pk_drcs(pk_cwc[0], 0, 0);
-                pk_dpot();
-                pk_awp();
-
-                pk_pmsg("Show me your card, Ace.");
-                strPr("F1  Show", 225, 18, COLOR_red);
-                strPr("F10 Quit", 225, 26, COLOR_red);
-                ikey = 0;
-                while (ikey != 1 && ikey != 2)
-                        ikey = pk_inph(KEY_F1, KEY_F10, 255);
-                if (ikey == 2)
-                        goto cleanup;
-
-                pk_drcs(pk_pwc[0], 0, 1);
-                plEr(225, 10, 319, 60);
-                gameTick(5);
-
-                /* Both ranks land in locals before the compare, and
-                   the loser's branch recomputes them the other way
-                   round. */
-                if ((ikey = pk_pwc[0] % 13) > (cidx = pk_cwc[0] % 13)) {
-                        /* Player wins. */
-                        if (ikey == 12) {
-                                sp = "Ace? I don't believe it!";
-                        } else {
-                                switch (rndRng(1, 6)) {
-                                case 1: sp = "You're awfully lucky!";       break;
-                                case 2: sp = "Arrghh!";                        break;
-                                case 3: sp = "You're tough.";                 break;
-                                case 4: sp = "I'll get you next time.";     break;
-                                case 5: sp = "Dog-gone it.";                   break;
-                                case 6: sp = "All right. Slow down.";       break;
-                                }
-                        }
-                        pk_pmsg(sp);
-                        gameTick(8);
-                        pk_annr(1);
-                        plEr(70, 10, 219, 62);
-                        g_ppmon -= 2;
-                        pk_actd(g_ppdrp, &g_ppmon, pk_pwc[0]);
-                        pk_actd(g_ppdrp, &g_ppmon, pk_cwc[0]);
-                        goto round;
-                } else if ((ikey = pk_cwc[0] % 13) > (cidx = pk_pwc[0] % 13)) {
-                        /* Computer wins by margin (ikey - cidx). */
-                        if (ikey == 12) {
-                                sp = "Ace takes it!";
-                        } else if (ikey - cidx <= 2) {
-                                if (rndRng(0, 1))
-                                        sp = "Whew! That was too close.";
-                                else
-                                        sp = "Hmm... That's not too bad!";
-                        } else if (ikey - cidx >= 7) {
-                                switch (rndRng(1, 3)) {
-                                case 1: sp = "No contest. You lose!"; break;
-                                case 2: sp = "Beat you by a mile.";   break;
-                                case 3: sp = "That was easy!";        break;
-                                }
-                        } else if (cidx <= 3) {
-                                if (rndRng(0, 1))
-                                        sp = "That's an easy card to beat.";
-                                else
-                                        sp = "Not a very high card, but I'll take it.";
-                        } else if (cidx >= 9) {
-                                sp = "Great, a face card, and it's mine now!";
-                        } else {
-                                switch (rndRng(1, 3)) {
-                                case 1: sp = "Alright. I win!";        break;
-                                case 2: sp = "Better luck next time."; break;
-                                case 3: sp = "Hey... look at that!";   break;
-                                }
-                        }
-                        pk_pmsg(sp);
-                        saved_head_frame = g_hsfra;
-                        saved_head_mode  = g_hamod;
-                        a_peeka();
-                        g_hamod = saved_head_mode;
-                        gameTick(8);
-                        pk_annr(0);
-                        plEr(70, 10, 219, 62);
-                        g_pcmon -= 2;
-                        pk_actd(g_pcdrp, &g_pcmon, pk_pwc[0]);
-                        pk_actd(g_pcdrp, &g_pcmon, pk_cwc[0]);
-                        g_hsfra = saved_head_frame;
-                        goto round;
-                } else {
-                        /* Tie -> war round. */
-                        ikey = pk_bjwr();
-                        if (mg_tofl != NO)
-                                goto cleanup;
-                        if (ikey == -1)
-                                goto out_of_cards;
-                        if (ikey == -2)
-                                goto no_cards;
-                        goto round;
-                }
+        short   rect[4];
+        rect[0] = 162; rect[1] = 10;
+        rect[2] = 319; rect[3] = 49;
+        initVdi();
+        v_bar(vdihnd, rect);
+        exitVdi();
 }
 
-/* pk_bjwr: nested war round.  Draw 3 face-down + 1 face-up each.
-   On tie, loops with g_pchc++.
-   Returns 0 = normal, -1 = computer out / user quit, -2 = player out.
-   addr: poker_blackjack_war_round() */
-
-static short
-pk_bjwr()
-{
-        short   drawn;
-        short   res;
-        short   idx;
-        short   off;      /* (g_pchc << 2) + g_pchc + g_pchc == g_pchc*6 */
-
-        g_pchc = 0;
-        for (idx = 1; idx < 52; idx = idx + 1) {
-                pk_cwc[idx] = CARD_NONE;
-                pk_pwc[idx] = CARD_NONE;
-        }
-        for (;;) {
-                pk_pmsg("... WAR!! ...");
-                gameTick(10);
-                if (g_pcmon == 0) return -1;
-                if (g_ppmon == 0) return -2;
-
-                idx = 1;
-                while (idx < 4 && g_ppmon != 1 && g_pcmon != 1) {
-                        off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
-                        drawn = pk_rmch(g_ppdrp, &g_ppmon);
-                        pk_pwc[idx + off] = drawn;
-                        g_ppppa = g_ppppa + 1;
-                        pk_drcs(CARD_BACK, idx, 1);
-                        pk_dpot();
-                        pk_dppm();
-                        gameTick(3);
-                        drawn = pk_rmch(g_pcdrp, &g_pcmon);
-                        pk_cwc[idx + off] = drawn;
-                        g_ppppa = g_ppppa + 1;
-                        pk_drcs(CARD_BACK, idx, 0);
-                        pk_dpot();
-                        pk_awp();
-                        gameTick(3);
-                        idx = idx + 1;
-                }
-
-                /* Final face-up card each. */
-                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
-                drawn = pk_rmch(g_ppdrp, &g_ppmon);
-                pk_pwc[idx + off] = drawn;
-                g_ppppa = g_ppppa + 1;
-                pk_drcs(CARD_BACK, idx, 1);
-                pk_dpot();
-                pk_dppm();
-                gameTick(3);
-                drawn = pk_rmch(g_pcdrp, &g_pcmon);
-                pk_cwc[idx + off] = drawn;
-                g_ppppa = g_ppppa + 1;
-                pk_drcs(drawn, idx, 0);
-                pk_dpot();
-                pk_awp();
-                gameTick(3);
-
-                pk_pmsg("Let's see what you've got...");
-                strPr("F1 Show", 225, 18, COLOR_red);
-                while ((res = pk_inph(KEY_F1, 0, 0)) != 1) {
-                        if (mg_tofl != NO)
-                                return -1;
-                }
-                pk_drcs(pk_pwc[idx + off], idx, 1);
-                plEr(225, 10, 319, 60);
-                gameTick(5);
-
-                if ((short)((short) pk_cwc[idx + off] % 13) <
-                    (short)((short) pk_pwc[idx + off] % 13)) {
-                        /* Player wins the war round. */
-                        pk_pmsg("You win the war!!!");
-                        gameTick(8);
-                        while (idx = idx - 1, idx != 0) {
-                                pk_drcs(pk_cwc[idx + off], idx, 0);
-                                gameTick(1);
-                        }
-                        gameTick(10);
-                        res = g_ppppa;
-                        pk_annr(1);
-                        g_ppmon = g_ppmon - res;
-                        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
-                                pk_actd(g_ppdrp, &g_ppmon, pk_pwc[idx]);
-                                pk_actd(g_ppdrp, &g_ppmon, pk_cwc[idx]);
-                        }
-                        return 0;
-                }
-                if ((short)((short) pk_pwc[idx + off] % 13) <
-                    (short)((short) pk_cwc[idx + off] % 13))
-                        break;
-                g_pchc = g_pchc + 1;
-        }
-
-        /* Computer wins the war round. */
-        pk_pmsg("I win the war!!!");
-        gameTick(8);
-        while (idx = idx - 1, idx != 0) {
-                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
-                pk_drcs(pk_pwc[idx + off], idx, 1);
-                gameTick(1);
-        }
-        gameTick(10);
-        res = g_ppppa;
-        pk_annr(0);
-        g_pcmon = g_pcmon - res;
-        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
-                pk_actd(g_pcdrp, &g_pcmon, pk_pwc[idx]);
-                pk_actd(g_pcdrp, &g_pcmon, pk_cwc[idx]);
-        }
-        return 0;
-}
-
-/* pk_pmsg: print a green status message in the bottom info bar.
-   addr: poker_print_message() */
+/* ag_cswa: clear the left-panel intro/instructions area (5,10)-(160,60).
+   addr: anagram_clear_scrambled_word_area() */
 
 void
-pk_pmsg(str)
-char *  str;
+ag_cswa()
 {
-        plEr(5, 63, 319, 75);
-        strPr(str, 5, 71, COLOR_green);
+        short   rect[4];
+        rect[0] = 5;   rect[1] = 10;
+        rect[2] = 160; rect[3] = 60;
+        initVdi();
+        v_bar(vdihnd, rect);
+        exitVdi();
 }
 
-/* STX: pk_ldCrd sits here (0xab04), ahead of pk_awp. */
-#ifndef FAITHFUL
-#include "parts/pk_ldCrd.c"
-#endif
-
-/* pk_awp: display computer money count in the top-left panel.
-   Preserves the 3-digit hand-formatted, space-padded byte layout
-   from Ghidra verbatim (byte-comparable).
-   addr: poker_award_pot() */
+/* ag_cgpa: clear the "Guess #N?" prompt bar (166,50)-(319,65).
+   addr: anagram_clear_guess_prompt_area() */
 
 void
-pk_awp()
+ag_cgpa()
 {
-        char    str[10];
-        short   rem;
-
-        plEr(5, 10, 31, 20);
-        str[3] = '\0';
-        str[0] = (str[8] = g_pcmon / 100) + '0';
-        if (str[0] == '0')
-                str[0] = ' ';
-        str[6] = (rem = g_pcmon % 100) / 10;
-        if (str[0] == ' ' && str[6] == '\0')
-                str[1] = ' ';
-        else
-                str[1] = str[6] + '0';
-        str[4] = rem % 10;
-        str[2] = str[4] + '0';
-        strPr(str, 5, 18, COLOR_black);
+        short   rect[4];
+        rect[0] = 166; rect[1] = 50;
+        rect[2] = 319; rect[3] = 65;
+        initVdi();
+        v_bar(vdihnd, rect);
+        exitVdi();
 }
 
-/* pk_dppm: display player money (same 3-digit format as pk_awp).
-   addr: poker_display_player_money() */
+/* ag_csb: clear the bottom info bar (5,62)-(319,75).
+   addr: anagram_clear_status_bar() */
 
 void
-pk_dppm()
+ag_csb()
 {
-        char    str[10];
-        short   rem;
-
-        plEr(5, 50, 31, 60);
-        str[3] = '\0';
-        str[0] = (str[8] = g_ppmon / 100) + '0';
-        if (str[0] == '0')
-                str[0] = ' ';
-        str[6] = (rem = g_ppmon % 100) / 10;
-        if (str[0] == ' ' && str[6] == '\0')
-                str[1] = ' ';
-        else
-                str[1] = str[6] + '0';
-        str[4] = rem % 10;
-        str[2] = str[4] + '0';
-        strPr(str, 5, 58, COLOR_black);
+        short   rect[4];
+        rect[0] = 5;   rect[1] = 62;
+        rect[2] = 319; rect[3] = 75;
+        initVdi();
+        v_bar(vdihnd, rect);
+        exitVdi();
 }
 
-/* pk_dpot: display the pot amount in the middle panel.
-   addr: poker_display_pot() */
+/* ag_intr: draw the 5-line intro text in the left panel.
+   addr: anagram_show_intro_text() */
 
 void
-pk_dpot()
+ag_intr()
 {
-        char    str[10];
-        short   rem;
-
-        plEr(31, 30, 57, 40);
-        str[3] = '\0';
-        str[0] = (str[8] = g_ppppa / 100) + '0';
-        if (str[0] == '0')
-                str[0] = ' ';
-        str[6] = (rem = g_ppppa % 100) / 10;
-        if (str[0] == ' ' && str[6] == '\0')
-                str[1] = ' ';
-        else
-                str[1] = str[6] + '0';
-        str[4] = rem % 10;
-        str[2] = str[4] + '0';
-        strPr(str, 31, 38, COLOR_black);
+        strPr("I am thinking of",  5, 17, COLOR_black);
+        strPr("a word.  Here it",  5, 25, COLOR_black);
+        strPr("is jumbled up...",  5, 33, COLOR_black);
+        strPr("See if you can ",   5, 41, COLOR_black);
+        strPr("guess what it is.", 5, 49, COLOR_black);
 }
 
-/* pk_rmch: pop card from top of `pile`; shift remaining entries down.
-   Returns CARD_NONE if empty.
-   addr: poker_remove_card_from_hand() */
-
-short
-pk_rmch(pile, count)
-short * pile;
-short * count;
-{
-#ifdef FAITHFUL
-        short   card;
-        short   n;
-        short   i;
-#else
-        /* STX's frame is 12 bytes: `card` and `i` are followed by two
-           more declared shorts the body never touches. */
-        short   card;
-        short   i;
-        short   unused1;
-        short   unused2;
-#endif
-
-        if (*count == 0)
-                return -1;
-        card    = *pile;
-#ifdef FAITHFUL
-        n       = *count;
-        *count  = n - 1;
-        if ((short)(n - 1) != 0) {
-                for (i = 0; i < 51; i = i + 1)
-                        pile[i] = pile[i + 1];
-        }
-#else
-        /* STX decrements the count in place and returns early when the
-           pile is emptied, so `card` is returned from two places. */
-        if (--*count == 0)
-                return card;
-        for (i = 0; i < 51; i++)
-                *(pile + i) = *(pile + i + 1);
-#endif
-        return card;
-}
-
-/* pk_actd: append val at pile[*idx]; increment idx.
-   addr: poker_add_card_to_discard() */
+/* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch.
+   addr: anagram_display_word_large() */
 
 void
-pk_actd(pile, idx, val)
-short * pile;
-short * idx;
-short   val;
-{
-        pile[*idx] = val;
-        (*idx)++;
-}
-
-/* pk_annr: transfer pot to winner one chip per tick
-   (winner=0 -> computer, winner=1 -> player).
-   addr: poker_ante_and_new_round() */
-
-void
-pk_annr(winner)
-short   winner;
-{
-        /* The pot decrement is the loop condition itself -- `while
-           (n--)` loads the value, subtracts straight to memory and
-           tests the OLD copy -- so it runs one past zero and the tail
-           assignment puts the pot back to 0. */
-        while (g_ppppa--) {
-                if (winner == 0) {
-                        g_pcmon++;
-                        pk_awp();
-                        pk_dpot();
-                        gameTick(0);
-                } else {
-                        g_ppmon++;
-                        pk_dppm();
-                        pk_dpot();
-                        gameTick(0);
-                }
-        }
-        g_ppppa = 0;
-}
-
-/* pk_inph: wait for one of F-keys a/b/c or digits 1..5.
-   Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout.
-   addr: poker_input_handler() */
-
-short
-pk_inph(a, b, c)
-short   a;
-short   b;
-short   c;
-{
-        short   ch;
-
-#ifdef FAITHFUL
-        for (;;) {
-#else
-        while (1) {
-#endif
-                gameTick(0);
-                ch = mg_wkev();
-                if (ch == a) return 1;
-                if (ch == b) return 2;
-                if (ch == c) return 3;
-                if (ch == 0x31) return 4;         /* '1' */
-                if (ch == 0x32) return 5;         /* '2' */
-                if (ch == 0x33) return 6;         /* '3' */
-                if (ch == 0x34) return 7;         /* '4' */
-                if (ch == 0x35) return 8;         /* '5' */
-                if (mg_tofl != NO)
-                        return -1;
-        }
-}
-
-/* pk_drcs: blit one card sprite (15x23) at slot xi of row yi.
-   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly.
-   addr: poker_draw_card_sprite() */
-
-void
-pk_drcs(card, xi, yi)
-short   card;
-short   xi;
-short   yi;
+ag_dwl(word, text_color)
+char *  word;
+short   text_color;
 {
         short   x;
-        short   y;
 
-        if (yi == 0) {
-                x = crd_xa[xi];
-                y = crd_ya[xi];
-        } else {
-                x = crd_xb[xi];
-                y = crd_yb[xi];
+        ag_cwda();
+        vst_h20();
+        x = 0;
+#ifdef FAITHFUL
+        for (; *word != '\0'; word = word + 1) {
+                prCh((short) *word, x + 162, 37, text_color);
+                x = x + 12;
         }
-        vroCpyD(vdihnd, S_ONLY,
-                              (long) &crd_mfdb[card], (long) &mf_scb_c,
-                              0, 0, 15, 23,
-                              x, y, x + 15, y + 23);
+#else
+        /* STX steps the pointer inside the body, before the pitch,
+           and both steps are memory-direct. */
+        while (*word != '\0') {
+                prCh((short) *word, x + 162, 37, text_color);
+                word++;
+                x += 12;
+        }
+#endif
+        rst_vsth();
 }
+
+/* ag_sgp -> parts/ag_sgp.c (STX: 0x8052, after ag_intr). */
+#ifdef FAITHFUL
+#include "parts/ag_sgp.c"
+#endif
+
+#ifndef FAITHFUL
+#include "parts/ag_sgp.c"   /* STX: 0x8052, after ag_intr */
+#endif
+
+/* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
+   copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
+   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string.
+   addr: anagram_select_and_scramble_word() */
+
+void
+ag_ssw()
+{
+#ifdef FAITHFUL
+        short   idx;
+        short   pos;
+        short   n;
+        char *  wp;
+        short   ia;
+        short   ib;
+        char    tmp;
+
+        idx      = rndRng(0, 0x95);            /* 0..149 */
+        pos      = 0;
+        g_agorw  = g_agwb + (short)(idx * 11);
+        for (wp = g_agorw; *wp > ' ' && *wp != '.'; wp = wp + 1) {
+                g_agscw[pos] = *wp;
+                pos          = pos + 1;
+        }
+        g_agscw[pos] = '\0';
+        *wp          = '\0';
+        g_agwol      = pos;
+
+        for (;;) {
+                if (ag_matc(g_agscw, g_agorw) == 0)
+                        break;
+                n = 0;
+                for (;;) {
+                        if (rndRng(10, 0x14) <= n)
+                                break;
+                        ia  = rndRng(0, g_agwol - 1);
+                        ib  = rndRng(0, g_agwol - 1);
+                        tmp = g_agscw[ib];
+                        g_agscw[ib] = g_agscw[ia];
+                        g_agscw[ia] = tmp;
+                        n = n + 1;
+                }
+        }
+        ag_dwl(g_agscw, COLOR_green);
+#else
+        /* STX's frame is -18: no `idx`, one counter reused for the
+           copy index and the shuffle round, and a local copy of the
+           word length that the shuffle reads instead of g_agwol. */
+        short   pos;
+        short   len;
+        short   ia;
+        short   ib;
+        char    tmp;
+        char *  wp;
+
+        g_agorw = g_agwb + rndRng(0, 0x95) * 11;        /* 0..149 */
+        pos     = 0;
+        for (wp = g_agorw; *wp > ' ' && *wp != '.'; ) {
+                /* index first: the base folds into add.l #base,An */
+                *(pos + g_agscw) = *wp;
+                wp++;
+                pos++;
+        }
+        g_agscw[pos] = '\0';
+        *wp          = '\0';
+        len     = pos;
+        g_agwol = len;
+
+        while (ag_matc(g_agscw, g_agorw) != 0) {
+                pos = 0;
+                while (rndRng(10, 0x14) > pos) {
+                        ia  = rndRng(0, len - 1);
+                        ib  = rndRng(0, len - 1);
+                        tmp = g_agscw[ib];
+                        g_agscw[ib] = g_agscw[ia];
+                        g_agscw[ia] = tmp;
+                        pos++;
+                }
+        }
+        ag_dwl(g_agscw, COLOR_green);
+#endif
+}
+
+/* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
+   inner per-keypress.  Labels new_word/validate mirror the two
+   goto LAB_00018210 / LAB_00018562 jumps in the 1985 source.
+   addr: ag_main() (== anagram_main) */
+
+void
+ag_main()
+{
+        /* STX's frame is -28: twelve shorts, only six of which the
+           body touches. */
+        short   index;
+        short   unused1;
+        short   unused2;
+        short   key_pressed;
+        short   unused3;
+        short   walk_result;
+        char    typed_char;
+        short   clue_count;
+        short   guess_count;
+        short   unused5;
+        short   unused6;
+        BOOL16  word_complete;
+
+        g_agwb = (char *) Malloc(10000L);
+        if (g_agwb == (char *) 0)
+                er_nomem();
+        fr_reac("words", (unsigned char *) g_agwb, 10000);
+        mg_stp();
+        strPr("***ANAGRAMS***", 5, 8, COLOR_black);
+        ag_intr();
+
+new_word:
+        ag_csb();
+        g_agclc = 0;
+        g_aggun = 1;
+        ag_ssw();
+
+        /* STX runs the round prologue ONCE per word and folds the
+           guess-count guard into a `while` condition; the
+           "too many guesses" tail lives inside the loop and ends with
+           `goto new_word`. */
+        g_agacu = 0;
+        ag_clue = 0;
+        strPr("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
+        ag_sgp(g_aggun);
+        for (index = 0; index < 10; index++)
+                g_aginb[index] = ' ';
+        g_aginb[10]   = '\0';
+        gameTick(0);
+        word_complete = NO;
+        while (g_aggun < 9 || (g_aggun < 10 && g_agacu != 0)) {
+                index         = 0;
+                key_pressed   = 0;
+                while (key_pressed != KEY_CTRL_M) {
+                        strPr(g_aginb, 239, 57, COLOR_green);
+                        key_pressed = mg_wkev();
+                        if (key_pressed >= 'A' && key_pressed <= 'Z')
+                                key_pressed += 0x20;
+                        if (key_pressed <= 'z' && key_pressed >= 'a') {
+                                g_aginb[index] = key_pressed;
+                                if (++index >= 10) {
+                                        index = 9;
+                                        ag_sgp(g_aggun);
+                                }
+                        }
+                        if (key_pressed == KEY_CURSOR_LEFT) {
+                                if (index != 0) {
+                                        if (index == 9 &&
+                                            g_aginb[index] != ' ')
+                                                g_aginb[index] = ' ';
+                                        else {
+                                                index--;
+                                                *(index + g_aginb) = ' ';
+                                        }
+                                } else
+                                        g_aginb[index] = ' ';
+                                ag_sgp(g_aggun);
+                                continue;
+                        }
+                        if (key_pressed == KEY_F10) {
+                                tx_sctm  = 0;
+                                no_keyin = NO;
+                                Mfree(g_agwb);
+                                return;
+                        }
+                        if (key_pressed == KEY_F1 && ag_clue == 0) {
+                                /* Braced: a bare `continue` folds into
+                                   the conditional branch, braces make
+                                   Alcyon emit beq-over-bra. */
+                                if (ag_matc(g_agorw, g_agscw) != 0) {
+                                        continue;
+                                }
+                                /* Clue path: reveal one letter. */
+                                g_agclc++;
+                                g_aggun++;
+                                ag_sgp(g_aggun);
+                                if (g_aggun == 9)
+                                        g_agacu = 1;
+                                ag_clue = 1;
+                                plEr(182, 0, 319, 9);
+                                strPr("         F10 Quit", 183, 8,
+                                      COLOR_blue);
+                                for (guess_count = 0;
+                                     guess_count < g_agwol;
+                                     guess_count++)
+                                        if (g_agorw[guess_count] !=
+                                            g_agscw[guess_count])
+                                                break;
+                                if (guess_count != g_agwol) {
+                                        clue_count = g_agwol - 1;
+                                        for (;;) {
+                                                if (g_agorw[guess_count] ==
+                                                    g_agscw[clue_count])
+                                                        break;
+                                                clue_count--;
+                                        }
+                                        typed_char = g_agscw[clue_count];
+                                        g_agscw[clue_count] =
+                                                g_agscw[guess_count];
+                                        g_agscw[guess_count] = typed_char;
+                                }
+                                ag_dwl(g_agscw, COLOR_green);
+                                if (ag_matc(g_agorw, g_agscw) != 0) {
+                                        ag_csb();
+                                        strPr("You took too many clues!",
+                                              5, 69, COLOR_black);
+                                        ag_dwl(g_agorw, COLOR_black);
+                                        gameTick(0x14);
+                                        word_complete = YES;
+                                }
+                                if (word_complete != NO)
+                                        goto validate;
+                        } else if (word_complete != NO)
+                                goto validate;
+                }
+
+validate:
+                if (word_complete != NO)
+                        goto new_word;
+                /* The second test is a bare truthiness test, which
+                   is what makes Alcyon reach it with an indexed EA
+                   (movea.w idx,a0 / movea.l #base,a1 /
+                   tst.b (0,a0,a1.l)); spelling it `!= '\0'` emits the
+                   base+add form instead. */
+                for (index = 0;
+                     g_aginb[index] != ' ' && g_aginb[index];
+                     index++) ;
+                if (g_aginb[index] == ' ')
+                        g_aginb[index] = '\0';
+                if (ag_matc(g_aginb, g_agorw) != 0) {
+                        strPr("YOU GOT IT!!!!!!",
+                                             5, 69, COLOR_black);
+                        ag_dwl(g_agorw, COLOR_black);
+                        gameTick(0x1e);
+                        ag_csb();
+                        goto new_word;
+                /* The guess counter steps in the condition itself,
+                   so both arms see it incremented. */
+                } else if (g_aggun++ < 8) {
+                        strPr(g_agwgm[rndRng(0, 2)], 5, 69, COLOR_black);
+                        gameTick(0x14);
+                        ag_csb();
+                        goto new_word;
+                } else {
+
+                /* Too many wrong guesses: show the answer, start a
+                   new word. */
+                strPr("Sorry, too many guesses!",
+                             5, 69, COLOR_black);
+                gameTick(0x14);
+                ag_csb();
+                strPr("Here is the word.",
+                             5, 69, COLOR_black);
+                ag_dwl(g_agorw, COLOR_black);
+                gameTick(0x1e);
+                ag_cwda();
+                goto new_word;
+                }
+        }
+}
+
+/* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
+   at 0x7f84); see parts/plEr.c. */
+#ifndef FAITHFUL
+#include "parts/plEr.c"
+#include "parts/plErCol.c"   /* 0x871a, right after plEr */
+#endif
 
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
    On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
@@ -2999,6 +2424,550 @@ char *  prompt;
         } while (*cnt_ptr != CARD_BJ_STOP);
         pk_pmsg("You cannot take any more cards.");
         gameTick(0xf);
+        return 0;
+}
+
+/* pk_annr: transfer pot to winner one chip per tick
+   (winner=0 -> computer, winner=1 -> player).
+   addr: poker_ante_and_new_round() */
+
+void
+pk_annr(winner)
+short   winner;
+{
+        /* The pot decrement is the loop condition itself -- `while
+           (n--)` loads the value, subtracts straight to memory and
+           tests the OLD copy -- so it runs one past zero and the tail
+           assignment puts the pot back to 0. */
+        while (g_ppppa--) {
+                if (winner == 0) {
+                        g_pcmon++;
+                        pk_awp();
+                        pk_dpot();
+                        gameTick(0);
+                } else {
+                        g_ppmon++;
+                        pk_dppm();
+                        pk_dpot();
+                        gameTick(0);
+                }
+        }
+        g_ppppa = 0;
+}
+
+/* pk_drcs: blit one card sprite (15x23) at slot xi of row yi.
+   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly.
+   addr: poker_draw_card_sprite() */
+
+void
+pk_drcs(card, xi, yi)
+short   card;
+short   xi;
+short   yi;
+{
+        short   x;
+        short   y;
+
+        if (yi == 0) {
+                x = crd_xa[xi];
+                y = crd_ya[xi];
+        } else {
+                x = crd_xb[xi];
+                y = crd_yb[xi];
+        }
+        vroCpyD(vdihnd, S_ONLY,
+                              (long) &crd_mfdb[card], (long) &mf_scb_c,
+                              0, 0, 15, 23,
+                              x, y, x + 15, y + 23);
+}
+
+/* STX: pk_ldCrd sits here (0xab04), ahead of pk_awp. */
+#ifndef FAITHFUL
+#include "parts/pk_ldCrd.c"
+#endif
+
+/* pk_inph: wait for one of F-keys a/b/c or digits 1..5.
+   Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout.
+   addr: poker_input_handler() */
+
+short
+pk_inph(a, b, c)
+short   a;
+short   b;
+short   c;
+{
+        short   ch;
+
+#ifdef FAITHFUL
+        for (;;) {
+#else
+        while (1) {
+#endif
+                gameTick(0);
+                ch = mg_wkev();
+                if (ch == a) return 1;
+                if (ch == b) return 2;
+                if (ch == c) return 3;
+                if (ch == 0x31) return 4;         /* '1' */
+                if (ch == 0x32) return 5;         /* '2' */
+                if (ch == 0x33) return 6;         /* '3' */
+                if (ch == 0x34) return 7;         /* '4' */
+                if (ch == 0x35) return 8;         /* '5' */
+                if (mg_tofl != NO)
+                        return -1;
+        }
+}
+
+/* pk_awp: display computer money count in the top-left panel.
+   Preserves the 3-digit hand-formatted, space-padded byte layout
+   from Ghidra verbatim (byte-comparable).
+   addr: poker_award_pot() */
+
+void
+pk_awp()
+{
+        char    str[10];
+        short   rem;
+
+        plEr(5, 10, 31, 20);
+        str[3] = '\0';
+        str[0] = (str[8] = g_pcmon / 100) + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (rem = g_pcmon % 100) / 10;
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = rem % 10;
+        str[2] = str[4] + '0';
+        strPr(str, 5, 18, COLOR_black);
+}
+
+/* pk_dppm: display player money (same 3-digit format as pk_awp).
+   addr: poker_display_player_money() */
+
+void
+pk_dppm()
+{
+        char    str[10];
+        short   rem;
+
+        plEr(5, 50, 31, 60);
+        str[3] = '\0';
+        str[0] = (str[8] = g_ppmon / 100) + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (rem = g_ppmon % 100) / 10;
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = rem % 10;
+        str[2] = str[4] + '0';
+        strPr(str, 5, 58, COLOR_black);
+}
+
+/* pk_dpot: display the pot amount in the middle panel.
+   addr: poker_display_pot() */
+
+void
+pk_dpot()
+{
+        char    str[10];
+        short   rem;
+
+        plEr(31, 30, 57, 40);
+        str[3] = '\0';
+        str[0] = (str[8] = g_ppppa / 100) + '0';
+        if (str[0] == '0')
+                str[0] = ' ';
+        str[6] = (rem = g_ppppa % 100) / 10;
+        if (str[0] == ' ' && str[6] == '\0')
+                str[1] = ' ';
+        else
+                str[1] = str[6] + '0';
+        str[4] = rem % 10;
+        str[2] = str[4] + '0';
+        strPr(str, 31, 38, COLOR_black);
+}
+
+/* pk_pmsg: print a green status message in the bottom info bar.
+   addr: poker_print_message() */
+
+void
+pk_pmsg(str)
+char *  str;
+{
+        plEr(5, 63, 319, 75);
+        strPr(str, 5, 71, COLOR_green);
+}
+
+/* pk_rmch: pop card from top of `pile`; shift remaining entries down.
+   Returns CARD_NONE if empty.
+   addr: poker_remove_card_from_hand() */
+
+short
+pk_rmch(pile, count)
+short * pile;
+short * count;
+{
+#ifdef FAITHFUL
+        short   card;
+        short   n;
+        short   i;
+#else
+        /* STX's frame is 12 bytes: `card` and `i` are followed by two
+           more declared shorts the body never touches. */
+        short   card;
+        short   i;
+        short   unused1;
+        short   unused2;
+#endif
+
+        if (*count == 0)
+                return -1;
+        card    = *pile;
+#ifdef FAITHFUL
+        n       = *count;
+        *count  = n - 1;
+        if ((short)(n - 1) != 0) {
+                for (i = 0; i < 51; i = i + 1)
+                        pile[i] = pile[i + 1];
+        }
+#else
+        /* STX decrements the count in place and returns early when the
+           pile is emptied, so `card` is returned from two places. */
+        if (--*count == 0)
+                return card;
+        for (i = 0; i < 51; i++)
+                *(pile + i) = *(pile + i + 1);
+#endif
+        return card;
+}
+
+/* pk_actd: append val at pile[*idx]; increment idx.
+   addr: poker_add_card_to_discard() */
+
+void
+pk_actd(pile, idx, val)
+short * pile;
+short * idx;
+short   val;
+{
+        pile[*idx] = val;
+        (*idx)++;
+}
+
+static void     pk_show();
+
+
+/* pk_wrMn: WAR mini-game main loop.
+   Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
+   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
+   addr: pk_wrMn() (== poker_war_main) */
+
+void
+pk_wrMn()
+{
+        /* Seven locals: ikey and cidx double as the shuffle's and the
+           deal loop's indices, and ikey also carries the war round's
+           result. */
+        short   ikey;
+        short   cidx;
+        short   j;
+        short   t;
+        char *  sp;
+        short   saved_head_frame;
+        short   saved_head_mode;
+
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
+
+        g_pcmon = 26;
+        g_ppmon = 26;
+        g_ppppa = 0;
+
+        /* Deck 0..51 then Fisher-Yates-lite 400-swap shuffle. */
+        for (ikey = 0; ikey < 52; ikey++)
+                pk_dsc[ikey] = ikey;
+        j = 400;
+        while (j--) {
+                ikey = rndRng(0, 51);
+                do {
+                        cidx = rndRng(0, 51);
+                } while (ikey == cidx);
+                t = pk_dsc[cidx];
+                pk_dsc[cidx] = pk_dsc[ikey];
+                pk_dsc[ikey] = t;
+        }
+        ikey = 0;
+        for (cidx = 0; ikey < 52; cidx++) {
+                g_pcdrp[cidx] = pk_dsc[ikey];
+                ikey++;
+                g_ppdrp[cidx] = pk_dsc[ikey];
+                ikey++;
+        }
+
+        pk_awp();
+        pk_dppm();
+        pk_dpot();
+
+        /* Per-round loop (Ghidra LAB_0001b29c): a label and explicit
+           gotos, not a for(;;) -- every round-end branches straight
+           back here rather than to a loop-bottom edge.  The bare
+           `pk_dppm;` is in the original: a call whose parentheses
+           were left off, so Alcyon just loads its address into d0. */
+round:
+                pk_awp();
+                pk_dppm;
+                pk_dpot();
+                plEr(5, 63, 319, 75);
+                plEr(225, 10, 319, 60);
+                plEr(70, 10, 219, 62);
+
+                /* Every exit is a goto: the two message blocks and
+                   the cleanup are labels the war round jumps back
+                   into, and the cleanup returns. */
+                if (g_pcmon == 0) {
+out_of_cards:
+                        pk_pmsg("I'm out of cards! You're too good!");
+                        gameTick(0x14);
+cleanup:
+                        tx_sctm  = 0;
+                        no_keyin = NO;
+                        Mfree(crd_dat);
+                        moff();
+                        return;
+                }
+                if (g_ppmon == 0) {
+no_cards:
+                        pk_pmsg("No cards, huh? Better luck next time.");
+                        gameTick(0x14);
+                        goto cleanup;
+                }
+
+                gameTick(5);
+                pk_pwc[0] = pk_rmch(g_ppdrp, &g_ppmon);
+                g_ppppa++;
+                pk_drcs(CARD_BACK, 0, 1);
+                pk_dpot();
+                pk_dppm();
+                gameTick(3);
+                pk_cwc[0] = pk_rmch(g_pcdrp, &g_pcmon);
+                g_ppppa++;
+                pk_drcs(pk_cwc[0], 0, 0);
+                pk_dpot();
+                pk_awp();
+
+                pk_pmsg("Show me your card, Ace.");
+                strPr("F1  Show", 225, 18, COLOR_red);
+                strPr("F10 Quit", 225, 26, COLOR_red);
+                ikey = 0;
+                while (ikey != 1 && ikey != 2)
+                        ikey = pk_inph(KEY_F1, KEY_F10, 255);
+                if (ikey == 2)
+                        goto cleanup;
+
+                pk_drcs(pk_pwc[0], 0, 1);
+                plEr(225, 10, 319, 60);
+                gameTick(5);
+
+                /* Both ranks land in locals before the compare, and
+                   the loser's branch recomputes them the other way
+                   round. */
+                if ((ikey = pk_pwc[0] % 13) > (cidx = pk_cwc[0] % 13)) {
+                        /* Player wins. */
+                        if (ikey == 12) {
+                                sp = "Ace? I don't believe it!";
+                        } else {
+                                switch (rndRng(1, 6)) {
+                                case 1: sp = "You're awfully lucky!";       break;
+                                case 2: sp = "Arrghh!";                        break;
+                                case 3: sp = "You're tough.";                 break;
+                                case 4: sp = "I'll get you next time.";     break;
+                                case 5: sp = "Dog-gone it.";                   break;
+                                case 6: sp = "All right. Slow down.";       break;
+                                }
+                        }
+                        pk_pmsg(sp);
+                        gameTick(8);
+                        pk_annr(1);
+                        plEr(70, 10, 219, 62);
+                        g_ppmon -= 2;
+                        pk_actd(g_ppdrp, &g_ppmon, pk_pwc[0]);
+                        pk_actd(g_ppdrp, &g_ppmon, pk_cwc[0]);
+                        goto round;
+                } else if ((ikey = pk_cwc[0] % 13) > (cidx = pk_pwc[0] % 13)) {
+                        /* Computer wins by margin (ikey - cidx). */
+                        if (ikey == 12) {
+                                sp = "Ace takes it!";
+                        } else if (ikey - cidx <= 2) {
+                                if (rndRng(0, 1))
+                                        sp = "Whew! That was too close.";
+                                else
+                                        sp = "Hmm... That's not too bad!";
+                        } else if (ikey - cidx >= 7) {
+                                switch (rndRng(1, 3)) {
+                                case 1: sp = "No contest. You lose!"; break;
+                                case 2: sp = "Beat you by a mile.";   break;
+                                case 3: sp = "That was easy!";        break;
+                                }
+                        } else if (cidx <= 3) {
+                                if (rndRng(0, 1))
+                                        sp = "That's an easy card to beat.";
+                                else
+                                        sp = "Not a very high card, but I'll take it.";
+                        } else if (cidx >= 9) {
+                                sp = "Great, a face card, and it's mine now!";
+                        } else {
+                                switch (rndRng(1, 3)) {
+                                case 1: sp = "Alright. I win!";        break;
+                                case 2: sp = "Better luck next time."; break;
+                                case 3: sp = "Hey... look at that!";   break;
+                                }
+                        }
+                        pk_pmsg(sp);
+                        saved_head_frame = g_hsfra;
+                        saved_head_mode  = g_hamod;
+                        a_peeka();
+                        g_hamod = saved_head_mode;
+                        gameTick(8);
+                        pk_annr(0);
+                        plEr(70, 10, 219, 62);
+                        g_pcmon -= 2;
+                        pk_actd(g_pcdrp, &g_pcmon, pk_pwc[0]);
+                        pk_actd(g_pcdrp, &g_pcmon, pk_cwc[0]);
+                        g_hsfra = saved_head_frame;
+                        goto round;
+                } else {
+                        /* Tie -> war round. */
+                        ikey = pk_bjwr();
+                        if (mg_tofl != NO)
+                                goto cleanup;
+                        if (ikey == -1)
+                                goto out_of_cards;
+                        if (ikey == -2)
+                                goto no_cards;
+                        goto round;
+                }
+}
+
+/* pk_bjwr: nested war round.  Draw 3 face-down + 1 face-up each.
+   On tie, loops with g_pchc++.
+   Returns 0 = normal, -1 = computer out / user quit, -2 = player out.
+   addr: poker_blackjack_war_round() */
+
+static short
+pk_bjwr()
+{
+        short   drawn;
+        short   res;
+        short   idx;
+        short   off;      /* (g_pchc << 2) + g_pchc + g_pchc == g_pchc*6 */
+
+        g_pchc = 0;
+        for (idx = 1; idx < 52; idx = idx + 1) {
+                pk_cwc[idx] = CARD_NONE;
+                pk_pwc[idx] = CARD_NONE;
+        }
+        for (;;) {
+                pk_pmsg("... WAR!! ...");
+                gameTick(10);
+                if (g_pcmon == 0) return -1;
+                if (g_ppmon == 0) return -2;
+
+                idx = 1;
+                while (idx < 4 && g_ppmon != 1 && g_pcmon != 1) {
+                        off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
+                        drawn = pk_rmch(g_ppdrp, &g_ppmon);
+                        pk_pwc[idx + off] = drawn;
+                        g_ppppa = g_ppppa + 1;
+                        pk_drcs(CARD_BACK, idx, 1);
+                        pk_dpot();
+                        pk_dppm();
+                        gameTick(3);
+                        drawn = pk_rmch(g_pcdrp, &g_pcmon);
+                        pk_cwc[idx + off] = drawn;
+                        g_ppppa = g_ppppa + 1;
+                        pk_drcs(CARD_BACK, idx, 0);
+                        pk_dpot();
+                        pk_awp();
+                        gameTick(3);
+                        idx = idx + 1;
+                }
+
+                /* Final face-up card each. */
+                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
+                drawn = pk_rmch(g_ppdrp, &g_ppmon);
+                pk_pwc[idx + off] = drawn;
+                g_ppppa = g_ppppa + 1;
+                pk_drcs(CARD_BACK, idx, 1);
+                pk_dpot();
+                pk_dppm();
+                gameTick(3);
+                drawn = pk_rmch(g_pcdrp, &g_pcmon);
+                pk_cwc[idx + off] = drawn;
+                g_ppppa = g_ppppa + 1;
+                pk_drcs(drawn, idx, 0);
+                pk_dpot();
+                pk_awp();
+                gameTick(3);
+
+                pk_pmsg("Let's see what you've got...");
+                strPr("F1 Show", 225, 18, COLOR_red);
+                while ((res = pk_inph(KEY_F1, 0, 0)) != 1) {
+                        if (mg_tofl != NO)
+                                return -1;
+                }
+                pk_drcs(pk_pwc[idx + off], idx, 1);
+                plEr(225, 10, 319, 60);
+                gameTick(5);
+
+                if ((short)((short) pk_cwc[idx + off] % 13) <
+                    (short)((short) pk_pwc[idx + off] % 13)) {
+                        /* Player wins the war round. */
+                        pk_pmsg("You win the war!!!");
+                        gameTick(8);
+                        while (idx = idx - 1, idx != 0) {
+                                pk_drcs(pk_cwc[idx + off], idx, 0);
+                                gameTick(1);
+                        }
+                        gameTick(10);
+                        res = g_ppppa;
+                        pk_annr(1);
+                        g_ppmon = g_ppmon - res;
+                        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
+                                pk_actd(g_ppdrp, &g_ppmon, pk_pwc[idx]);
+                                pk_actd(g_ppdrp, &g_ppmon, pk_cwc[idx]);
+                        }
+                        return 0;
+                }
+                if ((short)((short) pk_pwc[idx + off] % 13) <
+                    (short)((short) pk_cwc[idx + off] % 13))
+                        break;
+                g_pchc = g_pchc + 1;
+        }
+
+        /* Computer wins the war round. */
+        pk_pmsg("I win the war!!!");
+        gameTick(8);
+        while (idx = idx - 1, idx != 0) {
+                off = g_pchc + g_pchc; off = off + off + g_pchc + g_pchc;
+                pk_drcs(pk_pwc[idx + off], idx, 1);
+                gameTick(1);
+        }
+        gameTick(10);
+        res = g_ppppa;
+        pk_annr(0);
+        g_pcmon = g_pcmon - res;
+        for (idx = 0; pk_cwc[idx] != CARD_NONE; idx = idx + 1) {
+                pk_actd(g_pcdrp, &g_pcmon, pk_pwc[idx]);
+                pk_actd(g_pcdrp, &g_pcmon, pk_cwc[idx]);
+        }
         return 0;
 }
 
