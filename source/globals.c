@@ -16,6 +16,7 @@
 #ifdef FAITHFUL
 short   ani_cnt  = 0;
 #else
+short           bj_key;         /* pk_bjMn's key variable (a global in STX) */
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
 unsigned short  ani_cnt = 0;    /* STX: the & 7 test zero-extends */

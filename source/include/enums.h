@@ -497,7 +497,7 @@
 #define CARD_HIGHLIGHT                  53
 /* Ghidra: CARD_NONE = -1 (signed short sentinel used across war /
    blackjack / poker hand arrays for "empty slot" and end-of-pile). */
-#define CARD_NONE                       (-1)
+#define CARD_NONE                       255     /* LCP_STX stores 0xff */
 
 /* Blackjack hit-counter constants.  Ghidra shows these as
    CARD_HEART_10 / _QUEEN / _KING because the 1985 source aliased

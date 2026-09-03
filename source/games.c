@@ -1516,7 +1516,7 @@ short * count;
 #endif
 
         if (*count == 0)
-                return CARD_NONE;
+                return -1;
         card    = *pile;
 #ifdef FAITHFUL
         n       = *count;
@@ -3011,13 +3011,18 @@ char *  prompt;
 void
 pk_bjMn()
 {
-        short   res;
-        short   rv;
-        BOOL16  game_over;
-        short   round_ctr;
-        short   br;
-        short   ikey;
-        short   i;
+        /* Ten locals in LCP_STX; four of them are never referenced and
+           the last is written once and never read. */
+        short   br;             /* -2, also every countdown */
+        short   hit;            /* -4  */
+        short   unused1;        /* -6  */
+        short   unused2;        /* -8  */
+        short   unused3;        /* -10 */
+        short   unused4;        /* -12 */
+        short   res;            /* -14 */
+        short   rv;             /* -16 */
+        short   round_ctr;      /* -18 */
+        short   phase_snap;     /* -20, written once, never read */
 
         crd_dat = (short *) Malloc(0x28a0L);
         if (crd_dat == (short *) 0)
@@ -3044,11 +3049,11 @@ round:
                 strPr("F1  Bet",  225, 18, COLOR_red);
                 strPr("F10 Quit", 225, 34, COLOR_red);
                 pk_pmsg("What's your bet?");
+                bj_key  = 0;
                 pk_quit = NO;
-                ikey    = 0;
-                while (ikey != 1 && ikey != 3)
-                        ikey = pk_inph(KEY_F1, 255, KEY_F10);
-                if (ikey == 3) {
+                while (bj_key != 1 && bj_key != 3)
+                        bj_key = pk_inph(KEY_F1, 255, KEY_F10);
+                if (bj_key == 3) {
 cleanup:
                         tx_sctm  = 0;
                         no_keyin = NO;
@@ -3079,14 +3084,14 @@ cleanup:
 
 bet_loop:
                 do {
-                        ikey = 0;
-                        while (ikey != 1 && ikey != 2 &&
-                                 ikey != 3 && ikey != -1) {
+                        bj_key = 0;
+                        while (bj_key != 1 && bj_key != 2 &&
+                                 bj_key != 3 && bj_key != -1) {
                                 gameTick(0);
-                                ikey = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                bj_key = pk_inph(KEY_F1, KEY_F3, KEY_F5);
                         }
                         if (mg_tofl != NO) goto cleanup;
-                        if (ikey == 3) {
+                        if (bj_key == 3) {
                                 g_ppmon += pk_bet;
                                 pk_bet  = 0;
                                 g_pcbet = 0;
@@ -3095,7 +3100,7 @@ bet_loop:
                                 pk_dpile[10] = CARD_BJ_STEP;
                                 break;
                         }
-                        if (ikey == 1) {
+                        if (bj_key == 1) {
                                 if (g_ppmon == 0) {
                                         pk_pmsg("Game's over. I win.");
                                         pk_quit = YES;
@@ -3108,7 +3113,7 @@ bet_loop:
                                 pk_dbhi(1);
                                 pk_bet++;
                         }
-                } while (ikey != 2);
+                } while (bj_key != 2);
 
                 if (pk_dpile[10] == CARD_BJ_STOP) {
                         if (pk_quit != NO) {
@@ -3166,13 +3171,13 @@ bet_loop:
                                         plEr(225, 10, 319, 60);
                                         strPr("F1 Split",    225, 18, COLOR_red);
                                         strPr("F3 No split", 225, 26, COLOR_red);
-                                        ikey = 0;
-                                        while (ikey != 1 && ikey != 2 && ikey != -1) {
+                                        bj_key = 0;
+                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
                                                 gameTick(0);
-                                                ikey = pk_inph(KEY_F1, KEY_F3, 0);
+                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
                                         }
                                         if (mg_tofl != NO) goto cleanup;
-                                        if (ikey == 1) {
+                                        if (bj_key == 1) {
                                                 pk_phase = 1;
                                                 pk_psh[0] = pk_ph[1];
                                                 pk_ph[1]  = CARD_NONE;
@@ -3247,21 +3252,21 @@ bet_loop:
                                         strPr("F1 Double",    225, 18, COLOR_red);
                                         strPr("F3 No double", 225, 26, COLOR_red);
                                         if (pk_phase == 0) {
-                                                if (g_ppmon < g_pcbet) ikey = 2;
+                                                if (g_ppmon < g_pcbet) bj_key = 2;
                                                 else {
                                                         pk_pmsg("Do you wish to double-down?");
-                                                        ikey = 0;
+                                                        bj_key = 0;
                                                 }
-                                                while (ikey != 1 && ikey != 2 && ikey != -1) {
+                                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
                                                         gameTick(0);
-                                                        ikey = pk_inph(KEY_F1, KEY_F3, 0);
+                                                        bj_key = pk_inph(KEY_F1, KEY_F3, 0);
                                                 }
                                                 if (mg_tofl != NO) goto cleanup;
-                                                if (ikey == 1) {
+                                                if (bj_key == 1) {
                                                         pk_pcc = CARD_BJ_STEP;
-                                                        i      = g_pcbet;
+                                                        br      = g_pcbet;
                                                         pk_wrf = YES;
-                                                        while (i != 0) {
+                                                        while (br != 0) {
                                                                 if (g_ppmon == 0) {
                                                                         pk_quit = YES;
                                                                         break;
@@ -3271,7 +3276,7 @@ bet_loop:
                                                                 g_pcbet++;
                                                                 pk_dbhi(1);
                                                                 gameTick(0);
-                                                                i--;
+                                                                br--;
                                                         }
                                                         if (pk_quit != NO) {
                                                                 pk_pmsg("Game's over. I win.");
@@ -3281,24 +3286,24 @@ bet_loop:
                                                 }
                                         } else {
                                                 if (pk_c1bj == NO) {
-                                                        if (g_ppmon < g_pcbet) ikey = 2;
+                                                        if (g_ppmon < g_pcbet) bj_key = 2;
                                                         else {
                                                                 pk_pmsg("Double-down on your first hand?");
                                                                 pk_drcs(pk_ph[0], 0, 1);
                                                                 pk_drcs(pk_ph[1], 1, 1);
                                                                 gameTick(0);
-                                                                ikey = 0;
+                                                                bj_key = 0;
                                                         }
-                                                        while (ikey != 1 && ikey != 2 && ikey != -1) {
+                                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
                                                                 gameTick(0);
-                                                                ikey = pk_inph(KEY_F1, KEY_F3, 0);
+                                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
                                                         }
                                                         if (mg_tofl != NO) goto cleanup;
-                                                        if (ikey == 1) {
+                                                        if (bj_key == 1) {
                                                                 pk_pcc = CARD_BJ_STEP;
-                                                                i      = g_pcbet;
+                                                                br      = g_pcbet;
                                                                 pk_wrf = YES;
-                                                                while (i != 0) {
+                                                                while (br != 0) {
                                                                         if (g_ppmon == 0) {
                                                                                 pk_quit = YES;
                                                                                 break;
@@ -3308,7 +3313,7 @@ bet_loop:
                                                                         g_pcbet++;
                                                                         pk_dbhi(1);
                                                                         gameTick(0);
-                                                                        i--;
+                                                                        br--;
                                                                 }
                                                                 if (pk_quit != NO) {
                                                                         pk_pmsg("Games over. I win.");
@@ -3319,24 +3324,24 @@ bet_loop:
                                                 }
                                                 if (pk_c2bj == NO) {
                                                         gameTick(10);
-                                                        if (g_ppmon < g_ppbet) ikey = 2;
+                                                        if (g_ppmon < g_ppbet) bj_key = 2;
                                                         else {
                                                                 pk_pmsg("Double-down on your second hand?");
                                                                 pk_drcs(pk_psh[0], 0, 1);
                                                                 pk_drcs(pk_psh[1], 1, 1);
                                                                 gameTick(0);
-                                                                ikey = 0;
+                                                                bj_key = 0;
                                                         }
-                                                        while (ikey != 1 && ikey != 2 && ikey != -1) {
+                                                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
                                                                 gameTick(0);
-                                                                ikey = pk_inph(KEY_F1, KEY_F3, 0);
+                                                                bj_key = pk_inph(KEY_F1, KEY_F3, 0);
                                                         }
                                                         if (mg_tofl != NO) goto cleanup;
-                                                        if (ikey == 1) {
+                                                        if (bj_key == 1) {
                                                                 pk_pscc = CARD_BJ_STEP;
                                                                 pk_wcs  = YES;
-                                                                i       = g_ppbet;
-                                                                while (i != 0) {
+                                                                br       = g_ppbet;
+                                                                while (br != 0) {
                                                                         if (g_ppmon == 0) {
                                                                                 pk_quit = YES;
                                                                                 break;
@@ -3346,7 +3351,7 @@ bet_loop:
                                                                         g_ppbet++;
                                                                         pk_dbhi(2);
                                                                         gameTick(0);
-                                                                        i--;
+                                                                        br--;
                                                                 }
                                                                 if (pk_quit != NO) {
                                                                         pk_pmsg("Game's over. I win.");
@@ -3395,9 +3400,7 @@ bet_loop:
                                                                 pk_pmsg("Your first hand is busted !!");
                                                                 gameTick(20);
                                                                 pk_bs1 = YES;
-                                                                while (res = g_pcbet - 1,
-                                                                       game_over = (g_pcbet != 0),
-                                                                       g_pcbet = res, game_over != NO) {
+                                                                while (g_pcbet--) {
                                                                         g_pcmon++;
                                                                         pk_awp();
                                                                         pk_dbhi(1);
@@ -3420,9 +3423,7 @@ bet_loop:
                                                                 pk_pmsg("Your second hand is busted!!");
                                                                 gameTick(0x14);
                                                                 pk_bs2 = YES;
-                                                                while (res = g_ppbet - 1,
-                                                                       game_over = (g_ppbet != 0),
-                                                                       g_ppbet = res, game_over != NO) {
+                                                                while (g_ppbet--) {
                                                                         g_pcmon++;
                                                                         pk_awp();
                                                                         pk_dbhi(2);
