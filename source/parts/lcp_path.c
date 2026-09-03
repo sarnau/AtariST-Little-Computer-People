@@ -115,7 +115,7 @@ lcp_path()
                         if (lcp_y == 161) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F3S;  /* ROM: enters at 12 */
+                                lcp_st = STATE_STR_CLIMB_F0;   /* STX enters at 9 */
                                 lcp_face = FACING_LEFT;
                                 lcp_x -= 6;
                                 lcp_y -= 2;
@@ -126,7 +126,7 @@ lcp_path()
                         } else if (lcp_y == 100) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F3S;  /* ROM: enters at 12 */
+                                lcp_st = STATE_STR_CLIMB_F0;   /* STX enters at 9 */
                                 lcp_face = FACING_RIGHT;
                                 lcp_x += 3;
                                 lcp_y -= 2;
@@ -142,16 +142,16 @@ lcp_path()
                                         sp_upds();
                                 }
                                 if (lcp_st < STATE_STR_TOP_F0 || lcp_st > STATE_STR_TOP_F3S) {
-                                        lcp_st = STATE_STR_TOP_F3S;     /* ROM: snaps to 16 */
+                                        lcp_st = STATE_STR_TOP_F0;
                                 } else {
+                                        /* Wraps to F0, and flips the
+                                           facing on the wrap. */
                                         if (++lcp_st > STATE_STR_TOP_F3S) {
-                                                lcp_st = STATE_STR_TOP_F3S;     /* ROM: 16 */
+                                                lcp_st = STATE_STR_TOP_F0;
                                                 lcp_face ^= FACING_LEFT;
                                         }
-                                        /* ROM tests F3S twice (dead
-                                           second arm, kept verbatim) */
                                         if (lcp_st == STATE_STR_TOP_F3S ||
-                                            lcp_st == STATE_STR_TOP_F3S)
+                                            lcp_st == STATE_STR_TOP_F0)
                                                 lcp_y -= 2;
                                         if (lcp_st == STATE_STR_TOP_F3S)
                                                 fs_trg = YES;
@@ -173,7 +173,7 @@ lcp_path()
                                                         lcp_x++;
                                         }
                                         if (++lcp_st > STATE_STR_CLIMB_F3S)
-                                                lcp_st = STATE_STR_CLIMB_F3S;
+                                                lcp_st = STATE_STR_CLIMB_F0;
                                         if (lcp_st == STATE_STR_CLIMB_F3S)
                                                 fs_trg = YES;
                                         if (g_hastl != 10) {
@@ -192,7 +192,7 @@ lcp_path()
                                                         lcp_x--;
                                         }
                                         if (++lcp_st > STATE_STR_CLIMB_F3S)
-                                                lcp_st = STATE_STR_CLIMB_F3S;
+                                                lcp_st = STATE_STR_CLIMB_F0;
                                         if (lcp_st == STATE_STR_CLIMB_F3S)
                                                 fs_trg = YES;
                                         if (g_hastl != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
@@ -207,7 +207,7 @@ lcp_path()
                                 sp_ssco(g_lcieo);
 
                         if (lcp_y == 161) {
-                                lcp_st = STATE_STR_BTM_F3;      /* ROM: 24 */
+                                lcp_st = STATE_STR_BTM_F0;
                                 lcp_face = FACING_RIGHT;
                                 lcp_y += 4;
                                 lcp_x += 6;
@@ -218,7 +218,7 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                         } else if (lcp_y == 100) {
-                                lcp_st = STATE_STR_BTM_F3;      /* ROM: 24 */
+                                lcp_st = STATE_STR_BTM_F0;
                                 lcp_face = FACING_RIGHT;
                                 lcp_y += 2;
                                 lcp_x -= 2;
@@ -229,21 +229,20 @@ lcp_path()
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                         } else if (lcp_y > 161 ||
-                                   (lcp_y > 100 && lcp_y < 140)) {
+                                   (lcp_y > 100 && lcp_y < 132)) {
                                 /* Bottom-of-stair frame (state 21..24). */
                                 if (g_lcyof != NO)
                                         sp_ss02(g_lcieo);
                                 if (lcp_st < STATE_STR_BTM_F0 || lcp_st > STATE_STR_BTM_F3) {
-                                        lcp_st = STATE_STR_BTM_F3;      /* ROM: 24 */
+                                        lcp_st = STATE_STR_BTM_F0;
                                         lcp_x += 2;
                                 } else {
                                         if (++lcp_st > STATE_STR_BTM_F3) {
-                                                lcp_st = STATE_STR_BTM_F3;      /* ROM: 24 */
+                                                lcp_st = STATE_STR_BTM_F0;
                                                 lcp_face ^= FACING_LEFT;
                                         }
-                                        /* ROM tests F3 twice (dead second arm) */
-                                        if (lcp_st == STATE_STR_BTM_F3 ||
-                                            lcp_st == STATE_STR_BTM_F3)
+                                        if (lcp_st == STATE_STR_BTM_F1 ||
+                                            lcp_st == STATE_STR_BTM_F2)
                                                 lcp_y += 2;
                                         if (lcp_st == STATE_STR_BTM_F3)
                                                 fs_trg = YES;
@@ -275,7 +274,7 @@ lcp_path()
                                                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
                                                 g_hastl = g_hatas;
                                         }
-                                        if (lcp_st == STATE_STR_DESC_F3S)
+                                        if (lcp_st == STATE_STR_DESC_F1)
                                                 fs_trg = YES;
                                 } else if (lcp_y < 161) {
                                         /* Lower flight, going down-right */
@@ -299,7 +298,7 @@ lcp_path()
                                                 g_hatas = 10;
                                                 g_hastl = g_hatas;
                                         }
-                                        if (lcp_st == STATE_STR_DESC_F3S)
+                                        if (lcp_st == STATE_STR_DESC_F1)
                                                 fs_trg = YES;
                                 }
                         }
