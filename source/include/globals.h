@@ -167,10 +167,8 @@ extern BOOL16 psg_out;
 extern char   psg_ntAc;         /* STX: byte flag */
 extern unsigned char psg_chNt[];
 extern PSG_ENVELOPE psg_envelope[];
-extern short env_val;
 extern char g_mnlol;
 extern char g_mnhil;
-extern short g_mccha;
 extern char g_sfcup;
 extern short g_sfddh;
 extern short g_sfddl;
@@ -181,7 +179,6 @@ extern void* g_srlgb;
 extern void* sv_lgb;
 extern void* g_srptr;
 extern short dsb_stor[];
-extern short* g_dsb;
 extern short scr_scal;
 extern short work_in[];
 extern short wk_out[];
@@ -199,7 +196,6 @@ extern char  sf_pri[];          /* STX: 26-byte table (moveb + extw) */
 extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];
-extern MFDB* g_obtmp;
 extern short g_obtaw[];
 extern short g_obtah[];
 extern short g_ltlic;

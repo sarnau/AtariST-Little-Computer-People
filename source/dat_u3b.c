@@ -39,7 +39,11 @@ short   mood_hfo[3]  = { 44, 0, 22 };
 
 
 
-char  ew2pos[160] = {
+/* ONE HUNDRED AND SIXTY-ONE bytes: the reference closes the table
+   with a -1 and Alcyon pads the odd length to 162, which is why
+   g_ew2b starts at 0x23f8 rather than 0x23f6.  The 0xff was
+   previously mistaken for a sentinel at the HEAD of g_ew2b. */
+char  ew2pos[161] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
@@ -55,16 +59,15 @@ char  ew2pos[160] = {
     6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
     6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
     8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 
-    8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 
-
+    8, 8, 8, 8, 8, 9, 9, 9, 9, 9,
+   -1
 };
 
 
 
-/* g_ew2b (Ghidra enteredword_to_bit @ 0x2bad2): 160-byte
-   WORD_ID -> bit.  There is NO {255, 0} head sentinel -- LCP_STX's
-   table starts at 3 and the port's two extra leading bytes pushed
-   every entry one word out of place. */
+/* g_ew2b: 160-byte WORD_ID -> bit, starting at 3.  It has no head
+   sentinel; the {255, 0} the port once carried here was ew2pos's
+   trailing -1 plus its alignment pad. */
 char  g_ew2b[160] = {
       3,   0,   1,   2,   2,   4,   4,   5,   5,   5,
       5,   5,   6,   6,   6,   6,   6,   6,   7,   0,
@@ -189,25 +192,3 @@ char            bm_lo[8] = {
    (accepts more), SAD (2) gives 0 (rejects most).  Port previously
    had guessed {2, 4, 6} which inverted the intended behavior. */
 short           mood_pri[3]        = { 3, 1, 0 };
-
-/* ---- position not yet recovered -------------------------------------
-   Four initialized globals that NOTHING in the program relocates
-   against, so the relocation pairing cannot place them.  Parked at the
-   end of the last object's data rather than left in the middle of a
-   stretch that is already byte-identical.  g_dsb carries one of the
-   two DATA relocations the port is still short of LCP_STX's 402, so
-   g_dsb and g_obtmp are probably real; env_val and g_mccha are only
-   ever named in
-   midi_seq.c comments.
-   ------------------------------------------------------------------ */
-/* psg_ntAc is a BYTE in the text segment behind mq_tick -- see
-   source/mq_tick.s. */
-short           env_val            = 5;    /* octave-5 baseline */
-
-short           g_mccha    = 1;
-
-short * g_dsb = dsb_stor;
-
-/* od_draw reads the object-MFDB table through this pointer, exactly
-   as the ROM does (initialized data 0x121b6 -> table in BSS). */
-MFDB *  g_obtmp = g_obtmt;
