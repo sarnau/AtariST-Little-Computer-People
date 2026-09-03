@@ -1660,23 +1660,24 @@ discard_loop:
 static void
 pk_show()
 {
-        short   ck;         /* computer_kicker */
-        short   pk;         /* player_kicker */
-        short   ch;         /* computer_high_card */
-        short   ph;         /* player_high_card */
-        unsigned short  br; /* bet_round / blink counter */
+        /* LCP_STX declares the loop counter first and has six locals,
+           not seven: the inner loops reuse `i`. */
         short   i;
-        short   j;
+        short   br;         /* blink counter, tested with (br & 1) */
+        short   pk;         /* -6  */
+        short   ck;         /* -8  */
+        short   ph;         /* -10 */
+        short   ch;         /* -12 */
 
         /* Reveal computer hand, animated. */
-        for (i = 0; i < 5; i = i + 1) {
+        for (i = 0; i < 5; i++) {
                 pk_drcs(pk_ch[i], i, 0);
                 gameTick(2);
         }
         pk_evh(pk_ch, pk_hrf,  pk_hsf,  &pk_chrk);
         pk_evh(pk_ph, pk_phrf, pk_phsf, &pk_phrk);
 
-        if (pk_phrk < pk_chrk) pk_dslot = 0;
+        if (pk_chrk > pk_phrk) pk_dslot = 0;
         if (pk_chrk < pk_phrk) pk_dslot = 1;
 
         if (pk_chrk == pk_phrk) {
@@ -1685,61 +1686,53 @@ pk_show()
                 /* Straight/flush/straight-flush tiebreak: compare
                    highest sorted-hand card rank. */
                 if ((pk_chrk == 8 || pk_chrk == 5 || pk_chrk == 4) &&
-                    pk_phsf[4] % 13 < pk_hsf[4] % 13)
+                    pk_hsf[4] % 13 > pk_phsf[4] % 13)
                         pk_dslot = 0;
 
                 /* Trips, full house, quads: compare the pair/trip
                    card's rank. */
                 if (pk_chrk == 7 || pk_chrk == 6 || pk_chrk == 3) {
-                        for (br = 0;
-                             (short) br < 5 && pk_hrf[(short) br] != 1;
-                             br = br + 1) ;
-                        for (i = 0;
-                             i < 5 && pk_phrf[i] != 1;
-                             i = i + 1) ;
-                        if ((short) pk_ph[i] % 13 <
-                            (short) pk_ch[(short) br] % 13)
+                        for (br = 0; br < 5; br++)
+                                if (pk_hrf[br] == 1)
+                                        break;
+                        for (i = 0; i < 5; i++)
+                                if (pk_phrf[i] == 1)
+                                        break;
+                        if (pk_ch[br] % 13 > pk_ph[i] % 13)
                                 pk_dslot = 0;
                 }
 
                 /* Two pair tiebreak. */
                 if (pk_chrk == 2) {
                         pk = 0; ck = 0; ph = 0; ch = 0;
-                        for (i = 0; i < 5; i = i + 1) {
-                                if (pk_hrf[i] != 0 &&
-                                    (short) pk % 13 <
-                                    (short) pk_ch[i] % 13)
+                        for (i = 0; i < 5; i++) {
+                                if (pk_hrf[i] &&
+                                    pk_ch[i] % 13 > pk % 13)
                                         pk = pk_ch[i];
-                                if (pk_hrf[i] != 0 &&
-                                    (short) pk_ch[i] % 13 <
-                                    (short) pk % 13)
+                                if (pk_hrf[i] &&
+                                    pk_ch[i] % 13 < pk % 13)
                                         ck = pk_ch[i];
-                                if (pk_phrf[i] != 0 &&
-                                    (short) ph % 13 <
-                                    (short) pk_ph[i] % 13)
+                                if (pk_phrf[i] &&
+                                    pk_ph[i] % 13 > ph % 13)
                                         ph = pk_ph[i];
-                                if (pk_phrf[i] != 0 &&
-                                    (short) pk_ph[i] % 13 <
-                                    (short) ph % 13)
+                                if (pk_phrf[i] &&
+                                    pk_ph[i] % 13 < ph % 13)
                                         ch = pk_ph[i];
                         }
-                        if ((short) ph % 13 < (short) pk % 13) {
+                        if (pk % 13 > ph % 13) {
                                 pk_dslot = 0;
-                        } else if ((short) pk % 13 == (short) ph % 13 &&
-                                   (short) ch % 13 <
-                                   (short) ck % 13) {
+                        } else if (pk % 13 == ph % 13 &&
+                                   ck % 13 > ch % 13) {
                                 pk_dslot = 0;
-                        } else if ((short) pk % 13 == (short) ph % 13 &&
-                                   (short) ck % 13 == (short) ch % 13) {
-                                for (i = 0;
-                                     i < 5 && pk_hrf[i] != 0;
-                                     i = i + 1) ;
-                                for (br = 0;
-                                     (short) br < 5 &&
-                                     pk_phrf[(short) br] != 0;
-                                     br = br + 1) ;
-                                if ((short) pk_ph[(short) br] % 13 <
-                                    (short) pk_ch[i] % 13)
+                        } else if (pk % 13 == ph % 13 &&
+                                   ck % 13 == ch % 13) {
+                                for (i = 0; i < 5; i++)
+                                        if (!pk_hrf[i])
+                                                break;
+                                for (br = 0; br < 5; br++)
+                                        if (!pk_phrf[br])
+                                                break;
+                                if (pk_ch[i] % 13 > pk_ph[br] % 13)
                                         pk_dslot = 0;
                         }
                 }
@@ -1747,19 +1740,19 @@ pk_show()
                 /* One pair: compare pair rank, then kicker ladder. */
                 if (pk_chrk == 1) {
                         pk = 0; ph = 0;
-                        for (i = 0; i < 5; i = i + 1) {
-                                if (pk_hrf[i]  != 0) pk = pk_ch[i];
-                                if (pk_phrf[i] != 0) ph = pk_ph[i];
+                        for (i = 0; i < 5; i++) {
+                                if (pk_hrf[i])  pk = pk_ch[i];
+                                if (pk_phrf[i]) ph = pk_ph[i];
                         }
-                        if ((short) ph % 13 < (short) pk % 13) {
+                        if (pk % 13 > ph % 13) {
                                 pk_dslot = 0;
-                        } else if ((short) pk % 13 == (short) ph % 13) {
-                                for (i = 4; i >= 0; i = i - 1) {
-                                        if (pk_phsf[i] % 13 <
-                                            pk_hsf[i]  % 13) {
+                        } else if (pk % 13 == ph % 13) {
+                                for (i = 4; i >= 0; i--) {
+                                        if (pk_hsf[i] % 13 >
+                                            pk_phsf[i] % 13) {
                                                 pk_dslot = 0; break;
                                         }
-                                        if (pk_hsf[i]  % 13 <
+                                        if (pk_hsf[i] % 13 <
                                             pk_phsf[i] % 13) {
                                                 pk_dslot = 1; break;
                                         }
@@ -1769,12 +1762,12 @@ pk_show()
 
                 /* High card: pure kicker ladder from top down. */
                 if (pk_chrk == 0) {
-                        for (i = 4; i >= 0; i = i - 1) {
-                                if (pk_phsf[i] % 13 <
-                                    pk_hsf[i]  % 13) {
+                        for (i = 4; i >= 0; i--) {
+                                if (pk_hsf[i] % 13 >
+                                    pk_phsf[i] % 13) {
                                         pk_dslot = 0; break;
                                 }
-                                if (pk_hsf[i]  % 13 <
+                                if (pk_hsf[i] % 13 <
                                     pk_phsf[i] % 13) {
                                         pk_dslot = 1; break;
                                 }
@@ -1786,34 +1779,34 @@ pk_show()
 
         if (pk_dslot == 0) {
                 pk_pmsg("I win!!!");
-                for (br = 0; (short) br < 10; br = br + 1) {
+                for (br = 0; br < 10; br++) {
                         gameTick(2);
-                        if ((br & 1) == 0) {
-                                for (j = 0; j < 5; j = j + 1)
-                                        pk_drcs(pk_ch[j], j, 0);
+                        if (br & 1) {
+                                for (i = 0; i < 5; i++)
+                                        pk_drcs(CARD_HIGHLIGHT, i, 0);
                         } else {
-                                for (j = 0; j < 5; j = j + 1)
-                                        pk_drcs(CARD_HIGHLIGHT, j, 0);
+                                for (i = 0; i < 5; i++)
+                                        pk_drcs(pk_ch[i], i, 0);
                         }
                 }
-                for (j = 0; j < 5; j = j + 1)
-                        pk_drcs(pk_ch[j], j, 0);
+                for (i = 0; i < 5; i++)
+                        pk_drcs(pk_ch[i], i, 0);
                 pk_annr(0);
         }
         if (pk_dslot == 1) {
                 pk_pmsg("You're so lucky!!!");
-                for (br = 0; (short) br < 10; br = br + 1) {
+                for (br = 0; br < 10; br++) {
                         gameTick(2);
-                        if ((br & 1) == 0) {
-                                for (j = 0; j < 5; j = j + 1)
-                                        pk_drcs(pk_ph[j], j, 1);
+                        if (br & 1) {
+                                for (i = 0; i < 5; i++)
+                                        pk_drcs(CARD_HIGHLIGHT, i, 1);
                         } else {
-                                for (j = 0; j < 5; j = j + 1)
-                                        pk_drcs(CARD_HIGHLIGHT, j, 1);
+                                for (i = 0; i < 5; i++)
+                                        pk_drcs(pk_ph[i], i, 1);
                         }
                 }
-                for (j = 0; j < 5; j = j + 1)
-                        pk_drcs(pk_ph[j], j, 1);
+                for (i = 0; i < 5; i++)
+                        pk_drcs(pk_ph[i], i, 1);
                 pk_annr(1);
         }
 }
