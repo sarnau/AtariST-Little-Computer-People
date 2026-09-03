@@ -141,16 +141,17 @@ long    bm32and[32] = {
 };
 
 
-/* Ghidra dog_destination_position_table @ 0x2B8DE, 10 HOUSE_POS
-   entries the dog picks (via rndRng) as its next wander target.
-   Last two duplicate POS_BTM_SCREEN_EDGE so it's picked with 2x
-   probability -- the dog favours wandering off-screen. */
-short   g_ddipt[10] = {
+/* NINE HOUSE_POS entries the dog picks (via rndRng) as its next
+   wander target -- the picker's index is rndRng(base, 8), so 0..8.
+   The port carried a tenth entry duplicating POS_BTM_SCREEN_EDGE; the
+   reference puts g_dgitx 18 bytes after g_ddipt, which leaves room for
+   exactly nine. */
+short   g_ddipt[9] = {
         POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
         POS_TOP_FIREPLACE_RIGHT,   POS_MID_BEDROOM_WALK,
         POS_MID_COMPUTER_DESK,     POS_BTM_STAIR_LANDING,
         POS_BTM_DOG_BOWL,          POS_BTM_WATER_TAP,
-        POS_BTM_SCREEN_EDGE,       POS_BTM_SCREEN_EDGE
+        POS_BTM_SCREEN_EDGE
 };
 
 
@@ -160,7 +161,7 @@ short   g_ddipt[10] = {
 short   g_dgitx        = POS_BTM_SCREEN_EDGE;
 
 
-short   g_ddyot[10]     = { 3, 9, 2, 10, 6, 0, 0, 11, 3, 3 };
+short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };
 
 
 /* Ghidra g_dgiyo @ 0x2b904 = 3.  Y micro-nudge applied
@@ -168,10 +169,14 @@ short   g_ddyot[10]     = { 3, 9, 2, 10, 6, 0, 0, 11, 3, 3 };
 short   g_dgiyo            = 3;
 
 
-/* Ghidra dog_dest_x_offset_table @ 0x2B906, dog_dest_y_offset_table
-   @ 0x2B8F2 (10 shorts each): per-destination pixel nudges applied
-   after hs_posXY returns the anchor for the destination. */
-short   g_ddxot[10]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0 };
+/* Per-destination pixel nudges applied after hs_posXY returns the
+   anchor for the destination.  g_ddyot is nine like g_ddipt, but the
+   reference gives g_ddxot ELEVEN -- g_dseat starts 22 bytes after it.
+   Only 0..8 are ever indexed, so whether the original wrote an
+   eleven-entry table or a nine-entry one followed by four unreferenced
+   zero bytes cannot be told apart from the binary; the layout is the
+   same either way. */
+short   g_ddxot[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
 
 
 short   g_dseat[3]   = {
