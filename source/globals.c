@@ -757,13 +757,32 @@ unsigned char   g_msmk[32] = {
 
 /* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO.
    LCP_STX declares both as char -- sgPlay writes them with moveb. */
-char    g_molof             = NO;
 
-char            mi_slop         = 1;    /* STX: byte */
+
+/* One byte, one variable: sgPlay writes it (the port called that
+   write g_molof) and mq_pars reads it.  Both port names mapped to
+   the same LCP_STX address, data 0x414. */
+char            mi_slop         = 1;
 
 char    mi_varR                      = YES;
 
 char *          mi_pgmap = mi_pgmapb;   /* STX: byte pointer */
+
+/* ---- the MIDI object ------------------------------------------------
+   midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon
+   emits a switch jump table into the .data of the object that holds
+   the function, and LCP_STX has mq_parh's table (7 case longs + 7
+   targets) and mq_dise's (5 targets) -- 76 bytes in all -- sitting
+   between mi_pgmap at data 0x418 and main_pal at 0x468.  Data from
+   separate objects cannot interleave, so the globals and the MIDI
+   code are ONE object, and the split point is exactly here.
+
+   tools/stx_units.txt therefore names midi_seq.c as this file's
+   constituent, and alcyon_link.sh puts globals.o where midi_seq.o
+   used to be (text 0x12a).
+   ---------------------------------------------------------------- */
+#include "midi_seq.c"
+
 
 
 /* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).
@@ -829,6 +848,11 @@ short   g_hacur                         = 8;
 short   g_hatas                         = 8;
 
 short   g_hamod                         = HEAD_ANIM_DISABLED;
+
+/* Two more bytes of -1 that nothing references, between g_hamod and
+   g_trac (LCP_STX data 0x4c0).  Dead 1985 data that Alcyon still
+   allocates. */
+short   g_unus3                         = -1;
 
 short   g_trac                  = ACTION_NONE;
 
@@ -944,27 +968,7 @@ short   hd_dang[93] = {
 };
 
 
-/* Carried-object sprite table (Ghidra carried_object_id_table
-   @ 0x2B95A; ROM data 0x135a2, 38 bytes): 19 shorts forming
-   {sprite_id, 0} pairs closed by a single 0 terminator.
-   NOTE: the ROM's per-object dispatch each write the same
-   `g_sepey[g_seslm[SPRITE_X]] = lcp_y - 20` with only the stored
-   sprite-def index differing; the port collapses this to a single
-   inline write in gameTick's carrying-mode positioning block.  Table
-   kept here for byte-fidelity to the ROM data segment. */
-short   g_cotbl[19]    = {
-        SPRITE_GLASS, 0, SPRITE_GAME_BOX, 0,
-        SPRITE_FOOD_PACKAGE, 0, SPRITE_FIREWOOD, 0,
-        SPRITE_COOKING_POT, 0, SPRITE_SUITCASE, 0,
-        SPRITE_BOOK, 0, SPRITE_VINYL_CARRY, 0,
-        SPRITE_COOKED_MEAL, 0, 0
-};
 
-/* 16 more zero bytes of unreferenced ROM data (0x11fc2) -- likely
-   four more never-used sign-off slots. */
-char *  g_unus2[4]      = {
-        (char *) 0, (char *) 0, (char *) 0, (char *) 0
-};
 
 
 /* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
@@ -1742,9 +1746,6 @@ short * g_dsb = dsb_stor;
    as the ROM does (initialized data 0x121b6 -> table in BSS). */
 MFDB *  g_obtmp = g_obtmt;
 
-/* Six bytes of zero-initialized, completely unreferenced data the ROM
-   carries between org_cnt and the PEx filename (data 0x11792). */
-short   g_unus1[3]          = { 0, 0, 0 };
 
 
 /* No globals here for the 200 Hz clock or the VBL counter.  Both are

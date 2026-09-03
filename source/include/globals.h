@@ -107,7 +107,6 @@ extern short main_pal[];
 extern short g_clcop[];
 extern short g_clcos[];
 extern short skin_pal[];
-extern char   g_molof;          /* STX: byte flags (moveb) */
 extern char   mi_varR;
 extern char  g_mspha;           /* STX: byte (moveb/tstb) */
 extern unsigned char* mi_dbase;

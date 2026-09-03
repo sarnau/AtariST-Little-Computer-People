@@ -110,13 +110,14 @@ done
 rm -f lcp.68k LCP.PRG
 # LCP_STX object order.  The 1985 link laid the game objects down in
 # this order, and every function's address depends on it:
-#   0x0012a midi_seq   0x0219a mq_tick   0x02272 psg_asm
+#   0x0012a globals    0x0219a mq_tick   0x02272 psg_asm
+#           (globals.o carries midi_seq.c -- see globals.c)
 #   0x022c0 cp_asm     0x0400c stx_u1    0x073e8 games
 #   0x0d9ea stx_u4     0x0de36 stx_u2    0x148fe stx_u3
 #   0x17310 blkcp_a    0x1733a vdistx    then the library
 # Everything not named here is an empty object (0 bytes of text) and
 # is emitted first, where it costs nothing.
-STXORDER="midi_seq.o mq_tick.o psg_asm.o cp_asm.o stx_u1.o games.o \
+STXORDER="globals.o mq_tick.o psg_asm.o cp_asm.o stx_u1.o games.o \
           stx_u4.o stx_u2.o stx_u3.o blkcp_a.o vdistx.o vdistx_a.o"
 REST=""
 for o in $OBJS; do

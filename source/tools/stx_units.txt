@@ -12,3 +12,4 @@ stx_u2.c render.c agames.c health.c sim.c walk.c tvanim.c
 stx_u3.c alerts.c sprites.c tick.c
 stx_u4.c sound.c sfx_irq.c
 vdistx.c
+globals.c midi_seq.c

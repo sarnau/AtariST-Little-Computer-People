@@ -19,7 +19,7 @@ char *  filename;
         unsigned char   temp[10];
         _DTA *   dta_ptr;
 
-        g_molof = YES;
+        mi_slop = YES;
         mi_varR          = YES;
 
         if (mi_play != NO) {

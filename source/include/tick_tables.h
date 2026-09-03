@@ -11,7 +11,6 @@ extern short g_obpha[];
 extern short g_obfia[];
 extern short g_obdea[];
 extern short g_ptdsi[];
-extern short g_cotbl[];
 extern short g_ptlss;
 extern BOOL16 g_alsts;
 extern short g_phrc;
