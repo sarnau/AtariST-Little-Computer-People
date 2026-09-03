@@ -416,13 +416,14 @@ char            midi_ch;
         char            saved_note;             /* -2  */
         unsigned char * saved_ptr;              /* -12 */
         char            saved_size;             /* -14 */
-        unsigned char * note_ptr;
-        short           channel_idx;
-        short           chosen;
-        short           i;
-        short           envelope_phase;
-        char            cVar4;
-        unsigned char   attack_hi;
+        char            chosen;                 /* -2  */
+        char            best;                   /* -6  */
+        long            env_ptr;                /* -18 */
+        char            envelope_phase;         /* -20 */
+        char            cVar4;                  /* -8  */
+        short           attack_hi;              /* -22 */
+        short           noise_mask;             /* -24 */
+        short           mixer_bits;             /* -26 */
         unsigned short  period;
         unsigned short  period_hi_nibble;
         unsigned short  freq_index;
@@ -450,125 +451,124 @@ char            midi_ch;
         }
 
         /* ---- PSG path ---- */
-        if (psg_out == NO)
-                return 1;
+        if (psg_out != NO) {
 
-        midiEvP  = saved_ptr;
-        midiEvS  = saved_size;
+                midiEvP  = saved_ptr;
+                midiEvS  = saved_size;
 
-        note_ptr = saved_ptr + 1;
-        if ((*saved_ptr & 0xf0) != 0x90)
-                return 0;
-
-        /* ---- Note-Off (velocity == 0) ---- */
-        if (saved_ptr[2] == 0) {
-                for (channel_idx = 0; channel_idx < 3;
-                     channel_idx = channel_idx + 1) {
-                        if (psg_chNt[channel_idx] == *note_ptr)
-                                break;
-                }
-                if (channel_idx >= 3)
+                if ((*midiEvP++ & 0xf0) != 0x90)
                         return 0;
-                psg_chNt[channel_idx] = 0;
-                psg_envelope[channel_idx].phase       = ENV_RELEASE;
-                psg_envelope[channel_idx].phase_timer = 0;
-                return 1;
-        }
 
-        /* ---- Note-On: pick a channel ---- */
-        for (chosen = 0; chosen < 3; chosen = chosen + 1) {
-                if (psg_chNt[chosen] == 0)
-                        break;
-        }
-        if (chosen == 3) {
-                /* Voice-steal: pick the channel furthest along in its
-                   envelope (highest phase index). */
+                if (midiEvP[1] != 0) {
+
+                /* ---- Note-On: pick a channel ---- */
                 chosen = 0;
-                for (i = 1; i < 3; i = i + 1) {
-                        if (psg_envelope[i - 1].phase <
-                            psg_envelope[i].phase)
-                                chosen = i;
+                while (psg_chNt[chosen++])
+                        ;
+                chosen--;
+                if (chosen == 3) {
+                        /* Voice-steal: pick the channel furthest along in its
+                           envelope (highest phase index). */
+                        best = chosen = 0;
+                        while (chosen != 2) {
+                                chosen++;
+                                if (psg_envelope[chosen].phase >
+                                    psg_envelope[chosen - 1].phase)
+                                        best = chosen;
+                        }
+                        chosen = best;
                 }
-        }
 
-        /* Range guard. */
-        if ((char) *note_ptr < g_mnlol ||
-            (char) *note_ptr > g_mnhil)
+                /* Range guard: the whole note-on body is inside it. */
+                if (*midiEvP >= g_mnlol && *midiEvP <= g_mnhil) {
+
+                /* Copy 8 bytes of ADSR params from the .SNG envelope
+                   block; the source address lands in a local first. */
+                env_ptr = (mi_ccha - 1) * 8 + mi_env;
+                envelope_phase = ENV_ATTACK;
+                psg_cpE(env_ptr,
+                        (unsigned char *) &psg_envelope[chosen] + 1,
+                        8L);
+
+                /* Split the packed nibbles: attack_start_vol keeps its low
+                   4 bits (start volume), high 4 bits stash the mixer flags;
+                   attack_duration keeps its low 4 bits, high 4 bits encode
+                   the octave shift (2 - N) * 12 semitones. */
+                attack_hi = (psg_envelope[chosen].attack_start_vol >> 4) & 0xf;
+                psg_envelope[chosen].attack_start_vol &= 0xf;
+                cVar4 = (2 - ((psg_envelope[chosen].attack_duration >> 4) & 0xf)) * 12;
+                psg_envelope[chosen].attack_duration &= 0xf;
+                mixer_bits = attack_hi << chosen;
+                noise_mask = ~(9 << chosen);
+
+                {
+                        freq_index = (unsigned short)
+                                ((short) cVar4 + (short) (char) *midiEvP);
+
+                        if (mi_dwrm == 1) {
+                                psg_wr((char) (psg_freq[freq_index] / 0x3c),
+                                                   (char) 6);
+                                psg_mix((char) mixer_bits,
+                                              (unsigned char) noise_mask | 0xc0);
+                        } else {
+                                long    mixer_prev;
+                                long    combined;
+                                Giaccess((long) (unsigned short)
+                                         (psg_freq[freq_index] / 0x3c), 0x86L);
+                                mixer_prev = Giaccess(0L, 7L);
+                                combined = (long) mixer_bits |
+                                           ((long) (noise_mask | 0xc0) & mixer_prev);
+                                Giaccess((long) (short) (combined >> 16),
+                                         (long) (short) combined);
+                        }
+                }
+
+                ret = chosen * 2;
+
+                if ((short) ((short) cVar4 + (short) (char) *midiEvP) < 0x17) {
+                        envelope_phase = ENV_FADEOUT;
+                } else {
+                        period = psg_freq[freq_index];
+                        period_hi_nibble = (period >> 8) & 0xf;
+                        if (mi_dwrm == 1) {
+                                psg_wr((char) period,
+                                                   (char) ret);
+                                psg_wr((char) period_hi_nibble,
+                                                   (char) (ret + 1));
+                        } else {
+                                Giaccess((long) (unsigned short) (period & 0xff),
+                                         (long) (ret + 0x80));
+                                Giaccess((long) period_hi_nibble,
+                                         (long) (ret + 0x81));
+                        }
+                }
+
+                psg_chNt[chosen] = *midiEvP;
+                if (envelope_phase == ENV_FADEOUT)
+                        psg_envelope[chosen].current_volume = 0;
+                psg_envelope[chosen].max_volume  = (unsigned char) psg_cvol;
+                psg_envelope[chosen].phase_timer = 1;
+                psg_ntAc                 = YES;
+                psg_envelope[chosen].phase       = (char) envelope_phase;
+
+                }       /* range guard */
+
+                } else {
+
+                /* ---- Note-Off (velocity == 0) ---- */
+                chosen = 0;
+                while (psg_chNt[chosen++] != *midiEvP && chosen < 4)
+                        ;
+                if (chosen == 4)
+                        return 0;
+                chosen--;
+                psg_chNt[chosen] = 0;
+                psg_envelope[chosen].phase       = ENV_RELEASE;
+                psg_envelope[chosen].phase_timer = 0;
+
+                }
                 return 1;
-
-        envelope_phase = ENV_ATTACK;
-
-        /* Copy 8 bytes of ADSR params from the .SNG envelope block. */
-        psg_cpE(
-                (unsigned char *) (mi_env +
-                        (long) (g_mccha - 1) * 8),
-                (unsigned char *) &psg_envelope[chosen].attack_start_vol,
-                8);
-
-        /* Split the packed nibbles: attack_start_vol keeps its low
-           4 bits (start volume), high 4 bits stash the mixer flags;
-           attack_duration keeps its low 4 bits, high 4 bits encode
-           the octave shift (2 - N) * 12 semitones. */
-        attack_hi = psg_envelope[chosen].attack_start_vol;
-        psg_envelope[chosen].attack_start_vol =
-                psg_envelope[chosen].attack_start_vol & 0xf;
-        cVar4 = (char) ((2 - ((psg_envelope[chosen].attack_duration >> 4) & 0xf)) * 12);
-        psg_envelope[chosen].attack_duration =
-                psg_envelope[chosen].attack_duration & 0xf;
-
-        {
-                unsigned short  mixer_bits =
-                        (unsigned short) (((attack_hi >> 4) & 0xf) << chosen);
-                unsigned short  noise_mask =
-                        (unsigned short) ~(9 << chosen);
-                freq_index = (unsigned short)
-                        ((short) cVar4 + (short) (char) *note_ptr);
-
-                if (mi_dwrm == 1) {
-                        psg_wr((char) (psg_freq[freq_index] / 0x3c),
-                                           (char) 6);
-                        psg_mix((char) mixer_bits,
-                                      (unsigned char) noise_mask | 0xc0);
-                } else {
-                        long    mixer_prev;
-                        long    combined;
-                        Giaccess((long) (unsigned short)
-                                 (psg_freq[freq_index] / 0x3c), 0x86L);
-                        mixer_prev = Giaccess(0L, 7L);
-                        combined = (long) mixer_bits |
-                                   ((long) (noise_mask | 0xc0) & mixer_prev);
-                        Giaccess((long) (short) (combined >> 16),
-                                 (long) (short) combined);
-                }
         }
-
-        ret = chosen * 2;
-
-        if ((short) ((short) cVar4 + (short) (char) *note_ptr) < 0x17) {
-                envelope_phase = ENV_FADEOUT;
-        } else {
-                period = psg_freq[freq_index];
-                period_hi_nibble = (period >> 8) & 0xf;
-                if (mi_dwrm == 1) {
-                        psg_wr((char) period,
-                                           (char) ret);
-                        psg_wr((char) period_hi_nibble,
-                                           (char) (ret + 1));
-                } else {
-                        Giaccess((long) (unsigned short) (period & 0xff),
-                                 (long) (ret + 0x80));
-                        Giaccess((long) period_hi_nibble,
-                                 (long) (ret + 0x81));
-                }
-        }
-
-        psg_chNt[chosen] = *note_ptr;
-        if (envelope_phase == ENV_FADEOUT)
-                psg_envelope[chosen].current_volume = 0;
-        psg_envelope[chosen].max_volume  = (unsigned char) psg_cvol;
-        psg_envelope[chosen].phase_timer = 1;
-        psg_ntAc                 = YES;
-        psg_envelope[chosen].phase       = (char) envelope_phase;
 
         return 1;
 }
@@ -682,6 +682,11 @@ mq_advs()
         }
 }
 
+
+/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, right before psg_upEn). */
+#ifndef FAITHFUL
+#include "parts/psg_cpE.c"
+#endif
 
 /* psg_upEn: PSG software ADSR envelope processor.  50 Hz from mq_tick.
    3 channels through attack->decay->sustain->release->fadeout.

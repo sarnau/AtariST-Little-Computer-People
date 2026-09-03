@@ -36,36 +36,9 @@ char    byte;
 }
 #endif
 
-/* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
-   addr: psg_cpE() */
-void
+/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, in the MIDI object). */
 #ifdef FAITHFUL
-psg_cpE(src, dest, count)
-unsigned char * src;
-unsigned char * dest;
-short           count;
-{
-        while (count != 0) {
-                *dest = *src;
-                src   = src  + 1;
-                dest  = dest + 1;
-                count = count - 1;
-        }
-}
-#else
-/* STX: a long count, tested by post-decrement, pointers stepped in
-   place. */
-psg_cpE(src, dest, count)
-unsigned char * src;
-unsigned char * dest;
-long            count;
-{
-        while (count--) {
-                *dest = *src;
-                src++;
-                dest++;
-        }
-}
+#include "parts/psg_cpE.c"
 #endif
 
 /* ST quirk: the 1985 source stores `val` into giselect and `reg` into
