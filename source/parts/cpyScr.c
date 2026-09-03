@@ -25,5 +25,5 @@ MFDB *  pdesMFDB;
         points[5] = 0;
         points[6] = (unsigned short) pdesMFDB->fd_w - 1;
         points[7] = (unsigned short) pdesMFDB->fd_h - 1;
-        vro_cpyfm(handle, ALL_WHITE, points, &MFDB_A, pdesMFDB);
+        vro_cpyfm(handle, ALL_WHITE, points, MFDB_A, pdesMFDB);
 }

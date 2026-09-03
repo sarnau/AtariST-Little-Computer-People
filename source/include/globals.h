@@ -183,7 +183,7 @@ extern short dsb_stor[];
 extern short scr_scal;
 extern short work_in[];
 extern short wk_out[];
-extern MFDB MFDB_A;
+extern short MFDB_A[];   /* a short[10], not an MFDB -- see globals.c */
 extern unsigned char scrbufA[];
 extern unsigned char scrbufB[];
 extern short g_cmmin;

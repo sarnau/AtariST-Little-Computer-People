@@ -317,11 +317,17 @@ short   scr_scal;
 short   work_in[11];
 short   wk_out[57];
 
-/* MFDB_A (Ghidra 0x2C82A) -- source MFDB for VDI raster copies.
-   fd_addr = NULL is the VDI convention for "device screen", so
-   vro_cpyfm(...) copies from the visible physbase into a memory
-   buffer instead of another off-screen bitmap. */
-MFDB    MFDB_A;
+/* MFDB_A -- source MFDB for VDI raster copies.  fd_addr = NULL is the
+   VDI convention for "device screen", so vro_cpyfm(...) copies from
+   the visible physbase into a memory buffer instead of another
+   off-screen bitmap.
+
+   A SHORT ARRAY, not an MFDB: stpScrB clears MFDB_A[0] and MFDB_A[1]
+   -- the two halves of fd_addr -- and cpyScr passes the array itself,
+   both at the same address.  Declared as a struct, the port wrote the
+   extents at +4/+6 and passed the base, which the reference's
+   relocations contradict. */
+short   MFDB_A[10];
 
 /* scrbufA / scrbufB (Ghidra SCREEN_BUFFER_A / _B) -- BSS scratch
    for the two double-buffer compositing screens.
