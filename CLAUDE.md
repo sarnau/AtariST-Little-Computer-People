@@ -931,6 +931,47 @@ proof that the port's reference structure matches the original's.
 Keep the invariant: run prg_diff.py after any change.  Regenerate the
 spec only when the layout really moved, and read the diff.
 
+**prg_diff.py is not enough on its own.**  It compares the binary AFTER
+bss_remap has rewritten every relocated BSS longword, so a wrong
+variable reference is invisible to it -- as it is to verify_bytes and
+stx_txtdiff, which wildcard relocated longwords outright.
+`source/tools/reloc_audit.py` closes that hole: it pairs the two
+relocation streams site by site (they are identical, because text and
+data are) and reports six ways the port's variable structure can
+disagree with the original's -- merges, aliases, split symbols,
+symbols nothing relocates against, symbols whose base is only
+INFERRED, and arrays declared larger than the original's storage.  Run
+it after any change that touches a global.  What it should report:
+
+    A merges          0
+    B aliases         1   last_hz / mi_lasT
+    C split symbols   0
+    D unverifiable    1   scn_cmn
+    E inferred bases  1   scrbufA
+    F over-declared   1   last_hz (the B alias)
+
+**A constant subscript is not evidence of an array.**  Alcyon folds it
+into the absolute address, so `arr[7]` and a plain short emit the same
+instruction.  aes_intO[16] was a single short (now mi_tpb); the cell
+sits 14 bytes past AESBIND's int_out, which made "the sequencer borrows
+int_out[7]" tempting and wrong -- int_out is only 14 bytes, so writing
+it that way lands on the next global.  This is what category E guards:
+a symbol referenced only at a non-zero offset has an inferred base, and
+the inference is only as good as the assumed shape.
+
+**A char array's declared size never reaches the codegen**, so only the
+gap to the next cell the reference uses can settle it: g_agscw is 10,
+g_ltscb 40, g_sfDoB 56.  The last one means the original really does
+overrun its Dosound buffer -- sf_irqp copies `size` bytes there
+straight from SOUNDS.LCP, which holds longer effects.  Reproduced as
+written; do not widen the buffer.
+
+**Regenerating the spec needs the PRE-REMAP binary.**  alcyon_link.sh
+leaves it as `build/alcyon/LCP_nobss.PRG`, and both `bss_remap.py
+--gen` and reloc_audit.py default to it.  Running --gen against an
+already-remapped LCP.PRG would pair the reference against itself and
+freeze the drift into the spec.
+
 **verify_bytes is not sufficient for this phase.**  It wildcards
 relocations AND PC-relative displacements, so a function can report
 MATCH while its internal branch targets differ (psg_upEn and ag_main
