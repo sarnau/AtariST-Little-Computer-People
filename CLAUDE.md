@@ -1040,55 +1040,74 @@ Roadmap:
  1. ~~Function-level recovery~~ DONE -- 265/265 spans, zero code
     differences.
  2. ~~Object and function order~~ DONE -- text is byte-identical.
- 3. **DATA (+3008) and BSS (+53884) layout.**  Analysed 2026-09-03 by
-    RELOCATION PAIRING: the text is byte-identical, so its 6429
+ 3. **DATA and BSS layout.**  Analysed and largely fixed 2026-09-03
+    by RELOCATION PAIRING: the text is byte-identical, so its 6429
     relocation SITES are identical in both binaries, and each site's
     stored longword gives a port-address -> LCP_STX-address pair.
-    That pairs 1073 distinct addresses and yields LCP_STX's whole
-    data/bss layout without guessing.  What it says:
+    That pairs ~1070 distinct addresses and yields LCP_STX's whole
+    data/bss layout without guessing.  **This is the tool for the
+    layout phase** -- rebuild the pairing after any change and ask it
+    which symbols are in the wrong segment, the wrong size, or the
+    wrong order.
 
-    * **155 port DATA symbols (3898 bytes) are BSS in LCP_STX** --
-      every `short x = 0;` in globals.c.  Alcyon puts an explicitly
-      zeroed global in .data; LCP_STX writes `short x;` and gets a
-      `.comm`.  Dropping those initializers is the single biggest
-      data fix.  List: `/tmp`-style dump via the pairing, or grep
-      globals.c for `= 0;` / `= NO;`.
-    * **8 port BSS symbols (850 bytes) are DATA in LCP_STX** and need
-      real initializers: bm32and, bm32or (128 each -- LCP_STX ships
-      the bit tables baked in rather than building them at run time),
-      g_ew2a (408), g_mstr (132), g_sepef (20), g_mcpro (16),
-      mi_chma (16), moff_f (2).
-    * 3898 - 850 = 3048 against a +3008 delta, so those two moves
-      account for essentially all of it; ~40 bytes of residual is
-      per-symbol size/padding.
-    * **124 of the 138 data->data symbols are already byte-identical**
-      in content (relocations wildcarded).  The 14 that are not:
-      mi_evst and mi_evrl hold each OTHER's contents (swapped);
-      rec_led runs backwards (LCP_STX 0x80,0x40,...,0x02); g_obisa is
-      {0x2b,0x2c,0x2d} not {0x17,0x18,0x19}; g_mnlol 0x60 not 0x17;
-      g_mnhil 0x24 not 0x7f; mi_slop and g_molof are 1 not 0;
-      g_ptdsi's last entry is 0x33; psg_freq differs at one entry
-      (0x0fc0 vs 0x0fd2).  days_pm and g_ptdoa "differ" only because
-      Alcyon emits string literals and `static` data with NO symbol,
-      so a symbol's extent swallows the anonymous blob that follows
-      it -- that is ordering, not content.
-    * **BSS is two over-allocated arrays.**  scrbufA: port 65536,
-      LCP_STX at most 33049 (+32487).  dsb_stor: port 34816, LCP_STX
-      at most 12836 (+21980).  Together 54467 against a +53884 delta;
-      everything else is noise from unreferenced symbols inflating the
-      derived gaps.  scrbufA is sized for TWO screens because the port
-      believed the alt compositing buffer was `scrbufA + 0x8000`; it
-      is not (see below), so one screen is enough.
-    * **Ordering is NOT right yet**: 49 inversions among 138 mapped
-      data symbols, 61 among 129 bss ones.  Data order is source
-      declaration order (fixable in globals.c, plus the string
-      literals' use order).  BSS order is the LINKER's `.comm`
-      allocation, which matches no surviving tool -- it will need a
-      post-link remap driven by a checked-in spec, the way
-      `bss_remap.py` did before it was deleted with the rest of the
-      LCP_ORG material (recover the technique from git history:
-      pair the reloc streams site-by-site, verify a consistent 1:1
-      mapping, rewrite the relocated longwords).
+    Deltas went from data +3008 / bss +53884 to **-44 / -580**.  What
+    the pairing showed and what was done:
+
+    * 155 port DATA symbols were BSS in LCP_STX -- every
+      `short x = 0;`.  Alcyon puts an explicitly zeroed global in
+      .data; LCP_STX writes `short x;` and gets a `.comm`.  Twenty of
+      them were NOT zero (g_pcmon/g_ppmon 400, mi_nlp0/mi_nxTk/
+      mi_lpTk/g_mtdiv 100, psg_cvol 15, mi_evcn 9, lcp_watr 7,
+      g_spdc/g_aprio 5, lcp_food 4, lcp_bwlS/g_aggun/scr_scal 1,
+      lastAct/g_msmap/g_lcieo -1, vdipb's five pointers) -- LCP_STX
+      initialises none of them and each has a run-time writer.  vdipb
+      is safe because v_opnvwk assigns all five entries before its
+      first trap.
+    * 8 port BSS symbols were DATA in LCP_STX and got their real
+      contents, read straight out of its data segment: bm32or and
+      bm32and (LCP_STX ships the 32 shift/mask longs rather than
+      building them at run time -- so initBM is not "dead code", it is
+      redundant), g_mstr, g_mcpro, mi_chmap, g_sepef, moff_f, g_ew2a.
+    * **g_ew2a can be a real table after all.**  Alcyon rejects the
+      NESTED form `{ {..}, a, p }` with "mismatched curly braces", but
+      takes the FLATTENED list -- which is how LCP_STX ships it.  And
+      the port's host-side rows had action and priority the wrong way
+      round in 33 of 34 rows: chk_encm returns the byte at +10 and
+      adds the byte at +11 to g_aprio, and LCP_STX's row 0 is (24,15).
+    * **g_mstr's static content is 0..99 then 110..127 then zeros** --
+      the row 100..109 is missing from the 1985 table.  Preserved;
+      mq_bust rewrites all 132 entries before anything reads them.
+    * BSS was two over-allocated arrays.  scrbufA and scrbufB are ONE
+      aligned screen each (32512), not two -- the "alt screen at
+      +0x8000" reading came from the `&scrbufA[0x8000]` bug.  dsb_stor
+      is 12832 bytes: fillTopR's largest caller is mg_stp's
+      fillTopR(0x4d) = 77 rows of 160, plus the 512 the align-up can
+      shift (LCP_STX's gap there is 12836).
+    * SPRITE_HW_SLOTS_ALLOC is 8 again.  The port had widened those
+      arrays to 10 so a stray slot-9 write stayed in bounds regardless
+      of link order; LCP_STX tolerates it because the write lands in
+      the ADJACENT array (g_sepey[9] == g_seacw[1]).  That safety now
+      rests on reproducing the original's adjacency.
+    * Deleted workin/work_out and g_setmt/g_setaw/g_setah -- duplicates
+      of work_in/wk_out and the g_obt* trio, referenced by nothing.
+
+    **Still to do: ORDER.**  49 inversions among the mapped data
+    symbols, 61 among the bss ones.  Data order is source declaration
+    order -- but note Alcyon emits string literals and `static` data
+    with NO symbol, so a named symbol's extent swallows the anonymous
+    blob that follows it; that is why days_pm and g_ptdoa look
+    thousands of bytes too big.  BSS order is the LINKER's `.comm`
+    allocation, which matches no surviving tool, so it will need a
+    post-link remap driven by a checked-in spec (recover the technique
+    from git history: `bss_remap.py` did exactly this before it was
+    deleted with the rest of the LCP_ORG material -- pair the reloc
+    streams site-by-site, verify a consistent 1:1 mapping, rewrite the
+    relocated longwords).  Until the order is right, every derived
+    "LCP_STX size" is only an UPPER bound: a gap absorbs whatever
+    unreferenced symbols happen to follow.  The residual -44 / -580
+    lives in that uncertainty -- the leads are g_lsimg / g_lsmas /
+    g_hsbuf / g_hsmas (port 336 each, gaps 512), mi_lstk (200 vs 688)
+    and g_sfdoc (2 vs 342).
 
     **Relocation pairing catches what byte comparison cannot.**  Both
     verify_bytes and stx_txtdiff wildcard relocated longwords, so a
