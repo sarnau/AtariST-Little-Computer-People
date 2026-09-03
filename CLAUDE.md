@@ -1089,6 +1089,51 @@ stub -- check the line number against that range before editing.
   globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
   10-byte slot that just calls the next function).
 
+## Byte-identity phase (2026-09-03)
+
+With every function matching, the remaining work is LAYOUT.  Sizes
+against LCP_STX: text +644, data +3006, bss +53924.
+
+**verify_bytes is not sufficient here.**  It wildcards relocations AND
+PC-relative displacements, so a function can report MATCH while its
+internal branch targets differ -- psg_upEn and ag_main both did.  Use
+`source/tools/stx_txtdiff.py`, which wildcards relocations only and
+walks the whole text segment; that is what this phase iterates on.
+
+Two layout levers, in order:
+
+ 1. **Object order.**  alcyon_link.sh now names LCP_STX's object order
+    explicitly for the default build (midi_seq 0x12a, mq_tick 0x219a,
+    psg_asm 0x2272, cp_asm 0x22c0, stx_u1 0x400c, games 0x73e8,
+    stx_u4 0xd9ea, stx_u2 0xde36, stx_u3 0x148fe, blkcp_a 0x17310,
+    then the library), with osbind.o right behind gemstart where the
+    trap bindings sit at 0xfa.  stx_check.sh reuses that list verbatim
+    -- if the symbol side-link disagrees with LCP.PRG about object
+    order, every symbol extent comes out wrong and the sweep reports
+    mass divergence that is not real.
+ 2. **Function order inside each object.**  midi_seq.c, stx_u1.c and
+    games.c are done; stx_u2.c (26 order breaks), stx_u3.c (2) and
+    vdiown.c (4) are not.  For a unity unit this is just reordering
+    the #include lines -- but the unit then needs every header at the
+    top, and obdefs.h has no include guard of its own, so port sources
+    include `obdefs1.h` instead.
+
+Text is byte-identical from 0 through 0x83d5 (33%).
+
+Things that cost bytes the original does not have: a `static` Alcyon
+emits even when nothing calls it (midi_seq.c's five mh_* header
+handlers, games.c's gamePlWQ), and helpers whose LCP_STX version is
+smaller (gameCln takes no argument there and does not free).  Both
+classes are now gated.
+
+Two more findings from this phase: LCP_STX keeps mi_dwrm, mi_rlock,
+g_mtpre, g_msmsa and psg_ntAc in the TEXT segment immediately behind
+mq_tick (0x226a-0x2271), and the last two are real BYTES, not BOOL16
+words -- mq_tick.s defines all five itself now.  And a static defined
+AFTER its caller needs a file-scope forward declaration, or Alcyon
+treats the call as an external and the linker resolves it to 0
+(pk_bjwr, which LCP_STX places behind pk_wrMn at 0xb784).
+
 Roadmap (mirrors campaign #1):
  1. Function-level recovery: iterate fn_diff/verify_bytes with
     LCP_REF=DATA/LCP_STX.PRG over the divergent functions,
