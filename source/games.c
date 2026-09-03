@@ -3029,7 +3029,12 @@ pk_bjMn()
         pk_awp();
         pk_dppm();
 
-        for (;;) {
+        /* A label and gotos, not a loop statement: the round tick sits
+           at the top and is skipped on the first pass. */
+        goto round;
+next_round:
+        gameTick(0x18);
+round:
                 plEr(70, 10, 219, 62);
                 plEr(31, 43, 57, 53);
                 g_pcbet = 0;
@@ -3042,10 +3047,17 @@ pk_bjMn()
                 pk_quit = NO;
                 ikey    = 0;
                 while (ikey != 1 && ikey != 3)
-                        ikey = pk_inph(KEY_F1, 0, KEY_F10);
-                if (ikey == 3) goto cleanup;
+                        ikey = pk_inph(KEY_F1, 255, KEY_F10);
+                if (ikey == 3) {
+cleanup:
+                        tx_sctm  = 0;
+                        no_keyin = NO;
+                        Mfree(crd_dat);
+                        moff();
+                        return;
+                }
 
-                for (br = 0; br < 5; br = br + 1) {
+                for (br = 0; br < 5; br++) {
                         pk_ch[br]  = CARD_NONE;
                         pk_ph[br]  = CARD_NONE;
                         pk_psh[br] = CARD_NONE;
@@ -3056,9 +3068,9 @@ pk_bjMn()
                         gameTick(0x14);
                         goto cleanup;
                 }
-                g_ppmon = g_ppmon - 1;
+                g_ppmon--;
                 pk_dppm();
-                g_pcbet = g_pcbet + 1;
+                g_pcbet++;
                 pk_dbhi(1);
                 pk_bet = 1;
                 strPr("F3  Enter", 225, 26, COLOR_red);
@@ -3075,7 +3087,7 @@ bet_loop:
                         }
                         if (mg_tofl != NO) goto cleanup;
                         if (ikey == 3) {
-                                g_ppmon = g_ppmon + pk_bet;
+                                g_ppmon += pk_bet;
                                 pk_bet  = 0;
                                 g_pcbet = 0;
                                 pk_dbhi(1);
@@ -3090,11 +3102,11 @@ bet_loop:
                                         break;
                                 }
                                 if (pk_bet == 20) goto bet_loop;
-                                g_ppmon = g_ppmon - 1;
+                                g_ppmon--;
                                 pk_dppm();
-                                g_pcbet = g_pcbet + 1;
+                                g_pcbet++;
                                 pk_dbhi(1);
-                                pk_bet  = pk_bet + 1;
+                                pk_bet++;
                         }
                 } while (ikey != 2);
 
@@ -3197,9 +3209,9 @@ bet_loop:
                                                                 pk_quit = YES;
                                                                 break;
                                                         }
-                                                        g_ppmon = g_ppmon - 1;
+                                                        g_ppmon--;
                                                         pk_dppm();
-                                                        g_ppbet = g_ppbet + 1;
+                                                        g_ppbet++;
                                                         pk_dbhi(2);
                                                         gameTick(0);
                                                 }
@@ -3254,12 +3266,12 @@ bet_loop:
                                                                         pk_quit = YES;
                                                                         break;
                                                                 }
-                                                                g_ppmon = g_ppmon - 1;
+                                                                g_ppmon--;
                                                                 pk_dppm();
-                                                                g_pcbet = g_pcbet + 1;
+                                                                g_pcbet++;
                                                                 pk_dbhi(1);
                                                                 gameTick(0);
-                                                                i = i - 1;
+                                                                i--;
                                                         }
                                                         if (pk_quit != NO) {
                                                                 pk_pmsg("Game's over. I win.");
@@ -3291,12 +3303,12 @@ bet_loop:
                                                                                 pk_quit = YES;
                                                                                 break;
                                                                         }
-                                                                        g_ppmon = g_ppmon - 1;
+                                                                        g_ppmon--;
                                                                         pk_dppm();
-                                                                        g_pcbet = g_pcbet + 1;
+                                                                        g_pcbet++;
                                                                         pk_dbhi(1);
                                                                         gameTick(0);
-                                                                        i = i - 1;
+                                                                        i--;
                                                                 }
                                                                 if (pk_quit != NO) {
                                                                         pk_pmsg("Games over. I win.");
@@ -3329,12 +3341,12 @@ bet_loop:
                                                                                 pk_quit = YES;
                                                                                 break;
                                                                         }
-                                                                        g_ppmon = g_ppmon - 1;
+                                                                        g_ppmon--;
                                                                         pk_dppm();
-                                                                        g_ppbet = g_ppbet + 1;
+                                                                        g_ppbet++;
                                                                         pk_dbhi(2);
                                                                         gameTick(0);
-                                                                        i = i - 1;
+                                                                        i--;
                                                                 }
                                                                 if (pk_quit != NO) {
                                                                         pk_pmsg("Game's over. I win.");
@@ -3353,27 +3365,27 @@ bet_loop:
                                                                 pk_pmsg("You've busted!!!");
                                                                 gameTick(10);
                                                                 while (g_pcbet != 0) {
-                                                                        g_pcmon = g_pcmon + 1;
-                                                                        g_pcbet = g_pcbet - 1;
+                                                                        g_pcmon++;
+                                                                        g_pcbet--;
                                                                         pk_awp();
                                                                         pk_dbhi(1);
                                                                         gameTick(0);
                                                                 }
                                                                 g_pcbet = -1;
-                                                                goto after_settle;
+                                                                goto next_round;
                                                         }
                                                         goto cleanup;
                                                 }
                                                 plEr(225, 10, 319, 60);
                                         } else {
-                                                for (br = 0; br < 5; br = br + 1)
+                                                for (br = 0; br < 5; br++)
                                                         pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                 pk_bs1 = NO;
                                                 pk_bs2 = NO;
                                                 if (pk_c1bj == NO) {
                                                         for (br = 0;
                                                              br < 5 && pk_ph[br] != CARD_NONE;
-                                                             br = br + 1)
+                                                             br++)
                                                                 pk_drcs(pk_ph[br], br, 1);
                                                         pk_dbhi(1);
                                                         res = pk_bjr(pk_ph, 1,
@@ -3386,7 +3398,7 @@ bet_loop:
                                                                 while (res = g_pcbet - 1,
                                                                        game_over = (g_pcbet != 0),
                                                                        g_pcbet = res, game_over != NO) {
-                                                                        g_pcmon = g_pcmon + 1;
+                                                                        g_pcmon++;
                                                                         pk_awp();
                                                                         pk_dbhi(1);
                                                                         gameTick(0);
@@ -3394,11 +3406,11 @@ bet_loop:
                                                         }
                                                 }
                                                 if (pk_c2bj == NO) {
-                                                        for (br = 0; br < 5; br = br + 1)
+                                                        for (br = 0; br < 5; br++)
                                                                 pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                         for (br = 0;
                                                              br < 5 && pk_psh[br] != CARD_NONE;
-                                                             br = br + 1)
+                                                             br++)
                                                                 pk_drcs(pk_psh[br], br, 1);
                                                         pk_dbhi(2);
                                                         res = pk_bjr(pk_psh, 1,
@@ -3411,7 +3423,7 @@ bet_loop:
                                                                 while (res = g_ppbet - 1,
                                                                        game_over = (g_ppbet != 0),
                                                                        g_ppbet = res, game_over != NO) {
-                                                                        g_pcmon = g_pcmon + 1;
+                                                                        g_pcmon++;
                                                                         pk_awp();
                                                                         pk_dbhi(2);
                                                                         gameTick(0);
@@ -3429,23 +3441,23 @@ bet_loop:
                                                         /* nothing extra */
                                                 } else if (pk_phase != 0 &&
                                                            pk_bs2 == NO && pk_c2bj == NO) {
-                                                        for (br = 0; br < 5; br = br + 1)
+                                                        for (br = 0; br < 5; br++)
                                                                 pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                         pk_pmsg("Here is your second hand.");
                                                         gameTick(0x14);
                                                         for (br = 0;
                                                              br < 5 && pk_psh[br] != CARD_NONE;
-                                                             br = br + 1)
+                                                             br++)
                                                                 pk_drcs(pk_psh[br], br, 1);
                                                         pk_dbhi(2);
                                                 } else if (pk_phase != 0) {
-                                                        for (br = 0; br < 5; br = br + 1)
+                                                        for (br = 0; br < 5; br++)
                                                                 pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                         pk_pmsg("Here is your first hand again.");
                                                         gameTick(0x14);
                                                         for (br = 0;
                                                              br < 5 && pk_ph[br] != CARD_NONE;
-                                                             br = br + 1)
+                                                             br++)
                                                                 pk_drcs(pk_ph[br], br, 1);
                                                         pk_dbhi(1);
                                                 }
@@ -3456,7 +3468,7 @@ bet_loop:
                                                 gameTick(0x14);
 
                                                 round_ctr = 0;
-                                                for (br = 0; br < 3; br = br + 1) {
+                                                for (br = 0; br < 3; br++) {
                                                         pk_cscore = 0;
                                                         round_ctr = 0;
                                                         res = pk_chsc(pk_ch, 0);
@@ -3527,11 +3539,11 @@ bet_loop:
                                                         }
                                                 } else {
                                                         if (pk_bs1 == NO && pk_c1bj == NO) {
-                                                                for (br = 0; br < 5; br = br + 1)
+                                                                for (br = 0; br < 5; br++)
                                                                         pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                                 for (br = 0;
                                                                      br < 5 && pk_ph[br] != CARD_NONE;
-                                                                     br = br + 1)
+                                                                     br++)
                                                                         pk_drcs(pk_ph[br], br, 1);
                                                                 pk_dbhi(1);
                                                                 res = pk_chsc(pk_ph, 0);
@@ -3557,11 +3569,11 @@ bet_loop:
                                                                 }
                                                         }
                                                         if (pk_bs2 == NO && pk_c2bj == NO) {
-                                                                for (br = 0; br < 5; br = br + 1)
+                                                                for (br = 0; br < 5; br++)
                                                                         pk_drcs(CARD_HIGHLIGHT, br, 1);
                                                                 for (br = 0;
                                                                      br < 5 && pk_psh[br] != CARD_NONE;
-                                                                     br = br + 1)
+                                                                     br++)
                                                                         pk_drcs(pk_psh[br], br, 1);
                                                                 pk_dbhi(2);
                                                                 res = pk_chsc(pk_psh, 0);
@@ -3590,18 +3602,10 @@ bet_loop:
                                         }
                                 }
                         }
-after_settle:
-                        gameTick(0x18);
-                        continue;
+                        goto next_round;
                 }
                 pk_dpile[10] = CARD_BJ_STOP;
-        }
-
-cleanup:
-        tx_sctm  = 0;
-        no_keyin = NO;
-        Mfree(crd_dat);
-        moff();
+        goto next_round;
 }
 
 
