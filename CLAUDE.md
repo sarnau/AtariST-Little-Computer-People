@@ -1307,6 +1307,40 @@ Roadmap:
     segment as LCP_STX's and every text->text one to the identical
     address.
 
+## Running it under Hatari (2026-09-04)
+
+Setup: TOS104US.ROM (never EmuTOS) copied somewhere with NO SPACES in
+the path -- Hatari's option parser rejects a quoted path -- plus
+`--machine st --cpulevel 0 --cpuclock 8 --memsize 1`.  Without those
+the saved config's MMU/68030 settings double bus error during boot,
+which looks like a game crash and is not.
+
+What works: the build boots, draws the title screen, takes the
+guestbook name/date/time through stEnter, loads HOUSE.SCN and draws the
+house, and runs for ten emulated minutes with the dog wandering all
+three floors and the clock advancing, with no frame corruption.
+
+**What does NOT work: the copy protection.**  Under Hatari `cp_main`
+always takes its failure path -- `cprot_r` reads 0, so `cs_mvIn` enters
+`while (1) a_sleep(-1);`, which re-runs `lcp_hwt()` every iteration:
+**the resident stands and waves for ever and the game never starts.**
+`cpretv` (text 0x2604) is also 0, so it bails inside `cpseek`/`cprd`
+-- the restore-to-track-0 and seek-to-track-79 step -- before it ever
+issues the Read Track (0xE4) that reads the protected track.  Tried
+without effect: --fastfdc off, --compatible on, --cpu-exact on,
+--protect-floppy on, --drive-a-heads 1 and 2.
+
+This is NOT a port defect, and the control is decisive: the run that
+fails is `A:\LCP.PRG` off the Pasti image itself -- the original 1985
+binary, which cmp shows is byte-identical to what we build.  Do not
+chase it in the C source.  When a session shows the resident waving on
+the spot, read cprot_r before assuming a regression.
+
+Launching from a GEMDOS drive fails earlier and differently: cp_main
+calls Dgetdrv() and derives the PSG drive-select from it, so on C: it
+selects no drive at all and spins in the FDC wait.  The game has to run
+from the drive holding the disk.
+
 ## Issue log -- ALL CLOSED
 
 Kept as historical findings; none is an open port bug.
