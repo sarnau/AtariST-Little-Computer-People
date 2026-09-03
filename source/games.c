@@ -1858,74 +1858,71 @@ pk_blf()
 static void
 pk_cdrw()
 {
-        short   nc;                  /* card_in_use flag -> BOOL16 */
-        short   dm;                  /* draw_message_count / scratch */
-        short   dc;                  /* discard count seed / temp */
-        short   card;
-        short   n;                   /* new_card */
-        short   i;
-        short   r;
+        /* Five locals in LCP_STX, counter first. */
+        short   i;                   /* -2  */
+        short   nc;                  /* -4, card_in_use flag */
+        short   dm;                  /* -6, inner counter / scratch */
+        short   card;                /* -8  */
+        short   n;                   /* -10, new_card */
 
-        for (i = 0; i < 5; i = i + 1)
+        for (i = 0; i < 5; i++)
                 pk_sel[i] = 0;
         pk_evh(pk_ch, pk_hrf, pk_hsf, &pk_chrk);
         pk_blf();
 
-        if (pk_bluff == NO) {
-                if (pk_chrk < 4) {
+        if (pk_bluff != NO) {
+                nc = rndRng(0, 2);
+                i  = nc;
+                for (card = 0; card < 5; card++) {
+                        if (i == 0)
+                                break;
+                        if (pk_hrf[card] == 0) {
+                                pk_sel[card] = 1;
+                                i--;
+                        }
+                }
+        } else {
+                if (pk_chrk >= 4) {
+                        nc = 0;
+                } else {
                         if (pk_chrk == 3) {
-                                card = 2;
-                                for (i = 0; i < 5; i = i + 1)
+                                nc = 2;
+                                for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
                         } else if (pk_chrk == 2) {
-                                card = 1;
-                                for (i = 0; i < 5; i = i + 1)
+                                nc = 1;
+                                for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
                         } else if (pk_chrk == 1) {
-                                card = 3;
-                                for (i = 0; i < 5; i = i + 1)
+                                nc = 3;
+                                for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
                         } else if (pk_chrk == 0) {
-                                card = 4;
-                                dc   = 0;
-                                for (i = 0; i < 5; i = i + 1) {
-                                        if ((short) pk_ch[dc] % 13 <
-                                            (short) pk_ch[i]  % 13)
-                                                dc = i;
+                                nc = 4;
+                                for (card = 0, i = 0; i < 5; i++) {
+                                        if (pk_ch[i] % 13 > pk_ch[card] % 13)
+                                                card = i;
                                 }
-                                for (i = 0; i < 5; i = i + 1)
-                                        if (i != dc)
+                                for (i = 0; i < 5; i++)
+                                        if (i != card)
                                                 pk_sel[i] = 1;
-                        } else {
-                                card = 0;
                         }
-                } else {
-                        card = 0;
-                }
-        } else {
-                card = rndRng(0, 2);
-                dc = 0;
-                i  = card;
-                while (dc < 5 && i != 0) {
-                        if (pk_hrf[dc] == 0) {
-                                pk_sel[dc] = 1;
-                                i = i - 1;
-                        }
-                        dc = dc + 1;
+                        /* No final else: ranks 0..3 are all covered,
+                           and >= 4 already cleared nc. */
                 }
         }
 
-        if (card == 0) {
+        if (nc == 0) {
                 pk_pmsg("I'll stay!");
                 gameTick(8);
                 return;
         }
 
-        pk_tcm[10] = (char) card + '0';
-        if (card == 1) {
+        pk_tcm[10] = nc + '0';
+        if (nc == 1) {
                 pk_tcm[16] = '.';
                 pk_tcm[17] = '\0';
         } else {
@@ -1935,30 +1932,29 @@ pk_cdrw()
         pk_pmsg(pk_tcm);
         gameTick(8);
 
-        for (i = 0; i < 5; i = i + 1) {
+        for (i = 0; i < 5; i++) {
                 if (pk_sel[i] == 1) {
                         nc = YES;
                         while (nc != NO) {
                                 n  = rndRng(0, 51);
                                 nc = NO;
-                                for (dm = 0; dm < 5; dm = dm + 1) {
+                                for (dm = 0; dm < 5; dm++) {
                                         if (pk_ch[dm] == n) nc = YES;
                                         if (pk_ph[dm] == n) nc = YES;
                                 }
                                 dm = pk_disc;
-                                while (r = dm - 1, dm != 0) {
-                                        dm = r;
-                                        if (pk_dpile[r] == n) nc = YES;
+                                while (dm--) {
+                                        if (pk_dpile[dm] == n) nc = YES;
                                 }
                                 pk_dpile[pk_disc] = pk_ch[i];
-                                pk_disc = pk_disc + 1;
+                                pk_disc++;
                                 pk_ch[i] = n;
                                 pk_drcs(CARD_HIGHLIGHT, i, 0);
                                 gameTick(3);
                         }
                 }
         }
-        for (i = 0; i < 5; i = i + 1) {
+        for (i = 0; i < 5; i++) {
                 if (pk_sel[i] == 1) {
                         pk_drcs(CARD_BACK, i, 0);
                         gameTick(1);

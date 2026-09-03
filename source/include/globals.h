@@ -373,7 +373,7 @@ extern BOOL16 pk_bluff;
 extern BOOL16 pk_pass;
 extern char *pk_bm;
 extern char *pk_rm;
-extern char pk_tcm[];
+extern char *pk_tcm;
 extern short pk_psh[];
 extern short pk_pcc;
 extern short pk_ccc;

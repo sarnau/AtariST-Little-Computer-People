@@ -1010,7 +1010,7 @@ BOOL16          pk_pass;    /* computer passed on the bet loop */
 #ifndef FAITHFUL
 char *          pk_bm     = "I'll bet 00.  ";
 char *          pk_rm     = "I'll raise 00.";
-char            pk_tcm[]  = "I'll take 0 cards.";
+char *          pk_tcm    = "I'll take 0 cards.";
 #endif
 
 /* Blackjack per-hand state.
