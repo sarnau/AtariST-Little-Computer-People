@@ -881,6 +881,19 @@ this build, ALL different from LCP_ORG's:
       (char)((int) x / 10) (ORG)  vs  x / 10 + '0'  -- the (int) cast
         + '0'                         adds an ext.w the original has
                                       nowhere
+      short ikey (a local) (ORG)  vs  a GLOBAL (pk_bjMn's key variable
+                                      is addressed absolutely)
+      CARD_NONE == -1      (ORG)  vs  255 -- but pk_rmch's empty-pile
+                                      return is a plain -1
+      if (A || B || C) {}  (ORG)  vs  if (!A && !B && !C) goto <next>;
+                                      followed by the body unnested --
+                                      the minigame mains invert every
+                                      guard into a goto
+      for (i = 0;          (ORG)  vs  for (i = 0; i < 5; i++) {
+        i < 5 && a[i] != N;             if (a[i] == N) break; body; }
+        i++) body;
+      dealer stands > 16   (ORG)  vs  >= 17 (the literal in the cmpi
+                                      is 17, not 16)
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
   a_wandi needed an UNUSED local the port lacked, a_getd reuses one
@@ -959,21 +972,19 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 332 matched / 4 divergent, 78 270 of
-104 156 STX text bytes (75.1%) proven byte-identical -- 82.6% of the
+**Status (2026-09-03): 333 matched / 3 divergent, 83 712 of
+104 156 STX text bytes (80.4%) proven byte-identical -- 88.4% of the
 94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
 LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
-Still divergent: pk_bjMn 0xbc72 (its round loop and increments are
-recovered; the frame still differs -- LCP_STX has ten locals, four of
-them never referenced), plus three functions the port has only as
-stubs and that must be written from scratch -- st_titl 0x6d7e
-(1040 B, a real interactive title screen), cs_mvIn 0xe500 (968 B, the
-move-in cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy
-protection).
+Still divergent: only the three functions the port has as stubs,
+which must be written from scratch -- st_titl 0x6d7e (1040 B, a real
+interactive title screen), cs_mvIn 0xe500 (968 B, the move-in
+cutscene) and cp_main 0x22c0 (7500 B, the uncracked copy protection).
+**Every function the port actually implements now matches.**
 
 **The minigame mains share one skeleton** (pk_main and pk_bjMn both
 match it): a `goto round; next_round: gameTick(0x18); round:` label
