@@ -160,6 +160,7 @@
 #include "parts/tt_off.c"      /* 0x13c1e */
 #include "parts/td_nois.c"     /* 0x13c74 */
 #include "parts/td_line.c"     /* 0x13c8a */
+#include "dat_u2b.c"
 #include "parts/a_writl.c"     /* 0x13cd6 */
 #include "parts/lt_tysa.c"     /* 0x1434a */
 #include "parts/lt_tyca.c"     /* 0x1445c */
