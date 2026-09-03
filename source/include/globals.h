@@ -158,6 +158,7 @@ extern unsigned char mi_chmap[];
 extern unsigned char mi_noSt[];
 extern char  g_mcpro[];         /* STX: byte array */
 extern char *mi_pgmap;          /* STX: a byte pointer, not an array */
+extern unsigned char mi_pgtab[];
 extern unsigned char g_mstr[];
 extern unsigned char g_msmk[];
 extern BOOL16 g_moen;

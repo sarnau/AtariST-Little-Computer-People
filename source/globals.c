@@ -160,11 +160,6 @@ short   intout[128];
 short   ptsout[128];
 
 void *  g_dscp;
-/* mi_pgmapb must come BEFORE mi_pgmap: both truncate to the same
-   8-char linkage name (_mi_pgma), which is the point -- the pointer
-   is stored over the array's first 4 bytes -- but as68 only accepts
-   the .comm ahead of the .data definition. */
-char            mi_pgmapb[16];
 char    g_mspha;   /* STX: byte */
 unsigned char * mi_dbase;
 
@@ -747,9 +742,20 @@ unsigned char   g_mstr[132] = {
    lookup.  Dumped verbatim -- previous port had guessed the values
    from Music Studio 2.0 documentation but the real ones diverge
    significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
-unsigned char   g_msmk[32] = {
+unsigned char   g_msmk[16] = {
         0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
-        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00,
+        0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
+};
+
+
+/* The default program map, sixteen bytes of INITIALIZED data right
+   behind g_msmk -- the port had swallowed it as g_msmk's second half
+   and kept an empty BSS array for mi_pgmap to point at, which made
+   the pointer address itself.  The reference relocates mi_pgmap to
+   data 0x404, i.e. here.  Named mi_pgtab rather than mi_pgmapb
+   because Alcyon truncates a linkage name to eight characters and
+   _mi_pgmapb would collide with _mi_pgmap. */
+unsigned char   mi_pgtab[16] = {
         0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11
 };
@@ -766,7 +772,7 @@ char            mi_slop         = 1;
 
 char    mi_varR                      = YES;
 
-char *          mi_pgmap = mi_pgmapb;   /* STX: byte pointer */
+char *          mi_pgmap = (char *) mi_pgtab;   /* STX: byte pointer */
 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon
