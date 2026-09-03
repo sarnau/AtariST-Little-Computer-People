@@ -972,18 +972,40 @@ this build, ALL different from LCP_ORG's:
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
   shows it.
 
-**Status (2026-09-03): 338 matched / 1 divergent, 86 238 of
-104 156 STX text bytes (82.8%) proven byte-identical -- 91.0% of the
-94 736 bytes that are the game's own code.**  LCP_ORG.PRG is NO
+**Status (2026-09-03): 339 matched / ZERO divergent, 93 738 of
+104 156 STX text bytes (90.0%) proven byte-identical.  Every function
+in the binary now matches; what is left is the library region
+(9 420 bytes) and a handful of sub-48-byte stubs verify_bytes
+skips.**  LCP_ORG.PRG is NO
 LONGER the reference (maintainer, 2026-09-02: it was a temporary
 hack, not the original game).  New work is written directly in
 LCP_STX shape instead of being gated behind `#ifdef FAITHFUL`, and
 the LCP_ORG byte-identity check is no longer run.
 
-Still divergent: **only cp_main** (0x22c0, 7500 B, the uncracked copy
-protection).  The maintainer confirms the whole region up to Ghidra
-0x1400b (= STX 0x400b) is hand-written ASSEMBLY, so it has to be
-recovered as a .s file, not as C.
+cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
+(`source/cp_asm.s`), not C -- the maintainer confirmed the whole
+region is assembly, and it proves out: the object is entirely
+self-contained, all 21 of its relocations pointing back inside
+itself.  It saves d1-d7/a0-a5 into its own static block rather than
+the stack, goes supervisor, sets TOS's flock byte at $43e, decrypts
+96 bytes of itself in place (keyed by the current drive number) under
+a raised interrupt mask, drives the 1772 FDC directly through
+$ff8604/$ff8606 and the DMA address registers $ff8609/$ff860b/
+$ff860d to restore-seek-read the protected track into a 6560-byte
+buffer that lives INSIDE the text segment, then re-encrypts itself,
+clears flock and restores the registers.  Its long return value is
+assembled by six mutually recursive stubs that each add a constant --
+obfuscation, not arithmetic.  main stores it in cprot_r and cs_mvIn
+parks the resident in `while (1) a_sleep(-1);` if it is zero.
+
+**Assemble cp_asm.s with `as68 -n`.**  as68 shortens branches on its
+own and ignores an explicit `.w`; the original picks bsr.w in places
+where bsr.s would fit (cpnxt's first call, +0x7e), so branch
+optimization must be OFF and every branch in the file carries its own
+size suffix.  Note also that `stx_check.sh`'s object list must mirror
+`alcyon_link.sh`'s exactly -- if the symbol side-link disagrees with
+LCP.PRG about object order, every symbol extent comes out wrong and
+the sweep reports mass divergence that is not real.
 
 st_titl (0x6d7e) and cs_mvIn (0xe500) were written from scratch and
 both match.  st_titl brought three helpers the port never had:
@@ -991,9 +1013,7 @@ plErCol (0x871a -- plEr with an explicit fill colour, the four VDI
 attribute calls written out instead of initVdi/exitVdi), erChr
 (0x72e6 -- blank one 8x8 character cell) and stEnter (0x718e -- the
 fixed-width numeric field reader, which skips every third column so
-the separators in MM/DD/YY and HH:MM cannot be typed over).  cs_mvIn
-is a full walking tour of the house, and it is where the protection
-result is consumed: `if (cprot_r == 0) while (1) a_sleep(-1);`.
+the separators in MM/DD/YY and HH:MM cannot be typed over).
 
 **The minigame mains share one skeleton** (pk_main and pk_bjMn both
 match it): a `goto round; next_round: gameTick(0x18); round:` label
