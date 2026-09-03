@@ -999,8 +999,8 @@ BOOL16          pk_pass;    /* computer passed on the bet loop */
    period/'s.' get patched in by pk_cdrw.  Buffer widths sized so
    the biggest overwrite (a 2-digit prefix like "20") still fits. */
 #ifndef FAITHFUL
-char            pk_bm[]   = "I'll bet 00.  ";
-char            pk_rm[]   = "I'll raise 00.";
+char *          pk_bm     = "I'll bet 00.  ";
+char *          pk_rm     = "I'll raise 00.";
 char            pk_tcm[]  = "I'll take 0 cards.";
 #endif
 

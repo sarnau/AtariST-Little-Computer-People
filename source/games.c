@@ -2138,6 +2138,399 @@ pk_cdrw()
         }
 }
 
+
+/* pk_main: 5-card draw poker main loop.
+   Init: Malloc, load cards, mg_stp, money=400 each.
+   Per-round: ante, deal, bet, discard/draw, computer draw, final bet,
+   showdown.  Preserves goto LAB_00018da0 (cleanup), LAB_00018d72,
+   LAB_00019082, LAB_00019514, LAB_00019950 verbatim.
+   addr: pk_main() (== poker_main) */
+
+void
+pk_main()
+{
+        /* Six locals: loc8 doubles as the second key variable and as
+           the raise countdown; there is no `res`. */
+        short   ikey;           /* -2  */
+        short   loc8;           /* -4  */
+        short   i;              /* -6  */
+        short   card;           /* -8  */
+        short   dcount;         /* -10 */
+        BOOL16  in_use;         /* -12 */
+
+        crd_dat = (short *) Malloc(10400L);
+        if (crd_dat == (short *) 0)
+                er_nomem();
+        pk_ldCrd();
+        mg_stp();
+
+        pk_round = 0;
+        pk_quit  = NO;
+        g_pcmon  = 400;
+        g_ppmon  = 400;
+        g_ppppa  = 0;
+        pk_awp();
+        pk_dppm();
+        pk_dpot();
+
+        /* A label and gotos, not a loop statement: the round tick sits
+           at the top and is skipped on the first pass.  The cleanup is
+           a label inside the first exit test. */
+        goto round;
+next_round:
+        gameTick(0x18);
+round:
+                plEr(70, 10, 219, 62);
+                pk_ante();
+                if (pk_quit == YES) {
+cleanup:
+                        tx_sctm  = 0;
+                        no_keyin = NO;
+                        Mfree(crd_dat);
+                        moff();
+                        return;
+                }
+                pk_evhs();
+
+                if (pk_cbet("Do you feel lucky today?") == -1) {
+                        if (mg_tofl != NO)
+                                goto cleanup;
+                        pk_pmsg("Sorry, you're all out!");
+                        gameTick(10);
+                        goto cleanup;
+                }
+                if (pk_pass != NO) {
+                        pk_pmsg("That's all right with me.");
+                        gameTick(10);
+                } else {
+                        pk_pmsg("I'll see your bet.");
+                        while (pk_bet--) {
+                                if (g_pcmon == 0) {
+                                        pk_pmsg("Sorry, I'm all out!");
+                                        gameTick(10);
+                                        goto cleanup;
+                                }
+                                g_pcmon--;
+                                pk_awp();
+                                g_ppppa++;
+                                pk_dpot();
+                                gameTick(0);
+                        }
+                }
+                gameTick(0x10);
+
+                pk_disc = 0;
+                pk_pmsg("Do you want any cards?");
+                plEr(225, 10, 319, 60);
+                strPr("F1 Draw", 225, 18, COLOR_red);
+                strPr("F3 Stay", 225, 26, COLOR_red);
+                for (i = 0; i < 5; i++)
+                        pk_sel[i] = 0;
+
+                /* One while loop: the key read is the condition, and
+                   every re-prompt is a `continue`. */
+discard_loop:
+                while ((ikey = pk_inph(KEY_F1, KEY_F3, 0)) != 2) {
+                        if (ikey == -1)
+                                break;
+                        for (i = 0; i < 5; i++)
+                                if (pk_sel[i] == 1)
+                                        break;
+                        if (i == 5)
+                                strPr("F3 Stay", 225, 26, COLOR_red);
+                        else
+                                strPr("F3 Stay", 225, 26, COLOR_lt_grey);
+                        if (ikey == 1) {
+                                for (i = 0; i < 5; i++)
+                                        if (pk_sel[i] == 1)
+                                                break;
+                                if (i == 5)
+                                        continue;
+                                break;
+                        }
+                        if (ikey < 4)
+                                continue;
+                        if (ikey > 8)
+                                continue;
+                        if (pk_sel[ikey - 4]) {
+                                pk_sel[ikey - 4] = 0;
+                                pk_drcs(pk_ph[ikey - 4], ikey - 4, 1);
+                        } else {
+                                pk_sel[ikey - 4] = 1;
+                                pk_drcs(CARD_HIGHLIGHT, ikey - 4, 1);
+                        }
+                        for (i = 0; i < 5; i++)
+                                if (pk_sel[i] == 1)
+                                        break;
+                        if (i == 5)
+                                strPr("F3 Stay", 225, 26, COLOR_red);
+                        else
+                                strPr("F3 Stay", 225, 26, COLOR_lt_grey);
+                }
+                if (mg_tofl != NO)
+                        goto cleanup;
+                if (ikey == 1) {
+                        for (i = 0; i < 5; i++) {
+                                if (pk_sel[i] != 1) continue;
+                                in_use = YES;
+                                while (in_use != NO) {
+                                        card = rndRng(0, 51);
+                                        in_use = NO;
+                                        for (dcount = 0; dcount < 5; dcount++) {
+                                                if (pk_ch[dcount] == card)
+                                                        in_use = YES;
+                                                if (pk_ph[dcount] == card)
+                                                        in_use = YES;
+                                        }
+                                        dcount = pk_disc;
+                                        while (dcount--)
+                                                if (pk_dpile[dcount] == card)
+                                                        in_use = YES;
+                                }
+                                pk_dpile[pk_disc] = pk_ph[i];
+                                pk_disc++;
+                                pk_ph[i] = card;
+                                pk_drcs(card, i, 1);
+                                gameTick(3);
+                        }
+                }
+                if (ikey == 2) {
+                        for (i = 0; i < 5; i++)
+                                if (pk_sel[i] == 1)
+                                        break;
+                        if (i != 5)
+                                goto discard_loop;
+                }
+
+                pk_cdrw();
+                if (pk_cbet("Want to make a bet?") == -1) {
+                        if (mg_tofl != NO)
+                                goto cleanup;
+                        pk_pmsg("Sorry, you're all out!");
+                        gameTick(10);
+                        goto cleanup;
+                }
+                if (pk_pass != NO) {
+                        if (pk_bluff == NO && pk_chrk == 0) {
+                                pk_pmsg("Ok, I'll call.");
+                                gameTick(10);
+                                pk_show();
+                                goto next_round;
+                        } else {
+                                i = rndRng(5, 15);
+                                if (i > g_pcmon)
+                                        i = g_pcmon;
+                                pk_bm[9] = i / 10 + '0';
+                                if (pk_bm[9] == '0')
+                                        pk_bm[9] = ' ';
+                                pk_bm[10] = i % 10 + '0';
+                                pk_pmsg(pk_bm);
+                                pk_bet = 0;
+                                while (i--) {
+                                        pk_ddec(0, 1);
+                                        gameTick(0);
+                                }
+                                gameTick(10);
+                                pk_pmsg("Will you see my bet?");
+                                pk_phv = pk_bet;
+                                plEr(225, 10, 319, 60);
+                                strPr("F1 See",  225, 18, COLOR_red);
+                                strPr("F3 Fold", 225, 34, COLOR_red);
+                                ikey = pk_inph(KEY_F1, 255, KEY_F3);
+                                if (ikey == -1) goto cleanup;
+                                if (ikey == 3) {
+                                        plEr(225, 10, 319, 60);
+                                        pk_pmsg("My pot.");
+                                        gameTick(8);
+                                        pk_annr(0);
+                                } else if (ikey == 1) {
+                                        loc8   = pk_phv;
+                                        pk_bet = 0;
+                                        while (loc8--) {
+                                                pk_ddec(1, 1);
+                                                gameTick(0);
+                                        }
+                                        if (g_ppmon == 0) {
+                                                pk_pmsg("Sorry, you're all out!");
+                                                gameTick(10);
+                                                goto cleanup;
+                                        }
+                                        plEr(225, 10, 319, 60);
+                                        plEr(5, 63, 319, 75);
+                                        strPr("F1 Raise", 225, 18, COLOR_red);
+                                        strPr("F3 Enter", 225, 26, COLOR_red);
+                                        strPr("F5 Call",  225, 34, COLOR_red);
+                                        pk_dpos = 0;
+                                        while (1) {
+                                                loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                                if (loc8 == -1)
+                                                        break;
+                                                if (loc8 == 3) {
+                                                        pk_show();
+                                                        goto next_round;
+                                                }
+                                                if (loc8 == 1 && g_ppmon != 0) {
+                                                        pk_bet = 0;
+                                                        pk_ddec(1, 1);
+                                                        pk_dpos++;
+                                                        break;
+                                                }
+                                        }
+                                        if (mg_tofl != NO) goto cleanup;
+                                        while (1) {
+                                                loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                                if (loc8 == -1)
+                                                        break;
+                                                if (loc8 == 2)
+                                                        break;
+                                                if (loc8 == 1) {
+                                                        pk_ddec(1, 1);
+                                                        if (g_ppmon != 0)
+                                                                pk_dpos++;
+                                                }
+                                        }
+                                        if (mg_tofl != NO) goto cleanup;
+                                        if (g_pcmon < pk_dpos) {
+                                                pk_pmsg("Sorry, I,m all out.");
+                                                gameTick(10);
+                                                goto cleanup;
+                                        }
+                                        pk_pmsg("Ok. I'll see your bet.");
+                                        gameTick(8);
+                                        loc8   = pk_dpos;
+                                        pk_bet = 0;
+                                        while (loc8--) {
+                                                pk_ddec(0, 1);
+                                                gameTick(0);
+                                        }
+                                        gameTick(5);
+                                        pk_pmsg("I'll call.");
+                                        gameTick(8);
+                                        pk_show();
+                                        goto next_round;
+                                }
+                        }
+                } else {
+                        if (pk_cace() == -1) {
+                                pk_pmsg("I feel unlucky. I fold.");
+                                gameTick(8);
+                                pk_pmsg("Your pot.");
+                                pk_annr(1);
+                        } else {
+                                if (g_pcmon < pk_bet) {
+                                        pk_pmsg("Sorry, I'm all out!");
+                                        gameTick(10);
+                                        goto cleanup;
+                                }
+                                pk_pmsg("Ok. I'll see your bet.");
+                                i = pk_bet;
+                                pk_bet = 0;
+                                while (i--) {
+                                        pk_ddec(0, 1);
+                                        gameTick(0);
+                                }
+                                if (pk_dbet() == 'c') {
+                                        pk_pmsg("I'll call.");
+                                        gameTick(8);
+                                        pk_show();
+                                        goto next_round;
+                                } else {
+                                        pk_rm[11] = pk_dpos / 10 + '0';
+                                        if (pk_rm[11] == '0')
+                                                pk_rm[11] = ' ';
+                                        pk_rm[12] = pk_dpos % 10 + '0';
+                                        pk_pmsg(pk_rm);
+                                        ikey = pk_dpos;
+                                        pk_bet    = 0;
+                                        while (ikey--) {
+                                                pk_ddec(0, 1);
+                                                gameTick(0);
+                                        }
+                                        gameTick(8);
+                                        pk_pmsg("You think I'm bluffin'?");
+                                        pk_phv = pk_dpos;
+                                        plEr(225, 10, 319, 60);
+                                        strPr("F1 See",  225, 18, COLOR_red);
+                                        strPr("F3 Fold", 225, 34, COLOR_red);
+                                        ikey = pk_inph(KEY_F1, 255, KEY_F3);
+                                        if (ikey == -1) goto cleanup;
+                                        if (ikey == 3) {
+                                                plEr(225, 10, 319, 60);
+                                                pk_pmsg("My pot.");
+                                                gameTick(8);
+                                                pk_annr(0);
+                                        } else {
+                                                if (ikey != 1) return;
+                                                loc8   = pk_phv;
+                                                pk_bet = 0;
+                                                while (loc8--) {
+                                                        pk_ddec(1, 1);
+                                                        gameTick(0);
+                                                }
+                                                if (g_ppmon == 0) {
+                                                        pk_pmsg("Sorry, you're all out!");
+                                                        gameTick(10);
+                                                        goto cleanup;
+                                                }
+                                                plEr(225, 10, 319, 60);
+                                                plEr(5, 63, 319, 75);
+                                                strPr("F1 Raise", 225, 18, COLOR_red);
+                                                strPr("F3 Enter", 225, 26, COLOR_red);
+                                                strPr("F5 Call",  225, 34, COLOR_red);
+                                                while (1) {
+                                                        loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                                        if (loc8 == -1)
+                                                                break;
+                                                        if (loc8 == 3) {
+                                                                pk_show();
+                                                                goto next_round;
+                                                        }
+                                                        if (loc8 == 1 && g_ppmon != 0) {
+                                                                pk_bet = 0;
+                                                                pk_dpos = 0;
+                                                                pk_ddec(1, 1);
+                                                                pk_dpos++;
+                                                                break;
+                                                        }
+                                                }
+                                                if (mg_tofl != NO) goto cleanup;
+                                                while (1) {
+                                                        loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
+                                                        if (loc8 == -1)
+                                                                break;
+                                                        if (loc8 == 2)
+                                                                break;
+                                                        if (loc8 == 1) {
+                                                                pk_ddec(1, 1);
+                                                                if (g_ppmon != 0)
+                                                                        pk_dpos++;
+                                                        }
+                                                }
+                                                if (mg_tofl != NO) goto cleanup;
+                                                if (g_pcmon < pk_dpos) {
+                                                        pk_pmsg("Sorry, I'm all out.");
+                                                        gameTick(10);
+                                                        goto cleanup;
+                                                }
+                                                pk_pmsg("Ok. I'll see your bet.");
+                                                loc8   = pk_dpos;
+                                                pk_bet = 0;
+                                                while (loc8--) {
+                                                        pk_ddec(0, 1);
+                                                        gameTick(0);
+                                                }
+                                                gameTick(5);
+                                                pk_pmsg("I'll call.");
+                                                gameTick(8);
+                                                pk_show();
+                                        }
+                                }
+                        }
+                }
+
+        goto next_round;
+}
+
 /* pk_show: showdown.  Reveal computer hand, evaluate both, walk the
    per-rank tiebreak ladder.  Winner blinks 5x then pk_annr transfers.
    Sets pk_round=1.  Preserves Ghidra tiebreak shape (byte-comparable).
@@ -2302,384 +2695,6 @@ pk_show()
                         pk_drcs(pk_ph[j], j, 1);
                 pk_annr(1);
         }
-}
-
-/* pk_main: 5-card draw poker main loop.
-   Init: Malloc, load cards, mg_stp, money=400 each.
-   Per-round: ante, deal, bet, discard/draw, computer draw, final bet,
-   showdown.  Preserves goto LAB_00018da0 (cleanup), LAB_00018d72,
-   LAB_00019082, LAB_00019514, LAB_00019950 verbatim.
-   addr: pk_main() (== poker_main) */
-
-void
-pk_main()
-{
-        short   ikey;
-        BOOL16  in_use;
-        short   dcount;
-        short   card;
-        short   i;
-        short   loc8;
-        short   raise_amt;
-        short   res;
-
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
-                er_nomem();
-        pk_ldCrd();
-        mg_stp();
-
-        pk_round = 0;
-        pk_quit  = NO;
-        g_pcmon  = 400;
-        g_ppmon  = 400;
-        g_ppppa  = 0;
-        pk_awp();
-        pk_dppm();
-        pk_dpot();
-
-        for (;;) {
-                plEr(70, 10, 219, 62);
-                pk_ante();
-                if (pk_quit == YES)
-                        goto cleanup;
-                pk_evhs();
-
-                ikey = pk_cbet("Do you feel lucky today?");
-                if (ikey == -1) {
-                        if (mg_tofl == NO) {
-                                pk_pmsg("Sorry, you're all out!");
-                                gameTick(10);
-                        }
-                        goto cleanup;
-                }
-                if (pk_pass == NO) {
-                        pk_pmsg("I'll see your bet.");
-                        while (ikey = pk_bet - 1,
-                               in_use = (pk_bet != 0),
-                               pk_bet = ikey, in_use != NO) {
-                                if (g_pcmon == 0) {
-                                        pk_pmsg("Sorry, I'm all out!");
-                                        gameTick(10);
-                                        goto cleanup;
-                                }
-                                g_pcmon = g_pcmon - 1;
-                                pk_awp();
-                                g_ppppa = g_ppppa + 1;
-                                pk_dpot();
-                                gameTick(0);
-                        }
-                } else {
-                        pk_pmsg("That's all right with me.");
-                        gameTick(10);
-                }
-                gameTick(0x10);
-
-                pk_disc = 0;
-                pk_pmsg("Do you want any cards?");
-                plEr(225, 10, 319, 60);
-                strPr("F1 Draw", 225, 18, COLOR_red);
-                strPr("F3 Stay", 225, 26, COLOR_red);
-                for (i = 0; i < 5; i = i + 1)
-                        pk_sel[i] = 0;
-
-discard_loop:
-                do {
-                        ikey = pk_inph(KEY_F1, KEY_F3, 0);
-                        if (ikey != 2 && ikey != -1) {
-                                for (i = 0;
-                                     i < 5 && pk_sel[i] != 1;
-                                     i = i + 1) ;
-                                if (i == 5)
-                                        strPr("F3 Stay", 225, 26, COLOR_red);
-                                else
-                                        strPr("F3 Stay", 225, 26, COLOR_lt_grey);
-                                if (ikey != 1) {
-                                        if (ikey > 3 && ikey < 9) {
-                                                if (pk_sel[ikey - 4] == 0) {
-                                                        pk_sel[ikey - 4] = 1;
-                                                        pk_drcs(CARD_HIGHLIGHT, ikey - 4, 1);
-                                                } else {
-                                                        pk_sel[ikey - 4] = 0;
-                                                        pk_drcs(pk_ph[ikey - 4], ikey - 4, 1);
-                                                }
-                                                for (i = 0;
-                                                     i < 5 && pk_sel[i] != 1;
-                                                     i = i + 1) ;
-                                                if (i == 5)
-                                                        strPr("F3 Stay", 225, 26, COLOR_red);
-                                                else
-                                                        strPr("F3 Stay", 225, 26, COLOR_lt_grey);
-                                        }
-                                        goto discard_loop;
-                                }
-                                for (i = 0;
-                                     i < 5 && pk_sel[i] != 1;
-                                     i = i + 1) ;
-                                if (i == 5) goto discard_loop;
-                        }
-                        if (mg_tofl != NO) goto cleanup;
-                        if (ikey == 1) {
-                                for (i = 0; i < 5; i = i + 1) {
-                                        if (pk_sel[i] != 1) continue;
-                                        in_use = YES;
-                                        while (in_use != NO) {
-                                                card = rndRng(0, 51);
-                                                in_use = NO;
-                                                for (dcount = 0; dcount < 5; dcount = dcount + 1) {
-                                                        if (pk_ch[dcount] == card)
-                                                                in_use = YES;
-                                                        if (pk_ph[dcount] == card)
-                                                                in_use = YES;
-                                                }
-                                                dcount = pk_disc;
-                                                while (res = dcount - 1,
-                                                       dcount != 0) {
-                                                        dcount = res;
-                                                        if (pk_dpile[res] == card)
-                                                                in_use = YES;
-                                                }
-                                        }
-                                        pk_dpile[pk_disc] = pk_ph[i];
-                                        pk_disc = pk_disc + 1;
-                                        pk_ph[i] = card;
-                                        pk_drcs(card, i, 1);
-                                        gameTick(3);
-                                }
-                        }
-                        if (ikey != 2) break;
-                        for (i = 0;
-                             i < 5 && pk_sel[i] != 1;
-                             i = i + 1) ;
-                } while (i != 5);
-
-                pk_cdrw();
-                ikey = pk_cbet("Want to make a bet?");
-                if (ikey == -1) {
-                        if (mg_tofl == NO) {
-                                pk_pmsg("Sorry, you're all out!");
-                                gameTick(10);
-                        }
-                        goto cleanup;
-                }
-                if (pk_pass == NO) {
-                        ikey = pk_cace();
-                        if (ikey == -1) {
-                                pk_pmsg("I feel unlucky. I fold.");
-                                gameTick(8);
-                                pk_pmsg("Your pot.");
-                                pk_annr(1);
-                        } else {
-                                if (g_pcmon < pk_bet) {
-                                        pk_pmsg("Sorry, I'm all out!");
-                                        gameTick(10);
-                                        goto cleanup;
-                                }
-                                pk_pmsg("Ok. I'll see your bet.");
-                                i = pk_bet;
-                                pk_bet = 0;
-                                while (i != 0) {
-                                        pk_ddec(0, 1);
-                                        gameTick(0);
-                                        i = i - 1;
-                                }
-                                ikey = pk_dbet();
-                                if (ikey == 'c') {
-                                        pk_pmsg("I'll call.");
-                                        gameTick(8);
-                                        pk_show();
-                                } else {
-                                        pk_rm[11] = (char)((int) pk_dpos / 10) + '0';
-                                        if (pk_rm[11] == '0')
-                                                pk_rm[11] = ' ';
-                                        pk_rm[12] = (char)((int) pk_dpos % 10) + '0';
-                                        pk_pmsg(pk_rm);
-                                        raise_amt = pk_dpos;
-                                        pk_bet    = 0;
-                                        while (raise_amt != 0) {
-                                                pk_ddec(0, 1);
-                                                gameTick(0);
-                                                raise_amt = raise_amt - 1;
-                                        }
-                                        gameTick(8);
-                                        pk_pmsg("You think I'm bluffin'?");
-                                        pk_phv = pk_dpos;
-                                        plEr(225, 10, 319, 60);
-                                        strPr("F1 See",  225, 18, COLOR_red);
-                                        strPr("F3 Fold", 225, 34, COLOR_red);
-                                        ikey = pk_inph(KEY_F1, 0, KEY_F3);
-                                        if (ikey == -1) goto cleanup;
-                                        if (ikey == 3) {
-                                                plEr(225, 10, 319, 60);
-                                                pk_pmsg("My pot.");
-                                                gameTick(8);
-                                                pk_annr(0);
-                                        } else {
-                                                if (ikey != 1) return;
-                                                loc8   = pk_phv;
-                                                pk_bet = 0;
-                                                while (loc8 != 0) {
-                                                        pk_ddec(1, 1);
-                                                        gameTick(0);
-                                                        loc8 = loc8 - 1;
-                                                }
-                                                if (g_ppmon == 0) {
-                                                        pk_pmsg("Sorry, you're all out!");
-                                                        gameTick(10);
-                                                        goto cleanup;
-                                                }
-                                                plEr(225, 10, 319, 60);
-                                                plEr(5, 63, 319, 75);
-                                                strPr("F1 Raise", 225, 18, COLOR_red);
-                                                strPr("F3 Enter", 225, 26, COLOR_red);
-                                                strPr("F5 Call",  225, 34, COLOR_red);
-                                                do {
-                                                        ikey = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                                        if (ikey == -1) goto raiseloop2;
-                                                        if (ikey == 3) {
-                                                                pk_show();
-                                                                goto endround;
-                                                        }
-                                                } while (ikey != 1 || g_ppmon == 0);
-                                                pk_bet   = 0;
-                                                pk_dpos  = 0;
-                                                pk_ddec(1, 1);
-                                                pk_dpos  = pk_dpos + 1;
-raiseloop2:
-                                                if (mg_tofl != NO) goto cleanup;
-                                                while ((ikey = pk_inph(KEY_F1, KEY_F3, KEY_F5),
-                                                        ikey != -1 && ikey != 2)) {
-                                                        if (ikey == 1) {
-                                                                pk_ddec(1, 1);
-                                                                if (g_ppmon != 0)
-                                                                        pk_dpos = pk_dpos + 1;
-                                                        }
-                                                }
-                                                if (mg_tofl != NO) goto cleanup;
-                                                if (g_pcmon < pk_dpos) {
-                                                        pk_pmsg("Sorry, I'm all out.");
-                                                        gameTick(10);
-                                                        goto cleanup;
-                                                }
-                                                pk_pmsg("Ok. I'll see your bet.");
-                                                loc8   = pk_dpos;
-                                                pk_bet = 0;
-                                                while (loc8 != 0) {
-                                                        pk_ddec(0, 1);
-                                                        gameTick(0);
-                                                        loc8 = loc8 - 1;
-                                                }
-                                                gameTick(5);
-                                                pk_pmsg("I'll call.");
-                                                gameTick(8);
-                                                pk_show();
-                                        }
-                                }
-                        }
-                } else if (pk_bluff == NO && pk_chrk == 0) {
-                        pk_pmsg("Ok, I'll call.");
-                        gameTick(10);
-                        pk_show();
-                } else {
-                        i = rndRng(5, 15);
-                        if (g_pcmon < i)
-                                i = g_pcmon;
-                        pk_bm[9] = (char)((int) i / 10) + '0';
-                        if (pk_bm[9] == '0')
-                                pk_bm[9] = ' ';
-                        pk_bm[10] = (char)((int) i % 10) + '0';
-                        pk_pmsg(pk_bm);
-                        pk_bet = 0;
-                        while (i != 0) {
-                                pk_ddec(0, 1);
-                                gameTick(0);
-                                i = i - 1;
-                        }
-                        gameTick(10);
-                        pk_pmsg("Will you see my bet?");
-                        pk_phv = pk_bet;
-                        plEr(225, 10, 319, 60);
-                        strPr("F1 See",  225, 18, COLOR_red);
-                        strPr("F3 Fold", 225, 34, COLOR_red);
-                        ikey = pk_inph(KEY_F1, 0, KEY_F3);
-                        if (ikey == -1) goto cleanup;
-                        if (ikey == 3) {
-                                plEr(225, 10, 319, 60);
-                                pk_pmsg("My pot.");
-                                gameTick(8);
-                                pk_annr(0);
-                        } else {
-                                if (ikey != 1) return;
-                                loc8   = pk_phv;
-                                pk_bet = 0;
-                                while (loc8 != 0) {
-                                        pk_ddec(1, 1);
-                                        gameTick(0);
-                                        loc8 = loc8 - 1;
-                                }
-                                if (g_ppmon == 0) {
-                                        pk_pmsg("Sorry, you're all out!");
-                                        gameTick(10);
-                                        goto cleanup;
-                                }
-                                plEr(225, 10, 319, 60);
-                                plEr(5, 63, 319, 75);
-                                strPr("F1 Raise", 225, 18, COLOR_red);
-                                strPr("F3 Enter", 225, 26, COLOR_red);
-                                strPr("F5 Call",  225, 34, COLOR_red);
-                                pk_dpos = 0;
-                                do {
-                                        ikey = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                        if (ikey == -1) goto raiseloop1;
-                                        if (ikey == 3) {
-                                                pk_show();
-                                                goto endround;
-                                        }
-                                } while (ikey != 1 || g_ppmon == 0);
-                                pk_bet   = 0;
-                                pk_ddec(1, 1);
-                                pk_dpos  = pk_dpos + 1;
-raiseloop1:
-                                if (mg_tofl != NO) goto cleanup;
-                                while ((ikey = pk_inph(KEY_F1, KEY_F3, KEY_F5),
-                                        ikey != -1 && ikey != 2)) {
-                                        if (ikey == 1) {
-                                                pk_ddec(1, 1);
-                                                if (g_ppmon != 0)
-                                                        pk_dpos = pk_dpos + 1;
-                                        }
-                                }
-                                if (mg_tofl != NO) goto cleanup;
-                                if (g_pcmon < pk_dpos) {
-                                        pk_pmsg("Sorry, I,m all out.");
-                                        gameTick(10);
-                                        goto cleanup;
-                                }
-                                pk_pmsg("Ok. I'll see your bet.");
-                                gameTick(8);
-                                loc8   = pk_dpos;
-                                pk_bet = 0;
-                                while (loc8 != 0) {
-                                        pk_ddec(0, 1);
-                                        gameTick(0);
-                                        loc8 = loc8 - 1;
-                                }
-                                gameTick(5);
-                                pk_pmsg("I'll call.");
-                                gameTick(8);
-                                pk_show();
-                        }
-                }
-
-endround:
-                gameTick(0x18);
-        }
-
-cleanup:
-        tx_sctm  = 0;
-        no_keyin = NO;
-        Mfree(crd_dat);
-        moff();
 }
 
 /* pk_dbhi: display bet with highlight.  sel=1 -> computer bet, else
