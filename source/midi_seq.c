@@ -124,7 +124,6 @@ unsigned char * p;
 }
 
 #endif  /* FAITHFUL */
-
 #ifndef FAITHFUL
 /* STX links mq_skip first in this object (0x12a). */
 #include "parts/mq_skip.c"
@@ -168,26 +167,6 @@ long            maxPos;
         mq_stap();
         mi_play = YES;
 }
-
-/* mq_parh -> parts/mq_parh.c (STX: 0x11fa, near the end of the MIDI object). */
-#ifdef FAITHFUL
-#include "parts/mq_parh.c"
-#endif
-
-/* mq_resp -> parts/mq_resp.c (STX: 0x1184, near the end of the MIDI object). */
-#ifdef FAITHFUL
-#include "parts/mq_resp.c"
-#endif
-
-/* mq_skip: advance past leading 0x00 padding.  Returns ptr as-is if
-   it starts {0x00, 0xFF} (start-of-song marker); otherwise walks
-   forward to next 0x00.
-   addr: mq_skip() */
-
-/* mq_skip -> parts/mq_skip.c (STX: 0x12a, first in the MIDI object). */
-#ifdef FAITHFUL
-#include "parts/mq_skip.c"
-#endif
 
 /* mq_setp: stash read cursor + end-of-song marker; init per-song
    driver state; publish ticks-per-beat via aes_intO[7].
@@ -243,137 +222,328 @@ mq_stap()
 #endif
 }
 
-/* mq_pacm: unpack 30-byte channel/program map (90 bytes before mi_dbase).
-   Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
-   Values are 1-based on disk (0 = no-op sentinel); decrement on load.
-   Logical channel 0 reserved for game SFX.
-   addr: mq_pacm() */
+
+/* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49).
+   addr: midi_seq_push_loop() */
 
 void
-mq_pacm(p)
-unsigned char * p;
+mq_pshl(a, b)
+void *  a;
+short   b;
 {
-        short   i;
-
 #ifdef FAITHFUL
-        for (i = 1; i < 16; i = i + 1) {
-                mi_chmap[i] = p[i - 1]  - 1;
-                mi_pgmap[i] = p[i + 14] - 1;
+        if (mi_evcn < 49) {
+                mi_lstk[mi_evcn] = (long) a;
+                mi_evcn = mi_evcn + 1;
+                mi_lstk[mi_evcn] = (long)(short)(b - 1);
+                mi_evcn = mi_evcn + 1;
         }
 #else
-        /* STX writes the offset arithmetic inside the dereference,
-           which makes the pointer the INDEX register and the loop
-           counter the base -- `p[i - 1]` gives the other way round. */
-        for (i = 1; i < 16; i++) {
-                mi_chmap[i] = *(p + i - 1)  - 1;
-                mi_pgmap[i] = *(p + i + 14) - 1;
+        if (mi_evcn < 49) {
+                mi_lstk[mi_evcn] = (long) a;
+                mi_evcn++;
+                mi_lstk[mi_evcn] = (long)(short)(b - 1);
+                mi_evcn++;
         }
 #endif
 }
+
+/* mq_popl: pop/decrement top of loop stack.  Returns loop-start ptr
+   if count nonzero, else NULL (fall through end).
+   addr: midi_seq_pop_loop() */
+
+unsigned char *
+mq_popl()
+{
+        unsigned char * ret;
+        long            cnt;
+
+        if (mi_evcn == 9)
+                return (unsigned char *) 0;
+        ret = (unsigned char *) mi_lstk[mi_evcn - 2];
+        cnt = mi_lstk[mi_evcn - 1];
+#ifdef FAITHFUL
+        mi_lstk[mi_evcn - 1] = mi_lstk[mi_evcn - 1] - 1;
+#else
+        mi_lstk[mi_evcn - 1]--;
+#endif
+#ifdef FAITHFUL
+        if (cnt == 0) {
+                mi_evcn = mi_evcn - 2;
+                ret = (unsigned char *) 0;
+        }
+        return ret;
+#else
+        if (cnt == 0) {
+                mi_evcn -= 2;
+                return (unsigned char *) 0;
+        } else
+                return ret;
+#endif
+}
+
+/* mq_pars: walk compact event stream at mi_sqpos.
+   Byte forms:
+     0x00        tick separator; returns 1, mi_nlp0 loaded
+     0x01..0x7F  note event, 3 bytes:
+                   byte0: [0..3]=logical ch, [4]=note-on (inverted),
+                          [5]=sustain, [6]=note-off
+                   byte1: [0..4]=dur index, [5]=accent (vel 0x7F),
+                          [6..7]=transpose mode
+                   byte2: MIDI note number
+     0x82        bar marker (1 byte)
+     0x85 <n>    loop start, count=n
+     0x86        loop end (jump back if count > 0)
+     0xFF        end of song, returns 0
+   Ghidra 0x10388, nested while-loops preserved as gotos.
+   addr: midi_seq_parse_events() */
+
+short
+mq_pars()
+{
+        /* No locals at all: STX walks mi_sqpos with ++ in place and
+           dispatches the command bytes through a switch. */
+
+        /* Prologue: skip leading 0x00, refresh mi_nlp0, end-check. */
+        if (*mi_sqpos != 0)
+                return 0;
+        mi_sqpos++;
+        if (mi_sqpos >= mi_seqE)
+                return 0;
+        mi_evTf = 0;
+        mq_rdur();
+        if (mi_sqpos >= mi_seqE)
+                return 0;
+
+        while (*mi_sqpos != 0) {
+                if ((*mi_sqpos & 0x80) == 0) {
+                        /* Note event: unpack bytes 0..2, advance one
+                           byte at a time, queue via mq_qnne.  byte1
+                           bit 5 = accent (max vel + max PSG vol). */
+                        mi_evTf = 1;
+                        mi_nnOn = 16 - (*mi_sqpos & 0x10);
+                        mi_lasT = *mi_sqpos & 0x40;
+                        mi_nnOf = *mi_sqpos & 0x20;
+                        mi_ccha = *mi_sqpos & 0x0f;
+                        mi_sqpos++;
+
+                        if ((mi_nlpA = *mi_sqpos & 0x20) != 0) {
+                                mi_vel = 0x7f;
+                                psg_cvol = 0xf;
+                        } else {
+                                mi_vel = mi_dvel;
+                                psg_cvol = psg_dvol;
+                        }
+                        mi_nmof = *mi_sqpos & 0xc0;
+                        mi_nlp0 = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
+                        mi_sqpos++;
+
+                        if ((mi_nmof & 0xc0) != 0) {
+                                mi_cnot = *mi_sqpos & 0x7f;
+                                mi_sqpos++;
+                                if (mi_nmof & 0x80) {
+                                        if (mi_nmof & 0x40)
+                                                mi_cnot--;
+                                        else
+                                                mi_cnot++;
+                                }
+                        } else {
+                                mi_cnot = g_mstr[*mi_sqpos & 0x7f];
+                                mi_sqpos++;
+                        }
+
+                        if (mi_nnOn != 0)
+                                mq_qnne();
+                } else {
+                        switch (*mi_sqpos++ & 0xff) {
+                        case 0x82:
+                                /* Bar marker: refresh mi_nlp0 for the
+                                   next event only if none was decoded
+                                   this pass. */
+                                if (mi_evTf == 0) {
+                                        mq_rdur();
+                                        if (mi_sqpos >= mi_seqE)
+                                                return 0;
+                                }
+                                break;
+                        case 0x85:
+                                /* Loop start: byte = count, push the
+                                   return address. */
+                                mq_pshl(mi_sqpos + 1, *mi_sqpos);
+                                mi_sqpos++;
+                                mq_rdur();
+                                if (mi_sqpos >= mi_seqE)
+                                        return 0;
+                                break;
+                        case 0x86:
+                                /* Loop end: pop, jump back if nonzero. */
+                                if ((mi_dptr = mq_popl()) != 0)
+                                        mi_sqpos = mi_dptr;
+                                mq_rdur();
+                                if (mi_sqpos >= mi_seqE)
+                                        return 0;
+                                break;
+                        case 0xff:
+                                return 0;
+                                break;
+                        }
+                }
+        }
+        return 1;
+}
+
+/* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
+   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0.
+   addr: midi_seq_read_note_duration() */
+
+void
+mq_rdur()
+{
+#ifdef FAITHFUL
+        for (; *mi_sqpos == 0; mi_sqpos = mi_sqpos + 1) ;
+#else
+        for (; *mi_sqpos == 0; mi_sqpos++) ;
+#endif
+        if ((*mi_sqpos & 0x80) == 0)
+                mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
+                                                          - 1) * g_mtspb;
+        else
+                mi_nlp0 = 0;
+}
+
+/* mq_spgm does not exist in LCP_STX: mq_sepc (0x84a) is the one
+   program-change sender, and mq_qnne calls it directly. */
+
+/* mq_qnne: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
+   and dispatch Note-On via mq_dise.  Queue entry fires paired Note-Off
+   later via mq_expN + mq_snof.
+   addr: midi_seq_queue_note_event() */
 
 #ifdef FAITHFUL
-/* mq_bust: (re)build 132-note transpose LUT.
-   Identity, then blank chromatic non-diatonic (1,3,6,8,10) with 0xFF.
-   For scale != 1, apply 7-bit chord mask g_msmk[scale] per octave,
-   shifting missing degrees by +1 (scale<9) or -1 (scale>=9).
-   Mask bit 0 = degree 7 (leading tone), bit 6 = root.
-   addr: mq_bust() */
+void
+mq_qnne()
+{
+        if (mi_evi < 58) {
+                mi_evq[mi_evi] = mi_nlp0;
+                mi_evi = mi_evi + 1;
+                if (mi_nnOn == 0)
+                        mi_evq[mi_evi] = 0;
+                else
+                        mi_evq[mi_evi] = (short)(char) mi_cnot |
+                                                          ((short) mi_lasT << 1);
+                mi_evi = mi_evi + 1;
+                mi_evq[mi_evi] = (short) mi_chmap[(short)(char) mi_ccha];
+                mi_evi = mi_evi + 1;
+
+                if ((char) mi_cnot <= g_mnhil &&
+                    g_mnlol <= (char) mi_cnot) {
+                        if (mi_slop == NO)
+                                mi_ccha = (char) mi_varR;
+                        else
+                                mq_sepc(mi_ccha);
+
+                        if (mi_nnOf != 0)
+                                mi_nOS[(short)(char) mi_cnot] = 0;
+                        if (mi_lasT != 0)
+                                mi_nOS[(short)(char) mi_cnot] =
+                                                          (unsigned char) mi_ccha;
+                        if (mi_nnOf == 0) {
+                                g_meve[0] = (mi_chmap[(short)(char) mi_ccha]
+                                                                          & 0xf) | 0x90;
+                                g_meve[1] = (unsigned char) mi_cnot;
+                                g_meve[2] = (unsigned char) mi_vel;
+                                mq_dise(g_meve, (short) 3,
+                                                            (short) mi_chmap[(short)(char) mi_ccha]);
+                        }
+                }
+        }
+}
+#else   /* STX: link #-6 -- one local for the channel byte; the
+           range test is two early returns, the two if/else pairs are
+           the other way round, and none of the byte reads is cast. */
 
 void
-mq_bust(value)
-short   value;
+mq_qnne()
 {
-        short           i;
-        unsigned char   chord_mask;
-        char            note_shift;
+        short   ch;
 
-        /* Identity, then blank C#/D#/F#/G#/A# in the first octave. */
-        for (i = 0; i < 0x84; i = i + 1)
-                g_mstr[i] = (unsigned char) i;
-        g_mstr[1]  = 0xff;
-        g_mstr[3]  = 0xff;
-        g_mstr[6]  = 0xff;
-        g_mstr[8]  = 0xff;
-        g_mstr[10] = 0xff;
-
-        if (value == 1)
+        if (mi_evi < 58) {
+                mi_evq[mi_evi] = mi_nlp0;
+                mi_evi++;
+                if (mi_nnOn != 0) {
+                        mi_evq[mi_evi] = (mi_lasT << 1) | mi_cnot;
+                        mi_evi++;
+                } else {
+                        mi_evq[mi_evi] = 0;
+                        mi_evi++;
+                }
+                mi_evq[mi_evi] = mi_chmap[mi_ccha];
+                mi_evi++;
+        } else
                 return;
 
-        note_shift = (value < 9) ? 1 : -1;
-        chord_mask = g_msmk[value];
+        if (mi_cnot > g_mnlol)
+                return;
+        if (mi_cnot < g_mnhil)
+                return;
 
-        /* Per octave, apply mask to the 7 diatonic slots
-           (offsets 0,2,4,5,7,9,11).  Bit order matches 1985 source. */
-        for (i = 0; i < 0x84; i = i + 12) {
-                if ((chord_mask & 0x01) == 0)
-                        g_mstr[i + 11] += note_shift;
-                if ((chord_mask & 0x02) == 0)
-                        g_mstr[i + 9]  += note_shift;
-                if ((chord_mask & 0x04) == 0)
-                        g_mstr[i + 7]  += note_shift;
-                if ((chord_mask & 0x08) == 0)
-                        g_mstr[i + 5]  += note_shift;
-                if ((chord_mask & 0x10) == 0)
-                        g_mstr[i + 4]  += note_shift;
-                if ((chord_mask & 0x20) == 0)
-                        g_mstr[i + 2]  += note_shift;
-                if ((chord_mask & 0x40) == 0)
-                        g_mstr[i]      += note_shift;
-        }
-}
-#else   /* STX: the mask is reloaded each octave and shifted right
-           after every test, note_shift is a word, and the identity
-           fill carries no cast. */
-
-void
-mq_bust(value)
-short   value;
-{
-        short           i;
-        short           note_shift;
-        char            chord_mask;
-
-        for (i = 0; i < 0x84; i++)
-                g_mstr[i] = i;
-        g_mstr[1]  = -1;
-        g_mstr[3]  = -1;
-        g_mstr[6]  = -1;
-        g_mstr[8]  = -1;
-        g_mstr[10] = -1;
-
-        if (value == 1)
-                return 1;
-
-        if (value > 8)
-                note_shift = -1;
+        if (mi_slop != NO)
+                mq_sepc(mi_ccha);
         else
-                note_shift = 1;
+                mi_ccha = mi_varR;
 
-        for (i = 0; i < 0x84; i += 12) {
-                chord_mask = g_msmk[value];
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 11] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 9] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 7] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 5] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 4] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i + 2] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        g_mstr[i] += note_shift;
-        }
+        if (mi_nnOf != 0)
+                mi_nOS[mi_cnot] = 0;
+        if (mi_lasT != 0)
+                mi_nOS[mi_cnot] = mi_ccha;
+        if (mi_nnOf != 0)
+                return;
+
+        ch = mi_chmap[mi_ccha];
+        g_meve[0] = (ch & 0xf) | 0x90;
+        g_meve[1] = mi_cnot;
+        g_meve[2] = mi_vel;
+        mq_dise(g_meve, (short) 3, ch);
 }
 #endif
+
+/* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
+   nptr[0]={note|flags}, nptr[1]=physical channel byte.
+   Fires only if note in [g_mnlol, g_mnhil] and non-zero.
+   addr: midi_seq_send_note_off() */
+
+void
+mq_snof(nptr)
+short * nptr;
+{
+#ifdef FAITHFUL
+        if ((nptr[0] & 0x80) == 0) {
+                g_meve[1] = (unsigned char) nptr[0];
+                if ((char) g_meve[1] >= g_mnlol &&
+                    (char) g_meve[1] <= g_mnhil && g_meve[1] != 0) {
+                        g_meve[0] = ((unsigned char) nptr[1] & 0xf) + 0x90;
+                        g_meve[2] = 0;
+                        mq_dise(g_meve, (short) 3, (short) nptr[1]);
+                }
+        }
+#else
+        /* STX is called with &mi_evq[i] and walks the pointer forward;
+           the range test is one bitwise OR of two comparisons and each
+           rejection returns. */
+        if ((nptr[1] & 0x80) != 0)
+                return;
+        nptr++;
+        g_meve[1] = nptr[0];
+        if ((char) g_meve[1] > g_mnlol | (char) g_meve[1] < g_mnhil)
+                return 1;
+        if (g_meve[1] == 0)
+                return 1;
+        nptr++;
+        g_meve[0] = (nptr[0] & 0xf) + 0x90;
+        g_meve[2] = 0;
+        mq_dise(g_meve, (short) 3, (short) nptr[0]);
+#endif
+}
 
 /* mq_sepc: dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
@@ -566,6 +736,48 @@ char            midi_ch;
         return 1;
 }
 
+/* mq_expN: subtract val from each queued event's remaining duration;
+   when <=0, mq_snof + mq_rmev.
+   addr: midi_seq_expire_notes() */
+
+void
+mq_expN(val)
+short   val;
+{
+#ifdef FAITHFUL
+        short   r;
+        short   i;
+
+        for (i = 0; i < mi_evi; i = i + 3) {
+                mi_evq[i] = mi_evq[i] - val;
+                if (mi_evq[i] < 1) {
+                        mq_snof(&mi_evq[i + 1]);
+                        r = mq_rmev(i);
+                        if (r != 0)
+                                i = i - 3;
+                }
+        }
+#else
+        /* STX: one local, memory-direct steps, the removal result
+           tested in place, and mq_snof gets &mi_evq[i]. */
+        short   i;
+
+        for (i = 0; i < mi_evi; i += 3) {
+                mi_evq[i] -= val;
+                if (mi_evq[i] <= 0) {
+                        mq_snof(&mi_evq[i]);
+                        if (mq_rmev(i) != 0)
+                                i -= 3;
+                }
+        }
+#endif
+}
+
+#ifndef FAITHFUL
+/* STX links mq_rmev immediately after mq_expN (0xe64). */
+#include "parts/mq_rmev.c"
+#endif
+
 /* mq_tick lives in source/mq_tick.s -- privileged move-sr + rte
    terminator, installed by Xbtimer directly. */
 
@@ -675,568 +887,6 @@ mq_advs()
         }
 }
 
-
-/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, right before psg_upEn). */
-#ifndef FAITHFUL
-#include "parts/psg_cpE.c"
-#endif
-
-/* psg_upEn: PSG software ADSR envelope processor.  50 Hz from mq_tick.
-   3 channels through attack->decay->sustain->release->fadeout.
-   Per phase: Bresenham accum, delta = (target-cur)*rate_table[t],
-   accum += delta; while accum > 360, cur += dir; accum -= 360.
-   phase_timer==0 with dur==0 -> immediate fall-through (gotos).
-   Clamp cur to max_volume; write PSG amp reg 8/9/10 via psg_wr.
-   Preserves Ghidra switch(fallthrough) shape as C gotos.
-   addr: psg_process_envelopes() */
-
-void
-psg_upEn()
-{
-        char    i;
-
-        for (i = 0; i < 3; i++) {
-                if (!psg_envelope[i].phase)
-                        continue;
-
-                switch (psg_envelope[i].phase) {
-                case ENV_ATTACK:
-                        psg_envelope[(short) i].current_volume =
-                                                 psg_envelope[(short) i].attack_start_vol;
-                        psg_envelope[(short) i].phase = ENV_DECAY;
-                        if (!psg_envelope[i].attack_duration) {
-                                psg_envelope[(short) i].current_volume =
-                                                                 psg_envelope[(short) i].attack_target_vol;
-                                psg_envelope[(short) i].phase_timer = 0;
-                                goto do_decay;
-                        }
-                        psg_envelope[(short) i].phase_timer =
-                                                 (short) psg_envelope[(short) i].attack_duration;
-                        if (psg_envelope[i].attack_start_vol >
-                            psg_envelope[i].attack_target_vol) {
-                                psg_rmpD[(short) i] =
-                                                          (short) psg_envelope[(short) i].attack_start_vol -
-                                                          (short) psg_envelope[(short) i].attack_target_vol;
-                                psg_envelope[(short) i].ramp_direction = -1;
-                        } else {
-                                psg_envelope[(short) i].ramp_direction = 1;
-                                psg_rmpD[(short) i] =
-                                                          (short) psg_envelope[(short) i].attack_target_vol -
-                                                          (short) psg_envelope[(short) i].attack_start_vol;
-                        }
-                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
-                                             mi_evrt[psg_envelope[(short) i].phase_timer];
-                        psg_envelope[(short) i].phase_timer =
-                                             mi_evtt[psg_envelope[(short) i].phase_timer];
-                        psg_rmpA[(short) i] = 0;
-                        break;
-
-                case ENV_DECAY:
-do_decay:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
-                                }
-                                break;
-                        } else {
-                                if (!psg_envelope[i].decay_duration) {
-                                        psg_envelope[(short) i].current_volume =
-                                                                          psg_envelope[(short) i].decay_target_vol;
-                                        psg_envelope[(short) i].phase_timer = 0;
-                                        goto do_sustain;
-                                }
-                                psg_envelope[(short) i].phase = ENV_SUSTAIN;
-                                psg_envelope[(short) i].phase_timer =
-                                                                 (short) psg_envelope[(short) i].decay_duration;
-                                if (psg_envelope[i].attack_target_vol >
-                                    psg_envelope[i].decay_target_vol) {
-                                        psg_rmpD[(short) i] =
-                                                                  (short) psg_envelope[(short) i].attack_target_vol -
-                                                                  (short) psg_envelope[(short) i].decay_target_vol;
-                                        psg_envelope[(short) i].ramp_direction = -1;
-                                } else {
-                                        psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rmpD[(short) i] =
-                                                                  (short) psg_envelope[(short) i].decay_target_vol -
-                                                                  (short) psg_envelope[(short) i].attack_target_vol;
-                                }
-                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
-                                                                          mi_evrt[psg_envelope[(short) i].phase_timer];
-                                psg_envelope[(short) i].phase_timer =
-                                                                          mi_evtt[psg_envelope[(short) i].phase_timer];
-                                psg_rmpA[(short) i] = 0;
-                        }
-                        break;
-
-                case ENV_SUSTAIN:
-do_sustain:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
-                                }
-                                break;
-                        } else {
-                                if (!psg_envelope[i].sustain_duration) {
-                                        psg_envelope[(short) i].current_volume =
-                                                                          psg_envelope[(short) i].sustain_target_vol;
-                                        psg_envelope[(short) i].phase_timer = 0;
-                                        goto do_release;
-                                }
-                                psg_envelope[(short) i].phase = ENV_RELEASE;
-                                psg_envelope[(short) i].phase_timer =
-                                                                 mi_evst[(short) psg_envelope[(short) i].sustain_duration];
-                                if (psg_envelope[i].decay_target_vol >
-                                    psg_envelope[i].sustain_target_vol) {
-                                        psg_rmpD[(short) i] =
-                                                                  (short) psg_envelope[(short) i].decay_target_vol -
-                                                                  (short) psg_envelope[(short) i].sustain_target_vol;
-                                        psg_envelope[(short) i].ramp_direction = -1;
-                                } else {
-                                        psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rmpD[(short) i] =
-                                                                  (short) psg_envelope[(short) i].sustain_target_vol -
-                                                                  (short) psg_envelope[(short) i].decay_target_vol;
-                                }
-                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
-                                                                          mi_evrl[(short) psg_envelope[(short) i].sustain_duration];
-                                psg_rmpA[(short) i] = 0;
-                        }
-                        break;
-
-                case ENV_RELEASE:
-do_release:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
-                                }
-                                break;
-                        } else {
-                                if (psg_envelope[i].release_duration) {
-                                        psg_envelope[(short) i].phase = ENV_FADEOUT;
-                                        psg_envelope[(short) i].phase_timer =
-                                                         (short) psg_envelope[(short) i].release_duration;
-                                        psg_rmpD[(short) i] =
-                                                  (short) psg_envelope[(short) i].current_volume;
-                                        psg_envelope[(short) i].ramp_direction = -1;
-                                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
-                                                  mi_evrt[psg_envelope[(short) i].phase_timer];
-                                        psg_envelope[(short) i].phase_timer =
-                                                  mi_evtt[psg_envelope[(short) i].phase_timer];
-                                        psg_rmpA[(short) i] = 0;
-                                        break;
-                                } else {
-                                        psg_envelope[(short) i].phase_timer = 0;
-                                        goto do_fadeout;
-                                }
-                        }
-                        /* falls through into ENV_FADEOUT */
-
-                case ENV_FADEOUT:
-do_fadeout:
-                        if (psg_envelope[i].phase_timer-- > 0 &&
-                            psg_envelope[i].current_volume) {
-                                psg_rmpA[i] += psg_rmpD[i];
-                                while (psg_rmpA[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_rmpA[i] -= 0x168;
-                                }
-                        } else {
-                                psg_envelope[i].current_volume =
-                                        psg_envelope[i].phase = ENV_IDLE;
-                        }
-                        break;
-                }
-
-                /* The clamped volume goes through a global, not a
-                   local, and the pick is a ternary (one store). */
-                psg_ovol = psg_envelope[i].current_volume >
-                           psg_envelope[i].max_volume
-                         ? psg_envelope[i].max_volume
-                         : psg_envelope[i].current_volume;
-                psg_wr(psg_ovol, psg_rot[i] - 0x80);
-        }
-}
-
-
-/* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49).
-   addr: midi_seq_push_loop() */
-
-void
-mq_pshl(a, b)
-void *  a;
-short   b;
-{
-#ifdef FAITHFUL
-        if (mi_evcn < 49) {
-                mi_lstk[mi_evcn] = (long) a;
-                mi_evcn = mi_evcn + 1;
-                mi_lstk[mi_evcn] = (long)(short)(b - 1);
-                mi_evcn = mi_evcn + 1;
-        }
-#else
-        if (mi_evcn < 49) {
-                mi_lstk[mi_evcn] = (long) a;
-                mi_evcn++;
-                mi_lstk[mi_evcn] = (long)(short)(b - 1);
-                mi_evcn++;
-        }
-#endif
-}
-
-/* mq_popl: pop/decrement top of loop stack.  Returns loop-start ptr
-   if count nonzero, else NULL (fall through end).
-   addr: midi_seq_pop_loop() */
-
-unsigned char *
-mq_popl()
-{
-        unsigned char * ret;
-        long            cnt;
-
-        if (mi_evcn == 9)
-                return (unsigned char *) 0;
-        ret = (unsigned char *) mi_lstk[mi_evcn - 2];
-        cnt = mi_lstk[mi_evcn - 1];
-#ifdef FAITHFUL
-        mi_lstk[mi_evcn - 1] = mi_lstk[mi_evcn - 1] - 1;
-#else
-        mi_lstk[mi_evcn - 1]--;
-#endif
-#ifdef FAITHFUL
-        if (cnt == 0) {
-                mi_evcn = mi_evcn - 2;
-                ret = (unsigned char *) 0;
-        }
-        return ret;
-#else
-        if (cnt == 0) {
-                mi_evcn -= 2;
-                return (unsigned char *) 0;
-        } else
-                return ret;
-#endif
-}
-
-/* mq_rmev -> parts/mq_rmev.c (STX: 0xe64, right after mq_expN). */
-#ifdef FAITHFUL
-#include "parts/mq_rmev.c"
-#endif
-
-/* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
-   nptr[0]={note|flags}, nptr[1]=physical channel byte.
-   Fires only if note in [g_mnlol, g_mnhil] and non-zero.
-   addr: midi_seq_send_note_off() */
-
-void
-mq_snof(nptr)
-short * nptr;
-{
-#ifdef FAITHFUL
-        if ((nptr[0] & 0x80) == 0) {
-                g_meve[1] = (unsigned char) nptr[0];
-                if ((char) g_meve[1] >= g_mnlol &&
-                    (char) g_meve[1] <= g_mnhil && g_meve[1] != 0) {
-                        g_meve[0] = ((unsigned char) nptr[1] & 0xf) + 0x90;
-                        g_meve[2] = 0;
-                        mq_dise(g_meve, (short) 3, (short) nptr[1]);
-                }
-        }
-#else
-        /* STX is called with &mi_evq[i] and walks the pointer forward;
-           the range test is one bitwise OR of two comparisons and each
-           rejection returns. */
-        if ((nptr[1] & 0x80) != 0)
-                return;
-        nptr++;
-        g_meve[1] = nptr[0];
-        if ((char) g_meve[1] > g_mnlol | (char) g_meve[1] < g_mnhil)
-                return 1;
-        if (g_meve[1] == 0)
-                return 1;
-        nptr++;
-        g_meve[0] = (nptr[0] & 0xf) + 0x90;
-        g_meve[2] = 0;
-        mq_dise(g_meve, (short) 3, (short) nptr[0]);
-#endif
-}
-
-/* mq_expN: subtract val from each queued event's remaining duration;
-   when <=0, mq_snof + mq_rmev.
-   addr: midi_seq_expire_notes() */
-
-void
-mq_expN(val)
-short   val;
-{
-#ifdef FAITHFUL
-        short   r;
-        short   i;
-
-        for (i = 0; i < mi_evi; i = i + 3) {
-                mi_evq[i] = mi_evq[i] - val;
-                if (mi_evq[i] < 1) {
-                        mq_snof(&mi_evq[i + 1]);
-                        r = mq_rmev(i);
-                        if (r != 0)
-                                i = i - 3;
-                }
-        }
-#else
-        /* STX: one local, memory-direct steps, the removal result
-           tested in place, and mq_snof gets &mi_evq[i]. */
-        short   i;
-
-        for (i = 0; i < mi_evi; i += 3) {
-                mi_evq[i] -= val;
-                if (mi_evq[i] <= 0) {
-                        mq_snof(&mi_evq[i]);
-                        if (mq_rmev(i) != 0)
-                                i -= 3;
-                }
-        }
-#endif
-}
-
-#ifndef FAITHFUL
-/* STX links mq_rmev immediately after mq_expN (0xe64). */
-#include "parts/mq_rmev.c"
-#endif
-
-/* mq_spgm does not exist in LCP_STX: mq_sepc (0x84a) is the one
-   program-change sender, and mq_qnne calls it directly. */
-
-/* mq_qnne: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
-   and dispatch Note-On via mq_dise.  Queue entry fires paired Note-Off
-   later via mq_expN + mq_snof.
-   addr: midi_seq_queue_note_event() */
-
-#ifdef FAITHFUL
-void
-mq_qnne()
-{
-        if (mi_evi < 58) {
-                mi_evq[mi_evi] = mi_nlp0;
-                mi_evi = mi_evi + 1;
-                if (mi_nnOn == 0)
-                        mi_evq[mi_evi] = 0;
-                else
-                        mi_evq[mi_evi] = (short)(char) mi_cnot |
-                                                          ((short) mi_lasT << 1);
-                mi_evi = mi_evi + 1;
-                mi_evq[mi_evi] = (short) mi_chmap[(short)(char) mi_ccha];
-                mi_evi = mi_evi + 1;
-
-                if ((char) mi_cnot <= g_mnhil &&
-                    g_mnlol <= (char) mi_cnot) {
-                        if (mi_slop == NO)
-                                mi_ccha = (char) mi_varR;
-                        else
-                                mq_sepc(mi_ccha);
-
-                        if (mi_nnOf != 0)
-                                mi_nOS[(short)(char) mi_cnot] = 0;
-                        if (mi_lasT != 0)
-                                mi_nOS[(short)(char) mi_cnot] =
-                                                          (unsigned char) mi_ccha;
-                        if (mi_nnOf == 0) {
-                                g_meve[0] = (mi_chmap[(short)(char) mi_ccha]
-                                                                          & 0xf) | 0x90;
-                                g_meve[1] = (unsigned char) mi_cnot;
-                                g_meve[2] = (unsigned char) mi_vel;
-                                mq_dise(g_meve, (short) 3,
-                                                            (short) mi_chmap[(short)(char) mi_ccha]);
-                        }
-                }
-        }
-}
-#else   /* STX: link #-6 -- one local for the channel byte; the
-           range test is two early returns, the two if/else pairs are
-           the other way round, and none of the byte reads is cast. */
-
-void
-mq_qnne()
-{
-        short   ch;
-
-        if (mi_evi < 58) {
-                mi_evq[mi_evi] = mi_nlp0;
-                mi_evi++;
-                if (mi_nnOn != 0) {
-                        mi_evq[mi_evi] = (mi_lasT << 1) | mi_cnot;
-                        mi_evi++;
-                } else {
-                        mi_evq[mi_evi] = 0;
-                        mi_evi++;
-                }
-                mi_evq[mi_evi] = mi_chmap[mi_ccha];
-                mi_evi++;
-        } else
-                return;
-
-        if (mi_cnot > g_mnlol)
-                return;
-        if (mi_cnot < g_mnhil)
-                return;
-
-        if (mi_slop != NO)
-                mq_sepc(mi_ccha);
-        else
-                mi_ccha = mi_varR;
-
-        if (mi_nnOf != 0)
-                mi_nOS[mi_cnot] = 0;
-        if (mi_lasT != 0)
-                mi_nOS[mi_cnot] = mi_ccha;
-        if (mi_nnOf != 0)
-                return;
-
-        ch = mi_chmap[mi_ccha];
-        g_meve[0] = (ch & 0xf) | 0x90;
-        g_meve[1] = mi_cnot;
-        g_meve[2] = mi_vel;
-        mq_dise(g_meve, (short) 3, ch);
-}
-#endif
-
-/* mq_pars: walk compact event stream at mi_sqpos.
-   Byte forms:
-     0x00        tick separator; returns 1, mi_nlp0 loaded
-     0x01..0x7F  note event, 3 bytes:
-                   byte0: [0..3]=logical ch, [4]=note-on (inverted),
-                          [5]=sustain, [6]=note-off
-                   byte1: [0..4]=dur index, [5]=accent (vel 0x7F),
-                          [6..7]=transpose mode
-                   byte2: MIDI note number
-     0x82        bar marker (1 byte)
-     0x85 <n>    loop start, count=n
-     0x86        loop end (jump back if count > 0)
-     0xFF        end of song, returns 0
-   Ghidra 0x10388, nested while-loops preserved as gotos.
-   addr: midi_seq_parse_events() */
-
-short
-mq_pars()
-{
-        /* No locals at all: STX walks mi_sqpos with ++ in place and
-           dispatches the command bytes through a switch. */
-
-        /* Prologue: skip leading 0x00, refresh mi_nlp0, end-check. */
-        if (*mi_sqpos != 0)
-                return 0;
-        mi_sqpos++;
-        if (mi_sqpos >= mi_seqE)
-                return 0;
-        mi_evTf = 0;
-        mq_rdur();
-        if (mi_sqpos >= mi_seqE)
-                return 0;
-
-        while (*mi_sqpos != 0) {
-                if ((*mi_sqpos & 0x80) == 0) {
-                        /* Note event: unpack bytes 0..2, advance one
-                           byte at a time, queue via mq_qnne.  byte1
-                           bit 5 = accent (max vel + max PSG vol). */
-                        mi_evTf = 1;
-                        mi_nnOn = 16 - (*mi_sqpos & 0x10);
-                        mi_lasT = *mi_sqpos & 0x40;
-                        mi_nnOf = *mi_sqpos & 0x20;
-                        mi_ccha = *mi_sqpos & 0x0f;
-                        mi_sqpos++;
-
-                        if ((mi_nlpA = *mi_sqpos & 0x20) != 0) {
-                                mi_vel = 0x7f;
-                                psg_cvol = 0xf;
-                        } else {
-                                mi_vel = mi_dvel;
-                                psg_cvol = psg_dvol;
-                        }
-                        mi_nmof = *mi_sqpos & 0xc0;
-                        mi_nlp0 = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
-                        mi_sqpos++;
-
-                        if ((mi_nmof & 0xc0) != 0) {
-                                mi_cnot = *mi_sqpos & 0x7f;
-                                mi_sqpos++;
-                                if (mi_nmof & 0x80) {
-                                        if (mi_nmof & 0x40)
-                                                mi_cnot--;
-                                        else
-                                                mi_cnot++;
-                                }
-                        } else {
-                                mi_cnot = g_mstr[*mi_sqpos & 0x7f];
-                                mi_sqpos++;
-                        }
-
-                        if (mi_nnOn != 0)
-                                mq_qnne();
-                } else {
-                        switch (*mi_sqpos++ & 0xff) {
-                        case 0x82:
-                                /* Bar marker: refresh mi_nlp0 for the
-                                   next event only if none was decoded
-                                   this pass. */
-                                if (mi_evTf == 0) {
-                                        mq_rdur();
-                                        if (mi_sqpos >= mi_seqE)
-                                                return 0;
-                                }
-                                break;
-                        case 0x85:
-                                /* Loop start: byte = count, push the
-                                   return address. */
-                                mq_pshl(mi_sqpos + 1, *mi_sqpos);
-                                mi_sqpos++;
-                                mq_rdur();
-                                if (mi_sqpos >= mi_seqE)
-                                        return 0;
-                                break;
-                        case 0x86:
-                                /* Loop end: pop, jump back if nonzero. */
-                                if ((mi_dptr = mq_popl()) != 0)
-                                        mi_sqpos = mi_dptr;
-                                mq_rdur();
-                                if (mi_sqpos >= mi_seqE)
-                                        return 0;
-                                break;
-                        case 0xff:
-                                return 0;
-                                break;
-                        }
-                }
-        }
-        return 1;
-}
-
-/* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
-   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0.
-   addr: midi_seq_read_note_duration() */
-
-void
-mq_rdur()
-{
-#ifdef FAITHFUL
-        for (; *mi_sqpos == 0; mi_sqpos = mi_sqpos + 1) ;
-#else
-        for (; *mi_sqpos == 0; mi_sqpos++) ;
-#endif
-        if ((*mi_sqpos & 0x80) == 0)
-                mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
-                                                          - 1) * g_mtspb;
-        else
-                mi_nlp0 = 0;
-}
-
 /* mq_stop (Ghidra midi_seq_stop @ 0x1103c): stop sequencer.
    Drain pending events, send Note-Off for every mi_noSt[] flag,
    clear g_msmsa.  Not called yet -- present for ROM parity.
@@ -1338,3 +988,327 @@ mq_extm()
 #include "parts/mq_resp.c"
 #include "parts/mq_parh.c"
 #endif
+
+/* mq_pacm: unpack 30-byte channel/program map (90 bytes before mi_dbase).
+   Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
+   Values are 1-based on disk (0 = no-op sentinel); decrement on load.
+   Logical channel 0 reserved for game SFX.
+   addr: mq_pacm() */
+
+void
+mq_pacm(p)
+unsigned char * p;
+{
+        short   i;
+
+#ifdef FAITHFUL
+        for (i = 1; i < 16; i = i + 1) {
+                mi_chmap[i] = p[i - 1]  - 1;
+                mi_pgmap[i] = p[i + 14] - 1;
+        }
+#else
+        /* STX writes the offset arithmetic inside the dereference,
+           which makes the pointer the INDEX register and the loop
+           counter the base -- `p[i - 1]` gives the other way round. */
+        for (i = 1; i < 16; i++) {
+                mi_chmap[i] = *(p + i - 1)  - 1;
+                mi_pgmap[i] = *(p + i + 14) - 1;
+        }
+#endif
+}
+
+#ifdef FAITHFUL
+/* mq_bust: (re)build 132-note transpose LUT.
+   Identity, then blank chromatic non-diatonic (1,3,6,8,10) with 0xFF.
+   For scale != 1, apply 7-bit chord mask g_msmk[scale] per octave,
+   shifting missing degrees by +1 (scale<9) or -1 (scale>=9).
+   Mask bit 0 = degree 7 (leading tone), bit 6 = root.
+   addr: mq_bust() */
+
+void
+mq_bust(value)
+short   value;
+{
+        short           i;
+        unsigned char   chord_mask;
+        char            note_shift;
+
+        /* Identity, then blank C#/D#/F#/G#/A# in the first octave. */
+        for (i = 0; i < 0x84; i = i + 1)
+                g_mstr[i] = (unsigned char) i;
+        g_mstr[1]  = 0xff;
+        g_mstr[3]  = 0xff;
+        g_mstr[6]  = 0xff;
+        g_mstr[8]  = 0xff;
+        g_mstr[10] = 0xff;
+
+        if (value == 1)
+                return;
+
+        note_shift = (value < 9) ? 1 : -1;
+        chord_mask = g_msmk[value];
+
+        /* Per octave, apply mask to the 7 diatonic slots
+           (offsets 0,2,4,5,7,9,11).  Bit order matches 1985 source. */
+        for (i = 0; i < 0x84; i = i + 12) {
+                if ((chord_mask & 0x01) == 0)
+                        g_mstr[i + 11] += note_shift;
+                if ((chord_mask & 0x02) == 0)
+                        g_mstr[i + 9]  += note_shift;
+                if ((chord_mask & 0x04) == 0)
+                        g_mstr[i + 7]  += note_shift;
+                if ((chord_mask & 0x08) == 0)
+                        g_mstr[i + 5]  += note_shift;
+                if ((chord_mask & 0x10) == 0)
+                        g_mstr[i + 4]  += note_shift;
+                if ((chord_mask & 0x20) == 0)
+                        g_mstr[i + 2]  += note_shift;
+                if ((chord_mask & 0x40) == 0)
+                        g_mstr[i]      += note_shift;
+        }
+}
+#else   /* STX: the mask is reloaded each octave and shifted right
+           after every test, note_shift is a word, and the identity
+           fill carries no cast. */
+
+void
+mq_bust(value)
+short   value;
+{
+        short           i;
+        short           note_shift;
+        char            chord_mask;
+
+        for (i = 0; i < 0x84; i++)
+                g_mstr[i] = i;
+        g_mstr[1]  = -1;
+        g_mstr[3]  = -1;
+        g_mstr[6]  = -1;
+        g_mstr[8]  = -1;
+        g_mstr[10] = -1;
+
+        if (value == 1)
+                return 1;
+
+        if (value > 8)
+                note_shift = -1;
+        else
+                note_shift = 1;
+
+        for (i = 0; i < 0x84; i += 12) {
+                chord_mask = g_msmk[value];
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 11] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 9] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 7] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 5] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 4] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i + 2] += note_shift;
+                chord_mask >>= 1;
+                if ((chord_mask & 1) == 0)
+                        g_mstr[i] += note_shift;
+        }
+}
+#endif
+
+
+/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, right before psg_upEn). */
+#ifndef FAITHFUL
+#include "parts/psg_cpE.c"
+#endif
+
+/* psg_upEn: PSG software ADSR envelope processor.  50 Hz from mq_tick.
+   3 channels through attack->decay->sustain->release->fadeout.
+   Per phase: Bresenham accum, delta = (target-cur)*rate_table[t],
+   accum += delta; while accum > 360, cur += dir; accum -= 360.
+   phase_timer==0 with dur==0 -> immediate fall-through (gotos).
+   Clamp cur to max_volume; write PSG amp reg 8/9/10 via psg_wr.
+   Preserves Ghidra switch(fallthrough) shape as C gotos.
+   addr: psg_process_envelopes() */
+
+void
+psg_upEn()
+{
+        char    i;
+
+        for (i = 0; i < 3; i++) {
+                if (!psg_envelope[i].phase)
+                        continue;
+
+                switch (psg_envelope[i].phase) {
+                case ENV_ATTACK:
+                        psg_envelope[(short) i].current_volume =
+                                                 psg_envelope[(short) i].attack_start_vol;
+                        psg_envelope[(short) i].phase = ENV_DECAY;
+                        if (!psg_envelope[i].attack_duration) {
+                                psg_envelope[(short) i].current_volume =
+                                                                 psg_envelope[(short) i].attack_target_vol;
+                                psg_envelope[(short) i].phase_timer = 0;
+                                goto do_decay;
+                        }
+                        psg_envelope[(short) i].phase_timer =
+                                                 (short) psg_envelope[(short) i].attack_duration;
+                        if (psg_envelope[i].attack_start_vol >
+                            psg_envelope[i].attack_target_vol) {
+                                psg_rmpD[(short) i] =
+                                                          (short) psg_envelope[(short) i].attack_start_vol -
+                                                          (short) psg_envelope[(short) i].attack_target_vol;
+                                psg_envelope[(short) i].ramp_direction = -1;
+                        } else {
+                                psg_envelope[(short) i].ramp_direction = 1;
+                                psg_rmpD[(short) i] =
+                                                          (short) psg_envelope[(short) i].attack_target_vol -
+                                                          (short) psg_envelope[(short) i].attack_start_vol;
+                        }
+                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                             mi_evrt[psg_envelope[(short) i].phase_timer];
+                        psg_envelope[(short) i].phase_timer =
+                                             mi_evtt[psg_envelope[(short) i].phase_timer];
+                        psg_rmpA[(short) i] = 0;
+                        break;
+
+                case ENV_DECAY:
+do_decay:
+                        if (psg_envelope[i].phase_timer-- > 0) {
+                                psg_rmpA[i] += psg_rmpD[i];
+                                while (psg_rmpA[i] > 0x168) {
+                                        psg_envelope[i].current_volume +=
+                                                psg_envelope[i].ramp_direction;
+                                        psg_rmpA[i] -= 0x168;
+                                }
+                                break;
+                        } else {
+                                if (!psg_envelope[i].decay_duration) {
+                                        psg_envelope[(short) i].current_volume =
+                                                                          psg_envelope[(short) i].decay_target_vol;
+                                        psg_envelope[(short) i].phase_timer = 0;
+                                        goto do_sustain;
+                                }
+                                psg_envelope[(short) i].phase = ENV_SUSTAIN;
+                                psg_envelope[(short) i].phase_timer =
+                                                                 (short) psg_envelope[(short) i].decay_duration;
+                                if (psg_envelope[i].attack_target_vol >
+                                    psg_envelope[i].decay_target_vol) {
+                                        psg_rmpD[(short) i] =
+                                                                  (short) psg_envelope[(short) i].attack_target_vol -
+                                                                  (short) psg_envelope[(short) i].decay_target_vol;
+                                        psg_envelope[(short) i].ramp_direction = -1;
+                                } else {
+                                        psg_envelope[(short) i].ramp_direction = 1;
+                                        psg_rmpD[(short) i] =
+                                                                  (short) psg_envelope[(short) i].decay_target_vol -
+                                                                  (short) psg_envelope[(short) i].attack_target_vol;
+                                }
+                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                                                          mi_evrt[psg_envelope[(short) i].phase_timer];
+                                psg_envelope[(short) i].phase_timer =
+                                                                          mi_evtt[psg_envelope[(short) i].phase_timer];
+                                psg_rmpA[(short) i] = 0;
+                                break;
+                        }
+
+                case ENV_SUSTAIN:
+do_sustain:
+                        if (psg_envelope[i].phase_timer-- > 0) {
+                                psg_rmpA[i] += psg_rmpD[i];
+                                while (psg_rmpA[i] > 0x168) {
+                                        psg_envelope[i].current_volume +=
+                                                psg_envelope[i].ramp_direction;
+                                        psg_rmpA[i] -= 0x168;
+                                }
+                                break;
+                        } else {
+                                if (!psg_envelope[i].sustain_duration) {
+                                        psg_envelope[(short) i].current_volume =
+                                                                          psg_envelope[(short) i].sustain_target_vol;
+                                        psg_envelope[(short) i].phase_timer = 0;
+                                        goto do_release;
+                                }
+                                psg_envelope[(short) i].phase = ENV_RELEASE;
+                                psg_envelope[(short) i].phase_timer =
+                                                                 mi_evst[(short) psg_envelope[(short) i].sustain_duration];
+                                if (psg_envelope[i].decay_target_vol >
+                                    psg_envelope[i].sustain_target_vol) {
+                                        psg_rmpD[(short) i] =
+                                                                  (short) psg_envelope[(short) i].decay_target_vol -
+                                                                  (short) psg_envelope[(short) i].sustain_target_vol;
+                                        psg_envelope[(short) i].ramp_direction = -1;
+                                } else {
+                                        psg_envelope[(short) i].ramp_direction = 1;
+                                        psg_rmpD[(short) i] =
+                                                                  (short) psg_envelope[(short) i].sustain_target_vol -
+                                                                  (short) psg_envelope[(short) i].decay_target_vol;
+                                }
+                                psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                                                          mi_evrl[(short) psg_envelope[(short) i].sustain_duration];
+                                psg_rmpA[(short) i] = 0;
+                                break;
+                        }
+
+                case ENV_RELEASE:
+do_release:
+                        if (psg_envelope[i].phase_timer-- > 0) {
+                                psg_rmpA[i] += psg_rmpD[i];
+                                while (psg_rmpA[i] > 0x168) {
+                                        psg_envelope[i].current_volume +=
+                                                psg_envelope[i].ramp_direction;
+                                        psg_rmpA[i] -= 0x168;
+                                }
+                                break;
+                        } else {
+                                if (psg_envelope[i].release_duration) {
+                                        psg_envelope[(short) i].phase = ENV_FADEOUT;
+                                        psg_envelope[(short) i].phase_timer =
+                                                         (short) psg_envelope[(short) i].release_duration;
+                                        psg_rmpD[(short) i] =
+                                                  (short) psg_envelope[(short) i].current_volume;
+                                        psg_envelope[(short) i].ramp_direction = -1;
+                                        psg_rmpD[(short) i] = psg_rmpD[(short) i] *
+                                                  mi_evrt[psg_envelope[(short) i].phase_timer];
+                                        psg_envelope[(short) i].phase_timer =
+                                                  mi_evtt[psg_envelope[(short) i].phase_timer];
+                                        psg_rmpA[(short) i] = 0;
+                                        break;
+                                } else {
+                                        psg_envelope[(short) i].phase_timer = 0;
+                                        goto do_fadeout;
+                                }
+                        }
+                        /* falls through into ENV_FADEOUT */
+
+                case ENV_FADEOUT:
+do_fadeout:
+                        if (psg_envelope[i].phase_timer-- > 0 &&
+                            psg_envelope[i].current_volume) {
+                                psg_rmpA[i] += psg_rmpD[i];
+                                while (psg_rmpA[i] > 0x168) {
+                                        psg_envelope[i].current_volume +=
+                                                psg_envelope[i].ramp_direction;
+                                        psg_rmpA[i] -= 0x168;
+                                }
+                        } else {
+                                psg_envelope[i].current_volume =
+                                        psg_envelope[i].phase = ENV_IDLE;
+                        }
+                        break;
+                }
+
+                /* The clamped volume goes through a global, not a
+                   local, and the pick is a ternary (one store). */
+                psg_ovol = psg_envelope[i].current_volume >
+                           psg_envelope[i].max_volume
+                         ? psg_envelope[i].max_volume
+                         : psg_envelope[i].current_volume;
+                psg_wr(psg_ovol, psg_rot[i] - 0x80);
+        }
+}
