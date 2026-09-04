@@ -118,9 +118,23 @@ source ships; ad-hoc debug scaffolding does not.
   state, and `vsl_color` silently falls back to pen 15 (dark brown).
   This causes the water tank to render brown instead of blue — see
   the comment above `sc_sdtb` in `source/gfx_prim.c`.
-- There is ONE build configuration.  Test builds may use
+- There is ONE SHIPPED build configuration, and it must stay
+  byte-identical.  Two defines exist for test builds only:
   `-DSKIP_MIDI=1` (skips the Timer-A install for frame-hash
-  determinism).
+  determinism) and `-DSKIP_COPYPROT=1` (see below).  Pass them through
+  `ALCYON_CPPFLAGS`, and rebuild from clean afterwards -- a stale
+  object from a gated build would silently break byte identity.
+
+- **`-DSKIP_COPYPROT=1` is what makes the game playable under an
+  emulator.**  It replaces main's `cprot_r = cp_main();` with a
+  non-zero constant, so cs_mvIn and gameLoop take their normal paths
+  instead of parking the resident in `while (1) a_sleep(-1);`.  It
+  skips the CALL, not the check, which also avoids the FDC wait that
+  never terminates when the program was launched from a drive that is
+  not the floppy.  With it the move-in cutscene runs, the resident
+  walks the house, uses the stairs, changes clothes and sits down to
+  read -- none of which the shipped build will do on any emulator
+  here.
 
 ## Key project layout
 
@@ -1335,6 +1349,14 @@ fails is `A:\LCP.PRG` off the Pasti image itself -- the original 1985
 binary, which cmp shows is byte-identical to what we build.  Do not
 chase it in the C source.  When a session shows the resident waving on
 the spot, read cprot_r before assuming a regression.
+
+**Build with `-DSKIP_COPYPROT=1` to actually play it** (see "Launching
+/ running the port").  Verified 2026-09-04 from a GEMDOS drive: the
+move-in cutscene plays, the dog arrives, the resident walks down from
+the attic, sits in the armchair to read, and later changes clothes --
+about ten emulated minutes with no corruption.  That configuration is
+NOT byte-identical, by construction; rebuild from clean before
+checking prg_diff again.
 
 Launching from a GEMDOS drive fails earlier and differently: cp_main
 calls Dgetdrv() and derives the PSG drive-select from it, so on C: it

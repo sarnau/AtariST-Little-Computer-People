@@ -163,7 +163,25 @@ char ** argv;
         /* Ghidra step 34 */  sc_drfc();                /* screen_draw_food_cabinet */
         /* Ghidra step 35 */  daily_rs();
         /* Ghidra step 36 */  pa_cloc();                /* palette_apply_clothing_colors */
-        /* Ghidra step 37 */  cprot_r = cp_main();  /* copyprot_main_check */
+        /* Ghidra step 37 */
+#ifdef SKIP_COPYPROT
+        /* Test builds only.  cp_main drives the 1772 directly to read
+           the protected track, and no emulator here satisfies it: it
+           returns 0, cs_mvIn parks the resident in
+           `while (1) a_sleep(-1);` -- which re-runs lcp_hwt() every
+           iteration, so it stands and waves for ever -- and gameLoop
+           does the same.  A non-zero cprot_r is all either test wants;
+           the real routine ORs 0xf0000000 into its count.  Skipping
+           the CALL rather than the check also avoids the FDC wait,
+           which never terminates when the program was launched from a
+           drive that is not the floppy.
+
+           This is NOT part of the shipped configuration: the default
+           build must stay byte-identical to DATA/LCP_STX.PRG. */
+        cprot_r = 0xf000000aL;
+#else
+        cprot_r = cp_main();  /* copyprot_main_check */
+#endif
         /* Ghidra step 38 */  sp_imfs();                /* sprite_init_MFDBs */
         /* Ghidra step 39 */
         if (g_lcldd == 0)
