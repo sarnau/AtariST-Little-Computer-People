@@ -303,8 +303,50 @@ unsigned char * mi_ntLp[25];
    sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and the
    file has effects longer than that, so the original overruns this
    buffer -- reproduced as written, not papered over with a bigger
-   one. */
+   one.
+
+   Where the overrun LANDS is decided by the linker, and the two
+   builds disagree:
+
+     * Shipped build.  bss_remap puts g_sfDoB at 0x3fe48, followed by
+       g_sfdos (+56) and g_sfdoc (+58) -- both WRITE-ONLY, set by
+       sf_so() and read nowhere -- and then 342 bytes that no symbol
+       claims (the next is g_srlgb at +400).  SOUNDS.LCP's largest
+       effects are blocks 8 (SFX_HEAD_NOD) and 17
+       (SFX_TOILET_REFILL), 148 bytes each, so the worst overrun is
+       92 bytes and dies in that hole.  Harmless -- which is why 1985
+       shipped it.
+
+     * Gated test build.  bss_remap is SKIPPED, so lo68's own .comm
+       packing applies, and it puts g_obtah -- the 56-entry object
+       HEIGHT table -- at exactly +56.  The first head-nod or toilet
+       refill overwrites 46 of its entries; the next od_draw() then
+       passes g_obtah[i] - 1 to vro_cpyfm as a raster coordinate, TOS
+       computes a wild address from it and bus errors inside the VDI.
+       Measured: VBL 16983, reproducible to the frame, and the bytes
+       left in g_obtah are byte-for-byte SOUNDS.LCP block 17's
+       payload[56:].
+
+   So the buffer is padded to 400 IN TEST BUILDS ONLY, reproducing
+   the original's gap so a long run stays representative.  The
+   shipped configuration keeps the original's 56 -- widening it there
+   would change the BSS size in the header and break byte identity. */
+/* cp68 has no defined(), so the gates are collected one at a time. */
+#ifdef SKIP_COPYPROT
+#define LCP_SFDOB_PAD   1
+#endif
+#ifdef SKIP_TITLE
+#define LCP_SFDOB_PAD   1
+#endif
+#ifdef SKIP_MIDI
+#define LCP_SFDOB_PAD   1
+#endif
+
+#ifdef LCP_SFDOB_PAD
+char            g_sfDoB[400];
+#else
 char            g_sfDoB[56];
+#endif
 
 void *  g_srlgb;
 void *  sv_lgb;

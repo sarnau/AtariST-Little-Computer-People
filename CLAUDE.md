@@ -1513,6 +1513,66 @@ calls Dgetdrv() and derives the PSG drive-select from it, so on C: it
 selects no drive at all and spins in the FDC wait.  The game has to run
 from the drive holding the disk.
 
+**A gated build's BSS layout is not the original's, and that is not
+cosmetic** (diagnosed 2026-09-06).  A `-DSKIP_COPYPROT` run used to die
+at **VBL 16983**, reproducible to the frame: a bus error reading
+`$ffffffa8` inside TOS's VDI at `$fd23da`, after which TOS loops on
+`Pterm(-1)` and the program exits -- about 4.7 emulated minutes, which
+is the "game exits after four minutes" report.
+
+It is the `g_sfDoB` overrun, and it is worth knowing how it was found
+because the same route works for any wild-pointer crash here:
+
+  * `--trace vdi` names the failing call outright (`VDI 0x6D`,
+    vro_cpyfm).  `--trace gemdos,cpu_exception` is 300 MB of normal
+    trap dispatch -- exception 33 is TRAP #1, 34 is TRAP #2, 28/30 are
+    autovector interrupts.  None of those is a fault; only exception 2
+    is.
+  * Hatari drops into its debugger on a bus error, so piping commands
+    to its **stdin** dumps memory at the fault.  The first debugger
+    entry is the harmless boot-time `$ffff8a00` blitter probe, so the
+    script is `c` and then the real dump.
+  * The load base is in the log: `Mshrink(0x12496, ...)` gives the
+    basepage, text is basepage + 0x100 = **0x12596**, and
+    `runtime - 0x12596` indexes `lcp_sym.68k` directly.
+
+That gave `contrl[0]=109`, a source MFDB of `g_obtmt + 0x118` (stride
+20, so object 14 -- perfectly valid) and a `pxy` of
+`0,0,15,0x8003 / 271,92,286,0x805F`.  Working back through od_draw,
+`sy2 = g_obtah[14] - 1`, so `g_obtah[14]` was `0x8004`.  `g_obtaw` was
+intact; `g_obtah` held **SOUNDS.LCP block 17's payload[56:], byte for
+byte** -- `sf_irqp`'s copy running off the end of `g_sfDoB[56]`.
+
+SOUNDS.LCP has 23 effects; three exceed 56 bytes -- block 8
+(SFX_HEAD_NOD) and block 17 (SFX_TOILET_REFILL) at 148, block 19 at
+60.  So the worst overrun is **92 bytes**.
+
+Why the shipped build does not care: bss_remap puts `g_sfDoB` at
+0x3fe48 followed by `g_sfdos` (+56) and `g_sfdoc` (+58) -- both
+**write-only**, set by `sf_so()` and read nowhere in C or asm -- and
+then 342 bytes no symbol claims (next is `g_srlgb` at +400).  The
+overrun dies in that hole.  That is why 1985 shipped it.  A gated
+build skips bss_remap, and lo68 puts `g_obtah` -- the 56-entry object
+HEIGHT table -- at exactly +56.
+
+`globals.c` therefore pads `g_sfDoB` to 400 **in test builds only**
+(`SKIP_COPYPROT` / `SKIP_TITLE` / `SKIP_MIDI`), reproducing the
+original's gap.  The shipped build keeps 56: widening it there would
+change the BSS size in the header and break byte identity.  Verified
+both ways -- shipped still MD5 eae52d14..., gated now runs 40 000 VBLs
+with no bus error and no exit.
+
+Two harness lessons from the same session.  `test_longrun_stable.sh`
+ran to 15 000 VBLs, i.e. it stopped **1983 VBLs short** of the bug and
+scored STABLE; the default is now 30 000.  And this Hatari wants
+`--avirecord on` -- the bare flag now eats the next argument, which is
+why the script reported "didn't produce an AVI" while swallowing
+`--auto`.
+
+**cp68 has no `defined()`.**  `#if defined(A) || defined(B)` does not
+fail the build loudly, it just makes the file MISS; collect the gates
+with separate `#ifdef`s instead.
+
 ## Issue log -- ALL CLOSED
 
 Kept as historical findings; none is an open port bug.

@@ -57,7 +57,7 @@ if [ -n "$AVI" ]; then
         --fast-forward on \
         --run-vbls "$VBLS" \
         --auto 'C:\LCP.PRG' \
-        --avi-vcodec bmp --avi-file "$AVI" --avirecord \
+        --avi-vcodec bmp --avi-file "$AVI" --avirecord on \
         > "$LOG" 2>&1
 else
     "$HATARI" \

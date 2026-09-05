@@ -60,9 +60,14 @@ set -uo pipefail
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
 TOOLS="$CSRC/tools"
 
-VBLS_TOTAL=${VBLS_TOTAL:-15000}
+# 30000, not the 15000 this ran at until 2026-09-06.  The g_sfDoB
+# overrun crash (see globals.c) landed at VBL 16983 -- 1983 VBLs past
+# the old ceiling, so this test walked right up to it and stopped.  A
+# regression check that ends before the bug does is worth nothing;
+# 30000 VBLs is ~8 emulated minutes and costs ~20 s of wall clock.
+VBLS_TOTAL=${VBLS_TOTAL:-30000}
 VBL_EARLY=${VBL_EARLY:-3000}
-VBL_LATE=${VBL_LATE:-13000}
+VBL_LATE=${VBL_LATE:-25000}
 PSNR_MIN=${PSNR_MIN:-18}
 TOS_IMG=${TOS_IMG:-/Users/sarnau/Desktop/Retro/Atari ST/Atari TOS Images/TOS104US.ROM}
 GAME_DIR=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
@@ -97,7 +102,7 @@ hatari --harddrive "$GAME_DIR" \
        --fast-forward on \
        --run-vbls "$VBLS_TOTAL" \
        --auto 'C:\LCP.PRG' \
-       --avi-vcodec bmp --avi-file "$AVI" --avirecord \
+       --avi-vcodec bmp --avi-file "$AVI" --avirecord on \
        > "$LOG" 2>&1
 run_status=$?
 
