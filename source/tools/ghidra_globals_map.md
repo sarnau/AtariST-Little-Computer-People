@@ -7,7 +7,8 @@ cross-referencing decompiler output against port source.
 
 ## Coverage
 
-**Currently mapped: ~304/397 port globals.**  Remaining ~93 are mostly
+**Currently mapped: ~366/397 port globals.**  (62 added 2026-09-05 by
+the address-keyed sync; see the section at the end.)  Remaining ~93 are mostly
 port-only helpers, MIDI/sprite arrays where Ghidra shows only
 `PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx` labels, or file-scoped statics with
 no descriptive ROM name.  Extend by decompiling more Ghidra functions
@@ -787,3 +788,75 @@ CONFIRMED bugs in this class.
    the function) is a global.  Match it to the port global that
    `foo()` in `source/*.c` accesses at the same position.
 4. Add a row here.
+
+## Recovered 2026-09-05 (address-keyed sync)
+
+Pairs the map never carried.  Each was confirmed by ADDRESS -- the
+port symbol and the Ghidra label occupy the same cell -- not by
+guessing from the name.  Addresses come from byte-identical DATA/TEXT
+and, for BSS, from `stx_bss_layout.tsv`.
+
+| Ghidra long name                   | port short   |
+| ---------------------------------- | ------------ |
+| `PLAYER_STATE_ARRAY`                  | `pst_arr`      |
+| `aes_addr_in`                         | `addr_in`      |
+| `aes_addr_out`                        | `addr_ou`      |
+| `aes_control`                         | `control`      |
+| `aes_global`                          | `global`       |
+| `aes_intO`                            | `int_out`      |
+| `aes_int_in`                          | `int_in`       |
+| `aes_params_ptr`                      | `ad_c`         |
+| `bitmask_1_2_4_8_10_20_40_80`         | `rv_val`       |
+| `bitmask_1_2_4_8_10_20_40_80_0`       | `bm_lo`        |
+| `bitmask_32bit_and`                   | `bm32and`      |
+| `bitmask_32bit_or`                    | `bm32or`       |
+| `bitmask_80_40_20_10_8_4_2_1`         | `rv_msk`       |
+| `body_ptr`                            | `body_pt`      |
+| `body_shp`                            | `body_sh`      |
+| `card_deck`                           | `bj_key`       |
+| `ctrl_cnts`                           | `ctrl_cn`      |
+| `days_in_month`                       | `days_pmo`     |
+| `dest_scr_buffer`                     | `dsb_stor`     |
+| `entered_word_bytes`                  | `g_ewb`        |
+| `enteredword_to_action`               | `g_ew2a`       |
+| `enteredword_to_bit`                  | `g_ew2b`       |
+| `footstep_trigger_flag`               | `fs_trg`       |
+| `gSongMaxPosition_0`                  | `g_momap`      |
+| `happiniess_to_priority`              | `mood_pri`     |
+| `house_scene_size`                    | `scn_siz`      |
+| `in_execute_event_routine_flag`       | `in_evrt`      |
+| `mi_ntLp[25]`                         | `mi_ndur`      |
+| `mi_ntLp[25]+2`                       | `mi_nlpA`      |
+| `midi_channel_volume`                 | `mi_pgtab`     |
+| `midi_dma_start_lo`                   | `pk_pscore`    |
+| `object_alarm_animation`              | `g_obala`      |
+| `object_clock_animation`              | `g_obcla`      |
+| `object_phone_animation`              | `g_obpha`      |
+| `pblock`                              | `vdipb`        |
+| `pex_ptr`                             | `pex_name`     |
+| `poker_card_back_mfdb`                | `pk_phrk`      |
+| `poker_card_deck_index`               | `pk_c2bj`      |
+| `poker_computer_hand_value_hi`        | `pk_bs2`       |
+| `poker_computer_hand_value_lo`        | `pk_bs1`       |
+| `poker_display_x_offset`              | `pk_cscore`    |
+| `poker_round_count`                   | `pk_round`     |
+| `psg_current_volume`                  | `psg_cvol`     |
+| `psg_freq_table`                      | `psg_freq`     |
+| `revert_table`                        | `rev_tab`      |
+| `room_position_x_table`               | `g_rpxs`       |
+| `scene_data_ptr`                      | `scn_buf`      |
+| `scn_cmn`                             | `scn_dic`      |
+| `screen_buffer_2`                     | `scrbufB`      |
+| `soundfile_header`                    | `mi_sig`       |
+| `sprite_file_index_table`             | `sp_fidx`      |
+| `sprites_files`                       | `spr_file`     |
+| `valid_word_table`                    | `vwd_tab`      |
+| `walk_target_x`                       | `g_wtx`        |
+| `walk_target_y`                       | `g_wty`        |
+| `walk_waypoint_x`                     | `g_wyx`        |
+| `walk_waypoint_y`                     | `g_wkadj`      |
+| `walk_waypoint_y`                     | `g_wyy`        |
+| `word_puzzle_player_answers`          | `wp_ans`       |
+| `word_﻿entered_to_position`           | `ew2pos`       |
+| `work_out`                            | `wk_out`       |
+| `workin`                              | `work_in`      |

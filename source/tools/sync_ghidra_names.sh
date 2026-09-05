@@ -41,5 +41,5 @@ case "$MODE" in
 esac
 
 "$GHIDRA/support/analyzeHeadless" "$REPO" LCP -process -noanalysis \
-    "${extra[@]}" -scriptPath "$SCRIPTS" -postScript "$script" 2>&1 |
+    ${extra[@]+"${extra[@]}"} -scriptPath "$SCRIPTS" -postScript "$script" 2>&1 |
     grep -E 'SYNC|VERIFY|ERROR' | sed 's/^INFO  [^>]*> //'
