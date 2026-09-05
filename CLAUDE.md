@@ -194,11 +194,27 @@ had no declaration before its first call, `al_loal` was declared
 `erChr`/`stEnter` were declared nowhere.  stx_u1 gained alerts.h,
 assets.h and render.h; stx_u3 gained gfx_prim.h.
 
-**Still broken: nine of the ten unit tests.**  Only `make hyber_test`
-links and runs (and passes -- 128/128 byte-identical round trip).  The
-other nine reference pre-rename identifiers (`compression_tokens`,
-`file_load_letter_template`, ...) from before the 8-character symbol
-campaign and need updating to the current names.
+**`make test` runs all ten unit tests and they pass** (2026-09-05).
+Two things to know before touching them:
+
+- **The host is little-endian and the loaders are not.**  sf_sl and
+  al_loal read their length fields with raw two-byte fr_reads, so 34
+  arrives as 8704 and the file walk is lost after the first block.
+  That is faithful ST code.  t_sounds.c and t_assets.c therefore write
+  a HOST-ENDIAN copy of the asset -- same payloads, same order, only
+  the length fields swapped -- so the loader's LOGIC is what is under
+  test.  Do the same for any new test that drives a real asset.
+- **Not everything is checkable here.**  chk_encm walks g_ew2a until
+  `table[0] == 0xff`, and Alcyon narrows that constant to a signed
+  char so the sentinel matches; clang does not, so on the host the
+  walk runs off the end of the table.  t_parser.c reports that case
+  instead of asserting it.
+
+`tests/reference/sprite_golden.pgm` was re-blessed on 2026-09-05: the
+old master came from the retired LCP_ORG revision, and the sprite path
+is now the byte-identical LCP_STX code.  A sprite test must call
+`initBRev()` -- rev_tab is BSS here and built at boot, where it used to
+be a shipped table, and without it every mirrored frame renders blank.
 
 ## Key project layout
 
