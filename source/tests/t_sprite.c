@@ -2,7 +2,7 @@
  * sprite_compose.c -- host-side smoke test for the sprite compositor.
  *
  * Loads DATA/BODY.LCP into memory, wires body_lcp_file and
- * body_shape_data into it, sets up a minimal PLAYER + world state,
+ * body_shp into it, sets up a minimal PLAYER + world state,
  * and calls sp_updb().  Then:
  *   - asserts the compositor wrote non-zero pixels into g_lsimg
  *   - asserts g_seacx[3] / g_seacy[3] track lcp_x/y
@@ -30,19 +30,24 @@
 extern PLAYER   lcp;
 extern short    lcp_x;
 extern short    lcp_y;
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
-extern short    debug_hide_lcp_offscreen;
+extern short    dbg_hide;
 extern short    g_sepef[];
 extern short    g_seacx[];
 extern short    g_seacy[];
-extern short *  body_lcp_file;
-extern short *  body_shape_data;
+/* body_ptr and body_shp are real global ARRAYS in LCP_STX, not
+   pointers -- sp_updb indexes them with an immediate base and no
+   ext.l, which is what pinned the shape (see CLAUDE.md).  So the
+   frames are COPIED in here; there is nothing to re-point. */
+extern unsigned char    body_ptr[][168];
+extern unsigned char    body_shp[][84];
 extern short    g_lsimg[];
 extern short    g_lsmas[];
-extern short    body_y_offset_per_state[];
+extern short    body_yof[];
 extern void     sp_updb();
+extern void     initBRev();
 
 static int      failures = 0;
 
@@ -141,17 +146,24 @@ char ** argv;
         if (shape_buf == NULL) { perror("calloc shape_buf"); return 1; }
 
         /* Wire globals. */
-        body_lcp_file   = (short *) body_buf;
-        body_shape_data = (short *) shape_buf;
+        memcpy(body_ptr, body_buf,
+               (size_t) ((payload_bytes < 120L * 168L)
+                         ? payload_bytes : 120L * 168L));
+        memset(body_shp, 0, 98 * 84);   /* the whole array */
 
-        /* Minimal player + world state.  lcp_state=0 => idle stand pose. */
+        /* rev_tab is BSS in LCP_STX -- initBRev builds the
+           bit-reversal LUT at boot (it used to be a shipped
+           data table).  Without this the mirrored, right-facing
+           frames come out blank. */
+        initBRev();
+        /* Minimal player + world state.  lcp_st=0 => idle stand pose. */
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
         lcp_y                    = 100;
-        lcp_state                = 0;
-        lcp_facing_direction     = FACING_RIGHT;
+        lcp_st                = 0;
+        lcp_face     = FACING_RIGHT;
         g_lcyof = 0;
-        debug_hide_lcp_offscreen = 0;
+        dbg_hide = 0;
         g_sepef[3]   = 0;
 
         memset(g_lsimg,  0, LCP_BODY_DEST_WORDS * sizeof(short));
@@ -168,9 +180,9 @@ char ** argv;
         CHECK(nonzero, "g_lsimg is all zeros after compose");
 
         /* Position: FACING_RIGHT (=1) picks the "x - 4" branch.
-           y = lcp_y + body_y_offset_per_state[0] - 21. */
+           y = lcp_y + body_yof[0] - 21. */
         expected_x = lcp_x - 4;
-        expected_y = lcp_y + body_y_offset_per_state[0] - 21;
+        expected_y = lcp_y + body_yof[0] - 21;
         CHECK(g_seacx[3] == expected_x,
               "g_seacx[3] mismatch after compose");
         CHECK(g_seacy[3] == expected_y,

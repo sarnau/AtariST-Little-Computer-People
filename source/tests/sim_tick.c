@@ -1,5 +1,5 @@
 /*
- * sim_tick.c -- host-side smoke test for game_simulate_one_second.
+ * sim_tick.c -- host-side smoke test for gameSim1.
  *
  * Drives the sim for 24 game-hours (86400 game-seconds) from a known
  * starting state and asserts that clock, hunger, thirst and bathroom
@@ -8,7 +8,7 @@
  * This is a pure-logic test: no HYBER file, no file I/O.  The PLAYER
  * struct is populated with host-native short values (skipping the
  * usual big-endian file load) so we can reason about the counters
- * directly.  intro_sequence_active is asserted to suppress the random
+ * directly.  introSeq is asserted to suppress the random
  * daytime phone-call branch, keeping the test deterministic.
  *
  * Build: make sim_test
@@ -22,17 +22,17 @@
 #include "../include/structs.h"
 
 extern PLAYER   lcp;
-extern short    time_minutes;
-extern short    time_hours;
+extern short    t_min;
+extern short    t_hour;
 extern short    date_day;
-extern short    date_month;
-extern short    date_year;
-extern short    animation_tick_counter;
-extern short    game_seconds_counter;
-extern BOOL16   phone_answered_flag;
-extern BOOL16   phone_call_active_flag;
-extern BOOL16   intro_sequence_active;
-extern void     game_simulate_one_second();
+extern short    dt_mon;
+extern short    dt_year;
+extern short    ani_cnt;
+extern short    g_secs;
+extern BOOL16   ph_ans;
+extern BOOL16   ph_call;
+extern BOOL16   introSeq;
+extern void     gameSim1();
 
 static int      failures = 0;
 
@@ -73,27 +73,27 @@ char ** argv;
         lcp.sickness_level      = 0;
 
         /* Sim entry conditions. */
-        animation_tick_counter  = 0;    /* (counter & 7) == 0 -> tick */
-        game_seconds_counter    = 0;
-        time_minutes            = 0;
-        time_hours              = 6;    /* 06:00:00 */
+        ani_cnt  = 0;    /* (counter & 7) == 0 -> tick */
+        g_secs    = 0;
+        t_min            = 0;
+        t_hour              = 6;    /* 06:00:00 */
         date_day                = 1;
-        date_month              = 0;
-        date_year               = 0;
+        dt_mon              = 0;
+        dt_year               = 0;
 
         /* Suppress the random phone-call branch. */
-        intro_sequence_active   = YES;
-        phone_answered_flag     = NO;
-        phone_call_active_flag  = NO;
+        introSeq   = YES;
+        ph_ans     = NO;
+        ph_call  = NO;
 
         /* Drive 24 game-hours (86400 game-seconds). */
         for (i = 0; i < 86400L; i++)
-                game_simulate_one_second();
+                gameSim1();
 
         /* Clock should have advanced exactly 24h -- back to 06:00:00. */
-        CHECK(time_hours == 6,   "time_hours != 6 after 86400 seconds");
-        CHECK(time_minutes == 0, "time_minutes != 0 after 86400 seconds");
-        CHECK(game_seconds_counter == 0, "game_seconds_counter != 0");
+        CHECK(t_hour == 6,   "t_hour != 6 after 86400 seconds");
+        CHECK(t_min == 0, "t_min != 0 after 86400 seconds");
+        CHECK(g_secs == 0, "g_secs != 0");
 
         /* Calendar should have rolled over exactly one day. */
         CHECK(date_day == 2, "date_day did not advance to 2");
@@ -126,38 +126,38 @@ char ** argv;
         lcp.bathroom_timer      = 9999;
         lcp.bathroom_timer_max  = 9999;
         lcp.happiness_duration_active = 9999;
-        animation_tick_counter  = 0;
-        game_seconds_counter    = 0;
-        time_minutes            = 0;
-        time_hours              = 7;
-        intro_sequence_active   = YES;
+        ani_cnt  = 0;
+        g_secs    = 0;
+        t_min            = 0;
+        t_hour              = 7;
+        introSeq   = YES;
         for (i = 0; i < 3600L; i++)
-                game_simulate_one_second();
-        CHECK(time_hours == 8,   "1-hour drive: time_hours != 8");
-        CHECK(time_minutes == 0, "1-hour drive: time_minutes != 0");
+                gameSim1();
+        CHECK(t_hour == 8,   "1-hour drive: t_hour != 8");
+        CHECK(t_min == 0, "1-hour drive: t_min != 0");
 
-        /* Sub-minute drive (30 seconds): only game_seconds_counter
+        /* Sub-minute drive (30 seconds): only g_secs
            should advance; nothing else.                               */
         memset(&lcp, 0, sizeof(lcp));
         lcp.thirst_timer = lcp.thirst_timer_max = 9999;
         lcp.hunger_timer = lcp.hunger_timer_max = 9999;
         lcp.bathroom_timer = lcp.bathroom_timer_max = 9999;
         lcp.happiness_duration_active = 9999;
-        animation_tick_counter = 0;
-        game_seconds_counter = 0;
-        time_minutes = 0;
-        time_hours = 10;
-        intro_sequence_active = YES;
+        ani_cnt = 0;
+        g_secs = 0;
+        t_min = 0;
+        t_hour = 10;
+        introSeq = YES;
         for (i = 0; i < 30L; i++)
-                game_simulate_one_second();
-        CHECK(game_seconds_counter == 30, "30-sec drive: counter wrong");
-        CHECK(time_minutes == 0, "30-sec drive: minutes wrong");
+                gameSim1();
+        CHECK(g_secs == 30, "30-sec drive: counter wrong");
+        CHECK(t_min == 0, "30-sec drive: minutes wrong");
 
         /* Non-tick frame: counter & 7 != 0 -> function must early-return. */
-        game_seconds_counter = 42;
-        animation_tick_counter = 3;      /* 3 & 7 == 3 != 0 */
-        game_simulate_one_second();
-        CHECK(game_seconds_counter == 42, "non-tick frame incremented counter");
+        g_secs = 42;
+        ani_cnt = 3;      /* 3 & 7 == 3 != 0 */
+        gameSim1();
+        CHECK(g_secs == 42, "non-tick frame incremented counter");
 
         (void) thirst_hits; (void) hunger_hits;
 

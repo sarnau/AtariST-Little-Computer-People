@@ -113,20 +113,48 @@ short   handle;
         return 0;
 }
 
+/* GEMDOS Malloc/Mfree, with one behaviour of the real thing that the
+   host libc does not share: TOS looks the pointer up in its own block
+   list and ignores anything it did not hand out.  The port relies on
+   that -- fr_reac frees the buffer pointer its nibble loop has already
+   walked forward (LCP_STX has no saved copy, see CLAUDE.md), which is
+   harmless on the ST and an abort() on macOS.  So Mfree frees only
+   blocks Malloc actually returned. */
+#define MAX_HOST_BLOCKS 64
+static void *   host_blocks[MAX_HOST_BLOCKS];
+
 void *
 Malloc(sz)
 long    sz;
 {
+        void *  p;
+        int     i;
+
         if (sz <= 0) return NULL;
-        return malloc((size_t) sz);
+        p = malloc((size_t) sz);
+        if (p != NULL)
+                for (i = 0; i < MAX_HOST_BLOCKS; i++)
+                        if (host_blocks[i] == NULL) {
+                                host_blocks[i] = p;
+                                break;
+                        }
+        return p;
 }
 
 long
 Mfree(p)
 void *  p;
 {
-        if (p != NULL) free(p);
-        return 0;
+        int     i;
+
+        if (p == NULL) return 0;
+        for (i = 0; i < MAX_HOST_BLOCKS; i++)
+                if (host_blocks[i] == p) {
+                        host_blocks[i] = NULL;
+                        free(p);
+                        return 0;
+                }
+        return 0;               /* not ours: TOS would ignore it too */
 }
 
 void *

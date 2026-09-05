@@ -50,10 +50,36 @@ short   longs;
                 dst[i] = src[i];
 }
 
-/* --- vdistx_a.s: the VDI trap dispatcher and its two mode words --- */
-short   wr_src;
-short   wr_dst;
-void    gsx1()   { }
+/* --- vdistx_a.s: the VDI trap dispatcher and its two helpers -------
+   wr_src and wr_dst are ROUTINES, not variables: they drop a 32-bit
+   MFDB address into contrl+14 and contrl+18, i.e. contrl[7..8] and
+   contrl[9..10].  gsx1 points vdipb[0] at contrl and traps; here it
+   does the pointer and skips the trap, which is what lets vdi_pb_test
+   inspect the parameter block the wrappers built. */
+extern short    contrl[];
+extern short *  vdipb[];
+
+void
+wr_src(addr)
+long    addr;
+{
+        contrl[7] = (short) ((addr >> 16) & 0xffff);
+        contrl[8] = (short) (addr & 0xffff);
+}
+
+void
+wr_dst(addr)
+long    addr;
+{
+        contrl[9]  = (short) ((addr >> 16) & 0xffff);
+        contrl[10] = (short) (addr & 0xffff);
+}
+
+void
+gsx1()
+{
+        vdipb[0] = contrl;
+}
 
 /* --- XBIOS / AES entries with no host meaning --------------------- */
 /* Setexc and Xbtimer install the Timer-A ISR; appl_init, graf_handle

@@ -1,10 +1,17 @@
 /*
  * sprite_golden.c -- golden-master render test for the sprite compositor.
  *
- * Iterates lcp_state = 0..29 (the animation range for which
+ * Iterates lcp_st = 0..29 (the animation range for which
  * body_sprite_frame_table has non-zero entries) x both facings, calling
  * sp_updb() for each, and packs all 60 outputs into a
  * single 4-column x 15-row atlas PGM (4*64 = 256 wide, 15*21 = 315 tall).
+ *
+ * REFERENCE RE-BLESSED 2026-09-05.  The checked-in atlas was produced
+ * by the retired LCP_ORG-era revision.  The sprite path is now the
+ * byte-identical LCP_STX code -- sp_updb was recovered byte for byte
+ * and body_ptr/body_shp became real arrays -- so the old master no
+ * longer describes what the original computes.  The new one was
+ * eyeballed (60 tiles, both facings populated) before being blessed.
  *
  * The atlas is written to sprite_golden.pgm.  If tests/reference/
  * sprite_golden.pgm exists, the test byte-diffs the two and fails on
@@ -29,15 +36,20 @@
 extern PLAYER   lcp;
 extern short    lcp_x;
 extern short    lcp_y;
-extern short    lcp_state;
-extern short    lcp_facing_direction;
+extern short    lcp_st;
+extern short    lcp_face;
 extern short    g_lcyof;
-extern short    debug_hide_lcp_offscreen;
+extern short    dbg_hide;
 extern short    g_sepef[];
-extern short *  body_lcp_file;
-extern short *  body_shape_data;
+/* body_ptr and body_shp are real global ARRAYS in LCP_STX, not
+   pointers -- sp_updb indexes them with an immediate base and no
+   ext.l, which is what pinned the shape (see CLAUDE.md).  So the
+   frames are COPIED in here; there is nothing to re-point. */
+extern unsigned char    body_ptr[][168];
+extern unsigned char    body_shp[][84];
 extern short    g_lsimg[];
 extern void     sp_updb();
+extern void     initBRev();
 
 #define N_STATES        30
 #define ATLAS_COLS      4
@@ -112,14 +124,21 @@ char ** argv;
         }
         fclose(f);
         shape_buf = (unsigned char *) calloc(1, payload_bytes);
+        memcpy(body_ptr, body_buf,
+               (size_t) ((payload_bytes < 120L * 168L)
+                         ? payload_bytes : 120L * 168L));
+        memset(body_shp, 0, 98 * 84);   /* the whole array */
 
-        body_lcp_file            = (short *) body_buf;
-        body_shape_data          = (short *) shape_buf;
+        /* rev_tab is BSS in LCP_STX -- initBRev builds the
+           bit-reversal LUT at boot (it used to be a shipped
+           data table).  Without this the mirrored, right-facing
+           frames come out blank. */
+        initBRev();
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
         lcp_y                    = 100;
         g_lcyof = 0;
-        debug_hide_lcp_offscreen = 0;
+        dbg_hide = 0;
         g_sepef[3]   = 0;
 
         memset(atlas, 255, sizeof(atlas));
@@ -130,8 +149,8 @@ char ** argv;
         for (i = 0; i < N_STATES; i++) {
                 int facing;
                 for (facing = 0; facing < 2; facing++) {
-                        lcp_state            = i;
-                        lcp_facing_direction = facing;
+                        lcp_st            = i;
+                        lcp_face = facing;
                         memset(g_lsimg, 0, LCP_BODY_DEST_WORDS * sizeof(short));
                         /* Clear the double-buffer flag every iteration:
                            sp_updb sets it to YES on exit and

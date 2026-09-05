@@ -2,7 +2,7 @@
  * letload.c -- host-side smoke test for LETTER.TXT decoder.
  *
  * Copies DATA/LETTER.TXT into the CWD as "letter.txt", calls
- * file_load_letter_template() which internally allocates the 10496-byte
+ * fl_ltpl() which internally allocates the 10496-byte
  * buffer, decompresses the nibble-encoded file, and populates
  * g_ltlp[360].  Then prints a handful of decoded lines so you
  * can eyeball the output matches the actual 1985 letter fragments.
@@ -19,8 +19,8 @@
 
 extern char *   g_ltlp[];
 extern char *   g_lttx;
-extern unsigned char compression_tokens[];
-extern void     file_load_letter_template();
+extern unsigned char comp_tok[];
+extern void     fl_ltpl();
 
 int
 main(argc, argv)
@@ -55,11 +55,11 @@ char ** argv;
         if (g_lttx == NULL) { perror("malloc"); return 2; }
 
         /* Decompress + index via the real ports. */
-        file_load_letter_template();
+        fl_ltpl();
 
-        printf("compression_tokens (15 most common bytes):");
+        printf("comp_tok (15 most common bytes):");
         for (i = 0; i < 15; i = i + 1)
-                printf(" %02x", compression_tokens[i]);
+                printf(" %02x", comp_tok[i]);
         printf("\n");
 
         printf("First 10 g_ltlp[] entries:\n");
