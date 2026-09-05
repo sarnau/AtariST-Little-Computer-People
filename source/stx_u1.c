@@ -26,10 +26,16 @@
 #include "structs.h"
 #include "enums.h"
 #include "obdefs1.h"
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <vdibind.h>
+#endif
 #include <osbind.h>
 #include "globals.h"
 #include "abathrm.h"
+#include "alerts.h"
+#include "assets.h"
 #include "actions.h"
 #include "afood.h"
 #include "agames.h"
@@ -49,6 +55,7 @@
 #include "movement.h"
 #include "parser.h"
 #include "random.h"
+#include "render.h"
 #include "renderx.h"
 #include "save.h"
 #include "sprglobs.h"

@@ -6,7 +6,11 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <vdibind.h>
+#endif
 #include "vdiown.h"
 #include "obdefs1.h"
 #include "ahouse.h"

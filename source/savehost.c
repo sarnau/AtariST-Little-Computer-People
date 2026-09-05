@@ -72,6 +72,24 @@ void *  buf;
         return (long) fread(buf, 1, (size_t) count, host_handles[handle]);
 }
 
+/* GEMDOS Fseek(offset, handle, mode): 0 = from start, 1 = from the
+   current position, 2 = from the end.  Returns the new position. */
+long
+Fseek(offset, handle, mode)
+long    offset;
+short   handle;
+short   mode;
+{
+        int     whence;
+
+        if (handle < 0 || handle >= MAX_HOST_HANDLES ||
+            host_handles[handle] == NULL) return -1;
+        whence = (mode == 1) ? SEEK_CUR : (mode == 2) ? SEEK_END : SEEK_SET;
+        if (fseek(host_handles[handle], (long) offset, whence) != 0)
+                return -1;
+        return (long) ftell(host_handles[handle]);
+}
+
 long
 Fwrite(handle, count, buf)
 short   handle;

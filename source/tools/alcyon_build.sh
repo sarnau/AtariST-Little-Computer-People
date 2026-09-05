@@ -59,7 +59,8 @@ else
     TO_BUILD=""
     for c in "$CSRC"/*.c; do
         base=$(basename "$c")
-        [ "$base" = "savehost.c" ] && continue
+        [ "$base" = "savehost.c" ] && continue   # HOST-only
+        [ "$base" = "hostasm.c" ]  && continue   # HOST-only
         case " $SKIP " in *" $base "*)
             rm -f "$OUT/${base%.c}.o"   # never leave a stale object
             continue;;

@@ -8,7 +8,15 @@
 #include "structs.h"
 #include <osbind.h>
 
+#ifdef HOST
+
+#include "hostgem.h"
+
+#else
+
 #include <vdibind.h>            /* v_pline, vsl_color, vsf_*, vst_*, vswr_mode, ... */
+
+#endif
 #include "obdefs1.h"
 #include "gfx_prim.h"
 #include "globals.h"

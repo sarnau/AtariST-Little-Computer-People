@@ -7,5 +7,9 @@
  */
 #ifndef OBDEFS1_H
 #define OBDEFS1_H
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <obdefs.h>
+#endif
 #endif

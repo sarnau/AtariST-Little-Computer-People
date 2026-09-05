@@ -151,6 +151,55 @@ source ships; ad-hoc debug scaffolding does not.
   read -- none of which the shipped build will do on any emulator
   here.
 
+## The host build (`cd source && make`)
+
+Compiles every .c with the host cc as a syntax/semantic check; it does
+not produce a runnable ST binary.  `make linktest` additionally links
+all 32 objects.  Both work again as of 2026-09-05.
+
+What it takes to keep clang and Alcyon reading the same source:
+
+- **`include/hostgem.h`** stands in for the four DK headers the port
+  includes but the host has no copy of -- `<vdibind.h>`, `<ostruct.h>`,
+  `<gembind.h>`, `<obdefs.h>`.  Every one of those includes is wrapped
+  `#ifdef HOST` / `#else`, so the Atari build is untouched.  MFDB and
+  _DTA use `short` where the ST headers say `int`: Alcyon's int is 16
+  bits, and with the host's 32-bit int these would be the wrong size
+  and the host build would stop being a check on the real layout.
+- **`hostasm.c` and `savehost.c`** supply the symbols the five .s files
+  and the GEMDOS/BIOS traps provide on the ST.  alcyon_build.sh skips
+  both BY NAME, so they cannot reach the shipped binary.
+- **`SOURCES` is derived, not hand-written**: every .c except the
+  unity-unit constituents named in columns 2+ of `tools/stx_units.txt`.
+  The old hand list still had midi_seq.c in it after the globals.c
+  fold, so it went into the link twice.  (Beware: a literal `#` inside
+  `$(shell ...)` starts a make comment and swallows the closing paren
+  -- the awk in that line uses `\043`.)
+- **Four warnings are turned back into warnings**: implicit function
+  declarations, implicit int, falling off the end of a non-void
+  function, and pointer-to-long assignment are all legal Alcyon and
+  hard errors in modern clang.  The port relies on the third
+  deliberately (pk_cace, chk_timA).
+- **The lvalue cast has no clang spelling.**  `(char *) p += n;` is what
+  emits `add.l d0,mem`, and clang cannot parse it at all, so its six
+  sites (main.c, sc_firw.c, sc_firsb.c) carry an `#ifdef HOST`
+  alternative beside the shipped line.
+- **main() is `lcp_main()` on the host** so the unit tests can supply
+  their own; it now lives inside stx_u1.o and cannot be left out.
+
+Declaration fixes that fell out of it, all verified byte-neutral:
+`pk_dchd` was forward-declared `void` and defined `short`, `pk_show`
+had no declaration before its first call, `al_loal` was declared
+`void`, `fr_read`'s definition had no return type at all, and
+`erChr`/`stEnter` were declared nowhere.  stx_u1 gained alerts.h,
+assets.h and render.h; stx_u3 gained gfx_prim.h.
+
+**Still broken: nine of the ten unit tests.**  Only `make hyber_test`
+links and runs (and passes -- 128/128 byte-identical round trip).  The
+other nine reference pre-rename identifiers (`compression_tokens`,
+`file_load_letter_template`, ...) from before the 8-character symbol
+campaign and need updating to the current names.
+
 ## Key project layout
 
 - `source/*.c` — the port itself.

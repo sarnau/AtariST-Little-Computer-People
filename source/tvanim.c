@@ -9,7 +9,15 @@
 #include "enums.h"
 #include <osbind.h>
 
+#ifdef HOST
+
+#include "hostgem.h"
+
+#else
+
 #include <vdibind.h>
+
+#endif
 #include "gfx_prim.h"
 #include "globals.h"
 #include "tick.h"

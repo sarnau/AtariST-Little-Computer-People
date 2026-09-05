@@ -9,7 +9,15 @@
 #include "enums.h"
 #include <osbind.h>
 
+#ifdef HOST
+
+#include "hostgem.h"
+
+#else
+
 #include <vdibind.h>
+
+#endif
 #include "obdefs1.h"
 #include "ahouse.h"
 #include "ai.h"
@@ -44,7 +52,8 @@ static short pk_bjwr();
 static short pk_chsc();
 static short pk_bjr();
 static short pk_cnbj();
-static void  pk_dchd();
+static void  pk_show();  /* defined at 0x9a3a, called from pk_main above it */
+static short pk_dchd();  /* returns short; the void here was a slip */
 static void  pk_dbhi();
 static void  pk_sbet();
 static void  pk_ante();

@@ -4,7 +4,15 @@
  * under parts/ are never compiled standalone.
  */
 int
+#ifdef HOST
+/* The host unit tests each supply their own main(), and this one now
+   lives inside stx_u1.o where it cannot be left out of the link.
+   Renaming it for the host keeps both linkable; the Atari build is
+   untouched. */
+lcp_main(argc, argv)
+#else
 main(argc, argv)
+#endif
 int     argc;
 char ** argv;
 {
@@ -84,7 +92,14 @@ char ** argv;
                 if (w % 16)
                         wpr++;
                 sp_iniM(0L, &g_obtmt[i], p, wpr << 4, h);
+#ifdef HOST
+                /* Alcyon takes a cast as an lvalue and the compound form is what
+                   emits `add.l d0,mem`; clang cannot parse it at all.  Same
+                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                p = (void *) ((char *) p + ((wpr * h) << 3));
+#else
                 (char *) p += (wpr * h) << 3;
+#endif
         }
 
         ldSpr();
@@ -99,8 +114,22 @@ char ** argv;
                 if (w % 16)
                         wpr++;
                 sp_regs(sp_fidx[i], p, q, h, wpr << 4);
+#ifdef HOST
+                /* Alcyon takes a cast as an lvalue and the compound form is what
+                   emits `add.l d0,mem`; clang cannot parse it at all.  Same
+                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                p = (void *) ((char *) p + ((wpr * h) << 3));
+#else
                 (char *) p += (wpr * h) << 3;
+#endif
+#ifdef HOST
+                /* Alcyon takes a cast as an lvalue and the compound form is what
+                   emits `add.l d0,mem`; clang cannot parse it at all.  Same
+                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                q = (void *) ((char *) q + ((wpr * h) << 3));
+#else
                 (char *) q += (wpr * h) << 3;
+#endif
         }
 
         sf_sl();

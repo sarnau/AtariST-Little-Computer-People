@@ -23,37 +23,21 @@
 # units' constituents are not listed either.
 
 # ---- Source list ---------------------------------------------------------
-SOURCES         := assets.c \
-                   cards.c \
-                   clock.c \
-                   events.c \
-                   games.c \
-                   gfx_prim.c \
-                   globals.c \
-                   init.c \
-                   keyboard.c \
-                   letload.c \
-                   midi_seq.c \
-                   parser.c \
-                   psg_io.c \
-                   psgfreq.c \
-                   random.c \
-                   renderf.c \
-                   save.c \
-                   sprender.c \
-                   sprglobs.c \
-                   sprhead.c \
-                   sprload.c \
-                   stubs.c \
-                   stx_u1.c \
-                   stx_u2.c \
-                   stx_u3.c \
-                   stx_u4.c \
-                   tables.c \
-                   tick_tables.c \
-                   vdistx.c \
-                   vocab.c \
-                   main.c
+# Derived, not hand-maintained: every .c in this directory EXCEPT the
+# unity-unit constituents, which are #included by their unit and must
+# not also be compiled on their own (that is what put midi_seq.c in the
+# link twice, once standalone and once inside globals.c).  The skip
+# list is columns 2+ of tools/stx_units.txt -- the same file
+# alcyon_build.sh reads, so the two builds cannot drift apart.  (\043 is
+# awk's '#': a literal one would start a make comment and swallow the
+# closing paren of $(shell ...).)
+#
+# savehost.c and hostasm.c come in through the wildcard and are
+# HOST-ONLY: stdio stand-ins for the GEMDOS/BIOS calls and for the five
+# hand-written .s files.  alcyon_build.sh skips both by name, so they
+# never reach the shipped binary.
+UNIT_PARTS      := $(shell awk '$$1 !~ /^\043/ { for (i = 2; i <= NF; i++) print $$i }' tools/stx_units.txt 2>/dev/null)
+SOURCES         := $(filter-out $(UNIT_PARTS),$(notdir $(wildcard *.c)))
 
 # ---- Directory layout ----------------------------------------------------
 INCDIR          := include
@@ -67,6 +51,16 @@ ALCYONOBJS      := $(patsubst %.c,$(ALCYONOBJDIR)/%.o,$(SOURCES))
 # K&R-style extern decls with empty parens trigger -Wdeprecated-non-prototype
 # on modern clang -- that's the Alcyon convention we're targeting, so silence
 # the warning rather than "fixing" the code.
+#
+# The same goes for the three flags added below.  Alcyon is a K&R
+# compiler: a call to an undeclared function is legal and returns int,
+# a declaration with no type IS int, and a function may fall off its
+# end leaving the last computed value in d0 -- which the port relies on
+# deliberately (pk_cace and chk_timA both do it, see CLAUDE.md) -- and
+# Super()'s void * drops straight into a long.  Clang makes all four
+# hard errors by default.  Turning them back into what
+# they are on the target keeps this build a check on the code we ship
+# rather than a demand that the code stop being faithful.
 CC              ?= cc
 HOST_CFLAGS     := -I$(INCDIR) \
                    -DHOST \
@@ -74,6 +68,10 @@ HOST_CFLAGS     := -I$(INCDIR) \
                    -Wno-deprecated-non-prototype \
                    -Wno-strict-prototypes \
                    -Wno-unused-parameter \
+                   -Wno-implicit-function-declaration \
+                   -Wno-implicit-int \
+                   -Wno-return-type \
+                   -Wno-int-conversion \
                    -MMD -MP \
                    -std=c89 -pedantic
 
@@ -154,9 +152,12 @@ ci: alcyon
 
 # ---- Housekeeping --------------------------------------------------------
 .PHONY: linktest
+# The port's own entry point is lcp_main() on the host (parts/main.c
+# renames it so the unit tests can supply their own main), so this
+# still needs a tiny one of its own.
 linktest: host
 	@echo "  LINK  build/host/lcp_linktest"
-	@printf 'extern void endless_game_loop();\nint main(void){return 0;}\n' > build/host/_tinymain.c
+	@printf 'int main(void){return 0;}\n' > build/host/_tinymain.c
 	@$(CC) -o build/host/lcp_linktest build/host/_tinymain.c $(HOSTOBJS)
 	@rm -f build/host/_tinymain.c
 	@echo "  link OK -- $(words $(HOSTOBJS)) object(s) plus tiny main"

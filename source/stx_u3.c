@@ -18,6 +18,7 @@
 #include "structs.h"
 #include "enums.h"
 #include "globals.h"
+#include "gfx_prim.h"
 #include "ai.h"
 #include "events.h"
 #include "keyboard.h"

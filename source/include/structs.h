@@ -12,8 +12,24 @@
 #define STRUCTS_H
 
 #include "types.h"
+#ifdef HOST
+#include "hostgem.h"
+#else
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <vdibind.h>    /* MFDB */
+#endif
+#endif
+#ifdef HOST
+#include "hostgem.h"
+#else
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <ostruct.h>    /* _DTA */
+#endif
+#endif
 
 /* PLAYER (LCP) -- 128-byte persistent character state.
    Layout verified via Ghidra struct editor and HYBER save file dumps. */

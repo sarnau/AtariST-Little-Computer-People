@@ -20,7 +20,11 @@
 #include "types.h"
 #include <osbind.h>       /* the sc_sdt* parts use Setscreen/Logbase */
 #include <stdio.h>        /* sprintf, for the letter writer */
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <vdibind.h>
+#endif
 #include "structs.h"
 #include "enums.h"
 #include "obdefs1.h"

@@ -83,13 +83,21 @@
    pre-compressed art; the real init paints the correct (open or
    closed) object over each rectangle.  Skipping the chain leaves the
    placeholders visible as horizontal streaks in the affected rows. */
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <vdibind.h>            /* vsl_color, v_pline, v_clsvwk, ... */
+#endif
 
 
 /* Alcyon gemlib entry points (see gemstart.o + gem.a).
    Prototypes match gembind.h / vdibind.h shape.  Declared here as
    K&R externs (empty parens) so cp68 doesn't try to typecheck them. */
+#ifdef HOST
+#include "hostgem.h"
+#else
 #include <gembind.h>              /* appl_init, appl_exit, ... */
+#endif
 
 /* main -- ported line-by-line from Ghidra 0x15546.
    Every call below matches the Ghidra decompile in structure and

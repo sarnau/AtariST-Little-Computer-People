@@ -2,6 +2,7 @@
  * parts/fr_read.c -- shared body; LCP_STX links it in the 0xdece
  * object (0x736c). Files under parts/ are never compiled standalone.
  */
+short
 fr_read(fhnd, count, buffer)
 short   fhnd;
 long    count;
