@@ -40,9 +40,11 @@ st_titl()
            still decoded above, so the screen buffer and the file path
            are in the same state as a real run.
 
-           PLAYER at noon on 0-0-0 are the defaults this repo used
-           before the STX title screen was recovered (see b2334e9), so
-           frame goldens taken back then still line up.
+           A REAL date and time, not the 0-0-0 noon the pre-STX stub
+           used: with dt_year 0 the move-in cutscene never finishes and
+           the compositor corrupts the screen within a couple of
+           minutes.  These are the values a manual run enters --
+           09/04/26, 10:30 AM -- and they reach gameplay cleanly.
 
            NOT part of the shipped configuration: the default build
            must stay byte-identical to DATA/LCP_STX.PRG. */
@@ -53,11 +55,11 @@ st_titl()
         lcp.owner_name[4] = 'E';
         lcp.owner_name[5] = 'R';
         lcp.owner_name[6] = 0;
-        dt_mon   = 0;           /* January, st_titl stores month - 1 */
-        date_day = 0;           /* the 1st, likewise day - 1         */
-        dt_year  = 0;
-        t_hour   = 12;
-        t_min    = 0;
+        dt_mon   = 8;           /* September; st_titl stores month - 1 */
+        date_day = 3;           /* the 4th;   likewise day - 1         */
+        dt_year  = 26;
+        t_hour   = 10;
+        t_min    = 30;
         colour = 0; n = 0; j = 0; ch = 0;   /* -Wall: set, never read */
         return;
 #else
