@@ -32,6 +32,35 @@ st_titl()
         scn_dec(scn_buf, g_dscp, 16000);
         Mfree(scn_buf);
 
+#ifdef SKIP_TITLE
+        /* Test builds only.  The guestbook is interactive -- it waits
+           on getKey() for a name, a date, a time and AM/PM -- so an
+           unattended Hatari run stalls here for ever.  Seed the fields
+           the entry loops would have set and return; TITLE.SCN is
+           still decoded above, so the screen buffer and the file path
+           are in the same state as a real run.
+
+           PLAYER at noon on 0-0-0 are the defaults this repo used
+           before the STX title screen was recovered (see b2334e9), so
+           frame goldens taken back then still line up.
+
+           NOT part of the shipped configuration: the default build
+           must stay byte-identical to DATA/LCP_STX.PRG. */
+        lcp.owner_name[0] = 'P';
+        lcp.owner_name[1] = 'L';
+        lcp.owner_name[2] = 'A';
+        lcp.owner_name[3] = 'Y';
+        lcp.owner_name[4] = 'E';
+        lcp.owner_name[5] = 'R';
+        lcp.owner_name[6] = 0;
+        dt_mon   = 0;           /* January, st_titl stores month - 1 */
+        date_day = 0;           /* the 1st, likewise day - 1         */
+        dt_year  = 0;
+        t_hour   = 12;
+        t_min    = 0;
+        colour = 0; n = 0; j = 0; ch = 0;   /* -Wall: set, never read */
+        return;
+#else
         colour = 9;
         strPr("NAME: ------------------", 80, 110, colour);
         n = 0;
@@ -104,4 +133,5 @@ time_entry:
         erChr(160, 146, 15);
         prCh(ch, 160, 146, colour);
         evnt_timer(1000, 0);
+#endif
 }

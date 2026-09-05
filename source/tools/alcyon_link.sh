@@ -168,7 +168,17 @@ fi
 #    identical but every relocated BSS longword points somewhere else.
 #    The allocation is carried as a checked-in spec (the reference
 #    binary is NOT read here); see tools/stx_bss_layout.tsv.
+#    The spec describes the SHIPPED build, so it only applies when the
+#    objects were compiled with no gating defines; a test build has
+#    different code and different relocation sites, and remapping it
+#    would (rightly) fail on the first site the spec has never seen.
 cp LCP.PRG LCP_nobss.PRG        # pre-remap copy, for bss_remap.py --gen
-python3 "$CSRC/tools/bss_remap.py" LCP.PRG || exit 1
+if [ -s CPPFLAGS ]; then
+    echo "bss_remap: SKIPPED -- built with $(cat CPPFLAGS); the layout"
+    echo "           spec describes the shipped build only, and this"
+    echo "           binary is NOT byte-identical by construction."
+else
+    python3 "$CSRC/tools/bss_remap.py" LCP.PRG || exit 1
+fi
 
 echo "SUCCESS: $OUT/LCP.PRG ($(stat -f%z LCP.PRG) bytes)"

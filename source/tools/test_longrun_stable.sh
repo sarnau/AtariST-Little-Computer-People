@@ -15,8 +15,19 @@
 # seconds by CI.
 #
 # Method:
-#   1. Build with -DSKIP_TITLE=1 -DSKIP_MIDI=1 (same flags as the
-#      other Hatari-driven tests).
+#   1. Build with -DSKIP_TITLE=1 -DSKIP_COPYPROT=1.  SKIP_TITLE gets
+#      past the interactive guestbook (it waits on getKey for a name,
+#      a date and a time, so an unattended run stalls there for ever)
+#      and SKIP_COPYPROT past cp_main, which never succeeds under any
+#      emulator here and otherwise parks the resident in
+#      `while (1) a_sleep(-1);` -- a motionless screen this test would
+#      score as a clean PASS.
+#      NOT -DSKIP_MIDI: without the Timer-A ISR the mq_* engine never
+#      completes a record, the resident retries the activity, and each
+#      retry's Fsfirst("*.sng") leaks a TOS folder buffer until GEMDOS
+#      halts with "OUT OF INTERNAL MEMORY" -- measured at ~75 s of
+#      gameplay.  MIDI jitter does not matter here: this test compares
+#      two frames by PSNR, it does not hash them.
 #   2. Launch LCP.PRG under `--auto` for 15 000 VBLs.  --auto matches
 #      the launch mode where getKey misbehaviour actually surfaces
 #      -- COMMAND.PRG (Atari shell) also triggers it, and the whole
@@ -65,7 +76,7 @@ trap 'rm -f "$AVI" "$EARLY_PNG" "$LATE_PNG" "$LOG"' EXIT
 
 # ---- rebuild (unless caller asked us to skip) ---------------------
 if [ -z "${NO_REBUILD:-}" ]; then
-    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_MIDI=1" \
+    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_COPYPROT=1" \
         "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
         && "$TOOLS/alcyon_link.sh" >/dev/null 2>&1 \
         || { echo "SETUP: rebuild failed" >&2; exit 2; }

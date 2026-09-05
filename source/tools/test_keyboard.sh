@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+#
+# *** DOES NOT RUN.  TEST_KEY is no longer implemented anywhere in
+# source/ -- the in-game keyboard harness it switched on was removed
+# during the LCP_STX restructuring, so the flag below compiles to
+# nothing and this script exercises no hook.  SKIP_TITLE and
+# SKIP_COPYPROT here are current and correct; re-instating the
+# keyboard hook is what is missing. ***
+#
 # test_keyboard.sh -- exercise every Ctrl-letter keyboard dispatch
 # path by invoking deal_kc(keycode) at startup, then running the
 # smoke test to look for crashes.
@@ -45,7 +53,7 @@ for entry in "${tests[@]}"; do
     name=${entry#*=}
     printf "==== %-16s (code=%3s)  " "$name" "$id"
 
-    ALCYON_CPPFLAGS="-DTEST_KEY=$id -DSKIP_TITLE=1 -DSKIP_MIDI=1" \
+    ALCYON_CPPFLAGS="-DTEST_KEY=$id -DSKIP_TITLE=1 -DSKIP_MIDI=1 -DSKIP_COPYPROT=1" \
         FILES=init.c "$CSRC/tools/alcyon_build.sh" > /dev/null 2>&1 || {
         echo "BUILD-FAIL"; fail=1; results+="\n  $name  BUILD-FAIL"; continue
     }

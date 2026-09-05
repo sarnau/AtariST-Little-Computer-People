@@ -16,6 +16,15 @@
 #
 # Env vars:
 #   VBLS         run length             (default 3000; below the crash)
+#
+# Keeps -DSKIP_MIDI=1, which is the point here -- Timer-A jitter would
+# make the frame hashes non-reproducible.  That caps how long this can
+# run: without the ISR the mq_* engine never finishes a record, the
+# resident retries, and each retry's Fsfirst("*.sng") leaks a TOS
+# folder buffer until GEMDOS halts with "OUT OF INTERNAL MEMORY" at
+# roughly 75 s of gameplay (~4000 VBLs).  The 2000-VBL default is well
+# inside that; for a longer run use test_longrun_stable.sh, which
+# drops SKIP_MIDI.
 #   FPS_SAMPLE   FPS to extract at      (default 1  -> 1 frame per sec)
 #   FPS_MAX      cap on frame count     (default 60)
 #
@@ -44,7 +53,7 @@ MODE=${1:-check}
 # hang under --fast-forward.  Skip when NO_REBUILD is set (e.g. by a
 # CI job that already ran the build step).
 if [ -z "${NO_REBUILD:-}" ]; then
-    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_MIDI=1" "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
+    ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_MIDI=1 -DSKIP_COPYPROT=1" "$TOOLS/alcyon_build.sh" >/dev/null 2>&1 \
         && "$TOOLS/alcyon_link.sh" >/dev/null 2>&1 \
         || { echo "SETUP: rebuild for tests failed" >&2; exit 2; }
 fi

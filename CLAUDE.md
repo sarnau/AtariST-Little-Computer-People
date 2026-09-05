@@ -121,9 +121,24 @@ source ships; ad-hoc debug scaffolding does not.
 - There is ONE SHIPPED build configuration, and it must stay
   byte-identical.  Two defines exist for test builds only:
   `-DSKIP_MIDI=1` (skips the Timer-A install for frame-hash
-  determinism) and `-DSKIP_COPYPROT=1` (see below).  Pass them through
-  `ALCYON_CPPFLAGS`, and rebuild from clean afterwards -- a stale
-  object from a gated build would silently break byte identity.
+  determinism), `-DSKIP_TITLE=1` (seeds the guestbook fields -- PLAYER,
+  noon, 0-0-0 -- instead of waiting on getKey for a name, a date and a
+  time, so an unattended run reaches gameplay) and `-DSKIP_COPYPROT=1`
+  (see below).  Pass them through `ALCYON_CPPFLAGS`, and rebuild from
+  clean afterwards -- a stale object from a gated build would silently
+  break byte identity.  alcyon_build.sh now records the flags in
+  `build/alcyon/CPPFLAGS` and alcyon_link.sh SKIPS the BSS remap when
+  that file is non-empty: the layout spec describes the shipped build,
+  and remapping a gated one fails on the first site the spec has never
+  seen.
+
+- **Do NOT combine `-DSKIP_MIDI=1` with a long gameplay run.**  Without
+  the Timer-A ISR the mq_* engine never completes a record, the
+  resident retries the activity, and each retry's `Fsfirst("*.sng")`
+  leaks a TOS folder buffer until GEMDOS halts with "OUT OF INTERNAL
+  MEMORY -- SYSTEM HALTED" -- measured at ~75 s of gameplay (~4000
+  VBLs).  frame_hash.sh keeps SKIP_MIDI and stays under that ceiling
+  (2000 VBLs); test_longrun_stable.sh drops it.
 
 - **`-DSKIP_COPYPROT=1` is what makes the game playable under an
   emulator.**  It replaces main's `cprot_r = cp_main();` with a

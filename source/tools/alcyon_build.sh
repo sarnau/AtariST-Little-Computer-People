@@ -140,6 +140,12 @@ open(p, 'w').write('\n'.join(out))
     fi
 done
 
+# Record the configuration this build was made with.  alcyon_link.sh
+# reads it to decide whether the BSS remap applies: the layout spec
+# describes the SHIPPED build, and a gated build has different code and
+# therefore different relocation sites.
+printf '%s' "${ALCYON_CPPFLAGS:-}" > "$OUT/CPPFLAGS"
+
 echo "Alcyon build: $built OK, $missed missing"
 if [ -n "$missed_list" ]; then echo "Missing:$missed_list"; fi
 exit $([ "$missed" -eq 0 ] && echo 0 || echo 1)
