@@ -1044,19 +1044,34 @@ it after any change that touches a global.  What it should report:
     E inferred bases  1   scrbufA
     F over-declared   0
 
-**scn_cmn was not real** (closed 2026-09-05).  It came from the
-LCP_ORG-era Ghidra project, where main called an `unScn` helper and
-read 30 bytes into `scene_common_data` @ 0x4cf7c.  LCP_STX has no
-unScn -- the .SCN handling is inlined -- and its one 30-byte
-dictionary read goes to scn_dic.  The reference's own BSS settles it:
-0x3cf7c is two bytes INSIDE scn_buf and runs over mf_scrp, g_inpmd and
-g_ltscb, so there is no room for a separate object there.  Deleted.
+**scn_cmn was not real** (closed 2026-09-05).  Ghidra's own main
+settles it: the 30-byte dictionary read is
+`move.l #0x2c6ce,(SP) / move.l #0x1e,-(SP) / bsr fr_read`, and 0x2c6ce
+is link-time 0x1c6ce -- scn_dic.  The `@ 0x4cf7c` in the port's old
+comment was simply a wrong address: 0x3cf7c is two bytes INSIDE
+scn_buf and would run over mf_scrp, g_inpmd and g_ltscb, every one of
+them a symbol real relocations point at.  One object, two names, and
+the unreferenced one is gone.
 
-**Beware which Ghidra program is open.**  `LCP.rep` holds two, and the
-one that comes up as `LCP.PRG` decompiles to LCP_ORG-shaped code --
-its main calls unScn, fLoad and lcp_load, none of which exist in
-LCP_STX.  Addresses and symbols from it describe the retired revision.
-LCP_STX is the larger program, `LCP.PRG.1.1`, at BASE 0x10000.
+**Stale LABELS in Ghidra are not a different program.**  The open
+project decompiles main with calls to `unScn`, `fLoad` and `lcp_load`,
+which LCP_STX does not have as functions -- and that looks exactly
+like the retired image until you check the bytes.  It is not: the
+disassembly at 0x15546 matches our byte-identical build at text 0x5546
+instruction for instruction.  Those were LCP_ORG-era NAMES still
+attached to LCP_STX functions.  When a Ghidra name contradicts the
+port, disassemble and compare bytes before concluding anything about
+which revision you are looking at.  (Renamed 2026-09-05: unScn ->
+scn_dec, fLoad -> al_loal, lcp_load -> lc_load, al_lost -> ldSpr,
+sp_reglp -> sp_regs.)
+
+**The globals half of the sync is not runnable right now.**
+`apply_ghidra_renames.sh` POSTs to a Ghidra HTTP server on :8089 and
+needs `~/ghidra_scripts/RenameLcpGlobals.java`, `list_data_symbols.java`
+and a fresh `/tmp/ghidra_syms.txt`.  All three scripts are missing and
+the endpoint does not answer; the MCP can rename functions and locals
+but has no data-symbol rename.  Function names can be synced through
+the MCP by address (Ghidra address = link address + 0x10000).
 
 E is the one category that cannot be closed from the binary at all:
 scrbufA is referenced only at +511 through the align-up constant, and
