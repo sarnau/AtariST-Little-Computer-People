@@ -1038,11 +1038,17 @@ INFERRED, and arrays declared larger than the original's storage.  Run
 it after any change that touches a global.  What it should report:
 
     A merges          0
-    B aliases         1   last_hz / mi_lasT
+    B aliases         0
     C split symbols   0
     D unverifiable    1   scn_cmn
     E inferred bases  1   scrbufA
-    F over-declared   1   last_hz (the B alias)
+    F over-declared   0
+
+D and E are not defects and cannot be closed from the binary: nothing
+relocates against scn_cmn, so neither its size nor its existence is
+observable, and scrbufA is referenced only at +511 through the align-up
+constant, so its base rests on assuming the original wrote
+`scrbufA + 0x1FF`.
 
 **A constant subscript is not evidence of an array.**  Alcyon folds it
 into the absolute address, so `arr[7]` and a plain short emit the same
@@ -1374,15 +1380,17 @@ Roadmap:
       * cl_redrH's second cl_drwH call reads the cached g_cmmin and
         g_chhou back rather than t_min/t_hour.
 
-    One alias remains and is deliberate: last_hz and the sequencer's
-    mi_lasT are ONE cell in the original (word accesses from the
-    compositor, byte accesses from the sequencer, and a byte write
-    lands on the word's high half).  Spelling that in C as
-    `#define mi_lasT (*(char *) &last_hz)` changes the codegen --
-    Alcyon takes the width from `&last_hz` and emits move.w where the
-    original has move.b -- so the port keeps two symbols and the spec
-    maps both onto the one address.  bss_remap.py allows many-to-one
-    and prints the alias; one-to-many it still rejects.
+    The last of these was last_hz / mi_lasT: ONE cell in the original,
+    word accesses from the compositor and byte accesses from the
+    sequencer, a byte write landing on the word's high half.  A cast
+    macro does NOT express it -- `#define mi_lasT (*(char *) &last_hz)`
+    makes Alcyon take the width from `&last_hz` and emit move.w where
+    the original has move.b.  A UNION does: `union LASTHZ { unsigned
+    short w; char b; }` with `#define last_hz lasthz.w` and
+    `#define mi_lasT lasthz.b` keeps every use site unchanged and emits
+    the original's widths exactly.  One symbol, one address, and the
+    spec dropped from 417 rows to 416.  bss_remap.py still allows
+    many-to-one and prints any alias, but there is none left.
 
     **Relocation pairing catches what byte comparison cannot.**  Both
     verify_bytes and stx_txtdiff wildcard relocated longwords, so a

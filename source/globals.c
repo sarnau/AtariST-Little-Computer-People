@@ -228,7 +228,6 @@ unsigned char * mi_seqE;
 unsigned char * mi_dptr;
 char            mi_evTf;
 char            mi_nnOn;
-char            mi_lasT;
 char            mi_nnOf;
 char            mi_ccha;
 char            mi_cnot;
@@ -405,7 +404,7 @@ char    g_cdinb[64];
 BOOL16  food_dlv;
 short   g_ptanf;
 
-unsigned short  last_hz;   /* STX: clr.w zero-extension at every use */
+union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
 long    last_vbc;
 /* sv_phb: TOS's original Physbase, captured once at boot by
    aes_init via Physbase().  BSS-zero to match Ghidra's

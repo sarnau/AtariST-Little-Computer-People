@@ -133,7 +133,6 @@ extern unsigned char* mi_seqE;
 extern unsigned char* mi_dptr;
 extern char mi_evTf;
 extern char mi_nnOn;
-extern char mi_lasT;
 extern char mi_nnOf;
 extern char mi_ccha;
 extern char mi_cnot;
@@ -208,7 +207,21 @@ extern BOOL16 g_inpmd;
 extern char g_cdinb[];
 extern BOOL16 food_dlv;
 extern short g_ptanf;
-extern unsigned short last_hz;
+/* ONE cell in the reference.  The compositor reads and writes it as a
+   word -- sc_ren8's frame gate and sp_imfs's reset -- and the
+   sequencer as a byte, and on the 68000 a byte write to a word's
+   address lands on its high half.  The port used to carry two symbols
+   and let the BSS spec map both onto the one address; a union gives
+   each subsystem its own access width with no cast.  (`*(char *)
+   &last_hz` does NOT work: Alcyon takes the width from &last_hz and
+   emits move.w where the original has move.b.) */
+union LASTHZ {
+        unsigned short  w;      /* sc_ren8, sp_imfs   */
+        char            b;      /* mq_pars, mq_qnne   */
+};
+extern union LASTHZ lasthz;
+#define last_hz  lasthz.w
+#define mi_lasT  lasthz.b
 extern long last_vbc;
 extern void* sv_phb;
 extern MFDB g_srmfd;
