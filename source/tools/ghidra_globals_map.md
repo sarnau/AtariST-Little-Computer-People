@@ -90,7 +90,7 @@ Derived from decompiling: `mq_tick`, `mq_advs`, `psg_upEn`, `psg_wr`,
 | `action_table_active[]`            | `g_obala[]`  |
 | `action_table_moderate[]`          | `g_obcla[]`  |
 | `action_table_relaxed[]`           | `g_obpha[]`  |
-| `activity_schedule_table[]`        | `g_cotbl[]`  |
+| `activity_schedule_table[]`        | `sch_tab[]`  |
 | `triggered_event_list[]`           | `pst_arr[]`  |
 
 (action_table_* assignment to `g_ob{ala,cla,pha}` is by role;
@@ -116,7 +116,7 @@ handlers.)
 | `midi_last_processed_tick`         | `mi_lpTk`    |
 | `midi_note_event_index`            | `mi_evi`     |
 | `midi_note_length_params[]`        | `mi_ntLp[]`  |
-| `aes_int_out[]`                    | `aes_intO[]` |
+| `aes_int_out[]`                    | `mi_tpb[]` |
 
 ### PSG / envelope
 
@@ -124,8 +124,8 @@ handlers.)
 |------------------------------------|--------------|
 | `psg_notes_active`                 | `psg_ntAc`   |
 | `psg_envelope[]`                   | `psg_envelope[]` |
-| `psg_channel_ramp_accum[]`         | `psg_rmpA[]` |
-| `psg_channel_ramp_delta[]`         | `psg_rmpD[]` |
+| `psg_channel_ramp_accum[]`         | `psg_racc[]` |
+| `psg_channel_ramp_delta[]`         | `psg_rdel[]` |
 | `psg_register_offset_table[]`      | `psg_rot[]`  |
 | `psg_output_volume` (working reg)  | `psg_cvol`   |
 
@@ -406,7 +406,7 @@ handlers.)
 | `skin_color_palette`               | `skin_pal`   |
 | `month_name_table`                 | `mo_names`   |
 | `pex_lcp_ptr`                      | `pex_ptr`    |
-| `pex_lcp_file`                     | `pex_buf`    |
+| `pex_lcp_file`                     | `pex_ptr`    |
 | `sng_song_file_count`              | `sng_cnt`    |
 | `org_song_file_count`              | `org_cnt`    |
 | `input_string`                     | `in_str`     |
@@ -414,7 +414,7 @@ handlers.)
 | `command_input_ptr`                | `cmd_inp`    |
 | `debug_hide_lcp_offscreen`         | `dbg_hide`   |
 | `text_scroll_timer`                | `tx_sctm`    |
-| `last_hz200`                       | `last_hz`    |
+| `last_hz200`                       | `lasthz`    |
 | `last_vbclock`                     | `last_vbc`   |
 
 ## Ghidra names seen but role not yet mapped to a port global
@@ -457,7 +457,7 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `body_lcp_file`                    | `body_buf`   |
+| `body_lcp_file`                    | `body_ptr`   |
 | `lcp_sprite_img`                   | `g_lsimg`    |
 | `lcp_sprite_mask`                  | `g_lsmas`    |
 | `lcp_carrying_object_flag`         | `g_lcyof`    |
@@ -498,8 +498,8 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 | `midi_note_on_flag`                | `mi_nnOn`    |
 | `midi_note_off_flag`               | `mi_nnOf`    |
 | `midi_note_mode_flags`             | `mi_nmof`    |
-| `midi_note_hi_limit`               | `g_mnhil`    |
-| `midi_note_lo_limit`               | `g_mnlol`    |
+| `midi_note_hi_limit`               | `g_mnhi`    |
+| `midi_note_lo_limit`               | `g_mnlo`    |
 | `midi_output_enabled`              | `g_moen`     |
 | `midi_program_map`                 | `mi_pgmap`   |
 | `midi_channel_map`                 | `mi_chmap`   |

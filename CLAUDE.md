@@ -1065,13 +1065,47 @@ which revision you are looking at.  (Renamed 2026-09-05: unScn ->
 scn_dec, fLoad -> al_loal, lcp_load -> lc_load, al_lost -> ldSpr,
 sp_reglp -> sp_regs.)
 
-**The globals half of the sync is not runnable right now.**
-`apply_ghidra_renames.sh` POSTs to a Ghidra HTTP server on :8089 and
-needs `~/ghidra_scripts/RenameLcpGlobals.java`, `list_data_symbols.java`
-and a fresh `/tmp/ghidra_syms.txt`.  All three scripts are missing and
-the endpoint does not answer; the MCP can rename functions and locals
-but has no data-symbol rename.  Function names can be synced through
-the MCP by address (Ghidra address = link address + 0x10000).
+**Syncing names to Ghidra: use `source/tools/sync_ghidra_names.sh`.**
+The old `apply_ghidra_renames.sh` POSTs to a Ghidra HTTP server on
+:8089 and needs `RenameLcpGlobals.java`, `list_data_symbols.java` and a
+fresh `/tmp/ghidra_syms.txt` -- none of which are installed, and the
+endpoint does not answer.  The replacement drives `analyzeHeadless`
+with `tools/ghidra/LcpSyncNames.java`: no server, no GUI, works on a
+closed project.  `sync_ghidra_names.sh verify` re-runs it read-only.
+
+Ghidra MUST be closed -- it holds an exclusive lock, and clearing a
+LIVE lock is how the database gets corrupted.  The script refuses
+rather than fight over it.  If a SIGTERM ever leaves `LCP.lock` and
+`LCP.lock~` behind with no process running, those are stale and safe
+to delete; verify afterwards by reopening headless before committing
+the database.
+
+Three things to get right when building the rename list:
+  * **Ghidra address = link address + 0x10000.**
+  * **For BSS, lcp_sym.68k's address is lo68's, not the reference's.**
+    Take it from `tools/stx_bss_layout.tsv`, which is where the remap
+    actually puts the symbol.  DATA and TEXT are byte-identical, so
+    their link addresses are the reference's already.
+  * **lcp_sym.68k carries 8-char TRUNCATED linkage names.**  Pushing
+    those gives Ghidra `lcp_pat` for `lcp_path` and `aes_ini` for
+    `aes_init` -- an earlier sync did exactly that.  Expand them
+    against the `extern` declarations in `include/*.h` first.
+
+Rename data symbols BY ADDRESS, not by name, wherever the port's own
+name has changed -- and always where two names were SWAPPED.  Going by
+name there chases a symbol that has moved or collides with the name
+still held by the other cell.  That is how the g_mnhi/g_mnlo pair had
+to be done, and doing it by address is what revealed that GHIDRA had
+them right all along and the port had them backwards.
+
+State after the 2026-09-05 sync: 676 of 784 port symbols verified in
+place by address, 0 failures.  Of the 97 that differ, 14 are DRI libc
+internals (`___pname`), 4 are Ghidra placeholders with no name at all,
+and 79 are globals the map has never covered -- the "~93 remaining"
+its own coverage note describes.  Extending it is research, not a
+mechanical push: each needs confirming that Ghidra's descriptive name
+really is that symbol.  One to look at first is `mi_pgtab`, where
+Ghidra says `midi_channel_volume`.
 
 E is the one category that cannot be closed from the binary at all:
 scrbufA is referenced only at +511 through the align-up constant, and
