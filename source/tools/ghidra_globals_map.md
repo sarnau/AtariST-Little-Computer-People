@@ -688,7 +688,7 @@ port shorts, cross-checked by usage patterns in the port
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `scene_common_data`                | `scn_cmn`    |
+| `scene_common_data`                | *(deleted -- LCP_ORG-only; the 30 bytes are `scn_dic`)* |
 | `vdi_color_table`                  | `vdi_colt`   |
 | `vdi_handle`                       | `vdi_hnd`    |
 

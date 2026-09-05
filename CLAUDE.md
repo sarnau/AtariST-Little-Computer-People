@@ -1040,15 +1040,28 @@ it after any change that touches a global.  What it should report:
     A merges          0
     B aliases         0
     C split symbols   0
-    D unverifiable    1   scn_cmn
+    D unverifiable    0
     E inferred bases  1   scrbufA
     F over-declared   0
 
-D and E are not defects and cannot be closed from the binary: nothing
-relocates against scn_cmn, so neither its size nor its existence is
-observable, and scrbufA is referenced only at +511 through the align-up
-constant, so its base rests on assuming the original wrote
-`scrbufA + 0x1FF`.
+**scn_cmn was not real** (closed 2026-09-05).  It came from the
+LCP_ORG-era Ghidra project, where main called an `unScn` helper and
+read 30 bytes into `scene_common_data` @ 0x4cf7c.  LCP_STX has no
+unScn -- the .SCN handling is inlined -- and its one 30-byte
+dictionary read goes to scn_dic.  The reference's own BSS settles it:
+0x3cf7c is two bytes INSIDE scn_buf and runs over mf_scrp, g_inpmd and
+g_ltscb, so there is no room for a separate object there.  Deleted.
+
+**Beware which Ghidra program is open.**  `LCP.rep` holds two, and the
+one that comes up as `LCP.PRG` decompiles to LCP_ORG-shaped code --
+its main calls unScn, fLoad and lcp_load, none of which exist in
+LCP_STX.  Addresses and symbols from it describe the retired revision.
+LCP_STX is the larger program, `LCP.PRG.1.1`, at BASE 0x10000.
+
+E is the one category that cannot be closed from the binary at all:
+scrbufA is referenced only at +511 through the align-up constant, and
+that constant lives inside a relocated longword, so `+0x1FF` with base
+0x1a7 and `+0x200` with base 0x1a6 are indistinguishable.
 
 **A constant subscript is not evidence of an array.**  Alcyon folds it
 into the absolute address, so `arr[7]` and a plain short emit the same

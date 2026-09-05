@@ -92,10 +92,6 @@ char *  mi_sbuf;
    as a guess. */
 short   sng_cnt;
 short   org_cnt;
-/* scn_cmn -- 30-byte scene common-data header shared between
-   house.scn and title.scn.  Ghidra `scene_common_data` @ 0x4cf7c.
-   The port's unScn helper (assets.c) fills this via fr_read. */
-char    scn_cmn[30];
 short   fire_dur;
 BOOL16  fire_ext;
 short   tx_sctm;
@@ -125,7 +121,14 @@ char    in_str[80];             /* LCP_STX gap; a screen line */
 /* scn_dic[15]: the 15-entry word dictionary at the head of a .SCN
    file, and the size/buffer main uses while decoding one.  LCP_STX
    keeps all three as globals -- the .SCN file handling is inlined in
-   main and only the nibble decoder is a function. */
+   main and only the nibble decoder is a function.
+
+   This IS the 30 bytes the older analysis called `scene_common_data`.
+   The port used to carry that as a second array, scn_cmn, which
+   nothing referenced: it came from the LCP_ORG-era Ghidra project,
+   where main called an unScn helper that LCP_STX does not have.  In
+   LCP_STX there is no room for it -- 0x3cf7c, where that symbol sits,
+   is inside scn_buf and runs over mf_scrp, g_inpmd and g_ltscb. */
 short           scn_dic[15];
 unsigned char   comp_tok[15];
 short           scn_siz;
