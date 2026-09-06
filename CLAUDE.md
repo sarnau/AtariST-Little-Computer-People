@@ -1751,7 +1751,8 @@ Driven through the Hatari MCP and verified by STATE, not by animation
       Ctrl-F  0x06  food      putEv() entered
       Ctrl-M  0x0D  Return    prsCmd -- proven all session (PLAY GAME,
                               CALL DOG, every minigame answer)
-      Ctrl-P  0x10  pat dog   g_ptdoa set then cleared
+      Ctrl-P  0x10  pat LCP   g_ptdoa set then cleared (the RESIDENT,
+                              not the dog -- see below)
       Ctrl-R  0x12  record    putEv() entered
       Ctrl-W  0x17  water     lcp_watr 4 -> 7 for three presses
       (8)           erase     g_cdibp 5 -> 4, g_cdinb[4] nulled --
@@ -1774,13 +1775,38 @@ an empty buffer.  With turbo off the same keypress works every time.
 A key that looks dead under turbo is the emulator's pacing, not the
 port's.
 
-**Ctrl-P needs the dog called first.**  `deal_kc` guards it with
-`dg_petok != NO && g_ptdoa == NO`, and dg_petok is set ONLY by
-a_calld, which no typed command reaches: neither ACTION_CALL_DOG (40)
-nor ACTION_PET_DOG (42) appears in g_ew2a, so both are autonomous-only.
-The reachable route is a phone call -- ev_ansPh calls a_calld -- but
-the YES window is narrow and easy to sample past.  To test the handler
-body directly, force the guard from the debugger:
+**Ctrl-P pats the RESIDENT, not the dog** (corrected by the
+maintainer, 2026-09-06 -- an earlier note here called it "pat dog",
+which is wrong).  The code says so three ways:
+
+  * the handler sets `lcp.happiness = MOOD_HAPPY` -- the RESIDENT's
+    mood, with `happiness_duration_active` reloaded;
+  * the animation cycles `SPRITE_PET_HAND_1..6` -- a HAND, drawn
+    `SPRITE_BEHIND_LCP` and ping-ponged 1->6->2 by tick.c -- at a
+    FIXED (192,165), i.e. the player's hand reaching in, not the
+    resident reaching for anything;
+  * (192,165) is the phone: tick.c draws OBJ_PHONE_2 at (190,168),
+    and ev_ansPh draws od_med1 at the same spot.
+
+**`POS_BTM_DOG_FOOD` is misnamed too.**  a_calld walks to position 43
+and crouches, and 43 is `g_rpxs[43] = 110`, i.e. **x = 220** on the
+BOTTOM floor -- the armchair beside the phone.  The real dog bowl is
+`POS_BTM_DOG_BOWL` (33) at x = 16, over in the kitchen.  So the whole
+`dg_petok` / `a_calld` / `a_petd` / `ACTION_PET_DOG` cluster is named
+after the dog and is actually the resident-in-the-chair pat.  Same
+failure as `mi_pgtab`: a name taken from the neighbourhood rather
+than the use.
+
+NOT renamed, deliberately.  `tools/stx_bss_layout.tsv` is keyed by
+PORT SYMBOL NAME, so renaming any of these means regenerating the
+spec and re-auditing it; the names are wrong but harmless, and the
+binary does not care.  Read them as "pat", not "pet the dog".
+
+For testing: dg_petok is set ONLY by a_calld, which no typed command
+reaches -- neither ACTION_CALL_DOG (40) nor ACTION_PET_DOG (42)
+appears in g_ew2a, so both are autonomous-only.  The reachable route
+is a phone call (ev_ansPh calls a_calld), but the YES window is narrow
+and easy to sample past.  Force the guard instead:
 `w $<dg_petok> 0 1` (that write syntax is byte-at-a-time), then press
 the key and watch g_ptdoa.
 

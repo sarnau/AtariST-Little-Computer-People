@@ -22,10 +22,17 @@
 #   Ctrl-D  dog food   putEv() entered
 #   Ctrl-F  food       putEv() entered
 #   Ctrl-R  record     putEv() entered
-#   Ctrl-P  pat dog    g_ptdoa changes.  Guarded by dg_petok, which only
-#                      a_calld sets and NO typed command reaches, so the
-#                      guard is forced from the debugger -- otherwise
-#                      this key is untestable without waiting on the AI.
+#   Ctrl-P  pat LCP    g_ptdoa changes.  This pats the RESIDENT on the
+#                      head, not the dog: the handler sets
+#                      lcp.happiness = MOOD_HAPPY, and the animation
+#                      cycles SPRITE_PET_HAND_1..6 -- the player's hand
+#                      -- at a fixed (192,165), which is where the
+#                      phone sits (tick.c draws it at 190,168).  It is
+#                      gated on dg_petok, set only by a_calld, which
+#                      walks the resident to position 43 (x=220, the
+#                      armchair by the phone) and crouches.  No typed
+#                      command reaches a_calld, so the guard is forced
+#                      from the debugger.
 #   Ctrl-M  Return     g_aliss grows (a command is submitted)
 #   8       erase      g_cdibp decrements.  Reached from BOTH Backspace
 #                      and the cursor-LEFT arrow: getKey maps scancode
@@ -58,13 +65,19 @@ A_CDIBP=$(probe_addr _g_cdibp)
 echo "load base \$$(probe_base)"
 echo ""
 
-# ---- Ctrl-W: the one handler with a durable counter ------------------
+# ---- Ctrl-W: durable counter, but it CLAMPS ---------------------------
+# deal_kc returns immediately when the tank is already full:
+#   if (lcp_watr == 10) return;
+# and earlier runs of this very script leave it at 10, so asserting an
+# increase without emptying it first fails on the second run of the day.
+# Empty it, then three presses must add three.
 printf '%-22s ' "Ctrl-W  water"
+probe_poke "$A_WATR" 0 0
 before=$(probe_word "$A_WATR")
 probe_ctrl W; probe_ctrl W; probe_ctrl W; sleep 0.5
 after=$(probe_word "$A_WATR")
-if [ "$after" -gt "$before" ]; then ok "Ctrl-W  lcp_watr $before -> $after"
-else bad "Ctrl-W" "lcp_watr stayed $before"; fi
+if [ "$after" -eq $((before + 3)) ]; then ok "Ctrl-W  lcp_watr $before -> $after"
+else bad "Ctrl-W" "lcp_watr $before -> $after, expected $((before + 3))"; fi
 
 # ---- Ctrl-F is CONDITIONAL, so make its condition true ---------------
 # deal_kc returns without queuing when the food cupboard reads full:
@@ -106,7 +119,7 @@ else bad "Ctrl-A" "alarm_p never changed"; fi
 probe_bp_clear
 
 # ---- Ctrl-P: force the guard the AI would have to satisfy ------------
-printf '%-22s ' "Ctrl-P  pat dog"
+printf '%-22s ' "Ctrl-P  pat LCP"
 probe_poke "$A_PETOK" 0 1                  # dg_petok = YES
 probe_bp_changed "$A_PTDOA"
 M=$(probe_mark); probe_ctrl P; sleep 0.6
