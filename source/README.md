@@ -96,8 +96,9 @@ source/
 │   dog.c, delivery.c, events.c, alerts.c, health.c
 ├── tvanim.c            LCP's on-screen computer/TV animations
 ├── init.c              cs_mvIn move-in cutscene + boot-time helpers
-│                       (also hosts TEST_ACTIONS / TEST_KEY #ifdef
-│                       hooks for regression tests)
+│                       (it used to host TEST_ACTIONS / TEST_KEY
+│                       #ifdef hooks; those went in the LCP_STX
+│                       restructuring and nothing is gated in now)
 └── tests/              host-side smoke tests (see below)
 ```
 
@@ -216,7 +217,18 @@ live list.  Highlights:
   computer-typing session).  Long-run stability test now passes
   for 36 000 VBLs / 10 real minutes with 0 bus errors.  Test
   harness: `--auto` load address fix, TOS boot-probe (`$fc0174`)
-  filter in `run_hatari.sh` -- test_actions / test_keyboard /
-  test_saveload all clean.
+  filter in `run_hatari.sh`.
+
+  **Correction (2026-09-06):** this entry also claimed
+  "test_actions / test_keyboard / test_saveload all clean".  They
+  were not clean; they did not RUN.  test_actions and test_keyboard
+  built with `-DTEST_ACTIONS` / `-DTEST_KEY` to switch on in-game
+  harnesses that the LCP_STX restructuring had already removed, so
+  the flags compiled to nothing and both scripts exercised no hook
+  while still exiting 0.  test_saveload looked for HYBER in a
+  `data/` subdirectory that does not exist and bailed out at its
+  setup check.  All three were rewritten on `hatari_probe.sh`
+  (2026-09-06) and now assert against the game's own globals:
+  11/11, 33/33 and 7/7 respectively.
 
 See [STATUS.md](STATUS.md) for the current port ledger.
