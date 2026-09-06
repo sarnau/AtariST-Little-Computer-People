@@ -2,6 +2,8 @@
 
 Under Alcyon C 4.14 the external symbol table truncates C names to 7 characters.  Colliding long names were renamed to unique short forms during the mechanical rename pass.  This table lets you trace short names back to the original long names used in the Ghidra decompile.
 
+**Five of these long names are no longer in Ghidra.**  On 2026-09-05 the project database was renamed to the port's own names, so `unScn`, `fLoad`, `lcp_load`, `al_lost` and `sp_reglp` now read `scn_dec`, `al_loal`, `lc_load`, `ldSpr` and `sp_regs` there.  The rows below are kept as history -- searching Ghidra for the long form will not find them.
+
 ## Functions
 
 | short   | long                                             |
@@ -57,9 +59,10 @@ Under Alcyon C 4.14 the external symbol table truncates C names to 7 characters.
 | a_yawas | action_yawn_and_stretch                          |
 | al_locs | asset_load_character_sheets                      |
 | al_loal | asset_load_lcp                                   |
-| al_loan | asset_load_names                                 |
+| ~~al_loan~~ | asset_load_names -- DELETED, LCP_STX has no such    |
+|         | function; lcp_crnd inlines the NAMES read           |
 | al_loot | asset_load_objects_table                         |
-| al_lost | asset_load_sprites_table                         |
+| ldSpr   | asset_load_sprites_table (was al_lost)           |
 | er_bood | event_receive_book_delivery                      |
 | er_dogf | event_receive_dog_food                           |
 | er_food | event_receive_food_delivery                      |

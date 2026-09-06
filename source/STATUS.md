@@ -52,7 +52,7 @@ Data tables populated with authoritative values: **NLP vocabulary (160 words), N
 | `create_file`                          | `save.c`            | GEMDOS Fcreate with retry |
 | `file_read`                            | `save.c`            | GEMDOS Fread with 3-retry + alert |
 | `lcp_save`                             | `save.c`            | GEMDOS Fopen/Fwrite/Fclose |
-| `lcp_load`                             | `save.c`            | reads HYBER + unpacks door bits |
+| `lc_load`                              | `save.c`            | reads HYBER + unpacks door bits |
 | `lcp_enter_study_and_save`             | `save.c`            | full study animation + repack + save |
 | `sprite_lcp_flip`                      | `sprites.c`         | 2->4 word row expansion + optional mirror via revert_table |
 | `sprite_flip_horizontal`               | `sprites.c`         | in-place general sprite mirror |
@@ -257,7 +257,7 @@ empty history files documenting where each function moved.
 - `make linktest` -- link every object + a tiny `main()` (proves no
   undefined symbols)
 - `make hyber_test` -- link `tests/hyber_roundtrip.c` and run it.
-  Copies `DATA/HYBER` into place, calls `lcp_load()`, prints the owner
+  Copies `DATA/HYBER` into place, calls `lc_load()`, prints the owner
   and resident names, calls `lcp_save()`, and asserts the two files are
   byte-identical.  Verified passing: owner=REBECCA, resident=Norton,
   128/128 bytes round-tripped.

@@ -231,12 +231,17 @@ be a shipped table, and without it every mirrored frame renders blank.
 has a Ghidra counterpart with a different (usually longer) name.  To
 push the map to the Ghidra project, run:
 
-    source/tools/apply_ghidra_renames.sh
+    source/tools/sync_ghidra_names.sh          # `verify` = read-only
 
-This regenerates a TSV via `gen_ghidra_rename_tsv.py`, then POSTs to
-Ghidra's HTTP server at `localhost:8089/run_script` to invoke
-`~/ghidra_scripts/RenameLcpGlobals.java`.  Prereqs: Ghidra open with
-LCP.PRG loaded; `list_data_symbols.java` has been run at least once.
+**Ghidra must be CLOSED for it** -- it holds an exclusive lock, and
+clearing a live one is how the database gets corrupted.  See "Syncing
+names to Ghidra" further down for the address/truncation traps.
+
+(`apply_ghidra_renames.sh` and `gen_ghidra_rename_tsv.py` were deleted
+2026-09-06.  They POSTed to a Ghidra HTTP server on :8089 and needed
+`RenameLcpGlobals.java`, `list_data_symbols.java` and a fresh
+`/tmp/ghidra_syms.txt` -- none installed, and the endpoint does not
+answer.  This paragraph used to present them as the way in.)
 
 Struct name/field syncing uses the same HTTP mechanism via
 `~/ghidra_scripts/RenameGhidraStructs.java` and a

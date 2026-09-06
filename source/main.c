@@ -61,11 +61,11 @@
 /* main -- Ghidra 0x00015546.  See there for the faithful init
    sequence: mq_intim -> aes_init -> conterm clear ->
    Dsetpath("data") -> vdi_init -> stpScrB ->
-   initBRev -> cntSong -> lcp_load ->
+   initBRev -> cntSong -> lc_load ->
    show_title_screen_enter_name_and_date -> house.scn open+decompress ->
    fillTopR(27) -> cl_drini ->
-   fLoad("body.lcp") -> lcp_crnd (if new) ->
-   fLoad(pex_lcp) -> sprite_lcp_build_all -> ldObj/sprites
+   al_loal("body.lcp") -> lcp_crnd (if new) ->
+   al_loal(pex_lcp) -> sprite_lcp_build_all -> ldObj/sprites
    -> soundeffects_load -> dog_init_position -> updWtLv
    -> screen_set_draw_to_backbuffer -> draw water pipe + doors +
    food-bowl objects -> screen_draw_food_cabinet ->
@@ -78,7 +78,7 @@
    marked inline. */
 
 
-/* Object-draw chain (Ghidra main 0x15546, after unScn).
+/* Object-draw chain (Ghidra main 0x15546, after scn_dec).
    Every door/cabinet in HOUSE.SCN has a placeholder rectangle in the
    pre-compressed art; the real init paints the correct (open or
    closed) object over each rectangle.  Skipping the chain leaves the
