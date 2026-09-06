@@ -7,13 +7,20 @@ cross-referencing decompiler output against port source.
 
 ## Coverage
 
-**Currently mapped: ~366/397 port globals.**  (62 added 2026-09-05 by
-the address-keyed sync; see the section at the end.)  Remaining ~93 are mostly
-port-only helpers, MIDI/sprite arrays where Ghidra shows only
-`PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx` labels, or file-scoped statics with
-no descriptive ROM name.  Extend by decompiling more Ghidra functions
-and appending to the appropriate subsystem table below, then re-run
-`source/tools/sync_ghidra_names.sh` to push the new pairs to Ghidra.
+**Currently mapped: all but THIRTEEN port globals** (measured
+2026-09-06).  The previous note here said "~366/397, remaining ~93"
+and was badly wrong: it compared lcp_sym.68k's 8-char TRUNCATED
+linkage names against this file's full names, so `lcp_watr`,
+`introSeq`, `date_day` and dozens more counted as unmapped when they
+are not.  Expand the truncations first -- and exclude DRI libc and the
+AES library's own `gl_apid`, which are not port globals.
+
+The thirteen that remain are listed at the end of this file with what
+each one does.  None of them has a 1985 descriptive name left to
+recover, so the way to "extend coverage" is NOT to invent names for
+them; it is to decompile more Ghidra FUNCTIONS and record pairs the
+original analysis actually produced.  Push new pairs with
+`source/tools/sync_ghidra_names.sh`.
 
 ## Status: auto-rename pipeline
 
@@ -95,16 +102,41 @@ Derived from decompiling: `mq_tick`, `mq_advs`, `psg_upEn`, `psg_wr`,
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `action_table_active[]`            | `g_obala[]`  |
-| `action_table_moderate[]`          | `g_obcla[]`  |
-| `action_table_relaxed[]`           | `g_obpha[]`  |
+| `action_table_active[]`            | `g_atact[]`  |
+| `action_table_moderate[]`          | `g_atmod[]`  |
+| `action_table_relaxed[]`           | `g_atrel[]`  |
 | `activity_schedule_table[]`        | `sch_tab[]`  |
-| `triggered_event_list[]`           | `pst_arr[]`  |
+| `triggered_event_list[]`           | `g_trel[]`   |
 
-(action_table_* assignment to `g_ob{ala,cla,pha}` is by role;
-`g_obfia[]` and `g_obdea[]` may match fire/dead tables not yet
-sampled -- verify when decompiling `chk_encm` or fire/emergency
-handlers.)
+**Four of these rows were wrong until 2026-09-06**, and the section
+even flagged the first three as unverified ("assignment ... is by
+role").  Verified now, and the port side was on the wrong symbols:
+
+  * The action tables are `g_atact` / `g_atmod` / `g_atrel`, each
+    `[16]` and indexed `rndRng(0, 15)` in airandom.c to pick an action
+    for the resident's activity level.  They used to be paired with
+    `g_obala` / `g_obcla` / `g_obpha`, which are OBJECT ANIMATION
+    frame lists fed to `od_draw` -- and which this file ALSO pairs,
+    correctly, with `object_alarm_animation` / `object_clock_animation`
+    / `object_phone_animation` further down.  `g_obala` appeared twice
+    with contradictory meanings.  Confirmed by address: g_obala is
+    Ghidra 0x2b92a and dat_u3a.c's own comment reads
+    "alarm_animation @ 0x2B92A".
+  * `triggered_event_list` is **g_trel**, not `pst_arr`.  g_trel is
+    Ghidra 0x2b6da -- exactly the address globals.c cites for that
+    name, in a comment that sits above pst_arr's declaration by
+    mistake.  g_trel is the event FIFO putEv appends to and everything
+    tests as `g_trel[0] != ACTION_NONE`; pst_arr is a 10-short scratch
+    buffer the action handlers cache player STATES in (a_playc fills
+    it with STATE_HANDS_DOWN and friends), and it has no descriptive
+    Ghidra name.
+
+The Ghidra spellings of `action_table_*` are kept because the ROLE is
+now proven, but note they were role-inferred by the original analysis
+and the address-keyed sync found a stale port label (`g_obala`) rather
+than a descriptive one sitting at g_atact's address -- so treat the
+left column here as a description, not as a string to search Ghidra
+for.  `g_obfia[]` and `g_obdea[]` remain unsampled.
 
 ### MIDI sequencer
 
@@ -889,3 +921,37 @@ this table as a lead, and check the use sites before adopting one.
 | `word_﻿entered_to_position`           | `ew2pos`       |
 | `work_out`                            | `wk_out`       |
 | `workin`                              | `work_in`      |
+
+## The globals with NO descriptive Ghidra name (2026-09-06)
+
+Coverage was measured properly on 2026-09-06 and the old "~93
+remaining" note was badly wrong -- it had been comparing lcp_sym.68k's
+8-char TRUNCATED linkage names against this file's full names, so
+`lcp_watr`, `introSeq`, `date_day` and dozens like them counted as
+unmapped when they are not.  Expanding the truncations first (and
+dropping DRI libc and the AES library's own `gl_apid`) leaves
+**thirteen** port globals with no descriptive counterpart:
+
+| port      | what it is                                             |
+|-----------|--------------------------------------------------------|
+| `g_atact[16]` | action table, resident on HIGH activity -- see above |
+| `g_atmod[16]` | action table, moderate activity                    |
+| `g_atrel[16]` | action table, relaxed activity                     |
+| `g_trel[10]`  | the triggered-event FIFO -- see above              |
+| `g_rphs[48]`  | Y offset from the floor baseline per HOUSE_POS; the companion to `g_rpxs`, and hs_posXY's `floor_y - g_rphs[i]` |
+| `gr_hwchar`   | graf_handle's character cell width                 |
+| `gr_hhchar`   | ...cell height                                     |
+| `gr_hwbox`    | ...box width                                       |
+| `gr_hhbox`    | ...box height.  LCP_STX's aes_init has an empty frame because graf_handle writes all four straight to globals |
+| `psg_epp[3]`  | pointers to the three PSG_ENVELOPE structs         |
+| `psg_ovol`    | psg_upEn's clamped output volume                   |
+| `psg_vrg[8]`  | PSG volume-register list `{8,0,9,0,10,0,-1,0}` -- registers 8/9/10 are the three channel volumes, -1 ends it |
+| `g_unus3`     | `= -1`, referenced by NOTHING.  Same class as `mi_sig` and `cmd_num`: a 1985 declaration that still costs its bytes |
+
+These are not gaps to be filled by guessing.  Ghidra either shows a
+placeholder (`PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx`) at these addresses or
+now carries the port's own name from the address-keyed sync, so there
+is no 1985 descriptive name left to recover for them -- inventing one
+and recording it here would manufacture provenance that does not
+exist.  The `what it is` column is derived from use sites, which is
+what this table should have been keyed on all along.

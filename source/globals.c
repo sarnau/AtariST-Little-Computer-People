@@ -62,12 +62,17 @@ long    g_sfret;
 BOOL16  g_actif;
 short   g_wtx;
 short   g_wty;
-/* Ghidra triggered_event_list @ 0x2b6da: 10-short scratch buffer used
+/* A 10-short scratch buffer used
    by action handlers (bathroom, food, house, leisure, idle, simple)
    to cache a small set of state values indexed by variable expressions
    like `i & 3`.  Port previously declared [4], which was one byte
    short of a real out-of-bounds write via `pst_arr[4]` writes in the
-   bathroom/food/house paths -- the fifth slot overlapped lcp_frdO. */
+   bathroom/food/house paths -- the fifth slot overlapped lcp_frdO.
+
+   NOT Ghidra's triggered_event_list: this comment used to claim that
+   name and the address 0x2b6da, but 0x2b6da is g_trel, the event FIFO
+   putEv appends to.  pst_arr is Ghidra 0x573a8 and has no descriptive
+   name.  See tools/ghidra_globals_map.md. */
 short   pst_arr[10];
 
 short   lcp_frdO;
