@@ -1688,12 +1688,25 @@ Driven through the Hatari MCP and verified by STATE, not by animation
       Ctrl-P  0x10  pat dog   g_ptdoa set then cleared
       Ctrl-R  0x12  record    putEv() entered
       Ctrl-W  0x17  water     lcp_watr 4 -> 7 for three presses
-      (8)           backspace g_cdibp 2 -> 1, g_cdinb[1] nulled
+      (8)           erase     g_cdibp 5 -> 4, g_cdinb[4] nulled --
+                              works from the cursor-LEFT arrow and
+                              from Backspace, which are the same code
 
-**`KEY_CURSOR_LEFT` is a misnomer.**  Its value is 8, which is
-BACKSPACE, not the cursor-left arrow -- pressing the arrow key does
-nothing.  st_titl's own name entry tests `ch == 8` for the same
-purpose.  The constant is faithful; only the name misleads.
+**`KEY_CURSOR_LEFT` is named correctly** -- an earlier note in this
+file called it a misnomer and that was WRONG, retracted 2026-09-06.
+getKey has `case 0x4b: return 8;`, and 0x4b IS the cursor-left
+scancode, reached because the arrow's ASCII byte is 0.  Backspace
+independently IS ASCII 8.  So the two keys are aliases and both erase
+a character; measured, the arrow takes g_cdibp 5 -> 4 and nulls
+g_cdinb[4].  (st_titl and stEnter spell the same code as a bare `8`.)
+
+The retracted claim came from a test run with turbo ON, where the
+arrow appeared to do nothing.  It was the tx_sctm confound below:
+key code 8 is NOT in tick.c's exempt list, so a key arriving after
+tx_sctm has expired hits `g_cdibp = 0` FIRST and the erase then finds
+an empty buffer.  With turbo off the same keypress works every time.
+A key that looks dead under turbo is the emulator's pacing, not the
+port's.
 
 **Ctrl-P needs the dog called first.**  `deal_kc` guards it with
 `dg_petok != NO && g_ptdoa == NO`, and dg_petok is set ONLY by
