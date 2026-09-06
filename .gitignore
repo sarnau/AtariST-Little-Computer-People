@@ -10,3 +10,8 @@ LCP.rep/**/tmp*.ps
 LCP.rep/**/~journal.bak
 LCP.rep/**/~index.bak
 LCP.rep/user/**/db.*.gbf
+
+# Rendered audio under music/psg/ is derived: the .SNG/.ORG sources plus
+# source/tools/render_psg_all.py regenerate it bit-for-bit, and the register
+# logs beside it are the exact trace. Keep the logs, not the ~100 MB of WAV.
+music/psg/*.wav

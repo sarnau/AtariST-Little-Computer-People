@@ -1,0 +1,607 @@
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/AISLEDAN.SNG
+=====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           3431 bytes
+  title          "Aisle Dance by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  11 (Eb major, mask 0xec)
+  tempo          150 quarter notes/min -> 16 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=11, volume=5, tempo=150, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+  *  1  Blocks       Blocks             0     +0    12  A 15->12 d3  D -> 7 d6  S -> 6 d8  R d9  | mix tone | oct +0
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Flute        Flute              0    -36     0  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+  *  5  Clarinet     Clarinet           0     +0     6  A 15->13 d9  D ->12 d6  S ->10 d8  R d12 | mix tone | oct +0
+     6  Baritone     Baritone           0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+  *  7  Hihat        Hihat              1    +24    15  A 14->13 d3  D -> 5 d5  S -> 5 d3  R d5  | mix noise | oct +2
+  *  8  Snare        Snare              2    +12    15  A 14->13 d6  D -> 7 d15 S -> 4 d15 R d15 | mix noise | oct -2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Sax                0    -36     0  A 13->14 d4  D -> 8 d15 S -> 5 d4  R d7  | mix tone | oct -1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+  * 13  Bass         Bass               3    -24    13  A 15->14 d2  D ->11 d5  S ->10 d8  R d15 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0xd67, header ends 0x213
+  events         end=1, note=822
+  notes sounded  751
+  length         4704 units = 196.0 quarter notes = 78.4 s
+  voices used    [1, 5, 7, 8, 13] (marked * above)
+  stream walk    ended at 0xd66 of 0xd67
+  range          C2..D6 (MIDI 36..86)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/BALLAD.SNG
+===================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2380 bytes
+  title          "Ballad by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          141 quarter notes/min -> 17 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=1, volume=5, tempo=141, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+  *  4  Flute        Flute              0    +12     4  A 11->10 d4  D ->11 d7  S -> 8 d11 R d15 | mix tone | oct +1
+  *  5  Clarinet     Clarinet           0    -12    13  A 13->12 d5  D ->11 d11 S -> 9 d14 R d15 | mix tone | oct +0
+  *  6  Baritone     Baritone           0    -12     8  A 13->13 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+  *  7  Hihat        Hihat              1    +24    15  A 14->10 d3  D -> 7 d5  S -> 6 d3  R d3  | mix noise | oct +2
+  *  8  Snare        Snare              2    +12    10  A 14->15 d2  D ->14 d2  S -> 3 d9  R d15 | mix noise | oct +2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Sax                0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+  * 13  Bass         Bass               3    -24    13  A 14->13 d2  D ->13 d6  S -> 9 d10 R d12 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0x94c, header ends 0x213
+  events         end=1, loop_end=2, loop_start=1, note=588
+  notes sounded  586
+  length         3528 units = 147.0 quarter notes = 62.5 s
+  voices used    [4, 5, 6, 7, 8, 13] (marked * above)
+  stream walk    ended at 0x94b of 0x94c
+  range          C2..C6 (MIDI 36..84)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/BEBOP.SNG
+==================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           3139 bytes
+  title          "Bebop by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          138 quarter notes/min -> 17 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         12
+  header cmds    key=1, volume=12, tempo=138, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 10->10 d0  D ->10 d1  S ->10 d0  R d0  | mix tone+noise | oct +2
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d12 D ->11 d9  S -> 5 d10 R d15 | mix tone+noise | oct +2
+  *  3  Sax          Sax                0    -36     4  A 11->12 d15 D ->12 d13 S -> 5 d13 R d13 | mix tone | oct +0
+     4  Guitar       Guitar             0    -36     0  A  7-> 7 d0  D -> 7 d2  S -> 7 d1  R d0  | mix tone+noise | oct +2
+     5  Clarinet     Clarinet           0    -36     0  A  8->12 d5  D -> 9 d6  S -> 7 d15 R d15 | mix tone+noise | oct +2
+     6  Flute        Flute              0    -36     0  A  7->12 d8  D ->10 d14 S -> 8 d6  R d4  | mix tone+noise | oct +2
+  *  7  Hihat        Hihat              0     +0    10  A  9->12 d0  D -> 7 d5  S -> 4 d6  R d10 | mix noise | oct +1
+     8  Soprano      Soprano            0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     9  Bass         Bass               0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+  * 10  Sax          Sax                3     +0     4  A 12->12 d9  D -> 5 d12 S -> 4 d5  R d10 | mix tone | oct +0
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  7-> 5 d3  D -> 4 d4  S -> 2 d0  R d1  | mix tone+noise | oct +2
+  * 13  Bass         Bass               1    -24    13  A 12-> 8 d15 D -> 8 d5  S -> 5 d13 R d15 | mix tone | oct -1
+  * 14  Vibes        Vibes              2     +0     9  A 12->11 d4  D ->12 d4  S -> 8 d4  R d15 | mix tone | oct +1
+    15  Hihat        Hihat              0    -36     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0xc43, header ends 0x213
+  events         end=1, note=725
+  notes sounded  513
+  length         2664 units = 111.0 quarter notes = 47.2 s
+  voices used    [3, 7, 10, 13, 14] (marked * above)
+  stream walk    ended at 0xc42 of 0xc43
+  range          C3..E6 (MIDI 48..88)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/BOOGIE.SNG
+===================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2458 bytes
+  title          "Boogie by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  9 (F major, mask 0xfe)
+  tempo          160 quarter notes/min -> 15 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=9, volume=5, tempo=160, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Flute        Flute              0    -36     0  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Baritone           0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Hihat              0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+  *  8  Snare        Snare              2     +0    10  A 13->11 d6  D -> 7 d15 S -> 4 d15 R d15 | mix noise | oct -2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+  * 10  Sax          Sax                1    -12     7  A 13->14 d4  D -> 8 d15 S -> 5 d4  R d7  | mix tone | oct -1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+  * 13  Bass         Bass               0     +0    13  A 14->13 d2  D ->11 d5  S ->10 d8  R d15 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0x99a, header ends 0x213
+  events         end=1, note=547
+  notes sounded  546
+  length         3456 units = 144.0 quarter notes = 54.0 s
+  voices used    [8, 10, 13] (marked * above)
+  stream walk    ended at 0x999 of 0x99a
+  range          F2..F6 (MIDI 41..89)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/BOSSA.SNG
+==================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2763 bytes
+  title          "Bossa Nova by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  9 (F major, mask 0xfe)
+  tempo          78 quarter notes/min -> 30 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=9, volume=5, tempo=78, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+  *  1  Blocks       Blocks             0     +0    10  A 11-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +2
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Guitar1      Guitar1            0    -36     0  A  7-> 7 d0  D -> 7 d2  S -> 7 d1  R d0  | mix tone+noise | oct +2
+  *  5  Clarinet     Clarinet           1     +0     8  A  9->11 d5  D ->11 d6  S -> 7 d10 R d12 | mix tone | oct -1
+     6  Flute        Flute              0    -36     0  A  7->12 d8  D ->10 d14 S -> 8 d6  R d4  | mix tone+noise | oct +2
+     7  Hihat        Hihat              0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Snare        Snare              0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  Bass         Bass               0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+    10  Sax          Sax                0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+  * 11  flute        Flute              3     +0     6  A 11->12 d3  D -> 9 d5  S ->11 d10 R d10 | mix tone | oct +1
+    12  Piano        Piano              0    -36     0  A  7-> 5 d3  D -> 4 d4  S -> 2 d0  R d1  | mix tone+noise | oct +2
+  * 13  Bass         Bass               2    -12     8  A 15->14 d1  D -> 7 d6  S -> 3 d9  R d8  | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Hihat        Hihat              0    -36     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0xacb, header ends 0x213
+  events         end=1, note=626
+  notes sounded  602
+  length         2082 units = 86.8 quarter notes = 65.1 s
+  voices used    [1, 5, 11, 13] (marked * above)
+  stream walk    ended at 0xaca of 0xacb
+  range          A2..D6 (MIDI 45..86)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/CALYPSO.SNG
+====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2729 bytes
+  title          "Calypso by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          133 quarter notes/min -> 18 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=1, volume=5, tempo=133, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Sax          Sax                0    -36     0  A  1->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+  *  3  Bells        Bells              0     +0     6  A 14->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone+noise | oct +2
+  *  4  Flute        Flute              1     +0     0  A 13->13 d4  D ->12 d8  S -> 8 d8  R d10 | mix tone | oct +0
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Baritone           0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Hihat              0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Snare        Snare              0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+  * 10  Blocks       Blocks             2    +24    15  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+  * 13  Bass         Bass               3    -24    13  A 14->12 d2  D ->11 d5  S -> 7 d10 R d13 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0xaa9, header ends 0x213
+  events         end=1, note=605
+  notes sounded  420
+  length         2286 units = 95.2 quarter notes = 42.9 s
+  voices used    [3, 4, 10, 13] (marked * above)
+  stream walk    ended at 0xaa8 of 0xaa9
+  range          G2..C6 (MIDI 43..84)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/CANON.SNG
+==================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2961 bytes
+  title          "Pachelbel's Canon in D"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  3 (D major, mask 0x37)
+  tempo          160 quarter notes/min -> 15 ticks per 1/24 note @ 960 Hz
+  velocity       120 (PSG volume 15)
+  header cmds    tempo=160, velocity=120, key=3
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Sax                0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+  *  4  Flute        Guitar             0    -36     0  A  0->10 d10 D ->10 d6  S ->10 d14 R d14 | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->12 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Flute              0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Accordian          0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Snare        Soprano            0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     Bass               0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Baritone           0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+  * 11  Clarinet     Vibes              0    -36     0  A  0->12 d12 D ->10 d4  S -> 7 d14 R d3  | mix tone | oct +1
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+    13  Bass         Congas             0    -36     0  A  4->13 d2  D -> 8 d5  S -> 3 d8  R d2  | mix tone | oct -1
+    14  Vibes        Trumphet           0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Hihat              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0xb91, header ends 0x211
+  events         end=1, note=678
+  notes sounded  667
+  length         9408 units = 392.0 quarter notes = 147.0 s
+  voices used    [4, 11] (marked * above)
+  stream walk    ended at 0xb90 of 0xb91
+  range          D2..C#5 (MIDI 38..73)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/COUNTRY2.SNG
+=====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           3178 bytes
+  title          "Country Too by Ed Bogas"
+  pointers@0x1cc 0x000000 0x060d54 0x060d54 0x060d54 0x060d54
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  9 (F major, mask 0xfe)
+  tempo          130 quarter notes/min -> 18 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=9, volume=5, tempo=130, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 10->10 d0  D ->10 d1  S ->10 d0  R d0  | mix tone+noise | oct +2
+     2  Sax          Sax                0    -36     0  A  1->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+  *  3  Guitar       Guitar             1     +0    10  A 12->11 d2  D -> 7 d3  S -> 5 d3  R d4  | mix tone | oct +0
+     4  Guitar1      Guitar1            0    -36     0  A  7-> 7 d0  D -> 7 d2  S -> 7 d1  R d0  | mix tone+noise | oct +2
+     5  Clarinet     Clarinet           0    -36     0  A  8->12 d5  D -> 9 d6  S -> 7 d15 R d15 | mix tone+noise | oct +2
+     6  Flute        Flute              0    -36     0  A  7->12 d8  D ->10 d14 S -> 8 d6  R d4  | mix tone+noise | oct +2
+  *  7  Hihat        Hihat              2     +0    15  A 12-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Soprano      Soprano            0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     9  Bass         Bass               0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+  * 10  Harmonica    Harmonica          0    -12     2  A  6->12 d6  D ->11 d8  S -> 5 d8  R d10 | mix tone | oct +0
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  7-> 5 d3  D -> 4 d4  S -> 2 d0  R d1  | mix tone+noise | oct +2
+  * 13  Bass         Bass               3     +0     7  A 13->12 d1  D -> 8 d9  S -> 3 d8  R d10 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Hihat        Hihat              0    -36     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0xc6a, header ends 0x213
+  events         end=1, loop_end=3, loop_start=1, note=772
+  notes sounded  725
+  length         2856 units = 119.0 quarter notes = 53.5 s
+  voices used    [3, 7, 10, 13] (marked * above)
+  stream walk    ended at 0xc69 of 0xc6a
+  range          A#2..D6 (MIDI 46..86)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/FIVEFOUR.SNG
+=====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2925 bytes
+  title          "Five Four by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  14 (Gb major, mask 0x88)
+  tempo          171 quarter notes/min -> 14 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         6
+  header cmds    key=14, volume=6, tempo=171, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Guitar1      Guitar1            0    -36     0  A  7-> 7 d0  D -> 7 d2  S -> 7 d1  R d0  | mix tone+noise | oct +2
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Baritone           0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+  *  7  Hihat        Hihat              0    +12    10  A 12-> 9 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Soprano      Soprano            0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     9  Bass         Bass               0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+  * 10  Sax          Sax                1     +0     6  A 10->11 d4  D -> 9 d15 S -> 4 d15 R d15 | mix tone | oct +0
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  5->12 d1  D -> 8 d4  S -> 6 d4  R d3  | mix tone | oct +0
+  * 13  Bass         Bass               2     +0     8  A 13->12 d2  D -> 8 d7  S -> 3 d11 R d13 | mix tone | oct -1
+  * 14  Vibes        Vibes              3     +0    10  A 11->12 d3  D -> 6 d7  S -> 0 d6  R d8  | mix tone | oct +1
+    15  Hihat        Hihat              0    -36     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0xb6d, header ends 0x213
+  events         end=1, loop_end=4, loop_start=1, note=702
+  notes sounded  664
+  length         4896 units = 204.0 quarter notes = 71.4 s
+  voices used    [7, 10, 13, 14] (marked * above)
+  stream walk    ended at 0xb6c of 0xb6d
+  range          A#2..C#6 (MIDI 46..85)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/MYSTERY.SNG
+====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           1963 bytes
+  title          "Mystery by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  2 (G major, mask 0x77)
+  tempo          104 quarter notes/min -> 23 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=2, volume=5, tempo=104, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+  *  3  Guitar       Guitar             0     +0    10  A 15->11 d2  D ->11 d3  S -> 0 d4  R d2  | mix tone | oct +0
+     4  Flute        Flute              0    -36     0  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+  *  6  Baritone     Baritone           1     +0     8  A 15->11 d8  D -> 9 d14 S -> 7 d15 R d15 | mix tone | oct +0
+     7  Hihat        Hihat              0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+  *  8  Snare        Snare              2    +24    15  A 15->11 d10 D -> 7 d15 S -> 4 d15 R d15 | mix noise | oct -2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Sax                0    -36     0  A 13->14 d4  D -> 8 d15 S -> 5 d4  R d7  | mix tone | oct -1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+    13  Bass         Bass               0    -36     0  A 14->13 d2  D ->11 d5  S ->10 d8  R d15 | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0x7ab, header ends 0x213
+  events         end=1, loop_end=2, loop_start=1, note=774
+  notes sounded  571
+  length         3108 units = 129.5 quarter notes = 74.5 s
+  voices used    [3, 6, 8] (marked * above)
+  stream walk    ended at 0x7aa of 0x7ab
+  range          E2..D6 (MIDI 40..86)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/TANGO.SNG
+==================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           3520 bytes
+  title          "Tango by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  10 (Bb major, mask 0xee)
+  tempo          133 quarter notes/min -> 18 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=10, volume=5, tempo=133, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+  *  2  Accordian    Harmonica          0     +0     9  A  9->13 d15 D ->11 d12 S -> 5 d11 R d7  | mix tone | oct +1
+     3  Guitar       Guitar             0    -36     0  A 10->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +0
+  *  4  Flute        Flute              0     +0     6  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+  *  5  Clarinet     Clarinet           1    -24     8  A 11->12 d5  D ->14 d6  S -> 9 d10 R d13 | mix tone | oct -1
+  *  6  Baritone     Baritone           1     +0     0  A 12->10 d8  D -> 9 d14 S -> 7 d10 R d15 | mix tone | oct -1
+  *  7  Hihat        Hihat              2     +0    15  A 12->11 d2  D -> 9 d5  S -> 5 d3  R d4  | mix noise | oct +2
+     8  Snare        Snare              0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Sax                0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+  * 13  Bass         Bass               3    -24    13  A 13->13 d2  D -> 8 d5  S -> 3 d10 R d13 | mix tone | oct +0
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0xdc0, header ends 0x213
+  events         end=1, note=846
+  notes sounded  618
+  length         3054 units = 127.2 quarter notes = 57.3 s
+  voices used    [2, 4, 5, 6, 7, 13] (marked * above)
+  stream walk    ended at 0xdbf of 0xdc0
+  range          C2..F6 (MIDI 36..89)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/FOLKSONG.ORG
+=====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2520 bytes
+  title          "Folk Song by Ed Bogas"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          100 quarter notes/min -> 24 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=1, volume=5, tempo=100, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+  *  3  Guitar       Guitar             0     +0     7  A 11->10 d2  D -> 8 d7  S -> 5 d10 R d11 | mix tone | oct +0
+     4  Flute        Flute              1     +0     6  A 11->12 d4  D ->12 d8  S -> 8 d14 R d15 | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Flute              0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Accordian          0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Soprano      Soprano            0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     9  Bass         Bass               0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+    10  Sax          Baritone           0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+    11  Clarinet     Vibes              0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        Piano              0    -36     0  A  5->12 d1  D -> 8 d4  S -> 6 d4  R d3  | mix tone | oct +0
+    13  Bass         Congas             0    -36     0  A  4->13 d2  D -> 8 d5  S -> 3 d8  R d2  | mix tone | oct -1
+    14  Vibes        Trumphet           0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Hihat        Hihat              0    -36     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0x9d8, header ends 0x213
+  events         end=1, loop_end=2, loop_start=1, note=571
+  notes sounded  571
+  length         2592 units = 108.0 quarter notes = 64.8 s
+  voices used    [3] (marked * above)
+  stream walk    ended at 0x9d7 of 0x9d8
+  range          C3..C6 (MIDI 48..84)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/MAPLE.ORG
+==================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           12978 bytes
+  title          "MAPLE LEAF RAG by Scott Joplin"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 00 05 00 09 00 21 00 43
+  key signature  12 (Ab major, mask 0xcc)
+  tempo          109 quarter notes/min -> 22 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         12
+  header cmds    key=12, volume=12, tempo=109, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       x                  0     +0     0  A 10->10 d0  D ->10 d1  S ->10 d0  R d0  | mix tone+noise | oct +2
+     2  Harmonica    x                  0     +0     0  A  6->12 d12 D ->11 d9  S -> 5 d10 R d15 | mix tone+noise | oct +2
+     3  Sax          x                  0    -36     0  A 11->12 d15 D ->12 d13 S -> 5 d13 R d13 | mix tone | oct +0
+     4  Guitar       x                  0     +0     0  A  7-> 7 d0  D -> 7 d2  S -> 7 d1  R d0  | mix tone+noise | oct +2
+     5  Clarinet     x                  0    +12     0  A  8->12 d5  D -> 9 d6  S -> 7 d15 R d15 | mix tone+noise | oct +2
+     6  Flute        x                  0     +0     0  A  7->12 d8  D ->10 d14 S -> 8 d6  R d4  | mix tone+noise | oct +2
+     7  Hihat        x                  0     +0     0  A  9->12 d0  D -> 7 d5  S -> 4 d6  R d10 | mix noise | oct +1
+     8  Soprano      x                  0     +0     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     9  Bass         x                  0    -36     0  A 11->15 d0  D ->15 d0  S ->15 d0  R d1  | mix tone+noise | oct +2
+  * 10  Sax          x                  0     +0     0  A 12->12 d9  D -> 5 d12 S -> 4 d5  R d10 | mix tone | oct +0
+    11  Clarinet     Marimba            5    +12    17  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+    12  Piano        x                  0    +12     0  A  7-> 5 d3  D -> 4 d4  S -> 2 d0  R d1  | mix tone+noise | oct +2
+    13  Bass         x                  0    -12     0  A 12-> 8 d15 D -> 8 d5  S -> 5 d13 R d15 | mix tone | oct -1
+    14  Vibes        x                  0     +0    10  A 12->11 d4  D ->12 d4  S -> 8 d4  R d15 | mix tone | oct +1
+    15  Hihat        x                  0    +12     0  A  5-> 8 d1  D -> 8 d0  S ->10 d0  R d0  | mix tone+noise | oct +2
+
+  stream         0x208..0x32b2, header ends 0x213
+  events         bar=144, end=1, note=3717
+  notes sounded  2568
+  length         6906 units = 287.8 quarter notes = 158.3 s
+  voices used    [10] (marked * above)
+  stream walk    ended at 0x32b1 of 0x32b2
+  range          C2..G#6 (MIDI 36..92)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/PRELUDE.ORG
+====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2714 bytes
+  title          "Prelude"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          120 quarter notes/min -> 20 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         12
+  header cmds    key=1, volume=12, tempo=120, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Guitar             0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Flute        Flute              0    -36     0  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Baritone           0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Hihat              0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Snare        Snare              0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     B.Fiddle           0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Sax                0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+    11  Clarinet     Clarinet           0    -36     0  A  2-> 8 d6  D -> 6 d7  S ->11 d10 R d10 | mix tone | oct -2
+  * 12  Piano        Piano              0     +0     3  A 11->13 d2  D ->11 d6  S -> 6 d8  R d7  | mix tone | oct +0
+    13  Bass         Bass               0    -36     0  A  4->13 d2  D -> 8 d5  S -> 3 d8  R d2  | mix tone | oct -1
+    14  Vibes        Vibes              0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Bells              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0xa9a, header ends 0x213
+  events         end=1, note=603
+  notes sounded  578
+  length         2700 units = 112.5 quarter notes = 56.2 s
+  voices used    [12] (marked * above)
+  stream walk    ended at 0xa99 of 0xa9a
+  range          B2..C6 (MIDI 47..84)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/REQUIEM.ORG
+====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           4947 bytes
+  title          "Kyrie eleison-Mozart's REQUIEM"
+  pointers@0x1cc 0x000000 0x000000 0x000000 0x000000 0x000000
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  9 (F major, mask 0xfe)
+  tempo          128 quarter notes/min -> 18 ticks per 1/24 note @ 960 Hz
+  velocity       127 (PSG volume 15)
+  volume         5
+  header cmds    key=9, volume=5, tempo=128, velocity=127
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Sax                0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+     4  Flute        Guitar             0    -36     0  A  2->10 d4  D ->12 d8  S -> 8 d8  R d7  | mix tone | oct +1
+     5  Clarinet     Clarinet           0    -36     0  A  8->10 d5  D ->11 d6  S -> 7 d10 R d10 | mix tone | oct +0
+     6  Baritone     Flute              0    -36     0  A  5->10 d8  D -> 9 d14 S -> 7 d10 R d4  | mix tone | oct -1
+     7  Hihat        Accordian          0    -36     0  A 10-> 1 d3  D -> 0 d5  S -> 0 d0  R d0  | mix noise | oct +2
+     8  Snare        Soprano            0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     Bass               0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+    10  Sax          Baritone           0    -36     0  A  2->12 d4  D -> 1 d15 S -> 0 d4  R d0  | mix tone | oct +1
+  * 11  Clarinet     Vibes              0    -36     0  A 12->12 d3  D ->13 d5  S ->13 d14 R d13 | mix tone | oct +0
+    12  Piano        Piano              0    -36     0  A  0->14 d2  D -> 8 d7  S -> 6 d5  R d0  | mix tone | oct +0
+    13  Bass         Congas             0    -36     0  A  4->13 d2  D -> 8 d5  S -> 3 d8  R d2  | mix tone | oct -1
+    14  Vibes        Trumphet           0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+    15  Bells        Hihat              0    -36     0  A 15->12 d1  D -> 8 d1  S -> 7 d2  R d0  | mix tone | oct +2
+
+  stream         0x208..0x1353, header ends 0x213
+  events         bar=51, end=1, note=1229
+  notes sounded  1200
+  length         5022 units = 209.2 quarter notes = 94.2 s
+  voices used    [11] (marked * above)
+  stream walk    ended at 0x1352 of 0x1353
+  range          A2..A#5 (MIDI 45..82)
+
+/Users/sarnau/GitHub/AtariST-Little-Computer-People/DATA/STARSPAN.ORG
+=====================================================================
+  signature      yes   type 2 (song (.SNG/.ORG))
+  size           2104 bytes
+  title          "Star-Spangled Banner / F.S.Key"
+  pointers@0x1cc 0x000000 0x02da5a 0x02da5a 0x02da5a 0x02da5a
+  trailer @0x200 ff ff 00 00 00 00 00 00
+  key signature  1 (C major, mask 0xff)
+  tempo          133 quarter notes/min -> 18 ticks per 1/24 note @ 960 Hz
+  velocity       91 (PSG volume 13)
+  volume         4
+  header cmds    key=1, volume=4, tempo=133, velocity=91
+
+  voice  instrument   (2nd list)   MIDI ch  transp  prog  envelope
+     1  Blocks       Blocks             0    -36     0  A 15-> 3 d1  D -> 0 d0  S -> 0 d0  R d0  | mix tone | oct +1
+     2  Harmonica    Harmonica          0    -36     0  A  6->12 d2  D ->11 d5  S -> 5 d0  R d0  | mix tone | oct +0
+     3  Guitar       Sax                0    -36     0  A  0->13 d2  D -> 7 d3  S -> 5 d4  R d2  | mix tone | oct +1
+  *  4  Flute        Guitar             0     +0     7  A 10->13 d4  D ->10 d15 S ->15 d13 R d15 | mix tone | oct +1
+  *  5  Clarinet     Clarinet           0    -36     0  A 11->15 d9  D ->15 d15 S ->12 d15 R d15 | mix tone | oct +0
+  *  6  Baritone     Flute              1     +0     0  A  8->12 d10 D ->13 d15 S -> 7 d15 R d15 | mix tone | oct +0
+  *  7  Hihat        Accordian          2    -24     1  A 10->10 d3  D ->13 d5  S -> 8 d8  R d11 | mix tone | oct +0
+     8  Snare        Soprano            0    -36     0  A 15-> 0 d6  D ->11 d1  S -> 0 d2  R d1  | mix noise | oct +2
+     9  B.Fiddle     Bass               0    -36     0  A  5->14 d3  D -> 8 d7  S -> 7 d14 R d1  | mix tone | oct -2
+  * 10  Sax          Baritone           3     +0     0  A  2->12 d4  D -> 6 d15 S -> 5 d4  R d10 | mix tone | oct +1
+  * 11  Baritone     Vibes              2    -12    14  A 10->12 d10 D ->13 d15 S -> 7 d15 R d15 | mix tone | oct +0
+    12  Piano        Piano              0    -36     0  A  1->15 d2  D ->12 d6  S -> 6 d13 R d11 | mix tone | oct +0
+  * 13  Bass         Congas             3     +0     0  A  4->13 d1  D ->10 d10 S -> 6 d10 R d12 | mix tone | oct +0
+    14  Vibes        Trumphet           0    -36     0  A  4->15 d3  D -> 9 d5  S -> 0 d3  R d1  | mix tone | oct +2
+  * 15  Bells        Hihat              3     +0     6  A 15->12 d0  D -> 8 d3  S -> 7 d6  R d15 | mix tone | oct +2
+
+  stream         0x208..0x838, header ends 0x213
+  events         bar=32, end=1, note=402
+  notes sounded  389
+  length         2304 units = 96.0 quarter notes = 43.2 s
+  voices used    [4, 5, 6, 7, 10, 11, 13, 15] (marked * above)
+  stream walk    ended at 0x837 of 0x838
+  range          C2..E6 (MIDI 36..88)
+
