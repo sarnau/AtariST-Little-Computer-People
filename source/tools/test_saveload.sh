@@ -1,129 +1,146 @@
 #!/usr/bin/env bash
-# test_saveload.sh -- verify save/load round-trip doesn't crash.
 #
-# The port has two boot paths depending on whether a HYBER save file
-# is present in the game data dir:
+# test_saveload.sh -- verify both HYBER boot paths, and that a save
+# file's CONTENTS actually reach the PLAYER struct.
 #
-#   no HYBER  -> lc_load returns 0, cs_mvIn seeds player state
-#                (resident at (300, 190) via the minimal cutscene)
+# The port boots two ways depending on whether HYBER is present:
 #
-#   HYBER OK  -> lc_load reads 128 bytes into PLAYER struct, unpacks
-#                door states, calls lcp_upal; gameLoop sees g_lcldd=1
-#                and positions player near POS_TOP_STUDY_DOOR
+#   no HYBER   lc_load returns 0, g_lcldd stays 0, and main runs
+#              cs_mvIn -- the move-in cutscene that seeds the resident
+#   HYBER OK   lc_load reads 128 bytes into `lcp`, unpacks the door
+#              bits and calls lcp_upal; g_lcldd is 1 and cs_mvIn is
+#              skipped entirely
 #
-# Both paths must boot without crashing.  This test runs each in turn
-# and compares the resulting bus-error / crash-detector output.  A
-# synthesised HYBER with sane defaults is generated in Python.
+# The previous version of this script never ran at all: it looked for
+# HYBER in $GAME_DIR/data, which does not exist -- the game opens
+# "hyber" on the GEMDOS drive root -- so it exited "SETUP" every time.
+# It also built without -DSKIP_COPYPROT, which parks the resident in
+# cs_mvIn's `while (1) a_sleep(-1)` under any emulator here, and its
+# only assertion was "did not crash" -- which a load path that silently
+# did nothing would pass.
 #
-# Exit codes:
-#   0 both paths boot clean
-#   1 either path crashed (see log for details)
-#   2 setup error
+# So this checks the values.  The synthesised save carries distinctive
+# numbers and the test reads them back out of `lcp` in memory.  Note
+# that main is `g_lcldd = lc_load(); st_titl();`, and with SKIP_TITLE
+# st_titl overwrites owner_name and the date, so the fields asserted
+# here are deliberately ones st_titl never touches.
+#
+# Env: KEEP_LOG=1, HATARI=, TOS_IMG=, GAME_DIR= as in hatari_probe.sh.
+# Exit: 0 both paths correct, 1 an assertion failed, 2 setup error.
 
 set -uo pipefail
-
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
-GAME=${GAME_DIR:-$HOME/Hatari_C/hatari-c/GAME}
-DATA_DIR=$GAME/data
-HYBER=$DATA_DIR/HYBER   # Alcyon Fopen is case-insensitive per Atari conv
-BACKUP=/tmp/hyber.saveload_test.bak
-LOG=/tmp/lcp_saveload.log
+. "$CSRC/tools/hatari_probe.sh"
 
-if [ ! -d "$DATA_DIR" ]; then
-    echo "SETUP: $DATA_DIR missing" >&2
-    exit 2
-fi
+HYBER="$GAME_DIR/hyber"
+BACKUP=$(mktemp -t hyber_bak)
 
-# Preserve any existing hyber the user has.
+# PLAYER field offsets, from include/structs.h.
+OFF_CLOTHING=0x00
+OFF_SPRITE=0x5a
+OFF_FOOD=0x52
+OFF_WATER=0x5c
+
+# Distinctive values -- not defaults, so a stale struct cannot pass.
+WANT_CLOTHING=5
+WANT_SPRITE=3
+WANT_FOOD=4
+WANT_WATER=7
+
+pass=0; fail=0; results=""
+ok()  { pass=$((pass+1)); printf 'ok\n';             results+=$'\n'"  ok    $1"; }
+bad() { fail=$((fail+1)); printf 'FAIL (%s)\n' "$2"; results+=$'\n'"  FAIL  $1 -- $2"; }
+
+# The GEMDOS drive is shared with the developer's own play sessions, so
+# put back whatever was there.
 had_hyber=0
-if [ -f "$HYBER" ]; then
-    had_hyber=1
-    cp "$HYBER" "$BACKUP"
-fi
-
+[ -f "$HYBER" ] && { had_hyber=1; cp "$HYBER" "$BACKUP"; }
 restore() {
-    if [ "$had_hyber" = "1" ]; then
-        mv "$BACKUP" "$HYBER"
-    else
-        rm -f "$HYBER"
-    fi
+    if [ "$had_hyber" = "1" ]; then cp "$BACKUP" "$HYBER"; else rm -f "$HYBER"; fi
+    rm -f "$BACKUP"
 }
 trap restore EXIT
 
-# ---- Path A: no HYBER -----------------------------------------------
-rm -f "$HYBER"
-echo "==== A. no HYBER (fresh-boot path) ===="
-LOG="$LOG" VBLS=1500 "$CSRC/tools/run_hatari.sh"
-a=$?
-echo ""
-
-# ---- Path B: valid HYBER --------------------------------------------
-# Synthesise a 128-byte PLAYER struct with sane defaults.  Field offsets
-# from include/structs.h.  All shorts big-endian (68k byte order).
-echo "==== B. valid HYBER (loaded save path) ===="
-HYBER_OUT="$HYBER" python3 <<'PY'
+write_hyber() {
+    HYBER_OUT="$HYBER" python3 <<PY
 import struct, os
-out = os.environ['HYBER_OUT']
 p = bytearray(128)
-def put_s(off, val):
-    struct.pack_into('>h', p, off, val)
-
-put_s(0x00, 5)      # clothing_color
-put_s(0x02, 3)      # skin_color
-put_s(0x04, 22)     # bedtime_hour
-put_s(0x06, 6)      # wake_hour
-put_s(0x08, 12)     # lunch_hour
-put_s(0x0a, 18)     # dinner_hour
-put_s(0x0c, 1)      # personality_type
-put_s(0x0e, 4)      # activity_level
-# 0x10..0x27 reserved (zero)
-put_s(0x28, 1)      # happiness (MOOD_CONTENT)
-put_s(0x2a, 12)     # happiness_initial_countdown
-put_s(0x2c, 12)     # happiness_duration_happy
-put_s(0x2e, 8)      # happiness_duration_content
-put_s(0x30, 12)     # happiness_duration_active
-put_s(0x32, -1)     # happiness_direction
-put_s(0x34, 0)      # sickness_level
-put_s(0x36, 0)      # sickness_countdown
-put_s(0x38, 0)      # sickness_direction
-put_s(0x3a, 0)      # is_sleeping
-put_s(0x3c, 50)     # initiative_threshold
-put_s(0x3e, 0)      # thirst_level
-put_s(0x40, 60)     # thirst_timer_max
-put_s(0x42, 60)     # thirst_timer
-put_s(0x44, 0)      # hunger_level
-put_s(0x46, 90)     # hunger_timer_max
-put_s(0x48, 90)     # hunger_timer
-put_s(0x4a, 0)      # bathroom_need
-put_s(0x4c, 30)     # bathroom_timer_max
-put_s(0x4e, 30)     # bathroom_timer
-# 0x50 reserved
-put_s(0x52, 4)      # food_supply
-put_s(0x54, 0)      # record_playing
-put_s(0x56, 0)      # tv_on
-# door_states_and_flags @ 0x58: init full-food, everything closed.
-put_s(0x58, 0x0800) # DSF_INIT_FOOD_FULL
-put_s(0x5a, 3)      # character_sprite_id (PE3.LCP)
-put_s(0x5c, 7)      # water_level
-name = b'PLAYER\x00' + b'\x00' * 17    # 24 bytes @ 0x5e
-p[0x5e:0x76] = name
-cname = b'BUDDY\x00\x00\x00\x00\x00'    # 10 bytes @ 0x76
-p[0x76:0x80] = cname
-open(out, 'wb').write(bytes(p))
-print(f'wrote {len(p)} bytes -> {out}')
+def s(off, val): struct.pack_into('>h', p, off, val)
+s($OFF_CLOTHING, $WANT_CLOTHING)
+s(0x02, 3)     # skin_color
+s(0x04, 22)    # bedtime_hour
+s(0x06, 6)     # wake_hour
+s(0x08, 12)    # lunch_hour
+s(0x0a, 18)    # dinner_hour
+s(0x0c, 1)     # personality_type
+s(0x0e, 4)     # activity_level
+s(0x28, 1)     # happiness
+s(0x2a, 12); s(0x2c, 12); s(0x2e, 8); s(0x30, 12); s(0x32, -1)
+s(0x3c, 50)    # initiative_threshold
+s(0x40, 60); s(0x42, 60)      # thirst timers
+s(0x46, 90); s(0x48, 90)      # hunger timers
+s(0x4c, 30); s(0x4e, 30)      # bathroom timers
+s($OFF_FOOD, $WANT_FOOD)
+s(0x58, 0x0800)               # door_states_and_flags: food full, shut
+s($OFF_SPRITE, $WANT_SPRITE)
+s($OFF_WATER, $WANT_WATER)
+p[0x5e:0x76] = b'SAVETEST' + b'\0' * 16
+p[0x76:0x80] = b'BUDDY' + b'\0' * 5
+open(os.environ['HYBER_OUT'], 'wb').write(bytes(p))
 PY
+}
 
-LOG="$LOG" VBLS=1500 "$CSRC/tools/run_hatari.sh"
-b=$?
+field() {                                # $1 = offset -> decimal value
+    probe_word "$(printf '%x' $(( 0x$(probe_addr _lcp) + $1 )))"
+}
+
+# Build once; both paths run the same binary.
+ALCYON_CPPFLAGS="-DSKIP_TITLE=1 -DSKIP_COPYPROT=1" \
+    "$CSRC/tools/alcyon_build.sh" >/dev/null 2>&1 \
+    && "$CSRC/tools/alcyon_link.sh" >/dev/null 2>&1 \
+    || { echo "SETUP: gated rebuild failed" >&2; exit 2; }
+
+# ---- Path A: no HYBER, the move-in path ------------------------------
+echo "==== A. no HYBER (fresh boot) ===="
+rm -f "$HYBER"
+NO_REBUILD=1 probe_start
+echo "load base \$$(probe_base)"
+printf '%-34s ' "g_lcldd == 0 (nothing loaded)"
+v=$(probe_word "$(probe_addr _g_lcldd)")
+[ "$v" = "0" ] && ok "path A  g_lcldd = 0" || bad "path A" "g_lcldd = $v, expected 0"
+printf '%-34s ' "reached gameplay"
+ok "path A  cutscene completed (introSeq cleared)"   # probe_start asserts it
+probe_stop
 echo ""
 
-# ---- Verdict ---------------------------------------------------------
-echo "==== SAVE/LOAD VERDICT ===="
-echo "  path A (no HYBER):     exit=$a"
-echo "  path B (valid HYBER):  exit=$b"
-if [ "$a" = "0" ] && [ "$b" = "0" ]; then
-    echo "  both paths boot clean"
-    exit 0
-fi
-echo "  at least one path crashed"
-exit 1
+# ---- Path B: a valid save, values must arrive ------------------------
+echo "==== B. valid HYBER (loaded save) ===="
+write_hyber
+[ -s "$HYBER" ] || { echo "SETUP: could not synthesise HYBER" >&2; exit 2; }
+NO_REBUILD=1 probe_start
+echo "load base \$$(probe_base)"
+
+printf '%-34s ' "g_lcldd == 1 (save loaded)"
+v=$(probe_word "$(probe_addr _g_lcldd)")
+[ "$v" = "1" ] && ok "path B  g_lcldd = 1" || bad "path B" "g_lcldd = $v, expected 1"
+
+# The point of the test: the file's numbers must be IN the struct.
+for spec in "$OFF_WATER:$WANT_WATER:water_level" \
+            "$OFF_FOOD:$WANT_FOOD:food_supply" \
+            "$OFF_SPRITE:$WANT_SPRITE:character_sprite_id" \
+            "$OFF_CLOTHING:$WANT_CLOTHING:clothing_color"; do
+    IFS=: read -r off want name <<< "$spec"
+    printf '%-34s ' "lcp.$name == $want"
+    got=$(field "$off")
+    [ "$got" = "$want" ] && ok "path B  lcp.$name = $got" \
+                         || bad "path B lcp.$name" "got $got, expected $want"
+done
+probe_stop
+
+echo ""
+echo "==== HYBER SAVE/LOAD ===="
+echo -e "$results"
+echo ""
+echo "  passed $pass, failed $fail"
+[ "$fail" -eq 0 ] || exit 1
+exit 0

@@ -66,8 +66,26 @@ after=$(probe_word "$A_WATR")
 if [ "$after" -gt "$before" ]; then ok "Ctrl-W  lcp_watr $before -> $after"
 else bad "Ctrl-W" "lcp_watr stayed $before"; fi
 
-# ---- the five that queue an event ------------------------------------
-for pair in "B book" "C phone" "D dogfood" "F food" "R record"; do
+# ---- Ctrl-F is CONDITIONAL, so make its condition true ---------------
+# deal_kc returns without queuing when the food cupboard reads full:
+#   if (((lcp.door_states_and_flags >> 9) & 7) == 4) { food_dlv = YES; return; }
+# Whether that holds depends on the save that happens to be on the
+# drive, so this asserted nothing stable until the field was forced.
+# Clear bits 9..11 and the delivery path is the one under test.
+printf '%-22s ' "Ctrl-F  food"
+A_DSF=$(printf '%x' $(( 0x$(probe_addr _lcp) + 0x58 )))
+dsf=$(probe_word "$A_DSF")
+newdsf=$(( dsf & ~0x0E00 ))
+probe_poke "$A_DSF" $(( (newdsf >> 8) & 0xff )) $(( newdsf & 0xff ))
+probe_bp_clear; probe_bp_pc "$A_PUTEV"
+M=$(probe_mark); probe_ctrl F; sleep 0.6
+n=$(probe_hits "$M")
+if [ "$n" -ge 1 ]; then ok "Ctrl-F  putEv entered (food field forced < 4)"
+else bad "Ctrl-F" "putEv never entered even with the food field cleared"; fi
+probe_bp_clear
+
+# ---- the four unconditional event keys -------------------------------
+for pair in "B book" "C phone" "D dogfood" "R record"; do
     set -- $pair
     printf '%-22s ' "Ctrl-$1  $2"
     probe_bp_clear; probe_bp_pc "$A_PUTEV"

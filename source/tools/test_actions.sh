@@ -179,6 +179,13 @@ while IFS='|' read -r row want cmd; do
         continue
     fi
     got=$(probe_word "$A_AQUEU")
+    # A dropped keystroke can leave a SHORTER command that matches some
+    # other row, so a mismatch is retried too -- a real regression still
+    # fails both times, but a lost key no longer reports a false one.
+    if [ "$got" != "$want" ]; then
+        n=$(run_one "$row" "$want" "$cmd")
+        [ "$n" -ne 0 ] && got=$(probe_word "$A_AQUEU")
+    fi
     if [ "$got" = "$want" ]; then
         pass=$((pass+1)); printf 'ok (action %s)\n' "$got"
         results+=$'\n'"  ok    row $row  $cmd -> $got"

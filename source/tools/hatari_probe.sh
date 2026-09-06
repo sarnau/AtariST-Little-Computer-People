@@ -177,10 +177,7 @@ probe_start() {
     for _ in $(seq 1 60); do [ -p "$_PROBE_FIFO" ] && break; sleep 0.25; done
     [ -p "$_PROBE_FIFO" ] || probe_die "Hatari never created the command FIFO"
 
-    # Let it boot and run the move-in cutscene.  BOOT_VBLS is emulated
-    # time; fast-forward measured ~2000 VBL/s here.
-    sleep $(( BOOT_VBLS / 1800 + 4 ))
-
+    sleep 8                              # TOS boot + program load
     _probe_find_base
     probe_gameplay_ready
 }
@@ -209,15 +206,22 @@ _probe_find_base() {
 
 # The cutscene must be over before typed input is dispatched at all --
 # tick.c gates the keyboard on `introSeq == NO`.
+#
+# How long that takes depends entirely on whether a save was loaded.
+# With a HYBER present lc_load sets g_lcldd and main SKIPS cs_mvIn, so
+# introSeq is clear almost at once.  Without one the full move-in
+# cutscene runs -- doorbell, kitchen, sink, dresser, bathroom, suitcase
+# -- and that is ~60 s of wall time even fast-forwarded.  Wait for the
+# slow case; the fast one returns on the first poll.
 probe_gameplay_ready() {
     local a v
     a=$(probe_addr _introSe)
-    for _ in $(seq 1 30); do
+    for _ in $(seq 1 ${READY_TIMEOUT:-180}); do
         v=$(probe_word "$a")
         [ "$v" = "0" ] && return 0
         sleep 1
     done
-    probe_die "introSeq never cleared -- gameplay not reached"
+    probe_die "introSeq never cleared after ${READY_TIMEOUT:-180}s -- gameplay not reached"
 }
 
 probe_base() { printf '%x' "$_PROBE_BASE"; }
