@@ -1673,6 +1673,67 @@ why the script reported "didn't produce an AVI" while swallowing
 fail the build loudly, it just makes the file MISS; collect the gates
 with separate `#ifdef`s instead.
 
+## Every typed command tested (2026-09-06)
+
+The parser's whole reachable surface, driven through the Hatari MCP and
+checked against `g_aqueu`/`g_aliss`, which is where prsCmd appends the
+action chk_encm returned.
+
+**How the parser works, and how to enumerate it.**  Each recognised
+word ORs `bm_lo[g_ew2b[w]]` into `g_ewb[ew2pos[w]]`; each of g_ew2a's
+rows is a 10-byte mask plus an action at +10 and a priority at +11, and
+a row fires when its mask is a SUBSET of the accumulated bits.  First
+match wins.  So the command set is fully derivable from the tables --
+pick, for each bit a row needs, a word that supplies it, then check no
+earlier row is also satisfied.  `PLAY GAME` -> row 22 -> action 16
+validates the model against observed behaviour.
+
+**33 rows, 31 reachable, all 31 verified.**  One command per row:
+
+    1 MAKE LOG 20        2 YOU SEEM COLD 20    3 USE LOG 20
+    4 PUT MUSIC 5        5 TIDY UP OUGHT 36    7 USE PIANO 26
+    8 USE SONG 26        9 TICKLE IVORIES 26  10 TYPE NOTE 7
+   11 IS NOTE 7         12 BRUSH TEETH 17     13 MESSY TEETH 17
+   14 DRINK WATER 13    15 SEEM GLASS 13      16 FEED DOG 31
+   17 FILL CAN 31       18 OPEN CAN 31        19 MOON 8
+   20 TIRED MUSIC 6     21 HATE MUSIC 6       22 USE WAR 16
+   23 DUST ADDITION 14  24 ATARI 2            25 WHAT IN UPSTAIRS
+   CLOSET 27            26 WHAT IN BEDROOM CLOSET 34
+   27 WHAT IN KITCHEN CABINET 18              28 WHAT IN FILING
+   CABINET 16           29 WHAT IN FREEZER 18 30 WHAT IN FRIDGE 18
+   31 WHAT IN DRESSER 34                      32 WHAT IN NIGHTSTAND 34
+
+**TWO rows can never fire, and it is the 1985 data that says so** --
+the tables are byte-identical, so these are the original's quirks, not
+port bugs.  Both predictions were confirmed by typing them: neither
+produced a queue entry.
+
+  * **Row 0, ACTION_HELLO.**  Its mask needs byte 9 bits 0x01|0x02.
+    Only five words reach byte 9 -- EXCUSE, PARDON, HELLO, ATTENTION,
+    HEY -- and ALL FIVE carry bit 0x02.  Nothing supplies 0x01, so the
+    greeting action is unreachable from the keyboard.
+  * **Row 6, the `MESSY IS HOME` phrasing of ACTION_CLEAN_UP.**  It
+    needs byte 4 bit 0x08, which only `IS` at vwd_tab index 84
+    supplies -- and index 84 is a DUPLICATE.  chk_vwd returns the
+    first spelling match, index 26, whose bit is byte 1 0x02.  (The
+    action itself is still reachable through row 5, `TIDY UP OUGHT`.)
+
+**vwd_tab has four dead entries.**  chk_vwd scans linearly and returns
+the first match, so a repeated spelling makes every later copy
+unreachable: **START** (idx 35, shadowed by 20), **LIKE** (71, by 3)
+and **IS** (84, by 26).  And index 0, **PLEASE**, is dead for a
+different reason -- chk_encm tests `chk_vwd(...) == 0` as
+"unrecognised", so the word at index 0 can never contribute its bit
+and instead takes the +4 priority PENALTY that unknown words get.
+Saying please makes the request less likely to be obeyed.
+
+Method notes: a newline inside `type_text` acts as Return, so several
+commands go in one call; the queue holds 10 and prsCmd drops anything
+further, so drain it under turbo (watch g_aliss) between batches.  A
+long batch can silently lose a keystroke -- two commands that failed
+in a batch of five both worked when retyped alone, so re-test a
+failure individually before believing it.
+
 ## All ten deal_kc key commands work (2026-09-06)
 
 Driven through the Hatari MCP and verified by STATE, not by animation
