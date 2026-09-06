@@ -1617,6 +1617,57 @@ why the script reported "didn't produce an AVI" while swallowing
 fail the build loudly, it just makes the file MISS; collect the gates
 with separate `#ifdef`s instead.
 
+## All five minigames play (2026-09-06)
+
+Driven end to end through the Hatari MCP on the gated build.  **All
+five work**, and between them they exercise most of the statics the
+byte-identity phase recovered:
+
+  1. **Anagrams** (`ag_main`) -- puzzle rendered, a guess accepted and
+     rejected (-> "Guess #2"), F1 clue re-jumbled the letters and
+     consumed itself (the header drops "F1 Clue").
+  2. **War** (`pk_wrMn`) -- 25/25 deal, round resolved to 24/26, next
+     card dealt.
+  3. **Poker** (`pk_main`) -- ante, five-card deal, bet, draw, second
+     betting round, the RESIDENT bet 14 of its own accord, call,
+     raise, showdown, pot of 32 transferred (384 -> 416).  Covers
+     pk_dbet/pk_sbet, pk_evh, pk_cdrw/pk_ldCrd.
+  4. **Blackjack** (`pk_bjMn`) -- bet, deal, SPLIT offered on 6h/6d
+     (pk_chsc), double-down offered (pk_dbhi), hit to 19, stand,
+     settled 401/399.
+  5. **Word Puzzles** (`wp_main`) -- puzzle rendered, F1/F2 navigation
+     between puzzles, solve mode, two-word answer taken a word at a
+     time (wp_solv), return to selection.
+
+Stability alongside it: **VBL 579 524, about 2.7 emulated hours**, 34x
+past the 16 983 crash point, no bus error and no corruption, with the
+house still compositing cleanly at the end.
+
+**How to reach the menu.**  Type `PLAY GAME` and press Return --
+ordinary characters accumulate in `g_cdinb` through `deal_kc`'s
+default arm and `KEY_CTRL_M` (Return) submits via `prsCmd()`.  The
+resident then fetches the game box from the filing cabinet, carries it
+down to the kitchen table and sits; the menu is `a_plaag`'s, keys
+'1'..'5'.  It is a long walk -- budget a few thousand frames -- and a
+need (thirst, bathroom, a delivery) can interrupt it through
+`lcp_lgt`, in which case the resident abandons the table and the
+attempt has to be repeated.
+
+Two harness traps, both of which cost real time:
+
+  * **Keystrokes buffer and replay.**  `a_plaag` polls `getKey()` in a
+    loop, so digits pressed early sit in the IKBD buffer and relaunch
+    the game again and again -- measured at 7 entries to `ag_main` and
+    26 to `pk_wrMn` from a handful of presses.  Those counts look
+    exactly like a re-entrancy bug and are not one.  Screenshot to
+    confirm the menu is actually up, then press the digit ONCE.
+  * **`breakpoint_hits` under-reports.**  Breakpoints on `pk_main`,
+    `pk_bjMn` and `wp_main` stayed armed (`list_breakpoints` confirms)
+    yet reported no hits while all three demonstrably ran.  Do not
+    read a silent `breakpoint_hits` as "the code never executed" --
+    corroborate with a screenshot, which is the stronger evidence
+    anyway: the game's UI cannot render without its main having run.
+
 ## Issue log -- ALL CLOSED
 
 Kept as historical findings; none is an open port bug.
