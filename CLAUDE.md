@@ -902,6 +902,31 @@ DATA/LCP_STX.PRG -- 104 156 bytes on both sides, zero differing bytes
 modulo relocations.  All that remains is the data (+3008) and bss
 (+53884) layout; see "Byte-identity phase" below.**
 
+**cp_main is Activision's, not LCP's: 97.2% of it is byte-identical to
+THE MUSIC STUDIO** (found 2026-09-06).  Extract the Music Studio ST
+disk with the project's own `stx_extract.py` --
+`Retro/Atari ST/music_studio_activision_(usa)/*.stx` -- and hash 32-byte
+windows of its `AUDIO.PRG` text against LCP_STX's.  10 063 bytes are
+shared, and the largest single run is **6 904 bytes, LCP_STX
+0x02514-0x0400C**, which ends exactly at 0x400c where cp_asm stops and
+stx_u1 begins.  Of cp_asm's 7 499 bytes, **7 289 are shared**; the 210
+that are not sit in five islands (64 at the entry, then 41, 89, 13, 3),
+and the 89-byte one is about the size of the self-decrypting block
+described below.  So the protection is a shared Activision routine
+with per-title constants, which independently corroborates that this
+region is hand assembly rather than compiled C.
+
+Two related results from the same comparison.  LCP's **MIDI sequencer
+really does share code with Music Studio** -- 1 043 of mq_*'s 5 212
+bytes (0x12a-0x1586), plus 78 bytes around mq_tick -- which is the
+player lineage the shared .SNG format already implied.  But the
+**sound-EFFECT engine does not**: sf_irqp (0xdafc-0xdcc4) shares ZERO
+of its 456 bytes, and the whole game-code span 0x400c-0x1733a shares
+nothing at all.  That is why Music Studio cannot settle the g_sfDoB
+size question -- the function that copies into that buffer is LCP's
+own code.  Everything else shared is DRI library, expected of two
+Alcyon builds.
+
 cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
 (`source/cp_asm.s`), not C -- the maintainer confirmed the whole
 region is assembly, and it proves out: the object is entirely
@@ -1641,6 +1666,21 @@ What is not settled, and cannot be from the image:
     which would make the cells sound DATA.  It does not hold -- the
     reference emits `move.w`/`clr.w`, so the bytes are `00 FF 00 00`,
     not `FF 00`.
+
+**THE MUSIC STUDIO CANNOT SETTLE IT EITHER** (checked 2026-09-06).
+The obvious external source is the Activision Music Studio ST disk,
+whose player LCP's sequencer descends from, and it IS on this machine
+under `Retro/Atari ST/music_studio_activision_(usa)`.  Extracting it
+and diffing its `AUDIO.PRG` against LCP_STX finds 10 063 shared bytes
+-- but they are the copy protection (97.2% of cp_asm), 1 043 bytes of
+the MIDI sequencer, and DRI library.  **sf_irqp shares ZERO of its 456
+bytes**, and the whole 0x400c-0x1733a game span shares nothing.  The
+function that copies into g_sfDoB is LCP's own code, so Music Studio's
+layout says nothing about that buffer.  Its `STANDARD.SND` is an
+instrument-NAME table (signature version 0x01), not Dosound data, and
+is no help either.  That avenue is closed; anything further has to
+come from actual 1985 source or an analysis note predating the Ghidra
+sync.
 
 Ghidra's independent analysis calls them `soundeffect_dosound_status`
 and `soundeffect_dosound_control`, separate from
