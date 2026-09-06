@@ -13,27 +13,34 @@ port-only helpers, MIDI/sprite arrays where Ghidra shows only
 `PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx` labels, or file-scoped statics with
 no descriptive ROM name.  Extend by decompiling more Ghidra functions
 and appending to the appropriate subsystem table below, then re-run
-`source/tools/apply_ghidra_renames.sh` to push the new pairs to Ghidra.
+`source/tools/sync_ghidra_names.sh` to push the new pairs to Ghidra.
 
 ## Status: auto-rename pipeline
 
-Automated via `source/tools/apply_ghidra_renames.sh`:
+Use **`source/tools/sync_ghidra_names.sh`** (`verify` for a read-only
+pass).  It drives `analyzeHeadless` with
+`tools/ghidra/LcpSyncNames.java`: no server, no GUI, and it works on a
+closed project.  **Ghidra must be CLOSED** -- it holds an exclusive
+lock, and clearing a live lock is how the database gets corrupted; the
+script refuses rather than fight over it.
 
-1. `gen_ghidra_rename_tsv.py` walks this file, extracts the pairs,
-   and joins against `/tmp/ghidra_syms.txt` to write
-   `~/ghidra_scripts/lcp_rename_map.tsv` (address+current+new triples).
-2. POST to Ghidra's HTTP server at `localhost:8089/run_script`
-   invokes `~/ghidra_scripts/RenameLcpGlobals.java`, which reads the
-   TSV and renames each symbol via `Symbol.setName(...)`.
+The older `apply_ghidra_renames.sh` is DEAD and this file used to
+point at it.  It POSTs to a Ghidra HTTP server on :8089 and needs
+`RenameLcpGlobals.java`, `list_data_symbols.java` and a fresh
+`/tmp/ghidra_syms.txt` -- none of which are installed, and the
+endpoint does not answer.
 
-Prereqs: Ghidra open with LCP.PRG loaded; HTTP server listening on
-:8089; `list_data_symbols.java` has been run at least once to refresh
-`/tmp/ghidra_syms.txt`.
+Three things to get right when building the list: Ghidra address =
+link address + 0x10000; for BSS take the address from
+`tools/stx_bss_layout.tsv` (lcp_sym.68k carries lo68's, not the
+reference's); and expand lcp_sym.68k's 8-char TRUNCATED linkage names
+against the `extern` declarations in `include/*.h` first, or Ghidra
+ends up with `lcp_pat` for `lcp_path`.
 
-The MCP tool surface itself has no data-symbol rename endpoint --
-`rename_function_by_address` handles functions only, and
-`rename_variables` handles function-local variables.  The HTTP script
-executor is what actually gets us there.
+Rename BY ADDRESS, not by name, wherever the port's own name has
+changed -- and always where two names were SWAPPED.  Going by name
+chases a symbol that has moved, or collides with the name the other
+cell still holds.
 
 ## Address mismatch caveat
 
@@ -796,6 +803,28 @@ port symbol and the Ghidra label occupy the same cell -- not by
 guessing from the name.  Addresses come from byte-identical DATA/TEXT
 and, for BSS, from `stx_bss_layout.tsv`.
 
+**Co-location is not agreement.**  A row here says the two names are
+the same cell; it does NOT say Ghidra's descriptive name is right.
+Two in this batch are demonstrably wrong and are marked `(Ghidra
+WRONG)` below -- the port name is the correct one and Ghidra has
+already been renamed to it, so this table is the only place the bad
+name survives:
+
+  * `midi_channel_volume` -> **mi_pgtab** is the default PROGRAM map,
+    not a volume table.  mq_sepc builds `g_meve[0] = (chan) | 0xc0`,
+    and 0xC0 is the MIDI Program Change status byte, so the following
+    `g_meve[1] = mi_pgmap[index]` is a program NUMBER.  mq_pacm
+    confirms the shape: it loads two parallel 15-entry tables out of
+    the song header, the channel map from bytes 0..14 and the program
+    map from 15..29.  Volume never enters it.
+  * `midi_dma_start_lo` -> **pk_pscore** is the poker/blackjack
+    PLAYER SCORE, compared against pk_cscore all through games.c's
+    hand comparison.  Nothing MIDI touches it.
+
+Both are the same failure: a 1985 analyst naming an unlabelled cell
+from its neighbourhood rather than its use.  Treat any Ghidra name in
+this table as a lead, and check the use sites before adopting one.
+
 | Ghidra long name                   | port short   |
 | ---------------------------------- | ------------ |
 | `PLAYER_STATE_ARRAY`                  | `pst_arr`      |
@@ -827,8 +856,8 @@ and, for BSS, from `stx_bss_layout.tsv`.
 | `in_execute_event_routine_flag`       | `in_evrt`      |
 | `mi_ntLp[25]`                         | `mi_ndur`      |
 | `mi_ntLp[25]+2`                       | `mi_nlpA`      |
-| `midi_channel_volume`                 | `mi_pgtab`     |
-| `midi_dma_start_lo`                   | `pk_pscore`    |
+| `midi_channel_volume` (Ghidra WRONG)  | `mi_pgtab`     |
+| `midi_dma_start_lo` (Ghidra WRONG)    | `pk_pscore`    |
 | `object_alarm_animation`              | `g_obala`      |
 | `object_clock_animation`              | `g_obcla`      |
 | `object_phone_animation`              | `g_obpha`      |
