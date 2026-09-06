@@ -1141,12 +1141,46 @@ scn_dec, fLoad -> al_loal, lcp_load -> lc_load, al_lost -> ldSpr,
 sp_reglp -> sp_regs.)
 
 **Syncing names to Ghidra: use `source/tools/sync_ghidra_names.sh`.**
-The old `apply_ghidra_renames.sh` POSTs to a Ghidra HTTP server on
-:8089 and needs `RenameLcpGlobals.java`, `list_data_symbols.java` and a
-fresh `/tmp/ghidra_syms.txt` -- none of which are installed, and the
-endpoint does not answer.  The replacement drives `analyzeHeadless`
-with `tools/ghidra/LcpSyncNames.java`: no server, no GUI, works on a
-closed project.  `sync_ghidra_names.sh verify` re-runs it read-only.
+The old `apply_ghidra_renames.sh` needed `RenameLcpGlobals.java`,
+`list_data_symbols.java` and a fresh `/tmp/ghidra_syms.txt` -- none of
+which are installed -- and it POSTed to `/run_script`, which this
+plugin does not serve.  The replacement drives `analyzeHeadless` with
+`tools/ghidra/LcpSyncNames.java`: no server, no GUI, works on a closed
+project.  `sync_ghidra_names.sh verify` re-runs it read-only.
+
+**But for ONE symbol, do not close Ghidra -- talk to the plugin over
+HTTP** (established 2026-09-06).  The GhidraMCP plugin answers on
+:8089 while Ghidra is OPEN, which the headless script cannot be.  It
+takes `POST /<tool_name>` with a JSON body, and an earlier note here
+that there is "no data-symbol rename endpoint" is WRONG -- the MCP
+*tool* surface has none, but the plugin does:
+
+    # what is actually at that cell, before touching it
+    curl -s -X POST -H 'Content-Type: application/json' \
+         -d '{"address":"0x2b6d6","length":2}' \
+         http://127.0.0.1:8089/analyze_data_region
+    # -> current_name, current_type, xref_count, xref_map
+
+    curl -s -X POST -H 'Content-Type: application/json' \
+         -d '{"address":"0x2b6d6","newName":"pat_ok"}' \
+         http://127.0.0.1:8089/rename_data
+
+Note `newName`, camelCase, where the address parameter is `address`;
+`new_name` is silently null and the call fails with a Java NPE.  Other
+live endpoints: `rename_or_label`, `create_label`,
+`batch_create_labels`, `list_data_items`, `get_version`.  Endpoint
+names match the bridge's tool names (`~/GhidraMCP/bridge_mcp_ghidra.py`
+is the list); GET returns 404 on almost all of them, so probe with
+POST.
+
+`analyze_data_region`'s **xref_count is a free sanity check** and it
+earned its keep: after correcting the action-table rows it showed
+g_trel with 18 xrefs (everything tests `g_trel[0]`) against 1 each for
+g_atact/g_atmod/g_atrel (indexed once apiece in airandom.c) and 1 each
+for g_obala/g_obcla/g_obpha (one od_draw call apiece) -- Ghidra's own
+analysis agreeing with the corrected pairing.  The plugin also warns
+that a global "must start with g_"; that is ITS convention, not this
+project's, and does not apply.
 
 Ghidra MUST be closed -- it holds an exclusive lock, and clearing a
 LIVE lock is how the database gets corrupted.  The script refuses

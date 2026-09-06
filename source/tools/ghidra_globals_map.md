@@ -34,8 +34,15 @@ script refuses rather than fight over it.
 The older `apply_ghidra_renames.sh` is DEAD and this file used to
 point at it.  It POSTs to a Ghidra HTTP server on :8089 and needs
 `RenameLcpGlobals.java`, `list_data_symbols.java` and a fresh
-`/tmp/ghidra_syms.txt` -- none of which are installed, and the
-endpoint does not answer.
+`/tmp/ghidra_syms.txt` -- none of which are installed -- and it POSTed
+to `/run_script`, which this plugin does not serve.
+
+The plugin ITSELF is alive on :8089 while Ghidra is open, and it does
+have a data-symbol rename -- `POST /rename_data` with
+`{"address": ..., "newName": ...}`, and `POST /analyze_data_region` to
+see what is there first.  Use that for a one-symbol correction instead
+of closing Ghidra for the headless script.  Full recipe and the
+parameter-name trap are in CLAUDE.md.
 
 Three things to get right when building the list: Ghidra address =
 link address + 0x10000; for BSS take the address from
