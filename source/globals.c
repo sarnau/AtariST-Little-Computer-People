@@ -301,9 +301,19 @@ unsigned char * mi_ntLp[25];
    from mi_ntLp[g_sfcur] each time a new effect starts.  FIFTY-SIX
    bytes: that is the distance to the next cell the reference uses.
    sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and the
-   file has effects longer than that, so the original overruns this
-   buffer -- reproduced as written, not papered over with a bigger
-   one.
+   file has effects longer than that, so ON THIS MODEL the original
+   overruns the buffer -- reproduced as written, not papered over with
+   a bigger one.
+
+   That 56 is an INFERENCE, not a measurement: a declared array size
+   never reaches the codegen.  g_sfDoB..g_srlgb is exactly 400 bytes,
+   so the original may instead have had ONE 400-byte object with
+   g_sfdos/g_sfdoc as fields at +56/+58, and no overrun at all.  A
+   400-byte array plus two separate shorts is ruled out -- .comm packs
+   densely, so g_sfdos would land at +400 -- but a struct is not.  The
+   two readings are behaviourally identical and the image cannot
+   separate them; see CLAUDE.md.  Either way the shipped binary is
+   byte-identical, because the size never reaches the codegen.
 
    Where the overrun LANDS is decided by the linker, and the two
    builds disagree:

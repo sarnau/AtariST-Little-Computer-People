@@ -1547,6 +1547,50 @@ SOUNDS.LCP has 23 effects; three exceed 56 bytes -- block 8
 (SFX_HEAD_NOD) and block 17 (SFX_TOILET_REFILL) at 148, block 19 at
 60.  So the worst overrun is **92 bytes**.
 
+**Is the 56 real?  UNDECIDED, and the binary cannot decide it**
+(raised by the maintainer, 2026-09-06).  A declared array size never
+reaches the codegen, so `g_sfDoB[56]` was only ever inferred from the
+distance to the next referenced cell.  `0x3fe48 -> 0x3ffd8` is exactly
+**400**, which invites the reading that the original declared one
+400-byte object and that `g_sfdos`/`g_sfdoc` are FIELDS INSIDE it at
++56/+58 -- in which case there is no overrun at all and the port has
+simply mis-split one object into three.
+
+What is settled: a plain `char g_sfDoB[400]` plus two separate
+`short`s is IMPOSSIBLE.  `.comm` blocks pack densely here (see
+0x3fe2a/0x3fe2e/0x3fe46), so a 400-byte buffer would put `g_sfdos` at
++400, not +56.  If the buffer is 400 those cells must be struct
+fields.
+
+What is not settled, and cannot be from the image:
+
+  * 56+2+2 needs an unreferenced ~340-byte global at 0x3fe84.  That is
+    NOT exotic in this source -- `mi_sig` (the ten-byte Music Studio
+    signature) is declared and referenced by nothing, and `cmd_num`
+    (0x17278) is a static with no caller in the whole image.  There is
+    a second unexplained hole of the same kind at `mi_lstk` (+488).
+  * A 400-byte struct needs a 56-byte buffer, two write-only status
+    words, and a 340-byte unused tail.
+  * 400 is round; so is the 340 the other model leaves.
+  * Both models are BEHAVIOURALLY IDENTICAL -- under either, any
+    effect over 56 bytes writes those two cells, and under either they
+    are write-only.  No run can tell them apart, and the shipped
+    binary is byte-identical either way.
+  * A tempting false lead: `0xff` then `0` is the Dosound terminator,
+    which would make the cells sound DATA.  It does not hold -- the
+    reference emits `move.w`/`clr.w`, so the bytes are `00 FF 00 00`,
+    not `FF 00`.
+
+Ghidra's independent analysis calls them `soundeffect_dosound_status`
+and `soundeffect_dosound_control`, separate from
+`soundeffect_DoSound_Buffer[]` -- the same model the port uses, but an
+analyst reading absolute addresses cannot distinguish a struct field
+from a global either, so that is not evidence.
+
+Treat the paragraph below as describing the port's CURRENT model, not
+a proven fact about the 1985 source.  Settling it needs external
+evidence, not another sweep.
+
 Why the shipped build does not care: bss_remap puts `g_sfDoB` at
 0x3fe48 followed by `g_sfdos` (+56) and `g_sfdoc` (+58) -- both
 **write-only**, set by `sf_so()` and read nowhere in C or asm -- and
