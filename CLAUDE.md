@@ -1126,7 +1126,63 @@ gap to the next cell the reference uses can settle it: g_agscw is 10,
 g_ltscb 40, g_sfDoB 56.  The last one means the original really does
 overrun its Dosound buffer -- sf_irqp copies `size` bytes there
 straight from SOUNDS.LCP, which holds longer effects.  Reproduced as
-written; do not widen the buffer.
+written; do not widen the buffer.  (But see "Is the 56 real?" under the
+Hatari chapter: that reading is an inference, not a measurement.)
+
+**The BSS accounting CLOSES, and it localises every open size question
+to three symbols** (2026-09-06).  lo68 gives the port 185 892 bytes of
+BSS where the reference has 187 450 -- bss_remap only patches the
+header number -- so the reference holds **1558 bytes that no port
+symbol claims**.  Summing the gaps between each remapped symbol and
+its declared size accounts for **1556** of them (the missing 2 are the
+last symbol's tail).  That is a useful invariant: every other byte of
+the reference's BSS is claimed, so the port's sizes are right
+everywhere except where a gap shows.  27 gaps exist and 24 are <= 20
+bytes of alignment slop.  The three that matter:
+
+      533   scrbufA    category E -- its base is inferred from a +511
+                       reference, so its size is undecidable (see
+                       reloc_audit)
+      488   mi_lstk    see below
+      340   g_sfDoB    the Dosound-buffer question above
+
+Re-run this sum after any change that touches a global: if the total
+stops matching 1558, a declared size has drifted.
+
+**mi_lstk's 488-byte hole: open, but harmless** (2026-09-06).  The
+port declares `long mi_lstk[50]` (200 bytes) and the reference's next
+used cell, mi_nnOn, is 688 bytes away.  Every other mi_* symbol in the
+region is dense, so this is a genuine standout.
+
+Two things make it a WEAKER puzzle than g_sfDoB, and the difference is
+worth internalising:
+
+  * **Nothing sits inside the gap.**  g_sfDoB's case is forced because
+    g_sfdos/g_sfdoc are referenced at +56/+58, INSIDE the disputed
+    extent, which is what rules out a plain array and demands a
+    struct.  Here the 488 bytes are untouched by any relocation, so
+    "mi_lstk is simply bigger" and "mi_lstk is 200 and a dead ~488-byte
+    global follows it" are both unforced.  Dead declarations are known
+    in this source -- mi_sig is declared and referenced by nothing,
+    cmd_num is an uncalled static.
+  * **The size has NO behavioural consequence.**  mq_pshl guards
+    `mi_evcn < 49` and writes [mi_evcn] and [mi_evcn+1]; mq_popl reads
+    [mi_evcn-2] and [mi_evcn-1].  Max index 49, so the highest byte
+    touched is 49*4+3 = **199 of 200**.  No overrun is possible at any
+    declared size >= 200.  Whichever reading is right, nothing
+    observable changes -- unlike g_sfDoB, where the answer decides
+    whether a shipped overrun exists at all.
+
+Curiosity worth recording: the loop stack's empty sentinel is
+`mi_evcn == 9`, and mq_zero initialises mi_evcn to 9 -- so indices
+0..8 (36 bytes) are dead at the FRONT too.  Only [9..49] is ever
+touched, a 164-byte window inside a 688-byte allocation.
+
+An avenue that is CLOSED: declaration order cannot place a
+hypothetical dead global here.  The 1985 linker's `.comm` order is not
+source order -- the run around mi_lstk comes out in globals.c line
+order 438, 247, 233, 273, 161, 30, 577, 97, 643, 537, 299, 199, 238 --
+so there is no way to argue from where a declaration would have sat.
 
 **Regenerating the spec needs the PRE-REMAP binary.**  alcyon_link.sh
 leaves it as `build/alcyon/LCP_nobss.PRG`, and both `bss_remap.py
