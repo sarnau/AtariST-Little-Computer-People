@@ -7,9 +7,10 @@ THE MUSIC STUDIO (2026-09-06) established that cp_main is not LCP's
 code at all: 7289 of cp_asm's 7499 bytes are byte-identical to Music
 Studio's AUDIO.PRG, which corroborates from an unrelated binary that
 the region is hand assembly rather than compiled C.  The same run found
-1043 shared bytes in the MIDI sequencer -- the player lineage the
-shared .SNG format had only implied -- and ZERO in sf_irqp, which is
-what closed Music Studio as a source of evidence about g_sfDoB.
+the MIDI sequencer descending from Music Studio's player -- mq_bust
+73.8% identical, mq_dise 44.2%, the lineage the shared .SNG format had
+only implied -- and ZERO in sf_irqp, which is what closed Music Studio
+as a source of evidence about g_sfDoB.
 
 That comparison was worth keeping, hence this.
 
@@ -35,6 +36,19 @@ WHAT THE NUMBERS MEAN, and the one trap:
   * DRI library matches are expected and uninteresting: everything from
     vswr_mode (0x1733a) up is library in LCP_STX.  Matches BELOW that
     are the finding.
+
+THE BASELINE, measured against the period Alcyon toolchain's own
+binaries -- DRI-built ST programs unrelated to LCP:
+
+    C168.PRG      4347 shared, but only  68 below 0x1733a
+    CP68.PRG      4177 shared, but only  68 below
+    DOODLE.PRG     219 shared,            0 below
+    COMMAND.PRG      0 shared,            0 below
+    AUDIO.PRG    10055 shared,         8614 below   <-- Music Studio
+
+An unrelated Alcyon program shares 0-68 bytes of non-library code, and
+every C168 match is libc.  So "below the boundary" in the hundreds or
+thousands means a real relationship; tens mean nothing.
 """
 
 import os

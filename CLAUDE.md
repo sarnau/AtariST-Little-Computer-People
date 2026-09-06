@@ -945,6 +945,33 @@ agree on, so a shared function is chopped into a run per relocation
 site.  Matches at or above 0x1733a are DRI library and expected;
 matches BELOW it are the finding.
 
+**The baseline, so the numbers mean something** (2026-09-06).  Run
+against the period Alcyon toolchain's own binaries -- DRI-built ST
+programs with no relationship to LCP whatsoever:
+
+      C168.PRG      4347 shared, but only  68 below 0x1733a
+      CP68.PRG      4177 shared, but only  68 below
+      DOODLE.PRG     219 shared,            0 below
+      COMMAND.PRG      0 shared,            0 below
+      AUDIO.PRG    10055 shared,         8614 below   <-- Music Studio
+
+So an unrelated Alcyon program shares 0-68 bytes of non-library code
+with LCP_STX, and every one of C168's matches is libc (__doprt,
+_malloc, __flsbuf, _free).  Music Studio's 8614 is ~125x that.  The
+relationship is real and not an artifact of shared tooling -- which is
+the question a reader should ask first, and now does not have to.
+
+**Other Activision ST titles are NOT reachable here** (checked
+2026-09-06).  Music Studio is the only one on this machine as a usable
+image.  PaintWorks, Ghostbusters II, Fighting Soccer and Hacker II
+exist only as GreaseWeazle FLUX dumps (`.scp` inside `.7z`, under
+`Retro/Floppies and HDs/.../Atari ST Stream Images`), and neither
+converter installed here will do it headlessly: `gw convert` dies with
+`'bitarray.bitarray' object has no attribute 'itersearch'` (bitarray
+3.x dropped it), and HxCFloppyEmulator / UnifiedFloppyTool are GUI
+only.  Pinning an older bitarray would fix `gw`, but that is the
+maintainer's environment to change.
+
 cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
 (`source/cp_asm.s`), not C -- the maintainer confirmed the whole
 region is assembly, and it proves out: the object is entirely
