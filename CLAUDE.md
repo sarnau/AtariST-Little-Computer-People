@@ -916,16 +916,34 @@ described below.  So the protection is a shared Activision routine
 with per-title constants, which independently corroborates that this
 region is hand assembly rather than compiled C.
 
-Two related results from the same comparison.  LCP's **MIDI sequencer
-really does share code with Music Studio** -- 1 043 of mq_*'s 5 212
-bytes (0x12a-0x1586), plus 78 bytes around mq_tick -- which is the
-player lineage the shared .SNG format already implied.  But the
-**sound-EFFECT engine does not**: sf_irqp (0xdafc-0xdcc4) shares ZERO
-of its 456 bytes, and the whole game-code span 0x400c-0x1733a shares
-nothing at all.  That is why Music Studio cannot settle the g_sfDoB
-size question -- the function that copies into that buffer is LCP's
-own code.  Everything else shared is DRI library, expected of two
-Alcyon builds.
+Two related results from the same comparison, and the sharing is
+per-FUNCTION rather than a vague total:
+
+      _cp_main    7290 / 7500   97.2%
+      _mq_bust     344 /  466   73.8%
+      _mq_dise     556 / 1258   44.2%
+      _mq_pars      45 /  662    6.8%
+      _psg_wr       78 bytes
+      _sf_irqp       0 /  456    NOTHING
+
+So LCP's **MIDI sequencer really does descend from Music Studio's
+player** -- mq_bust, the scale-table builder, is three-quarters
+identical and mq_dise, the MIDI-out dispatcher, nearly half -- which
+is the lineage the shared .SNG format only implied.  But the
+**sound-EFFECT engine does not**: sf_irqp shares ZERO of its 456
+bytes, and the whole game-code span 0x400c-0x1733a shares nothing at
+all.  That is why Music Studio cannot settle the g_sfDoB size question
+-- the function that copies into that buffer is LCP's own code.
+Everything else shared is DRI library, expected of two Alcyon builds.
+
+**The comparison is a tool: `source/tools/xbin_diff.py`.**  Give it a
+PRG or a whole .stx (it runs stx_extract.py itself) and it reports
+shared bytes, coverage PER REFERENCE FUNCTION from lcp_sym.68k, and
+the longest runs.  Judge by the coverage column, never by run length:
+relocated longwords hold absolute addresses that two binaries never
+agree on, so a shared function is chopped into a run per relocation
+site.  Matches at or above 0x1733a are DRI library and expected;
+matches BELOW it are the finding.
 
 cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
 (`source/cp_asm.s`), not C -- the maintainer confirmed the whole
@@ -1672,8 +1690,9 @@ The obvious external source is the Activision Music Studio ST disk,
 whose player LCP's sequencer descends from, and it IS on this machine
 under `Retro/Atari ST/music_studio_activision_(usa)`.  Extracting it
 and diffing its `AUDIO.PRG` against LCP_STX finds 10 063 shared bytes
--- but they are the copy protection (97.2% of cp_asm), 1 043 bytes of
-the MIDI sequencer, and DRI library.  **sf_irqp shares ZERO of its 456
+-- but they are the copy protection (97.2% of cp_asm), the MIDI
+sequencer's descent from the Music Studio player (mq_bust 73.8%,
+mq_dise 44.2%), and DRI library.  **sf_irqp shares ZERO of its 456
 bytes**, and the whole 0x400c-0x1733a game span shares nothing.  The
 function that copies into g_sfDoB is LCP's own code, so Music Studio's
 layout says nothing about that buffer.  Its `STANDARD.SND` is an
