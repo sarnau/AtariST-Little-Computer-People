@@ -1673,6 +1673,61 @@ why the script reported "didn't produce an AVI" while swallowing
 fail the build loudly, it just makes the file MISS; collect the gates
 with separate `#ifdef`s instead.
 
+## All ten deal_kc key commands work (2026-09-06)
+
+Driven through the Hatari MCP and verified by STATE, not by animation
+-- each one has a global that must move:
+
+      Ctrl-A  0x01  alarm     alarm_p set, then cleared when consumed
+      Ctrl-B  0x02  book      putEv() entered
+      Ctrl-C  0x03  phone     putEv() entered
+      Ctrl-D  0x04  dog food  putEv() entered
+      Ctrl-F  0x06  food      putEv() entered
+      Ctrl-M  0x0D  Return    prsCmd -- proven all session (PLAY GAME,
+                              CALL DOG, every minigame answer)
+      Ctrl-P  0x10  pat dog   g_ptdoa set then cleared
+      Ctrl-R  0x12  record    putEv() entered
+      Ctrl-W  0x17  water     lcp_watr 4 -> 7 for three presses
+      (8)           backspace g_cdibp 2 -> 1, g_cdinb[1] nulled
+
+**`KEY_CURSOR_LEFT` is a misnomer.**  Its value is 8, which is
+BACKSPACE, not the cursor-left arrow -- pressing the arrow key does
+nothing.  st_titl's own name entry tests `ch == 8` for the same
+purpose.  The constant is faithful; only the name misleads.
+
+**Ctrl-P needs the dog called first.**  `deal_kc` guards it with
+`dg_petok != NO && g_ptdoa == NO`, and dg_petok is set ONLY by
+a_calld, which no typed command reaches: neither ACTION_CALL_DOG (40)
+nor ACTION_PET_DOG (42) appears in g_ew2a, so both are autonomous-only.
+The reachable route is a phone call -- ev_ansPh calls a_calld -- but
+the YES window is narrow and easy to sample past.  To test the handler
+body directly, force the guard from the debugger:
+`w $<dg_petok> 0 1` (that write syntax is byte-at-a-time), then press
+the key and watch g_ptdoa.
+
+Three traps, all of which cost time here:
+
+  * **The load base is NOT the same under the MCP.**  `--auto` puts
+    text at 0x12596; the MCP's run_program puts it at **0x12492**.
+    Every symbol address shifts by 0x104, and a wrong base reads
+    plausible-looking garbage rather than failing.  Derive it at run
+    time instead of assuming: dump a known table and subtract.  The
+    power-of-two longs 1,2,4,8,16 are bm32or, which pins the base in
+    one read.  (An earlier session's introSeq/dg_init readings used
+    the wrong base; re-verified at the right one, both are 0 and the
+    conclusion was unaffected -- but only the screenshots had ever
+    really supported it.)
+  * **Read memory while the machine is RUNNING.**  `debug('m ...')`
+    works without pausing, and pause/resume round trips cost enough
+    emulated time that short-lived state is gone before you look.
+  * **Turbo makes transient state unobservable.**  tx_sctm is 160
+    ticks, and with turbo on hundreds of frames pass between two MCP
+    calls, so g_cdibp resets to 0 and a typed buffer looks like it
+    never accumulated.  For anything transient use a VALUE-CHANGE
+    breakpoint -- `($addr).w ! ($addr).w` -- which catches both the
+    set and the clear and cannot be sampled past.  That is how
+    alarm_p and g_ptdoa were confirmed after direct reads showed 0.
+
 ## All five minigames play (2026-09-06)
 
 Driven end to end through the Hatari MCP on the gated build.  **All
