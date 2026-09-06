@@ -7,29 +7,46 @@ with the Atari ST Developer Kit).
 
 At a glance:
 
-- ~200 functions ported across ~54 modules
+- **The build is BYTE-IDENTICAL to `DATA/LCP_STX.PRG`** — 123 352
+  bytes, MD5 `eae52d14023b51d7ac459a90d37eed10`, text 104 156 / data
+  12 260 / bss 187 450
+- 268 game functions below the DRI library boundary, 185 of them as
+  single-function bodies under `parts/`
+- 64 top-level `.c`, 13 `dat_*.c` data units, 4 `stx_u*.c` unity
+  translation units, 5 hand-written `.s` files
 - 128-byte HYBER save file loads directly into `PLAYER` struct
-- 45 `do_action()` handlers implemented (no game-logic stubs remain)
-- 9 original data-file formats decode byte-exactly
-- 8 host-side tests + 6 Hatari-driven regression tests, all passing
-- Sprite buffers sized to match ROM slots exactly (`body_buf`,
-  `pex_buf`, `sp_mbuf`) with `LCP_BODY_FRAME_SIZE` /
-  `LCP_BODY_SHAPE_SIZE` / `LCP_BODY_DEST_WORDS` constants for the
-  three sprite pipeline dimensions
+- 8 test programs on the host, 4 Hatari-driven runtime tests, one
+  command to run everything (`tools/run_all.sh`)
 
-See [STATUS.md](STATUS.md) for the full per-function port ledger.
+See [STATUS.md](STATUS.md) for the full per-function port ledger and
+[../CLAUDE.md](../CLAUDE.md) for the working notes.
 
 ## Fidelity target
 
-**Not** byte-exact rebuild. Goal is source that:
+**Byte-exact rebuild, and it is achieved.**  `source/tools/prg_diff.py`
+reports BYTE-IDENTICAL against `DATA/LCP_STX.PRG`, the uncracked
+shipped 1985 binary extracted from the protected Pasti image.
 
-1. Compiles under Alcyon C 4.14 and produces a functionally-equivalent
-   game — same UX, same save-file compatibility, same VDI/XBIOS/GEMDOS
-   call pattern.
-2. Also compiles under a modern host toolchain (`clang`/`gcc`) via the
-   `HOST` shim so subsystems can be exercised without Hatari.
+(This section said "**Not** byte-exact rebuild ... byte-exact
+validation is a *later* pass" until 2026-09-06.  That was true when it
+was written and had been wrong since 2026-09-03, which is exactly the
+kind of stale claim worth correcting rather than leaving to mislead.)
 
-Byte-exact validation is a *later* pass on individual hot files.
+Getting there needs both toolchains:
+
+1. **Alcyon C 4.14** produces the shipped binary.  Byte identity is
+   checked on every change — the source is not merely "equivalent",
+   it emits the same instructions in the same order.
+2. **A modern host compiler** (`clang`/`gcc`) with `-DHOST` builds the
+   same sources so pure-logic subsystems can be tested without an
+   emulator.  Keeping clang and Alcyon reading one source has its own
+   set of constraints; CLAUDE.md's "host build" section lists them.
+
+Two things are NOT byte-identical by construction: the test
+configurations gated behind `-DSKIP_TITLE`, `-DSKIP_COPYPROT` and
+`-DSKIP_MIDI`.  Those exist so an unattended emulator run can reach
+gameplay at all, and `alcyon_link.sh` refuses to remap BSS when they
+are set.  Rebuild clean before checking `prg_diff` again.
 
 ## Style bible
 
@@ -52,59 +69,47 @@ Byte-exact validation is a *later* pass on individual hot files.
 
 ## Layout
 
+The file structure is NOT free: it reproduces LCP_STX's own object
+partition, recovered from the binary (see CLAUDE.md, "Recovering
+LCP_STX's C sources").  A `bsr` from A to B proves everything between
+them is one object, which bounds the original's ~7 huge game objects.
+The port therefore builds **unity translation units** that `#include`
+their constituents in the original's order.
+
 ```
 source/
-├── include/
-│   ├── types.h         BOOL16, YES/NO, size types
-│   ├── enums.h         all symbolic constants (#define)
-│   ├── structs.h       PLAYER, PSG_ENVELOPE, MFDB, WORD_TO_ACTION
-│   ├── globals.h       extern of every global
-│   ├── osbind.h        GEMDOS/XBIOS/BIOS trap wrappers (host + target)
-│   └── st_io.h         raw hardware I/O helpers
-├── globals.c           storage for all extern globals + data tables
-├── main.c              entry point (init_vdi + main loop)
-├── sim.c               game_simulate_one_second (clock + needs)
-├── ai.c, ai_random.c   9-priority AI + random-event picker
-├── actions.c           do_action() dispatch + 45 handlers
-│   ├── actions_bathroom.c, actions_food.c,
-│   │   actions_doors.c,    actions_games.c,
-│   │   actions_house.c,    actions_idle.c,
-│   │   actions_leisure.c,  actions_letter.c,
-│   │   action_simple.c
-│   └── action_stubs.c  (empty — retained for symmetry)
-├── parser.c            NLP command parser
-├── vocab_data.c        160-word vocabulary + 33 action-match rules
-├── save.c              HYBER load/save (128-byte format)
-├── save_host.c         host GEMDOS shim
-├── letter_load.c       LETTER.TXT nibble decoder + template loader
-├── assets.c            OBJECTS / SPRITES / BODY.LCP / PEx.LCP loaders
-├── cards.c             poker card graphics loader
-├── sprites.c           45-entry sprite table + head/body updater
-│   ├── sprglobs.c, sprender.c, sprhead.c, sprload.c
-├── movement.c, walk.c  position table + pathfinding
-├── render.c            screen_render_8hz frame driver
-│   ├── renderx.c, renderf.c, gfx_prim.c, tvanim.c
-├── (VDI/AES trap wrappers now come from Alcyon gemlib)
-├── sound.c             song_play + soundeffect_* dispatch
-│   ├── midi_seq.c      MIDI sequencer control
-│   ├── psg_io.c        YM2149 register writers
-│   ├── sfx_irq.c       8Hz Dosound tick
-│   ├── psgfreq.c       132-entry PSG tone-period LUT
-│   └── mq_tick.s       Timer-A MFP ISR (byte-faithful asm)
-├── games.c, cards.c    mini-games (poker/blackjack/anagram/war/word-puzzle)
-├── clock.c, calendar.c, keyboard.c, random.c,
-│   dog.c, delivery.c, events.c, alerts.c, health.c
-├── tvanim.c            LCP's on-screen computer/TV animations
-├── init.c              cs_mvIn move-in cutscene + boot-time helpers
-│                       (it used to host TEST_ACTIONS / TEST_KEY
-│                       #ifdef hooks; those went in the LCP_STX
-│                       restructuring and nothing is gated in now)
-└── tests/              host-side smoke tests (see below)
+├── include/            63 headers -- types, enums, structs, globals,
+│                       trap wrappers.  obdefs1.h wraps the DK header,
+│                       which has no include guard of its own.
+├── parts/              185 single-function bodies.  One function per
+│                       file so a unity unit can place it at its exact
+│                       address; several port .c files straddled two
+│                       LCP_STX objects and had to be split this way.
+├── stx_u1.c ... u4.c   the unity units.  Their #include ORDER IS the
+│                       object's function order -- LCP_STX did not
+│                       group by source file, so aleisure's functions
+│                       alone run from 0xe338 to 0x12ca0.
+├── dat_u*.c            per-object data files.  A unit's .data comes
+│   dat_games*.c        out in source order and its string literals in
+│                       the order c168 met them, so where a global is
+│                       declared is itself evidence.
+├── globals.c           storage for every extern, plus data tables
+├── games.c             the whole minigame suite -- one LCP_STX object
+├── midi_seq.c          MIDI sequencer (descends from Music Studio's
+│                       player: mq_bust is 73.8% byte-identical to it)
+├── cp_asm.s            the copy protection, hand assembly.  97.2%
+│                       byte-identical to The Music Studio -- it is
+│                       Activision's routine, not LCP's.
+├── mq_tick.s           Timer-A MFP ISR, psg_asm.s, blkcp_a.s,
+│                       vdistx_a.s -- the other hand-written asm
+├── vdistx.c            the VDI binding module as LCP_STX links it:
+│                       ONE trap dispatcher, ONE parameter block
+├── hostasm.c           host stand-ins for the .s files; savehost.c
+│   savehost.c          for the GEMDOS/BIOS traps.  alcyon_build.sh
+│                       skips both BY NAME so they cannot ship.
+├── tools/              build, verification and test scripts
+└── tests/              host-side test programs
 ```
-
-Subsystem layout mirrors the Python port under `../lcp/`. When Ghidra
-output is ambiguous, the Python behaviour is authoritative — it's the
-executable reference.
 
 ## Building
 
@@ -117,24 +122,32 @@ the `source/` directory:
 make host
 ```
 
-This links the whole game against the host GEMDOS/XBIOS shims (`save_host.c`,
-stubbed traps in `osbind.h`).  It **won't run interactively** on a
-non-ST host but it lets every non-graphical subsystem be exercised.
+This links the whole game against the host GEMDOS/XBIOS shims
+(`savehost.c`, `hostasm.c`, stubbed traps in `osbind.h`).  It **won't
+run interactively** on a non-ST host, but it type-checks every source
+file and lets the pure-logic subsystems be tested.  `main()` becomes
+`lcp_main()` under `-DHOST` so the tests can supply their own.
 
 ### Alcyon (target) build
 
-Under Hatari + TOS + Atari ST Developer Kit:
-
 ```
-make alcyon
+make alcyon                 # = tools/alcyon_build.sh + alcyon_link.sh
 ```
 
-This drives Alcyon's `CP68` (preprocessor), `C068` (compiler), and
-`AS68` (assembler) in sequence, linking with `LO68` to produce a
-runnable `LCP.PRG`.
+Alcyon runs **natively**, not under emulation: `tools/build_toolchain.sh`
+rebuilds `cp68`/`c068`/`c168`/`as68`/`ar68`/`link68`/`relmod` from
+Thorsten Otto's cleaned-up sources into `~/Hatari_C/hatari-c/bin`.  That
+rebuilt toolchain is **codegen-equivalent** to the one that built
+LCP_STX — running alcyon2's own 1985 `C168.PRG` under Hatari on the
+same input emits the same instructions — so a difference in output is
+a difference in SOURCE, never in the compiler.
 
-The `Makefile` documents both toolchains side-by-side; the primary
-`CFLAGS` gate on the `HOST` define.
+The link ends with `tools/bss_remap.py`, because lo68 and the 1985
+linker pack `.comm` blocks at different offsets.  Text, data and the
+relocation stream come out identical without it; BSS addresses do not.
+The original allocation is checked in as `tools/stx_bss_layout.tsv`
+and resolved against a second symbols link — **the reference binary is
+not read at link time.**
 
 ## Testing
 
@@ -152,25 +165,39 @@ afterwards even on failure.  The two build configurations are not
 interchangeable and leaving the wrong one behind makes the next run
 report a failure that is not real, which is why this exists.
 
-Eight host-side smoke tests live in `tests/`, and run on their own with:
+Ten host-side test programs live in `tests/`, and run on their own
+with:
 
 ```
 make test
 ```
 
-| Test              | Verifies                                                  |
-|-------------------|-----------------------------------------------------------|
-| `linktest`        | Every module compiles + links, no unresolved symbols       |
-| `hyber_test`      | HYBER save-file round-trip: load → mutate → save → reload  |
-| `letter_test`     | `LETTER.TXT` nibble-encoded template decoder               |
-| `parser_test`     | NLP parser: `"please play a game"` → `ACTION_PLAY_GAME`    |
+| Test                | Verifies                                                |
+|---------------------|---------------------------------------------------------|
+| `linktest`          | Every module compiles + links, no unresolved symbols     |
+| `hyber_test`        | HYBER save-file round-trip: load → mutate → save → reload |
+| `letter_test`       | `LETTER.TXT` nibble-encoded template decoder             |
+| `parser_test`       | NLP parser smoke test: `"please play a game"` reaches `ACTION_PLAY_A_GAME`.  Note it gets there on `play`+`game` alone — `please` is `vwd_tab[0]`, and chk_encm reads chk_vwd's 0 as "unrecognised", so the politeness word contributes nothing and costs +4 priority |
 | `vdi_pb_test`     | VDI parameter-block layout matches GEM ABI                 |
 | `assets_test`     | `OBJECTS` + `SPRITES` big-endian header decode             |
 | `scn_test`        | `HOUSE.SCN` compressed screen decompression                |
 | `sounds_test`     | `SOUNDS.LCP` sound-effect table load                       |
 
-All tests read real 1985 data files from `../data/` and assert
+All tests read real 1985 data files from `../DATA/` and assert
 byte-exact matches against reference dumps.
+
+Two things to know before touching them.  **The host is little-endian
+and the loaders are not**: sf_sl and al_loal read their length fields
+with raw two-byte `fr_read`s, so 34 arrives as 8704 and the file walk
+is lost after the first block.  That is faithful ST code, so
+`t_sounds.c` and `t_assets.c` write a HOST-ENDIAN copy of the asset --
+same payloads, only the length fields swapped -- and put the loader's
+LOGIC under test.  And **not everything is checkable here**: chk_encm
+walks `g_ew2a` until `table[0] == 0xff`, which Alcyon narrows to a
+signed char so the sentinel matches and clang does not, so on the host
+that walk runs off the table.  `t_parser.c` reports that case instead
+of asserting it, and it is why the FULL parser can only be checked
+under the emulator, by `tools/test_actions.sh`.
 
 ## Adding a new subsystem
 
@@ -181,33 +208,51 @@ byte-exact matches against reference dumps.
    about caller sites, calling convention, or side effects goes
    above the function unchanged. Add commentary below the plate,
    not inside it.
-3. **Copy variable names from the decompile.** If the decompile
-   calls it `iVar3`, keep it as `iVar3` on the first pass; only
-   rename once behaviour is understood and the name reads clearly
-   in context.
+3. **Match the frame, not just the behaviour.**  Compare the
+   `link #-N` prologue FIRST: it says exactly how many locals the
+   function really has, and local offsets are assigned in
+   DECLARATION order, so a fn_diff pins the declaration list and its
+   ORDER exactly.  a_wandi needed an unused local the port lacked;
+   a_driwa's order is rnd, counter, last_pick, pick and it never
+   initialises last_pick.  Preserve such things as written.
 4. **Add extern declarations to `globals.h`** for any global you
    touch; storage goes in `globals.c` grouped by subsystem.
 5. **Wire up a host test** when possible. If the function loads
    or decodes a real 1985 file format, that format has a fixture
-   under `../data/` — add a `tests/foo.c` that exercises the round
+   under `../DATA/` — add a `tests/t_foo.c` that exercises the round
    trip and asserts byte-exact.
 6. **Update `STATUS.md`** with the new port and its status.
 
 ## Known gaps
 
-See [CLAUDE.md](../CLAUDE.md)'s "Known open issues" section for the
-live list.  Highlights:
+**One**, and the binary cannot close it.  `g_sfDoB`'s declared size is
+an inference: a declared array size never reaches the codegen, so 56
+came only from the distance to the next referenced cell.
+`g_sfDoB..g_srlgb` is exactly 400 bytes, so the original may instead
+have had one 400-byte object with `g_sfdos`/`g_sfdoc` as fields inside
+it — in which case there is no overrun at all.  Both readings are
+behaviourally identical and produce the same bytes.  The Music Studio
+disk was checked and rules itself out: `sf_irqp` shares ZERO of its
+456 bytes with it.  See CLAUDE.md, "Is the 56 real?".
 
-- `cp_main` copy protection is intentionally stubbed (the ROM
-  routine can't run under Hatari — flock + XOR-decrypt + FDC
-  signature read — documented in `source/stubs.c`).
-- Stair test harness now runs end-to-end but surfaces a
-  game-behavior regression: LCP descends by falling through floors
-  rather than engaging stair mode.  Manual play in the same
-  scenario worked; automated harness caught what the manual test
-  missed.
-- Music playback in the production build (no `-DSKIP_MIDI=1`) not
-  yet verified end-to-end.
+Everything the older version of this section listed is CLOSED, and
+each was wrong in an instructive way:
+
+- **`cp_main` is not "intentionally stubbed"** — it is fully recovered
+  as hand assembly in `cp_asm.s`, byte-identical, and 97.2%
+  byte-identical to THE MUSIC STUDIO, so it is Activision's shared
+  protection routine rather than LCP's own code.  It genuinely does
+  not pass under an emulator, but the control is decisive: the
+  ORIGINAL 1985 binary off the Pasti image fails identically.  Build
+  with `-DSKIP_COPYPROT=1` to play.
+- **The stairs "regression" was a false negative** in a harness that
+  warped the resident past the walk establishing stair state.  Real
+  play walks stairs correctly; the harness is gone.
+- **.SNG playback works.**  The Timer-A ISR installs and ticks through
+  a 36 000-VBL run; the resident simply had not chosen the record
+  player autonomously.  Ask it to play a record.
+
+CLAUDE.md's corresponding section is titled "Issue log — ALL CLOSED".
 
 ## History
 
@@ -244,5 +289,25 @@ live list.  Highlights:
   setup check.  All three were rewritten on `hatari_probe.sh`
   (2026-09-06) and now assert against the game's own globals:
   11/11, 33/33 and 7/7 respectively.
+
+
+- **v7 (2026-09-03)**: **BYTE IDENTITY REACHED.**  The build reproduces
+  `DATA/LCP_STX.PRG` exactly — MD5 `eae52d14023b51d7ac459a90d37eed10`.
+  Getting there was not more porting but recovering the original's
+  STRUCTURE: its object partition (from which calls are `bsr` and which
+  `jsr`), the function order inside each object, its data declaration
+  order, and its `.comm` allocation.  cp_main turned out to be hand
+  assembly; the VDI layer to be one dispatcher where the port had
+  three; and ~30 recurring source-shape rules had to be recovered
+  one site at a time.  See CLAUDE.md.
+- **v8 (2026-09-06)**: verification caught up with the code.  A crash
+  that killed every long run at VBL 16983 was diagnosed as `sf_irqp`
+  overrunning `g_sfDoB` — and it also explained the missing dog and the
+  `introSeq` flag that never cleared, both of which had been chased as
+  separate bugs.  Two dead test scripts were rewritten to assert
+  against the game's own globals, four stale diagnostics deleted, and
+  `tools/run_all.sh` added so the whole suite is one command.  All five
+  minigames, all ten key commands and all 31 reachable typed commands
+  are now verified end to end.
 
 See [STATUS.md](STATUS.md) for the current port ledger.
