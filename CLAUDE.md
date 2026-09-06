@@ -1621,6 +1621,23 @@ with separate `#ifdef`s instead.
 
 Kept as historical findings; none is an open port bug.
 
+- **"The dog is missing", introSeq/dg_init never clear (CLOSED
+  2026-09-06).**  Not a separate bug and nothing to do with
+  SKIP_TITLE, which is where it was wrongly pinned twice.  It was the
+  `g_sfDoB` overrun crash: `cs_mvIn` is a LONG cutscene -- doorbell,
+  kitchen cabinet, sink, dresser, bathroom, suitcase -- and only its
+  last few statements release the dog (`dg_init = 0`) and clear
+  `introSeq`.  The program died at VBL 16983, i.e. INSIDE the
+  cutscene, so neither ever ran.  With the overrun contained the
+  cutscene completes: measured at VBL 25560, `introSeq` 0, `dg_init`
+  0, dog visible in the kitchen and walking the ground floor two
+  thousand frames later.
+
+  The general lesson is worth keeping: a symptom that looks like
+  missing game logic can just be a crash upstream of the code that
+  would have produced it.  Check that the program is still alive
+  before hunting for the flag that never got set.
+
 - **test_longrun_stable.sh env-side failures (CLOSED 2026-07-21).**
   Root cause was tv_boul / tv_patl calling v_pline with count=2 but
   only initialising 1 point; fixed in 12e572f.  The 36000-VBL
