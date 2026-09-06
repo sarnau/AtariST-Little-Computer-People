@@ -11,7 +11,7 @@ a_calld()
         /* STX tests the walk call inline -- no local, so its frame
            is 2 bytes smaller. */
 
-        hs_posXY(POS_BTM_DOG_FOOD, &g_wtx, &g_wty);
+        hs_posXY(POS_BTM_COUCH, &g_wtx, &g_wty);
         if (lcp_wkD() != 0)
                 return;
         lcp_st              = STATE_STAND_SIDE_VIEW;
@@ -20,5 +20,5 @@ a_calld()
         lcp_hwt();
         lcp_st = STATE_CROUCH_DOWN;
         gameTick(5);
-        dg_petok = YES;
+        pat_ok = YES;
 }

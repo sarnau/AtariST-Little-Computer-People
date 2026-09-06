@@ -11,7 +11,7 @@ a_petd()
         short   ticks;
 
         g_actif = YES;
-        if (dg_petok == NO)
+        if (pat_ok == NO)
                 a_calld();
         g_actif = NO;
 
@@ -27,7 +27,7 @@ a_petd()
                         break;
         }
 
-        dg_petok = NO;
+        pat_ok = NO;
         lcp_st         = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 }

@@ -61,7 +61,7 @@ a_socwd()
         while (g_ptdoa != NO)
                 gameTick(0);
 
-        dg_petok = NO;
+        pat_ok = NO;
         lcp_st = STATE_STAND_SIDE_VIEW;
         lcp_face = FACING_RIGHT;
         gameTick(1);

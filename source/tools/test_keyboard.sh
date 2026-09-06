@@ -28,7 +28,7 @@
 #                      cycles SPRITE_PET_HAND_1..6 -- the player's hand
 #                      -- at a fixed (192,165), which is where the
 #                      phone sits (tick.c draws it at 190,168).  It is
-#                      gated on dg_petok, set only by a_calld, which
+#                      gated on pat_ok, set only by a_calld, which
 #                      walks the resident to position 43 (x=220, the
 #                      armchair by the phone) and crouches.  No typed
 #                      command reaches a_calld, so the guard is forced
@@ -58,7 +58,7 @@ A_WATR=$(probe_addr _lcp_wat)
 A_ALRM=$(probe_addr _alarm_p)
 A_PUTEV=$(probe_addr _putEv)
 A_PTDOA=$(probe_addr _g_ptdoa)
-A_PETOK=$(probe_addr _dg_peto)
+A_PETOK=$(probe_addr _pat_ok)
 A_ALISS=$(probe_addr _g_aliss)
 A_CDIBP=$(probe_addr _g_cdibp)
 
@@ -120,12 +120,12 @@ probe_bp_clear
 
 # ---- Ctrl-P: force the guard the AI would have to satisfy ------------
 printf '%-22s ' "Ctrl-P  pat LCP"
-probe_poke "$A_PETOK" 0 1                  # dg_petok = YES
+probe_poke "$A_PETOK" 0 1                  # pat_ok = YES
 probe_bp_changed "$A_PTDOA"
 M=$(probe_mark); probe_ctrl P; sleep 0.6
 n=$(probe_hits "$M")
 if [ "$n" -ge 1 ]; then ok "Ctrl-P  g_ptdoa changed ($n)"
-else bad "Ctrl-P" "g_ptdoa never changed (dg_petok guard?)"; fi
+else bad "Ctrl-P" "g_ptdoa never changed (pat_ok guard?)"; fi
 probe_bp_clear
 
 # ---- Ctrl-M: Return submits the command buffer -----------------------

@@ -43,7 +43,7 @@ extern short g_hamod;
 extern short g_hsfra;
 extern long g_sfret;
 extern BOOL16 g_actif;
-extern BOOL16 dg_petok;
+extern BOOL16 pat_ok;
 extern short g_wtx;
 extern short g_wty;
 extern short pst_arr[];

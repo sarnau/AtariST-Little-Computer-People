@@ -37,7 +37,7 @@ short   keycode;
                 return;
 
         case KEY_CTRL_P_PATTING:
-                if (dg_petok != NO && g_ptdoa == NO) {
+                if (pat_ok != NO && g_ptdoa == NO) {
                         g_ptanf          = 0;
                         g_ptdoa          = YES;
                         lcp.happiness               = MOOD_HAPPY;

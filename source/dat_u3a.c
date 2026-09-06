@@ -14,7 +14,7 @@
  */
 
 
-BOOL16  dg_petok               = NO;
+BOOL16  pat_ok                 = NO;
 
 
 BOOL16  g_ptdoa              = NO;

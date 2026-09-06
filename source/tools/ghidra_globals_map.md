@@ -187,7 +187,7 @@ handlers.)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `dog_pettable_flag`                | `dg_petok`   |
+| `dog_pettable_flag` (Ghidra WRONG)  | `pat_ok`     |
 | `dog_idle_countdown`               | `dg_idlcd`   |
 | `dog_food_bowl_change`             | `dg_bwlch`   |
 | `dog_near_food_bowl`               | `dg_nrbwl`   |

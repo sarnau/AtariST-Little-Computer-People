@@ -1788,26 +1788,42 @@ which is wrong).  The code says so three ways:
   * (192,165) is the phone: tick.c draws OBJ_PHONE_2 at (190,168),
     and ev_ansPh draws od_med1 at the same spot.
 
-**`POS_BTM_DOG_FOOD` is misnamed too.**  a_calld walks to position 43
-and crouches, and 43 is `g_rpxs[43] = 110`, i.e. **x = 220** on the
-BOTTOM floor -- the armchair beside the phone.  The real dog bowl is
-`POS_BTM_DOG_BOWL` (33) at x = 16, over in the kitchen.  So the whole
-`dg_petok` / `a_calld` / `a_petd` / `ACTION_PET_DOG` cluster is named
-after the dog and is actually the resident-in-the-chair pat.  Same
-failure as `mi_pgtab`: a name taken from the neighbourhood rather
-than the use.
+**Two renames followed, and only two** (2026-09-06):
 
-NOT renamed, deliberately.  `tools/stx_bss_layout.tsv` is keyed by
-PORT SYMBOL NAME, so renaming any of these means regenerating the
-spec and re-auditing it; the names are wrong but harmless, and the
-binary does not care.  Read them as "pat", not "pet the dog".
+    POS_BTM_DOG_FOOD (43)  ->  POS_BTM_COUCH
+    dg_petok               ->  pat_ok
 
-For testing: dg_petok is set ONLY by a_calld, which no typed command
+`POS_BTM_COUCH` is `g_rpxs[43] = 110`, i.e. **x = 220** on the BOTTOM
+floor.  That is the couch beside the phone, and three things say so:
+a_socwd sits there with `STATE_SIT_COUCH_UPRIGHT` and parks
+SPRITE_READING_1 at (221,172); ev_ansPh answers the phone there; and
+the real dog bowl is `POS_BTM_DOG_BOWL` (33) at x = 16, over in the
+kitchen, used by a_feedd.  The old name had ONE user -- a_calld --
+and was almost certainly guessed from a_calld's own name, which makes
+it circular evidence.
+
+**The rest of the "dog" cluster was left alone, because it is not
+wrong.**  a_socwd genuinely drives `STATE_SIT_COUCH_PETTING_DOG`: the
+resident really does pet the dog on that couch.  So `a_calld`
+(crouches -- plausibly calling the dog over), `a_petd`,
+`ACTION_CALL_DOG` and `ACTION_PET_DOG` all have real dog evidence and
+keep their names.  `POS_BTM_DOG_FOOD_STORE` (44) is referenced by
+NOTHING, so renaming it would swap one guess for another; left as is.
+
+Renaming cost nothing here and that was checked, not assumed:
+POS_BTM_* are `#define`s, and neither pat_ok nor g_ptdoa has a row in
+`tools/stx_bss_layout.tsv` (only g_ptanf does, and "petting anim
+frame" is already accurate).  `bss_remap.py --gen` reproduced the
+spec UNCHANGED at 416 rows, prg_diff stayed BYTE-IDENTICAL, and
+reloc_audit stayed clean.  Anything that DOES have a spec row needs
+the regenerate-and-review cycle before it can be renamed.
+
+For testing: pat_ok is set ONLY by a_calld, which no typed command
 reaches -- neither ACTION_CALL_DOG (40) nor ACTION_PET_DOG (42)
 appears in g_ew2a, so both are autonomous-only.  The reachable route
 is a phone call (ev_ansPh calls a_calld), but the YES window is narrow
 and easy to sample past.  Force the guard instead:
-`w $<dg_petok> 0 1` (that write syntax is byte-at-a-time), then press
+`w $<pat_ok> 0 1` (that write syntax is byte-at-a-time), then press
 the key and watch g_ptdoa.
 
 Three traps, all of which cost time here:

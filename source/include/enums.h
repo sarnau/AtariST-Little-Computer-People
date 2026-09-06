@@ -234,7 +234,7 @@
 #define POS_BTM_FRONT_DOOR_INSIDE       40
 #define POS_BTM_WATER_TAP               41
 #define POS_BTM_DINING_AREA             42
-#define POS_BTM_DOG_FOOD                43
+#define POS_BTM_COUCH                   43
 #define POS_BTM_DOG_FOOD_STORE          44
 #define POS_BTM_FIREPLACE_LOGS          45
 #define POS_BTM_FRONT_DOOR              46

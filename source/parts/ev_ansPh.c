@@ -73,7 +73,7 @@ ev_ansPh()
         while (g_ptdoa != NO)
                 gameTick(0);
 
-        dg_petok = NO;
+        pat_ok = NO;
         lcp_y -= 2;
         g_hatas = 8;
         g_hacur      = 8;
