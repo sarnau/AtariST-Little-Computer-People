@@ -138,7 +138,21 @@ The `Makefile` documents both toolchains side-by-side; the primary
 
 ## Testing
 
-Eight host-side smoke tests live in `tests/`:
+Everything, in the order that works:
+
+```
+tools/run_all.sh            # ~3.5 min, includes the emulator tests
+tools/run_all.sh --quick    # ~10 s, build + host only
+```
+
+It runs the byte-identity checks on a clean SHIPPED build, then the
+host build and unit tests, then the runtime tests on a GATED one
+(`-DSKIP_TITLE -DSKIP_COPYPROT`), and restores the shipped build
+afterwards even on failure.  The two build configurations are not
+interchangeable and leaving the wrong one behind makes the next run
+report a failure that is not real, which is why this exists.
+
+Eight host-side smoke tests live in `tests/`, and run on their own with:
 
 ```
 make test

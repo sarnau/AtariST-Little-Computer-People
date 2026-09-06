@@ -8,13 +8,31 @@ every function, initialization step, and control-flow decision.  The C
 source in `source/` compiles under Alcyon C 4.14 (K&R) and runs on
 Hatari.
 
-**The build's TEXT segment is byte-identical to it** (104 156 bytes,
-zero differing bytes modulo relocations); data and bss layout are the
-remaining work.  Reproduce with:
+**The WHOLE BINARY is byte-identical to it** -- 123 352 bytes, MD5
+eae52d14023b51d7ac459a90d37eed10, text 104 156 / data 12 260 / bss
+187 450.  (This paragraph said "the TEXT segment ... data and bss
+layout are the remaining work" until 2026-09-06; that has been out of
+date since the goal was reached on 2026-09-03, described under "GOAL
+ACHIEVED" below.)
 
-    source/tools/alcyon_build.sh
+**One command runs everything:**
+
+    source/tools/run_all.sh              # ~3.5 min, includes the emulator
+    source/tools/run_all.sh --quick      # ~10 s, build + host only
+
+It does the byte-identity checks on a clean SHIPPED build, then the
+host build and unit tests, then the runtime tests on a GATED one, and
+restores the shipped build afterwards even if something fails.  That
+ordering is the whole point: the two configurations are not
+interchangeable, and leaving the wrong one in `build/alcyon` makes the
+next run lie in a way that looks like a real failure.
+
+The individual pieces, if you want one of them:
+
+    source/tools/alcyon_build.sh && source/tools/alcyon_link.sh
     bash source/tools/stx_check.sh
     LCP_REF=DATA/LCP_STX.PRG python3 source/tools/prg_diff.py
+    python3 source/tools/reloc_audit.py
 
 ## Toolchain
 
