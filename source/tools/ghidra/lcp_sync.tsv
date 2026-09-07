@@ -1,0 +1,109 @@
+# lcp_sync.tsv -- the CURATED list of names to push into the Ghidra project.
+#
+# Read by ghidra/LcpSyncNames.java, driven by tools/sync_ghidra_names.sh.
+# It lived in ~/ghidra_scripts until 2026-09-07, i.e. outside version
+# control, which is the same hazard that made the verify list drift.
+#
+#   A <TAB> 0xADDRESS <TAB> port_name    rename the primary label there
+#   F <TAB> 0xADDRESS <TAB> port_name    rename the function there
+#   D <TAB> ghidra_name <TAB> port_name  rename by name (historical)
+#
+# Ghidra address = link address + 0x10000; for BSS take the link address
+# from tools/stx_bss_layout.tsv, not from lcp_sym.68k.
+#
+# This list is CURATED, not generated, and that is deliberate.  The
+# generated tools/gen_ghidra_verify.py list names every port symbol, and
+# pushing all 694 would overwrite the descriptive names Ghidra's own
+# analysis carries for the globals the map has never covered
+# (mi_pgtab is `midi_channel_volume` there).  Confirming one of those is
+# research, not a mechanical push -- see ghidra_globals_map.md.  Add a row
+# here only once the pairing is established.
+A	0x296dc	ctrl_cn
+A	0x29922	psg_freq
+A	0x29ae0	mi_pgtab
+A	0x29ecc	g_rpxs
+A	0x2a084	sp_fidx
+A	0x2a0f8	pex_name
+A	0x2a1d0	g_atact
+A	0x2a1f0	g_atmod
+A	0x2a210	g_atrel
+A	0x2a260	rv_msk
+A	0x2a270	rv_val
+A	0x2b466	mi_sig
+A	0x2b472	g_momap
+A	0x2b4b6	g_obisa
+A	0x2b54a	days_pmo
+A	0x2b5a6	rec_ledt
+A	0x2b6da	g_trel
+A	0x2b7de	bm32or
+A	0x2b85e	bm32and
+A	0x2b922	g_obcla
+A	0x2b92a	g_obala
+A	0x2b92e	g_obpha
+A	0x2b93e	g_ptdsi
+A	0x2bf98	mood_pri
+A	0x2bad4	g_ew2b
+A	0x2bf90	bm_lo
+A	0x2ba32	ew2pos
+A	0x2bdf8	g_ew2a
+A	0x2bb74	vwd_tab
+A	0x2c6ce	scn_dic
+A	0x2c700	vdipb
+A	0x2c714	ldivr
+A	0x2c864	in_evrt
+A	0x34a82	scrbufB
+A	0x3ca44	pk_wpr
+A	0x3ca46	pk_wrf
+A	0x3ca48	pk_wcs
+A	0x3cce6	psg_ovol
+A	0x3ccec	g_wyx
+A	0x3cf82	g_wyy
+A	0x3cf84	g_sedeh
+A	0x3d128	pk_c1bj
+A	0x3d23c	body_sh
+A	0x3f6dc	pk_bs1
+A	0x3f6de	pk_bs2
+A	0x3f6e0	pk_c2bj
+A	0x3f6e6	g_ewb
+A	0x3f79a	global
+A	0x3f7ba	g_wkadj
+A	0x3f8b0	body_pt
+A	0x44770	spr_file
+A	0x47ea6	psg_cvol
+A	0x47ea8	work_in
+A	0x480d2	pk_ccc
+A	0x48102	dsb_stor
+A	0x4b77c	bj_key
+A	0x4cf7a	scn_buf
+A	0x4cf94	g_ltscb
+A	0x4cfcc	g_wtx
+A	0x4cfce	g_wty
+A	0x4cfd0	scn_siz
+A	0x4cfd4	control
+A	0x4cfdc	int_in
+A	0x4cffc	int_out
+A	0x4d00e	rev_tab
+A	0x4d218	wk_out
+A	0x4d2da	pex_ptr
+A	0x4fe46	pk_pscore
+A	0x5018a	ad_c
+A	0x501a8	pk_cscore
+A	0x53a5c	fs_trg
+A	0x53b1e	pk_round
+A	0x53e96	pk_phrk
+A	0x53e98	addr_in
+A	0x53ec2	g_sedew
+A	0x53f3a	wp_ans
+A	0x53fde	mi_ndur
+A	0x53fe0	mi_nlpA
+A	0x54016	g_sedms
+A	0x5a156	g_sedim
+A	0x5a248	addr_ou
+A	0x5a2cc	pst_arr
+# Truncation repairs, found by the generated verify on 2026-09-07: an
+# earlier sync pushed lcp_sym.68k's 8-character LINKAGE names, the same
+# way it once produced `lcp_pat` for `lcp_path`.
+A	0x3d23c	body_shp
+A	0x3f8b0	body_ptr
+F	0x278c0	evnt_timer
+F	0x278e2	form_alert

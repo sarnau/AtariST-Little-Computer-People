@@ -31,6 +31,21 @@ closed project.  **Ghidra must be CLOSED** -- it holds an exclusive
 lock, and clearing a live lock is how the database gets corrupted; the
 script refuses rather than fight over it.
 
+Both lists are under version control now (2026-09-07); neither is
+hand-maintained in `$HOME` any more:
+
+  * **What to push** is `tools/ghidra/lcp_sync.tsv`, CURATED by hand.
+    It stays curated deliberately -- a blanket push of every port name
+    would overwrite the descriptive names Ghidra's own analysis carries
+    for the globals below.
+  * **What to check** is generated fresh on every `verify` run by
+    `tools/gen_ghidra_verify.py`, from `lcp_sym.68k` and
+    `tools/stx_bss_layout.tsv`.  It expands the truncated linkage names
+    and omits the library symbols the repo has no authority over, so a
+    mismatch it reports is real.  Its first run found four names an
+    earlier sync had pushed truncated (`body_sh`, `body_pt`, `evnt_ti`,
+    `form_al`); the hand-written list it replaced had never noticed.
+
 The older `apply_ghidra_renames.sh` is DEAD and this file used to
 point at it.  It POSTs to a Ghidra HTTP server on :8089 and needs
 `RenameLcpGlobals.java`, `list_data_symbols.java` and a fresh

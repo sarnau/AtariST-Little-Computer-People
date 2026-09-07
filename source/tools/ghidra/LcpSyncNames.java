@@ -4,9 +4,13 @@
 // scripts and a server that are not installed.  Runs headless instead:
 //
 //   analyzeHeadless <projdir> LCP -process -noanalysis \
-//       -scriptPath ~/ghidra_scripts -postScript LcpSyncNames.java
+//       -scriptPath ~/ghidra_scripts \
+//       -postScript LcpSyncNames.java <path-to-lcp_sync.tsv>
 //
-// Reads ~/ghidra_scripts/lcp_sync.tsv, one row per rename:
+// The list is source/tools/ghidra/lcp_sync.tsv, passed as the first script
+// argument (~/ghidra_scripts/lcp_sync.tsv is still accepted as a fallback,
+// which is where it lived until it was brought under version control).
+// One row per rename:
 //   D <TAB> current_ghidra_name <TAB> port_name     (data symbol, by name)
 //   F <TAB> 0xADDRESS           <TAB> port_name     (function, by address)
 //
@@ -24,9 +28,13 @@ import java.util.*;
 
 public class LcpSyncNames extends GhidraScript {
     public void run() throws Exception {
-        File tsv = new File(System.getProperty("user.home"),
+        String[] argv = getScriptArgs();
+        File tsv = (argv.length > 0 && argv[0].length() > 0)
+                 ? new File(argv[0])
+                 : new File(System.getProperty("user.home"),
                             "ghidra_scripts/lcp_sync.tsv");
         if (!tsv.exists()) { println("SYNC ERROR: missing " + tsv); return; }
+        println("SYNC reading " + tsv);
 
         SymbolTable st = currentProgram.getSymbolTable();
         int dOk=0, dSkip=0, dMiss=0, dFail=0;
@@ -36,6 +44,7 @@ public class LcpSyncNames extends GhidraScript {
         BufferedReader r = new BufferedReader(new FileReader(tsv));
         String line;
         while ((line = r.readLine()) != null) {
+            if (line.startsWith("#")) continue;
             String[] c = line.split("\t");
             if (c.length != 3) continue;
 
