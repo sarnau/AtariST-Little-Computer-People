@@ -60,14 +60,12 @@ A	0x3ccec	g_wyx
 A	0x3cf82	g_wyy
 A	0x3cf84	g_sedeh
 A	0x3d128	pk_c1bj
-A	0x3d23c	body_sh
 A	0x3f6dc	pk_bs1
 A	0x3f6de	pk_bs2
 A	0x3f6e0	pk_c2bj
 A	0x3f6e6	g_ewb
 A	0x3f79a	global
 A	0x3f7ba	g_wkadj
-A	0x3f8b0	body_pt
 A	0x44770	spr_file
 A	0x47ea6	psg_cvol
 A	0x47ea8	work_in
@@ -107,3 +105,12 @@ A	0x3d23c	body_shp
 A	0x3f8b0	body_ptr
 F	0x278c0	evnt_timer
 F	0x278e2	form_alert
+# Labels Ghidra never created, because nothing in the image references
+# these cells (2026-09-07).  All four are DATA, whose segment is
+# byte-identical to the reference, so the addresses are lcp_sym.68k's
+# own and involve no inference -- unlike scrbufA, whose base is only
+# known from a +511 reference, which is why it is NOT in this list.
+A	0x29860	psg_epp
+A	0x29b9c	g_unus3
+A	0x29f2c	g_rphs
+A	0x2b444	psg_vrg

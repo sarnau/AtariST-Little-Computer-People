@@ -44,7 +44,9 @@ hand-maintained in `$HOME` any more:
     and omits the library symbols the repo has no authority over, so a
     mismatch it reports is real.  Its first run found four names an
     earlier sync had pushed truncated (`body_sh`, `body_pt`, `evnt_ti`,
-    `form_al`); the hand-written list it replaced had never noticed.
+    `form_al`) and five addresses Ghidra had no label at; the
+    hand-written list it replaced had noticed none of them.  All fixed
+    except scrbufA, whose base is inferred -- **ok=693, mismatched=0**.
 
 The older `apply_ghidra_renames.sh` is DEAD and this file used to
 point at it.  It POSTs to a Ghidra HTTP server on :8089 and needs

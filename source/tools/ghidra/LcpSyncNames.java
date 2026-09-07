@@ -40,6 +40,12 @@ public class LcpSyncNames extends GhidraScript {
         int dOk=0, dSkip=0, dMiss=0, dFail=0;
         int fOk=0, fSkip=0, fMiss=0, fFail=0;
         List<String> notes = new ArrayList<String>();
+        // Two rows for one address make the file self-contradictory and
+        // the result order-dependent: the list inherited from $HOME named
+        // 0x3d23c both body_sh and body_shp, so a run renamed it twice and
+        // whichever row came last won.  Report it rather than silently
+        // apply the last one.
+        Map<String,String> claimed = new HashMap<String,String>();
 
         BufferedReader r = new BufferedReader(new FileReader(tsv));
         String line;
@@ -47,6 +53,12 @@ public class LcpSyncNames extends GhidraScript {
             if (line.startsWith("#")) continue;
             String[] c = line.split("\t");
             if (c.length != 3) continue;
+            if (!c[0].equals("D")) {
+                String prev = claimed.put(c[1], c[2]);
+                if (prev != null && !prev.equals(c[2]))
+                    notes.add("DUPLICATE " + c[1] + " named both "
+                              + prev + " and " + c[2] + " -- fix the list");
+            }
 
             if (c[0].equals("D")) {
                 String from = c[1], to = c[2];

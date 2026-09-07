@@ -1232,14 +1232,24 @@ are about keeping the report free of noise a real drift could hide in:
 The first run of the generated list immediately found four names the
 hand file had been hiding -- `body_sh`, `body_pt`, `evnt_ti` and
 `form_al`, all pushed by an earlier sync straight from lcp_sym.68k,
-the same class of error as `lcp_pat` for `lcp_path`.  Fixed, and
-**verify is now ok=689 mismatched=0**.
+the same class of error as `lcp_pat` for `lcp_path`.  It also found
+five addresses where Ghidra had NO label at all.  Both are fixed and
+**verify is now ok=693 mismatched=0 no_symbol=1**.
 
-`no_symbol=5` remains and is NOT drift: psg_epp, g_unus3, g_rphs,
-psg_vrg and scrbufA are addresses where Ghidra has no label at all.
-The first four are ordinary BSS globals nothing in the image
-references; scrbufA is category E, its base inferred from a +511
-reference, so a label there would be a guess.
+The one remaining is **scrbufA, and it stays that way on purpose**.
+The other four -- psg_epp, g_unus3, g_rphs, psg_vrg -- are DATA cells
+nothing in the image references, and DATA is byte-identical to the
+reference, so lcp_sym.68k's addresses ARE the reference's and labelling
+them involves no inference.  scrbufA is category E: its base is only
+known from a +511 reference, so a label there would be a guess, and
+guessing is what this whole apparatus exists to avoid.
+
+**A contradictory sync list used to apply silently.**  The list
+inherited from $HOME named 0x3d23c both `body_sh` and `body_shp`, so a
+run renamed the cell twice and whichever row came last won -- which is
+how the truncated names survived a sync in the first place.
+LcpSyncNames now reports `SYNC NOTE DUPLICATE` when two non-D rows name
+one address differently.
 
 **The sync list is in the repo too** (`tools/ghidra/lcp_sync.tsv`, moved
 from $HOME the same day).  It stays CURATED rather than generated on
