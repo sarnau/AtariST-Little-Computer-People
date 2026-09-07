@@ -53,7 +53,15 @@ restore_shipped() {
         echo "    WARNING: could not restore a byte-identical shipped build" >&2
     fi
 }
-trap 'pkill -x hatari 2>/dev/null; restore_shipped' EXIT
+# TERM, then KILL: an emulator already sitting on a confirm-quit dialog
+# never sees the TERM through to an exit, and the leftover window then
+# collides with the next run.  The launches pass --confirm-quit off so
+# this should not be needed -- it covers an instance started by hand.
+kill_hatari() {
+    pkill -x hatari 2>/dev/null; sleep 1
+    pkill -9 -x hatari 2>/dev/null
+}
+trap 'kill_hatari; restore_shipped' EXIT
 
 cd "$REPO" || { echo "SETUP: cannot cd to $REPO" >&2; exit 2; }
 [ -f "$REF" ] || { echo "SETUP: reference $REF missing" >&2; exit 2; }
@@ -140,7 +148,7 @@ else
             ok "gated build (-DSKIP_TITLE -DSKIP_COPYPROT)"
 
             for t in test_keyboard test_actions test_saveload; do
-                pkill -x hatari 2>/dev/null; sleep 1
+                kill_hatari
                 out=$(NO_REBUILD=1 "$CSRC/tools/$t.sh" 2>&1)
                 line=$(echo "$out" | grep -E '^ *passed [0-9]+' | tail -1)
                 if echo "$out" | grep -qE 'failed 0$'; then
@@ -155,7 +163,7 @@ else
             # Give it a shim rather than edit the script.
             shim=$(mktemp -d -t lcp_hatari_shim)
             ln -sf "$HAT" "$shim/hatari"
-            pkill -x hatari 2>/dev/null; sleep 1
+            kill_hatari
             out=$(PATH="$shim:$PATH" NO_REBUILD=1 \
                   "$CSRC/tools/test_longrun_stable.sh" 2>&1)
             rm -rf "$shim"

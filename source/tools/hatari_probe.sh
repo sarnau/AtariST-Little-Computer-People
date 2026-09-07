@@ -169,9 +169,16 @@ probe_start() {
         || probe_die "cannot stage LCP.PRG into $GAME_DIR"
     rm -f "$GAME_DIR/LCP.SAV"            # force the cs_mvIn path
     pkill -x hatari 2>/dev/null; sleep 1
+    pkill -9 -x hatari 2>/dev/null   # a confirm-quit dialog eats the TERM
 
+    # --confirm-quit off: without it Hatari answers a quit request (the
+    # pkill above, or closing the window) with a modal "All unsaved data
+    # will be lost" alert and sits there, so the process survives, the
+    # next run's pkill finds a window waiting on a dialog, and a stale
+    # emulator is left on screen.
     "$HATARI" --harddrive "$GAME_DIR" --tos "$TOS_IMG" \
               --machine st --cpulevel 0 --cpuclock 8 --memsize 1 \
+              --confirm-quit off \
               --fast-forward on --cmd-fifo "$_PROBE_FIFO" \
               --auto 'C:\LCP.PRG' > "$_PROBE_LOG" 2>&1 &
     for _ in $(seq 1 60); do [ -p "$_PROBE_FIFO" ] && break; sleep 0.25; done
@@ -257,7 +264,8 @@ probe_fast() { _probe_send "hatari-option --fast-forward $1"; sleep 0.3; }
 probe_stop() {
     [ -n "$_PROBE_FIFO" ] && [ -p "$_PROBE_FIFO" ] && _probe_send "hatari-shortcut quit"
     sleep 1
-    pkill -x hatari 2>/dev/null
+    pkill -x hatari 2>/dev/null; sleep 1
+    pkill -9 -x hatari 2>/dev/null   # a confirm-quit dialog eats the TERM
     [ -n "${KEEP_LOG:-}" ] && echo "log: $_PROBE_LOG" >&2
     [ -z "${KEEP_LOG:-}" ] && [ -n "$_PROBE_TMP" ] && rm -rf "$_PROBE_TMP"
     return 0

@@ -96,9 +96,11 @@ command -v ffmpeg >/dev/null \
 cp -f "$PRG"                    "$GAME_DIR/LCP.PRG"
 rm -f "$GAME_DIR/LCP.SAV"       # fresh cs_mvIn path
 pkill -x hatari 2>/dev/null; sleep 1
+pkill -9 -x hatari 2>/dev/null   # a confirm-quit dialog eats the TERM
 
 hatari --harddrive "$GAME_DIR" \
        --tos "$TOS_IMG" \
+       --confirm-quit off \
        --fast-forward on \
        --run-vbls "$VBLS_TOTAL" \
        --auto 'C:\LCP.PRG' \

@@ -1724,6 +1724,18 @@ the path -- Hatari's option parser rejects a quoted path -- plus
 the saved config's MMU/68030 settings double bus error during boot,
 which looks like a game crash and is not.
 
+**Every scripted launch also needs `--confirm-quit off`** (added
+2026-09-07).  The default is ON, so a quit request -- `hatari-shortcut
+quit` down the command FIFO, a SIGTERM from the scripts' own `pkill`,
+or closing the window -- pops a modal "All unsaved data will be lost.
+Do you really want to quit?" alert and WAITS.  The process survives its
+own shutdown, a stale emulator is left on screen, and the next run's
+`pkill` finds a window already sitting on a dialog.  All four launch
+sites pass it now (hatari_probe.sh, run_hatari.sh x2,
+test_longrun_stable.sh), and every `pkill -x hatari` escalates to
+`pkill -9` after a second, which covers an instance someone started by
+hand.  The Hatari MCP server does not have the problem at all.
+
 What works: the build boots, draws the title screen, takes the
 guestbook name/date/time through stEnter, loads HOUSE.SCN and draws the
 house, and runs for ten emulated minutes with the dog wandering all
