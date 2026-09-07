@@ -114,3 +114,13 @@ A	0x29860	psg_epp
 A	0x29b9c	g_unus3
 A	0x29f2c	g_rphs
 A	0x2b444	psg_vrg
+# scrbufA (2026-09-07).  This one is the PORT'S model, not a fact
+# recovered from the image: scrbufA is referenced only at +511 through
+# the align-up constant, and that constant sits inside a relocated
+# longword, so `base+0x1FF` and `base-1+0x200` store the same value and
+# the binary cannot tell them apart (reloc_audit category E).  0x2c867
+# is what source/sprites.c and parts/sc_ren8.c declare today.  See the
+# note in CLAUDE.md: three independent indications point at 0x2c866
+# instead, and if the port ever moves, the generated verify list moves
+# with it and a sync corrects this label.
+A	0x2c867	scrbufA

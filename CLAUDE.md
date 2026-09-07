@@ -1103,10 +1103,11 @@ eae52d14023b51d7ac459a90d37eed10, 123 352 bytes: text 104 156, data
     LCP_REF=DATA/LCP_STX.PRG python3 source/tools/prg_diff.py
 
 The final step is `tools/bss_remap.py`.  lo68 and the 1985 linker pack
-the same `.comm` blocks at different offsets (and the original does not
-even align them -- scrbufA lands on an odd address), so TEXT, DATA and
-the relocation stream come out identical while every relocated BSS
-longword points somewhere else.  The original allocation is carried as
+the same `.comm` blocks at different offsets (scrbufA appears to land
+on an odd address -- but that is an ARTEFACT of the port's `+0x1FF`
+reading, not a measurement; see the category-E note below), so TEXT,
+DATA and the relocation stream come out identical while every relocated
+BSS longword points somewhere else.  The original allocation is carried as
 a checked-in spec, `tools/stx_bss_layout.tsv` (417 rows, port
 symbol+offset -> address, bss size in the header).  alcyon_link.sh
 takes a second SYMBOLS link as `lcp_sym.68k`, resolves the spec against
@@ -1300,6 +1301,33 @@ E is the one category that cannot be closed from the binary at all:
 scrbufA is referenced only at +511 through the align-up constant, and
 that constant lives inside a relocated longword, so `+0x1FF` with base
 0x1a7 and `+0x200` with base 0x1a6 are indistinguishable.
+
+**But the layout leans hard on `+0x200`, i.e. base 0x1c866, one byte
+BELOW what the port declares** (noticed 2026-09-07 while labelling the
+symbol in Ghidra; not acted on, because it is a claim about the 1985
+source and the maintainer's call).  Three independent indications:
+
+  * **Every other symbol in the reference layout sits at an EVEN
+    address** -- all 282 of them.  Under the port's `+0x1FF` reading
+    scrbufA is the only odd one in the whole BSS.
+  * **The cell below it ends exactly at 0x1c866.**  `in_evrt` is a
+    `BOOL16` at 0x1c864, so it occupies 0x1c864-0x1c865 and 0x1c866 is
+    the next free byte -- dense packing, which is what these `.comm`
+    blocks do everywhere else.
+  * **The two sibling align-up sites use +512, not +511.**  stpScrB
+    0x65ae and fillTopR 0x6880 both `addl #512` then `andl #-512`, so
+    `+0x200` is this program's idiom; only the scrbufA site bakes the
+    constant in, which is why it is the one that cannot be read
+    directly.
+
+Note the circularity to avoid: "the original does not even align them
+-- scrbufA lands on an odd address", written elsewhere in this file, is
+NOT independent evidence.  It is a restatement of the `+0x1FF`
+assumption.  Nothing else in the layout is odd.
+
+Flipping it would keep the binary byte-identical (the stored longword
+is the same either way) but moves the spec row, so it needs the
+regenerate-and-review cycle plus a prg_diff.
 
 **A constant subscript is not evidence of an array.**  Alcyon folds it
 into the absolute address, so `arr[7]` and a plain short emit the same
