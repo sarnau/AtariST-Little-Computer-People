@@ -713,6 +713,11 @@
 #define TIER_RELAXED                    2       /* g_atrel */
 #define TIER_SLEEP                      3
 
+/* g_ew2a's end-of-table marker, in a row's first mask byte.  Alcyon
+   narrows it to a signed char, so chk_encm's compare against the char
+   field matches. */
+#define EW2A_END                        0xff
+
 /* ---- ACTION_ID (dumped verbatim from Ghidra) --------------------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions
    in the original binary, not appended at the end.  ACTION_NONE (-1)

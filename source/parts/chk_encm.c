@@ -47,7 +47,7 @@ char *  str;
            explicit goto, not a break plus an `i >= 10` re-test. */
         row = 0;
         while (1) {
-                if (g_ew2a[row].table[0] == 0xff)
+                if (g_ew2a[row].table[0] == EW2A_END)
                         break;
                 for (i = 0; i < 10; i++)
                         if ((g_ew2a[row].table[i] & g_ewb[i]) !=
