@@ -16,7 +16,7 @@ lcp_sick()
         lcp.sickness_countdown  = 60;
         lcp.sickness_direction  = DIR_WORSENING;
         lcp.happiness_direction = DIR_WORSENING;
-        if (lcp.happiness < 2)
+        if (lcp.happiness < MOOD_SAD)
                 /* The other revision compiles the register-form add; the STX
                    revision's addq shape comes from +=. */
                 lcp.happiness += MOOD_CONTENT;

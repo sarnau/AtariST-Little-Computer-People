@@ -127,7 +127,7 @@ a_writl()
                 template_index = section_id * 0x60;
                 if (section_id == 3)
                         template_index += rndRng(0, 5) * 0xc;
-                else if (lcp.sickness_level > 0)
+                else if (lcp.sickness_level > SICKNESS_HEALTHY)
                         template_index += rndRng(0, 1) * 0x30 + 0x24;
                 else
                         template_index += rndRng(0, 1) * 0x30 +

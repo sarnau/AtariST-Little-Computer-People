@@ -42,7 +42,7 @@ chk_actT()
 
         /* Sickness bias: 66% skip healthy, 0% sick. */
         /* STX tests the other way round, so the arms swap. */
-        if (lcp.sickness_level > 0)
+        if (lcp.sickness_level > SICKNESS_HEALTHY)
                 sickness_skip_probability = 0;
         else
                 sickness_skip_probability = 66;
@@ -50,7 +50,7 @@ chk_actT()
            two conjunctions, re-testing the sickness level in the
            second arm -- the three tst.w and their branch targets pin
            the shape. */
-        if (lcp.thirst_level > 0) {
+        if (lcp.thirst_level > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sickness_skip_probability &&
                     ((lcp.sickness_level != SICKNESS_HEALTHY &&
                       lcp_watr != 0) ||
@@ -66,7 +66,7 @@ chk_actT()
         /* P5: hunger.  Same disjunctive shape, and note that STX's
            lastAct gate applies ONLY to the healthy arm -- it is not
            the ROM's `(healthy || food) && lastAct != KITCHEN`. */
-        if (lcp.hunger_level > 0) {
+        if (lcp.hunger_level > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sickness_skip_probability &&
                     ((lcp.sickness_level != SICKNESS_HEALTHY &&
                       food_slots != 0) ||

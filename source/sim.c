@@ -32,7 +32,7 @@ gameSim1()
         lcp.thirst_timer--;
         if (lcp.thirst_timer <= 0) {
                 lcp.thirst_timer = lcp.thirst_timer_max;
-                if (lcp.thirst_level < 3)
+                if (lcp.thirst_level < NEED_SEVERE)
                         lcp.thirst_level++;
                 else
                         lcp_sick();
@@ -42,25 +42,25 @@ gameSim1()
         lcp.hunger_timer--;
         if (lcp.hunger_timer <= 0) {
                 lcp.hunger_timer = lcp.hunger_timer_max;
-                if (lcp.hunger_level < 3)
+                if (lcp.hunger_level < NEED_SEVERE)
                         lcp.hunger_level++;
                 else
                         lcp_sick();
         }
 
         /* Sickness progression / recovery */
-        if (lcp.sickness_level > 0) {
+        if (lcp.sickness_level > SICKNESS_HEALTHY) {
                 if (--lcp.sickness_countdown == 0) {
                         lcp.sickness_level += lcp.sickness_direction;
                         if (lcp.sickness_level == SICKNESS_HEALTHY)
                                 lcp_upal();
-                        else if (lcp.sickness_level > 4)
+                        else if (lcp.sickness_level > SICKNESS_CRITICAL)
                                 /* `==` where the author meant `=`: the
                                    clamp never happens, and the binary
                                    carries the discarded comparison.
                                    Preserved as written. */
-                                lcp.sickness_level == 4;
-                        if (lcp.sickness_level >= 2)
+                                lcp.sickness_level == SICKNESS_CRITICAL;
+                        if (lcp.sickness_level >= SICKNESS_MODERATE)
                                 lcp.happiness = MOOD_SAD;
                         if (lcp.sickness_direction == DIR_IMPROVING)
                                 lcp.sickness_countdown = 5;
@@ -96,10 +96,10 @@ gameSim1()
             lcp.happiness != MOOD_SAD) {
                 if (--lcp.happiness_duration_active == 0) {
                         lcp.happiness += lcp.happiness_direction;
-                        if (lcp.happiness <= 0) {
+                        if (lcp.happiness <= MOOD_HAPPY) {
                                 lcp.happiness = MOOD_HAPPY;
                                 lcp.happiness_direction = DIR_WORSENING;
-                        } else if (lcp.happiness >= 2) {
+                        } else if (lcp.happiness >= MOOD_SAD) {
                                 lcp.happiness = MOOD_SAD;
                                 lcp.happiness_direction = DIR_IMPROVING;
                         }

@@ -32,7 +32,7 @@ chk_timA()
         if (table_pick < 0)
                 table_pick += 24;
 
-        if (table_pick >= 18 || lcp.sickness_level >= 2) {
+        if (table_pick >= 18 || lcp.sickness_level >= SICKNESS_MODERATE) {
                 table_pick = TIER_SLEEP;
         } else {
                 /* sch_tab is a real 2-D array here -- the shifted

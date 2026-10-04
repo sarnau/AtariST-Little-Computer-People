@@ -106,7 +106,7 @@ mg_wkev()
                 /* The GLOBAL tank level, not the saved copy in the
                    struct: the reference relocates this site to
                    lcp_watr, not to lcp+92. */
-                if (lcp.thirst_level > 0 && lcp_watr != 0) {
+                if (lcp.thirst_level > NEED_SATISFIED && lcp_watr != 0) {
                         lcp_lgt();
                         a_drink();
                         lcp_rgt();
