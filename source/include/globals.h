@@ -127,7 +127,7 @@ extern long  mi_nxTk;           /* long tick counters */
 extern long  mi_lpTk;
 extern char  g_msmsa;           /* byte flag */
 extern short mi_rlock;
-extern long mi_svtv;
+extern void (*mi_svtv)();
 extern unsigned char* mi_seqE;
 extern unsigned char* mi_dptr;
 extern char mi_evTf;

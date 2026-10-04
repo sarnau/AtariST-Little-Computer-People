@@ -196,7 +196,7 @@ unsigned char   g_meve[4];     /* MIDI message being built for mq_dise */
                         game-code path triggers another timer event
                         before the first handler completes.
    mi_svtv  -- previous Timer-A vector, saved so it can be restored. */
-long            mi_svtv;
+void            (*mi_svtv)();
 
 /* ---- MIDI sequencer parse state -----------------------------------
    The sequencer walks a 3-byte-per-event compact stream inside
