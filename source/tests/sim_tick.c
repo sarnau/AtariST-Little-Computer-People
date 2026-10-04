@@ -20,6 +20,7 @@
 
 #include "../include/types.h"
 #include "../include/structs.h"
+#include "../include/enums.h"
 
 extern PLAYER   lcp;
 extern short    t_min;
@@ -64,13 +65,13 @@ char ** argv;
         lcp.hunger_timer        = 45;
         lcp.bathroom_timer_max  = 120;
         lcp.bathroom_timer      = 120;
-        lcp.happiness           = 1;    /* MOOD_CONTENT   */
+        lcp.happiness           = MOOD_CONTENT;
         lcp.happiness_initial_countdown  = 6;
         lcp.happiness_duration_happy     = 4;
         lcp.happiness_duration_content   = 6;
         lcp.happiness_duration_active    = 6;
-        lcp.happiness_direction = 1;
-        lcp.sickness_level      = 0;
+        lcp.happiness_direction = DIR_WORSENING;
+        lcp.sickness_level      = SICKNESS_HEALTHY;
 
         /* Sim entry conditions. */
         ani_cnt  = 0;    /* (counter & 7) == 0 -> tick */
@@ -103,13 +104,13 @@ char ** argv;
            thirst_level (capped at 3 then triggers lcp_become_sick).
            Timer at end: 1440 % 30 == 0 so it resets to 30.            */
         CHECK(lcp.thirst_timer == 30, "thirst_timer end value wrong");
-        CHECK(lcp.thirst_level >= 3,  "thirst_level should max out");
+        CHECK(lcp.thirst_level >= NEED_SEVERE,  "thirst_level should max out");
 
         /* hunger_timer: 1440 minutes with timer_max=45 = 32 wraps.
            At level 3 further wraps invoke lcp_become_sick which
            leaves level unchanged.                                     */
         CHECK(lcp.hunger_timer == 45, "hunger_timer end value wrong");
-        CHECK(lcp.hunger_level >= 3,  "hunger_level should max out");
+        CHECK(lcp.hunger_level >= NEED_SEVERE,  "hunger_level should max out");
 
         /* bathroom_timer: 1440 min, timer_max=120 -> wraps 12 times.
            On first wrap bathroom_timer is set to 9999 and bathroom_need

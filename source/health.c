@@ -17,9 +17,10 @@ lcp_sick()
         lcp.sickness_direction  = DIR_WORSENING;
         lcp.happiness_direction = DIR_WORSENING;
         if (lcp.happiness < MOOD_SAD)
-                /* The other revision compiles the register-form add; the STX
+                /* One mood step sadder (HAPPY -> CONTENT -> SAD).  The
+                   other revision compiles the register-form add; the STX
                    revision's addq shape comes from +=. */
-                lcp.happiness += MOOD_CONTENT;
+                lcp.happiness += 1;
         lcp_upal();
 }
 
