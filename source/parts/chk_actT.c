@@ -61,7 +61,7 @@ chk_actT()
                 }
         }
 
-        food_slots = (lcp.door_states_and_flags >> 9) & 7;
+        food_slots = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
 
         /* P5: hunger.  Same disjunctive shape, and note that STX's
            lastAct gate applies ONLY to the healthy arm -- it is not

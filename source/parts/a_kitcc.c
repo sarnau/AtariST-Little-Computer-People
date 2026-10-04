@@ -31,7 +31,7 @@ a_kitcc()
 
         a_opecc(DOOR_OPEN);
 
-        food_count = (lcp.door_states_and_flags >> 9) & 7;
+        food_count = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         if (food_count == 0) {
                 gameTick(2);
                 return;
@@ -41,7 +41,7 @@ a_kitcc()
         gameTick(3);
         food_count--;
         lcp.door_states_and_flags =
-                (food_count << 9) |
+                (food_count << DSF_FOOD_SHIFT) |
                 (lcp.door_states_and_flags & ~DSF_FOOD_MASK);
         sc_drfc();
         lcp_st = STATE_STAND_FACING_SCREEN;

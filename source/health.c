@@ -13,7 +13,7 @@ void
 lcp_sick()
 {
         lcp.sickness_level      = SICKNESS_MILD;
-        lcp.sickness_countdown  = 60;
+        lcp.sickness_countdown  = SICK_DELAY_WORSENING;
         lcp.sickness_direction  = DIR_WORSENING;
         lcp.happiness_direction = DIR_WORSENING;
         if (lcp.happiness < MOOD_SAD)
@@ -30,7 +30,7 @@ lcp_rcov()
         if (lcp.hunger_level == NEED_SATISFIED &&
             lcp.thirst_level == NEED_SATISFIED) {
                 lcp.sickness_direction = DIR_IMPROVING;
-                lcp.sickness_countdown = 5;
+                lcp.sickness_countdown = SICK_DELAY_IMPROVING;
         }
 }
 

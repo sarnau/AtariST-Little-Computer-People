@@ -64,11 +64,11 @@ er_food()
                 if (g_dvdog == NO) {
                         while (1) {
                                 food_count =
-                                        (lcp.door_states_and_flags >> 9) & 7;
+                                        (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
                                 food_count++;
-                                if (food_count > 4)
+                                if (food_count > FOOD_PACKS_MAX)
                                         break;
-                                food_count = food_count << 9;
+                                food_count = food_count << DSF_FOOD_SHIFT;
                                 lcp.door_states_and_flags &= ~DSF_FOOD_MASK;
                                 lcp.door_states_and_flags |= food_count;
                                 lcp_st = STATE_REACH_INTO_CABINET;

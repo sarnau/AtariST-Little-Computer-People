@@ -45,7 +45,7 @@ short   event;
                 er_recd();
                 break;
         case ACTION_EVENT_FOOD_DELIVERY:        /* 0x5fde */
-                if (((lcp.door_states_and_flags >> 9) & 7) == 4)
+                if (((lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
                         break;
                 er_food();
                 break;

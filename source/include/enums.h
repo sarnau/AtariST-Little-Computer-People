@@ -641,6 +641,22 @@
 #define DSF_FOOD_COUNT_MASK             0xE00
 #define DSF_FOOD_MASK                   0xE00
 #define DSF_PRESERVE_UPPER_MASK         0xFE00
+/* The kitchen cabinet's food count lives in DSF_FOOD_MASK: a 3-bit
+   field, 0..FOOD_PACKS_MAX packs.  A new resident starts with it full. */
+#define DSF_FOOD_SHIFT                  9
+#define DSF_FOOD_FIELD                  7       /* DSF_FOOD_MASK >> DSF_FOOD_SHIFT */
+#define FOOD_PACKS_MAX                  4
+
+/* ---- Other lcp status values ------------------------------------------ */
+#define WATER_START                     7       /* new resident's tank */
+#define WATER_MAX                       10      /* lcp_watr, a full tank */
+/* bathroom_timer once the need has fired: effectively off until eating
+   (a_kitcc) reloads it from bathroom_timer_max. */
+#define BATHROOM_TIMER_OFF              9999
+/* sickness_countdown reloads, in gameSim1 steps: sickness worsens one
+   level every 60 and, once recovering, improves one every 5. */
+#define SICK_DELAY_WORSENING            60
+#define SICK_DELAY_IMPROVING            5
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
    The 1985 code uses a keycode_enum where Ctrl+X maps to X-'@' (i.e.

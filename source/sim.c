@@ -63,16 +63,16 @@ gameSim1()
                         if (lcp.sickness_level >= SICKNESS_MODERATE)
                                 lcp.happiness = MOOD_SAD;
                         if (lcp.sickness_direction == DIR_IMPROVING)
-                                lcp.sickness_countdown = 5;
+                                lcp.sickness_countdown = SICK_DELAY_IMPROVING;
                         else
-                                lcp.sickness_countdown = 60;
+                                lcp.sickness_countdown = SICK_DELAY_WORSENING;
                 }
         }
 
         /* Bathroom tick */
         lcp.bathroom_timer--;
         if (lcp.bathroom_timer <= 0) {
-                lcp.bathroom_timer = 9999;
+                lcp.bathroom_timer = BATHROOM_TIMER_OFF;
                 lcp.bathroom_need = YES;
         }
 

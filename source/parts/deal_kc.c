@@ -26,9 +26,9 @@ short   keycode;
 
         case KEY_CTRL_F_FOOD:
                 if (food_dlv != NO &&
-                    ((lcp.door_states_and_flags >> 9) & 7) < 4)
+                    ((lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) < FOOD_PACKS_MAX)
                         food_dlv = NO;
-                if (((lcp.door_states_and_flags >> 9) & 7) == 4) {
+                if (((lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX) {
                         food_dlv = YES;
                         return;
                 }
@@ -60,7 +60,7 @@ short   keycode;
                 return;
 
         case KEY_CTRL_W_WATER:
-                if (lcp_watr == 10)
+                if (lcp_watr == WATER_MAX)
                         return;
                 sf_sele(SFX_WATER_TAP, -1L);
                 updWtLv(1);

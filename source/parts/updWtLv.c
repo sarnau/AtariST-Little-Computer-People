@@ -24,7 +24,7 @@ short   val;
                 while (y-- != 0) {
                         pts[1] = 174 - y;
                         pts[3] = pts[1];
-                        vsl_color(vdihnd, vdi_colt[0xd]);
+                        vsl_color(vdihnd, vdi_colt[COLOR_blue]);
                         v_pline(vdihnd, 2, pts);
                 }
                 sc_sdtf();
@@ -32,10 +32,10 @@ short   val;
                 /* Draw empty portion (colour 0x0C). */
                 y = lcp_watr;
                 sc_sdtb();
-                while (y++ < 10) {
+                while (y++ < WATER_MAX) {
                         pts[1] = 174 - (y - 1);
                         pts[3] = pts[1];
-                        vsl_color(vdihnd, vdi_colt[0xc]);
+                        vsl_color(vdihnd, vdi_colt[COLOR_lt_grey]);
                         v_pline(vdihnd, 2, pts);
                 }
                 sc_sdtf();
@@ -44,15 +44,15 @@ short   val;
 
         if (val > 0) {
                 /* Fill val steps (capped at 10). */
-                while (val != 0 && lcp_watr <= 10) {
-                        if (++lcp_watr > 10) {
+                while (val != 0 && lcp_watr <= WATER_MAX) {
+                        if (++lcp_watr > WATER_MAX) {
                                 lcp_watr--;
                                 break;
                         }
                         pts[1] = 174 - (lcp_watr - 1);
                         pts[3] = pts[1];
                         sc_sdtb();
-                        vsl_color(vdihnd, vdi_colt[0xd]);
+                        vsl_color(vdihnd, vdi_colt[COLOR_blue]);
                         v_pline(vdihnd, 2, pts);
                         sc_sdtf();
                         val--;
@@ -63,7 +63,7 @@ short   val;
                         pts[1] = 174 - (lcp_watr - 1);
                         pts[3] = pts[1];
                         sc_sdtb();
-                        vsl_color(vdihnd, vdi_colt[0xc]);
+                        vsl_color(vdihnd, vdi_colt[COLOR_lt_grey]);
                         v_pline(vdihnd, 2, pts);
                         sc_sdtf();
                         gameTick(4);

@@ -97,7 +97,7 @@ sc_drfc()
         if (lcp_cabO == NO)
                 return;
 
-        cabinet_content = (lcp.door_states_and_flags >> 9) & 7;
+        cabinet_content = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         od_draw(od_cbo2, 46, 140);
 
         if (cabinet_content >= 1) od_draw(od_cbit, 50, 159);

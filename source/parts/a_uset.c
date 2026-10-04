@@ -111,6 +111,6 @@ a_uset()
                 a_clotd();
 
         lcp.bathroom_need  = NO;
-        lcp.bathroom_timer = 9999;
+        lcp.bathroom_timer = BATHROOM_TIMER_OFF;
         g_actif = NO;
 }

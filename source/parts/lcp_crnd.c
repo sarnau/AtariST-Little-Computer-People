@@ -27,7 +27,7 @@ lcp_crnd()
                 if (lcp.character_name[tmp] < 'A')
                         lcp.character_name[tmp] = 0;
 
-        lcp.water_level               = 7;
+        lcp.water_level               = WATER_START;
         lcp_watr               = lcp.water_level;
         lcp.clothing_color            = rndRng(0, 15);
         lcp.skin_color                = rndRng(0, 7);
@@ -69,5 +69,5 @@ lcp_crnd()
         lcp_tv                     = lcp.tv_on;
         lcp.food_supply               = 4;
         lcp_food                = lcp.food_supply;
-        lcp.door_states_and_flags     = 0x0800;         /* DSF_INIT_FOOD_FULL */
+        lcp.door_states_and_flags     = FOOD_PACKS_MAX << DSF_FOOD_SHIFT;
 }
