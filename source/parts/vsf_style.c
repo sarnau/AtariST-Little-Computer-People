@@ -3,6 +3,8 @@
  * binding module's function order; never compiled on its own.
  */
 
+/* VDI: sets the fill style index (pattern or hatch number) on
+   workstation handle and returns the style the VDI selected. */
 void
 vsf_style(handle, style)
 short   handle;

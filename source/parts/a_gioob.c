@@ -2,6 +2,12 @@
  * parts/a_gioob.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_gioob: get into or out of bed, toggling lcp.is_sleeping.  Awake:
+   the resident walks to the bed and, unless preempted, undresses,
+   gets in and lies down, stepping left as each pose plays.  Asleep:
+   the same poses play in reverse, stepping right, and he ends
+   standing by the bed.  doAct calls it first whenever an action
+   arrives while he is asleep. */
 void
 a_gioob()
 {

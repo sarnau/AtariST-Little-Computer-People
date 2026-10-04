@@ -9,4 +9,6 @@
 #include "types.h"
 #include "enums.h"
 
+/* The resident's draw announcement: pk_cdrw writes the count into
+   [10] and makes the ending "card." or "cards." from [16]. */
 char *          pk_tcm    = "I'll take _ cards.";

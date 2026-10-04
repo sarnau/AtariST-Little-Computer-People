@@ -3,6 +3,12 @@
  * never compiled on its own.
  */
 
+/* a_opecc: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the kitchen
+   cabinet while the resident stands at it, updating lcp_cabO.  Both
+   directions reach in and step the door through its ajar frame with
+   the matching sound; opening also draws the food-count markers on
+   the shelves (sc_drfc).  A request matching the current state
+   returns immediately. */
 void
 a_opecc(oc_stat)
 short   oc_stat;

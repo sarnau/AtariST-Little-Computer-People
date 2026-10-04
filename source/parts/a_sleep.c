@@ -3,6 +3,14 @@
  */
 
 
+/* The resident dozes off.  With SLEEP_RANDOM (ACTION_SLEEP, cs_mvIn,
+   and gameLoop's endless loop when the copy protection fails) he first
+   walks to the centre line of the floor he is on and turns side-on,
+   then sleeps 7..15 rounds; any other value is the round count, slept
+   on the spot (a_plaag's a_sleep(1) between key polls).  Each round
+   plays the breathe-in/out poses from pst_arr and SFX_SNORING.  Does
+   nothing while he is on the stairs (lcp_stR); a queued action
+   (g_trel[0]) wakes him early. */
 void
 a_sleep(value)
 short   value;

@@ -2,6 +2,12 @@
  * parts/lt_tysa.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* Types the string str through lt_tyca, word by word, wrapping to a
+   new line before any word that would pass column 40.  val is an
+   indent: a negative value types -val spaces first, and a positive one
+   does so only when the line already has text on it.  Each word is
+   collected in g_ltscb before it is typed.  Returns the character that
+   ended the scan (the string's terminator in practice). */
 short
 lt_tysa(str, val)
 char *  str;

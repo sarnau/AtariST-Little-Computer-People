@@ -3,6 +3,8 @@
  * binding module; never compiled on its own.
  */
 
+/* VDI: sets the fill colour index on workstation handle and returns
+   the index the VDI actually selected. */
 void
 vsf_color(handle, index)
 short   handle;

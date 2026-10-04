@@ -3,6 +3,14 @@
  * never compiled on its own.
  */
 
+/* a_plawr: play a tune at the shelf spot (ACTION_PLAY_PIANO).  Any
+   record playing is stopped first (a_playp).  The resident walks to
+   POS_TOP_RECORD_SHELF, a prop sprite is shown, and a random *.ORG
+   file is picked and started with sgPlay.  While it plays he switches
+   to a new random reaching pose whenever any PSG channel's volume
+   rises, so he moves in time with the notes.  g_rbact is set
+   throughout to keep rp_anim's record-player animation still, and the
+   song buffer is freed at the end. */
 void
 a_plawr()
 {

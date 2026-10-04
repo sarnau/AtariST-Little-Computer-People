@@ -2,6 +2,9 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_pacen: pace nervously on the spot.  The resident turns side-on,
+   waits for his head to settle, then alternates the shift-left and
+   shift-right pacing poses for 15 ticks and stands still again. */
 void
 a_pacen()
 {

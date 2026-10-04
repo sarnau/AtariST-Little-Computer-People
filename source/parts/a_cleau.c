@@ -2,6 +2,11 @@
  * parts/a_cleau.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_cleau: tidy up.  Visits each door the house tracks as open --
+   filing cabinet, study door, toilet, bedroom closet, dresser, kitchen
+   cabinet, front door -- walks to it and closes it, clearing its
+   lcp_*O / studyDrO flag through the matching close routine.  Each
+   walk can be preempted by a new action, which abandons the rest. */
 void
 a_cleau()
 {

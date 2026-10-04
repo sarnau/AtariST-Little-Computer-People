@@ -21,8 +21,11 @@
 /* Small handle table so callers get a short back and we look the
    FILE * up on each subsequent call. */
 #define MAX_HOST_HANDLES        16
-static FILE *   host_handles[MAX_HOST_HANDLES];
+static FILE *   host_handles[MAX_HOST_HANDLES];   /* open FILE per GEMDOS handle; NULL = free slot */
 
+/* Give an open FILE a GEMDOS-style handle: the first free slot of
+   host_handles.  With the table full the file is closed and -1
+   returned, like a failed open. */
 static short
 al_hnd(fp)
 FILE *  fp;
@@ -40,6 +43,8 @@ FILE *  fp;
 
 /* --- GEMDOS trap #1 subset ------------------------------------------- */
 
+/* GEMDOS Fopen: mode 0 opens for reading, any other mode opens for
+   (truncating) binary write.  Returns a handle or -1. */
 short
 Fopen(path, mode)
 char *  path;
@@ -50,6 +55,8 @@ short   mode;
         return al_hnd(fp);
 }
 
+/* GEMDOS Fcreate: create/truncate path for writing; the attribute is
+   ignored.  Returns a handle or -1. */
 short
 Fcreate(path, attr)
 char *  path;
@@ -61,6 +68,8 @@ short   attr;
         return al_hnd(fp);
 }
 
+/* GEMDOS Fread: read up to count bytes into buf.  Returns the number
+   read, or -1 for a bad handle. */
 long
 Fread(handle, count, buf)
 short   handle;
@@ -90,6 +99,8 @@ short   mode;
         return (long) ftell(host_handles[handle]);
 }
 
+/* GEMDOS Fwrite: write count bytes from buf.  Returns the number
+   written, or -1 for a bad handle. */
 long
 Fwrite(handle, count, buf)
 short   handle;
@@ -101,6 +112,8 @@ void *  buf;
         return (long) fwrite(buf, 1, (size_t) count, host_handles[handle]);
 }
 
+/* GEMDOS Fclose: close the file and free its handle slot.  Closing an
+   unused slot is harmless; only an out-of-range handle returns -1. */
 short
 Fclose(handle)
 short   handle;
@@ -121,8 +134,12 @@ short   handle;
    harmless on the ST and an abort() on macOS.  So Mfree frees only
    blocks Malloc actually returned. */
 #define MAX_HOST_BLOCKS 64
-static void *   host_blocks[MAX_HOST_BLOCKS];
+static void *   host_blocks[MAX_HOST_BLOCKS];     /* blocks Malloc handed out; NULL = free slot */
 
+/* GEMDOS Malloc: malloc the block and record it in host_blocks so
+   Mfree can recognise it.  Returns NULL for a size <= 0 or on failure.
+   A block allocated while the table is full is not recorded, so Mfree
+   will ignore it (it leaks, which is harmless in a test). */
 void *
 Malloc(sz)
 long    sz;
@@ -141,6 +158,8 @@ long    sz;
         return p;
 }
 
+/* GEMDOS Mfree: free p only if Malloc recorded it, ignoring anything
+   else the way TOS does.  Always returns 0. */
 long
 Mfree(p)
 void *  p;
@@ -157,6 +176,8 @@ void *  p;
         return 0;               /* not ours: TOS would ignore it too */
 }
 
+/* GEMDOS Fgetdta: return a static 64-byte buffer as the disk transfer
+   area.  Fsfirst never succeeds on the host, so it is never filled. */
 void *
 Fgetdta()
 {

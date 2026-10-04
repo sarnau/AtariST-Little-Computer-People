@@ -4,6 +4,14 @@
  */
 
 
+/* Food delivery.  The resident walks to the front door, opens it and
+   picks up the package (SPRITE_FOOD_PACKAGE, carried), closing the
+   door when a 0..100 roll beats his initiative_threshold.  For dog
+   food (g_dvdog) he fills the bowl if it is empty (a_feedd) or else
+   takes the package to the fridge (a_gesff).  Otherwise he stocks the
+   kitchen cabinet: one reach per pack until the food-count field in
+   lcp.door_states_and_flags reaches FOOD_PACKS_MAX, redrawing the
+   cabinet's food markers (sc_drfc) each time. */
 void
 er_food()
 {

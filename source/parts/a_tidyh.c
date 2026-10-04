@@ -3,6 +3,12 @@
  * never compiled on its own.
  */
 
+/* ACTION_TIDY_HOUSE (also run during the move-in cutscene).  The
+   resident walks to the top-floor filing cabinet, turns to the screen
+   and rummages in it with a_watat, which opens it if it is shut.  He
+   closes it again (a_opcfc) when a 0..100 roll beats his
+   initiative_threshold, and always during the cutscene (introSeq).
+   Interrupted on the way, he simply gives up. */
 void
 a_tidyh()
 {

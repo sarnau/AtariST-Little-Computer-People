@@ -2,6 +2,11 @@
  * Included by stx_u1.c; never compiled on its own.
  */
 
+/* Sets up the off-screen picture buffer at boot: g_srptr becomes
+   scrbufB rounded up to a 512-byte boundary, mf_scrp describes it as a
+   320x200 (scaled by scr_scal) bitmap, MFDB_A's NULL address names the
+   physical screen, and cpyScr copies what is on screen into the new
+   buffer. */
 void
 stpScrB()
 {

@@ -3,6 +3,12 @@
  */
 
 
+/* a_playc: use the computer.  The resident walks to the computer
+   desk and sits; then for 0x80..0x1ff steps he alternates hands-down
+   (with a key click, sfClick) and hands-up poses with random pauses,
+   quitting early on a new action or during the intro.  Rarely, after
+   a keystroke, he looks up while the computer's small screen is
+   cleared and redrawn with a random animation (tv_scrc). */
 void
 a_playc()
 {

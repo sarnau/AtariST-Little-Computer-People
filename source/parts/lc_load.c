@@ -3,6 +3,12 @@
  *
  * Included by stx_u1.c; never compiled on its own.
  */
+/* Restore a saved game: if the file "hyber" opens, its 128-byte image
+   is read straight into the lcp record and the water level, every
+   door/cabinet open flag, the dog-bowl state, food supply, record
+   player and TV are unpacked from it into their working globals, and
+   the sickness tint is applied to the palette (lcp_upal).  Returns 1
+   if a save was loaded, 0 if there is none; main keeps it in g_lcldd. */
 short
 lc_load()
 {

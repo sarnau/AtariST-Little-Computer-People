@@ -2,6 +2,12 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_chefd: check the front door.  The resident walks to the front
+   door, opens it if shut, steps outside (the sitting-dog sprite waits
+   on the porch, the resident is hidden) for `value` ticks, comes back
+   in and the dog sprite is removed.  If a random roll beats
+   lcp.initiative_threshold he walks back and shuts the door again.
+   g_actif keeps the inner walks from being preempted. */
 void
 a_chefd(value)
 short   value;

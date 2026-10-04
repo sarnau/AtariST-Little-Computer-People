@@ -11,6 +11,8 @@
 #include "types.h"
 #include "enums.h"
 
+/* Secondary shirt colour (12-bit ST RGB) per CLOTHING_COLOR_ID;
+   pa_cloc loads it into palette slot 2 alongside g_clcop (below). */
 short   g_clcos[16] = {
         0x060, 0x760, 0x606, 0x066,
         0x767, 0x007, 0x700, 0x030,

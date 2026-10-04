@@ -32,8 +32,10 @@ char *          g_aggpr[10] = {
         "Guess #9?          "
 };
 
-short           g_agacu          = 0;
+short           g_agacu          = 0;    /* anagram: set when a clue pushed the guess count to 9, allowing one more guess (cleared per round) */
 
+/* Anagram wrong-guess messages; ag_main picks one of the three with
+   rndRng(0, 2).  The last two slots are NULL. */
 char *          g_agwgm[5] = {
         "Nope, have another try.",
         "Sorry, try again.",
@@ -45,8 +47,8 @@ char *          g_agwgm[5] = {
    are spaced 28 pixels apart (15-px card + 13-px gutter). */
 short           crd_xa[5]         = { 70, 98, 126, 154, 182 };
 
-short           crd_ya[5]         = { 11, 11, 11, 11, 11 };
+short           crd_ya[5]         = { 11, 11, 11, 11, 11 };    /* row A (computer) y per card slot */
 
-short           crd_xb[5]         = { 70, 98, 126, 154, 182 };
+short           crd_xb[5]         = { 70, 98, 126, 154, 182 };    /* row B (player) x per card slot */
 
-short           crd_yb[5]         = { 37, 37, 37, 37, 37 };
+short           crd_yb[5]         = { 37, 37, 37, 37, 37 };    /* row B (player) y per card slot; all four read by pk_drcs */

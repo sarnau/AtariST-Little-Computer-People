@@ -40,6 +40,10 @@
 #include "sprender.h"
 
 
+/* Loads the CARDS file into crd_dat in the layout described above,
+   builds the selection-highlight card at slot 53 itself, and points the
+   54 card MFDBs and the card-table MFDB mf_scb_c (the 320x77 area at
+   g_dscp) at their bitmaps.  Called by the card games before play. */
 void
 pk_ldCrd()
 {

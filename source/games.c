@@ -72,10 +72,15 @@ static void  pk_cdrw();
    not here: they belong to that object. */
 
 /* mg_wkev: wait for a key while processing urgent game events.
-   On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10. */
-
+   The minigames' key reader: it first drains stale keys, then, while
+   no key is pressed, lets the resident answer the alarm, use the
+   toilet, drink, or run a queued event (each wrapped in lcp_lgt /
+   lcp_rgt so he leaves and returns to the table) and advances the
+   game by one gameTick.  On 7200 idle frames (~15 min) sets
+   mg_tofl=YES and returns KEY_F10, which the games treat as quit.
+   The player's care keys (Ctrl-A/B/C/D/F/W) are passed to deal_kc
+   before the key is returned. */
 short
-
 mg_wkev()
 {
         short           key;
@@ -595,6 +600,13 @@ ag_ssw()
 
 #include "dat_games2.c"
 
+/* The Anagrams minigame.  Loads the "words" file into a 10000-byte
+   Malloc buffer (freed on F10), then loops: ag_ssw picks and scrambles
+   a word, the player types up to ten letters (cursor-left erases) and
+   Return submits.  A right answer or too many guesses/clues starts a
+   new word; a wrong one keeps the word and counts a guess (g_aggun).
+   F1 once per word swaps one letter of the scramble into place and
+   costs a guess.  F10 (or mg_wkev's idle timeout) leaves the game. */
 void
 ag_main()
 {
@@ -973,6 +985,11 @@ rank_from_hc_bp:
 
 #include "dat_games3.c"
 
+/* The Poker minigame (five-card draw against the resident).  Allocates
+   and loads the card images into crd_dat, gives both sides 400 chips,
+   then plays rounds until pk_ante sets pk_quit, a side runs out of
+   chips, or mg_wkev times out; every exit frees crd_dat and hides the
+   mouse through the cleanup label. */
 void
 pk_main()
 {
@@ -1561,6 +1578,12 @@ pk_blf()
 
 #include "dat_games4.c"
 
+/* The resident's draw.  Rates his hand with pk_evh, marks the cards
+   to throw in pk_sel (the cards that are not part of the scoring
+   rank, or 0..2 random ones when pk_blf decides to bluff), announces
+   the count through the pk_tcm message, and deals each replacement
+   from cards not in either hand or the discard pile, moving the old
+   card onto pk_dpile. */
 static void
 pk_cdrw()
 {

@@ -3,6 +3,11 @@
  *
  * Included by stx_u3.c; never compiled on its own.
  */
+/* Queues an outside event (a delivery, a phone call, the dog food key
+   commands) for the resident: event is an ACTION_EVENT_* id, appended
+   at the first free slot of the 10-entry queue g_trel, which getEv
+   empties from the front.  Ignored during the move-in cutscene and
+   when the queue is already full. */
 void
 putEv(event)
 short   event;

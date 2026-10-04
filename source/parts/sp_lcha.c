@@ -13,6 +13,14 @@
 #define HEAD_MODE_V_OVERRIDE            0x80
 #endif
 
+/* Moves the resident's head one step per tick.  g_hacur is the current
+   head pose (direction in bits 0-2, tilt in bits 3-4) and g_hatas the
+   target.  Once the head has reached its target and the g_hadec
+   countdown runs out, a new random target is picked within the limits
+   g_hamod allows, either turning the head or tilting it.  The pose then
+   steps one notch toward the target, and is turned into the head sprite
+   frame g_hsfra plus the mirror flag g_hsmif for directions past 4.
+   Called from the game tick. */
 void
 sp_lcha()
 {

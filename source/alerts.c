@@ -30,6 +30,15 @@
 #include "sprites.h"
 #include "tables.h"
 
+/* Load the dog's frame into the two dog hardware sprite slots.  Both
+   slots are cleared first; a negative frame id (or the dog not yet
+   released, dg_init) leaves the dog hidden.  Otherwise both slots get
+   the frame's size, the dog's position (the frame's top is 17 lines
+   above dog_y) and the mask, but only one slot gets the image: the
+   FRONT slot when layer_p is 1, the BACK slot otherwise, so the dog is
+   drawn in front of or behind the resident.  With flipH2 set the
+   frame is first mirrored into g_dfimb/g_dfmab (15 lines, 2 words)
+   and those buffers are used instead. */
 void
 sp_spud(g_seid, layer_p, flipH2)
 short   g_seid;
@@ -80,6 +89,11 @@ BOOL16  flipH2;
         }
 }
 
+/* Mirror a 4-plane sprite image horizontally.  For each of pixH lines,
+   the line's wdWidth 16-pixel groups (four plane words each) are
+   copied in reverse group order, and every word is bit-reversed one
+   byte at a time through rev_tab with the two bytes swapped.  Writes
+   pixH * wdWidth * 4 words to dest. */
 void
 sp_flih(source, dest, pixH, wdWidth)
 unsigned short *        source;

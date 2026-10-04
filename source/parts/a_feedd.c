@@ -2,6 +2,12 @@
  * parts/a_feedd.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_feedd: fill the dog's bowl.  With value 0 the resident first
+   fetches a food package from the fridge (door opens, he reaches in);
+   with value non-zero the caller (a food delivery) has already put the
+   package in his hands.  He carries it to the dog bowl, bends and
+   fills it (lcp_bwlS = BOWL_FULL, dg_bwlch flags the change for the
+   tick loop), then carries the package back and stores it (a_opecf). */
 void
 a_feedd(value)
 short   value;

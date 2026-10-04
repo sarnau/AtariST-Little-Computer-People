@@ -3,6 +3,8 @@
  * module's order; never compiled on its own.
  */
 
+/* VDI filled rectangle (GDP bar) on workstation handle; pxy holds the
+   two corners x1,y1,x2,y2. */
 void
 v_bar(handle, pxy)
 short   handle;

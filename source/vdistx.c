@@ -76,7 +76,12 @@ short * attrib;
         vdipb[4] = ptsout;
 }
 
-/* vro_cpyfm: the array-pxy blit. */
+/* vro_cpyfm: the array-pxy blit.  Copies the rectangle pxy[0..3] of
+   the source MFDB to pxy[4..7] of the destination MFDB with writing
+   mode `mode` (VDI opaque raster copy).  The parameter block's ptsin
+   entry is aimed at the caller's pxy for the trap instead of copying
+   the eight points, then restored; src and dst are MFDB addresses
+   that wr_src/wr_dst store into contrl. */
 void
 vro_cpyfm(handle, mode, pxy, src, dst)
 short   handle;
@@ -103,7 +108,10 @@ long    dst;
 #include "parts/vsl_color.c"
 #include "parts/vst_color.c"
 
-/* vst_height: the DRI VDIBIND body. */
+/* vst_height: the DRI VDIBIND body.  Sets the text character height
+   in pixels for workstation `handle` and returns the resulting
+   character width/height and cell width/height through the four
+   pointers. */
 void
 vst_height(handle, height, char_w, char_h, cell_w, cell_h)
 short   handle;

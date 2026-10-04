@@ -35,6 +35,8 @@
 
 	.text
 
+* cp_main(): the entry point, called once by main.  Returns a long in
+* d0: zero means the disk check failed, anything else that it passed.
 _cp_main:
 	move.l	a6,cpa6
 	lea	cptop,a6

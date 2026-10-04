@@ -9,6 +9,9 @@
 #include "types.h"
 #include "enums.h"
 
+/* The resident's raise announcement: pk_main writes his raise
+   (pk_dpos, two digits, a leading zero blanked) over the underscores
+   at [11] and [12] before showing it. */
 char *          pk_rm     = "I'll raise __.";
 
 /* Editable poker prompts, patched in place before each is shown.  The

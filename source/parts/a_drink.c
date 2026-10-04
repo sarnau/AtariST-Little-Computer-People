@@ -2,6 +2,12 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_drink: get a drink of water.  The resident walks to the kitchen
+   sink, picks up the glass and carries it to the water tap.  If the
+   water tank (lcp_watr) is not empty he bends, draws 3 units
+   (updWtLv(-3)), drinks for 16 ticks and rinses the glass at the sink
+   (a_driwa).  Thirst is reset to satisfied with a full timer whether or
+   not there was water, and lcp_rcov may start recovery from sickness. */
 void
 a_drink()
 {

@@ -14,6 +14,13 @@
 #include "renderx.h"
 #include "sim.h"
 
+/* Advance the game clock and the resident's bodily needs.  Called
+   every frame but acts only on every 8th (ani_cnt), counting those in
+   g_secs; each time g_secs wraps at 60 (one game minute) it ticks the
+   thirst, hunger, sickness and bathroom timers, may ring the phone
+   (2% per minute between 08:00 and 21:59, outside the move-in), and
+   steps t_min.  The hour rollover runs the mood cycle and t_hour; the
+   day rollover runs daily_rs and advances the date. */
 void
 gameSim1()
 {

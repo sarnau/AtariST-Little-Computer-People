@@ -2,6 +2,9 @@
  * parts/a_yawas.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* ACTION_YAWN_AND_STRETCH: the resident turns side-on and, for 15
+   ticks, alternates the open-mouthed yawn and the arm stretch, then
+   stands side-on again. */
 void
 a_yawas()
 {

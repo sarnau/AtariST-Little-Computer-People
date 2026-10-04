@@ -2,6 +2,12 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_readn: read the newspaper.  The TV is switched on first (tt_on),
+   then the resident walks to the armchair, sits, and reads for up to
+   200 ticks -- holding the paper and turning a page about one tick in
+   sixteen -- until a new action is queued.  He is lowered 8 pixels
+   into the chair for the reading poses and raised again afterwards,
+   and the TV is switched off at the end. */
 void
 a_readn()
 {

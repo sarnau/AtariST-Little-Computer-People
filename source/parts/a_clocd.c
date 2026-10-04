@@ -2,6 +2,10 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_clocd: close the bedroom closet.  Assumes the resident is already
+   standing at it: he turns to face the screen, reaches, the door is
+   redrawn ajar then shut with the door-close sound, and lcp_clsO is
+   cleared.  Used by a_cleau and at the end of a_opcbc. */
 void
 a_clocd()
 {

@@ -2,6 +2,10 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* Draw one line from (x1,y1) to (x2,y2) into the house picture in
+   game colour `color' (mapped to a VDI pen through vdi_colt).  The
+   v_pline call is bracketed by sc_sdtb/sc_sdtf so it lands on the
+   back screen.  Used for the wall clock's hands and centre. */
 void
 drwLine(x1, y1, x2, y2, color)
 short   x1;

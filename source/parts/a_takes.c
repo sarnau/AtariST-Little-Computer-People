@@ -3,6 +3,13 @@
  * never compiled on its own.
  */
 
+/* ACTION_TAKE_SHOWER (also a_gotbn and a_wakum).  The resident walks
+   to the shower door -- giving up if interrupted there -- then, now
+   committed (g_actif), steps into the stall and showers for 20..25
+   rounds, each a random choice of washing or scrubbing left/right,
+   with the head on HEAD_ANIM_SHOWER.  Afterwards he steps down out of
+   the stall, walks back to the door and the head animation and
+   g_actif are reset. */
 void
 a_takes()
 {

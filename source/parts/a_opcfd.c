@@ -3,6 +3,12 @@
  * never compiled on its own.
  */
 
+/* a_opcfd: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the front door
+   while the resident stands at it.  Opening reaches out, draws the
+   door ajar then wide with the door-open sound and sets lcp_frdO;
+   closing draws it ajar then shut with the door-close sound and
+   clears lcp_frdO.  A request matching the current state returns
+   immediately. */
 void
 a_opcfd(door_st)
 short   door_st;

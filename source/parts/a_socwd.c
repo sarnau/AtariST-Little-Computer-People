@@ -2,6 +2,13 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* ACTION_SIT_ON_COUCH_WITH_DOG.  a_calld walks the resident to the
+   couch beside the phone (uninterruptibly, g_actif) and lets him be
+   patted; he sits upright, the SPRITE_READING_1 prop appears beside
+   him, and he pets the dog for 30..50 three-tick rounds unless a new
+   action is queued.  Then he sits up, the prop is hidden, he crouches
+   to stand, waits for a running Ctrl-P pat (g_ptdoa) to finish, and
+   clears pat_ok so the player can no longer pat him. */
 void
 a_socwd()
 {

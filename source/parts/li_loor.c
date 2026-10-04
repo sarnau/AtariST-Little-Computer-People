@@ -2,6 +2,11 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* The resident turns to face the screen, waits for its head to swing
+   round (lcp_hwt), bends down for a moment and straightens up again --
+   a "stand and look" gesture.  a_lists and a_playp use this copy; tt_on
+   and tt_off use the otherwise identical li_lool.  Changes lcp_face,
+   lcp_st and the head target g_hatas. */
 void
 li_loor()
 {

@@ -25,38 +25,43 @@ short           bj_key;         /* pk_bjMn's key variable (a global, not a local
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
 unsigned short  ani_cnt;    /* unsigned: the & 7 test zero-extends */
-short   g_secs;
+short   g_secs;         /* game seconds 0..59; gameSim1 steps it every 8th frame */
 
-short   t_min;
-short   t_hour;
-short   date_day;
-short   dt_mon;
-short   dt_year;
+/* The game clock and calendar, set from the guestbook by st_titl and
+   advanced by gameSim1. */
+short   t_min;          /* minute 0..59 */
+short   t_hour;         /* hour 0..23 */
+short   date_day;       /* day of the month, 0-based */
+short   dt_mon;         /* month 0..11 */
+short   dt_year;        /* year - 1900 */
 
-PLAYER  lcp;
-BOOL16  introSeq;
+PLAYER  lcp;            /* the resident's record, saved to and loaded from "hyber" */
+BOOL16  introSeq;       /* YES while the move-in cutscene runs; holds off keys, phone and events */
 
-BOOL16  in_evrt;
+BOOL16  in_evrt;        /* YES while execEv runs a deferred event, so lcp_wkD is not interrupted */
 
-short   lastAct;
+short   lastAct;        /* the action doAct last ran; the random picker avoids repeating it */
 
 /* Left at 0 in BSS; the move-in cutscene sets them before gameLoop
    runs. */
-short   lcp_x;
+short   lcp_x;        /* resident's screen position in pixels */
 short   lcp_y;
-BOOL16  g_lcldd;
+BOOL16  g_lcldd;      /* lc_load's result: 1 = a saved resident was read, 0 = new game */
 long    cprot_r;      /* long: tested as a 32-bit value */
-short   g_spdc;
+short   g_spdc;       /* walk speed, 5 from gameLoop; read only in lcp_path's dead store */
 
-BOOL16  alarm_p;
-short   lcp_watr;
+BOOL16  alarm_p;        /* YES while the alarm clock rings (Ctrl-A, a_wakum); a_wakfa clears it */
+short   lcp_watr;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
 
-short   g_aliss;
-short   g_aqueu[10];
-short   g_apriq[10];
-short   g_hsfra;
-long    g_sfret;
-BOOL16  g_actif;
+/* Typed-command queue: prsCmd appends the action chk_encm found and
+   its priority, chk_actT consumes from the front. */
+short   g_aliss;        /* number of queued commands, 0..10 */
+short   g_aqueu[10];    /* queued action ids */
+short   g_apriq[10];    /* their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed */
+short   g_hsfra;        /* head sprite frame; sp_lcha derives it, actions override it to nod or talk */
+long    g_sfret;        /* game ticks until the current sound effect is stopped (sc_ren8); 0 = none */
+BOOL16  g_actif;        /* YES while the resident is busy in an activity, so lcp_wkD walks uninterrupted */
+/* Walk target in screen pixels for lcp_wkD / lcp_path; both 0 = arrived. */
 short   g_wtx;
 short   g_wty;
 /* A 10-short scratch buffer used by action handlers (bathroom, food,
@@ -65,31 +70,35 @@ short   g_wty;
    paths write pst_arr[4], so it must hold more than four. */
 short   pst_arr[10];
 
-short   lcp_frdO;
-short   studyDrO;
-short   lcp_clsO;
-short   lcp_cabO;
-short   lcp_drsO;
-short   lcp_toiO;
-short   lcp_flcO;
-short   lcp_bwlS;
-short   lcp_food;
+/* Open (YES) / closed (NO) state of the house's doors and cupboards,
+   unpacked from lcp.door_states_and_flags by lc_load and packed back
+   by lcp_std; main draws each one accordingly at boot. */
+short   lcp_frdO;       /* DSF_FRONT_DOOR, opened and closed by a_opcfd */
+short   studyDrO;       /* DSF_STUDY_DOOR */
+short   lcp_clsO;       /* DSF_CLOSET_DOOR */
+short   lcp_cabO;       /* DSF_KITCHEN_CABINET */
+short   lcp_drsO;       /* DSF_DRESSER */
+short   lcp_toiO;       /* DSF_TOILET_DOOR */
+short   lcp_flcO;       /* DSF_FILING_CABINET */
+short   lcp_bwlS;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
+short   lcp_food;       /* working copy of lcp.food_supply */
 
 
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    mi_play;
-short   dg_bwlch;
-short   g_sfplf;
-short   g_sfpli;
-char *  mi_sbuf;
+short   dg_bwlch;       /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
+short   g_sfplf;        /* YES while a sound effect is playing */
+short   g_sfpli;        /* id of the effect playing, tested to stop or chain it */
+char *  mi_sbuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
 /* Song file counts (.SNG / .ORG), set at boot by cntSong(). */
 short   sng_cnt;
 short   org_cnt;
-short   fire_dur;
-BOOL16  fire_ext;
-short   tx_sctm;
-short   g_srsdc;
-short   g_cdibp;
+short   fire_dur;       /* frames until the lit fire burns out (a_lighf sets 2500..5000) */
+BOOL16  fire_ext;       /* request for tick.c to put the fire out and redraw the grate */
+short   tx_sctm;        /* text-strip timer: > 0 frames until the typed line expires,
+                           < 0 a minigame owns the strip, 0 idle; picks sc_ren8's copy */
+short   g_srsdc;        /* frames left of the text strip's scroll-up after Return */
+short   g_cdibp;        /* cursor position in g_cdinb, 0..38 */
 
 /* Letter subsystem storage.  g_ltlp[] is populated at runtime from
    LETTER.TXT (see fl_ltpl).  360 slots: that is fl_ltpl's literal
@@ -114,12 +123,14 @@ unsigned char   comp_tok[15];
 short           scn_siz;
 char *          scn_buf;
 
+/* The resident's body and head sprite images, saved by hideLcp while
+   it blanks them and put back by showLcp. */
 short * sv_bodyP;
 short * sv_headP;
 
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
-short   vdihnd;
+short   vdihnd;     /* virtual workstation handle from v_opnvwk, passed to every VDI call */
 short   vdi_hnd;    /* physical from graf_handle */
 /* graf_handle writes its four cell/box metrics into these globals,
    not into locals of aes_init. */
@@ -144,17 +155,17 @@ short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
 
-void *  g_dscp;
-char    g_mspha;   /* a byte */
-unsigned char * mi_dbase;
+void *  g_dscp;     /* 512-aligned start of dsb_stor (fillTopR); the text strip is drawn there */
+char    g_mspha;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by mq_advs */
+unsigned char * mi_dbase;   /* the loaded song's event stream, just past its header */
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * mi_sqpos;
-long            mi_env;
-char            psg_cvol;     /* a byte */
+unsigned char * mi_sqpos;       /* read position in the event stream, walked by mq_pars */
+long            mi_env;         /* address of the song's ADSR block, 8 bytes per channel */
+char            psg_cvol;     /* a byte: PSG volume for the note being parsed */
 /* mq_setp sets mi_evcn to 9, the loop stack's empty mark. */
-short           mi_evi;
-short           mi_evcn;
+short           mi_evi;         /* number of shorts in use in mi_evq */
+short           mi_evcn;        /* loop-stack index into mi_lstk */
 
 /* Ticks per beat, published to the Timer-A handler.  ONE short: every
    access goes to a single cell, and the next cell is two bytes later.
@@ -162,8 +173,8 @@ short           mi_evcn;
    "int_out[7]" tempting -- but int_out is only 14 bytes, so declaring
    it that way collides with the next global. */
 short           mi_tpb;
-long            g_mtcou;
-short           g_mtdiv;
+long            g_mtcou;        /* master Timer-A tick counter, counted up by mq_tick */
+short           g_mtdiv;        /* divider: mq_tick runs psg_upEn each time it wraps */
 /* mq_stap resets mi_nlp0 at song start. */
 short           mi_nlp0;
 
@@ -172,9 +183,9 @@ short           mi_nlp0;
    mq_rdur's identical expression goes to mi_nlp0, which drives the
    tick counters. */
 short           mi_ndur;
-long            mi_nxTk;       /* long tick counters */
-long            mi_lpTk;
-unsigned char   g_meve[4];
+long            mi_nxTk;       /* long tick counters: g_mtcou value of the next event */
+long            mi_lpTk;       /* g_mtcou when queued notes were last expired */
+unsigned char   g_meve[4];     /* MIDI message being built for mq_dise */
 
 /* The remaining sequencer/PSG working state below belongs to the
    Timer-A music engine. */
@@ -198,15 +209,15 @@ long            mi_svtv;
    mi_ndt (in the initialized data below) is the duration lookup
    indexed by bits 0..4 of each note event's first byte. */
 
-unsigned char * mi_seqE;
-unsigned char * mi_dptr;
-char            mi_evTf;
-char            mi_nnOn;
-char            mi_nnOf;
-char            mi_ccha;
-char            mi_cnot;
-char            mi_nmof;
-char            mi_nlpA;
+unsigned char * mi_seqE;        /* end of the stream; -1 = no limit */
+unsigned char * mi_dptr;        /* loop-back address popped by mq_popl */
+char            mi_evTf;        /* set once a note was decoded in this pass */
+char            mi_nnOn;        /* non-zero: queue the note (bit 4 of byte 0 clear) */
+char            mi_nnOf;        /* non-zero: the event is a note-off (bit 5 of byte 0) */
+char            mi_ccha;        /* logical channel, low nibble of byte 0 */
+char            mi_cnot;        /* note to play: g_mstr-mapped, or literal (+-1) */
+char            mi_nmof;        /* note-mode bits of byte 1: absolute, or one up/down */
+char            mi_nlpA;        /* accent bit: full velocity and full PSG volume */
 
 /* Event queue -- 3 shorts per active note: {duration, note|flags,
    physical MIDI channel byte}.  Max 60 slots -> 20 concurrent
@@ -245,10 +256,10 @@ PSG_ENVELOPE    psg_envelope[3];
 
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-char            g_sfcup;
-short           g_sfddh;
-short           g_sfddl;
-long            g_sfHz2;
+char            g_sfcup;        /* sf_pri priority of the playing effect, for preemption */
+short           g_sfddh;        /* effect duration from its last 4 bytes, high word (200 Hz) */
+short           g_sfddl;        /* ... and low word */
+long            g_sfHz2;        /* 200 Hz clock when the effect started; written, never read */
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from SOUNDS.LCP.
@@ -302,14 +313,14 @@ unsigned char * mi_ntLp[25];
 #endif
 
 #ifdef LCP_SFDOB_PAD
-char            g_sfDoB[400];
+char            g_sfDoB[400];   /* Dosound buffer, padded (test builds) */
 #else
-char            g_sfDoB[56];
+char            g_sfDoB[56];    /* Dosound buffer handed to Dosound by sf_irqp */
 #endif
 
-void *  g_srlgb;
-void *  sv_lgb;
-void *  g_srptr;
+void *  g_srlgb;    /* logical screen saved by sc_sdtb, restored by sc_sdtf */
+void *  sv_lgb;     /* logical screen saved by initVdi, restored by exitVdi */
+void *  g_srptr;    /* 512-aligned start of scrbufB: the house picture VDI draws into */
 /* dsb_stor: offscreen buffer where the letter-typing status strip
    composites, kept separate from the main house buffer.
    fillTopR(27) writes rows 0..26 here so that the striped-white letter
@@ -320,8 +331,7 @@ void *  g_srptr;
    mg_stp's fillTopR(0x4d), 77 rows of 160 bytes = 12320, and the
    align-up `(base + 512) & ~511` moves the start by at most 512 --
    so 12832 bytes, 6416 shorts.
-   g_dsb points at the raw base; stpScrB re-points it to the ALIGNED
-   start at run time. */
+   fillTopR points g_dscp at the ALIGNED start at run time. */
 short   dsb_stor[6416];
 
 /* scr_scal -- always 1 (REZ_ST_MEDIUM).
@@ -365,11 +375,12 @@ short   MFDB_A[10];
 unsigned char   scrbufA[32512];
 unsigned char   scrbufB[32512];
 
-BOOL16  g_sfacf;
-short   g_sfcur;
-short   g_sfdur;
-short   g_sfdos;
-short   g_sfdoc;
+/* Sound-effect request from sf_sele, started by sc_ren8 via sf_irqp. */
+BOOL16  g_sfacf;        /* YES: a request is pending */
+short   g_sfcur;        /* requested effect id (index into mi_ntLp / sf_pri) */
+short   g_sfdur;        /* requested duration in game ticks; -1 = the effect's own */
+short   g_sfdos;        /* set by sf_so, read nowhere */
+short   g_sfdoc;        /* set by sf_so, read nowhere */
 
 /* Raw file buffers, filled at startup by ldObj / ldSpr.  OBJECTS
    and SPRITES are each read into 14000 bytes. */
@@ -380,16 +391,17 @@ unsigned char   spr_file[14000];
    walk is a fixed `for (i = 0; i < 56; i++)`. */
 MFDB    g_obtmt[56];
 
-short   g_obtaw[56];
-short   g_obtah[56];
+short   g_obtaw[56];        /* each object's width in pixels, for od_draw */
+short   g_obtah[56];        /* each object's height in pixels */
 
-BOOL16  g_inpmd;
-char    g_cdinb[64];
-BOOL16  food_dlv;
-short   g_ptanf;
+BOOL16  g_inpmd;        /* YES while lcp_lgt has the resident away from a minigame:
+                           only the Ctrl hot keys work, typing is ignored */
+char    g_cdinb[64];    /* the command line being typed, NUL-terminated, up to 38 chars */
+BOOL16  food_dlv;       /* set when Ctrl-F is refused because the cabinet is full; deal_kc only */
+short   g_ptanf;        /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
 
 union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
-long    last_vbc;
+long    last_vbc;       /* VBL count at sc_ren8's last frame, to pace it */
 /* sv_phb: TOS's original Physbase, captured once at boot by
    aes_init via Physbase().  Deliberately uninitialised: an explicit
    initialiser would move it from BSS into .data. */
@@ -399,17 +411,18 @@ void *  sv_phb;
    physical screen descriptor.  Populated by the graphics init routine. */
 MFDB    g_srmfd;
 MFDB    mf_scrp;
-MFDB *  cur_mf;
+MFDB *  cur_mf;     /* sc_ren8's page-flip MFDB */
 
-BOOL16  dg_vis;
-short   dg_idlcd;
-BOOL16  dg_nrbwl;
-BOOL16  g_deact;
-short   g_decou;
-short   dg_ltgtI;
+/* Dog wander and eating state, run by sc_ren8. */
+BOOL16  dg_vis;         /* YES during a minigame: wander targets limited to entries 3..8 */
+short   dg_idlcd;       /* frames to idle before picking the next target, 20..200 */
+BOOL16  dg_nrbwl;       /* set when the stair-landing target is picked; lets the dog eat at its bowl */
+BOOL16  g_deact;        /* YES while the dog is eating */
+short   g_decou;        /* frames of eating left; the bowl drops a step at 60, 30, 4 and 0 */
+short   dg_ltgtI;       /* last wander target picked, never picked twice in a row */
 
-char *  cmd_inp;
-short   g_aprio;
+char *  cmd_inp;        /* the line prsCmd hands to chk_encm (always g_cdinb) */
+short   g_aprio;        /* priority chk_encm gives the typed command: mood, chance, unknown words */
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
 MFDB    g_semfi[SPRITE_HW_SLOTS];
@@ -425,16 +438,16 @@ char            g_ewb[10];
 char            usr_buf[42];
 
 /* ---- Mini-game storage ----------------------------------------------- */
-char *          g_agwb;
-char *          g_wpdb;
-short *         crd_dat;
+char *          g_agwb;         /* Malloc'd "words" dictionary for Anagrams, 11-byte rows */
+char *          g_wpdb;         /* Malloc'd Word Puzzles text */
+short *         crd_dat;        /* Malloc'd card images for War, Poker and Blackjack */
 
-short           g_wpci;
-short           g_agclc;
-short           g_aggun;
-short           ag_clue;
-short           g_agwol;
-char            g_aginb[12];
+short           g_wpci;         /* current Word Puzzle, 0..32, wrapping on F1/F2 */
+short           g_agclc;        /* Anagrams clues taken for this word; written, never read */
+short           g_aggun;        /* Anagrams guess number, 1..9 */
+short           ag_clue;        /* 1 once F1 has given a clue for this guess */
+short           g_agwol;        /* length of the Anagrams word */
+char            g_aginb[12];    /* the Anagrams guess being typed, 10 chars + NUL */
 /* TEN bytes, the room the original leaves for it: the scrambled word
    buffer holds a 9-letter word and its NUL. */
 char            g_agscw[10];
@@ -449,18 +462,18 @@ char            g_agscw[10];
 BOOL16          mg_tofl;
 short           sv_vqta[10];
 
-short           pk_round;
-BOOL16          pk_quit;
-short           g_pcbet;
-short           g_ppbet;
-short           g_pcmon;
-short           g_ppmon;
-short           g_ppppa;
+short           pk_round;       /* 0 at Poker start, 1 after pk_show; read nowhere */
+BOOL16          pk_quit;        /* YES ends the card game (F10, timeout, or a side out of chips) */
+short           g_pcbet;        /* Blackjack: chips bet on the player's first hand */
+short           g_ppbet;        /* Blackjack: chips bet on the split hand */
+short           g_pcmon;        /* the resident's chips (Poker/Blackjack, 400) or cards (War, 26) */
+short           g_ppmon;        /* the player's chips or cards, likewise */
+short           g_ppppa;        /* chips in the pot */
 /* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
    set by ag_ssw when a word is picked. */
 char *          g_agorw;
-short           pk_phase;
-short           pk_dsc[52];
+short           pk_phase;       /* Blackjack: 1 once the player has split */
+short           pk_dsc[52];     /* War: the shuffled deck dealt into the two draw piles */
 /* Computer's and player's draw piles, 52 shorts each: pk_rmch's
    unconditional
      for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
@@ -555,10 +568,10 @@ short           wp_blk;
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share crd_dat as their bitmap backing. */
 MFDB            crd_mfdb[54];
-MFDB            mf_scb_c;
+MFDB            mf_scb_c;       /* the 320x77 card-table area the cards are copied into */
 
-BOOL16  g_dvdog;
-BOOL16  ph_hu;
+BOOL16  g_dvdog;        /* YES while er_dogf runs er_food for a dog-food delivery */
+BOOL16  ph_hu;          /* request for gameTick to hang the phone up and stop its ring */
 
 
 /* (gameTick animation tables + frame-state globals live
@@ -624,16 +637,16 @@ short           mi_evrl[16] = {
 };
 
 
-BOOL16          g_moen     = YES;
+BOOL16          g_moen     = YES;   /* send notes to MIDI OUT */
 
 
-BOOL16          psg_out              = YES;
+BOOL16          psg_out              = YES;     /* play notes on the YM2149 PSG */
 
 /* MIDI channel count; mq_parh's channel-count case writes p[2]
    here. */
 short           g_mchcn                 = 1;
 
-short           mi_temp              = 120;
+short           mi_temp              = 120;     /* song tempo in beats per minute, from the song header */
 
 /* Ticks per beat at the default tempo mi_temp = 120. */
 short           g_mtspb     = 20;
@@ -676,20 +689,20 @@ short           psg_freq[128] = {
      mi_vel   = 127 -- max MIDI velocity
      mi_dvel  = 127
      psg_dvol = 15  -- max PSG volume */
-char            mi_vel           = 127; /* a byte */
+char            mi_vel           = 127; /* a byte: velocity of the note being parsed */
 
 /* These two are char (byte compares/stores; Alcyon word-aligns them,
    hence the 2-byte spacing). */
-char            mi_dvel   = 127;
+char            mi_dvel   = 127;   /* velocity of an unaccented note, from the song header */
 
-char            psg_dvol      = 15;
+char            psg_dvol      = 15;    /* PSG volume of an unaccented note, from the header velocity */
 
 /* The note range the sequencer will play, HIGH first in the data:
    0x60 is the top of the range and 0x24 the bottom, and mq_dise
    rejects a note above the first and below the second. */
-char            g_mnhi      = 0x60;
+char            g_mnhi      = 0x60;    /* highest note played */
 
-char           g_mnlo       = 0x24;
+char           g_mnlo       = 0x24;    /* lowest note played */
 
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
@@ -700,8 +713,12 @@ char           g_mnlo       = 0x24;
 
 /* ---- PSG channel state ---------------------------------------------- */
 
+/* Program last sent on each MIDI channel; -1 = none, so the first
+   mq_sepc always sends one. */
 char            g_mcpro[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
+/* Logical song channel -> physical MIDI channel (low nibble); mq_pacm
+   fills it from the song header. */
 unsigned char   mi_chmap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* The static content is 0..99 then 110..127, with the last 14
@@ -744,9 +761,9 @@ unsigned char   mi_pgtab[16] = {
    mi_slop is written by sgPlay and read by mq_pars. */
 char            mi_slop         = 1;
 
-char    mi_varR                      = YES;
+char    mi_varR                      = YES;    /* channel every note uses when mi_slop is NO */
 
-char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer */
+char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer: MIDI program per logical channel */
 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon

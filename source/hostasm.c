@@ -59,6 +59,8 @@ short   longs;
 extern short    contrl[];
 extern short *  vdipb[];
 
+/* Host stand-in: store addr as the source MFDB pointer in
+   contrl[7..8], high word first. */
 void
 wr_src(addr)
 long    addr;
@@ -67,6 +69,8 @@ long    addr;
         contrl[8] = (short) (addr & 0xffff);
 }
 
+/* Host stand-in: store addr as the destination MFDB pointer in
+   contrl[9..10], high word first. */
 void
 wr_dst(addr)
 long    addr;
@@ -75,6 +79,9 @@ long    addr;
         contrl[10] = (short) (addr & 0xffff);
 }
 
+/* Host stand-in for the VDI dispatcher: aims the parameter block at
+   contrl like the real one, but issues no trap, so tests can inspect
+   what the binding wrote. */
 void
 gsx1()
 {

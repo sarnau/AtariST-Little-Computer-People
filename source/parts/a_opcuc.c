@@ -2,6 +2,12 @@
  * parts/a_opcuc.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_opcuc: go into the study (upstairs closet).  The resident walks
+   to the study door, opens it if shut, walks in behind the wide-open
+   door sprite and is hidden, then lcp_std takes over to close the door
+   and bring him back out.  value non-zero asks lcp_std to save the
+   game (HYBER) while he is inside.  Returns early if the first walk
+   is preempted. */
 void
 a_opcuc(value)
 short   value;

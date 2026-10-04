@@ -3,6 +3,11 @@
  */
 
 
+/* Draw both hands of the wall clock, centred at (278,85), in `color'.
+   The minute hand is picked by minute/5 from g_cmmip, the hour hand by
+   hour%12 from g_chhop; each table holds the x offset at [i] and the
+   y offset (upward) at [i+3].  cl_redrH calls it once with the old
+   time to erase and once with the new time to draw. */
 void
 cl_drwH(minute, hour, color)
 short   minute;

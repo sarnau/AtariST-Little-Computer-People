@@ -2,6 +2,11 @@
  * parts/a_calld.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_calld: the resident walks to the couch beside the phone on the
+   ground floor, turns side-on and crouches down, then sets pat_ok so
+   the player's Ctrl-P "pat" is accepted.  Gives up without crouching
+   if the walk is preempted by a new action.  Called for ACTION_CALL_DOG
+   and on the way into petting, the couch sit and answering the phone. */
 void
 a_calld()
 {

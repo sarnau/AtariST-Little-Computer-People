@@ -3,8 +3,6 @@
  *
  * Included by stx_u1.c; never compiled on its own.
  */
-/* aes_init: appl_init + graf_handle + Setpalette + physbase snapshot.
-   Does NOT call v_opnvwk (vdi_init's job). */
 
 #ifdef HOST
 
@@ -16,6 +14,12 @@
 
 #endif
 
+/* Boot-time AES set-up: appl_init, then graf_handle for the
+   workstation handle (vdi_hnd) and the system character/box metrics,
+   load the game palette main_pal, and remember TOS's own physical
+   screen base in sv_phb so the compositor can tell it apart from its
+   buffers.  It does NOT open the virtual workstation -- that is
+   vdi_init's job. */
 void
 aes_init()
 {

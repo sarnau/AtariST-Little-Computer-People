@@ -2,6 +2,11 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_dance: dance to a record.  If none is playing (lcp_recP) one is
+   started with a_lists first.  The resident then walks to the dance
+   floor and alternates the left/right dance-step poses every two
+   ticks for as long as music plays (mi_play), stopping early when a
+   new action is queued in g_trel[0]. */
 void
 a_dance()
 {

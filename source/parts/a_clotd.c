@@ -2,6 +2,10 @@
  * parts/a_clotd.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_clotd: close the toilet door.  Assumes the resident is already
+   at it: he faces the screen, reaches, the door is redrawn ajar then
+   shut with the door-close sound, and lcp_toiO is cleared.  Used by
+   a_cleau and by the toilet routine a_uset. */
 void
 a_clotd()
 {

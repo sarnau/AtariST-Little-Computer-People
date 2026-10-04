@@ -1,6 +1,10 @@
 /*
  * Included by stx_u3.c; never compiled on its own.
  */
+/* Pop the head of the action queue g_trel: returns ACTION_NONE when
+   the queue is empty, otherwise the first entry, shifting the other
+   nine up one slot and freeing the last.  chk_actT and games.c hand
+   the result to execEv. */
 short
 getEv()
 {

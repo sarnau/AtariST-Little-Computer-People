@@ -3,6 +3,8 @@
  * binding module; never compiled on its own.
  */
 
+/* VDI: sets the polyline colour index on workstation handle and
+   returns the index the VDI actually selected. */
 void
 vsl_color(handle, index)
 short   handle;

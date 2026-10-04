@@ -15,10 +15,13 @@
 BOOL16  pat_ok                 = NO;
 
 
-BOOL16  g_ptdoa              = NO;
+BOOL16  g_ptdoa              = NO;   /* YES while a Ctrl-P pat (hand animation) is running; gameTick clears it when the cycle ends */
 
 
 
+/* Event queue: up to ten ACTION_* events filled by putEv and drained
+   from the front by getEv; ACTION_NONE marks an empty slot, so
+   g_trel[0] != ACTION_NONE means an event is waiting. */
 short   g_trel[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE,
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE
@@ -98,6 +101,7 @@ long    bm32or[32] = {
 
 
 
+/* bm32and[i] = ~(1<<i), used by sp_lbhd to clear one bit of a mask. */
 long    bm32and[32] = {
         0xfffffffeL,
         0xfffffffdL,
@@ -151,7 +155,7 @@ short   g_ddipt[9] = {
 short   g_dgitx        = POS_BTM_SCREEN_EDGE;
 
 
-short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };
+short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };   /* Y nudge added to the dog's target, per g_ddipt entry (see g_ddxot) */
 
 
 /* Y micro-nudge applied
@@ -166,6 +170,7 @@ short   g_dgiyo            = 3;
 short   g_ddxot[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
 
 
+/* Dog eating frames, chosen by the eating countdown g_decou % 3. */
 short   g_dseat[3]   = {
         SPRITE_DOG_EATING_1, SPRITE_DOG_EATING_2, SPRITE_DOG_EATING_3
 };
@@ -179,13 +184,15 @@ short   g_obcla[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
                            OBJ_CLOCK_1, OBJ_CLOCK_3 };
 
 
-short   g_obala[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };
+short   g_obala[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };   /* ringing alarm clock, two frames */
 
 
+/* Ringing phone frames. */
 short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };
 
 
+/* Fireplace flame frames while fire_act. */
 short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };
 
@@ -208,6 +215,7 @@ short   g_ptdsi[10]    = {
 short   g_ptlss                         = SPRITE_PET_HAND_1;
 
 
+/* Dog bowl object per lcp_bwlS (BOWL_EMPTY, BOWL_HALF, BOWL_FULL). */
 short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_2,
                            OBJ_DOG_FOOD_BOWL_1 };

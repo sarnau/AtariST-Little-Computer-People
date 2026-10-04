@@ -1,6 +1,14 @@
 /*
  * Included by stx_u1.c; never compiled on its own.
  */
+/* Program entry.  Sets up MIDI, AES and VDI, silences the key click,
+   switches into the DATA folder, prepares the screen buffers and shows
+   the title/guestbook screen.  Then it unpacks HOUSE.SCN into the back
+   screen, loads the resident's body and outfit sprites, the object and
+   sprite tables and the sound effects, draws the water tank, pipe,
+   every door in its saved state and the dog bowl, runs the copy
+   protection check, and plays the move-in cutscene for a new game
+   before handing over to gameLoop, which never returns. */
 int
 #ifdef HOST
 /* The host unit tests each supply their own main(), and this one now

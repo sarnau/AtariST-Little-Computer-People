@@ -2,6 +2,11 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_opecd: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) a dresser drawer
+   while the resident stands at it, updating lcp_drsO.  He bends and
+   reaches while the drawer is drawn half then fully open or shut.
+   Plays no sound.  A request matching the current state returns
+   immediately. */
 void
 a_opecd(oc_stat)
 short   oc_stat;

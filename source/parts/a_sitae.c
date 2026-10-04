@@ -2,6 +2,11 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_sitae: exercise.  The resident walks to the middle-floor couch
+   and, facing side-on, cycles through the four arm-exercise poses
+   (centre, up, centre, wide) for 8..127 steps, three ticks on each
+   outstretched pose and one on centre, stopping early when a new
+   action is queued. */
 void
 a_sitae()
 {

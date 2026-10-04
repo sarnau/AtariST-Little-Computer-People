@@ -2,6 +2,10 @@
  * parts/a_nodh.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* a_nodh: nod the head.  The resident turns side-on, his head is
+   settled at position 8, then head animation is suspended (g_hacur =
+   g_hatas = -1) so three head frames can be forced through g_hsfra in
+   turn.  The saved frame and head position 8 are restored afterwards. */
 void
 a_nodh()
 {

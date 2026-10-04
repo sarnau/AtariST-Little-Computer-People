@@ -7,6 +7,12 @@
 #include "tables.h"
 #include "enums.h"
 
+/* Convert a house position (HOUSE_POS, 0..47) to screen coordinates.
+   Out-of-range indexes are treated as POS_BTM_SCREEN_EDGE.  X is
+   g_rpxs (stored at half resolution) doubled; Y is the floor's
+   baseline -- 77 for positions 0..15 (top floor), 140 for 16..31,
+   202 for 32..47 (ground floor) -- minus the position's g_rphs
+   offset.  Results go to *g_txx and *g_txy. */
 void
 hs_posXY(index, g_txx, g_txy)
 short   index;

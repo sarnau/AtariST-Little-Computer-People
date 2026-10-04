@@ -6,6 +6,12 @@
 #include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
 
 
+/* The last step of main, never returns.  If a saved game was loaded
+   (g_lcldd), the resident is placed at the study door and lcp_std
+   brings him back into the house without saving.  When the copy
+   protection failed (cprot_r == 0) he only ever sleeps.  Otherwise
+   the game speed is set and every frame is gameTick followed by
+   chk_actT, which picks and runs the next action. */
 void
 gameLoop()
 {

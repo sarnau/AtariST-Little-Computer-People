@@ -2,6 +2,13 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* Types one character of the letter at the desk.  ch below ' ' is a
+   carriage return: a few typing frames, then the line buffer position
+   g_cdibp is reset and g_srsdc = 4 makes gameTick scroll the paper strip
+   (sc_sctd), with the typewriter key sound (lt_sets).  Any other ch is
+   typed with a random hand, a click (sfClick) and printed at column
+   g_cdibp, which then advances.  Both paths show the one SPRITE_TYPING_*
+   sprite that matches how far along the line the carriage is. */
 void
 lt_tyca(ch)
 short   ch;

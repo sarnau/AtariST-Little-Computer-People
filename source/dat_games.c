@@ -25,6 +25,8 @@ char *          wp_prm[9] = {
         "What's the fifth word?"
 };
 
+/* Word Puzzles: the six right-answer messages; wp_solv shows one at
+   random through wp_shwm. */
 char *          wp_succ[6] = {
         "You got it!!",
         "Good going. That's right!",
@@ -34,6 +36,7 @@ char *          wp_succ[6] = {
         "You got that one. How about another?"
 };
 
+/* Word Puzzles: the six wrong-answer messages, picked the same way. */
 char *          wp_fail[6] = {
         "Too bad. You missed it.",
         "Better luck next time.",

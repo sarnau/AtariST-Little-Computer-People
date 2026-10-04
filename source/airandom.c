@@ -15,6 +15,14 @@
 #define WEEKDAY_SUNDAY          0
 #define WEEKDAY_SATURDAY        6
 
+/* Pick a random idle action for the resident.  The hours since he
+   woke (and his sickness) select an activity tier: sleep after 18
+   hours awake or when moderately sick, otherwise sch_tab indexed by
+   two-hour slot and his activity level, softened on weekends.  The
+   ACTIVE/MODERATE/RELAXED tiers draw one of 16 entries from
+   g_atact/g_atmod/g_atrel, re-rolling while it equals lastAct; the
+   sleep tier returns GET_IN_OUT_OF_BED if he is awake, else
+   ACTION_NONE.  chk_actT stores the result in g_trac. */
 short
 chk_timA()
 {

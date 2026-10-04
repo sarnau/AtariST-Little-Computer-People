@@ -1,7 +1,13 @@
 /*
- * parts/a_watat.c -- the resident tends the fireplace.
- * Included by stx_u2.c; never compiled on its own.
+ * parts/a_watat.c -- included by stx_u2.c; never compiled on its own.
  */
+
+/* a_watat: rummage in the filing cabinet.  The resident bends down,
+   opens the drawer if it is shut (lcp_flcO, drawn in two frames), then
+   holds the reaching pose (the state is named STOKE_FIREPLACE, but here
+   it is used at the cabinet) while glancing left and right ten times.
+   Shared by tidying the house, fetching letter paper and fetching the
+   game box -- all of which live in that cabinet. */
 
 void
 a_watat()

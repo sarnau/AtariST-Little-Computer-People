@@ -17,6 +17,11 @@
 #include "asimple.h"
 #include "globals.h"
 
+/* Run the action chk_actT chose.  Consumes g_trac (copying it into
+   lastAct so the random picker avoids repeating it, then clearing it
+   to ACTION_NONE), gets the resident out of bed first if he is
+   asleep, and dispatches to the matching a_* action routine.  Unknown
+   action numbers fall through and do nothing. */
 void
 doAct()
 {

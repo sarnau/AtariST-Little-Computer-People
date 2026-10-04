@@ -1,6 +1,8 @@
 /*
  * parts/lcp_upp.c -- included by stx_u3.c; never compiled on its own.
  */
+/* toupper for the command parser: lower-case ASCII letters become
+   upper case, every other value comes back unchanged. */
 short
 lcp_upp(ch)
 short   ch;

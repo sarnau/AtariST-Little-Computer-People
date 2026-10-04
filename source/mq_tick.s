@@ -36,6 +36,10 @@
 	.globl	_mq_advs
 	.globl	_psg_upE
 
+* mq_tick: the Timer-A interrupt routine.  Counts g_mtcou, steps the
+* PSG envelopes every 4th tick (via g_mtdiv) when the sequencer or a PSG
+* note is active, and steps the MIDI sequencer each time g_mtpre runs
+* out.  Each sub-call is guarded so it is never re-entered.
 _mq_tick:
 	ori.w	#$0700,sr		* mask all interrupts (IPL=7)
 	addq.l	#1,_g_mtcou		* ++g_mtcou
@@ -110,8 +114,17 @@ L_ack:
 * above address them directly.
 * -----------------------------------------------------------------------
 
+* mi_dwrm: non-zero while mq_advs is running; a tick that finds it set
+* skips the sequencer step.
 _mi_dwrm:	.ds.w	1
+* mi_rlock: non-zero while psg_upEn is running; blocks both sub-calls.
 _mi_rloc:	.ds.w	1
+* g_mtpre: ticks left until the next sequencer step; the sequencer
+* reloads it (mi_tpb / mi_nlp0).
 _g_mtpre:	.ds.w	1
+* psg_ntAc: non-zero while a PSG note's envelope is running, so the
+* envelopes keep being stepped when no song is playing.
 _psg_ntA:	.ds.b	1
+* g_msmsa: non-zero while a song is playing (set by the sequencer's
+* start, cleared when it ends or is stopped).
 _g_msmsa:	.ds.b	1

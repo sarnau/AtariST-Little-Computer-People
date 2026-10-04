@@ -1,6 +1,9 @@
 /*
  * Included by stx_u1.c; never compiled on its own.
  */
+/* Which floor a screen y belongs to: y above 140 (lower on the
+   screen) is FLOOR_BOTTOM, above 77 FLOOR_MIDDLE, the rest FLOOR_TOP.
+   The walking code uses it to decide when a target needs the stairs. */
 short
 getFlrY(y)
 short   y;

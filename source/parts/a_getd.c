@@ -2,6 +2,12 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_getd: head-movement gesture.  Picks a head target from the
+   direction the head currently faces (low three bits of g_hacur) and
+   waits for it, then four times alternates between that direction
+   level and tilted (bit 0x10) -- a nod -- before returning the head to
+   where it started.  Bound to ACTION_GET_DRESSED; on its own it only
+   moves the head. */
 void
 a_getd()
 {

@@ -21,7 +21,7 @@ char *  mo_names[12] = {
         "Sep", "Oct", "Nov", "Dec"
 };
 
-BOOL16          moff_f = 1;
+BOOL16          moff_f = 1;   /* YES while the mouse is hidden; moff/mon only call graf_mouse on a change.  Starts YES, so the first moff is a no-op until mon has shown it */
 
 /* Object frame ids; the od_draw call sites read these slots rather
    than enum constants. */
@@ -33,22 +33,24 @@ short   g_obisa[6]    = { 43, 44, 45, 30, 31, 32 };
    g_tpcoi (10, 5, 7, 13 in the main palette). */
 short   g_tp0xc[8] = { 293, 293, 293, 293, 293, 293, 293, 293 };
 
-short   g_tp0yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp0yc[8] = {   /* bar 0 Y per step (one row up per step) */ 106, 105, 104, 103, 102, 101, 100,  99 };
 
-short   g_tp1xc[8] = { 297, 297, 297, 297, 297, 297, 297, 297 };
+short   g_tp1xc[8] = {   /* bar 1 X per step */ 297, 297, 297, 297, 297, 297, 297, 297 };
 
-short   g_tp1yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp1yc[8] = {   /* bar 1 Y per step */ 106, 105, 104, 103, 102, 101, 100,  99 };
 
-short   g_tp2xc[8] = { 301, 301, 301, 301, 301, 301, 301, 301 };
+short   g_tp2xc[8] = {   /* bar 2 X per step */ 301, 301, 301, 301, 301, 301, 301, 301 };
 
-short   g_tp2yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp2yc[8] = {   /* bar 2 Y per step */ 106, 105, 104, 103, 102, 101, 100,  99 };
 
-short   g_tp3xc[8] = { 305, 305, 305, 305, 305, 305, 305, 305 };
+short   g_tp3xc[8] = {   /* bar 3 X per step */ 305, 305, 305, 305, 305, 305, 305, 305 };
 
-short   g_tp3yc[8] = { 106, 105, 104, 103, 102, 101, 100,  99 };
+short   g_tp3yc[8] = {   /* bar 3 Y per step */ 106, 105, 104, 103, 102, 101, 100,  99 };
 
-short   g_tpcoi[4] = { 10, 5, 7, 13 };
+short   g_tpcoi[4] = {   /* colour index per bar (through vdi_colt) */ 10, 5, 7, 13 };
 
+/* Days per month, January first; daysInMo replaces February's 28 by
+   29 in leap years. */
 short days_pmo[12] = {
         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
@@ -58,7 +60,7 @@ short days_pmo[12] = {
    and paints the initial 0:00 hands over the pre-drawn 5:06 default. */
 short   g_cmmin                         = 5;
 
-short   g_chhou                         = 6;
+short   g_chhou                         = 6;   /* hour the clock's hour hand was last drawn for */
 
 /* Circle-position table for the minute hand.  Indexed by the current
    minute/5 mod 12 giving one of 12 positions on a small circle around
@@ -79,7 +81,7 @@ short   g_chhop[15] = {
    then wraps to 13. */
 short   g_ltlic                         = -1;
 
-short   g_ltpac          = 0;
+short   g_ltpac          = 0;   /* record player VU LEDs currently lit, one bit per LED (rec_ledt); rp_anim toggles them */
 
 /* Bit-mask toggles for the VU-meter LEDs, high bit first. */
 unsigned short  rec_ledt[8] = {

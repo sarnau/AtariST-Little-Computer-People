@@ -2,6 +2,10 @@
  * parts/initVdi.c -- included by games.c, right after rst_vsth; never
  * compiled on its own.
  */
+/* Prepare for VDI drawing on the minigame/letter panel: remember the
+   current logical screen in sv_lgb, make the panel buffer g_dscp the
+   logical screen, and set replace mode and a solid fill in game colour
+   12.  exitVdi restores the saved screen. */
 void
 initVdi()
 {

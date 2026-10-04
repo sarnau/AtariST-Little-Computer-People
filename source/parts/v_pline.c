@@ -3,6 +3,8 @@
  * binding module's function order; never compiled on its own.
  */
 
+/* VDI polyline: draws count points from pxy (x,y pairs) on
+   workstation handle, in the current line colour. */
 void
 v_pline(handle, count, pxy)
 short   handle;

@@ -2,6 +2,16 @@
  * parts/a_writl.c -- included by stx_u2.c; never compiled on its own.
  */
 
+/* ACTION_WRITE_LETTER: the resident types a letter to the player.
+   He stops a playing record (a_playp), fetches paper from the filing
+   cabinet, goes through the study door and sits at the typewriter.
+   Keyboard input is blocked (no_keyin), the paper is painted into the
+   top panel (fillTopR), and the LETTER.TXT templates are loaded into a
+   Malloc'd buffer.  The letter is the date, "Dear <owner>,", 2..4
+   paragraphs from the four sections in shuffled order -- the line
+   variants chosen by sickness or happiness -- a random sign-off from
+   g_ltg and his name.  After a 60-tick pause everything is freed, the
+   typing sprites hidden and he walks back out through the door. */
 void
 a_writl()
 {

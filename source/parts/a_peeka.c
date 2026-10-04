@@ -2,6 +2,11 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* a_peeka: a quick glance.  The head is settled at position 8, head
+   animation is suspended so frame 2 can be forced through g_hsfra
+   for 6 ticks, then the saved frame and position 8 are restored.
+   Used as an action and by the War card game after the resident's
+   remark on a round. */
 void
 a_peeka()
 {

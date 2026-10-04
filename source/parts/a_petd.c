@@ -3,6 +3,11 @@
  * never compiled on its own.
  */
 
+/* a_petd: wait to be patted.  Unless pat_ok is already set, the
+   resident first goes to the couch and crouches (a_calld).  He then
+   waits 100..200 ticks (10 during the intro), or until a new action is
+   queued, for the player's Ctrl-P; afterwards pat_ok is cleared and he
+   stands up. */
 void
 a_petd()
 {

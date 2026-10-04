@@ -14,14 +14,18 @@
 
 	.text
 
+* wr_src(addr): store the source MFDB address in contrl[7..8].
 _wr_src:
 	move.l	4(sp),_contrl+14
 	rts
 
+* wr_dst(addr): store the destination MFDB address in contrl[9..10].
 _wr_dst:
 	move.l	4(sp),_contrl+18
 	rts
 
+* gsx1: call the VDI -- aim vdipb[0] at contrl, pass the parameter
+* block in d1 with opcode 115 in d0, and trap #2.
 _gsx1:
 	move.l	#_contrl,_vdipb
 	move.l	#_vdipb,d1

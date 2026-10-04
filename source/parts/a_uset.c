@@ -4,6 +4,15 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* ACTION_USE_TOILET (also from games.c and cs_mvIn).  The resident
+   walks to the bathroom toilet door, opens it if it is shut
+   (SFX_DOOR_OPEN), steps in and the door closes behind him in three
+   sprite phases while he is hidden (SFX_DOOR_CLOSE).  After 45..60
+   ticks the toilet flushes (SFX_TOILET_FLUSH), the door opens again,
+   he reappears and walks back out, and leaves it open unless a
+   0..100 roll beats his initiative_threshold or the cutscene runs, in
+   which case a_clotd shuts it.  Clears lcp.bathroom_need and resets
+   the bathroom timer. */
 void
 a_uset()
 {

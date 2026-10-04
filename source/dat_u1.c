@@ -47,7 +47,7 @@ short   vdi_colt[16]            = {
         9, 10, 11, 14, 12, 15, 13,  1
 };
 
-short   no_keyin          = NO;
+short   no_keyin          = NO;   /* YES while an activity owns the keyboard (letter writing, minigames): gameTick stops reading keys */
 
 /* ---- Hardware sprite double-buffer (SPRITE_HW_SLOTS) -------------------
    Two parallel state sets per hardware slot: `pe` = pending (what game
@@ -64,36 +64,39 @@ short   no_keyin          = NO;
    as a .comm -- that is where the original has it. */
 short   g_sepef[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
 
-short   g_hacur                         = 8;
+short   g_hacur                         = 8;    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
 
-short   g_hatas                         = 8;
+short   g_hatas                         = 8;    /* head pose the head animation is turning towards, same encoding */
 
-short   g_hamod                         = HEAD_ANIM_DISABLED;
+short   g_hamod                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* / sprhead.c bit-fields) */
 
 /* Two bytes of -1 that nothing references, between g_hamod and
    g_trac.  Dead 1985 data that Alcyon still allocates; it must stay
    for the layout. */
 short   g_unus3                         = -1;
 
-short   g_trac                  = ACTION_NONE;
+short   g_trac                  = ACTION_NONE;   /* action chk_actT chose for doAct to run; ACTION_NONE = none */
 
-short   lcp_recP              = 0;
+short   lcp_recP              = 0;   /* YES while a record is playing (animates the player); saved in lcp.record_playing */
 
-short   lcp_tv                       = 0;
+short   lcp_tv                       = 0;   /* YES while the TV is on (td_nois draws the picture); saved in lcp.tv_on */
 
-BOOL16  ph_call  = NO;
+BOOL16  ph_call  = NO;   /* phone is ringing: set by gameSim1 or Ctrl-C, cleared when answered */
 
-BOOL16  fire_act                = NO;
+BOOL16  fire_act                = NO;   /* fireplace is burning: animated each tick until fire_dur runs out */
 
-BOOL16  ph_ans     = NO;
+BOOL16  ph_ans     = NO;   /* resident is on the phone (ev_ansPh); blocks new calls */
 
+/* Once-a-day flags for chk_actT's scheduled lunch, dinner, wake-up and
+   bedtime actions: set when the action fires at its hour, cleared at
+   midnight by daily_rs. */
 BOOL16  lunT_trg      = NO;
 
-BOOL16  dinT_trg     = NO;
+BOOL16  dinT_trg     = NO;   /* dinner already triggered today */
 
-BOOL16  wkT_trg  = NO;
+BOOL16  wkT_trg  = NO;   /* wake-up already triggered today */
 
-BOOL16  bedT_trg         = NO;
+BOOL16  bedT_trg         = NO;   /* bedtime already triggered today */
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
 /* body_frT: maps lcp_st -> body-frame index into body.lcp /
@@ -224,9 +227,9 @@ short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
    stair_wp entries. */
 short   stair_ty           = 124;
 
-short   stair_by        = 137;
+short   stair_by        = 137;   /* landing Y; stair_ty (above) is the landing X */
 
-short   flr_cy[3]        = { 198, 135, 71 };
+short   flr_cy[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed getFlrY() - 1: bottom, middle, top */
 
 /* On-stairs flag (short, YES/NO).  YES while
    the path stepper is inside a stair-traversal path; drives the

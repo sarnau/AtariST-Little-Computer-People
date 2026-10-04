@@ -5,6 +5,10 @@
  */
 
 
+/* Clears the small screen at (293,99)-(308,106) to colour 0, waits a
+   tick, then plays one of its two random animations -- pattern lines
+   (tv_patl) or a bouncing dot (tv_boul).  Used for the rare "clear the
+   screen" gesture while the resident plays on the computer (a_playc). */
 void
 tv_scrc()
 {

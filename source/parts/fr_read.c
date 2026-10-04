@@ -1,6 +1,11 @@
 /*
  * parts/fr_read.c -- included by stx_u1.c; never compiled on its own.
  */
+/* Fread with retries: read `count' bytes from fhnd into buffer and
+   return Fread's result.  A failed read is retried twice after a
+   one-second wait; after that a "Bad file read" alert with a single
+   RETRY button comes up before every further attempt, so the function
+   only returns once a read succeeds. */
 short
 fr_read(fhnd, count, buffer)
 short   fhnd;

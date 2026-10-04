@@ -38,6 +38,7 @@ short   g_atact[16] = {
         ACTION_TIDY_HOUSE
 };
 
+/* Moderate tier (chk_timA, TIER_MODERATE). */
 short   g_atmod[16] = {
         ACTION_HELLO,
         ACTION_DANCE,
@@ -57,6 +58,7 @@ short   g_atmod[16] = {
         ACTION_EVENT_PHONE_CALL
 };
 
+/* Relaxed tier (chk_timA, TIER_RELAXED). */
 short   g_atrel[16] = {
         ACTION_READ_NEWSPAPER,
         ACTION_PET_DOG,
@@ -89,6 +91,8 @@ short           sch_tab[3][8] = {
           TIER_ACTIVE,    TIER_RELAXED,   TIER_MODERATE,  TIER_RELAXED }
 };
 
+/* Bit-reversal pairs for rv_bld: when bit rv_msk[i] is set in a
+   byte, bit rv_val[i] is set in its mirror image in rev_tab. */
 short           rv_msk[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
-short           rv_val[8] = {   1,  2,  4,  8, 16, 32, 64, 128 };
+short           rv_val[8] = {   1,  2,  4,  8, 16, 32, 64, 128 };   /* mirror bit for rv_msk[i] */

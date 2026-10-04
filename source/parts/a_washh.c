@@ -2,6 +2,12 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
+/* ACTION_WASH_HANDS.  The resident walks to the bathroom sink (giving
+   up if interrupted), turns to the screen and starts SFX_WATER_RUNNING,
+   then plays 4..127 one-tick hand-washing poses picked at random --
+   centre, left, right, or the left pose mirrored -- never the same
+   pick twice running.  A queued action ends it early.  The water
+   sound is stopped if it is still the effect playing. */
 void
 a_washh()
 {

@@ -3,6 +3,14 @@
  */
 
 
+/* Answer the phone (ACTION_EVENT_PHONE_CALL).  a_calld walks the
+   resident to the couch beside the phone; he picks up the receiver
+   (ph_ans set, ph_call cleared, the ring stopped by tick's ph_hu
+   handling) and talks for 40..50 rounds, each a random head frame
+   with one of the four chatter effects.  Then he hangs up, crouches,
+   waits for a running Ctrl-P pat (g_ptdoa) to finish, clears pat_ok
+   and stands side-on; ph_ans is cleared last.  The argument callers
+   pass is ignored. */
 void
 ev_ansPh()
 {

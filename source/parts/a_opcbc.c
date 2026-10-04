@@ -3,6 +3,14 @@
  * never compiled on its own.
  */
 
+/* a_opcbc: change in the bedroom closet.  The resident walks to the
+   dresser and opens a drawer (perhaps closing it again on a random
+   roll), walks to the closet, opens it and steps inside; the closet
+   sprites hide him while the door swings shut.  After 45..60 ticks
+   the palette changes -- new clothing colours for value 0, a new skin
+   colour otherwise -- unless introSeq is set, and he steps back out.
+   The closet is closed after him on a random roll, or always during
+   the intro.  Only the first walk can be preempted. */
 void
 a_opcbc(value)
 short   value;

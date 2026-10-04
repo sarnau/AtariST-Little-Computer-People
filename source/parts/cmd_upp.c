@@ -1,6 +1,11 @@
 /*
  * Included by stx_u3.c; never compiled on its own.
  */
+/* Tokenizer for the typed command line: skip to the first letter in
+   str, copy the run of letters uppercased into dest and NUL-terminate
+   it.  Returns where scanning stopped (the first non-letter after the
+   word), so chk_encm can call it again for the next word, or NULL if
+   the string ended before another letter was found. */
 char *
 cmd_upp(str, dest)
 char *  str;

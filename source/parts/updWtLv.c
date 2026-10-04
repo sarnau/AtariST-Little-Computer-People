@@ -3,6 +3,12 @@
  */
 
 
+/* Draws and changes the water tank level lcp_watr, one horizontal
+   line per unit at x 146..159 counting up from y 174.  val 0 redraws
+   the whole tank (blue up to the level, light grey above it, at boot);
+   a positive val adds that many units, stopping at WATER_MAX (the
+   Ctrl-W key); a negative val drains -val units one at a time with a
+   short pause each (the resident drinking). */
 void
 updWtLv(val)
 short   val;
