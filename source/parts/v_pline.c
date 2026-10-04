@@ -12,7 +12,7 @@ short * pxy;
 {
         /* STX aims the parameter block at the caller's points. */
         vdipb[2]  = pxy;
-        contrl[0] = 6;
+        contrl[0] = VDI_V_PLINE;
         contrl[1] = count;
         contrl[3] = 0;
         contrl[6] = handle;

@@ -14,10 +14,10 @@ short * pxy;
            copying the points, then restores it -- the same trick
            vdilib.c's vro_cpyfm uses. */
         vdipb[2]  = pxy;
-        contrl[0] = 11;
+        contrl[0] = VDI_V_GDP;
         contrl[1] = 2;
         contrl[3] = 0;
-        contrl[5] = 1;
+        contrl[5] = GDP_BAR;
         contrl[6] = handle;
         vdi_go();
         vdipb[2]  = ptsin;

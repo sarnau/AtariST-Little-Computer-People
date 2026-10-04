@@ -11,7 +11,7 @@ short   index;
 {
         /* intin first, and the binding RETURNS intout[0]. */
         intin[0]  = index;
-        contrl[0] = 17;
+        contrl[0] = VDI_VSL_COLOR;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;

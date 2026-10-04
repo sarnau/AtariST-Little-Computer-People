@@ -20,7 +20,7 @@ char *  str;
         i = 0;
         while (intin[i++] = *str++ & 0xff)
                 ;
-        contrl[0] = 8;
+        contrl[0] = VDI_V_GTEXT;
         contrl[1] = 1;
         contrl[3] = --i;
         contrl[6] = handle;

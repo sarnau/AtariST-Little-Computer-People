@@ -10,7 +10,7 @@ short   handle;
 short   mode;
 {
         intin[0]  = mode;
-        contrl[0] = 32;
+        contrl[0] = VDI_VSWR_MODE;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;

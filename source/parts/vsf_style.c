@@ -10,7 +10,7 @@ short   handle;
 short   style;
 {
         intin[0]  = style;
-        contrl[0] = 24;
+        contrl[0] = VDI_VSF_STYLE;
         contrl[1] = 0;
         contrl[3] = 1;
         contrl[6] = handle;

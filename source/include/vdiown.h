@@ -22,4 +22,24 @@ extern void     vroCpyD();
 
 extern short *  vdipb[];
 
+/* VDI function numbers -- what each binding writes into contrl[0]
+   (the GEM VDI opcode; contrl[1] is the ptsin count, contrl[3] the
+   intin count).  Only the ones this program issues. */
+#define VDI_V_PLINE             6
+#define VDI_V_GTEXT             8
+#define VDI_V_GDP               11      /* sub-function in contrl[5] */
+#define VDI_VST_HEIGHT          12
+#define VDI_VSL_COLOR           17
+#define VDI_VST_COLOR           22
+#define VDI_VSF_INTERIOR        23
+#define VDI_VSF_STYLE           24
+#define VDI_VSF_COLOR           25
+#define VDI_VSWR_MODE           32
+#define VDI_VQT_ATTRIBUTES      38
+#define VDI_V_OPNVWK            100
+#define VDI_VRO_CPYFM           109
+
+/* v_gdp sub-functions (contrl[5]). */
+#define GDP_BAR                 1
+
 #endif /* VDIOWN_H */
