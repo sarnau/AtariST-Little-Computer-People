@@ -51,7 +51,7 @@ def syms_of(path):
 # Same link order alcyon_link.sh uses: gemstart.o, main.o, then the
 # alphabetical remainder of the .o directory.
 files = sorted(f for f in os.listdir(BUILD) if f.endswith('.o'))
-special = ['gemstart.o', 'main.o']
+special = [f for f in ('gemstart.o', 'main.o') if f in files]
 skip    = {'osbind.o', 'crt0.o', 'nofloat.o'}
 ordered = special + [f for f in files if f not in special and f not in skip]
 

@@ -1,5 +1,5 @@
 /*
- * letload.c -- host-side smoke test for LETTER.TXT decoder.
+ * t_letter.c -- host-side smoke test for the LETTER.TXT decoder (fr_reac).
  *
  * Copies DATA/LETTER.TXT into the CWD as "letter.txt", calls
  * fl_ltpl() which internally allocates the 10496-byte

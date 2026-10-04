@@ -1,7 +1,11 @@
 /*
  * Included by stx_u1.c; never compiled on its own.
  */
-/* Program entry.  Sets up MIDI, AES and VDI, silences the key click,
+/* No `_stksize` is defined: alcyon2's GEMSTART.O, which this program
+   links, has the stack size built in, and defining it would add four
+   dead bytes at the head of the data segment.
+
+   Program entry.  Sets up MIDI, AES and VDI, silences the key click,
    switches into the DATA folder, prepares the screen buffers and shows
    the title/guestbook screen.  Then it unpacks HOUSE.SCN into the back
    screen, loads the resident's body and outfit sprites, the object and
@@ -157,7 +161,10 @@ char ** argv;
         v_pline(vdihnd, 2, r);
         sc_sdtf();
 
-        /* Door / cabinet draws: each is a full if/else with the whole
+        /* Door / cabinet draws.  HOUSE.SCN has a placeholder rectangle
+           where every door and cabinet sits; these paint the open or
+           closed object over each one (skip them and the placeholders
+           show as streaks).  Each is a full if/else with the whole
            od_draw call duplicated, not a ternary in the argument. */
         if (lcp_cabO == NO)
                 od_draw(od_cbcl, 46, 140);

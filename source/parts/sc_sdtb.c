@@ -6,7 +6,9 @@
    screen in g_srlgb, makes g_srptr the logical screen for the VDI, and
    resets the fill attributes (replace mode, solid colour-0 fill).
    Every VDI draw on the house picture is bracketed by this and
-   sc_sdtf. */
+   sc_sdtf.  Launch LCP.PRG directly (desktop or --auto): started from
+   COMMAND.PRG, the later Setscreen leaves VDI line attributes invalid,
+   vsl_color falls back to pen 15 and the water tank turns brown. */
 void
 sc_sdtb()
 {

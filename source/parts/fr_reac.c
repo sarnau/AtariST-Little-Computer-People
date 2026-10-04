@@ -3,7 +3,12 @@
  *
  * Included by stx_u1.c; never compiled on its own.
  */
-/* outsize is the *uncompressed* byte count (10496 for LETTER.TXT). */
+/* Decompress LETTER.TXT into out_buf for the letter writer.
+   File layout: a short holding the uncompressed size + 0x11 header
+   bytes, then the 15 most common bytes, then a nibble stream where
+   nibbles 0..14 pick one of those bytes and 15 escapes to a literal
+   byte.  outsize is the *uncompressed* byte count (10496 for
+   LETTER.TXT). */
 void
 fr_reac(filename, out_buf, outsize)
 char *          filename;

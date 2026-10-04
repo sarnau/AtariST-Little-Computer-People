@@ -96,7 +96,7 @@ else
     cp -f "$ALCYON2/GEMSTART.O"  gemstart.o
 fi
 
-# 3. Build .o list (main.o and gemstart.o handled separately).
+# 3. Build .o list (gemstart.o and osbind.o handled separately).
 OBJS=""
 for o in $(find . -maxdepth 1 -name "*.o" \
     ! -name "gemstart.o" ! -name "main.o" ! -name "osbind.o" \
@@ -136,7 +136,7 @@ LINKOPT="[PRGFLAGS[0],UNDEFINED,COMMAND[lcp_link.cmd]]"
 # osbind.o goes there.  No separate workstation object: LCP_STX folds
 # v_opnvwk/vro_cpyfm into the one binding module (vdistx.o) and has a
 # single dispatcher, so there is no second parameter block.
-LIST=$(echo "gemstart.o osbind.o main.o $OBJS vdibind.a aesbind.a $TAIL" | tr -s ' ' ',')
+LIST=$(echo "gemstart.o osbind.o $OBJS vdibind.a aesbind.a $TAIL" | tr -s ' ' ',')
 echo "lcp.68k=$LIST" > lcp_link.cmd
 "$ALCYON_BIN/link68" "$LINKOPT" 2>&1 | tail -5 || true
 

@@ -11,9 +11,12 @@
 *     $43e so the OS keeps its hands off the floppy,
 *   - decrypts 96 bytes of itself in place (cpenc) under a raised
 *     interrupt mask, keyed by the current drive number,
+*   - selects the drive itself through YM2149 register 14 (I/O port A),
+*     bypassing the OS,
 *   - drives the 1772 FDC directly through $ff8604/$ff8606 and the DMA
 *     address registers $ff8609/$ff860b/$ff860d: restore, seek, then
-*     read the protected track into cpbuf,
+*     read the protected track into cpbuf, polling MFP GPIP bit 5 for
+*     completion with a $40000 timeout,
 *   - re-encrypts itself, clears flock, restores the registers, and
 *     returns a LONG in d0.
 *

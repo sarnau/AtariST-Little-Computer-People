@@ -236,7 +236,13 @@ be a shipped table, and without it every mirrored frame renders blank.
 
 ## Key project layout
 
-- `source/*.c` — the port itself.
+- `source/*.c` — the port itself: the unity units (`stx_u1..4.c`,
+  `games.c`, `vdistx.c`, `midi_seq.c`), the data files (`dat_*.c`,
+  `globals.c`, `sprglobs.c`, ...) and the few modules that still hold
+  code.  Function bodies live in `source/parts/`, one per file.  The
+  eighteen `.c` files that had become comment-only redirects
+  (`main.c`, `init.c`, `save.c`, `stubs.c`, ...) were deleted on
+  2026-10-05; their explanations moved next to the code.
 - `source/include/*.h` — types, enums, struct layouts.
 - `source/tools/` — build & test scripts (Alcyon build, Hatari-driven
   regression tests, symbol lookup helpers).
