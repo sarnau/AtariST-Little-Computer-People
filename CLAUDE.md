@@ -1390,16 +1390,20 @@ worth internalising:
     cmd_num is an uncalled static.
   * **The size has NO behavioural consequence.**  mq_pshl guards
     `mi_evcn < 49` and writes [mi_evcn] and [mi_evcn+1]; mq_popl reads
-    [mi_evcn-2] and [mi_evcn-1].  Max index 49, so the highest byte
-    touched is 49*4+3 = **199 of 200**.  No overrun is possible at any
+    [mi_evcn-2] and [mi_evcn-1].  mi_evcn starts at 9 and moves in
+    steps of 2, so it is always odd: the last push is at 47 and writes
+    [47] and [48].  Max index 48, so the highest byte touched is
+    48*4+3 = **195 of 200** (an earlier version of this note said 49
+    and 199; the conclusion is the same).  No overrun is possible at any
     declared size >= 200.  Whichever reading is right, nothing
     observable changes -- unlike g_sfDoB, where the answer decides
     whether a shipped overrun exists at all.
 
 Curiosity worth recording: the loop stack's empty sentinel is
-`mi_evcn == 9`, and mq_zero initialises mi_evcn to 9 -- so indices
-0..8 (36 bytes) are dead at the FRONT too.  Only [9..49] is ever
-touched, a 164-byte window inside a 688-byte allocation.
+`mi_evcn == 9`, and mq_setp initialises mi_evcn to 9 -- so indices
+0..8 (36 bytes) are dead at the FRONT too.  Only [9..48] is ever
+touched, a 160-byte window inside a 688-byte allocation.  (This said
+`mq_zero`, which does not exist; the reset is in mq_setp.)
 
 An avenue that is CLOSED: declaration order cannot place a
 hypothetical dead global here.  The 1985 linker's `.comm` order is not
