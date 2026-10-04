@@ -25,7 +25,7 @@ again:
                 evnt_timer(1000, 0);
                 goto again;
         }
-        form_alert(0,
+        form_alert(ALERT_NO_DEFAULT,
                 "[1][Bad file open.|Try re-booting.][RETRY]");
         goto again;
 }

@@ -17,14 +17,14 @@ cntSong()
            counter step. */
         sng_cnt = 0;
         org_cnt = 0;
-        if (!Fsfirst("*.sng", 0)) {
+        if (!Fsfirst("*.sng", F_NORMAL)) {
                 sng_cnt = 1;
-                while (gemdos(0x4F) == 0)
+                while (gemdos(GEMDOS_FSNEXT) == 0)
                         sng_cnt++;
         }
-        if (!Fsfirst("*.org", 0)) {
+        if (!Fsfirst("*.org", F_NORMAL)) {
                 org_cnt = 1;
-                while (gemdos(0x4F) == 0)
+                while (gemdos(GEMDOS_FSNEXT) == 0)
                         org_cnt++;
         }
 }

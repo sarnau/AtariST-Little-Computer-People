@@ -22,7 +22,7 @@ short           outsize;
         unsigned char * fbuffer;
         short           filehandle;
 
-        filehandle = fOpen(filename, 0);
+        filehandle = fOpen(filename, RMODE_RD);
         /* The size word is read straight into the short. */
         fr_read(filehandle, 2L, &fsize);
 

@@ -19,6 +19,6 @@ er_nomem()
         exit(1);
 #else
         for (;;)
-                form_alert(0, "[1][Not enough memory.|Requires ROMs.][REBOOT]");
+                form_alert(ALERT_NO_DEFAULT, "[1][Not enough memory.|Requires ROMs.][REBOOT]");
 #endif
 }

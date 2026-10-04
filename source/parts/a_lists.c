@@ -30,7 +30,7 @@ a_lists()
 
         tmp = rndRng(0, lcp_food - 1);
         index = tmp + 1;
-        Fsfirst("*.sng", 0);
+        Fsfirst("*.sng", F_NORMAL);
         while (--index != 0)
                 Fsnext();
         filename = ((_DTA *) Fgetdta())->d_fname;

@@ -19,7 +19,7 @@ vdi_init()
         scr_scal = 1;
         if (wk_out[0] > 600)
                 while (1)
-                        form_alert(0,
+                        form_alert(ALERT_NO_DEFAULT,
                                 "[1][Must be in|low resolution.][REBOOT]");
         vdi_cls();
 }

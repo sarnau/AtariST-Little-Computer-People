@@ -36,7 +36,7 @@ sf_sl()
         short *         block;
         short           index;
 
-        fhandle = fOpen("sounds.lcp", 0);
+        fhandle = fOpen("sounds.lcp", RMODE_RD);
         for (index = 0; index < 500; index++) {
                 fr_read(fhandle, 2L, &size);
                 if (size == 0)

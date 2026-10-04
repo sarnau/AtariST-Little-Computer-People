@@ -16,7 +16,7 @@ void *  addr;
         crFile(filename);
 
         for (;;) {
-                filehandle = Fopen(filename, 1);
+                filehandle = Fopen(filename, RMODE_WR);
                 if (filehandle >= 0)
                         break;
                 er_write();

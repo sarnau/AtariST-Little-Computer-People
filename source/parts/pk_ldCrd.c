@@ -52,7 +52,7 @@ pk_ldCrd()
         short   fhnd;
         char *  buf;
 
-        fhnd = fOpen("cards", 0);
+        fhnd = fOpen("cards", RMODE_RD);
         buf  = (char *) crd_dat;
 
         /* 4 suits x (12 face cards reverse-ranked + 1 per-suit back).

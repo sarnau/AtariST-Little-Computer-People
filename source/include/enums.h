@@ -603,6 +603,31 @@
      vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
    Numeric values must match the ROM byte-for-byte. */
 #define FILL_SOLID                      8
+#ifndef FIS_PATTERN
+#define FIS_PATTERN                     2       /* vsf_interior: pattern fill */
+#endif
+
+/* ---- TOS / GEM constants the port passes as numbers ------------------
+   Standard Atari names where the DRI headers have one (tosdefs.h is
+   not included here, so its RMODE_* are repeated; the guards keep a
+   later include of it harmless).  MD_REPLACE comes from obdefs.h. */
+#ifndef M_OFF
+#define M_OFF                           256     /* graf_mouse: hide */
+#define M_ON                            257     /* graf_mouse: show */
+#endif
+#ifndef RMODE_RD
+#define RMODE_RD                        0       /* Fopen: read only */
+#define RMODE_WR                        1       /* Fopen: write only */
+#endif
+#define F_NORMAL                        0       /* Fsfirst: no attribute bits,
+                                                   plain files only */
+#define GEMDOS_FSNEXT                   0x4F    /* bare gemdos() call */
+#define ALERT_NO_DEFAULT                0       /* form_alert default button */
+#define VEC_TIMER_A                     0x4d    /* Setexc vector ($134 / 4) */
+#define SETEXC_QUERY                    (-1L)   /* Setexc: read, don't set */
+#define XB_TIMER_A                      0       /* Xbtimer timer number */
+#define MFP_STOP                        0       /* Xbtimer control: stopped */
+#define MFP_DIV64                       5       /* Xbtimer control: /64 delay */
 
 /* ---- Door / furniture state bitfield in lcp.door_states_and_flags ---- */
 #define DSF_FRONT_DOOR                  0x001

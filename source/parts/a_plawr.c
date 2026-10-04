@@ -52,7 +52,7 @@ a_plawr()
         gameTick(1);
 
         i = rndRng(1, org_cnt);
-        Fsfirst("*.org", 0);
+        Fsfirst("*.org", F_NORMAL);
         while (--i != 0)
                 Fsnext();
         dta_ptr = (_DTA *) Fgetdta();

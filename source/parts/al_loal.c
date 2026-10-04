@@ -20,7 +20,7 @@ unsigned char * dest_buf;
         short   total;
         short   fhnd;
 
-        fhnd = fOpen(filename, 0);
+        fhnd = fOpen(filename, RMODE_RD);
         fr_read(fhnd, 2L, &count);
         fr_read(fhnd, 2L, &total);
         fr_read(fhnd, (long) total, dest_buf);

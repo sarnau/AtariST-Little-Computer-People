@@ -7,8 +7,8 @@ initVdi()
 {
         sv_lgb = (void *) Logbase();
         Setscreen(g_dscp, (void *)-1L, -1);     /* rez as word */
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 2);        /* STX: FILL_PATTERN */
-        vsf_style(vdihnd, 8);           /* STX: style 8 */
+        vswr_mode(vdihnd, MD_REPLACE);
+        vsf_interior(vdihnd, FIS_PATTERN);
+        vsf_style(vdihnd, FILL_SOLID);
         vsf_color(vdihnd, vdi_colt[0xc]);
 }

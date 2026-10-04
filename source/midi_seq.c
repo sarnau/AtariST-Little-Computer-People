@@ -711,7 +711,7 @@ mq_stop()
 void
 mq_extm()
 {
-        Xbtimer(0, 0, 0x1c, mi_svtv);
+        Xbtimer(XB_TIMER_A, MFP_STOP, 0x1c, mi_svtv);
 }
 
 

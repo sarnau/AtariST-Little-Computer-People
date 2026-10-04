@@ -9,9 +9,9 @@ vdi_cls()
 {
         short   rect[4];
 
-        vswr_mode(vdihnd, 1);
-        vsf_interior(vdihnd, 2);
-        vsf_style(vdihnd, 8);
+        vswr_mode(vdihnd, MD_REPLACE);
+        vsf_interior(vdihnd, FIS_PATTERN);
+        vsf_style(vdihnd, FILL_SOLID);
         vsf_color(vdihnd, 0);
         rect[0] = 0;
         rect[1] = 0;
@@ -22,7 +22,7 @@ vdi_cls()
                 rect[2] = 319;
                 rect[3] = 199;
         }
-        graf_mouse(256, 0L);
+        graf_mouse(M_OFF, 0L);
         v_bar(vdihnd, rect);
         vsf_color(vdihnd, 1);
 }

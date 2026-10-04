@@ -13,7 +13,7 @@ lc_load()
         short   ok;
 
         ok = 0;
-        if ((fhnd = Fopen("hyber", 0)) >= 0) {
+        if ((fhnd = Fopen("hyber", RMODE_RD)) >= 0) {
                 ok = 1;
 
                 fr_read(fhnd, 0x80L, &lcp);

@@ -5,10 +5,6 @@
  * compiled standalone.
  */
 
-#ifndef M_OFF
-#define M_OFF           256
-#endif
-
 /* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
    addr: mouse_off() */
 
@@ -24,10 +20,6 @@ moff()
 
 /* mon (0xde5c): the counterpart moff guards against, immediately
    after it in the same object. */
-
-#ifndef M_ON
-#define M_ON            257
-#endif
 
 void
 mon()

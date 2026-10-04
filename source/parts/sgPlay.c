@@ -32,13 +32,13 @@ char *  filename;
                 mi_sbuf = (char *) 0;
         }
 
-        Fsfirst(filename, 0);
+        Fsfirst(filename, F_NORMAL);
         dta_ptr = (_DTA *) Fgetdta();
         mi_sbuf = (char *) Malloc(dta_ptr->d_length);
         if (mi_sbuf == (char *) 0)
                 er_nomem();
 
-        fhnd = fOpen(filename, 0);
+        fhnd = fOpen(filename, RMODE_RD);
         if (fhnd >= 0) {
                 fr_read(fhnd, 10L, temp);
                 fr_read(fhnd, 20000L, mi_sbuf);

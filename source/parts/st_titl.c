@@ -22,7 +22,7 @@ st_titl()
         short   unused3;        /* -16, never referenced */
 
         g_dscp  = sv_phb;
-        fhandle = fOpen("title.scn", 0);
+        fhandle = fOpen("title.scn", RMODE_RD);
         fr_read(fhandle, 2L, &scn_siz);
         scn_buf = (char *) Malloc((long) (scn_siz - 32));
         if (scn_buf == (char *) 0)

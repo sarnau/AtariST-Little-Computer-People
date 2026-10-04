@@ -19,7 +19,7 @@ lcp_crnd()
         lcp.character_sprite_id       = rndRng(2, 6);
 
         tmp  = rndRng(0, 265) * 10;
-        fhnd = fOpen("names", 0);
+        fhnd = fOpen("names", RMODE_RD);
         Fseek((long) tmp, fhnd, 0);
         fr_read(fhnd, 10L, lcp.character_name);
         Fclose(fhnd);

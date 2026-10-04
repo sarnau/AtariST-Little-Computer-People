@@ -10,7 +10,7 @@ ldSpr()
 {
         short   fhnd;
 
-        fhnd = fOpen("sprites", 0);
+        fhnd = fOpen("sprites", RMODE_RD);
         fr_read(fhnd, 14000L, spr_file);
         Fclose(fhnd);
 }

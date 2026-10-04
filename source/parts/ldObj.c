@@ -10,7 +10,7 @@ ldObj()
 {
         short   fhnd;
 
-        fhnd = fOpen("objects", 0);
+        fhnd = fOpen("objects", RMODE_RD);
         fr_read(fhnd, 14000L, obj_file);
         Fclose(fhnd);
 }

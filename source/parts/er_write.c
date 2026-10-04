@@ -12,6 +12,6 @@ er_write()
         fprintf(stderr,
                 "WARN: Unable to write to disk.\n");
 #else
-        form_alert(0, "[1][Unable to write.|Check disk.][RETRY]");
+        form_alert(ALERT_NO_DEFAULT, "[1][Unable to write.|Check disk.][RETRY]");
 #endif
 }
