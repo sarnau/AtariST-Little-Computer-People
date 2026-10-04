@@ -34,7 +34,7 @@ ev_ansPh()
         ph_call = NO;
         ph_hu      = YES;
         gameTick(0);
-        od_draw(od_med1, 190, 168);
+        od_draw(OBJ_PHONE_CALL, PHONE_X, PHONE_Y);
 
         lcp_st = STATE_PHONE_TALKING;
         gameTick(1);

@@ -33,12 +33,12 @@ a_uset()
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
                 gameTick(2);
-                od_draw(od_tocl, 187, 87);
+                od_draw(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
                 gameTick(2);
-                od_draw(od_too1, 187, 87);
+                od_draw(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(2);
-                od_draw(od_too2, 187, 87);
+                od_draw(OBJ_DOOR_TOILET_OPEN_2, TOILET_DOOR_X, TOILET_DOOR_Y);
                 gameTick(2);
                 lcp_toiO = YES;
         }
@@ -64,7 +64,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_2);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
-        od_draw(od_too1, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
         gameTick(1);
 
         g_selaf[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
@@ -73,7 +73,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_1);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_1]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_1]] = 87;
-        od_draw(od_tocl, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
         hideLcp();
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(1);
@@ -90,7 +90,7 @@ a_uset()
         showLcp();
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_2]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_2]] = 87;
-        od_draw(od_too1, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
@@ -100,7 +100,7 @@ a_uset()
         sp_sprs(SPRITE_DOOR_ANIM_3);
         g_sepex[g_seslm[SPRITE_DOOR_ANIM_3]] = 187;
         g_sepey[g_seslm[SPRITE_DOOR_ANIM_3]] = 87;
-        od_draw(od_too2, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_OPEN_2, TOILET_DOOR_X, TOILET_DOOR_Y);
         gameTick(1);
         lcp_toiO = YES;
 

@@ -19,9 +19,9 @@ BOOL16  p_dosnd;
         /* Phase 1: door closes (sprite in front of the resident). */
         g_selaf[SPRITE_DOOR_STUDY_1] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_DOOR_STUDY_1);
-        g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = 178;
-        g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] =  23;
-        od_draw(od_stcl, 178, 23);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_1]] = STUDY_DOOR_X;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_1]] = STUDY_DOOR_Y;
+        od_draw(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
 
         if (p_dosnd != NO)
                 sf_sele(SFX_DOOR_CLOSE, 6L);
@@ -55,9 +55,9 @@ BOOL16  p_dosnd;
         sp_upds();
         g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_DOOR_STUDY_AJAR);
-        g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = 178;
-        g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] =  23;
-        od_draw(od_sto1, 178, 23);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_X;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_Y;
+        od_draw(OBJ_DOOR_STUDY_OPEN_1, STUDY_DOOR_X, STUDY_DOOR_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
@@ -66,9 +66,9 @@ BOOL16  p_dosnd;
         sp_upds();
         g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
         sp_sprs(SPRITE_DOOR_STUDY_WIDE_OPEN);
-        g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = 178;
-        g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] =  23;
-        od_draw(od_sto2, 178, 23);
+        g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_X;
+        g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_Y;
+        od_draw(OBJ_DOOR_STUDY_OPEN_2, STUDY_DOOR_X, STUDY_DOOR_Y);
         showLcp();
         gameTick(1);
 
@@ -87,9 +87,9 @@ BOOL16  p_dosnd;
                 sp_upds();
                 gameTick(0);
         }
-        od_draw(od_sto1, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_OPEN_1, STUDY_DOOR_X, STUDY_DOOR_Y);
         gameTick(2);
-        od_draw(od_stcl, 178, 23);
+        od_draw(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         studyDrO = NO;

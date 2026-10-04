@@ -17,12 +17,12 @@ a_opecf()
 
         lcp_face = FACING_LEFT;
         lcp_st = STATE_REACH_INTO_CABINET;
-        od_draw(od_fdcl, 24, 153);
+        od_draw(OBJ_FRIDGE_CLOSED, FRIDGE_X, FRIDGE_Y);
         gameTick(1);
-        od_draw(od_fdo1, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_1, FRIDGE_X, FRIDGE_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
-        od_draw(od_fdo2, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_2, FRIDGE_X, FRIDGE_Y);
         gameTick(1);
 
         lcp_face = FACING_RIGHT;
@@ -37,9 +37,9 @@ a_opecf()
         lcp_st = STATE_STAND_FACING_SCREEN;
         gameTick(8);
 
-        od_draw(od_fdo1, 24, 153);
+        od_draw(OBJ_FRIDGE_OPEN_1, FRIDGE_X, FRIDGE_Y);
         gameTick(1);
-        od_draw(od_fdcl, 24, 153);
+        od_draw(OBJ_FRIDGE_CLOSED, FRIDGE_X, FRIDGE_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);   /* OPEN, not CLOSE: as in the original */
         gameTick(1);
 }

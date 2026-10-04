@@ -19,18 +19,18 @@ short   door_st;
                 lcp_face = FACING_RIGHT;
                 lcp_st = STATE_BEND_AND_REACH;
                 gameTick(2);
-                od_draw(od_fro1, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(2);
-                od_draw(od_fro2, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
                 gameTick(2);
                 lcp_frdO = YES;
         } else if (door_st != 0) {      /* redundant re-test, kept on purpose */
                 if (lcp_frdO == NO)
                         return;
-                od_draw(od_fro1, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);
                 gameTick(2);
-                od_draw(od_frcl, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_CLOSED, FRONT_DOOR_X, FRONT_DOOR_Y);
                 sf_sele(SFX_DOOR_CLOSE, 6L);
                 gameTick(2);
                 lcp_frdO = NO;

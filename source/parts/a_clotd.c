@@ -17,9 +17,9 @@ a_clotd()
         lcp_face = FACING_LEFT;
         lcp_st = STATE_BEND_AND_REACH;
         gameTick(2);
-        od_draw(od_too1, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
         gameTick(2);
-        od_draw(od_tocl, 187, 87);
+        od_draw(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         lcp_toiO = NO;

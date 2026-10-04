@@ -373,6 +373,35 @@
 #define OBJ_WHITE_BLUE                         54
 #define OBJ_TYPEWRITER                         55
 
+/* ---- Furniture screen positions -------------------------------------
+   Where od_draw paints each piece of furniture (the top-left corner of
+   its object frame).  Every open/closed frame of one piece is drawn at
+   the same spot, and the study door's sprites sit there too. */
+#define CLOSET_DOOR_X           75
+#define CLOSET_DOOR_Y           87
+#define DOG_BOWL_X              8
+#define DOG_BOWL_Y              190
+#define DRESSER_X               97
+#define DRESSER_Y               115
+#define FILING_CAB_X            258
+#define FILING_CAB_Y            47
+#define FIREPLACE_X             257
+#define FIREPLACE_Y             170
+#define FRIDGE_X                24
+#define FRIDGE_Y                153
+#define FRONT_DOOR_X            294
+#define FRONT_DOOR_Y            151
+#define KITCHEN_CAB_X           46
+#define KITCHEN_CAB_Y           140
+#define PHONE_X                 190
+#define PHONE_Y                 168
+#define STOVE_X                 6
+#define STOVE_Y                 172
+#define STUDY_DOOR_X            178
+#define STUDY_DOOR_Y            23
+#define TOILET_DOOR_X           187
+#define TOILET_DOOR_Y           87
+
 /* ---- Dog bowl state --------------------------------------------------- */
 #define BOWL_EMPTY                      0
 #define BOWL_HALF                       1

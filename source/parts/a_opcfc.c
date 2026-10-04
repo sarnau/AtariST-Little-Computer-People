@@ -12,10 +12,10 @@ a_opcfc()
         lcp_st = STATE_REACH_FORWARD;     gameTick(2);
         lcp_st = STATE_PICK_UP_FROM_FLOOR;gameTick(2);
         lcp_st = STATE_REACH_FORWARD;
-        od_draw(od_fio1, 258, 47);
+        od_draw(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
         gameTick(1);
         lcp_st = STATE_BEND_DOWN;
-        od_draw(od_ficl, 258, 47);
+        od_draw(OBJ_FILING_CABINET_CLOSED, FILING_CAB_X, FILING_CAB_Y);
         gameTick(1);
         lcp_flcO = NO;
         lcp_st = STATE_STAND_FACING_SCREEN;

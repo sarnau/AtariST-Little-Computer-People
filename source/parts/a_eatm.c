@@ -47,10 +47,10 @@ a_eatm()
         /* 30..50 tick cooking animation, rotating stove frames. */
         counter = rndRng(30, 50);
         while (counter-- != 0) {
-                od_draw(g_obisa[rndRng(0, 2)], 6, 172);
+                od_draw(g_obisa[rndRng(0, 2)], STOVE_X, STOVE_Y);
                 gameTick(1);
         }
-        od_draw(od_stof, 6, 172);
+        od_draw(OBJ_STOVE_OFF, STOVE_X, STOVE_Y);
 
         g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         sp_upds();

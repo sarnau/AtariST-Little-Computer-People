@@ -47,10 +47,10 @@ a_plaag()
                 lcp_st = STATE_BEND_DOWN;
                 gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;
-                od_draw(od_fio1, 258, 47);
+                od_draw(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
                 lcp_st = STATE_PICK_UP_FROM_FLOOR;
-                od_draw(od_fio2, 258, 47);
+                od_draw(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
                 lcp_flcO = YES;
                 lcp_st = STATE_BEND_DOWN;

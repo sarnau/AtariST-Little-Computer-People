@@ -77,12 +77,12 @@ sc_drfc()
                 return;
 
         cabinet_content = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
-        od_draw(od_cbo2, 46, 140);
+        od_draw(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
 
-        if (cabinet_content >= 1) od_draw(od_cbit, 50, 159);
-        if (cabinet_content >= 2) od_draw(od_cbit, 58, 159);
-        if (cabinet_content >= 3) od_draw(od_cbit, 50, 151);
-        if (cabinet_content >= 4) od_draw(od_cbit, 58, 151);
+        if (cabinet_content >= 1) od_draw(OBJ_CABINET_ITEM, 50, 159);
+        if (cabinet_content >= 2) od_draw(OBJ_CABINET_ITEM, 58, 159);
+        if (cabinet_content >= 3) od_draw(OBJ_CABINET_ITEM, 50, 151);
+        if (cabinet_content >= 4) od_draw(OBJ_CABINET_ITEM, 58, 151);
 }
 
 /* -- Water tank level bar (VDI polylines) -- */

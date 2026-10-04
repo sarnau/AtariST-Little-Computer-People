@@ -17,9 +17,9 @@ short   oc_stat;
                 lcp_drsO = YES;
                 lcp_st = STATE_BEND_DOWN;    gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(od_dro1, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_1, DRESSER_X, DRESSER_Y);
                 gameTick(2);
-                od_draw(od_dro2, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_2, DRESSER_X, DRESSER_Y);
                 gameTick(2);
         } else if (oc_stat != 0) {      /* redundant re-test, kept on purpose */
                 if (lcp_drsO == NO)
@@ -27,9 +27,9 @@ short   oc_stat;
                 lcp_drsO = NO;
                 lcp_st = STATE_BEND_DOWN;    gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;gameTick(2);
-                od_draw(od_dro1, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_1, DRESSER_X, DRESSER_Y);
                 gameTick(2);
-                od_draw(od_drcl, 97, 115);
+                od_draw(OBJ_DRESSER_CLOSED, DRESSER_X, DRESSER_Y);
                 gameTick(2);
         }
         lcp_st = STATE_STAND_FACING_SCREEN;

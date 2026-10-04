@@ -17,9 +17,9 @@ a_clocd()
         lcp_face = FACING_LEFT;
         lcp_st = STATE_BEND_AND_REACH;
         gameTick(2);
-        od_draw(od_clo1, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         gameTick(2);
-        od_draw(od_clcl, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(2);
         lcp_clsO = NO;

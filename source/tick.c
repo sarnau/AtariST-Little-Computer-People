@@ -128,7 +128,7 @@ short   counter;
                         }
 
                         /* Dog food bowl: current fill state + countdown. */
-                        od_draw(g_obdea[lcp_bwlS], 8, 190);
+                        od_draw(g_obdea[lcp_bwlS], DOG_BOWL_X, DOG_BOWL_Y);
                         if (dg_bwlch < 0) {
                                 if (lcp_bwlS != BOWL_EMPTY)
                                         lcp_bwlS--;
@@ -143,15 +143,14 @@ short   counter;
 
                         /* Fireplace animation + auto-extinguish. */
                         if (fire_act != NO) {
-                                od_draw(g_obfia[subAniC & 3],
-                                        257, 170);
+                                od_draw(g_obfia[subAniC & 3], FIREPLACE_X, FIREPLACE_Y);
                                 if (--fire_dur == 0)
                                         fire_ext = YES;
                         }
                         if (fire_ext != NO) {
                                 fire_ext = NO;
                                 fire_act = NO;
-                                od_draw(od_fir0, 257, 170);
+                                od_draw(OBJ_FIRE_OFF, FIREPLACE_X, FIREPLACE_Y);
                         }
 
                         /* Alarm clock SFX + animation. */
@@ -179,17 +178,16 @@ short   counter;
                                 }
                                 g_phrc--;
                                 if (g_phrc > 10) {
-                                        od_draw(g_obpha[subAniC & 3],
-                                                190, 168);
+                                        od_draw(g_obpha[subAniC & 3], PHONE_X, PHONE_Y);
                                 } else {
                                         if (g_sfplf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
                                                 sf_so();
-                                        od_draw(OBJ_PHONE_2, 190, 168);
+                                        od_draw(OBJ_PHONE_2, PHONE_X, PHONE_Y);
                                 }
                         }
                         if (ph_hu != NO) {
-                                od_draw(OBJ_PHONE_2, 190, 168);
+                                od_draw(OBJ_PHONE_2, PHONE_X, PHONE_Y);
                                 ph_hu = NO;
                                 if (g_sfplf != NO && g_sfpli == SFX_PHONE_RING)
                                         sf_so();

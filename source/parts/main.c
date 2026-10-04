@@ -167,42 +167,42 @@ char ** argv;
            show as streaks).  Each is a full if/else with the whole
            od_draw call duplicated, not a ternary in the argument. */
         if (lcp_cabO == NO)
-                od_draw(od_cbcl, 46, 140);
+                od_draw(OBJ_CABINET_CLOSED, KITCHEN_CAB_X, KITCHEN_CAB_Y);
         else
-                od_draw(od_cbo2, 46, 140);
+                od_draw(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
         if (lcp_frdO != NO)
-                od_draw(od_fro2, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
         else
-                od_draw(od_frcl, 294, 151);
+                od_draw(OBJ_DOOR_FRONT_CLOSED, FRONT_DOOR_X, FRONT_DOOR_Y);
         if (lcp_drsO != NO)
-                od_draw(od_dro2, 97, 115);
+                od_draw(OBJ_DRESSER_OPEN_2, DRESSER_X, DRESSER_Y);
         else
-                od_draw(od_drcl, 97, 115);
+                od_draw(OBJ_DRESSER_CLOSED, DRESSER_X, DRESSER_Y);
         if (lcp_clsO != NO)
-                od_draw(od_clo2, 75, 87);
+                od_draw(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         else
-                od_draw(od_clcl, 75, 87);
+                od_draw(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         if (studyDrO != NO)
-                od_draw(od_sto2, 178, 23);
+                od_draw(OBJ_DOOR_STUDY_OPEN_2, STUDY_DOOR_X, STUDY_DOOR_Y);
         else
-                od_draw(od_stcl, 178, 23);
+                od_draw(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
         if (lcp_toiO != NO)
-                od_draw(od_too2, 187, 87);
+                od_draw(OBJ_DOOR_TOILET_OPEN_2, TOILET_DOOR_X, TOILET_DOOR_Y);
         else
-                od_draw(od_tocl, 187, 87);
+                od_draw(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
         if (lcp_flcO != NO)
-                od_draw(od_fio2, 258, 47);
+                od_draw(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
         else
-                od_draw(od_ficl, 258, 47);
+                od_draw(OBJ_FILING_CABINET_CLOSED, FILING_CAB_X, FILING_CAB_Y);
 
         /* Dog bowl: three explicit state tests with literal frame
            ids, not an index into g_obdea. */
         if (lcp_bwlS == BOWL_EMPTY)
-                od_draw(OBJ_DOG_FOOD_BOWL_3, 8, 190);
+                od_draw(OBJ_DOG_FOOD_BOWL_3, DOG_BOWL_X, DOG_BOWL_Y);
         if (lcp_bwlS == BOWL_HALF)
-                od_draw(OBJ_DOG_FOOD_BOWL_2, 8, 190);
+                od_draw(OBJ_DOG_FOOD_BOWL_2, DOG_BOWL_X, DOG_BOWL_Y);
         if (lcp_bwlS == BOWL_FULL)
-                od_draw(OBJ_DOG_FOOD_BOWL_1, 8, 190);
+                od_draw(OBJ_DOG_FOOD_BOWL_1, DOG_BOWL_X, DOG_BOWL_Y);
 
         sc_drfc();
         daily_rs();

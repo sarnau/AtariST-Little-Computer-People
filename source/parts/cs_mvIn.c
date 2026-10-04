@@ -23,10 +23,10 @@ cs_mvIn()
         gameTick(24);
 
         /* Front door swings open behind the doorbell sound. */
-        od_draw(od_fro1, 294, 151);
+        od_draw(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(2);
-        od_draw(od_fro2, 294, 151);
+        od_draw(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
         gameTick(2);
         lcp_frdO = 1;
 

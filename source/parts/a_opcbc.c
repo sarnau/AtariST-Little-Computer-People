@@ -45,12 +45,12 @@ short   value;
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
                 gameTick(2);
-                od_draw(od_clcl, 75, 87);
+                od_draw(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
                 gameTick(2);
-                od_draw(od_clo1, 75, 87);
+                od_draw(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
                 sf_sele(SFX_DOOR_OPEN, 6L);
                 gameTick(2);
-                od_draw(od_clo2, 75, 87);
+                od_draw(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
                 gameTick(2);
                 lcp_clsO = YES;
         }
@@ -79,7 +79,7 @@ short   value;
         sp_sprs(SPRITE_CLOSET_AJAR);
         g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
-        od_draw(od_clo1, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         gameTick(1);
 
         g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_HIDDEN;
@@ -89,7 +89,7 @@ short   value;
         hideLcp();
         g_sepex[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 87;
-        od_draw(od_clcl, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         sf_sele(SFX_DOOR_CLOSE, 6L);
         gameTick(1);
 
@@ -109,7 +109,7 @@ short   value;
         showLcp();
         g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
-        od_draw(od_clo1, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
@@ -119,7 +119,7 @@ short   value;
         sp_sprs(SPRITE_CLOSET_WIDE_OPEN);
         g_sepex[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 75;
         g_sepey[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 87;
-        od_draw(od_clo2, 75, 87);
+        od_draw(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         gameTick(1);
         lcp_clsO = YES;
 

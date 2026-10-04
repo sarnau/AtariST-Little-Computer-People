@@ -39,9 +39,9 @@ a_cleau()
                 lcp_face = FACING_LEFT;
                 lcp_st = STATE_BEND_AND_REACH;
                 gameTick(2);
-                od_draw(od_sto1, 178, 23);
+                od_draw(OBJ_DOOR_STUDY_OPEN_1, STUDY_DOOR_X, STUDY_DOOR_Y);
                 gameTick(2);
-                od_draw(od_stcl,  178, 23);
+                od_draw(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
                 sf_sele(SFX_DOOR_CLOSE, 6L);
                 gameTick(2);
                 studyDrO = NO;

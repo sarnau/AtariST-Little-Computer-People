@@ -331,35 +331,5 @@ extern MFDB mf_scb_c;
 extern BOOL16 g_dvdog;
 extern BOOL16 ph_hu;
 extern BOOL16 g_ptdoa;
-/* The od_* object frame ids are compile-time constants: the original
-   passes them as immediates and nothing changes them at run time. */
-#define od_stcl    46
-#define od_sto1    47
-#define od_sto2    48
-#define od_frcl    36
-#define od_fro1    37
-#define od_fro2    38
-#define od_cbcl    19
-#define od_cbo1    20
-#define od_cbo2    21
-#define od_med1    52
-#define od_tocl    25
-#define od_too1    26
-#define od_too2    27
-#define od_stof    42
-#define od_fdcl    16
-#define od_fdo1    17
-#define od_fdo2    18
-#define od_clcl    28
-#define od_clo1    29
-#define od_clo2    30
-#define od_fir0    31
-#define od_ficl    0
-#define od_fio1    1
-#define od_fio2    2
-#define od_drcl    10
-#define od_dro1    11
-#define od_dro2    12
-#define od_cbit    53
 
 #endif /* GLOBALS_H */
