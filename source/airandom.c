@@ -5,11 +5,8 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "ai.h"
-#include "airandom.h"
+#include "protos.h"
 #include "globals.h"
-#include "movement.h"
-#include "random.h"
 #include "tables.h"
 
 #define WEEKDAY_SUNDAY          0

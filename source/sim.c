@@ -9,10 +9,7 @@
 #include "calendar.h"
 #include "events.h"
 #include "globals.h"
-#include "health.h"
-#include "random.h"
-#include "renderx.h"
-#include "sim.h"
+#include "protos.h"
 
 /* Advance the game clock and the resident's bodily needs.  Called
    every frame but acts only on every 8th (ani_cnt), counting those in

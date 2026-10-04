@@ -17,10 +17,8 @@
 
 #endif
 #include "obdefs1.h"
-#include "gfx_prim.h"
+#include "protos.h"
 #include "globals.h"
-#include "random.h"
-#include "renderx.h"
 
 /* pa_cloc: pick random/configured CLOTHING_COLOR_ID (0..15),
    load prim/sec colours to palette slots 1,2. Overshoot falls back

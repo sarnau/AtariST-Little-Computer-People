@@ -6,16 +6,9 @@
 #include "structs.h"
 #include "enums.h"
 #include "globals.h"
-#include "keyboard.h"
-#include "render.h"
-#include "renderf.h"
-#include "renderx.h"
-#include "sim.h"
-#include "sound.h"
+#include "protos.h"
 #include "sprglobs.h"
-#include "sprhead.h"
 #include "sprites.h"
-#include "tick.h"
 #include "tick_tables.h"
 
 

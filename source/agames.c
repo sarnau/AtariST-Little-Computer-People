@@ -8,23 +8,11 @@
 #include "structs.h"
 #include "enums.h"
 #include <osbind.h>
-#include "adoors.h"
-#include "agames.h"
-#include "aidle.h"
+#include "protos.h"
 #include "events.h"
-#include "games.h"
 #include "globals.h"
-#include "keyboard.h"
-#include "movement.h"
-#include "random.h"
-#include "render.h"
-#include "renderx.h"
-#include "sound.h"
 #include "sprglobs.h"
 #include "sprites.h"
-#include "tick.h"
-#include "tvanim.h"
-#include "walk.h"
 
 
 /* a_playc lives in parts/a_playc.c, in the object right before tv_scrc. */

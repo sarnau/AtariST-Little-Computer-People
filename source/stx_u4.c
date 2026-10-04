@@ -15,12 +15,8 @@
 #include "structs.h"
 #include "enums.h"
 #include <osbind.h>
-#include "alerts.h"
+#include "protos.h"
 #include "globals.h"
-#include "midi_seq.h"
-#include "save.h"
-#include "sound.h"
-#include "sfx_irq.h"
 
 #include "dat_u4.c"
 

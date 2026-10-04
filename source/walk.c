@@ -5,12 +5,9 @@
 #include "enums.h"
 #include "events.h"
 #include "globals.h"
-#include "movement.h"
-#include "sound.h"
+#include "protos.h"
 #include "sprglobs.h"
 #include "sprites.h"
-#include "tick.h"
-#include "walk.h"
 
 /* lcp_wkD: pump lcp_path() until arrival.
    Returns 0 on arrival, -1 on preemption when idle. */

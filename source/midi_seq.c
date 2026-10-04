@@ -43,8 +43,7 @@
 #include "enums.h"
 #include <osbind.h>
 #include "globals.h"
-#include "midi_seq.h"
-#include "psg_io.h"
+#include "protos.h"
 #include "psgfreq.h"
 
 

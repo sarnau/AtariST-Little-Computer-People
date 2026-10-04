@@ -12,17 +12,8 @@
 #endif
 #include "vdiown.h"
 #include "obdefs1.h"
-#include "ahouse.h"
-#include "clock.h"
-#include "gfx_prim.h"
+#include "protos.h"
 #include "globals.h"
-#include "movement.h"
-#include "random.h"
-#include "render.h"
-#include "renderx.h"
-#include "sound.h"
-#include "tick.h"
-#include "walk.h"
 
 /* lcp_upal -> renderx.c */
 

@@ -5,16 +5,7 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "abathrm.h"
-#include "actions.h"
-#include "afood.h"
-#include "agames.h"
-#include "ahouse.h"
-#include "ai.h"
-#include "aidle.h"
-#include "aleisure.h"
-#include "aletter.h"
-#include "asimple.h"
+#include "protos.h"
 #include "globals.h"
 
 /* Run the action chk_actT chose.  Consumes g_trac (copying it into

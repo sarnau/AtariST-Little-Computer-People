@@ -34,10 +34,8 @@
 #include "structs.h"
 #include "enums.h"
 #include <osbind.h>
-#include "cards.h"
+#include "protos.h"
 #include "globals.h"
-#include "save.h"
-#include "sprender.h"
 
 
 /* Loads the CARDS file into crd_dat in the layout described above,

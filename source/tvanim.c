@@ -17,10 +17,8 @@
 #include <vdibind.h>
 
 #endif
-#include "gfx_prim.h"
+#include "protos.h"
 #include "globals.h"
-#include "tick.h"
-#include "tvanim.h"
 
 /* tv_scrc lives in parts/tv_scrc.c, included by stx_u2.c right after
    a_playc. */

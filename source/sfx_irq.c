@@ -4,8 +4,7 @@
 #include "enums.h"
 #include <osbind.h>
 #include "globals.h"
-#include "sfx_irq.h"
-#include "sound.h"
+#include "protos.h"
 
 
 /* sf_irqp builds the 32-bit duration from its two halves and keeps

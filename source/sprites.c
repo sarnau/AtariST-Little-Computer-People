@@ -23,12 +23,10 @@
 #include "structs.h"
 #include "enums.h"
 #include "globals.h"
-#include "sprender.h"
+#include "protos.h"
 #include "sprglobs.h"
-#include "sprhead.h"
 #include "sprites.h"
 #include "tables.h"
-#include "tick.h"
 
 /* sp_updb -> parts/sp_updb.c, included by stx_u3.c after gameTick. */
 

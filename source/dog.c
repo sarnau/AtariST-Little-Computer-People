@@ -10,12 +10,10 @@
 
 #include "types.h"
 #include "enums.h"
-#include "dog.h"
+#include "protos.h"
 #include "globals.h"
-#include "movement.h"
 #include "sprglobs.h"
 #include "sprites.h"
-#include "walk.h"
 /* g_sedim/g_sedms are filled by sp_regs and used by sp_sprs/sp_ssco/
    sp_ss02 as well as the dog path. */
 

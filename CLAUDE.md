@@ -243,7 +243,14 @@ be a shipped table, and without it every mirrored frame renders blank.
   eighteen `.c` files that had become comment-only redirects
   (`main.c`, `init.c`, `save.c`, `stubs.c`, ...) were deleted on
   2026-10-05; their explanations moved next to the code.
-- `source/include/*.h` — types, enums, struct layouts.
+- `source/include/*.h` — types, enums, struct layouts.  Every function
+  declaration is in `protos.h` (the 43 per-module extern headers were
+  merged on 2026-10-05) -- except `rnd()`, which lives in `rnd.h` and is
+  included only by stx_u1.c, stx_u2.c and games.c: the original's
+  sp_lcha calls rnd() undeclared (implicit int), and declaring it as
+  long there changes that function's code.  The general lesson: a
+  declaration of a long- or pointer-returning function is NOT neutral --
+  making one visible to a unit that lacked it can change its bytes.
 - `source/tools/` — build & test scripts (Alcyon build, Hatari-driven
   regression tests, symbol lookup helpers).
 - `source/tests/` — host-side unit tests (compile under host cc, not

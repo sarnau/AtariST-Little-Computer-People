@@ -6,7 +6,7 @@
 
 #include "types.h"
 #include <osbind.h>
-#include "alerts.h"
+#include "protos.h"
 
 #ifdef HOST
 #include <stdlib.h>             /* exit */
@@ -26,7 +26,6 @@
 #include "enums.h"
 #include "globals.h"
 #include "sprglobs.h"
-#include "dog.h"
 #include "sprites.h"
 #include "tables.h"
 

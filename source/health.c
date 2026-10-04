@@ -5,8 +5,7 @@
 #include "enums.h"
 #include <osbind.h>
 #include "globals.h"
-#include "health.h"
-#include "renderx.h"
+#include "protos.h"
 
 /* Make the resident sick: called by gameSim1 when a need timer expires
    while thirst or hunger is already at its worst.  Sets him mildly

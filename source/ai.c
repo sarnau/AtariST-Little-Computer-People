@@ -7,15 +7,9 @@
 #include "types.h"
 #include "structs.h"
 #include "enums.h"
-#include "actions.h"
-#include "ahouse.h"
-#include "ai.h"
-#include "airandom.h"
-#include "delivery.h"
+#include "protos.h"
 #include "events.h"
 #include "globals.h"
-#include "parser.h"
-#include "random.h"
 
 /* execEv: dispatch a single deferred event to its handler.
    in_evrt guards recursion; sleeper is forced out of bed first.
