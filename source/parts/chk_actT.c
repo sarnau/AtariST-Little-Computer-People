@@ -123,7 +123,7 @@ chk_actT()
                 } else {
                         g_trac = g_aqueu[0];
                         if (g_trac == ACTION_PLAY_A_GAME ||
-                            g_trac == ACTION_PLAY_WITH_RECORD)
+                            g_trac == ACTION_PLAY_PIANO)
                                 a_getd();
                         for (index = 0; index < 9; index++) {
                                 g_aqueu[index] = g_aqueu[index + 1];

@@ -37,7 +37,7 @@ doAct()
         case ACTION_WASH_HANDS:               a_washh();                break;
         case ACTION_GET_IN_OUT_OF_BED:        a_gioob();         break;
         case ACTION_LISTEN_SONG:              a_lists();               break;
-        case ACTION_PLAY_PIANO:               a_playp();                break;
+        case ACTION_STOP_RECORD:              a_playp();                break;
         case ACTION_WRITE_LETTER:             a_writl();              break;
         case ACTION_DANCE:                    a_dance();                     break;
         case ACTION_YAWN_AND_STRETCH:         a_yawas();          break;
@@ -57,7 +57,7 @@ doAct()
         case ACTION_FEED_DOG:                 a_feedd(0);                 break;
         case ACTION_HELLO:                    a_hello();                     break;
         case ACTION_EAT_MEAL:                 a_eatm();                  break;
-        case ACTION_PLAY_WITH_RECORD:         a_plawr();          break;
+        case ACTION_PLAY_PIANO:               a_plawr();          break;
         case ACTION_OPEN_UPSTAIRS_CLOSET:     a_opcuc(1); break;
         case ACTION_GET_SNACK_FROM_FRIDGE:    a_gesff();     break;
         case ACTION_OPEN_BEDROOM_CLOSET:      a_opcbc(); break;

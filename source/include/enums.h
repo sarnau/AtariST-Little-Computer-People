@@ -729,7 +729,7 @@
 #define ACTION_WASH_HANDS                3
 #define ACTION_GET_IN_OUT_OF_BED         4
 #define ACTION_LISTEN_SONG               5
-#define ACTION_PLAY_PIANO                6
+#define ACTION_STOP_RECORD               6       /* a_playp; Ghidra: PLAY_PIANO */
 #define ACTION_WRITE_LETTER              7
 #define ACTION_DANCE                     8
 #define ACTION_YAWN_AND_STRETCH          9
@@ -749,7 +749,7 @@
 #define ACTION_FEED_DOG                 23
 #define ACTION_HELLO                    24
 #define ACTION_EAT_MEAL                 25
-#define ACTION_PLAY_WITH_RECORD         26
+#define ACTION_PLAY_PIANO               26       /* a_plawr; Ghidra: PLAY_WITH_RECORD */
 #define ACTION_OPEN_UPSTAIRS_CLOSET     27
 #define ACTION_EVENT_RECORD_DELIVERY    28
 #define ACTION_EVENT_FOOD_DELIVERY      29

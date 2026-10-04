@@ -71,7 +71,7 @@ short   g_atmod[16] = {
         ACTION_CHECK_FRONT_DOOR,
         ACTION_TOGGLE_TV,
         ACTION_LISTEN_SONG,
-        ACTION_PLAY_WITH_RECORD,
+        ACTION_PLAY_PIANO,
         ACTION_EVENT_PHONE_CALL,
         ACTION_TOGGLE_TV,
         ACTION_READ_NEWSPAPER,
@@ -98,7 +98,7 @@ short   g_atrel[16] = {
         ACTION_SIT_ON_COUCH_WITH_DOG,
         ACTION_PET_DOG,
         ACTION_CHECK_FRONT_DOOR,
-        ACTION_PLAY_PIANO,
+        ACTION_STOP_RECORD,
         ACTION_READ_NEWSPAPER,
         ACTION_TOGGLE_TV
 };
