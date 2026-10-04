@@ -863,8 +863,8 @@ short * hand_rank;
         while (j) {
                 j = 0;
                 for (i = 0; i < 4; i++) {
-                        if (suit_flags[i]     % 13 >
-                            suit_flags[i + 1] % 13) {
+                        if (suit_flags[i]     % CARDS_PER_SUIT >
+                            suit_flags[i + 1] % CARDS_PER_SUIT) {
                                 tmp = suit_flags[i + 1];
                                 suit_flags[i + 1] = suit_flags[i];
                                 suit_flags[i] = tmp;
@@ -875,26 +875,26 @@ short * hand_rank;
 
         /* Ace-high is latched BEFORE the straight scan in LCP_STX, and
            the wheel flag borrows the sort's tmp slot. */
-        if (suit_flags[4] % 13 == 12)
+        if (suit_flags[4] % CARDS_PER_SUIT == CARD_RANK_ACE)
                 ace_high = 1;
         straight = 1;
         for (i = 0; i < 3; i++) {
-                if (suit_flags[i] % 13 != suit_flags[i + 1] % 13 - 1)
+                if (suit_flags[i] % CARDS_PER_SUIT != suit_flags[i + 1] % CARDS_PER_SUIT - 1)
                         straight = 0;
         }
         tmp = 0;
         /* Wheel straight A-2-3-4-5 lives with Ace-high sorted last. */
-        if (ace_high != 0 && straight != 0 && suit_flags[0] % 13 == 0)
+        if (ace_high != 0 && straight != 0 && suit_flags[0] % CARDS_PER_SUIT == CARD_RANK_2)
                 tmp = 1;
         if (tmp == 0 &&
-            suit_flags[3] % 13 != suit_flags[4] % 13 - 1)
+            suit_flags[3] % CARDS_PER_SUIT != suit_flags[4] % CARDS_PER_SUIT - 1)
                 straight = 0;
 
         /* Flush: all same suit (card / 13). */
         flush = YES;
         for (i = 0; i < 4; i++) {
-                if (suit_flags[i]     / 13 !=
-                    suit_flags[i + 1] / 13)
+                if (suit_flags[i]     / CARDS_PER_SUIT !=
+                    suit_flags[i + 1] / CARDS_PER_SUIT)
                         flush = NO;
         }
         if (straight != NO) *hand_rank = HAND_STRAIGHT;
@@ -902,7 +902,7 @@ short * hand_rank;
         if (straight != NO && flush != NO)
                 *hand_rank = HAND_STRAIGHT_FLUSH;
         /* Royal: T-J-Q-K-A of one suit -- rank[0] == 8 (ten). */
-        if (*hand_rank == HAND_STRAIGHT_FLUSH && suit_flags[0] % 13 == 8)
+        if (*hand_rank == HAND_STRAIGHT_FLUSH && suit_flags[0] % CARDS_PER_SUIT == CARD_RANK_10)
                 *hand_rank = HAND_ROYAL_FLUSH;
         if (*hand_rank != HAND_HIGH_CARD)
                 return;
@@ -919,7 +919,7 @@ short * hand_rank;
         while (i < 13) {
                 tmp = 0;
                 for (j = 0; j < 5; j++) {
-                        if ((short) hand[j] % 13 == i) {
+                        if ((short) hand[j] % CARDS_PER_SUIT == i) {
                                 if (hc == 0)
                                         rc[j] = 1;
                                 else if (bp == 0)
@@ -1415,7 +1415,7 @@ pk_show()
                 /* Straight/flush/straight-flush tiebreak: compare
                    highest sorted-hand card rank. */
                 if ((pk_chrk == HAND_STRAIGHT_FLUSH || pk_chrk == HAND_FLUSH || pk_chrk == HAND_STRAIGHT) &&
-                    pk_hsf[4] % 13 > pk_phsf[4] % 13)
+                    pk_hsf[4] % CARDS_PER_SUIT > pk_phsf[4] % CARDS_PER_SUIT)
                         pk_dslot = 0;
 
                 /* Trips, full house, quads: compare the pair/trip
@@ -1427,7 +1427,7 @@ pk_show()
                         for (i = 0; i < 5; i++)
                                 if (pk_phrf[i] == 1)
                                         break;
-                        if (pk_ch[br] % 13 > pk_ph[i] % 13)
+                        if (pk_ch[br] % CARDS_PER_SUIT > pk_ph[i] % CARDS_PER_SUIT)
                                 pk_dslot = 0;
                 }
 
@@ -1436,32 +1436,32 @@ pk_show()
                         pk = 0; ck = 0; ph = 0; ch = 0;
                         for (i = 0; i < 5; i++) {
                                 if (pk_hrf[i] &&
-                                    pk_ch[i] % 13 > pk % 13)
+                                    pk_ch[i] % CARDS_PER_SUIT > pk % CARDS_PER_SUIT)
                                         pk = pk_ch[i];
                                 if (pk_hrf[i] &&
-                                    pk_ch[i] % 13 < pk % 13)
+                                    pk_ch[i] % CARDS_PER_SUIT < pk % CARDS_PER_SUIT)
                                         ck = pk_ch[i];
                                 if (pk_phrf[i] &&
-                                    pk_ph[i] % 13 > ph % 13)
+                                    pk_ph[i] % CARDS_PER_SUIT > ph % CARDS_PER_SUIT)
                                         ph = pk_ph[i];
                                 if (pk_phrf[i] &&
-                                    pk_ph[i] % 13 < ph % 13)
+                                    pk_ph[i] % CARDS_PER_SUIT < ph % CARDS_PER_SUIT)
                                         ch = pk_ph[i];
                         }
-                        if (pk % 13 > ph % 13) {
+                        if (pk % CARDS_PER_SUIT > ph % CARDS_PER_SUIT) {
                                 pk_dslot = 0;
-                        } else if (pk % 13 == ph % 13 &&
-                                   ck % 13 > ch % 13) {
+                        } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT &&
+                                   ck % CARDS_PER_SUIT > ch % CARDS_PER_SUIT) {
                                 pk_dslot = 0;
-                        } else if (pk % 13 == ph % 13 &&
-                                   ck % 13 == ch % 13) {
+                        } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT &&
+                                   ck % CARDS_PER_SUIT == ch % CARDS_PER_SUIT) {
                                 for (i = 0; i < 5; i++)
                                         if (!pk_hrf[i])
                                                 break;
                                 for (br = 0; br < 5; br++)
                                         if (!pk_phrf[br])
                                                 break;
-                                if (pk_ch[i] % 13 > pk_ph[br] % 13)
+                                if (pk_ch[i] % CARDS_PER_SUIT > pk_ph[br] % CARDS_PER_SUIT)
                                         pk_dslot = 0;
                         }
                 }
@@ -1473,16 +1473,16 @@ pk_show()
                                 if (pk_hrf[i])  pk = pk_ch[i];
                                 if (pk_phrf[i]) ph = pk_ph[i];
                         }
-                        if (pk % 13 > ph % 13) {
+                        if (pk % CARDS_PER_SUIT > ph % CARDS_PER_SUIT) {
                                 pk_dslot = 0;
-                        } else if (pk % 13 == ph % 13) {
+                        } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT) {
                                 for (i = 4; i >= 0; i--) {
-                                        if (pk_hsf[i] % 13 >
-                                            pk_phsf[i] % 13) {
+                                        if (pk_hsf[i] % CARDS_PER_SUIT >
+                                            pk_phsf[i] % CARDS_PER_SUIT) {
                                                 pk_dslot = 0; break;
                                         }
-                                        if (pk_hsf[i] % 13 <
-                                            pk_phsf[i] % 13) {
+                                        if (pk_hsf[i] % CARDS_PER_SUIT <
+                                            pk_phsf[i] % CARDS_PER_SUIT) {
                                                 pk_dslot = 1; break;
                                         }
                                 }
@@ -1492,12 +1492,12 @@ pk_show()
                 /* High card: pure kicker ladder from top down. */
                 if (pk_chrk == HAND_HIGH_CARD) {
                         for (i = 4; i >= 0; i--) {
-                                if (pk_hsf[i] % 13 >
-                                    pk_phsf[i] % 13) {
+                                if (pk_hsf[i] % CARDS_PER_SUIT >
+                                    pk_phsf[i] % CARDS_PER_SUIT) {
                                         pk_dslot = 0; break;
                                 }
-                                if (pk_hsf[i] % 13 <
-                                    pk_phsf[i] % 13) {
+                                if (pk_hsf[i] % CARDS_PER_SUIT <
+                                    pk_phsf[i] % CARDS_PER_SUIT) {
                                         pk_dslot = 1; break;
                                 }
                         }
@@ -1555,10 +1555,10 @@ pk_cace()
 
         if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
                 for (best = 0, i = 0; i < 5; i++) {
-                        if (pk_ch[i] % 13 > pk_ch[best] % 13)
+                        if (pk_ch[i] % CARDS_PER_SUIT > pk_ch[best] % CARDS_PER_SUIT)
                                 best = i;
                 }
-                if (pk_ch[best] % 13 < 12)
+                if (pk_ch[best] % CARDS_PER_SUIT < CARD_RANK_ACE)
                         return -1;
                 return;
         }
@@ -1634,7 +1634,7 @@ pk_cdrw()
                         } else if (pk_chrk == HAND_HIGH_CARD) {
                                 nc = 4;
                                 for (card = 0, i = 0; i < 5; i++) {
-                                        if (pk_ch[i] % 13 > pk_ch[card] % 13)
+                                        if (pk_ch[i] % CARDS_PER_SUIT > pk_ch[card] % CARDS_PER_SUIT)
                                                 card = i;
                                 }
                                 for (i = 0; i < 5; i++)
@@ -2210,9 +2210,9 @@ no_cards:
                 /* Both ranks land in locals before the compare, and
                    the loser's branch recomputes them the other way
                    round. */
-                if ((ikey = pk_pwc[0] % 13) > (cidx = pk_cwc[0] % 13)) {
+                if ((ikey = pk_pwc[0] % CARDS_PER_SUIT) > (cidx = pk_cwc[0] % CARDS_PER_SUIT)) {
                         /* Player wins. */
-                        if (ikey == 12) {
+                        if (ikey == CARD_RANK_ACE) {
                                 sp = "Ace? I don't believe it!";
                         } else {
                                 switch (rndRng(1, 6)) {
@@ -2232,9 +2232,9 @@ no_cards:
                         pk_actd(g_ppdrp, &g_ppmon, pk_pwc[0]);
                         pk_actd(g_ppdrp, &g_ppmon, pk_cwc[0]);
                         goto round;
-                } else if ((ikey = pk_cwc[0] % 13) > (cidx = pk_pwc[0] % 13)) {
+                } else if ((ikey = pk_cwc[0] % CARDS_PER_SUIT) > (cidx = pk_pwc[0] % CARDS_PER_SUIT)) {
                         /* Computer wins by margin (ikey - cidx). */
-                        if (ikey == 12) {
+                        if (ikey == CARD_RANK_ACE) {
                                 sp = "Ace takes it!";
                         } else if (ikey - cidx <= 2) {
                                 if (rndRng(0, 1))
@@ -2362,8 +2362,8 @@ pk_bjwr()
                 plEr(225, 10, 319, 60);
                 gameTick(5);
 
-                if ((prank = pk_pwc[g_pchc * 4 + idx] % 13) >
-                    (crank = pk_cwc[g_pchc * 4 + idx] % 13)) {
+                if ((prank = pk_pwc[g_pchc * 4 + idx] % CARDS_PER_SUIT) >
+                    (crank = pk_cwc[g_pchc * 4 + idx] % CARDS_PER_SUIT)) {
                         /* Player wins the war round. */
                         pk_pmsg("You win the war!!!");
                         gameTick(8);
@@ -2381,8 +2381,8 @@ pk_bjwr()
                         }
                         return 0;
                 }
-                if ((prank = pk_pwc[g_pchc * 4 + idx] % 13) <
-                    (crank = pk_cwc[g_pchc * 4 + idx] % 13)) {
+                if ((prank = pk_pwc[g_pchc * 4 + idx] % CARDS_PER_SUIT) <
+                    (crank = pk_cwc[g_pchc * 4 + idx] % CARDS_PER_SUIT)) {
                         /* Computer wins the war round. */
                         pk_pmsg("I win the war!!!");
                         gameTick(8);
@@ -2579,8 +2579,8 @@ cleanup:
                 /* Neither had a natural.  Split, double-down,
                    hit/stand, dealer -- the meat of the game. */
                 pk_phase = 0;
-                if ((short) pk_ph[0] % 13 ==
-                    (short) pk_ph[1] % 13) {
+                if ((short) pk_ph[0] % CARDS_PER_SUIT ==
+                    (short) pk_ph[1] % CARDS_PER_SUIT) {
                         pk_pmsg("Do you wish to split?");
                         plEr(225, 10, 319, 60);
                         strPr("F1 Split",    225, 18, COLOR_red);
@@ -3033,7 +3033,7 @@ short   ace_mode;
         for (i = 0; i < 5; i++) {
                 if (hand[i] == CARD_NONE)
                         return score;
-                if (hand[i] % 13 == 12) {
+                if (hand[i] % CARDS_PER_SUIT == CARD_RANK_ACE) {
                         if (ace_mode == 0)
                                 score++;
                         else if (ace_high == NO) {
@@ -3041,10 +3041,10 @@ short   ace_mode;
                                 ace_high = YES;
                         } else
                                 score++;
-                } else if (hand[i] % 13 <= 11 && hand[i] % 13 >= 8) {
+                } else if (hand[i] % CARDS_PER_SUIT <= CARD_RANK_KING && hand[i] % CARDS_PER_SUIT >= CARD_RANK_10) {
                         score += 10;
                 } else {
-                        score += hand[i] % 13 + 2;
+                        score += hand[i] % CARDS_PER_SUIT + 2;
                 }
         }
         return score;
@@ -3099,13 +3099,13 @@ char *  prompt;
                 for (j = 0; j < 5; j++) {
                         if (hand[j] == CARD_NONE)
                                 break;
-                        if ((short) hand[j] % 13 == 12)
+                        if ((short) hand[j] % CARDS_PER_SUIT == CARD_RANK_ACE)
                                 score++;
-                        else if ((short) hand[j] % 13 <= 11 &&
-                                 (short) hand[j] % 13 >= 8)
+                        else if ((short) hand[j] % CARDS_PER_SUIT <= CARD_RANK_KING &&
+                                 (short) hand[j] % CARDS_PER_SUIT >= CARD_RANK_10)
                                 score += 10;
                         else
-                                score += hand[j] % 13 + 2;
+                                score += hand[j] % CARDS_PER_SUIT + 2;
                 }
                 if (score > 21)
                         return -1;
@@ -3132,13 +3132,13 @@ char *  prompt;
                         for (j = 0; j < 5; j++) {
                                 if (hand[j] == CARD_NONE)
                                         break;
-                                if ((short) hand[j] % 13 == 12)
+                                if ((short) hand[j] % CARDS_PER_SUIT == CARD_RANK_ACE)
                                         score++;
-                                else if ((short) hand[j] % 13 <= 11 &&
-                                         (short) hand[j] % 13 >= 8)
+                                else if ((short) hand[j] % CARDS_PER_SUIT <= CARD_RANK_KING &&
+                                         (short) hand[j] % CARDS_PER_SUIT >= CARD_RANK_10)
                                         score += 10;
                                 else
-                                        score += hand[j] % 13 + 2;
+                                        score += hand[j] % CARDS_PER_SUIT + 2;
                         }
                         if (score > 21)
                                 return -1;
@@ -3163,11 +3163,11 @@ short * hand;
         short   r1;
 
         result = 0;
-        r0 = (short) hand[0] % 13;
-        r1 = (short) hand[1] % 13;
-        if (r0 == 12 && r1 <= 11 && r1 >= 8)
+        r0 = (short) hand[0] % CARDS_PER_SUIT;
+        r1 = (short) hand[1] % CARDS_PER_SUIT;
+        if (r0 == CARD_RANK_ACE && r1 <= CARD_RANK_KING && r1 >= CARD_RANK_10)
                 result = 1;
-        else if (r1 == 12 && r0 <= 11 && r0 >= 8)
+        else if (r1 == CARD_RANK_ACE && r0 <= CARD_RANK_KING && r0 >= CARD_RANK_10)
                 result = 1;
         return result;
 }

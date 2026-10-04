@@ -430,60 +430,85 @@
    MFDB.  CARD_NONE is the sentinel used by war/blackjack to mark
    empty slots in the war-cards arrays and to signal end-of-hand from
    pk_rmch when the source pile is empty.
-   Verbatim from Ghidra's `card_type` enum: KING..ACE within each suit
-   (KING = 0 within suit, ACE = 12 within suit; Hearts/Spades/Diamonds/
-   Clubs stride by 13). */
-#define CARD_HEART_KING                  0
-#define CARD_HEART_QUEEN                 1
-#define CARD_HEART_JACK                  2
-#define CARD_HEART_10                    3
-#define CARD_HEART_9                     4
-#define CARD_HEART_8                     5
-#define CARD_HEART_7                     6
-#define CARD_HEART_6                     7
-#define CARD_HEART_5                     8
-#define CARD_HEART_4                     9
-#define CARD_HEART_3                    10
-#define CARD_HEART_2                    11
+
+   card / 13 is the suit (Hearts, Spades, Diamonds, Clubs) and
+   card % 13 the rank, ASCENDING with the ace high: 0 is the two, 8 the
+   ten, 9..11 J/Q/K, 12 the ace.  The game logic says so three ways --
+   blackjack scores a plain card `% 13 + 2` and 8..11 as ten, pk_evh
+   takes rank 8 as the low card of a royal flush, and war's "Ace? I
+   don't believe it!" is rank 12 -- and the images agree.
+
+   Ghidra's `card_type` enum (KING = 0 .. 2 = 11, ACE = 12) is the
+   order of the CARDS FILE, not of crd_mfdb: each suit there runs
+   K, Q, J, 10 .. 2, A, and pk_ldCrd reads the first twelve into slots
+   11..0 and the ace into slot 12.  Checked against the bitmaps in
+   DATA/CARDS on 2026-10-05 (file card 0 is the king of hearts, 11 the
+   two, 12 the ace).  These names follow crd_mfdb. */
+#define CARDS_PER_SUIT                  13
+#define CARD_RANK_2                      0
+#define CARD_RANK_3                      1
+#define CARD_RANK_4                      2
+#define CARD_RANK_5                      3
+#define CARD_RANK_6                      4
+#define CARD_RANK_7                      5
+#define CARD_RANK_8                      6
+#define CARD_RANK_9                      7
+#define CARD_RANK_10                     8
+#define CARD_RANK_JACK                   9
+#define CARD_RANK_QUEEN                 10
+#define CARD_RANK_KING                  11
+#define CARD_RANK_ACE                   12
+#define CARD_HEART_2                     0
+#define CARD_HEART_3                     1
+#define CARD_HEART_4                     2
+#define CARD_HEART_5                     3
+#define CARD_HEART_6                     4
+#define CARD_HEART_7                     5
+#define CARD_HEART_8                     6
+#define CARD_HEART_9                     7
+#define CARD_HEART_10                    8
+#define CARD_HEART_JACK                  9
+#define CARD_HEART_QUEEN                10
+#define CARD_HEART_KING                 11
 #define CARD_HEART_ACE                  12
-#define CARD_SPADE_KING                 13
-#define CARD_SPADE_QUEEN                14
-#define CARD_SPADE_JACK                 15
-#define CARD_SPADE_10                   16
-#define CARD_SPADE_9                    17
-#define CARD_SPADE_8                    18
-#define CARD_SPADE_7                    19
-#define CARD_SPADE_6                    20
-#define CARD_SPADE_5                    21
-#define CARD_SPADE_4                    22
-#define CARD_SPADE_3                    23
-#define CARD_SPADE_2                    24
+#define CARD_SPADE_2                    13
+#define CARD_SPADE_3                    14
+#define CARD_SPADE_4                    15
+#define CARD_SPADE_5                    16
+#define CARD_SPADE_6                    17
+#define CARD_SPADE_7                    18
+#define CARD_SPADE_8                    19
+#define CARD_SPADE_9                    20
+#define CARD_SPADE_10                   21
+#define CARD_SPADE_JACK                 22
+#define CARD_SPADE_QUEEN                23
+#define CARD_SPADE_KING                 24
 #define CARD_SPADE_ACE                  25
-#define CARD_DIAMOND_KING               26
-#define CARD_DIAMOND_QUEEN              27
-#define CARD_DIAMOND_JACK               28
-#define CARD_DIAMOND_10                 29
-#define CARD_DIAMOND_9                  30
-#define CARD_DIAMOND_8                  31
-#define CARD_DIAMOND_7                  32
-#define CARD_DIAMOND_6                  33
-#define CARD_DIAMOND_5                  34
-#define CARD_DIAMOND_4                  35
-#define CARD_DIAMOND_3                  36
-#define CARD_DIAMOND_2                  37
+#define CARD_DIAMOND_2                  26
+#define CARD_DIAMOND_3                  27
+#define CARD_DIAMOND_4                  28
+#define CARD_DIAMOND_5                  29
+#define CARD_DIAMOND_6                  30
+#define CARD_DIAMOND_7                  31
+#define CARD_DIAMOND_8                  32
+#define CARD_DIAMOND_9                  33
+#define CARD_DIAMOND_10                 34
+#define CARD_DIAMOND_JACK               35
+#define CARD_DIAMOND_QUEEN              36
+#define CARD_DIAMOND_KING               37
 #define CARD_DIAMOND_ACE                38
-#define CARD_CLUB_KING                  39
-#define CARD_CLUB_QUEEN                 40
-#define CARD_CLUB_JACK                  41
-#define CARD_CLUB_10                    42
-#define CARD_CLUB_9                     43
-#define CARD_CLUB_8                     44
-#define CARD_CLUB_7                     45
-#define CARD_CLUB_6                     46
-#define CARD_CLUB_5                     47
-#define CARD_CLUB_4                     48
-#define CARD_CLUB_3                     49
-#define CARD_CLUB_2                     50
+#define CARD_CLUB_2                     39
+#define CARD_CLUB_3                     40
+#define CARD_CLUB_4                     41
+#define CARD_CLUB_5                     42
+#define CARD_CLUB_6                     43
+#define CARD_CLUB_7                     44
+#define CARD_CLUB_8                     45
+#define CARD_CLUB_9                     46
+#define CARD_CLUB_10                    47
+#define CARD_CLUB_JACK                  48
+#define CARD_CLUB_QUEEN                 49
+#define CARD_CLUB_KING                  50
 #define CARD_CLUB_ACE                   51
 #define CARD_BACK                       52
 /* Ghidra: CARD_HIGHLIGHT.  The 53rd MFDB slot -- an all-background
@@ -495,8 +520,9 @@
 #define CARD_NONE                       255     /* LCP_STX stores 0xff */
 
 /* Blackjack hit-counter constants.  Ghidra shows these as
-   CARD_HEART_10 / _QUEEN / _KING because the 1985 source aliased
-   three unrelated ROM constants onto card-name symbols; the values
+   CARD_HEART_10 / _QUEEN / _KING (its file-order card names, see
+   above) because the 1985 source aliased three unrelated ROM
+   constants onto card-name symbols; the values
    encode the "at most 5 total cards, so at most 3 hits per hand"
    rule.  Verified against the ORIGINAL disassembly:
       poker_blackjack_main  0x1c492 / 0x1c49a
