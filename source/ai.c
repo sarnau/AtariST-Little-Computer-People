@@ -42,8 +42,8 @@ short   event;
         case ACTION_EVENT_PHONE_CALL:
                 ev_ansPh(0);
                 break;
-        case ACTION_GET_DRESSED:
-                a_getd();
+        case ACTION_NOD_OK:
+                a_nodok();
                 break;
         case ACTION_EVENT_DOG_FOOD:
                 er_dogf();

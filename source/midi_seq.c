@@ -705,7 +705,7 @@ unsigned char * p;
 
 /* Rebuild g_mstr, the note translation table mq_tick reads every note
    through, from the key setting in a song's header (mq_parh passes the
-   byte it also stores in g_mchcn).  Starts from identity, marks five
+   byte it also stores in g_mkey).  Starts from identity, marks five
    entries of the lowest octave 0xFF, and returns there for value 1.
    Otherwise, in every octave, each scale degree whose bit is CLEAR in
    g_msmk[value] (bit 0 = B ... bit 6 = C) is moved one semitone: up

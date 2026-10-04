@@ -444,10 +444,10 @@
 #define SEQ_PHASE_SONG_ENDING                   2
 
 /* ---- Song header command bytes -------------------------------------- */
-#define MIDI_HDR_SET_CHANNEL_COUNT              0x80
+#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> g_mkey, mq_bust */
 #define MIDI_HDR_SET_TEMPO                      0x81
 #define MIDI_HDR_SET_VOLUME                     0x83
-#define MIDI_HDR_BUILD_SCALE_TABLE              0x84
+#define MIDI_HDR_SET_VELOCITY                   0x84    /* default velocity -> mi_dvel, psg_dvol */
 #define MIDI_HDR_PROGRAM_CHANGE                 0xC0
 #define MIDI_HDR_END                            0xFF
 
@@ -761,7 +761,7 @@
 #define ACTION_EVENT_BOOK_DELIVERY      32
 #define ACTION_GET_SNACK_FROM_FRIDGE    33
 #define ACTION_OPEN_BEDROOM_CLOSET      34
-#define ACTION_GET_DRESSED              35
+#define ACTION_NOD_OK                   35       /* a_nodok; nothing queues it */
 #define ACTION_CLEAN_UP                 36
 #define ACTION_TIDY_HOUSE               37
 #define ACTION_CHECK_FRONT_DOOR         38

@@ -73,7 +73,7 @@ cs_mvIn()
         lcp_st  = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
         lcp_hwt();
-        a_getd();
+        a_nodok();
         a_opcuc(0);
         a_wakfa();
 

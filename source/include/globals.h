@@ -115,7 +115,7 @@ extern char  mi_vel;            /* a byte, not a short */
 extern char mi_dvel;
 extern char  psg_cvol;          /* a byte, not a short */
 extern char psg_dvol;
-extern short g_mchcn;
+extern short g_mkey;
 extern short g_mtspb;
 extern short mi_temp;
 extern short mi_tpb;

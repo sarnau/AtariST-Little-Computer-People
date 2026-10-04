@@ -56,7 +56,7 @@ doAct()
         case ACTION_OPEN_UPSTAIRS_CLOSET:     a_opcuc(1); break;
         case ACTION_GET_SNACK_FROM_FRIDGE:    a_gesff();     break;
         case ACTION_OPEN_BEDROOM_CLOSET:      a_opcbc(); break;
-        case ACTION_GET_DRESSED:              a_getd();               break;
+        case ACTION_NOD_OK:              a_nodok();               break;
         case ACTION_CLEAN_UP:                 a_cleau();                  break;
         case ACTION_TIDY_HOUSE:               a_tidyh();                break;
         case ACTION_CHECK_FRONT_DOOR:         a_chefd(40);        break;

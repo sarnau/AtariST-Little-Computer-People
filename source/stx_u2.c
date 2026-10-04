@@ -92,7 +92,7 @@
 #include "agames.c"            /* a_plaag */
 #include "parts/a_opcfc.c"
 #include "parts/a_peeka.c"
-#include "parts/a_getd.c"
+#include "parts/a_nodok.c"
 #include "parts/a_nodh.c"
 #include "parts/sp_ssco.c"
 #include "parts/sp_ss02.c"

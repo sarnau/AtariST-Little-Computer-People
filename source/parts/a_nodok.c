@@ -2,14 +2,16 @@
  * Included by stx_u2.c; never compiled on its own.
  */
 
-/* a_getd: head-movement gesture.  Picks a head target from the
-   direction the head currently faces (low three bits of g_hacur) and
-   waits for it, then four times alternates between that direction
-   level and tilted (bit 0x10) -- a nod -- before returning the head to
-   where it started.  Bound to ACTION_GET_DRESSED; on its own it only
-   moves the head. */
+/* a_nodok: nod in agreement.  Picks a head target from the direction the
+   head currently faces (low three bits of g_hacur) and waits for it,
+   then four times alternates between that direction level and tilted
+   (bit 0x10) -- a nod -- before returning the head to where it started.
+   chk_actT plays it when the resident accepts a request to play a game
+   or the piano, and the move-in cutscene uses it.  It is also the body
+   of action 35 (ACTION_NOD_OK), but no command, event or AI table
+   ever queues that action. */
 void
-a_getd()
+a_nodok()
 {
         short   entry_current;
         short   h;

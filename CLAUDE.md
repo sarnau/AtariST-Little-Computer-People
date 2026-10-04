@@ -606,7 +606,7 @@ Structural rules of this build:
                                        switch end)
       case ORDER in the source is recoverable from the jump table's
         targets (STX's execEv writes BOOK, RECORD, FOOD, PHONE,
-        GET_DRESSED, DOG_FOOD)
+        GET_DRESSED (now ACTION_NOD_OK), DOG_FOOD)
       statement ORDER of two initialisations is evidence too
         (a_hello clears pick before prev_pick in STX)
       (Random() & 7) + 293 (no)   vs  (int)(Random() & 7) + 293
@@ -871,7 +871,7 @@ Structural rules of this build:
 
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
-  a_wandi needed an UNUSED local the port lacked, a_getd reuses one
+  a_wandi needed an UNUSED local the port lacked, a_getd (now a_nodok) reuses one
   variable as its loop counter, and a_tidyh/a_playp/a_wakum have
   NONE because every call result is consumed in place.  Removing a
   declaration without checking every use breaks the build (a_tidyh

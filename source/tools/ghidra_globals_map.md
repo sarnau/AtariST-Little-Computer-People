@@ -542,7 +542,7 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `midi_channel_count`               | `g_mchcn`    |
+| `midi_channel_count`               | `g_mkey`     |
 | `midi_current_channel`             | `mi_ccha`    |
 | `midi_current_program`             | `g_mcpro`    |
 | `midi_current_note`                | `mi_cnot`    |

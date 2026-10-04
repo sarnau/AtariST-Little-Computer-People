@@ -81,7 +81,7 @@ extern void a_drink();
 extern void a_uset();
 extern void a_wakum();
 extern void a_gotbn();
-extern void a_getd();
+extern void a_nodok();
 extern void li_lool();
 extern void li_loor();
 extern void a_lists();

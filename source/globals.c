@@ -644,7 +644,7 @@ BOOL16          psg_out              = YES;     /* play notes on the YM2149 PSG 
 
 /* MIDI channel count; mq_parh's channel-count case writes p[2]
    here. */
-short           g_mchcn                 = 1;
+short           g_mkey                  = 1;
 
 short           mi_temp              = 120;     /* song tempo in beats per minute, from the song header */
 

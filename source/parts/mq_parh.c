@@ -32,8 +32,8 @@ unsigned char * p;
                    falls straight to the loop test.  All three are the
                    original's shape. */
                 switch (*p & 0xff) {
-                case MIDI_HDR_SET_CHANNEL_COUNT:
-                        mq_bust(g_mchcn = p[2]);
+                case MIDI_HDR_SET_KEY:
+                        mq_bust(g_mkey = p[2]);
                         p += 3;
                         break;
                 case MIDI_HDR_SET_TEMPO:
@@ -45,7 +45,7 @@ unsigned char * p;
                 case MIDI_HDR_SET_VOLUME:
                         p += 2;
                         break;
-                case MIDI_HDR_BUILD_SCALE_TABLE:
+                case MIDI_HDR_SET_VELOCITY:
                         mi_dvel = p[2];
                         if      (mi_dvel < 0x17) psg_dvol = 5;
                         else if (mi_dvel < 0x27) psg_dvol = 7;

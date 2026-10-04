@@ -19,7 +19,7 @@ Under Alcyon C 4.14 the external symbol table truncates C names to 7 characters.
 | a_driwa | action_drink_water_animation                     |
 | a_eatm  | action_eat_meal                                  |
 | a_feedd | action_feed_dog                                  |
-| a_getd  | action_get_dressed                               |
+| a_nodok  | action_get_dressed                               |
 | a_gioob | action_get_in_out_of_bed                         |
 | a_gesff | action_get_snack_from_fridge                     |
 | a_gotbn | action_go_to_bed_night                           |
