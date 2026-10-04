@@ -11,7 +11,7 @@ cross-referencing decompiler output against port source.
 2026-09-06).  The previous note here said "~366/397, remaining ~93"
 and was badly wrong: it compared lcp_sym.68k's 8-char TRUNCATED
 linkage names against this file's full names, so `lcp_watr`,
-`introSeq`, `date_day` and dozens more counted as unmapped when they
+`introSeq` and dozens more counted as unmapped when they
 are not.  Expand the truncations first -- and exclude DRI libc and the
 AES library's own `gl_apid`, which are not port globals.
 
@@ -92,12 +92,12 @@ Derived from decompiling: `mq_tick`, `mq_advs`, `psg_upEn`, `psg_wr`,
 | Ghidra                            | Port         |
 |-----------------------------------|--------------|
 | `animation_tick_counter`          | `ani_cnt`    |
-| `game_seconds_counter`            | `g_secs`     |
+| `game_seconds_counter`            | `t_sec`      |
 | `time_minutes`                    | `t_min`      |
 | `time_hours`                      | `t_hour`     |
-| `date_day`                        | `date_day`   |
-| `date_month`                      | `dt_mon`     |
-| `date_year`                       | `dt_year`    |
+| `date_day`                        | `t_day`      |
+| `date_month`                      | `t_mon`      |
+| `date_year`                       | `t_year`     |
 
 ### Player / AI state
 
@@ -951,7 +951,7 @@ this table as a lead, and check the use sites before adopting one.
 Coverage was measured properly on 2026-09-06 and the old "~93
 remaining" note was badly wrong -- it had been comparing lcp_sym.68k's
 8-char TRUNCATED linkage names against this file's full names, so
-`lcp_watr`, `introSeq`, `date_day` and dozens like them counted as
+`lcp_watr`, `introSeq` and dozens like them counted as
 unmapped when they are not.  Expanding the truncations first (and
 dropping DRI libc and the AES library's own `gl_apid`) leaves
 **thirteen** port globals with no descriptive counterpart:

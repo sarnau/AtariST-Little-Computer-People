@@ -16,7 +16,7 @@
 
 /* Advance the game clock and the resident's bodily needs.  Called
    every frame but acts only on every 8th (ani_cnt), counting those in
-   g_secs; each time g_secs wraps at 60 (one game minute) it ticks the
+   t_sec; each time t_sec wraps at 60 (one game minute) it ticks the
    thirst, hunger, sickness and bathroom timers, may ring the phone
    (2% per minute between 08:00 and 21:59, outside the move-in), and
    steps t_min.  The hour rollover runs the mood cycle and t_hour; the
@@ -29,10 +29,10 @@ gameSim1()
         if ((ani_cnt & 7) != 0)
                 return;
 
-        if (++g_secs != 60)
+        if (++t_sec != 60)
                 return;
 
-        g_secs = 0;
+        t_sec = 0;
 
         /* Thirst tick */
         lcp.thirst_timer--;
@@ -123,11 +123,11 @@ gameSim1()
         daily_rs();
 
         /* Calendar advance: day / month / year */
-        if (daysInMo(dt_mon, dt_year) == ++date_day) {
-                date_day = 0;
-                if (++dt_mon == 12) {
-                        dt_mon = 0;
-                        dt_year++;
+        if (daysInMo(t_mon, t_year) == ++t_day) {
+                t_day = 0;
+                if (++t_mon == 12) {
+                        t_mon = 0;
+                        t_year++;
                 }
         }
 }

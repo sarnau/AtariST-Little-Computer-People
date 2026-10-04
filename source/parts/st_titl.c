@@ -39,7 +39,7 @@ st_titl()
            still decoded above, so the screen buffer and the file path
            are in the same state as a real run.
 
-           A REAL date and time: with dt_year 0 the move-in cutscene
+           A REAL date and time: with t_year 0 the move-in cutscene
            never finishes and the compositor corrupts the screen within
            a couple of minutes.  These are the values a manual run
            enters -- 09/04/26, 10:30 AM -- and they reach gameplay
@@ -54,9 +54,9 @@ st_titl()
         lcp.owner_name[4] = 'E';
         lcp.owner_name[5] = 'R';
         lcp.owner_name[6] = 0;
-        dt_mon   = 8;           /* September; st_titl stores month - 1 */
-        date_day = 3;           /* the 4th;   likewise day - 1         */
-        dt_year  = 26;
+        t_mon   = 8;           /* September; st_titl stores month - 1 */
+        t_day = 3;           /* the 4th;   likewise day - 1         */
+        t_year  = 26;
         t_hour   = 10;
         t_min    = 30;
         colour = 0; n = 0; j = 0; ch = 0;   /* -Wall: set, never read */
@@ -92,16 +92,16 @@ st_titl()
         strPr("ENTER DATE:", 80, 122, colour);
 date_entry:
         stEnter(176, 122, "MM/DD/YY", 8, colour);
-        dt_mon   = in_str[0] * 10 + in_str[1] - 1;
-        date_day = in_str[3] * 10 + in_str[4] - 1;
-        dt_year  = in_str[6] * 10 + in_str[7];
-        if (dt_mon < 0)
+        t_mon   = in_str[0] * 10 + in_str[1] - 1;
+        t_day = in_str[3] * 10 + in_str[4] - 1;
+        t_year  = in_str[6] * 10 + in_str[7];
+        if (t_mon < 0)
                 goto date_entry;
-        if (dt_mon >= 12)
+        if (t_mon >= 12)
                 goto date_entry;
-        if (date_day < 0)
+        if (t_day < 0)
                 goto date_entry;
-        if (daysInMo(dt_mon, dt_year) <= date_day)
+        if (daysInMo(t_mon, t_year) <= t_day)
                 goto date_entry;
 
         strPr("ENTER TIME:", 80, 134, colour);

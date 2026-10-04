@@ -1,7 +1,7 @@
 /*
  * Included by stx_u2.c; never compiled on its own.
  */
-/* The leap-year check reads the global dt_year, not the `year`
+/* The leap-year check reads the global t_year, not the `year`
    parameter.  Kept as in the original. */
 short
 daysInMo(month, year)
@@ -12,7 +12,7 @@ short   year;
            then-arm, and every arm returns directly. */
         if (month != 1)
                 return days_pmo[month];
-        else if ((dt_year % 4) == 0)
+        else if ((t_year % 4) == 0)
                 return 29;
         else
                 return 28;

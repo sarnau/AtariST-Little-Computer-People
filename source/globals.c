@@ -25,15 +25,15 @@ short           bj_key;         /* pk_bjMn's key variable (a global, not a local
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
 unsigned short  ani_cnt;    /* unsigned: the & 7 test zero-extends */
-short   g_secs;         /* game seconds 0..59; gameSim1 steps it every 8th frame */
+short   t_sec;         /* game seconds 0..59; gameSim1 steps it every 8th frame */
 
 /* The game clock and calendar, set from the guestbook by st_titl and
    advanced by gameSim1. */
 short   t_min;          /* minute 0..59 */
 short   t_hour;         /* hour 0..23 */
-short   date_day;       /* day of the month, 0-based */
-short   dt_mon;         /* month 0..11 */
-short   dt_year;        /* year - 1900 */
+short   t_day;       /* day of the month, 0-based */
+short   t_mon;         /* month 0..11 */
+short   t_year;        /* year - 1900 */
 
 PLAYER  lcp;            /* the resident's record, saved to and loaded from "hyber" */
 BOOL16  introSeq;       /* YES while the move-in cutscene runs; holds off keys, phone and events */

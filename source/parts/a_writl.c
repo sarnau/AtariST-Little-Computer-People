@@ -105,10 +105,10 @@ a_writl()
         tx_sctm = 9999;
         gameTick(2);
 
-        full_year = dt_year + 1900;
+        full_year = t_year + 1900;
         sprintf(in_str, "%s %d, %4d",
-                mo_names[dt_mon],
-                date_day + 1, full_year);
+                mo_names[t_mon],
+                t_day + 1, full_year);
         g_cdibp = 0;
         lt_tysa(in_str, -12);
         lt_tyca('\r');

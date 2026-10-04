@@ -25,11 +25,11 @@
 extern PLAYER   lcp;
 extern short    t_min;
 extern short    t_hour;
-extern short    date_day;
-extern short    dt_mon;
-extern short    dt_year;
+extern short    t_day;
+extern short    t_mon;
+extern short    t_year;
 extern short    ani_cnt;
-extern short    g_secs;
+extern short    t_sec;
 extern BOOL16   ph_ans;
 extern BOOL16   ph_call;
 extern BOOL16   introSeq;
@@ -75,12 +75,12 @@ char ** argv;
 
         /* Sim entry conditions. */
         ani_cnt  = 0;    /* (counter & 7) == 0 -> tick */
-        g_secs    = 0;
+        t_sec    = 0;
         t_min            = 0;
         t_hour              = 6;    /* 06:00:00 */
-        date_day                = 1;
-        dt_mon              = 0;
-        dt_year               = 0;
+        t_day                = 1;
+        t_mon              = 0;
+        t_year               = 0;
 
         /* Suppress the random phone-call branch. */
         introSeq   = YES;
@@ -94,10 +94,10 @@ char ** argv;
         /* Clock should have advanced exactly 24h -- back to 06:00:00. */
         CHECK(t_hour == 6,   "t_hour != 6 after 86400 seconds");
         CHECK(t_min == 0, "t_min != 0 after 86400 seconds");
-        CHECK(g_secs == 0, "g_secs != 0");
+        CHECK(t_sec == 0, "t_sec != 0");
 
         /* Calendar should have rolled over exactly one day. */
-        CHECK(date_day == 2, "date_day did not advance to 2");
+        CHECK(t_day == 2, "t_day did not advance to 2");
 
         /* thirst_timer counts down each minute; after 24*60=1440 minutes
            with timer_max=30 it wraps 48 times.  Each wrap raises
@@ -128,7 +128,7 @@ char ** argv;
         lcp.bathroom_timer_max  = 9999;
         lcp.happiness_duration_active = 9999;
         ani_cnt  = 0;
-        g_secs    = 0;
+        t_sec    = 0;
         t_min            = 0;
         t_hour              = 7;
         introSeq   = YES;
@@ -137,7 +137,7 @@ char ** argv;
         CHECK(t_hour == 8,   "1-hour drive: t_hour != 8");
         CHECK(t_min == 0, "1-hour drive: t_min != 0");
 
-        /* Sub-minute drive (30 seconds): only g_secs
+        /* Sub-minute drive (30 seconds): only t_sec
            should advance; nothing else.                               */
         memset(&lcp, 0, sizeof(lcp));
         lcp.thirst_timer = lcp.thirst_timer_max = 9999;
@@ -145,20 +145,20 @@ char ** argv;
         lcp.bathroom_timer = lcp.bathroom_timer_max = 9999;
         lcp.happiness_duration_active = 9999;
         ani_cnt = 0;
-        g_secs = 0;
+        t_sec = 0;
         t_min = 0;
         t_hour = 10;
         introSeq = YES;
         for (i = 0; i < 30L; i++)
                 gameSim1();
-        CHECK(g_secs == 30, "30-sec drive: counter wrong");
+        CHECK(t_sec == 30, "30-sec drive: counter wrong");
         CHECK(t_min == 0, "30-sec drive: minutes wrong");
 
         /* Non-tick frame: counter & 7 != 0 -> function must early-return. */
-        g_secs = 42;
+        t_sec = 42;
         ani_cnt = 3;      /* 3 & 7 == 3 != 0 */
         gameSim1();
-        CHECK(g_secs == 42, "non-tick frame incremented counter");
+        CHECK(t_sec == 42, "non-tick frame incremented counter");
 
         (void) thirst_hits; (void) hunger_hits;
 
