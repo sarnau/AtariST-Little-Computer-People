@@ -1,22 +1,21 @@
 /*
- * vdistx.c -- Activision's VDI binding module as LCP_STX links it.
+ * vdistx.c -- Activision's VDI binding module.
  *
- * The two revisions carry the SAME bindings in a different order, and
- * LCP_STX's module is bigger: it also holds vqt_attributes and
- * vst_height (copied verbatim from the DRI VDIBIND sources rather than
- * pulled from the library), and v_opnvwk / vro_cpyfm live here too
- * instead of in a separate workstation object.  Its addresses:
+ * It holds the game's own bindings plus vqt_attributes and vst_height
+ * (copied from the DRI VDIBIND sources rather than pulled from the
+ * library), and v_opnvwk / vro_cpyfm, instead of a separate
+ * workstation object.  The order of the bindings and #include lines
+ * below is the module's function order in the original and must not
+ * change:
  *
- *     vswr_mode 0x1733a < v_bar 0x17374 < v_gtext 0x173ba
- *     < v_opnvwk 0x17426 < v_pline 0x174a6 < vqt_attributes 0x174e4
- *     < vro_cpyfm 0x1753a < vsf_color 0x17596 < vsf_interior 0x175d0
- *     < vsf_style 0x1760a < vsl_color 0x17644 < vst_color 0x1767e
- *     < vst_height 0x176b8
+ *     vswr_mode < v_bar < v_gtext < v_opnvwk < v_pline
+ *     < vqt_attributes < vro_cpyfm < vsf_color < vsf_interior
+ *     < vsf_style < vsl_color < vst_color < vst_height
  *
- * There is also just ONE trap dispatcher and ONE parameter block:
- * every binding here reaches gsx1 (vdistx_a.s, 0x1772e, right behind
- * wr_src/wr_dst) and every one of them aims `vdipb`.  vdiown.h maps
- * the older vdi_go / vdi_go2 spellings onto gsx1.
+ * There is just ONE trap dispatcher and ONE parameter block: every
+ * binding here reaches gsx1 (vdistx_a.s, right behind wr_src/wr_dst)
+ * and every one of them aims `vdipb`.  vdiown.h maps the vdi_go /
+ * vdi_go2 spellings onto gsx1.
  *
  * This is the port's only VDI binding module.
  */
@@ -30,11 +29,11 @@ extern short *  vdipb[];
 extern void     wr_src();       /* vdistx_a.s: contrl[7..8]  = long */
 extern void     wr_dst();       /* vdistx_a.s: contrl[9..10] = long */
 
-#include "parts/vswr_mode.c"    /* 0x1733a */
-#include "parts/v_bar.c"        /* 0x17374 */
-#include "parts/v_gtext.c"      /* 0x173ba */
+#include "parts/vswr_mode.c"
+#include "parts/v_bar.c"
+#include "parts/v_gtext.c"
 
-/* v_opnvwk (0x17426): points the block's intin/intout/ptsout entries
+/* v_opnvwk points the block's intin/intout/ptsout entries
    at the caller's arrays for the call, then restores all four. */
 void
 v_opnvwk(work_in, handle, work_out)
@@ -57,9 +56,9 @@ short * work_out;
         vdipb[2] = ptsin;
 }
 
-#include "parts/v_pline.c"      /* 0x174a6 */
+#include "parts/v_pline.c"
 
-/* vqt_attributes (0x174e4): the DRI VDIBIND body, aiming the block's
+/* vqt_attributes: the DRI VDIBIND body, aiming the block's
    intout/ptsout entries at the caller's 12+ shorts. */
 void
 vqt_attributes(handle, attrib)
@@ -77,7 +76,7 @@ short * attrib;
         vdipb[4] = ptsout;
 }
 
-/* vro_cpyfm (0x1753a): the array-pxy blit. */
+/* vro_cpyfm: the array-pxy blit. */
 void
 vro_cpyfm(handle, mode, pxy, src, dst)
 short   handle;
@@ -98,13 +97,13 @@ long    dst;
         vdipb[2] = ptsin;
 }
 
-#include "parts/vsf_color.c"    /* 0x17596 */
-#include "parts/vsf_interior.c" /* 0x175d0 */
-#include "parts/vsf_style.c"    /* 0x1760a */
-#include "parts/vsl_color.c"    /* 0x17644 */
-#include "parts/vst_color.c"    /* 0x1767e */
+#include "parts/vsf_color.c"
+#include "parts/vsf_interior.c"
+#include "parts/vsf_style.c"
+#include "parts/vsl_color.c"
+#include "parts/vst_color.c"
 
-/* vst_height (0x176b8): the DRI VDIBIND body. */
+/* vst_height: the DRI VDIBIND body. */
 void
 vst_height(handle, height, char_w, char_h, cell_w, cell_h)
 short   handle;

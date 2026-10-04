@@ -11,9 +11,6 @@
  * would appear to run but never actually simulate.  The check itself
  * (cprot_r) is set once during startup and is treated as
  * an ordinary flag from here.
- *
- * addr: Ghidra `endless_game_loop` (called from the tail of main at
- * ROM 0x15546).
  */
 
 #include "types.h"
@@ -40,45 +37,33 @@
 #include "tick.h"
 #include "tick_tables.h"
 
-/* gameLoop -> parts/gameLoop.c (STX: 0x5c76, in the 0x400c object between lc_load and chk_actT). */
+/* gameLoop -> parts/gameLoop.c. */
 
 #ifndef HOST
 /* No `_stksize` here.  That global is the ATARI DK gemstart's
-   memory-model hook; alcyon2's GEMSTART.O -- the startup LCP_STX
+   memory-model hook; alcyon2's GEMSTART.O -- the startup this program
    links -- has the stack size baked in and contains no reference to
-   it (neither does its GEMLIB).  Defining it only put 4 dead bytes at
-   the head of the data segment, ahead of psg_rot, which LCP_STX has
-   at 0x180. */
+   it (neither does its GEMLIB).  Defining it would put 4 dead bytes
+   at the head of the data segment. */
 
 /* main -- C entry point for the Alcyon build (target only).
-   Ported line-by-line from Ghidra 0x15546; see the per-step comments
-   in the function body.  Excluded from the host build so tests can
-   supply their own main(). */
+   Excluded from the host build so tests can supply their own main().
 
-
-/* Init dependencies -- Alcyon-renamed short names (see namemap.md).
-   Original names in comments for cross-reference. */
-/* main -- Ghidra 0x00015546.  See there for the faithful init
-   sequence: mq_intim -> aes_init -> conterm clear ->
+   Init sequence: mq_intim -> aes_init -> conterm clear ->
    Dsetpath("data") -> vdi_init -> stpScrB ->
    initBRev -> cntSong -> lc_load ->
-   show_title_screen_enter_name_and_date -> house.scn open+decompress ->
+   title screen (name and date) -> house.scn open+decompress ->
    fillTopR(27) -> cl_drini ->
    al_loal("body.lcp") -> lcp_crnd (if new) ->
-   al_loal(pex_lcp) -> sprite_lcp_build_all -> ldObj/sprites
-   -> soundeffects_load -> dog_init_position -> updWtLv
-   -> screen_set_draw_to_backbuffer -> draw water pipe + doors +
-   food-bowl objects -> screen_draw_food_cabinet ->
-   daily_rs -> palette_apply_clothing_colors ->
-   cp_main -> sp_imfs -> (cutscene if new) ->
-   gameLoop.
-
-   All of those steps are ported.  Every line in main() corresponds
-   to an original Ghidra call; the few port-specific additions are
-   marked inline. */
+   al_loal(pex_lcp) -> build the LCP sprites -> ldObj/sprites
+   -> load sound effects -> dog start position -> updWtLv
+   -> draw to the back buffer -> draw water pipe + doors +
+   food-bowl objects -> draw the food cabinet ->
+   daily_rs -> clothing colours -> cp_main -> sp_imfs ->
+   (cutscene if new) -> gameLoop. */
 
 
-/* Object-draw chain (Ghidra main 0x15546, after scn_dec).
+/* Object-draw chain (after scn_dec).
    Every door/cabinet in HOUSE.SCN has a placeholder rectangle in the
    pre-compressed art; the real init paints the correct (open or
    closed) object over each rectangle.  Skipping the chain leaves the
@@ -99,16 +84,7 @@
 #include <gembind.h>              /* appl_init, appl_exit, ... */
 #endif
 
-/* main -- ported line-by-line from Ghidra 0x15546.
-   Every call below matches the Ghidra decompile in structure and
-   order.  Where an Alcyon-safe short name replaces the Ghidra long
-   name, the mapping is shown as a comment on the call.  Missing
-   pieces (mq_intim, cntSong, init_build_bit_revert_
-   table) are ported as verifiable stubs in init.c. */
-
-
-/* main -> parts/main.c (STX 0x5546, in the 0x400c object between
-   fr_reac and dg_ipos); stx_u1.c includes it there.  ct_clrB does not
-   exist as a function in LCP_STX -- main inlines the conterm patch. */
+/* main -> parts/main.c; stx_u1.c includes it.  main patches conterm
+   inline rather than through a helper. */
 
 #endif

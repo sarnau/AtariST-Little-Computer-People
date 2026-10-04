@@ -1,7 +1,4 @@
-/*
- * sfx_irq.c -- SFX playback tick (XBIOS Dosound driver).
- * addr: sf_irqp()
- */
+/* sfx_irq.c -- SFX playback tick (XBIOS Dosound driver). */
 
 #include "types.h"
 #include "enums.h"
@@ -11,23 +8,22 @@
 #include "sound.h"
 
 
-/* STX has neither a concat22 helper nor rd_hz: sf_irqp writes the
-   32-bit duration out of its two halves and keeps its own Super
-   block.  Both helpers are gone. */
-
-/* addr: sf_irqp() */
+/* sf_irqp builds the 32-bit duration from its two halves and keeps
+   its own Super block inline, rather than calling helpers. */
 void
 sf_irqp()
 {
-        char *          effectPtr;      /* -4 */
-        char *          dosound_ptr;    /* -8 */
-        short           size;           /* -10 */
-        short           i;              /* -12 */
-        long            raw_lo;         /* -16 */
-        short *         hz_ptr;         /* -20 */
-        short           unused;         /* -22, never read or written */
-        unsigned short  hz;             /* -24 */
-        long            ssp;            /* -28 */
+        /* Declaration order fixes the stack frame; `unused` is never
+           read or written but must stay for the same reason. */
+        char *          effectPtr;
+        char *          dosound_ptr;
+        short           size;
+        short           i;
+        long            raw_lo;
+        short *         hz_ptr;
+        short           unused;
+        unsigned short  hz;
+        long            ssp;
 
         /* MIDI has exclusive PSG access. */
         if (mi_play != NO)

@@ -1,12 +1,9 @@
-* vdistx_a.s -- the tail of Activision's VDI binding module in
-* LCP_STX: the two raw contrl writers plus the SINGLE trap-#2
-* dispatcher, at 0x1771a / 0x17724 / 0x1772e.
+* vdistx_a.s -- the tail of Activision's VDI binding module: the two
+* raw contrl writers plus the SINGLE trap-#2 dispatcher.
 *
-* LCP_STX has one dispatcher where the port used to carry three
-* (vdiown_a.s's vdi_go, vdilib_a.s's vdi_go2 and the linked VDIBIND
-* gsx1) -- 22 bytes each, the port's whole text surplus.  Defining
-* _gsx1 here keeps VDIBIND's own gsx1 member (and its private pblock)
-* out of the link, so `vdipb` in globals.c is the one parameter block.
+* Defining _gsx1 here keeps VDIBIND's own gsx1 member (and its private
+* pblock) out of the link, so `vdipb` in globals.c is the one
+* parameter block and vdi_go/vdi_go2 map onto this one dispatcher.
 
 
 	.globl	_wr_src

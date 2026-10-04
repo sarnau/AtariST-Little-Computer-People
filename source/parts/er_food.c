@@ -1,8 +1,6 @@
 /*
- * parts/er_food.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * delivery functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/er_food.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 
@@ -10,7 +8,7 @@ void
 er_food()
 {
         short   food_count;
-        short   roll;           /* declared, never written (link #-8) */
+        short   roll;           /* unused, but it must stay: removing it changes the compiled code */
 
         g_actif = YES;
         wkFrDr();

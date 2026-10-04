@@ -117,7 +117,7 @@ short   handle;
    host libc does not share: TOS looks the pointer up in its own block
    list and ignores anything it did not hand out.  The port relies on
    that -- fr_reac frees the buffer pointer its nibble loop has already
-   walked forward (LCP_STX has no saved copy, see CLAUDE.md), which is
+   walked forward (the original keeps no saved copy), which is
    harmless on the ST and an abort() on macOS.  So Mfree frees only
    blocks Malloc actually returned. */
 #define MAX_HOST_BLOCKS 64

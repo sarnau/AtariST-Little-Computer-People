@@ -1,12 +1,9 @@
 /*
- * parts/dg_wkPth.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x4586, immediately after dg_mvAni). Files under parts/ are
- * never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* dg_wkPth: dog waypoint math.  Same shape as lcp_flwp but uses
    dog_x/y and applies -3 X on middle-floor landing + -8 X on stair
-   crest.
-   addr: dg_wkPth() */
+   crest. */
 
 void
 dg_wkPth()
@@ -14,9 +11,8 @@ dg_wkPth()
         /* One local: every floor lookup is called inline (the first
            result goes on the stack for the compare).  The equal case
            is the ELSE arm, so its three assignments sit at the end.
-           Alcyon evaluates the RIGHT operand first, so the order of
-           the two arguments here is visible in which global the first
-           relocation names. */
+           Alcyon evaluates the RIGHT operand first, so swapping the two
+           sides of the first comparison changes the compiled code. */
         short   si;
 
         if (getFlrY(dog_y) != getFlrY(g_dty)) {

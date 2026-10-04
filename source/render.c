@@ -1,6 +1,5 @@
 /*
  * render.c -- VDI palette and screen refresh.
- * addr: sc_ren8(), lcp_upal()
  */
 
 #include "types.h"
@@ -30,13 +29,11 @@
 /* sc_ren8 -> renderf.c */
 
 /* cl_redrH: erase prev hands in white, draw new pair in grey.
-   Skips when t_min hasn't advanced past cached g_cmmin.
-   addr: cl_redrH() */
+   Skips when t_min hasn't advanced past cached g_cmmin. */
 
 
 /* od_draw: blit background object at (x,y) through the game's own
-   vro_cpy binding (ROM 0x97d0 -> 0xd8d2).
-   addr: od_draw() */
+   vro_cpy binding. */
 
 
 void
@@ -46,8 +43,8 @@ short   x;
 short   y;
 {
         vroCpyD(vdihnd, 3,
-                /* The other revision goes through a pointer variable;
-                   the STX revision addresses the MFDB array itself. */
+                /* Addresses the MFDB array itself (20 bytes per entry),
+                   not through a pointer variable. */
                 g_oiidx * 20 + (long) g_obtmt,
                 (long) &mf_scrp,
                 0, 0,
@@ -61,38 +58,29 @@ short   y;
 /* fillTopR: clear top text strip (rows 0..maxY-1).
    White fill for letter pane (maxY < 70), striped house-bg fill otherwise.
    Last row painted black as separator.
-   addr: fillTopR() */
-
-
-/* fillTopR -> parts/fillTopR.c (STX: 0xdece object, 0x686c -- in LCP_STX this is the 0x400c object, not 0xdece). */
+   Lives in parts/fillTopR.c (stx_u1's object). */
 
 /* sc_sctd, td_nois, rp_anim -> renderx.c */
 
 /* -- TV toggle -- */
 
 /* tt_on: walk to living room, idle look-left, set flag, play click SFX.
-   Returns -1 on walk failure, 0 otherwise.
-   addr: tt_on() */
-
-/* tt_on -> parts/tt_on.c (STX: 0xdece object, 0x13bc8, immediately after a_toggt). */
+   Returns -1 on walk failure, 0 otherwise.  Lives in parts/tt_on.c. */
 
 /* tt_off: same walk, clear flag, redraw antenna in off state.
-   Note: no SFX_TV_CLICK on off in the 1985 binary -- preserved verbatim.
-   addr: tt_off() */
-
-/* tt_off -> parts/tt_off.c (STX: 0xdece object, 0x13c1e, immediately after tt_on). */
+   Note: the 1985 code plays no SFX_TV_CLICK when switching off --
+   kept on purpose.  Lives in parts/tt_off.c. */
 
 /* -- Kitchen food-cabinet overlay -- */
 
 /* sc_drfc: paint food-count markers in 4 cabinet slots.
    Count = bits 9..11 of door_states_and_flags (0..4 packs). No-op if closed.
-     1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151)
-   addr: sc_drfc() */
+     1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151) */
 
 void
 sc_drfc()
 {
-        short           cabinet_content;    /* STX: signed compares */
+        short           cabinet_content;    /* signed on purpose: the compares must be signed */
 
         if (lcp_cabO == NO)
                 return;
@@ -114,6 +102,4 @@ sc_drfc()
      val >  0 : fill `val` steps
    Each level = one 14px horizontal polyline; colour 0x0D filled, 0x0C empty.
    VDI ops go to backbuffer so animation isn't torn by next 8Hz render.
-   addr: updWtLv() */
-
-/* updWtLv -> parts/updWtLv.c (STX: 0xdece object, 0x122fa, immediately after a_drink). */
+   Lives in parts/updWtLv.c. */

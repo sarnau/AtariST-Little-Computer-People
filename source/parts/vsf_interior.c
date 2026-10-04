@@ -1,7 +1,7 @@
 /*
- * parts/vsf_interior.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * Position in vdistx.c is the binding module's original order.
+ *
+ * Included by vdistx.c; never compiled on its own.
  */
 
 void

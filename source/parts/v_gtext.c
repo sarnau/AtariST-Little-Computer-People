@@ -1,7 +1,6 @@
 /*
- * parts/v_gtext.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/v_gtext.c -- included by vdistx.c at its place in the binding
+ * module's order; never compiled on its own.
  */
 
 void
@@ -13,8 +12,9 @@ char *  str;
 {
         short   i;
 
-        /* STX sets the point first and copies with the classic
-           while (dst[i++] = *src++) idiom, masking to a byte. */
+        /* The point is set first and the string copied with the
+           while (dst[i++] = *src++) idiom, masking to a byte; this
+           exact shape is the original's. */
         ptsin[0]  = x;
         ptsin[1]  = y;
         i = 0;

@@ -1,20 +1,17 @@
 /*
- * parts/cs_mvIn.c -- shared body; LCP_STX puts the move-in cutscene in
- * the 0xdece object at 0xe500, immediately after showLcp.  Files under
- * parts/ are never compiled standalone.
+ * parts/cs_mvIn.c -- included by stx_u2.c; never compiled on its own.
  */
 
 /* cs_mvIn: the new-resident move-in cutscene.  The screen is empty
    while the delivery van pulls up (two p_dobls door-bell blasts), the
    front door opens, the dog is placed on the step, then the resident
    walks in and does a full tour of the house -- dresser, sink, food,
-   TV, bed -- before the dog is released and the intro flag drops.
-   addr: cs_mvIn() */
+   TV, bed -- before the dog is released and the intro flag drops. */
 
 void
 cs_mvIn()
 {
-        short   unused;         /* -2, never referenced */
+        short   unused;         /* never referenced, but must stay */
 
         dg_init  = 1;
         introSeq = 1;

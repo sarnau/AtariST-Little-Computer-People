@@ -1,11 +1,8 @@
 /*
- * parts/lcp_fstp.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x4fec, in the 0x400c object with getFlrY). Files under
- * parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* lcp_fstp: pick footstep SFX (carpet/wood/stairs) by floor + X.
-   fs_trg is set by lcp_path on foot-plant frames.
-   addr: lcp_fstp() */
+   fs_trg is set by lcp_path on foot-plant frames. */
 
 void
 lcp_fstp()

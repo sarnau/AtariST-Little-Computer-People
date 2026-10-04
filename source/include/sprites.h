@@ -19,8 +19,8 @@
    set) that sp_lcpf writes into g_lsimg / g_lsmas / g_hsbuf /
    g_hsmas.  Both call sites pass width=2, height=21 and sp_lcpf
    writes 4 shorts per (x,y), so only 21*2*4 = 168 are ever touched --
-   but LCP_STX declares a round 256, which is what the relocation
-   pairing measures for all four buffers (gaps of 512 bytes). */
+   but the original declares a round 256 for all four buffers, and
+   the memory layout depends on that size. */
 #define LCP_BODY_DEST_WORDS     256
 
 extern void sp_updb();

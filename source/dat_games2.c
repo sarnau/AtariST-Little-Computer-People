@@ -1,13 +1,13 @@
 /*
- * dat_games2.c -- the anagram globals, declared where the reference puts them.
+ * dat_games2.c -- the anagram globals.
  *
  * Alcyon defers a compilation unit's string literals to a pool at the
- * end of its data, in the order it met them.  In the reference,
+ * end of its data, in the order it met them.  In the original,
  * g_aggpr's nine prompts and g_agwgm's three messages sit between
- * wp_main's screen text (0x10ad) and ag_main's (0x125f), so the
- * declarations are between those two functions.  The card-geometry
- * tables come along because the globals region keeps the same order.
- * Never compiled standalone.
+ * wp_main's screen text and ag_main's, so the declarations are
+ * between those two functions.  The card-geometry tables come along
+ * because the globals region keeps the same order.  The position of
+ * this file's inclusion must not change.  Never compiled standalone.
  */
 
 #include "types.h"
@@ -17,10 +17,9 @@
    19 characters so it overwrites the previous prompt in place.
    (0..8 -> "Guess #1?"..
    "Guess #9?").  Rendered by ag_sgp at (166, 57). */
-/* Ten slots for nine prompts and five for three messages: LCP_STX
+/* Ten slots for nine prompts and five for three messages: the original
    sizes both arrays past their initializer lists and Alcyon zero-fills
-   the tail (data 0xe08 and 0xe1a..0xe21 are NULL).  Do not shrink them
-   to the initializer count. */
+   the tail with NULLs.  Do not shrink them to the initializer count. */
 char *          g_aggpr[10] = {
         "Guess #1?          ",
         "Guess #2?          ",
@@ -41,8 +40,7 @@ char *          g_agwgm[5] = {
         "Missed, try again."
 };
 
-/* Card display positions -- 5 slots per row, extracted from Ghidra
-   memory at 0x2a4fe / 0x2a508 / 0x2a512 / 0x2a51c.  Row A = computer
+/* Card display positions -- 5 slots per row.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns
    are spaced 28 pixels apart (15-px card + 13-px gutter). */
 short           crd_xa[5]         = { 70, 98, 126, 154, 182 };

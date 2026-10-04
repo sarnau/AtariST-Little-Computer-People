@@ -1,7 +1,5 @@
 /*
- * parts/a_playc.c -- shared body; LCP_STX links it in the 0xdece
- * object at 0x12e86, immediately before tv_scrc. Files under parts/
- * are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 

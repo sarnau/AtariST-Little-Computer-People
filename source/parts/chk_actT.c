@@ -1,23 +1,18 @@
 /*
- * parts/chk_actT.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x5ce2, immediately after gameLoop). Files under parts/ are
- * never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* chk_actT: 9-priority AI ladder.
    1. Event queue -> execEv
    2. Alarm -> WAKE_FROM_ALARM   3. Bathroom -> USE_TOILET
    4. Thirst -> DRINK             5. Hunger -> KITCHEN_CABINET
    6. Lunch  7. Dinner  8. Wake  9. Bedtime (once/day scheduled)
-   10. User command queue         11. Random time/mood-based
-   addr: chk_actT() */
+   10. User command queue         11. Random time/mood-based */
 
 void
 chk_actT()
 {
-        /* STX's frame is also -12, but its four shorts are ordered
-           index, food_slots, skip-probability, unused: it keeps no
-           `event`/`rnd` temporaries and hoists the food-slot count
-           into a local of its own. */
+        /* Declaration order matters, and `unused` must stay: both
+           are part of the original's stack frame. */
         short   index;
         short   food_slots;
         short   sickness_skip_probability;
@@ -41,15 +36,15 @@ chk_actT()
         }
 
         /* Sickness bias: 66% skip healthy, 0% sick. */
-        /* STX tests the other way round, so the arms swap. */
+        /* Tested this way round on purpose: it matches the original. */
         if (lcp.sickness_level > SICKNESS_HEALTHY)
                 sickness_skip_probability = 0;
         else
                 sickness_skip_probability = 66;
-        /* P4: thirst.  STX spells the water gate as a disjunction of
-           two conjunctions, re-testing the sickness level in the
-           second arm -- the three tst.w and their branch targets pin
-           the shape. */
+        /* P4: thirst.  The water gate is a disjunction of two
+           conjunctions that re-tests the sickness level in the second
+           arm.  Redundant, but kept on purpose: it is the original's
+           shape. */
         if (lcp.thirst_level > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sickness_skip_probability &&
                     ((lcp.sickness_level != SICKNESS_HEALTHY &&
@@ -63,9 +58,9 @@ chk_actT()
 
         food_slots = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
 
-        /* P5: hunger.  Same disjunctive shape, and note that STX's
-           lastAct gate applies ONLY to the healthy arm -- it is not
-           the ROM's `(healthy || food) && lastAct != KITCHEN`. */
+        /* P5: hunger.  Same disjunctive shape; note that the lastAct
+           gate applies ONLY to the healthy arm -- it is not
+           `(healthy || food) && lastAct != KITCHEN`. */
         if (lcp.hunger_level > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sickness_skip_probability &&
                     ((lcp.sickness_level != SICKNESS_HEALTHY &&
@@ -108,9 +103,9 @@ chk_actT()
            out on every rejected round; high-priority (>=8) fire
            immediately.  Middle-priority items get their priority
            incremented and stay in the queue for another shot. */
-        /* STX tests the middle band as `< 8` and puts the increment in
-           the then-arm, and it re-reads g_trac (not g_aqueu[0]) for
-           the two game actions. */
+        /* The middle band is tested as `< 8` with the increment in the
+           then-arm, and g_trac (not g_aqueu[0]) is re-read for the two
+           game actions -- both as in the original. */
         if (g_aliss > 0) {
                 if (g_apriq[0] < 4) {
                         for (index = 0; index < 9; index++) {

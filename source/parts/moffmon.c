@@ -1,12 +1,9 @@
 /*
- * parts/moffmon.c -- shared body; LCP_STX puts moff (0xde36) and mon
- * (0xde5c) together at the head of the 0xdece object, right after
- * sf_so and immediately before lcp_lgt.  Files under parts/ are never
- * compiled standalone.
+ * parts/moffmon.c -- included by stx_u2.c; never compiled on its own.
+ * moff and mon sit together, in this order, in the original.
  */
 
-/* moff: idempotent AES mouse hide (moff_f guards repeat M_OFF).
-   addr: mouse_off() */
+/* Idempotent AES mouse hide: moff_f guards against a repeated M_OFF. */
 
 
 void
@@ -18,8 +15,7 @@ moff()
         }
 }
 
-/* mon (0xde5c): the counterpart moff guards against, immediately
-   after it in the same object. */
+/* The matching show: only undoes a hide moff actually did. */
 
 void
 mon()

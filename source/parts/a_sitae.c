@@ -1,19 +1,14 @@
 /*
- * parts/a_sitae.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_sitae()
 {
         short           result;
-        /* STX uses signed shorts here: no zero-extension around the
-           index arithmetic. */
-        /* STX's first local (frame -2) holds the per-frame tick
-           count, set to 3 before the loop and passed to gameTick;
-           duration and i follow at -4 and -6. */
+        /* Signed shorts, declared in this order, as in the original.
+           `result` holds the per-frame tick count, set to 3 before the
+           loop and passed to gameTick. */
         short           duration;
         short           i;
 
@@ -24,8 +19,8 @@ a_sitae()
 
         hs_posXY(POS_MID_COUCH,
                               &g_wtx, &g_wty);
-        /* STX: -= straight to memory, and the walk call is tested
-           inline rather than through a local. */
+        /* `-=` and the inline test of the walk call are part of the
+           original code. */
         g_wty -= 5;
         if (lcp_wkD() != 0)
                 return;
@@ -35,8 +30,8 @@ a_sitae()
         g_hatas = 8;
         lcp_hwt();
 
-        /* STX folds the mask into the assignment (computing it once)
-           and increments with i++. */
+        /* The mask is folded into the assignment (computed once) and
+           the counter steps with i++, as in the original. */
         result = 3;
         duration = (unsigned short)(Random() & 0x7f) | 8;
         i = 0;

@@ -1,7 +1,9 @@
 /*
- * parts/sp_iniM.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x6612, right after stpScrB). Files under parts/ are never
- * compiled standalone.
+ * Fill an MFDB for a 4-plane buffer.  The address is stored as two
+ * words through a (short *) cast, high half first, as the original
+ * does.
+ *
+ * Included by stx_u1.c; never compiled on its own.
  */
 
 void

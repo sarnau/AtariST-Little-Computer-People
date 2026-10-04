@@ -2,7 +2,6 @@
  * agames.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
  * a_playc: type at computer 0x80..0x1FF ticks, rare "clear screen".
  * a_plaag: filing cabinet -> game menu (1..5) -> game main -> cleanup.
- * addr: a_playc(), a_plaag()
  */
 
 #include "types.h"
@@ -28,12 +27,10 @@
 #include "walk.h"
 
 
-/* a_playc -> parts/a_playc.c (STX: 0xdece object, 0x12e86,
-   immediately before tv_scrc). */
+/* a_playc lives in parts/a_playc.c, in the object right before tv_scrc. */
 
-/* a_plaag: cabinet -> menu -> game -> cleanup.
-   tx_sctm timeout (300 -> 250 reload), a_sleep(1) yawn between polls.
-   addr: a_plaag() */
+/* The menu waits on the tx_sctm timeout (300, reloaded with 250 once it
+   runs low); while idle the resident yawns (a_sleep(1)) between polls. */
 
 
 void

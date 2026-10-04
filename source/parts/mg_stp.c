@@ -1,11 +1,9 @@
 /*
- * parts/mg_stp.c -- shared body; LCP_STX puts mg_stp at 0x759c, after
- * ag_matc.  Files under parts/ are never compiled standalone.
+ * parts/mg_stp.c -- included by games.c; never compiled on its own.
  */
 /* mg_stp: prep the top status strip for the game menu.
    Freezes text-scroll pane and disables keyboard input so keys
-   don't leak into the parser while a mini-game is running.
-   addr: mg_stp() */
+   don't leak into the parser while a mini-game is running. */
 
 void
 mg_stp()

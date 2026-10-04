@@ -1,7 +1,5 @@
 /*
- * parts/sc_sdtb.c -- shared body; LCP_STX links it in the 0xdece
- * object (in the 0xdece object). Files under parts/ are never compiled
- * standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void

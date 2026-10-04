@@ -1,8 +1,6 @@
 /*
- * parts/a_petd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * asimple functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_petd.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
@@ -19,8 +17,8 @@ a_petd()
         if (introSeq != NO)
                 ticks = 10;
 
-        /* A pre-decrement while with the break inverted -- the
-           subq's own flags, no tst. */
+        /* Pre-decrement loop condition with the break inside: this
+           shape is what the original compiles from; keep it. */
         while (--ticks != 0) {
                 gameTick(0);
                 if (g_trel[0] != ACTION_NONE)

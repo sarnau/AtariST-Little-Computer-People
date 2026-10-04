@@ -2,10 +2,10 @@
  *
  * Included transparently from types.h under `#ifdef __ALCYON__`.
  *
- * All long external identifiers were renamed in-source to unique
- * 7-character forms in the Path B rename pass (see namemap.md), so
- * this file no longer aliases anything.  It only patches the one
- * keyword Alcyon C doesn't recognise: `void`.
+ * Long external identifiers are spelled as unique 7-character names in
+ * the source itself (see namemap.md), so this file aliases nothing.  It
+ * only patches the keywords Alcyon C doesn't recognise: `void` and
+ * `volatile`.
  *
  * NOTE: cp68's macro-name table truncates to 8 characters, so any
  * long-name `#define` alias would collapse into an unintended

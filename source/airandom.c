@@ -1,6 +1,5 @@
 /*
  * airandom.c -- time-of-day / mood-based random action selector.
- * addr: chk_timA()
  */
 
 #include "types.h"
@@ -16,14 +15,13 @@
 #define WEEKDAY_SUNDAY          0
 #define WEEKDAY_SATURDAY        6
 
-/* addr: chk_timA() */
 short
 chk_timA()
 {
-        /* STX has three locals, not four: `table_pick` doubles as the
-           hours-since-wake temporary (frame -10), and the retry is an
-           explicit label rather than a loop -- the last arm carries no
-           branch back to the top. */
+        /* Three locals, not four: `table_pick` doubles as the
+           hours-since-wake temporary.  The retry is an explicit label
+           rather than a loop, as in the original -- the last arm
+           carries no branch back to the top. */
         short   table_pick;
         short   action_index;
         short   day;
@@ -35,9 +33,8 @@ chk_timA()
         if (table_pick >= 18 || lcp.sickness_level >= SICKNESS_MODERATE) {
                 table_pick = TIER_SLEEP;
         } else {
-                /* sch_tab is a real 2-D array here -- the shifted
-                   row/column offsets, the two ext.l and the trailing
-                   `add.l #base` are exactly Alcyon's `a[i][j]`. */
+                /* sch_tab must stay a real 2-D array: a table of row
+                   pointers compiles to different code. */
                 table_pick = (table_pick / 2) % 3;
                 table_pick = sch_tab[table_pick][lcp.activity_level];
 
@@ -48,11 +45,11 @@ chk_timA()
                         table_pick = TIER_MODERATE;
         }
 
-        /* The three table arms carry NO return statement: each one
-           simply ends, and the ladder's jump to the function end
-           leaves the freshly-compared value sitting in d0.  Only the
-           sleep arm returns explicitly, and it does so with a real
-           `else`. */
+        /* The three table arms deliberately have NO return statement:
+           each one simply ends, and the function returns whatever the
+           last comparison left in the return register.  Only the sleep
+           arm returns explicitly, with a real `else`.  Do not add the
+           missing returns -- they change the compiled code. */
 retry:
         if (table_pick == TIER_ACTIVE) {
                 action_index = g_atact[rndRng(0, 15)];

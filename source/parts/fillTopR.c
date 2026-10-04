@@ -1,7 +1,5 @@
 /*
- * parts/fillTopR.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x686c -- in LCP_STX this is the 0x400c object, not 0xdece).
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 
 void
@@ -10,7 +8,7 @@ short   max_y;
 {
         short   y;
 
-        /* STX aligns the buffer up to a 512-byte boundary instead. */
+        /* Align the buffer up to a 512-byte boundary. */
         g_dscp = (void *) dsb_stor;
         g_dscp = (void *) (((long) g_dscp + 512L) & ~511L);
 

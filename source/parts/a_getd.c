@@ -1,8 +1,5 @@
 /*
- * parts/a_getd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * ahouse functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -10,8 +7,8 @@ a_getd()
 {
         short   entry_current;
         short   h;
-        /* STX has only two locals: it reuses h as the loop counter
-           below, so its frame is 2 bytes smaller. */
+        /* Only two locals: h doubles as the loop counter below.
+           Do not add a separate one. */
 
         entry_current = g_hacur;
         h = g_hacur & 7;

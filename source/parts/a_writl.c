@@ -1,26 +1,24 @@
 /*
- * parts/a_writl.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aletter functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_writl.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_writl()
 {
-        /* Nine scalars and the section array LAST: swap_a doubles as
+        /* Declaration order fixes the stack-frame layout, so keep it:
+           nine scalars and the section array LAST.  swap_a doubles as
            the paragraph count and line_spacing as the '-' test, and
            every call result is consumed in place. */
-        short   section_id;             /* -2  */
-        short   i;                      /* -4  */
-        short   swap_a;                 /* -6  */
-        short   swap_b;                 /* -8  */
-        short   swap_temp;              /* -10 */
-        short   template_index;         /* -12 */
-        short   cursor_y;               /* -14 */
-        short   line_spacing;           /* -16 */
-        short   full_year;              /* -18 */
-        short   section_order[4];       /* -26 */
+        short   section_id;
+        short   i;
+        short   swap_a;
+        short   swap_b;
+        short   swap_temp;
+        short   template_index;
+        short   cursor_y;
+        short   line_spacing;
+        short   full_year;
+        short   section_order[4];
 
         if (lcp_recP != NO)
                 a_playp();

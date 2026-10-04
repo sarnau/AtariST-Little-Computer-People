@@ -1,17 +1,15 @@
 /*
- * parts/sp_ss02.c -- shared body; LCP_STX links it in the 0xdece
- * object at 0x12108 (see stx_u2.c). Files under parts/ are never
- * compiled standalone.
+ * parts/sp_ss02.c -- included by stx_u2.c; never compiled on its own.
  */
 
-/* sp_ss02: same as sp_ssco but in the in-front-of-LCP layer.
-   addr: sp_ss02() */
+/* Same as sp_ssco but in the in-front-of-LCP layer. */
 
 void
 sp_ss02(g_seix)
 short   g_seix;
 {
-        /* STX has no slot local (as in sp_sprs). */
+        /* No local for the slot (as in sp_sprs): g_seslm[] is
+           re-read at every use. */
         g_selaf[g_seix] = SPRITE_IN_FRONT;
         sp_upds();
         g_seaim[g_seslm[g_seix]]  = g_sedim[g_seix];

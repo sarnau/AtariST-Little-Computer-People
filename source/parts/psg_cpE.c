@@ -1,13 +1,12 @@
 /*
- * parts/psg_cpE.c -- shared body; LCP_STX puts it at 0x1586, at the end
- * of the MIDI object right before psg_upEn, so mq_dise reaches it with
- * a bsr.  Files under parts/ are never compiled standalone.
+ * Must sit right before psg_upEn, near mq_dise, which calls it.
+ *
+ * Included by midi_seq.c; never compiled on its own.
  */
-/* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct.
-   addr: psg_cpE() */
+/* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct. */
 void
-/* STX: a long count, tested by post-decrement, pointers stepped in
-   place. */
+/* A long count, tested by post-decrement, pointers stepped in place:
+   all as in the original. */
 psg_cpE(src, dest, count)
 unsigned char * src;
 unsigned char * dest;

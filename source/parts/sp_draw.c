@@ -1,8 +1,8 @@
 /*
- * parts/sp_draw.c -- LCP_STX links sp_draw in the sprite object at
- * 0x1605c, between putEv and sp_drin; sc_ren8 reaches it with a bsr.
- * Frame -8: only the position is latched, the extents are subscripted
- * at every use.  Files under parts/ are never compiled standalone.
+ * parts/sp_draw.c -- included by stx_u3.c; never compiled on its own.
+ *
+ * Only the position is latched in locals; the extents are subscripted
+ * at every use.  That is the original's shape -- keep it.
  */
 void
 sp_draw(index)

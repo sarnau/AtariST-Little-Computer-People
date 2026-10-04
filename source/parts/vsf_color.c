@@ -1,7 +1,6 @@
 /*
- * parts/vsf_color.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/vsf_color.c -- included by vdistx.c at its position in the
+ * binding module; never compiled on its own.
  */
 
 void

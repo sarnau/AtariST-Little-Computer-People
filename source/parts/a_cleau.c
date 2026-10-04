@@ -1,14 +1,11 @@
 /*
- * parts/a_cleau.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_cleau.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_cleau()
 {
-        /* STX consumes every call result in place -- no local. */
+        /* Every call result is consumed in place, with no local. */
 
         if (lcp_flcO != NO) {
                 hs_posXY(POS_TOP_FILING_CABINET,
@@ -29,10 +26,9 @@ a_cleau()
                 lcp_face = FACING_RIGHT;
                 lcp_st            = STATE_STAND_FACING_SCREEN;
                 /* The original really does compute g_hatas - 12 here
-                   and throw it away (STX 0xe9a0 = the Ghidra 0x1e9a0
-                   this comment already noted).  It is an expression
-                   statement in the source, not a compiler artifact,
-                   so the STX build emits it. */
+                   and throw it away.  It is an expression statement in
+                   the 1985 source and the compiler emits it, so it is
+                   kept on purpose. */
                 g_hatas - 12;
                 lcp_hwt();
                 lcp_face = FACING_LEFT;

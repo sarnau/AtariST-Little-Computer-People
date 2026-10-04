@@ -1,8 +1,5 @@
 /*
- * parts/a_chefd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void

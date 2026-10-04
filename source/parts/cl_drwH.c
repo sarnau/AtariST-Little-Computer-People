@@ -1,7 +1,5 @@
 /*
- * parts/cl_drwH.c -- shared body; LCP_STX links it in the 0xdece
- * object (between cl_redrH and drwLine). Files under parts/ are never
- * compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 

@@ -1,14 +1,12 @@
 /*
  * dat_u3a.c -- the initialized globals that belong to the stx_u3
- * OBJECT, in LCP_STX data order.
+ * object, in the original's data order.
  *
  * The 1985 sources declared their globals in the file that used them,
  * so each object's data segment is its own globals followed by the
- * string literals and switch tables its code emits.  The object that
- * owns a stretch of anonymous data is not a guess: a switch table's
- * relocation points into its own function, and a string is emitted in
- * the object that references it.  See CLAUDE.md, "DATA and BSS
- * layout".
+ * string literals and switch tables its code emits.  The ORDER of the
+ * declarations below therefore decides the data layout and must not
+ * change.  See CLAUDE.md, "DATA and BSS layout".
  *
  * Not compiled standalone -- included by stx_u3.
  */
@@ -27,13 +25,13 @@ short   g_trel[10] = {
 };
 
 
-/* Ghidra sprite_layer_flags @ 0x2b6ee: entries 0,1 = SPRITE_IN_FRONT (1),
+/* Sprite layer flags: entries 0,1 = SPRITE_IN_FRONT (1),
    rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
    0 and 7 in the hardware layout, per sp_upds). */
 short   g_selaf[SPRITE_SLOTS] = { 1, 1 };
 
 
-/* Ghidra sprite_slot_map @ 0x2b766: which hardware slot each logical
+/* Which hardware slot each logical
    sprite is currently mapped to.  Entries 0..1 pin the LCP body/head
    to their dedicated slots; the rest default to HW_SLOT_NONE (=9,
    the compositor's off-screen sentinel) and get assigned dynamically
@@ -61,13 +59,8 @@ short   g_seslm[SPRITE_SLOTS] = {
 
 
 
-/* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  LCP_STX has no builder for
-   these -- there is not a single `not.l` in its whole text -- because
-   it ships them as initialized DATA instead.
-   addr: bm32or, bm32and */
-
-/* LCP_STX ships both tables as initialized DATA rather than
-   building them at run time. */
+/* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  The original ships both
+   tables as initialized data rather than building them at run time. */
 long    bm32or[32] = {
         0x00000001L,
         0x00000002L,
@@ -142,10 +135,7 @@ long    bm32and[32] = {
 
 
 /* NINE HOUSE_POS entries the dog picks (via rndRng) as its next
-   wander target -- the picker's index is rndRng(base, 8), so 0..8.
-   The port carried a tenth entry duplicating POS_BTM_SCREEN_EDGE; the
-   reference puts g_dgitx 18 bytes after g_ddipt, which leaves room for
-   exactly nine. */
+   wander target -- the picker's index is rndRng(base, 8), so 0..8. */
 short   g_ddipt[9] = {
         POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
         POS_TOP_FIREPLACE_RIGHT,   POS_MID_BEDROOM_WALK,
@@ -155,7 +145,7 @@ short   g_ddipt[9] = {
 };
 
 
-/* Ghidra g_dgitx @ 0x2b8f0 = POS_BTM_SCREEN_EDGE.  Used by cutscene
+/* Used by the cutscene
    at startup to seed the dog's first wander target -- the dog walks
    in from the bottom-screen edge. */
 short   g_dgitx        = POS_BTM_SCREEN_EDGE;
@@ -164,18 +154,15 @@ short   g_dgitx        = POS_BTM_SCREEN_EDGE;
 short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };
 
 
-/* Ghidra g_dgiyo @ 0x2b904 = 3.  Y micro-nudge applied
+/* Y micro-nudge applied
    to the initial dog target position. */
 short   g_dgiyo            = 3;
 
 
 /* Per-destination pixel nudges applied after hs_posXY returns the
-   anchor for the destination.  g_ddyot is nine like g_ddipt, but the
-   reference gives g_ddxot ELEVEN -- g_dseat starts 22 bytes after it.
-   Only 0..8 are ever indexed, so whether the original wrote an
-   eleven-entry table or a nine-entry one followed by four unreferenced
-   zero bytes cannot be told apart from the binary; the layout is the
-   same either way. */
+   anchor for the destination.  g_ddyot is nine like g_ddipt, but
+   g_ddxot takes ELEVEN entries' worth of storage in the original.
+   Only 0..8 are ever indexed; the two extra zeros keep the layout. */
 short   g_ddxot[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
 
 
@@ -186,32 +173,27 @@ short   g_dseat[3]   = {
 
 
 /* Animation frame tables consumed by gameTick.  Every
-   value is an object_tab_mfdb index; game_tick indexes these by a
+   value is an object_tab_mfdb index; gameTick indexes these by a
    small counter to pick which sprite/frame to draw. */
-/* Object-animation frame tables (dumped from Ghidra data segment).
-   The previous port assignments were SCRAMBLED across each other:
-   g_obala had fire[0..1], g_obpha had alarm+phone[0..1], g_obfia had
-   phone[0..3].  Every od_draw of these tables drew the wrong sprite. */
 short   g_obcla[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
-                           OBJ_CLOCK_1, OBJ_CLOCK_3 };          /* clock_animation @ 0x2B922 */
+                           OBJ_CLOCK_1, OBJ_CLOCK_3 };
 
 
-short   g_obala[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };          /* alarm_animation @ 0x2B92A */
+short   g_obala[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };
 
 
 short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
-                           OBJ_PHONE_2, OBJ_PHONE_3 };          /* phone_animation @ 0x2B92E */
+                           OBJ_PHONE_2, OBJ_PHONE_3 };
 
 
 short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
-                           OBJ_FIRE_3, OBJ_FIRE_4 };            /* fire_animation  @ 0x2B936 */
+                           OBJ_FIRE_3, OBJ_FIRE_4 };
 
 
 
 /* Petting-dog sprite frames -- sprite ids the petting animation
    cycles through: ping-pong over frames 1..6 back down to 2.  TEN
-   entries, with no trailing SPRITE_PET_HAND_1 and no 0 terminator --
-   LCP_STX's data gap here is 20 bytes. */
+   entries, with no trailing SPRITE_PET_HAND_1 and no 0 terminator. */
 short   g_ptdsi[10]    = {
         SPRITE_PET_HAND_1, SPRITE_PET_HAND_2, SPRITE_PET_HAND_3,
         SPRITE_PET_HAND_4, SPRITE_PET_HAND_5, SPRITE_PET_HAND_6,
@@ -221,14 +203,11 @@ short   g_ptdsi[10]    = {
 
 
 
-/* Frame-state globals for the animation loop.  8-char-safe port names.
-   g_ptanf (petting_anim_frame) already lives in globals.c; the rest
-   are added here to keep globals.c under Alcyon's symbol-table
-   limit. */
-/* Ghidra petting_last_sprite_slot @ 0x2b952 = SPRITE_PET_HAND_1 (0x1b). */
+/* Frame-state globals for the petting animation (g_ptanf, the frame
+   counter, lives in globals.c).  g_ptlss is the last sprite drawn. */
 short   g_ptlss                         = SPRITE_PET_HAND_1;
 
 
 short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_2,
-                           OBJ_DOG_FOOD_BOWL_1 };  /* ROM 0x13584 */
+                           OBJ_DOG_FOOD_BOWL_1 };

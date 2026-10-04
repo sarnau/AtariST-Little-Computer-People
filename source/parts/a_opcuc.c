@@ -1,21 +1,17 @@
 /*
- * parts/a_opcuc.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_opcuc.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_opcuc(value)
 short   value;
 {
-        /* STX declares result but tests the call in place -- the
-           slot is allocated and never written (link #-6). */
+        /* Unused -- the call is tested in place -- but it must stay:
+           removing it changes the compiled code. */
         short   result;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        /* STX tests the walk call inline. */
         if (lcp_wkD() != 0)
                 return;
 
@@ -48,7 +44,7 @@ short   value;
 
         hs_posXY(POS_TOP_STUDY_DOOR,
                               &g_wtx, &g_wty);
-        /* STX: -= straight to memory. */
+        /* Written as -= on purpose: `x = x - n` compiles differently. */
         g_wty -= 3;
         g_wtx -= 10;
         g_actif = YES;
@@ -68,8 +64,9 @@ short   value;
         g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
         sp_upds();
 
-        /* Continue into the study; value != 0 -> save HYBER.
-           STX writes the condition the other way round. */
+        /* Continue into the study; value != 0 -> save HYBER.  The
+           test is written as `!= 0` on purpose: the inverted form
+           compiles differently. */
         if (value != 0)
                 lcp_std(YES, YES);
         else

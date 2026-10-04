@@ -1,11 +1,9 @@
 /*
- * parts/erChr.c -- LCP_STX only; the 0x400c object carries it at
- * 0x72e6, right before fOpen.  Files under parts/ are never compiled
- * standalone.
+ * parts/erChr.c -- included by stx_u1.c, right before fOpen; never
+ * compiled on its own.
  */
 
-/* erChr: blank one 8x8 character cell whose baseline is (x, y).
-   addr: 0x72e6 */
+/* Blank one 8x8 character cell whose baseline is (x, y). */
 
 void
 erChr(x, y, color)

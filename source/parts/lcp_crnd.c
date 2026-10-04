@@ -1,18 +1,16 @@
 /*
- * parts/lcp_crnd.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x69d8, in the 0x400c object after rnd). Files under parts/
- * are never compiled standalone.
+ * parts/lcp_crnd.c -- included by stx_u1.c, after rnd; never compiled
+ * on its own.
  */
-/* lcp_crnd (Ghidra 0x169D8): populate PLAYER for a new game.
-   1985 code also picks a random name from "names"; skipped here
-   (avoids fOpen); character_name left NUL. */
+/* Roll a new resident: appearance, schedule, personality and needs,
+   plus a random name. */
 
 void
 lcp_crnd()
 {
-        /* Two locals; the first is reused as the loop index.  STX
-           picks the resident's NAME out of a 266-entry, 10-byte
-           record file rather than leaving it empty. */
+        /* Two locals; the first is both the record offset and the
+           loop index.  The name is a random record of the 266-entry,
+           10-byte NAMES file; padding bytes below 'A' are cleared. */
         short   tmp;
         short   fhnd;
 

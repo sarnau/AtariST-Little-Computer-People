@@ -1,14 +1,13 @@
 /*
- * parts/lc_load.c -- shared body; LCP_STX links it in the 0x400c
- * object, ahead of gameLoop (0x5ac8). Files under parts/ are never
- * compiled standalone.
+ * Sits ahead of gameLoop.
+ *
+ * Included by stx_u1.c; never compiled on its own.
  */
 short
 lc_load()
 {
-        /* STX: link #-8 -- the result goes through a second local, the
-           open mode is a word, and the whole body hangs off the open
-           test. */
+        /* The result goes through a second local and the whole body
+           hangs off the open test, as in the original. */
         short   fhnd;
         short   ok;
 

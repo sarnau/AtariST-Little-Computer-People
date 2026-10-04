@@ -1,14 +1,12 @@
 /*
- * parts/a_tidyh.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_tidyh.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
 a_tidyh()
 {
-        /* STX tests the walk call inline -- no local, smaller frame. */
+        /* The walk call is tested inline, with no local for it. */
 
         hs_posXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
@@ -21,8 +19,8 @@ a_tidyh()
         lcp_hwt();
         a_watat();
 
-        /* STX has no local at all here: both call results are used
-           in place, which is why its frame is 2 bytes smaller. */
+        /* Both call results are used in place; adding a local here
+           would change the compiled code. */
         if (lcp.initiative_threshold < rndRng(0, 100) ||
             introSeq != NO)
                 a_opcfc();

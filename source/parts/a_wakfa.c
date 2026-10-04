@@ -1,15 +1,12 @@
 /*
- * parts/a_wakfa.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * asimple functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_wakfa.c -- walk to the bedroom and clear the alarm flag.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_wakfa()
 {
-        /* STX tests the walk call inline -- no local, so its frame
-           is 2 bytes smaller. */
+        /* The walk call is tested inline, without a local. */
 
         hs_posXY(POS_MID_BEDROOM_WALK,
                               &g_wtx, &g_wty);

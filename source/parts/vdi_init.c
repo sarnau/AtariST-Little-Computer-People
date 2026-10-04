@@ -1,10 +1,9 @@
 /*
- * parts/vdi_init.c -- LCP_STX splits the port's vdi_init in two:
- * this half (0x6680) opens the virtual workstation through global
- * work arrays, refuses anything but low resolution, and tail-calls
- * the attribute/clear half (parts/vdi_cls.c, 0x66fe, which must sit
- * immediately after it -- the call is a bsr.s).  Files under parts/
- * are never compiled standalone.
+ * parts/vdi_init.c -- the first half of vdi_init: opens the virtual
+ * workstation through the global work arrays, refuses anything but low
+ * resolution, and then calls the attribute/clear half
+ * (parts/vdi_cls.c), which must directly follow it.
+ * Included by stx_u1.c; never compiled on its own.
  */
 void
 vdi_init()

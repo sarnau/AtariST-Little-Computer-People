@@ -1,7 +1,8 @@
 /*
- * parts/scn_dec.c -- LCP_STX 0x52ca.  The .SCN nibble decoder; the
- * file handling around it is inlined in main (there is no unScn).
- * Files under parts/ are never compiled standalone.
+ * parts/scn_dec.c -- the .SCN nibble decoder.  Each nibble indexes the
+ * 15-entry scn_dic dictionary; nibble 0xf escapes to a literal 16-bit
+ * value in the next four nibbles.  The file handling around it is
+ * written out in main.  Included by stx_u1.c; never compiled on its own.
  */
 void
 scn_dec(src, out, count)

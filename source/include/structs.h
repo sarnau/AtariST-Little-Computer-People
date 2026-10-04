@@ -1,11 +1,9 @@
 /*
- * structs.h -- game struct layouts (Ghidra-verified against LCP.PRG).
+ * structs.h -- game struct layouts.
  *
  * Field order and sizes must match the original binary layout; the
  * 128-byte HYBER save file loads directly into the LCP struct via
- * memcpy(). Keep offsets in sync with lcp/structs.py.
- *
- * addr: LCP struct at Ghidra symbol "lcp"; HYBER file layout.
+ * memcpy().
  */
 
 #ifndef STRUCTS_H
@@ -31,8 +29,8 @@
 #endif
 #endif
 
-/* PLAYER (LCP) -- 128-byte persistent character state.
-   Layout verified via Ghidra struct editor and HYBER save file dumps. */
+/* PLAYER (LCP) -- 128-byte persistent character state; also the
+   layout of the HYBER save file. */
 typedef struct {
         /* Appearance                                       0x00 */
         short   clothing_color;
@@ -104,8 +102,8 @@ typedef struct {
 } PLAYER;
 
 /* PSG_ENVELOPE -- ADSR envelope state for one YM2149 PSG channel.
-   14-byte runtime layout matching Ghidra's psg_envelope struct
-   (`muls.w #0xe` at 0x115c0 confirms sizeof = 0xe = 14).  The 8-byte
+   14-byte runtime layout (the code indexes the array with a stride
+   of 14).  The 8-byte
    on-disk ADSR parameter block from Activision Music Studio 2.0's
    .SNG / .ORG files maps onto offsets 1..8 (attack_start_vol
    through release_duration), so psg_cpE can memcpy directly into
@@ -115,8 +113,8 @@ typedef struct {
 
    Field offsets are hand-controlled with explicit byte padding
    because Alcyon C 4.14 doesn't guarantee any specific alignment
-   for `short`s within structs (usually 2-byte, but the ROM's
-   0xe total confirms no padding between offset 9 and offset 10). */
+   for `short`s within structs (usually 2-byte; the 14-byte total
+   means there is no padding between offset 9 and offset 10). */
 typedef struct {
         char            phase;                  /* off 0  ENV_ATTACK..    */
         unsigned char   attack_start_vol;       /* off 1  volume 0..15    */
@@ -134,7 +132,7 @@ typedef struct {
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
-   12-byte LCP_STX layout (chk_encm @0x16f9a walks rows with muls #12):
+   12-byte layout (chk_encm walks the rows with a stride of 12):
    `table[10]` signed bitmask bytes, the ACTION_ID byte at +10, then
    the priority offset byte at +11.  A sentinel entry with
    `table[0] == 0xff` terminates the table. */
@@ -157,7 +155,6 @@ typedef struct {
 } RECT16;
 
 /* _DTA is defined in <ostruct.h> (included above) -- do not redeclare.
-   Callers use _DTA * directly; the on-disk layout is identical to
-   the previous port-local `DTA` typedef (44 bytes). */
+   Callers use _DTA * directly (44 bytes). */
 
 #endif  /* STRUCTS_H */

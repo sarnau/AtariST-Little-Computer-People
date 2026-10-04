@@ -1,2 +1,2 @@
-/* pk_ldCrd -> parts/pk_ldCrd.c (STX links it in the games
-   object at 0xab04, just before pk_awp). */
+/* pk_ldCrd lives in parts/pk_ldCrd.c, included by games.c just
+   before pk_awp. */

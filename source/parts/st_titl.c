@@ -1,25 +1,24 @@
 /*
- * parts/st_titl.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x6d7e, in the 0x400c object after pa_skic). Files under
- * parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* st_titl: the interactive title screen -- decode TITLE.SCN onto the
    spare screen buffer, then take the owner's name, the date and the
    time from the keyboard.  Nothing is validated until the whole field
-   is typed, and a bad field simply re-runs its own entry.
-   addr: st_titl() */
+   is typed, and a bad field simply re-runs its own entry. */
 
 void
 st_titl()
 {
-        short   unused;         /* -2, never referenced */
-        short   ch;             /* -4  */
-        short   fhandle;        /* -6  */
-        short   n;              /* -8  */
-        short   colour;         /* -10 */
-        short   j;              /* -12 */
-        short   unused2;        /* -14, never referenced */
-        short   unused3;        /* -16, never referenced */
+        /* Declaration order, and the three unused locals, must stay:
+           they fix the stack frame the original has. */
+        short   unused;         /* never referenced */
+        short   ch;
+        short   fhandle;
+        short   n;
+        short   colour;
+        short   j;
+        short   unused2;        /* never referenced */
+        short   unused3;        /* never referenced */
 
         g_dscp  = sv_phb;
         fhandle = fOpen("title.scn", RMODE_RD);
@@ -40,14 +39,14 @@ st_titl()
            still decoded above, so the screen buffer and the file path
            are in the same state as a real run.
 
-           A REAL date and time, not the 0-0-0 noon the pre-STX stub
-           used: with dt_year 0 the move-in cutscene never finishes and
-           the compositor corrupts the screen within a couple of
-           minutes.  These are the values a manual run enters --
-           09/04/26, 10:30 AM -- and they reach gameplay cleanly.
+           A REAL date and time: with dt_year 0 the move-in cutscene
+           never finishes and the compositor corrupts the screen within
+           a couple of minutes.  These are the values a manual run
+           enters -- 09/04/26, 10:30 AM -- and they reach gameplay
+           cleanly.
 
            NOT part of the shipped configuration: the default build
-           must stay byte-identical to DATA/LCP_STX.PRG. */
+           must stay byte-identical to the original. */
         lcp.owner_name[0] = 'P';
         lcp.owner_name[1] = 'L';
         lcp.owner_name[2] = 'A';

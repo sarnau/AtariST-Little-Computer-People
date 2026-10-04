@@ -1,7 +1,5 @@
 /*
- * parts/al_loal.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x6428, in the 0x400c object ahead of fl_ltpl). Files under
- * parts/ are never compiled standalone.
+ * parts/al_loal.c -- included by stx_u1.c; never compiled on its own.
  */
 /* al_loal: load BODY.LCP / PE2..6.LCP into caller buffer.
    Header: {count:BE16, total_bytes:BE16, payload}.  Returns frame count. */
@@ -11,9 +9,11 @@ al_loal(filename, dest_buf)
 char *          filename;
 unsigned char * dest_buf;
 {
-        /* STX's frame is -14: two unused shorts ahead of the two
-           header words and the handle.  There is no size cap and no
-           return value -- the header's second word IS the length. */
+        /* pad1/pad2 are unused, but they must stay ahead of the two
+           header words and the handle: removing them changes the
+           compiled code.  There is no size cap and no return value
+           (despite the declared short) -- the header's second word IS
+           the length. */
         short   pad1;
         short   pad2;
         short   count;

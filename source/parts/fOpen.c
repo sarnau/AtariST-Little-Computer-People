@@ -1,21 +1,20 @@
 /*
- * parts/fOpen.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x730e). Files under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* rwmode: 0=read, 1=write, 2=both.  Three tries with a 1s sleep, then
-   Retry alert loop.
-   addr: fOpen() */
+   Retry alert loop. */
 short
 fOpen(filename, rwmode)
 char *  filename;
 short   rwmode;
 {
-        short   retry;          /* STX declares the counter first */
+        short   retry;          /* declared first, as in the original */
         short   fhandle;
 
         retry = 0;
-        /* STX: an explicit backward goto from both arms -- neither
-           branch goes through a shared loop-back. */
+        /* An explicit backward goto from both arms rather than a loop:
+           neither branch goes through a shared loop-back, as in the
+           original. */
 again:
         fhandle = Fopen(filename, rwmode);
         if (fhandle >= 0)

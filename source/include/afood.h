@@ -1,4 +1,4 @@
-/* afood.h -- extern declarations for afood.c. */
+/* afood.h -- extern declarations for the food actions (bodies in parts/). */
 
 #ifndef AFOOD_H
 #define AFOOD_H

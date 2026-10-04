@@ -1,17 +1,14 @@
 /*
- * parts/mq_rmev.c -- shared body; LCP_STX links it in the 0xdece
- * object (0xe64, right after mq_expN). Files under parts/ are never
- * compiled standalone.
+ * parts/mq_rmev.c -- included by midi_seq.c; never compiled on its own.
  */
 /* mq_rmev: remove 3-word entry at mi_evq[val]; shift later down.
-   Returns 1 if more remain, 0 if empty.
-   addr: midi_seq_remove_event() */
+   Returns 1 if more remain, 0 if empty. */
 
 short
 mq_rmev(val)
 short   val;
 {
-        /* STX: one local; each arm shrinks the queue and returns. */
+        /* Each arm shrinks the queue itself and returns. */
         short   i;
 
         if (val + 3 == mi_evi) {

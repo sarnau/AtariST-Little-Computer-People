@@ -16,7 +16,7 @@ extern void blkcp32();
 extern void cpyScr();
 extern void aes_init();
 extern void vdi_init();
-extern void vdi_cls();          /* STX 0x66fe, vdi_init's second half */
+extern void vdi_cls();          /* vdi_init's second half */
 extern void stpScrB();
 extern void vst_h20();
 extern void rst_vsth();

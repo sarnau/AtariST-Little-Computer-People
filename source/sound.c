@@ -1,6 +1,5 @@
 /*
  * sound.c -- SFX queue + Dosound driver + .SNG song loader.
- * addr: sf_sele(), sf_so(), sf_sl(), sgPlay()
  */
 
 #include "types.h"
@@ -15,19 +14,17 @@
 
 /* One-line SFX wrappers.  K&R style (Alcyon 4.14). */
 
-/* The four SFX wrappers sit immediately after a_hello in the 0xdece
-   object (a_hello reaches each with a bsr), in the order tvc, spe,
-   hnd, grt -- stx_u2.c includes them there. */
-/* p_dobls -> parts/p_dobls.c (STX: 0x15f9a, after deal_kc). */
+/* The four SFX wrappers sit right after a_hello, in the order tvc,
+   spe, hnd, grt -- stx_u2.c includes them there.  p_dobls, lt_sets
+   and sfClick live in parts/ too. */
 
-/* lt_sets -> parts/lt_sets.c (STX: 0x1476c, immediately before sfClick). */
-
-/* sfClick -> parts/sfClick.c (STX: 0xdece object, 0x14786, just before lcp_wkD). */
-
-/* sf_sl (0xdcc4): the SOUNDS.LCP block loader -- fr_read sizes, a
-   Malloc per block, the result stored into mi_ntLp[index] and read
-   back, `(long) size + 4` widening, and the buffer walked with
-   block++ before the payload read. */
+/* sf_sl: the SOUNDS.LCP block loader.  Each block is a 2-byte size
+   followed by its payload; a size of 0 ends the file.  Every block
+   gets its own Malloc of size + 4, stored in mi_ntLp[index], with the
+   size in its first word and the payload behind it.  The details --
+   the result stored into mi_ntLp and read back, `(long) size + 4`
+   widening, block++ before the payload read -- are the original's
+   shape and must stay. */
 void
 sf_sl()
 {
@@ -52,8 +49,7 @@ sf_sl()
         Fclose(fhandle);
 }
 
-/* Lower priority value wins.
-   addr: sf_sele() */
+/* Lower priority value wins. */
 void
 sf_sele(sound_id, duration)
 short   sound_id;
@@ -68,7 +64,7 @@ long    duration;
         }
 }
 
-/* addr: sf_so() (ROM 0xb122) */
+/* Silence the three PSG channels and mark no effect playing. */
 void
 sf_so()
 {
@@ -81,4 +77,4 @@ sf_so()
 }
 
 
-/* sgPlay -> parts/sgPlay.c (STX: 0xd9ea, ahead of sf_irqp). */
+/* sgPlay lives in parts/sgPlay.c. */

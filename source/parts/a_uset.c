@@ -1,13 +1,13 @@
 /*
- * parts/a_uset.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x101be, immediately before a_clotd). Files under parts/ are never
- * compiled standalone.
+ * Must sit directly before a_clotd.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_uset()
 {
-        /* STX tests the call in place -- no local. */
+        /* The walk call is tested in place, with no local. */
         short   saved_x;
 
         hs_posXY(POS_MID_TOILET_DOOR,
@@ -70,7 +70,7 @@ a_uset()
         gameTick(1);
 
         /* 45..60 ticks, then flush + 16 tick refill. */
-        gameTick(rndRng(45, 60));       /* STX: no temporary */
+        gameTick(rndRng(45, 60));       /* no temporary, on purpose */
         sf_sele(SFX_TOILET_FLUSH, 6L);
         gameTick(16);
 

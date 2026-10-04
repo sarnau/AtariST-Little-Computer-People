@@ -1,15 +1,14 @@
 /*
- * parts/rndRng.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x74fc, in the minigame object right after mg_wkev). Files under
- * parts/ are never compiled standalone.
+ * parts/rndRng.c -- included by games.c, right after mg_wkev; never
+ * compiled on its own.
  */
-/* addr: rndRng() */
 short
 rndRng(low, high)
 short   low;
 short   high;
 {
-        /* STX: link #-8 -- r plus a slot that is never written. */
+        /* Random number in [low, high].  Keep both locals: they are
+           the original's, and the frame depends on them. */
         short   r;
         short   result;
 

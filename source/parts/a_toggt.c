@@ -1,10 +1,8 @@
 /*
- * parts/a_toggt.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x13bb2, immediately before tt_on). Files under parts/ are
- * never compiled standalone.
+ * parts/a_toggt.c -- switch the TV on or off.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
-/* addr: a_toggt() */
 void
 a_toggt()
 {

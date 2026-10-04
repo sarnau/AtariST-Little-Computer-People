@@ -1,15 +1,12 @@
 /*
- * parts/a_dance.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * ahouse functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_dance()
 {
-        /* STX has one local (the loop counter); the walk result is
-           tested in place. */
+        /* One local (the loop counter); the walk result is tested
+           in place. */
         short   i;
 
         pst_arr[0] = STATE_DANCE_STEP_LEFT;
@@ -32,8 +29,8 @@ a_dance()
         g_hatas = 8;
         lcp_hwt();
 
-        /* STX never initialises i -- the first iteration reads
-           whatever the frame slot held.  Preserved as written. */
+        /* i is never initialised -- the first iteration reads
+           whatever the frame slot held.  Kept as in the original. */
         while (mi_play != NO) {
                 i++;
                 lcp_st = pst_arr[i & 1];

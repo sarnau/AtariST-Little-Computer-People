@@ -1,8 +1,6 @@
 /*
- * parts/a_watat.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * adoors functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_watat.c -- the resident tends the fireplace.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -28,7 +26,7 @@ a_watat()
 
         lcp_st = STATE_STOKE_FIREPLACE;
         gameTick(1);
-        /* STX writes i++ here (addq straight to the frame slot). */
+        /* Written as i++ on purpose: i = i + 1 compiles differently. */
         for (i = 0; i < 10; i++) {
                 lcp_face = rndRng(0, 1);
                 gameTick(0);

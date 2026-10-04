@@ -1,14 +1,12 @@
 /*
- * parts/plEr.c -- plEr's body, shared between configurations.
+ * plEr: clear a rectangle via VDI v_bar.
  *
- * LCP_STX puts it at 0x86e0, past the anagram helpers (ag_intr
- * 0x7f84) -- and that distance is what makes its initVdi call a
- * bsr.w instead of a bsr.s.  Files under parts/ are never compiled
- * standalone.
+ * Its place in games.c, after the anagram helpers and far from
+ * initVdi, matters: closer, the initVdi call would compile to a
+ * shorter branch than the original's.
+ *
+ * Included by games.c; never compiled on its own.
  */
-
-/* plEr: clear a rectangle via VDI v_bar.
-   addr: plEr() */
 
 void
 plEr(x1, y1, x2, y2)

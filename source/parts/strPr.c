@@ -1,7 +1,6 @@
 /*
- * parts/strPr.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x16ea8, immediately before prCh). Files under parts/ are never
- * compiled standalone.
+ * parts/strPr.c -- included by stx_u3.c; never compiled on its own.
+ * Draws a string character by character through prCh, 8 pixels apart.
  */
 
 void
@@ -11,8 +10,8 @@ short   x;
 short   y;
 short   color;
 {
-        /* STX: a short ch, the fetch/step folded into the while
-           condition, and x stepped in the argument slot. */
+        /* A short ch, with the fetch and step folded into the while
+           condition: the original's shape. */
         short   ch;
 
         while ((ch = *str++) != 0) {

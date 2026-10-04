@@ -1,10 +1,11 @@
 /*
- * parts/rv_bld.c -- LCP_STX builds the 8-bit bit-reversal table at
- * boot (0x680e) instead of shipping it as data.  Three register
- * variables (d7/d6/d5 in declaration order) and one frame local for
- * the walking pointer.  initBRev (parts/initBRev.c) must sit
- * immediately before it -- the call is a bsr.s.
- * Files under parts/ are never compiled standalone.
+ * parts/rv_bld.c -- builds the 8-bit bit-reversal table at boot
+ * instead of shipping it as data.  Three register variables in this
+ * declaration order and one frame local for the walking pointer, as in
+ * the original.  initBRev (parts/initBRev.c) must sit immediately
+ * before it.
+ *
+ * Included by stx_u1.c; never compiled on its own.
  */
 void
 rv_bld()

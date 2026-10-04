@@ -1,16 +1,15 @@
 /*
- * parts/a_driwa.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * abathrm functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_driwa.c -- the resident stands at the kitchen sink with the
+ * water running.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_driwa(value)
 short   value;
 {
-        /* STX declares them rnd, counter, last_pick, pick -- the
-           frame offsets follow that order. */
+        /* Declaration order matters: it sets the stack-frame layout,
+           which must match the original. */
         short           rnd;
         short           counter;
         short           last_pick;
@@ -32,13 +31,12 @@ short   value;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
-        /* STX folds the mask into the assignment (computed once). */
         rnd = (unsigned short)(Random() & 0x1f) | 4;
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
-        /* STX masks at the assignment and never initialises
-           last_pick -- the first comparison reads whatever the frame
-           slot held.  Preserved as the original wrote it. */
+        /* last_pick is never initialised, so the first comparison
+           reads whatever the stack slot held.  That is how the 1985
+           code is written; do not "fix" it. */
         for (counter = 0; counter < rnd; counter++) {
                 pick = Random() & 3;
                 while (pick == last_pick)

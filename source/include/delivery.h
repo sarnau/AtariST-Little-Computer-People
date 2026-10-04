@@ -1,4 +1,5 @@
-/* delivery.h -- extern declarations for delivery.c. */
+/* delivery.h -- extern declarations for one group of resident actions.  Their
+   bodies live in parts/, compiled as part of stx_u2.c. */
 
 #ifndef DELIVERY_H
 #define DELIVERY_H

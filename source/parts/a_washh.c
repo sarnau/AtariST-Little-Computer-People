@@ -1,16 +1,12 @@
 /*
- * parts/a_washh.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * abathrm functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_washh()
 {
-        /* STX tests the call in place -- no local. */
-        /* STX declares them rnd, counter, last_pick, val, all
-           signed -- the same layout as a_driwa. */
+        /* The walk call is tested in place, with no local.  The locals
+           are declared in this order, all signed, as in a_driwa. */
         short           rnd;
         short           counter;
         short           last_pick;
@@ -33,8 +29,9 @@ a_washh()
         rnd = (unsigned short)(Random() & 0x7f) | 4;
         sf_sele(SFX_WATER_RUNNING, 10000L);
 
-        /* last_pick is never initialised in STX (as in a_driwa);
-           the counter is. */
+        /* last_pick is never initialised (as in a_driwa), so the first
+           comparison reads whatever the slot held.  1985 code, kept on
+           purpose. */
         counter = 0;
         while (counter < rnd) {
                 if (g_trel[0] != ACTION_NONE)

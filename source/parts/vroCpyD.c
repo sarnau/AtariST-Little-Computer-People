@@ -1,10 +1,8 @@
 /*
- * parts/vroCpyD.c -- shared body; LCP_STX puts vroCpyD in the 0x400c
- * object at 0x63cc, between hs_posXY and al_loal -- not with the VDI
- * bindings it wraps.  Files under parts/ are never compiled
- * standalone.
+ * parts/vroCpyD.c -- included by stx_u1.c; never compiled on its own.
+ * It sits with the game code, not with the VDI bindings it wraps.
  */
-/* addr: vroCpyD() (ROM 0xd8d2) -- discrete-argument vro_cpyfm. */
+/* vro_cpyfm with the coordinates as separate arguments. */
 void
 vroCpyD(handle, mode, src, dst, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2)
 short   handle;

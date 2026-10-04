@@ -1,10 +1,11 @@
 /*
- * parts/lcp_hwt.c -- shared body; LCP_STX puts it at 0x1568a, directly before gameTick (0x156a6),
- * so its call to gameTick is a SHORT bsr.
+ * parts/lcp_hwt.c -- included by stx_u3.c; never compiled on its own.
+ * It must sit directly before gameTick so its call to gameTick stays a
+ * short branch.
  */
 
-/* lcp_hwt: tick until g_hacur == g_hatas.
-   addr: lcp_hwt() */
+/* Tick until the head animation reaches its target (g_hacur ==
+   g_hatas). */
 
 void
 lcp_hwt()

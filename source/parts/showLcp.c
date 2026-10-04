@@ -1,10 +1,8 @@
 /*
- * parts/showLcp.c -- shared body; LCP_STX links it in the 0xdece
- * object (see stx_u2.c).
+ * parts/showLcp.c -- included by stx_u2.c; never compiled on its own.
  */
 
-/* showLcp: restore the pointers hideLcp() stashed.
-   addr: showLcp() */
+/* showLcp: restore the pointers hideLcp() stashed. */
 
 void
 showLcp()

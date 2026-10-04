@@ -1,6 +1,6 @@
 /*
- * parts/initVdi.c -- shared body; LCP_STX 0x764e, right after
- * rst_vsth.  Files under parts/ are never compiled standalone.
+ * parts/initVdi.c -- included by games.c, right after rst_vsth; never
+ * compiled on its own.
  */
 void
 initVdi()

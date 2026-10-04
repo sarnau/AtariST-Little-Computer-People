@@ -1,13 +1,11 @@
 /*
- * stx_u4.c -- STX unity unit for the sound object that immediately
- * precedes the big 0xdece one.
+ * stx_u4.c -- unity unit for the sound object that immediately
+ * precedes stx_u2's.
  *
- * Evidence: sf_irqp reaches sf_so with a bsr (0xdb2e -> 0xddd8), so
- * the two share an object; lt_sets (0x1476c, inside the 0xdece
- * object) reaches sf_sele with a jsr, so this is NOT that object.
- * Order follows the byte-matched members' STX addresses:
- *     sgPlay 0xd9ea < sf_irqp 0xdafc < sf_sl 0xdcc4
- *     < sf_sele 0xdd88 < sf_so 0xddd8
+ * sf_irqp calls sf_so as a same-object call, so the two share an
+ * object; lt_sets (in stx_u2's object) calls sf_sele as an external,
+ * so this is NOT that object.  Function order, which must not change:
+ *     sgPlay < sf_irqp < sf_sl < sf_sele < sf_so
  */
 
 
@@ -27,7 +25,7 @@
 #include "dat_u4.c"
 
 
-#include "parts/sgPlay.c"    /* 0xd9ea, first of the object */
-#include "sfx_irq.c"         /* sf_irqp 0xdafc */
-#include "sound.c"           /* sf_sl 0xdcc4 < sf_sele < sf_so */
+#include "parts/sgPlay.c"    /* first of the object */
+#include "sfx_irq.c"         /* sf_irqp */
+#include "sound.c"           /* sf_sl, sf_sele, sf_so */
 

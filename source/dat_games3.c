@@ -15,6 +15,6 @@ char *          pk_rm     = "I'll raise __.";
    underscores are the digit slots the original ships -- pk_dbet and
    pk_dppm overwrite the two in pk_bm/pk_rm, pk_cdrw the one in
    pk_tcm (and the trailing "." becomes "s." for a plural draw).
-   They are POINTERS, not arrays, so every patch goes through a
-   movea.l of the variable first. */
+   They are POINTERS, not arrays, so every patch loads the pointer
+   first; declaring them as arrays changes the compiled code. */
 char *          pk_bm     = "I'll bet __.";

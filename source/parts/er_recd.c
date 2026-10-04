@@ -1,19 +1,17 @@
 /*
- * parts/er_recd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * delivery functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/er_recd.c -- included by stx_u2.c; never compiled on its own.
+ * A record delivery: fetch it from the front step and take it upstairs.
  */
 
 void
 er_recd()
 {
-        short   unused;         /* STX: link #-6, the slot is never written */
+        short   unused;         /* never written, but must stay */
 
         g_actif = YES;
         wkFrDr();
-        /* STX writes the pick-up sequence out in each handler --
-           there is no dv_pick helper in that revision. */
+        /* The pick-up sequence is written out in each delivery
+           handler, not factored into a helper. */
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
@@ -51,6 +49,6 @@ er_recd()
         lcp_st = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        lcp_food++;                 /* 1985 typo, preserved */
+        lcp_food++;                 /* 1985 typo, kept on purpose */
         g_actif = NO;
 }

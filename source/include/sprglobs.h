@@ -5,15 +5,15 @@
 
 #include "types.h"
 
-/* Number of logical sprite-definition slots.  The port keeps one
-   shared 60-entry table (matching the ROM); slot IDs are
+/* Number of logical sprite-definition slots: one shared 60-entry
+   table; slot IDs are
    SPRITE_* enum values in include/enums.h.  The sprite-slot map
    `g_seslm[SPRITE_SLOTS]` picks which of the SPRITE_HW_SLOTS
    hardware slots each logical sprite lands on. */
 #define SPRITE_SLOTS    60
 
-/* Number of hardware sprite slots the compositor maintains.  Matches
-   ROM.  Slot roles are named individually below. */
+/* Number of hardware sprite slots the compositor maintains.  Slot
+   roles are named individually below. */
 #define SPRITE_HW_SLOTS         8
 
 /* Hardware-slot IDs (indices into g_sepim/g_sepms/g_seaim/g_seams/
@@ -52,14 +52,13 @@
    carrying path writes g_sepex/g_sepey[g_seslm[g_lcieo]] every frame,
    and sp_ssco/sp_ss02 write g_seaim/g_seams/g_seach/g_seacw the same
    way -- so any of these arrays can be indexed at HW_SLOT_NONE when a
-   carried sprite is momentarily hidden.  LCP_STX's 8-entry arrays
-   tolerate the [9] write because it overflows into the ADJACENT array
-   (g_sepey[9] == g_seacw[1], a harmless short) -- which is only true
-   while the link order is the original's.  The port used to allocate
-   10 entries to make the stray write inert regardless of layout; that
-   costs 4 bytes per array against LCP_STX, so the allocation is back
-   to 8 and the safety now rests on reproducing the original's array
-   adjacency.  Loops and bounds checks use SPRITE_HW_SLOTS (8). */
+   carried sprite is momentarily hidden.  The original's 8-entry
+   arrays tolerate the [9] write because it overflows into the
+   ADJACENT array (g_sepey[9] == g_seacw[1], a harmless short) -- which
+   is only true while the BSS layout is the original's.  So the arrays
+   stay at 8 and the safety rests on that adjacency; widening them
+   would change the layout.  Loops and bounds checks use
+   SPRITE_HW_SLOTS (8). */
 #define SPRITE_HW_SLOTS_ALLOC   SPRITE_HW_SLOTS
 
 extern short lcp_st;

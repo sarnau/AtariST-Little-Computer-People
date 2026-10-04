@@ -1,15 +1,12 @@
 /*
- * parts/getFlrY.c -- shared body; LCP_STX puts it at 0x5224 in the
- * 0x400c object, right after lcp_flwp and before ldObj.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
-/* addr: getFlrY() */
 short
 getFlrY(y)
 short   y;
 {
-        /* STX: one if/else-if/else chain -- each arm's return is
-           followed by the else-skip branch. */
+        /* One if/else-if/else chain on purpose: the original
+           follows each arm's return with an else-skip branch. */
         if (y > 140)
                 return FLOOR_BOTTOM;
         else if (y > 77)

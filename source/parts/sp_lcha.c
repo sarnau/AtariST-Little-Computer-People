@@ -1,7 +1,5 @@
 /*
- * parts/sp_lcha.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x16368, between sp_updb and sp_lchu). Files under parts/
- * are never compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
 
 /* Head-animation mode bits (sprhead.c's own defines, repeated here so
@@ -15,11 +13,11 @@
 #define HEAD_MODE_V_OVERRIDE            0x80
 #endif
 
-/* addr: sp_lcha() */
 void
 sp_lcha()
 {
-        /* Eleven shorts, one of them (-14) never touched. */
+        /* `unused` is never touched but must stay: removing it changes
+           the compiled code. */
         short   anim_mode;
         short   curTilt;
         short   tgtTilt;
@@ -41,8 +39,8 @@ sp_lcha()
                 goto apply_current;
 
         /* Pick a fresh target.  Coin-flip between a horizontal
-           adjustment and a vertical one -- STX tests for the bit being
-           CLEAR and puts the horizontal picker first. */
+           adjustment and a vertical one -- the test is for the bit being
+           CLEAR, with the horizontal picker first, as in the original. */
         g_hadec = rndRng(2, 9);
 
         if ((rnd() & 0x10) == 0) {

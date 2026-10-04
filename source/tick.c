@@ -1,6 +1,5 @@
 /*
  * tick.c -- main frame driver (gameTick).
- * addr: gameTick() @ Ghidra 0x256A6
  */
 
 #include "types.h"
@@ -21,9 +20,10 @@
 
 
 
-/* addr: gameTick() (ROM 0xce28).  Carrying mode (g_lcyof) repositions
-   the carried sprite and RETURNS -- in this binary Path B does not
-   fall through into the animation loop. */
+/* Advance the game by counter + 1 animation ticks.  In carrying mode
+   (g_lcyof) the carried sprite is first repositioned relative to the
+   resident; then each tick waits for the compositor, steps the house
+   animations and the simulation, and polls the keyboard. */
 void
 gameTick(counter)
 short   counter;
@@ -33,13 +33,14 @@ short   counter;
         unsigned short  count;
         short           psi;    /* petting sprite id / scratch */
 
-        /* The carrying-mode arm comes FIRST and the test is inverted.
-           There is no `slot` local: g_seslm[g_lcieo] is recomputed at
-           every use, the inner tests re-check g_lcyof redundantly (both
-           arms of the first pair assign the same thing), the clamp
+        /* Deliberate original shapes, all of which must stay: the
+           carrying-mode arm comes FIRST with the test inverted;
+           g_seslm[g_lcieo] is recomputed at every use instead of going
+           through a local; the inner tests re-check g_lcyof redundantly
+           (both arms of the first pair assign the same thing); the clamp
            indexes g_sepex with g_lcieo rather than the slot and lives
-           INSIDE the non-carrying arm (the 0x1570e end-of-then jump
-           clears it), and cy_yoff is INLINED as a switch. */
+           INSIDE the facing-left arm; and the per-object Y offset is
+           written out as a switch. */
         if (g_lcyof != NO) {
                 if (lcp_face == FACING_RIGHT) {
                         if (g_lcyof == NO)
@@ -88,7 +89,7 @@ short   counter;
                 }
         }
 
-        /* The tick loop is NOT an else arm in STX: carrying mode falls
+        /* The tick loop is NOT an else arm: carrying mode falls
            straight into it. */
         {
                 count = ani_cnt;
@@ -105,10 +106,10 @@ short   counter;
                         gameSim1();
                         cl_redrH();
 
-                        /* Petting-dog animation cycle. */
+                        /* Ctrl-P petting-hand animation cycle. */
                         if (g_ptdoa != NO) {
-                                /* STX tests `> 10` and puts the finish
-                                   arm first. */
+                                /* Tested as `> 10` with the finish arm
+                                   first, as in the original. */
                                 if (g_ptanf > 10) {
                                         g_selaf[g_ptlss] =
                                                 SPRITE_HIDDEN;
@@ -119,8 +120,9 @@ short   counter;
                                                 g_selaf[g_ptdsi[g_ptanf - 1]] =
                                                         SPRITE_HIDDEN;
                                         }
-                                        /* No `psi` local: the lookup
-                                           is repeated at every use. */
+                                        /* The lookup is repeated at every
+                                           use rather than cached in a
+                                           local, as in the original. */
                                         g_selaf[g_ptdsi[g_ptanf]] =
                                                 SPRITE_BEHIND_LCP;
                                         sp_sprs(g_ptdsi[g_ptanf]);
@@ -215,8 +217,8 @@ short   counter;
                                 if (no_keyin == NO &&
                                     introSeq == NO) {
                                         key = getKey();
-                                        /* STX's getKey returns -1 for
-                                           "no key", not 0. */
+                                        /* getKey returns -1 for "no key",
+                                           not 0. */
                                         if (key != -1) {
                                                 if (key != KEY_CTRL_W_WATER &&
                                                     key != KEY_CTRL_B_BOOK &&

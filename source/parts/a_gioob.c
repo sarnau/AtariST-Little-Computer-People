@@ -1,14 +1,11 @@
 /*
- * parts/a_gioob.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * ahouse functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_gioob.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_gioob()
 {
-        /* STX tests the call in place -- no local. */
+        /* The call is tested in place, with no local. */
 
         pst_arr[0] = STATE_UNDRESS_AT_BED;
         pst_arr[1] = STATE_LIE_DOWN_GETTING_IN;

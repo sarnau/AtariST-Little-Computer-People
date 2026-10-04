@@ -1,9 +1,7 @@
 /*
- * parts/ldSpr.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x528a). Files under parts/ are never compiled standalone.
+ * parts/ldSpr.c -- included by stx_u1.c; never compiled on its own.
  */
-/* ldSpr: read the 14000-byte SPRITES file into spr_file[].
-   addr: ldSpr() */
+/* Reads the 14000-byte SPRITES file into spr_file[]. */
 
 void
 ldSpr()

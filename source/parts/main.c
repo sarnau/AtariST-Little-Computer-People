@@ -1,7 +1,5 @@
 /*
- * parts/main.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x5546, in the 0x400c object between fr_reac and dg_ipos). Files
- * under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 int
 #ifdef HOST
@@ -16,32 +14,35 @@ main(argc, argv)
 int     argc;
 char ** argv;
 {
-        /* STX's frame is -42.  ct_clrB, the .SCN file handling,
-           al_locs, al_loot/al_lost and sp_reglp's loop are all INLINED
-           here, which is why this function is 1370 bytes. */
-        short   i;              /* -2 */
-        short * p;              /* -6 */
-        short * q;              /* -10 */
-        short   w;              /* -12 */
-        short   h;              /* -14 */
-        short   wpr;            /* -16 */
-        short   pad1;           /* -18 */
-        short   pad2;           /* -20 */
-        short   fhandle;        /* -22 */
-        char *  conterm;        /* -26 */
-        long    ssp;            /* -30 */
-        short   r[4];           /* -32 .. -38 */
+        /* The conterm clear, the .SCN file handling, and the object and
+           sprite loading are all written out inline here, which is why
+           this function is so long.  pad1/pad2 are unused but must
+           stay, and the declaration order is the original's frame
+           layout. */
+        short   i;
+        short * p;
+        short * q;
+        short   w;
+        short   h;
+        short   wpr;
+        short   pad1;
+        short   pad2;
+        short   fhandle;
+        char *  conterm;
+        long    ssp;
+        short   r[4];
 
         mq_intim();
         aes_init();
 
-        /* ct_clrB inlined: clear bits 0..2 of TOS's `conterm`. */
+        /* Clear bits 0..2 of TOS's `conterm` (key click, key repeat,
+           bell) at 0x484, which needs supervisor mode. */
         conterm = (char *) 0x484L;
         ssp = Super(0L);
         *conterm = *conterm & 0xf8;
         Super(ssp);
 
-        /* STX's data files live in a DATA subdirectory. */
+        /* The data files live in a DATA subdirectory. */
         Dsetpath("data");
 
         vdi_init();
@@ -63,10 +64,10 @@ char ** argv;
         scn_dec(scn_buf, g_srptr, 16000);
         Mfree(scn_buf);
 
-        /* Ghidra step 14 */  fillTopR(27);
-        /* Ghidra step 15 */  cl_drini();                /* clock_draw_initial */
+        fillTopR(27);
+        cl_drini();
 
-        /* al_locs inlined: body.lcp loads FIRST, then lcp_crnd for a
+        /* body.lcp loads FIRST, then lcp_crnd for a
            new game, then the PEx filename is patched and loaded. */
         al_loal("body.lcp", (unsigned char *) body_ptr);
         if (g_lcldd == 0)
@@ -76,9 +77,8 @@ char ** argv;
 
         sp_lbal();
 
-        /* al_loot / al_lost / sp_reglp are all inlined here: a fixed
-           56- and 50-iteration walk with no zero-record or size check
-           and no return value. */
+        /* Object and sprite tables: a fixed 56- and 50-iteration walk
+           with no zero-record or size check. */
         ldObj();
         p = (short *) obj_file;
         for (i = 0; i < 56; i++) {
@@ -189,10 +189,9 @@ char ** argv;
         if (lcp_bwlS == BOWL_FULL)
                 od_draw(OBJ_DOG_FOOD_BOWL_1, 8, 190);
 
-        /* Ghidra step 34 */  sc_drfc();                /* screen_draw_food_cabinet */
-        /* Ghidra step 35 */  daily_rs();
-        /* Ghidra step 36 */  pa_cloc();                /* palette_apply_clothing_colors */
-        /* Ghidra step 37 */
+        sc_drfc();
+        daily_rs();
+        pa_cloc();
 #ifdef SKIP_COPYPROT
         /* Test builds only.  cp_main drives the 1772 directly to read
            the protected track, and no emulator here satisfies it: it
@@ -206,15 +205,14 @@ char ** argv;
            drive that is not the floppy.
 
            This is NOT part of the shipped configuration: the default
-           build must stay byte-identical to DATA/LCP_STX.PRG. */
+           build must stay byte-identical to the original. */
         cprot_r = 0xf000000aL;
 #else
-        cprot_r = cp_main();  /* copyprot_main_check */
+        cprot_r = cp_main();  /* copy-protection check */
 #endif
-        /* Ghidra step 38 */  sp_imfs();                /* sprite_init_MFDBs */
-        /* Ghidra step 39 */
+        sp_imfs();
         if (g_lcldd == 0)
-                cs_mvIn();        /* cutscene_new_lcp_move_in */
+                cs_mvIn();        /* new game: move-in cutscene */
 
         /* gameLoop never returns; there is no Pterm here. */
         gameLoop();

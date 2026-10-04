@@ -1,12 +1,10 @@
 /*
- * parts/sp_updb.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x148fe object, after gameTick). Files under parts/ are
- * never compiled standalone.
+ * parts/sp_updb.c -- included by stx_u3.c; never compiled on its own.
+ * Must follow gameTick.
  */
-/* sp_updb: select body pose for lcp_st -> slot 3.  When carrying an
+/* Select the body pose for lcp_st -> slot 3.  When carrying an
    object during walk states (< 25), uses arms-up frames from cy_frT.
-   X = lcp_x - 4 (right) or lcp_x - 14 (left); Y = lcp_y + body_yof[st] - 21.
-   addr: sp_updb() */
+   X = lcp_x - 4 (right) or lcp_x - 14 (left); Y = lcp_y + body_yof[st] - 21. */
 
 void
 sp_updb()
@@ -17,14 +15,14 @@ sp_updb()
                 ;
 
         frame = body_frT[lcp_st];
-        /* The bound is spelled inclusively on the previous state
-           (cmpi #24/bgt), not < 25. */
+        /* The bound is spelled inclusively on the previous state,
+           not `< 25`: the two compile differently. */
         if (g_lcyof != NO && lcp_st <= STATE_STR_BTM_F3)
                 frame = cy_frT[lcp_st];
 
-        /* Ghidra 0x2669a `muls.w #0x54, D0`: stride is 168 src, 84 dest. */
-        /* STX multiplies in word width (muls.w) -- no (long) casts,
-           so no call to the long-multiply helper. */
+        /* Row strides are 168 (body_ptr) and 84 (body_shp).  body_ptr
+           and body_shp are real arrays and the index is not cast to
+           long, so the multiply stays 16-bit (no long-multiply call). */
         sp_lcpf((short *) body_ptr[frame],
                 (short *) body_shp[frame],
                 (short *) g_lsimg,

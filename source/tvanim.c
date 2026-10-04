@@ -1,7 +1,6 @@
 /*
  * tvanim.c -- TV screen contents (bouncing line, pattern lines).
  * TV rect: (293,99)..(308,106).
- * addr: tv_scrc(), tv_boul(), tv_patl()
  */
 
 #include "types.h"
@@ -23,15 +22,12 @@
 #include "tick.h"
 #include "tvanim.h"
 
-/* addr: tv_scrc() */
-/* tv_scrc -> parts/tv_scrc.c (STX: 0xdece object, 0x13074, right after a_playc). */
+/* tv_scrc lives in parts/tv_scrc.c, included by stx_u2.c right after
+   a_playc. */
 
-/* addr: tv_boul() (ROM 0xd404).  v_pline is called with count=2 but
-   only pos[0..1] initialised: the second point deliberately overlaps
-   the rcolor/rnd locals in the ROM frame layout, so the TV draws a
-   line to a pseudo-random point.  Local order below reproduces the
-   exact ROM frame (-2 rnd, -4 rcolor, -8 pos, -10 dy, -12 dx,
-   -14 frame, -16 xpos, -18 ypos). */
+/* A dot bouncing inside the TV rectangle in random colours: v_pline
+   draws a two-point line whose ends coincide.  The order of the local
+   declarations is part of the original code; keep it. */
 
 void
 tv_boul()
@@ -73,4 +69,4 @@ tv_boul()
         }
 }
 
-/* tv_patl -> parts/tv_patl.c (STX: 0xdece object, 0x13204). */
+/* tv_patl lives in parts/tv_patl.c, included by stx_u2.c. */

@@ -107,13 +107,13 @@ extern short g_clcop[];
 extern short g_clcos[];
 extern short skin_pal[];
 extern char   mi_varR;
-extern char  g_mspha;           /* STX: byte (moveb/tstb) */
+extern char  g_mspha;           /* a byte, not a short */
 extern unsigned char* mi_dbase;
 extern unsigned char* mi_sqpos;
 extern long mi_env;
-extern char  mi_vel;            /* STX: byte */
+extern char  mi_vel;            /* a byte, not a short */
 extern char mi_dvel;
-extern char  psg_cvol;          /* STX: byte */
+extern char  psg_cvol;          /* a byte, not a short */
 extern char psg_dvol;
 extern short g_mchcn;
 extern short g_mtspb;
@@ -123,9 +123,9 @@ extern long g_mtcou;
 extern short mi_dwrm;
 extern short g_mtdiv;
 extern short g_mtpre;
-extern long  mi_nxTk;           /* STX: long tick counters */
+extern long  mi_nxTk;           /* long tick counters */
 extern long  mi_lpTk;
-extern char  g_msmsa;           /* STX: byte flag */
+extern char  g_msmsa;           /* byte flag */
 extern short mi_rlock;
 extern long mi_svtv;
 extern unsigned char* mi_seqE;
@@ -139,7 +139,7 @@ extern char mi_nmof;
 extern char mi_nlpA;
 extern short mi_nlp0;
 extern short mi_ndur;
-extern char   mi_slop;          /* STX: byte flag */
+extern char   mi_slop;          /* byte flag */
 extern short mi_ndt[];
 extern short mi_evq[];
 extern short mi_evi;
@@ -154,8 +154,8 @@ extern short mi_evst[];
 extern unsigned char psg_rot[];
 extern unsigned char mi_chmap[];
 extern unsigned char mi_noSt[];
-extern char  g_mcpro[];         /* STX: byte array */
-extern char *mi_pgmap;          /* STX: a byte pointer, not an array */
+extern char  g_mcpro[];         /* byte array */
+extern char *mi_pgmap;          /* a byte pointer, not an array */
 extern unsigned char mi_pgtab[];
 extern unsigned char g_mstr[];
 extern unsigned char g_msmk[];
@@ -163,7 +163,7 @@ extern BOOL16 g_moen;
 extern unsigned char g_meve[];
 extern long g_momap;
 extern BOOL16 psg_out;
-extern char   psg_ntAc;         /* STX: byte flag */
+extern char   psg_ntAc;         /* byte flag */
 extern unsigned char psg_chNt[];
 extern PSG_ENVELOPE psg_envelope[];
 extern char g_mnhi;
@@ -191,7 +191,7 @@ extern short g_sfcur;
 extern short g_sfdur;
 extern short g_sfdos;
 extern short g_sfdoc;
-extern char  sf_pri[];          /* STX: 26-byte table (moveb + extw) */
+extern char  sf_pri[];          /* 26-byte char table */
 extern unsigned char obj_file[];
 extern unsigned char spr_file[];
 extern MFDB g_obtmt[];
@@ -206,14 +206,12 @@ extern BOOL16 g_inpmd;
 extern char g_cdinb[];
 extern BOOL16 food_dlv;
 extern short g_ptanf;
-/* ONE cell in the reference.  The compositor reads and writes it as a
-   word -- sc_ren8's frame gate and sp_imfs's reset -- and the
+/* ONE cell shared by two subsystems.  The compositor reads and writes
+   it as a word -- sc_ren8's frame gate and sp_imfs's reset -- and the
    sequencer as a byte, and on the 68000 a byte write to a word's
-   address lands on its high half.  The port used to carry two symbols
-   and let the BSS spec map both onto the one address; a union gives
-   each subsystem its own access width with no cast.  (`*(char *)
-   &last_hz` does NOT work: Alcyon takes the width from &last_hz and
-   emits move.w where the original has move.b.) */
+   address lands on its high half.  A union gives each subsystem its
+   own access width with no cast.  (`*(char *) &last_hz` does NOT
+   work: Alcyon then accesses it as a word, not a byte.) */
 union LASTHZ {
         unsigned short  w;      /* sc_ren8, sp_imfs   */
         char            b;      /* mq_pars, mq_qnne   */
@@ -333,10 +331,8 @@ extern MFDB mf_scb_c;
 extern BOOL16 g_dvdog;
 extern BOOL16 ph_hu;
 extern BOOL16 g_ptdoa;
-/* The od_* frame ids are DATA globals (od_draw
-   reads them from memory) but compile-time constants in the
-   STX revision, which pushes the numbers as immediates.
-   Nothing writes them at runtime, so a macro is exact. */
+/* The od_* object frame ids are compile-time constants: the original
+   passes them as immediates and nothing changes them at run time. */
 #define od_stcl    46
 #define od_sto1    47
 #define od_sto2    48

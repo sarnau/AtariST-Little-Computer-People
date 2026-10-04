@@ -1,17 +1,14 @@
 /*
- * parts/lcp_upp.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x172e8, the last function of the sprite object). Files
- * under parts/ are never compiled standalone.
+ * parts/lcp_upp.c -- included by stx_u3.c; never compiled on its own.
  */
-/* addr: lcp_upp() */
 short
 lcp_upp(ch)
 short   ch;
 {
-        /* STX returns the converted value directly rather than
-           writing it back to the parameter, and spells the range with
-           inclusive bounds -- the trailing else-skip branch after the
-           returning then-arm is Alcyon's, not a second statement. */
+        /* Returns the converted value directly, and spells the range
+           with inclusive bounds.  The `else` after a returning
+           then-arm is the original's: it compiles to an extra branch,
+           so it is kept on purpose. */
         if (ch >= 'a' && ch <= 'z')
                 return ch - 0x20;
         else

@@ -1,15 +1,12 @@
 /*
- * parts/a_wandi.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aidle functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_wandi.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_wandi()
 {
-        /* STX's frame is 2 bytes larger (link #-6 vs #-4): the
-           original declared a local here that the body never uses. */
+        /* Unused, but it must stay: removing it changes the compiled
+           code. */
         short   unused;
 
         pst_arr[0]  = STATE_IDLE_SHRUG_START;

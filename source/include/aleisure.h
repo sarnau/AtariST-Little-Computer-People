@@ -1,4 +1,5 @@
-/* aleisure.h -- extern declarations for aleisure.c. */
+/* aleisure.h -- extern declarations for the leisure actions (bodies in
+   parts/). */
 
 #ifndef ALEISURE_H
 #define ALEISURE_H

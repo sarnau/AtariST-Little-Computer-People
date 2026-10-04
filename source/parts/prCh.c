@@ -1,7 +1,6 @@
 /*
- * parts/prCh.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x16ede, immediately after strPr). Files under parts/ are never
- * compiled standalone.
+ * parts/prCh.c -- included by stx_u3.c; never compiled on its own.
+ * Draws one character into the g_dscp screen; must follow strPr.
  */
 
 void

@@ -1,8 +1,5 @@
 /*
- * parts/a_yawas.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * asimple functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_yawas.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -17,7 +14,7 @@ a_yawas()
         g_hatas = 8;
         lcp_hwt();
 
-        /* i++ -- addq straight to the frame slot. */
+        /* Written as i++ on purpose: `i = i + 1` compiles differently. */
         for (i = 0; i < 15; i++) {
                 lcp_st = pst_arr[i & 1];
                 gameTick(1);

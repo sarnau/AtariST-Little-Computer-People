@@ -1,16 +1,15 @@
 /*
- * parts/a_playp.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x13a62, right after a_lists). Files under parts/ are never
- * compiled standalone.
+ * Stop a currently-playing record so the resident can start
+ * writing/typing: walks to the dance floor, drains the MIDI buffer and
+ * frees it.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
-/* a_playp: stop a currently-playing record so the resident can start
-   writing/typing.  Walks to dance floor, drains MIDI buffer, frees it.
-   addr: a_playp() */
 
 void
 a_playp()
 {
-        /* STX has no local: the walk result is tested in place. */
+        /* No local: the walk result is tested in place. */
 
         if (lcp_recP == NO)
                 return;

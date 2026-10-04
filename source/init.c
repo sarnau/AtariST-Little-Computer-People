@@ -1,7 +1,4 @@
-/*
- * init.c -- boot-time init functions from Ghidra main() at 0x15546.
- * addr: lcp_crnd @ 0x169D8, cl_drini @ 0x233B4, cs_mvIn.
- */
+/* init.c -- boot-time init functions called from main(). */
 
 #include "types.h"
 #include "structs.h"
@@ -35,30 +32,20 @@
 #include "walk.h"
 
 
-/* lcp_crnd -> parts/lcp_crnd.c (STX: 0x69d8, in the 0x400c object after rnd). */
+/* lcp_crnd -> parts/lcp_crnd.c. */
 
-/* cl_drini -> parts/cl_drini.c (STX: 0x133b4). */
+/* cl_drini -> parts/cl_drini.c. */
 
+/* st_titl -> parts/st_titl.c. */
 
-/* st_titl -> parts/st_titl.c (STX: 0x6d7e, in the 0x400c object after pa_skic). */
+/* mq_intim -> parts/mq_intim.c (included by midi_seq.c). */
 
-/* dbg_prA was a dead debug helper shipped between st_titl
-   and mq_intim.  LCP_STX does not have it. */
+/* cntSong -> parts/cntSong.c. */
 
+/* cl_redrH, cl_drwH and drwLine belong to stx_u2's object, so stx_u2.c
+   includes parts/cl_redrH.c, parts/cl_drwH.c and parts/drwLine.c. */
 
-/* mq_intim -> parts/mq_intim.c (STX: 0x1112, in the 0x12a MIDI
-   object between mq_stop and mq_extm -- midi_seq.c includes it). */
+/* initBRev -> parts/initBRev.c, with the builder it calls in
+   parts/rv_bld.c right behind it; stx_u1.c includes both. */
 
-/* cntSong -> parts/cntSong.c (STX: 0x400c -- the FIRST function of the 0x400c object). */
-
-/* STX grouping: cl_redrH (0x137d4), cl_drwH and drwLine (0x138d4)
-   live in the 0xdece object, so stx_u2.c includes parts/cl_redrH.c,
-   parts/cl_drwH.c and parts/drwLine.c. */
-
-
-/* initBRev -> parts/initBRev.c (STX 0x6804), with the builder it
-   calls in parts/rv_bld.c right behind it; stx_u1.c includes both. */
-
-
-/* cs_mvIn -> parts/cs_mvIn.c (STX: 0xe500, right after showLcp
-   in the 0xdece object -- stx_u2.c includes it there). */
+/* cs_mvIn -> parts/cs_mvIn.c (included by stx_u2.c). */

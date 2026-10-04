@@ -4,9 +4,8 @@
 #include "calendar.h"
 #include "globals.h"
 
-/* daysInMo -> parts/daysInMo.c (STX: 0x13796, in the 0xdece object just ahead of cWkday). */
+/* daysInMo -> parts/daysInMo.c. */
 
-/* addr: daily_rs() */
 void
 daily_rs()
 {

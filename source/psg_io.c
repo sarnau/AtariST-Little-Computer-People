@@ -1,6 +1,5 @@
 /*
  * psg_io.c -- ST hardware register writes (MIDI ACIA + YM2149 PSG).
- * addr: mowrit(), psg_cpE(), psg_wr(), psg_mix()
  */
 
 #include "types.h"
@@ -18,18 +17,14 @@ volatile unsigned char  g_hgis   = 0;
 volatile unsigned char  g_hgiw    = 0;
 #endif
 
-/* Poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE is
-   preseeded to 1 so the poll returns immediately.
-   addr: mowrit() */
-/* mowrit: LCP_STX has this as hand-assembly (psg_asm.s). */
+/* mowrit: poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE
+   is preseeded to 1 so the poll returns immediately.  Hand-assembly
+   (psg_asm.s). */
 
-/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, in the MIDI object). */
+/* psg_cpE -> parts/psg_cpE.c. */
 
-/* ST quirk: the 1985 source stores `val` into giselect and `reg` into
-   giwrite (YM2149 two-stage latch).  Preserved verbatim.
-   addr: psg_wr() */
-/* psg_wr: LCP_STX has this as hand-assembly (psg_asm.s). */
+/* psg_wr: YM2149 two-stage latch -- select the register, then write
+   the value.  Hand-assembly (psg_asm.s). */
 
-/* Read-modify-write on YM2149 mixer register 7.
-   addr: psg_mix() */
-/* psg_mix: LCP_STX has this as hand-assembly (psg_asm.s). */
+/* psg_mix: read-modify-write on YM2149 mixer register 7.
+   Hand-assembly (psg_asm.s). */

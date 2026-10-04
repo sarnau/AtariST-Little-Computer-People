@@ -1,7 +1,6 @@
 /*
- * parts/vswr_mode.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/vswr_mode.c -- included by vdistx.c at its place in the binding
+ * module's order; never compiled on its own.
  */
 
 void

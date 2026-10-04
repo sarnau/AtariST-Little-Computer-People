@@ -1,15 +1,12 @@
 /*
- * parts/crFile.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x1488e, right after lcp_save). Files under parts/ are never
- * compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
-/* addr: crFile() */
 void
 crFile(filename)
 char *  filename;
 {
-        /* STX: link #-10 -- the create attribute goes through a third
-           local, and the retry is a goto loop. */
+        /* The create attribute goes through a third local and the
+           retry is a goto loop, as in the original. */
         short   rval;
         short   iVar1;
         short   attr;

@@ -8,7 +8,6 @@
 #include "health.h"
 #include "renderx.h"
 
-/* addr: lcp_sick() */
 void
 lcp_sick()
 {
@@ -17,14 +16,12 @@ lcp_sick()
         lcp.sickness_direction  = DIR_WORSENING;
         lcp.happiness_direction = DIR_WORSENING;
         if (lcp.happiness < MOOD_SAD)
-                /* One mood step sadder (HAPPY -> CONTENT -> SAD).  The
-                   other revision compiles the register-form add; the STX
-                   revision's addq shape comes from +=. */
+                /* One mood step sadder (HAPPY -> CONTENT -> SAD).  Written
+                   `+= 1` on purpose: `x = x + 1` compiles differently. */
                 lcp.happiness += 1;
         lcp_upal();
 }
 
-/* addr: lcp_rcov() */
 void
 lcp_rcov()
 {
@@ -35,8 +32,8 @@ lcp_rcov()
         }
 }
 
-/* lcp_upal lives HERE (after lcp_rcov, same object -- lcp_sick
-   reaches it with a bsr). */
+/* lcp_upal must stay here, after lcp_rcov and in the same unit as
+   lcp_sick, which calls it. */
 void
 lcp_upal()
 {

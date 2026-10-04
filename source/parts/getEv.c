@@ -1,13 +1,11 @@
 /*
- * parts/getEv.c -- shared body; LCP_STX puts getEv in the sprite
- * object at 0x16002, right after putEv.  Files under parts/ are never
- * compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
-/* addr: getEv() */
 short
 getEv()
 {
-        /* STX: index first, and the queue head tested in place. */
+        /* Declaration order (index first) and testing the queue head
+           in place both match the original. */
         short   index;
         short   result;
 

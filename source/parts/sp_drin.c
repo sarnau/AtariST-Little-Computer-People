@@ -1,10 +1,9 @@
 /*
- * parts/sp_drin.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x148fe object, after gameTick). Files under parts/ are
- * never compiled standalone.
+ * parts/sp_drin.c -- included by stx_u3.c after gameTick; never
+ * compiled on its own.
  */
-/* sp_drin: empty in the 1985 code (dead hook).
-   addr: sp_drin() */
+/* Empty in the 1985 code (a dead hook), but it still occupies its
+   place in the binary. */
 
 void
 sp_drin()

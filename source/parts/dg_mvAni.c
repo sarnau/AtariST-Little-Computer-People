@@ -1,6 +1,5 @@
 /*
- * parts/dg_mvAni.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x412c). Files under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
 /* dg_mvAni: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
@@ -8,15 +7,13 @@
    coords[] gate for the two staircase entrances).  Layer depth is
    1 (in-front) when the dog is below the resident, -1 (behind) when
    above -- newspaper reading forces in-front so the dog doesn't disappear
-   behind the paper.
-
-   addr: dg_mvAni() */
+   behind the paper. */
 
 void
 dg_mvAni()
 {
-        /* STX's frame is -16: six shorts, declared in this order, two
-           of them never touched. */
+        /* Six shorts, declared in this order; unused1 and next_x are
+           never touched but must stay, as in the original. */
         short   x_distance;
         short   floor_num;
         short   unused1;
@@ -44,8 +41,8 @@ dg_mvAni()
 
         /* Exit stair-mode when reaching a floor boundary. */
         if (dg_stair != NO) {
-                /* The assignment is embedded, so the index reuses
-                   getFlrY's result in d0. */
+                /* The assignment is embedded on purpose, so the index
+                   reuses getFlrY's result without a reload. */
                 if (dog_y <= flr_by[(floor_num = getFlrY(g_dyy)) - 1]) {
                         if (floor_num == FLOOR_TOP)
                                 dg_stair = NO;
@@ -77,8 +74,8 @@ dg_mvAni()
                         h_flip = YES;
                         dog_x--;
                 }
-                /* STX writes an if/else with the store duplicated in
-                   both arms, not a ternary. */
+                /* An if/else with the store duplicated in both arms,
+                   not a ternary, as in the original. */
                 if (dog_x >= g_dyx)
                         x_distance = dog_x - g_dyx;
                 else
@@ -96,9 +93,9 @@ dg_mvAni()
                 }
         }
 
-        /* STX has no `next_x`: the stair patches step dog_x and
-           dog_y in place, and every anchor is written as a relative
-           step rather than an absolute coordinate. */
+        /* The stair patches step dog_x and dog_y in place, and every
+           anchor is written as a relative step rather than an absolute
+           coordinate. */
         if (dg_stair != NO) {
                 if (dog_y > g_dyy) {
                         /* Going up */

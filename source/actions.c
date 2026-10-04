@@ -1,6 +1,5 @@
 /*
  * actions.c -- doAct() dispatcher.
- * addr: doAct()
  */
 
 #include "types.h"

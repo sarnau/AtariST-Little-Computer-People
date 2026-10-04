@@ -1,7 +1,5 @@
 /*
- * parts/cmd_upp.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x1711c, after chk_encm). Files under parts/ are never
- * compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
 char *
 cmd_upp(str, dest)
@@ -10,9 +8,10 @@ char *  dest;
 {
         short   c;
 
-        /* The fetch and the uppercase conversion are two statements,
-           the bounds are inclusive, and the copy loop's terminator is
-           written in the else arm (which also steps dest). */
+        /* Skip to the first letter, then copy the word uppercased and
+           NUL-terminate it.  The fetch and the conversion are two
+           statements, and the terminator is written in the else arm
+           (which also steps dest) -- the original's shape. */
         while (1) {
                 c = *str;
                 c = lcp_upp(c);

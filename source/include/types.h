@@ -4,8 +4,6 @@
  * Alcyon C 4.14 for the Atari ST: short = 16 bits, long = 32 bits,
  * char = 8-bit signed. Struct layout is packed; the compiler aligns
  * shorts on even boundaries but does not add trailing padding.
- *
- * addr: n/a (project-wide typedef)
  */
 
 #ifndef TYPES_H

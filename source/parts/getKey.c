@@ -1,11 +1,10 @@
 /*
- * parts/getKey.c -- shared body; LCP_STX links it in the 0x400c object
- * at 0x68ee, just before rnd. Files under parts/ are never compiled
- * standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
-/* Returns KEY_NONE (-1) when the buffer is empty.  When ASCII byte is 0
-   the scancode (bits 16..23) is folded into 0x100 | scan.
-   addr: getKey() */
+/* Returns KEY_NONE (-1) when the buffer is empty.  When the ASCII byte
+   is 0, the scancode (bits 16..23) selects cursor-left or F1..F10.
+   The dead `break` after each `return` is part of the original code
+   and must stay; the last arm has none. */
 short
 getKey()
 {

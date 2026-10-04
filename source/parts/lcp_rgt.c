@@ -1,11 +1,11 @@
 /*
- * parts/lcp_rgt.c -- shared body; LCP_STX places it at the head of the 0xdece object (it
- * reaches lcp_wkD and sp_ssco there with bsr).
+ * parts/lcp_rgt.c -- included by stx_u2.c near the head of the object;
+ * never compiled on its own.
  */
 
-/* lcp_rgt: reverse of lcp_lgt -- restore seated STATE_EAT_BITE pose
-   with the +8y/+6x offset expected by mini-game overlays.
-   addr: lcp_return_to_game_table() */
+/* Reverse of lcp_lgt: walk back to the table and restore the seated
+   STATE_EAT_BITE pose with the +8y/+6x offset the minigame overlays
+   expect. */
 
 void
 lcp_rgt()

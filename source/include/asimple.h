@@ -1,4 +1,5 @@
-/* asimple.h -- extern declarations for asimple.c. */
+/* asimple.h -- extern declarations for one group of resident actions.  Their
+   bodies live in parts/, compiled as part of stx_u2.c. */
 
 #ifndef ASIMPLE_H
 #define ASIMPLE_H

@@ -13,8 +13,8 @@ extern void cntSong();
 extern void initBRev();
 extern void cs_mvIn();
 
-/* st_titl's two helpers (0x718e and 0x72e6), used by st_titl
-   itself and reached before their definitions in the unity unit. */
+/* st_titl's two helpers, used by st_titl itself and reached before
+   their definitions in the unity unit. */
 extern void stEnter();
 extern void erChr();
 

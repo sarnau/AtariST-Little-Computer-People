@@ -1,8 +1,5 @@
 /*
- * parts/a_opecf.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * adoors functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_opecf.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -38,6 +35,6 @@ a_opecf()
         od_draw(od_fdo1, 24, 153);
         gameTick(1);
         od_draw(od_fdcl, 24, 153);
-        sf_sele(SFX_DOOR_OPEN, 6L);   /* verbatim */
+        sf_sele(SFX_DOOR_OPEN, 6L);   /* OPEN, not CLOSE: as in the original */
         gameTick(1);
 }

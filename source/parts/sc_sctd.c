@@ -1,23 +1,23 @@
 /*
- * parts/sc_sctd.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x16d5a, in the 0x148fe object ahead of sc_firw). Files
- * under parts/ are never compiled standalone.
+ * parts/sc_sctd.c -- included by stx_u3.c; never compiled on its own.
  */
-/* sc_sctd: 1-row block scroll on top text strip (letter typewriter wrap).
-   Copies 13 rows of 40 words each downward, blanks top two rows to white.
-   addr: sc_sctd() */
+/* sc_sctd: scroll the letter's text strip up by two scan lines when the
+   typewriter wraps.  Each of 13 two-line (320-byte) blocks is copied
+   onto the block above it, then lines 24 and 25 are refilled with the
+   paper colour. */
 
 void
 sc_sctd()
 {
-        /* STX's frame is -16: src, dest, an unused short, then row. */
+        /* Declaration order and the unused short must stay: both set
+           the stack-frame layout, which must match the original. */
         char *  src_ptr;
         char *  dest_ptr;
         short   unused;
         short   row;
 
-        /* STX biases the source pointer once before the loop and
-           steps both pointers in place after the copy. */
+        /* The source pointer is biased once before the loop and both
+           pointers step in place after the copy, as in the original. */
         src_ptr  = (char *) g_dscp + 320;
         dest_ptr = (char *) g_dscp;
         for (row = 0; row < 13; row++) {

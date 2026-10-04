@@ -1,19 +1,19 @@
 /*
- * parts/fr_reac.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x53b8, in the 0x400c object ahead of main). Files under
- * parts/ are never compiled standalone.
+ * Sits ahead of main.
+ *
+ * Included by stx_u1.c; never compiled on its own.
  */
-/* outsize is the *uncompressed* byte count (10496 for LETTER.TXT).
-   addr: fr_reac() */
+/* outsize is the *uncompressed* byte count (10496 for LETTER.TXT). */
 void
 fr_reac(filename, out_buf, outsize)
 char *          filename;
 unsigned char * out_buf;
 short           outsize;
 {
-        /* STX's frame is -20: seven locals in this order, and no
-           `fbuffer_orig` -- the Mfree at the end frees the pointer the
-           loop has already advanced. */
+        /* Seven locals, declared in this order.  There is no copy of
+           the original buffer pointer, so the Mfree at the end frees
+           the pointer the loop has already advanced.  1985 code, kept
+           on purpose. */
         short           flag;
         short           nibble;
         short           count;

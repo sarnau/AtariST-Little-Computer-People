@@ -6,7 +6,6 @@
 #include "events.h"
 #include "globals.h"
 
-/* putEv -> parts/putEv.c (STX: 0x15fb4, after p_dobls). */
-
-/* getEv -> parts/getEv.c (STX: 0x16002, right after putEv in the
-   0x148fe object -- stx_u3.c includes it there). */
+/* putEv and getEv live in parts/putEv.c and parts/getEv.c; stx_u3.c
+   includes them, putEv right after p_dobls and getEv right after
+   putEv. */

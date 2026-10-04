@@ -78,12 +78,11 @@ extern long     bios();
 extern long     xbios();
 
 
-/* LCP_STX.PRG was built against the older Alcyon distribution's
-   OSBIND.H (alcyon2, 1985-05-30), whose macros pass ONLY the real
-   arguments -- no 0L padding, no casts (except the documented int
-   casts on Cconis/Fsfirst/Fsnext).  Byte-observed in the STX text:
-   Fclose pushes just opcode+handle before jsr gemdos (text 0x11a
-   trap-#1 veneer).  Shapes below mirror that header's subset. */
+/* These mirror the older Alcyon distribution's OSBIND.H (alcyon2,
+   1985-05-30), whose macros pass ONLY the real arguments -- no 0L
+   padding, no casts (except the documented int casts on
+   Cconis/Fsfirst/Fsnext).  So Fclose pushes just opcode+handle.
+   Adding padding or casts changes the compiled calls. */
 #define Fopen(n, m)             gemdos(0x3D, n, m)
 #define Fcreate(n, a)           gemdos(0x3C, n, a)
 #define Fread(h, n, b)          gemdos(0x3F, h, n, b)

@@ -1,18 +1,14 @@
 /*
- * parts/sp_ssco.c -- shared body; LCP_STX links it in the 0xdece
- * object (see stx_u2.c). Files under parts/ are never compiled
- * standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 /* sp_ssco: activate sprite as carried object in behind-LCP layer.
-   Per-frame X/Y update happens in update_carried_object_sprite().
-   addr: sp_ssco() */
+   The per-frame X/Y update happens in gameTick's carrying path. */
 
 void
 sp_ssco(g_seix)
 short   g_seix;
 {
-        /* STX has no slot local (as in sp_sprs). */
         g_selaf[g_seix] = SPRITE_BEHIND_LCP;
         sp_upds();
         g_seaim[g_seslm[g_seix]]  = g_sedim[g_seix];

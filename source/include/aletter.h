@@ -1,4 +1,5 @@
-/* aletter.h -- extern declarations for aletter.c. */
+/* aletter.h -- extern declarations for one group of resident actions.  Their
+   bodies live in parts/, compiled as part of stx_u2.c. */
 
 #ifndef ALETTER_H
 #define ALETTER_H

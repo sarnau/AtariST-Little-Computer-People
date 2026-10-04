@@ -1,18 +1,14 @@
 /*
- * parts/cWkday.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x1332e, in the 0xdece object). Files under parts/ are never
- * compiled standalone.
+ * parts/cWkday.c -- included by stx_u2.c; never compiled on its own.
  */
 /* The original references `daysInMo(dt_mon, dt_year)` inside the month
-   loop instead of `daysInMo(i, dt_year)` -- preserved for fidelity
-   though it's clearly a bug in the 1985 source.
-   addr: cWkday() */
+   loop instead of `daysInMo(i, dt_year)` -- a bug in the 1985 source,
+   kept on purpose. */
 short
 cWkday()
 {
-        /* STX carries only two locals (frame -8): it steps day_offset
-           in place rather than routing it through `next_offset`, and
-           accumulates the month lengths straight into it. */
+        /* Only two locals: day_offset is stepped in place and the
+           month lengths accumulate straight into it. */
         short   day_offset;
         short   i;
 

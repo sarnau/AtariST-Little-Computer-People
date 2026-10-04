@@ -1,8 +1,5 @@
 /*
- * parts/er_bood.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * delivery functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -10,8 +7,8 @@ er_bood()
 {
         g_actif = YES;
         wkFrDr();
-        /* STX writes the pick-up sequence out in each handler --
-           there is no dv_pick helper in that revision. */
+        /* The pick-up sequence is written out in each handler rather
+           than shared through a helper, as in the original. */
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;

@@ -1,17 +1,14 @@
 /*
- * parts/a_lists.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x1398c, right after drwPixel). Files under parts/ are never
- * compiled standalone.
+ * parts/a_lists.c -- included by stx_u2.c; never compiled on its own.
  */
 /* a_lists: pick a random .sng file and start it playing.
-   Uses lcp_food as a modulo index (1985 code reused the field).
-   addr: a_lists() */
+   Uses lcp_food as a modulo index (the 1985 code reused the field). */
 
 void
 a_lists()
 {
-        /* STX: link #-12 -- a temporary, index (reused as the '.'
-           scan counter) and the name pointer. */
+        /* Three locals: a temporary, index (reused as the '.' scan
+           counter) and the name pointer. */
         short   tmp;
         short   index;
         char *  filename;

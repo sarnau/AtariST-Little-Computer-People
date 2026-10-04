@@ -1,16 +1,13 @@
 /*
- * parts/chk_vwd.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x171ae, after cmd_upp). Files under parts/ are never
- * compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
-/* addr: chk_vwd() */
 short
 chk_vwd(word)
 char *  word;
 {
-        /* Frame -16: the scanned character gets a short of its own,
-           and the function simply falls out of the loop -- there is no
-           trailing `return WORD_NONE`. */
+        /* The scanned character gets a short of its own, and the
+           function simply falls out of the loop -- the missing trailing
+           `return WORD_NONE` is deliberate (the original has none). */
         short   word_index;
         short   c;
         char *  dict_ptr;

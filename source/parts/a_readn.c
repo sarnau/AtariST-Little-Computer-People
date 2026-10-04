@@ -1,16 +1,13 @@
 /*
- * parts/a_readn.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * ahouse functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_readn()
 {
-        /* STX tests the call in place -- no local. */
-        /* STX keeps the LIMIT at -2 and the counter at -4; it has no
-           rnd local at all (the Random test is inline). */
+        /* The limit is declared before the counter, and the walk call
+           and the Random test are inline with no local; all as in the
+           original. */
         short           t;
         short           i;
 
@@ -27,8 +24,9 @@ a_readn()
         lcp_st              = STATE_SIT_IN_ARMCHAIR;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
         lcp_hwt();
-        /* STX sets the counter before the coordinate steps and
-           emits an addi #0 on lcp_x -- a no-op the original wrote. */
+        /* The limit is set before the coordinate steps, and
+           `lcp_x += 0` is a no-op the original wrote.  Both kept on
+           purpose. */
         t = 200;
         lcp_x += 0;
         lcp_y += 8;

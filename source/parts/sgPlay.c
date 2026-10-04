@@ -1,19 +1,16 @@
 /*
- * parts/sgPlay.c -- shared body; LCP_STX puts it at 0xd9ea, the first
- * function of the 0xdece object, ahead of sf_irqp.  Files under
- * parts/ are never compiled standalone.
+ * Included by stx_u4.c; never compiled on its own.
  */
 /* sgPlay: load a .sng/.org from disk (10-byte Music Studio 2.0 header,
-   then up to 20000 bytes of sequence data) and hand it to mq_inis.
-   addr: sgPlay() */
+   then up to 20000 bytes of sequence data) and hand it to mq_inis. */
 
 
 void
 sgPlay(filename)
 char *  filename;
 {
-        /* STX: link #-22 -- fhnd at -2, an unwritten slot at -4,
-           temp at -14 and dta_ptr at -18. */
+        /* `unused` is never written but must stay: removing it changes
+           the compiled code. */
         short           fhnd;
         short           unused;
         unsigned char   temp[10];

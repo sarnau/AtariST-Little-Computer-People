@@ -1,8 +1,9 @@
 /*
- * parts/vdi_cls.c -- LCP_STX 0x66fe, the second half of vdi_init:
- * reset the fill attributes, hide the mouse and bar the whole screen.
- * Must be linked immediately after parts/vdi_init.c (bsr.s).
- * Files under parts/ are never compiled standalone.
+ * parts/vdi_cls.c -- the second half of vdi_init: reset the fill
+ * attributes, hide the mouse and bar the whole screen.  It must
+ * directly follow parts/vdi_init.c so vdi_init's call to it stays a
+ * short branch.
+ * Included by stx_u1.c; never compiled on its own.
  */
 void
 vdi_cls()

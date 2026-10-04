@@ -1,7 +1,6 @@
 /*
- * parts/rst_vsth.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x761e, in the games object right before initVdi). Files
- * under parts/ are never compiled standalone.
+ * parts/rst_vsth.c -- included by games.c; never compiled on its own.
+ * Restores the VDI text height from sv_vqta[7] (the cell height).
  */
 void
 rst_vsth()

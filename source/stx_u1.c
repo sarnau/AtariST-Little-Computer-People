@@ -1,19 +1,15 @@
 /*
- * stx_u1.c -- STX unity translation unit for the 0x400c-0x73ce object.
+ * stx_u1.c -- unity translation unit for the first of the original's
+ * game-code objects.
  *
- * LCP_STX.PRG's game code is ~7 objects of 13-27 KB each, where the
- * port keeps 55 small ones (see CLAUDE.md, "Campaign #2").  Since
- * as68 shortens a call only when the callee is in the SAME assembly
- * unit, reproducing the STX call shapes requires reproducing its
- * object partition -- so the DEFAULT build compiles these sources as
- * one unit instead of individually.
+ * The original's game code is ~7 large objects, where the port keeps
+ * many small source files.  as68 shortens a call only when the callee
+ * is in the SAME assembly unit, so reproducing the original's call
+ * shapes requires reproducing its object partition -- the default
+ * build therefore compiles these sources as one unit.
  *
- * Membership and order come from stx_objmap.py's cluster report plus
- * the STX addresses of the byte-matched functions:
- *     dg_ipos 0x5aa0 < execEv 0x5fae < doAct 0x6038 < hs_posX 0x635e
- *     < daily_r 0x6c9e < pa_cloc 0x6cbe < er_nomem 0x73ce
- * Order only shifts addresses (verify_bytes wildcards displacements),
- * so it can be refined without affecting matching.
+ * The ORDER of the #include lines below is the object's function (and
+ * data) order and must not change.
  *
  * alcyon_build.sh skips the constituents listed in
  * tools/stx_units.txt while building this file.
@@ -65,25 +61,23 @@
 #include "dat_u1.c"
 
 
-#include "parts/cntSong.c"  /* 0x400c */
-#include "parts/sp_genma.c" /* 0x408c */
-/* dg_mvAni (0x412c) is followed directly by walk.c's dg_wkPth
-   (0x4586) -- the call between them is a bsr. */
-#include "parts/dg_mvAni.c" /* 0x412c */
-#include "parts/dg_wkPth.c" /* 0x4586 */
-/* walk.c straddles two STX objects: lcp_path (0x470a) and
-   lcp_fstp (0x4fec) live here with getFlrY, while lcp_wkD and
-   friends stay in the 0xdece object (stx_u2.c). */
-#include "parts/lcp_path.c"  /* 0x470a */
-#include "parts/lcp_fstp.c"  /* 0x4fec */
-#include "parts/lcp_flwp.c"  /* 0x50bc */
-#include "parts/getFlrY.c"   /* 0x5224, reached by bsr from lcp_flwp */
+#include "parts/cntSong.c"
+#include "parts/sp_genma.c"
+/* dg_mvAni is followed directly by walk.c's dg_wkPth. */
+#include "parts/dg_mvAni.c"
+#include "parts/dg_wkPth.c"
+/* walk.c straddles two objects: lcp_path and lcp_fstp live here
+   with getFlrY, while lcp_wkD and friends are in stx_u2.c. */
+#include "parts/lcp_path.c"
+#include "parts/lcp_fstp.c"
+#include "parts/lcp_flwp.c"
+#include "parts/getFlrY.c"
 /* assets.c straddles: the two asset loaders are in this object,
    right after getFlrY.  They need the trap bindings. */
-#include "parts/ldObj.c"     /* 0x524a */
-#include "parts/ldSpr.c"     /* 0x528a */
-#include "parts/scn_dec.c"   /* 0x52ca */
-#include "parts/fr_reac.c"   /* 0x53b8 */
+#include "parts/ldObj.c"
+#include "parts/ldSpr.c"
+#include "parts/scn_dec.c"
+#include "parts/fr_reac.c"
 #include "main.h"
 #include "stubs.h"
 #include "sprload.h"
@@ -92,61 +86,60 @@
 #include "assets.h"
 #include "tick_tables.h"
 #include "dat_u1d.c"
-#include "parts/main.c"      /* 0x5546 */
-#include "dog.c"             /* dg_ipos 0x5aa0 */
+#include "parts/main.c"
+#include "dog.c"
 /* save.c straddles too: lc_load and sp_regs sit between dg_ipos and
    gameLoop. */
-#include "parts/lc_load.c"   /* 0x5ac8 */
-#include "parts/sp_regs.c"   /* 0x5bdc */
+#include "parts/lc_load.c"
+#include "parts/sp_regs.c"
 /* main.c straddles: gameLoop is in this object, between sp_regs
    and execEv. */
-#include "parts/gameLoop.c"  /* 0x5c76 */
-#include "parts/chk_actT.c"  /* 0x5ce2 -- bsr.s from gameLoop */
-#include "ai.c"              /* execEv 0x5fae */
-#include "actions.c"         /* doAct 0x6038 */
+#include "parts/gameLoop.c"
+#include "parts/chk_actT.c"
+#include "ai.c"
+#include "actions.c"
 /* execEv's and doAct's switch jump tables land in the data segment
-   right here (LCP_STX data 0xa20..0xaf3), so the globals that follow
-   them come after this point, not with the rest at the top. */
+   right here, so the globals that follow them come after this point,
+   not with the rest at the top. */
 #include "dat_u1b.c"
-/* chk_timA (0x6210) sits between doAct and hs_posXY. */
-#include "airandom.c"        /* chk_timA 0x6210 */
-#include "movement.c"        /* hs_posXY 0x635e */
-#include "parts/vroCpyD.c"   /* 0x63cc */
+/* chk_timA sits between doAct and hs_posXY. */
+#include "airandom.c"
+#include "movement.c"
+#include "parts/vroCpyD.c"
 /* letload.c straddles: fl_ltpl is in this object, just ahead of
-   cpyScr (its fr_reac call is a bsr).  gfx_prim.c straddles too:
-   cpyScr (0x64fa), stpScrB (0x6576) and sprites.c's sp_iniM
-   (0x6612) are in this object. */
-#include "parts/al_loal.c"   /* 0x6428 */
-#include "parts/fl_ltpl.c"   /* 0x648c */
-#include "parts/cpyScr.c"    /* 0x64fa */
-#include "parts/stpScrB.c"   /* 0x6576 */
-#include "parts/sp_iniM.c"   /* 0x6612 */
-/* STX splits vdi_init: the opener (0x6680) and the attribute/clear
-   half (0x66fe) it reaches with bsr.s. */
-#include "parts/vdi_init.c"  /* 0x6680 */
-#include "parts/vdi_cls.c"   /* 0x66fe */
-#include "parts/aes_init.c"  /* 0x67aa */
-#include "parts/initBRev.c"  /* 0x6804 */
-#include "parts/rv_bld.c"    /* 0x680e -- bsr.s from initBRev */
-/* fillTopR (0x686c) is in this object in LCP_STX, not the 0xdece
-   one where render.c's other functions live. */
-#include "parts/fillTopR.c"  /* 0x686c */
-#include "parts/getKey.c"    /* 0x68ee */
-/* getKey's jump table occupies LCP_STX data 0xba4..0xbe7, so the last
-   two globals of this unit are declared behind it. */
+   cpyScr.  gfx_prim.c straddles too: cpyScr, stpScrB and sprites.c's
+   sp_iniM are in this object. */
+#include "parts/al_loal.c"
+#include "parts/fl_ltpl.c"
+#include "parts/cpyScr.c"
+#include "parts/stpScrB.c"
+#include "parts/sp_iniM.c"
+/* vdi_init is split in two: the opener, and the attribute/clear half
+   it calls, which must follow it directly. */
+#include "parts/vdi_init.c"
+#include "parts/vdi_cls.c"
+#include "parts/aes_init.c"
+#include "parts/initBRev.c"
+#include "parts/rv_bld.c"
+/* fillTopR is in this object, not stx_u2's where render.c's other
+   functions live. */
+#include "parts/fillTopR.c"
+#include "parts/getKey.c"
+/* getKey's jump table lands in the data segment here, so the last
+   globals of this unit are declared behind it. */
 #include "dat_u1c.c"
-/* STX 0x69c6, just past getKey: the bare Random() wrapper. */
-#include "parts/rnd.c"       /* 0x69c6 */
-#include "parts/lcp_crnd.c"  /* 0x69d8 */
-#include "calendar.c"        /* daily_rs 0x6c9e */
-#include "renderx.c"         /* pa_cloc 0x6cbe, pa_skic 0x6d1e */
-/* st_titl (0x6d7e) is a real interactive title screen in STX. */
-#include "parts/st_titl.c"   /* 0x6d7e */
-#include "parts/stEnter.c"   /* 0x718e */
-#include "parts/erChr.c"     /* 0x72e6 */
-/* save.c's file helpers close this object. */
-#include "parts/fOpen.c"     /* 0x730e */
-#include "parts/fr_read.c"   /* 0x736c */
-/* Tail of the STX object: er_nomem (0x73ce). */
-#include "parts/er_nomem.c"  /* 0x73ce */
+/* The bare Random() wrapper, just past getKey. */
+#include "parts/rnd.c"
+#include "parts/lcp_crnd.c"
+#include "calendar.c"
+#include "renderx.c"
+/* st_titl is a real interactive title screen. */
+#include "parts/st_titl.c"
+#include "parts/stEnter.c"
+#include "parts/erChr.c"
+/* save.c's file helpers come near the end of this object. */
+#include "parts/fOpen.c"
+#include "parts/fr_read.c"
+/* er_nomem closes the object. */
+#include "parts/er_nomem.c"
 

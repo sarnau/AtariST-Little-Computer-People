@@ -1,10 +1,11 @@
 /*
- * parts/sp_lbhd.c -- shared body; LCP_STX places it in the sprite object
- * (see stx_u3.c for the address).  Files under parts/ are never
- * compiled standalone.
+ * parts/sp_lbhd.c -- included by stx_u3.c; never compiled on its own.
  */
-/* sp_lbal: dispatch 98 body + 66 head frames through sp_lbbd/sp_lbhd.
-   addr: sp_lcp_build_all() */
+/* sp_lbhd: build a head frame's mask.  Same packing as sp_lbbd, but
+   start with mask = 0xFFFFFFFF and shrink it from bit 31 down and from
+   bit 0 up until the next bit hits set img pixels -- the outline plus
+   1 bit of slack.  Then a vertical-OR merge (in the opposite direction
+   to sp_lbbd's). */
 
 void
 sp_lbhd(src, dest, height)
@@ -12,9 +13,10 @@ short *         src;
 short *         dest;
 short           height;
 {
-        /* bit / img / mask are register data variables (d7/d6/d5) and
-           dp a register ADDRESS variable (a5); only h gets a frame
-           slot. */
+        /* bit / img / mask are register data variables and dp a
+           register address variable; registers are assigned in
+           declaration order, so keep the order.  Only h lives in the
+           stack frame. */
         register short  bit;
         register long   img;
         register long   mask;

@@ -1,9 +1,9 @@
 /*
- * parts/lt_sets.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x1476c, immediately before sfClick). Files under parts/ are
- * never compiled standalone.
+ * Must sit immediately before sfClick.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
-/* addr: lt_sets(), sfClick() */
+/* Typewriter key click while a letter is being typed. */
 void
 lt_sets()
 {

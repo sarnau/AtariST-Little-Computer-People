@@ -2,7 +2,6 @@
  * alerts.c -- GEM form_alert wrappers for fatal errors.
  * On host, form_alert is a no-op returning 1, so we exit instead of
  * busy-looping.
- * addr: er_nomem(), er_write()
  */
 
 #include "types.h"
@@ -14,18 +13,14 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* er_nomem lives elsewhere: the STX revision
-   puts it at the end of its 0x400c object (see stx_u1.c).  The body
-   is shared via parts/ so neither configuration duplicates it. */
+/* er_nomem and er_write live in parts/ and are included by the unity
+   units (stx_u1.c, stx_u2.c) where the original's layout puts them. */
 
-/* er_write -> parts/er_write.c (STX: 0x148e6, right after crFile). */
-
-/* ---- STX-revision grouping --------------------------------------
-   In LCP_STX.PRG, sp_spud and sp_flih follow er_write in this
-   object (sp_spud reaches sp_flih with a bsr).  The STX sp_spud also
-   splits the tail
-   into two successive if/else pairs (mask pair first, then image
-   pair) instead of a single combined one. */
+/* sp_spud and sp_flih belong to the same object as er_write in the
+   original, so they are compiled here.  sp_spud's tail is deliberately
+   two successive if/else pairs (mask pair first, then image pair)
+   rather than one combined if/else: that is how the original is
+   written. */
 
 #include "structs.h"
 #include "enums.h"

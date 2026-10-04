@@ -3,16 +3,13 @@
  *
  * The 1985 game's MIDI subsystem lives in three tiers:
  *
- *   1. This file: song-lifecycle control (init/reset/start), header
- *      parsing dispatch, and playback-position bookkeeping.  All six
- *      functions here are real ports.
+ *   1. Song-lifecycle control (init/reset/start), header parsing
+ *      dispatch, and playback-position bookkeeping.
  *
- *   2. Deferred (stubs): the per-event MIDI parser + PSG channel
- *      output driver (envelope stepping, note-on/off state, program
- *      change dispatch, tempo-derived tick divider).  These live
- *      behind mq_pacm, mq_bust,
- *      mq_sepc, and the interrupt-service loop
- *      that fires from the ST's 200 Hz timer.
+ *   2. The per-event MIDI parser and the PSG channel output driver
+ *      (envelope stepping, note-on/off state, program change dispatch,
+ *      tempo-derived tick divider), stepped from the Timer-A interrupt
+ *      in mq_tick.s.
  *
  *   3. XBIOS/BIOS:  Midiws (send raw MIDI bytes) and Giaccess (PSG
  *      register write).  Both routed via _xbios in osbind.h.
@@ -37,9 +34,8 @@
  *                          by mq_pacm at p - 90)
  *   body + 0x1FE           MIDI event stream (this is mi_dbase)
  *
- * addr: mq_inis(), mq_parh(),
- *       mq_resp(), mq_skip(),
- *       mq_setp(), mq_stap()
+ * The order of the functions and parts/ includes in this file is the
+ * original object's function order; keep it.
  */
 
 #include "types.h"
@@ -52,21 +48,14 @@
 #include "psgfreq.h"
 
 
-/* Header-command handlers, dispatched by mq_parh on
-   0x80/0x81/0x83/0x84/0xC0/0xFF.  LCP_STX has no such helpers: their
-   bodies are written out inside mq_parh's switch, so the default
-   build must not emit them at all -- Alcyon still lays a static
-   function down even when nothing calls it, and these five cost 244
-   bytes the original does not have. */
-/* STX links mq_skip first in this object (0x12a). */
+/* mq_skip comes first in this object. */
 #include "parts/mq_skip.c"
 
 /* mq_inis: song-lifecycle entry point.
    If a song is playing: signal SEQ_PHASE_SONG_ENDING and return
    without starting the new one; caller spins until mi_play is false.
    Idle: position mi_dbase at buffer+0x1FE (event stream), parse header,
-   reset programs, skip 0x00/0xFF padding, store playback bounds, kick.
-   addr: mq_inis() */
+   reset programs, skip 0x00/0xFF padding, store playback bounds, kick. */
 
 void
 mq_inis(param_1, maxPos)
@@ -88,8 +77,7 @@ long            maxPos;
 
 /* mq_setp: stash read cursor + end-of-song marker; init per-song
    driver state; publish ticks-per-beat via mi_tpb.
-   Envelope base = mi_dbase - 0x168 (360 bytes, ADSR block).
-   addr: mq_setp() */
+   Envelope base = mi_dbase - 0x168 (360 bytes, ADSR block). */
 
 void
 mq_setp(curPos, maxPos)
@@ -97,11 +85,9 @@ unsigned char * curPos;
 long            maxPos;
 {
         mi_sqpos     = curPos;
-        /* mi_seqE, not a separate g_msmap: the reference relocates
-           both these stores and mq_pars' `mi_sqpos >= mi_seqE` tests
-           to the SAME cell.  It is the end-of-sequence pointer, and
-           -1 is how "no limit" is spelled -- every caller passes
-           g_momap, which is 0. */
+        /* mi_seqE is the end-of-sequence pointer, and -1 is how "no
+           limit" is spelled -- every caller passes g_momap, which
+           is 0. */
         if (maxPos == 0)
                 mi_seqE = (unsigned char *) -1L;
         else
@@ -117,21 +103,20 @@ long            maxPos;
 
 /* mq_stap: init timer counters + arm sequencer.
    All 4 tick counters seeded 100 (~500 ms grace before first event).
-   mi_dwrm=0 selects XBIOS Midiws path (not direct ACIA).
-   addr: mq_stap() */
+   mi_dwrm=0 selects XBIOS Midiws path (not direct ACIA). */
 
 void
 mq_stap()
 {
-        /* STX writes these as chained assignments. */
+        /* Chained assignments on purpose: separate statements
+           compile differently. */
         mi_dwrm = g_mtcou = 0;
         mi_lpTk = mi_nxTk = mi_nlp0 = g_mtpre = g_mtdiv = 100;
         g_mspha = g_msmsa = YES;
 }
 
 
-/* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49).
-   addr: midi_seq_push_loop() */
+/* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49). */
 
 void
 mq_pshl(a, b)
@@ -147,8 +132,7 @@ short   b;
 }
 
 /* mq_popl: pop/decrement top of loop stack.  Returns loop-start ptr
-   if count nonzero, else NULL (fall through end).
-   addr: midi_seq_pop_loop() */
+   if count nonzero, else NULL (fall through end). */
 
 unsigned char *
 mq_popl()
@@ -180,15 +164,14 @@ mq_popl()
      0x82        bar marker (1 byte)
      0x85 <n>    loop start, count=n
      0x86        loop end (jump back if count > 0)
-     0xFF        end of song, returns 0
-   Ghidra 0x10388, nested while-loops preserved as gotos.
-   addr: midi_seq_parse_events() */
+     0xFF        end of song, returns 0 */
 
 short
 mq_pars()
 {
-        /* No locals at all: STX walks mi_sqpos with ++ in place and
-           dispatches the command bytes through a switch. */
+        /* No locals at all: mi_sqpos is walked with ++ in place and
+           the command bytes are dispatched through a switch, as in the
+           original. */
 
         /* Prologue: skip leading 0x00, refresh mi_nlp0, end-check. */
         if (*mi_sqpos != 0)
@@ -221,11 +204,10 @@ mq_pars()
                                 psg_cvol = psg_dvol;
                         }
                         mi_nmof = *mi_sqpos & 0xc0;
-                        /* mi_ndur, not mi_nlp0: the reference stores
-                           this one in a second cell that only mq_qnne
-                           reads.  mq_rdur computes the same expression
-                           into mi_nlp0, which the tick counters use --
-                           the port had merged the two. */
+                        /* mi_ndur, not mi_nlp0: this duration goes to
+                           a second cell that only mq_qnne reads.
+                           mq_rdur computes the same expression into
+                           mi_nlp0, which the tick counters use. */
                         mi_ndur = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
                         mi_sqpos++;
 
@@ -284,8 +266,7 @@ mq_pars()
 }
 
 /* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
-   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0.
-   addr: midi_seq_read_note_duration() */
+   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0. */
 
 void
 mq_rdur()
@@ -298,13 +279,9 @@ mq_rdur()
                 mi_nlp0 = 0;
 }
 
-/* mq_spgm does not exist in LCP_STX: mq_sepc (0x84a) is the one
-   program-change sender, and mq_qnne calls it directly. */
-
 /* mq_qnne: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
    and dispatch Note-On via mq_dise.  Queue entry fires paired Note-Off
-   later via mq_expN + mq_snof.
-   addr: midi_seq_queue_note_event() */
+   later via mq_expN + mq_snof. */
 
 
 void
@@ -353,16 +330,16 @@ mq_qnne()
 
 /* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
-   Fires only if note in [g_mnhi, g_mnlo] and non-zero.
-   addr: midi_seq_send_note_off() */
+   Fires only if note in [g_mnlo, g_mnhi] and non-zero. */
 
 void
 mq_snof(nptr)
 short * nptr;
 {
-        /* STX is called with &mi_evq[i] and walks the pointer forward;
-           the range test is one bitwise OR of two comparisons and each
-           rejection returns. */
+        /* Called with &mi_evq[i] and walks the pointer forward.  The
+           range test is a bitwise OR of two comparisons and each
+           rejection returns a value from a void function; both are
+           part of the original code. */
         if ((nptr[1] & 0x80) != 0)
                 return;
         nptr++;
@@ -380,8 +357,7 @@ short * nptr;
 /* mq_sepc: dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
    Current-program keyed by physical channel (mi_chmap & 0xf), so
-   shared physical channels only get one PC per song load.
-   addr: mq_sepc() */
+   shared physical channels only get one PC per song load. */
 
 void
 mq_sepc(index)
@@ -410,8 +386,7 @@ char    index;
        mi_env + (g_mccha-1)*8; compute (2 - hi_nib(attack_dur))*12
        octave offset; write PSG tone/mixer/noise; if freq<0x17 use
        ENV_FADEOUT instead of ENV_ATTACK; set psg_ntAc.
-   Returns 1 on success, 0 on non-Note-On or Note-Off miss.
-   addr: mq_dise() */
+   Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
 short
 mq_dise(midiEvP, midiEvS, midi_ch)
@@ -420,18 +395,19 @@ char            midiEvS;
 char            midi_ch;
 {
         /* Both byte arguments are saved and restored around the MIDI
-           OUT path, which walks them destructively. */
-        char            chosen;                 /* -2, also saved_note */
-        char            unused;                 /* -4, never touched   */
-        char            best;                   /* -6  */
-        char            cVar4;                  /* -8  */
-        unsigned char * saved_ptr;              /* -12 */
-        char            saved_size;             /* -14 */
-        long            env_ptr;                /* -18 */
-        char            envelope_phase;         /* -20 */
-        short           attack_hi;              /* -22 */
-        short           noise_mask;             /* -24 */
-        short           mixer_bits;             /* -26 */
+           OUT path, which walks them destructively.  The declaration
+           order of these locals is part of the original code. */
+        char            chosen;                 /* also the saved note */
+        char            unused;                 /* unused, but it must stay */
+        char            best;
+        char            cVar4;
+        unsigned char * saved_ptr;
+        char            saved_size;
+        long            env_ptr;
+        char            envelope_phase;
+        short           attack_hi;
+        short           noise_mask;
+        short           mixer_bits;
 
         saved_ptr  = midiEvP;
         saved_size = midiEvS;
@@ -484,9 +460,7 @@ char            midi_ch;
                 }
 
                 /* Range guard: the whole note-on body is inside it.
-                   LOW first -- the reference compares against 0x34e
-                   (36) and branches lt, then against 0x34c (96) and
-                   branches gt. */
+                   The low limit is tested first, as in the original. */
                 if (*midiEvP >= g_mnlo && *midiEvP <= g_mnhi) {
 
                 /* Copy 8 bytes of ADSR params from the .SNG envelope
@@ -572,15 +546,12 @@ char            midi_ch;
 }
 
 /* mq_expN: subtract val from each queued event's remaining duration;
-   when <=0, mq_snof + mq_rmev.
-   addr: midi_seq_expire_notes() */
+   when <=0, mq_snof + mq_rmev. */
 
 void
 mq_expN(val)
 short   val;
 {
-        /* STX: one local, memory-direct steps, the removal result
-           tested in place, and mq_snof gets &mi_evq[i]. */
         short   i;
 
         for (i = 0; i < mi_evi; i += 3) {
@@ -593,21 +564,17 @@ short   val;
         }
 }
 
-/* STX links mq_rmev immediately after mq_expN (0xe64). */
+/* mq_rmev must follow mq_expN directly. */
 #include "parts/mq_rmev.c"
 
-/* mq_tick lives in source/mq_tick.s -- privileged move-sr + rte
-   terminator, installed by Xbtimer directly. */
+/* mq_tick lives in mq_tick.s: it needs privileged SR moves and an rte,
+   which Alcyon C cannot emit. */
 
-/* ---- Timer-A sequencer engine (other-image; KEPT build only).
-   The ROM never steps its sequencer -- no ISR exists and nothing
-   below is referenced by ROM code. ---- */
-/* mq_advs: sequencer state-machine advance from mq_tick.  Ghidra 0x111b0.
+/* mq_advs: sequencer state-machine advance from mq_tick.
    WAIT_NOTE_EXPIRE (0): expire queued notes, reload prescaler, -> PARSE.
    PARSE_NEXT_EVENT (1): mq_pars() walks next batch; 0=end-of-song ->
      SONG_ENDING, else mi_nlp0 = ticks until next event.
-   SONG_ENDING (2): expire remaining; when queue empty, kill PSG + flags.
-   addr: midi_seq_advance_sequencer() */
+   SONG_ENDING (2): expire remaining; when queue empty, kill PSG + flags. */
 
 void
 mq_advs()
@@ -621,12 +588,12 @@ mq_advs()
                 g_mtpre    = mi_tpb;
                 g_mspha    = SEQ_PHASE_PARSE_NEXT_EVENT;
                 mi_nxTk   += mi_tpb;
-                return;                 /* STX: explicit return */
+                return;                 /* explicit return kept on purpose */
         } else if (g_mspha == SEQ_PHASE_PARSE_NEXT_EVENT) {
                 g_mspha    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
                 mi_nlp0    = -1;
-                /* STX wraps the parse in a loop and returns from both
-                   arms. */
+                /* The parse sits in a loop that returns from both arms;
+                   that shape is part of the original code. */
                 while (mi_nlp0 < 0) {
                         if (mq_pars() != 0) {
                                 mi_nxTk += mi_nlp0;
@@ -659,10 +626,9 @@ mq_advs()
         }
 }
 
-/* mq_stop (Ghidra midi_seq_stop @ 0x1103c): stop sequencer.
+/* mq_stop: stop sequencer.
    Drain pending events, send Note-Off for every mi_noSt[] flag,
-   clear g_msmsa.  Not called yet -- present for ROM parity.
-   addr: mq_stop() */
+   clear g_msmsa.  Nothing calls it, but the original contains it. */
 
 
 void
@@ -700,13 +666,12 @@ mq_stop()
         g_msmsa = NO;
 }
 
-/* mq_intim (0x1112) sits here -- between mq_stop and mq_extm. */
+/* mq_intim sits between mq_stop and mq_extm. */
 #include "parts/mq_intim.c"
 
-/* mq_extm (Ghidra midi_seq_exit_timer @ 0x11162): tear down MFP
-   Timer-A hook; Xbtimer(0,...) reinstalls saved ISR from mi_svtv.
-   Not called yet -- present for ROM parity.
-   addr: mq_extm() */
+/* mq_extm: tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
+   saved ISR from mi_svtv.  Nothing calls it, but the original contains
+   it. */
 
 void
 mq_extm()
@@ -715,16 +680,14 @@ mq_extm()
 }
 
 
-/* STX links these near the end of the object:
-   mq_resp 0x1184, mq_parh 0x11fa. */
+/* mq_resp and mq_parh come near the end of the object. */
 #include "parts/mq_resp.c"
 #include "parts/mq_parh.c"
 
 /* mq_pacm: unpack 30-byte channel/program map (90 bytes before mi_dbase).
    Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
    Values are 1-based on disk (0 = no-op sentinel); decrement on load.
-   Logical channel 0 reserved for game SFX.
-   addr: mq_pacm() */
+   Logical channel 0 reserved for game SFX. */
 
 void
 mq_pacm(p)
@@ -732,9 +695,8 @@ unsigned char * p;
 {
         short   i;
 
-        /* STX writes the offset arithmetic inside the dereference,
-           which makes the pointer the INDEX register and the loop
-           counter the base -- `p[i - 1]` gives the other way round. */
+        /* The offset arithmetic is written inside the dereference on
+           purpose: `p[i - 1]` compiles differently. */
         for (i = 1; i < 16; i++) {
                 mi_chmap[i] = *(p + i - 1)  - 1;
                 mi_pgmap[i] = *(p + i + 14) - 1;
@@ -792,7 +754,7 @@ short   value;
 }
 
 
-/* psg_cpE -> parts/psg_cpE.c (STX: 0x1586, right before psg_upEn). */
+/* psg_cpE must sit right before psg_upEn. */
 #include "parts/psg_cpE.c"
 
 /* psg_upEn: PSG software ADSR envelope processor.  50 Hz from mq_tick.
@@ -801,8 +763,7 @@ short   value;
    accum += delta; while accum > 360, cur += dir; accum -= 360.
    phase_timer==0 with dur==0 -> immediate fall-through (gotos).
    Clamp cur to max_volume; write PSG amp reg 8/9/10 via psg_wr.
-   Preserves Ghidra switch(fallthrough) shape as C gotos.
-   addr: psg_process_envelopes() */
+   The case fall-throughs are written as gotos, as in the original. */
 
 void
 psg_upEn()
@@ -972,7 +933,8 @@ do_fadeout:
                 }
 
                 /* The clamped volume goes through a global, not a
-                   local, and the pick is a ternary (one store). */
+                   local, and the pick is a ternary (one store); both
+                   are part of the original code. */
                 psg_ovol = psg_envelope[i].current_volume >
                            psg_envelope[i].max_volume
                          ? psg_envelope[i].max_volume

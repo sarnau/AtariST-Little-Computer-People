@@ -1,8 +1,5 @@
 /*
- * parts/a_socwd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -19,8 +16,8 @@ a_socwd()
                 return;
         }
 
-        /* STX splits the +9 into +3 and +6 around the state
-           assignment, and uses += / -= straight to memory. */
+        /* The +9 is deliberately split into +3 and +6 around the state
+           assignment; merging them changes the compiled code. */
         lcp_y += 3;
         lcp_st = STATE_SIT_COUCH_UPRIGHT;
         lcp_y += 6;
@@ -36,9 +33,10 @@ a_socwd()
 
         ticks = rndRng(30, 50);
         lcp_st = STATE_SIT_COUCH_PETTING_DOG;
-        /* STX drives it from a post-decrement with the break in the
-           body, and splits the trailing +3 / state assignment the
-           same way as the entry sequence. */
+        /* Post-decrement loop with the break in the body, and the
+           trailing +3 / state assignment split the same way as the
+           entry sequence -- both shapes are what the original compiles
+           to. */
         while (ticks--) {
                 if (g_trel[0] != ACTION_NONE)
                         break;
@@ -53,7 +51,7 @@ a_socwd()
         lcp_hwt();
         gameTick(3);
 
-        /* STX splits the -9 into two subq steps. */
+        /* The -9 is deliberately two separate steps. */
         lcp_y -= 3;
         lcp_y -= 6;
         lcp_st = STATE_CROUCH_DOWN;

@@ -1,9 +1,9 @@
 /*
- * parts/drwPixel.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x13930). Files under parts/ are never compiled standalone.
+ * parts/drwPixel.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
-/* drwPixel: single-pixel via degenerate v_pline (VDI single-px fast path).
-   addr: draw_pixel @ 0x23930 */
+/* Plots one pixel as a degenerate two-point polyline (start == end),
+   since the VDI bindings used here have no single-pixel call. */
 
 void
 drwPixel(x, y, color)

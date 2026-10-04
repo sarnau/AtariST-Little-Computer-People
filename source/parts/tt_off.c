@@ -1,7 +1,6 @@
 /*
- * parts/tt_off.c -- shared body; LCP_STX links it in the 0xdece object
- * (0x13c1e, immediately after tt_on). Files under parts/ are never
- * compiled standalone.
+ * parts/tt_off.c -- included by stx_u2.c immediately after tt_on;
+ * never compiled on its own.
  */
 
 short

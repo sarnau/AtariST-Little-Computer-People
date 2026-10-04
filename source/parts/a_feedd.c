@@ -1,15 +1,12 @@
 /*
- * parts/a_feedd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * afood functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_feedd.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_feedd(value)
 short   value;
 {
-        /* STX tests the call in place -- no local. */
+        /* The call is tested in place, with no local. */
 
         if (value == 0) {
                 hs_posXY(POS_BTM_FRIDGE,

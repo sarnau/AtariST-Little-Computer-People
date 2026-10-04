@@ -1,14 +1,12 @@
 /*
- * parts/a_eatm.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * afood functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_eatm.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
 a_eatm()
 {
-        /* STX tests the call in place -- no local. */
+        /* lcp_wkD()'s result is tested in place, with no local for it. */
         short   counter;
 
         hs_posXY(POS_BTM_KITCHEN_CABINET,

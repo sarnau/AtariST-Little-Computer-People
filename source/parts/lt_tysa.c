@@ -1,8 +1,5 @@
 /*
- * parts/lt_tysa.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aletter functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/lt_tysa.c -- included by stx_u2.c; never compiled on its own.
  */
 
 short
@@ -10,10 +7,11 @@ lt_tysa(str, val)
 char *  str;
 short   val;
 {
-        /* STX declares the g_ltscb index first and has no NULL guard;
-           both scan loops are `while ((ch = *str++) <op> ' ')`, which
-           Alcyon compiles by saving the flags across the pointer
-           increment. */
+        /* The g_ltscb index is declared first (declaration order fixes
+           the frame layout) and there is no NULL guard.  Both scan
+           loops are `while ((ch = *str++) <op> ' ')`, which Alcyon
+           compiles by saving the flags across the pointer increment;
+           keep that form. */
         short   i;
         short   word_length;
         short   ch;
@@ -37,8 +35,8 @@ short   val;
 
                 i = 0;
                 while ((ch = *str++) > ' ') {
-                        /* Index first: Alcyon folds the base into the
-                           address register (add.l #g_ltscb,a1). */
+                        /* Index first, on purpose: `*(i + g_ltscb)`
+                           compiles differently from g_ltscb[i]. */
                         *(i + g_ltscb) = ch;
                         i++;
                 }

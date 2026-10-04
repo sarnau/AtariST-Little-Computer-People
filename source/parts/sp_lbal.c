@@ -1,15 +1,13 @@
 /*
- * parts/sp_lbal.c -- shared body; LCP_STX places it in the sprite object
- * (see stx_u3.c for the address).  Files under parts/ are never
- * compiled standalone.
+ * sp_lbal is followed directly by sp_lbbd and then sp_lbhd.
+ *
+ * Included by stx_u3.c; never compiled on its own.
  */
-/* STX order: sp_lbal (0x167b0) is followed directly by sp_lbbd
-   (0x1682e, a bsr.s target) and then sp_lbhd (0x169b4). */
 void
 sp_lbal()
 {
-        /* One local: STX subscripts the four arrays directly instead
-           of walking char* accumulators. */
+        /* One local: the four arrays are subscripted directly
+           instead of walked with char* accumulators. */
         short   index;
 
         for (index = 0; index < 98; index++)

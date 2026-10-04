@@ -1,15 +1,12 @@
 /*
- * parts/a_calld.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * asimple functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_calld.c -- included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_calld()
 {
-        /* STX tests the walk call inline -- no local, so its frame
-           is 2 bytes smaller. */
+        /* The walk call is tested in place, with no local; adding
+           one would change the compiled code. */
 
         hs_posXY(POS_BTM_COUCH, &g_wtx, &g_wty);
         if (lcp_wkD() != 0)

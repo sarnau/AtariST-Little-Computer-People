@@ -1,7 +1,5 @@
 /*
  * games.c -- mini-game entry points + shared setup helpers.
- * addr: mg_stp(), plEr(), ag_main(), wp_main(), pk_main(),
- *       pk_wrMn(), pk_bjMn()
  */
 
 #include "types.h"
@@ -45,15 +43,16 @@
 #include "dat_games.c"
 
 
-/* LCP_STX defines pk_bjwr AFTER pk_wrMn (0xb784) and reaches it with
-   a forward bsr; declaring it keeps the symbol local so as68 can
-   shorten the call instead of leaving an external. */
+/* These statics are defined after their first caller.  A static
+   called before its definition needs a forward declaration, or Alcyon
+   treats the call as external and the linker resolves it to 0; the
+   declaration also lets the assembler use a short call. */
 static short pk_bjwr();
 static short pk_chsc();
 static short pk_bjr();
 static short pk_cnbj();
-static void  pk_show();  /* defined at 0x9a3a, called from pk_main above it */
-static short pk_dchd();  /* returns short; the void here was a slip */
+static void  pk_show();  /* defined after pk_main, which calls it */
+static short pk_dchd();
 static void  pk_dbhi();
 static void  pk_sbet();
 static void  pk_ante();
@@ -65,19 +64,15 @@ static short pk_cbet();
 static void  pk_cdrw();
 
 
-/* gamePlWQ is only reached from the ROM banner stubs; the default
-   build must not emit it (Alcyon lays a static down regardless). */
+/* gamePlWQ does not exist in the original; Alcyon emits a static even
+   when nothing calls it, so it must not be defined here. */
 
 
-/* lcp_lgt -> parts/lcp_lgt.c (STX puts it at the head of the
-   0xdece object, ahead of sp_sprs). */
-
-/* lcp_rgt -> parts/lcp_rgt.c (STX puts it at the head of the
-   0xdece object, ahead of sp_sprs). */
+/* lcp_lgt and lcp_rgt live in parts/ and are included by stx_u2.c,
+   not here: they belong to that object. */
 
 /* mg_wkev: wait for a key while processing urgent game events.
-   On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10.
-   addr: minigame_wait_for_key_with_events() */
+   On 7200 idle frames (~15 min) sets mg_tofl=YES and returns KEY_F10. */
 
 short
 
@@ -104,8 +99,7 @@ mg_wkev()
                         lcp_rgt();
                 }
                 /* The GLOBAL tank level, not the saved copy in the
-                   struct: the reference relocates this site to
-                   lcp_watr, not to lcp+92. */
+                   lcp struct. */
                 if (lcp.thirst_level > NEED_SATISFIED && lcp_watr != 0) {
                         lcp_lgt();
                         a_drink();
@@ -132,25 +126,24 @@ mg_wkev()
         return key;
 }
 
-/* rndRng -> parts/rndRng.c: linked here (0x74fc), right after
-   mg_wkev, so the minigames reach it with bsr. */
+/* rndRng lives in parts/; it belongs here, right after mg_wkev, in
+   the minigame object, so the minigames reach it with a short call. */
 #include "parts/rndRng.c"
 
 
 /* ag_matc: character-by-character equality test for two C strings.
-   Preserves 1985 shape: walks both strings after mismatch, reports
-   final result -- byte-comparable with the original.
-   addr: anagram_match_result() */
+   Keeps walking both strings after a mismatch and reports at the end. */
 
 short
 ag_matc(a, b)
 char *  a;
 char *  b;
 {
-        /* STX keeps no character temporaries: it compares through the
-           post-increments, which makes Alcyon save and restore the
-           condition codes around them (move sr,d0 / move d0,ccr).
-           Its frame is -8, with an unused short ahead of the flag. */
+        /* No character temporaries: comparing through the
+           post-increments makes Alcyon save and restore the condition
+           codes around them, as the original does.  The unused short
+           ahead of the flag must stay: removing it changes the
+           compiled code. */
         short   unused;
         short   mismatch;
 
@@ -164,28 +157,29 @@ char *  b;
         else
                 return 1;
 }
-#include "parts/mg_stp.c"    /* 0x759c */
-#include "parts/gameCln.c"   /* 0x75c8 */
-#include "parts/vst_h20.c"   /* 0x75dc */
-#include "parts/rst_vsth.c"  /* 0x761e */
-#include "parts/initVdi.c"   /* 0x764e */
-#include "parts/exitVdi.c"   /* 0x76d0 */
+/* The order of these parts/ includes is the object's function order
+   and must not change. */
+#include "parts/mg_stp.c"
+#include "parts/gameCln.c"
+#include "parts/vst_h20.c"
+#include "parts/rst_vsth.c"
+#include "parts/initVdi.c"
+#include "parts/exitVdi.c"
 
 
 /* wp_main: WORD PUZZLE main loop.
    Loads wordpz.txt into a 2000-byte buffer, indexes 66 line pointers
    (33 puzzles x {template, solution}).  F1 next / F2 prev (wraps 0..0x20)
-   / F5 solve / F10 quit.  Preserves goto LAB_000177ac (next_puzzle)
-   and LAB_0001797c (cleanup) verbatim.
-   addr: wp_main() (== word_puzzle_main) */
+   / F5 solve / F10 quit.  The next_puzzle and cleanup gotos are the
+   original's control flow and must stay. */
 
 void
 wp_main()
 {
-        /* STX's frame is -18: an unused short ahead of line_index,
-           then ONE short reused for both the scanned character and
-           the mini-game key, the parse pointer, and four more
-           unreferenced bytes. */
+        /* Declaration order and the unused locals must stay: an unused
+           short ahead of line_index, then ONE short reused for both
+           the scanned character and the mini-game key, the parse
+           pointer, and four more unreferenced bytes. */
         short   unused1;
         short   line_index;
         short   cur;
@@ -204,8 +198,9 @@ wp_main()
         parse_ptr = g_wpdb;
         for (line_index = 0; line_index < 0x42; line_index++) {
                 g_ltlp[line_index] = parse_ptr;
-                /* STX steps once, then runs a plain `while` -- two
-                   increment sites, not a do/while's one. */
+                /* Step once, then a plain `while` -- two increment
+                   sites, not a do/while's one; the original has this
+                   shape. */
                 parse_ptr++;
                 while (*parse_ptr >= ' ')
                         parse_ptr++;
@@ -216,8 +211,9 @@ wp_main()
         g_wpci = 0;
         strPr("**WORD PUZZLE #  **", 8, 8, COLOR_black);
 
-        /* STX has no outer loop: `next_puzzle` is a plain label and
-           every arm of the key switch jumps back to it explicitly. */
+        /* No outer loop: `next_puzzle` is a plain label and every arm
+           of the key switch jumps back to it explicitly, as in the
+           original. */
 next_puzzle:
         strPr("Choose the puzzle",   8,  16, COLOR_black);
         strPr("you wish to solve.",  8,  24, COLOR_black);
@@ -273,23 +269,21 @@ next_puzzle:
 cleanup:
         no_keyin = NO;
         tx_sctm  = 0;
-        Mfree(g_wpdb);          /* STX does not clear g_wpdb here */
+        Mfree(g_wpdb);          /* g_wpdb is deliberately not cleared */
 }
 #undef key
 
-/* STX links wp_solv immediately after wp_main (0x799e): the
-   call from the key switch is a bsr.s. */
-/* wp_solv: solve phase.  Per blank: prompt, read A-Z (10-char max),
+/* wp_solv must follow wp_main directly so the call from the key switch
+   stays a short branch.
+   wp_solv: solve phase.  Per blank: prompt, read A-Z (10-char max),
    Enter confirms, F10 quits.  Then walk solution line, compare
-   token-by-token; show wp_succ or wp_fail.  Preserves LAB_00017c4a.
-   addr: word_puzzle_solve_phase() */
+   token-by-token; show wp_succ or wp_fail. */
 
 void
 wp_solv()
 {
-        /* STX's frame is -20: six locals, and ONE of them (`ch`) also
-           carries the scanned solution and answer characters, so
-           there is no ri/pci/sci/scp. */
+        /* Exactly six locals; `ch` also carries the scanned solution
+           and answer characters, as in the original. */
         short   cwi;            /* current_word_index */
         short   ilen;
         short   wi;
@@ -314,10 +308,10 @@ wp_solv()
                         ch = mg_wkev();
                         if (ch == KEY_F10)
                                 return;
-                        /* The two `(long)` casts are real: they keep
-                           the muls.w result long, which puts the array
-                           base AFTER the column offset.  Without them
-                           Alcyon folds the base in first -- which is
+                        /* The two `(long)` casts are deliberate: they
+                           make Alcyon add the array base after the
+                           column offset, as the original does.  Without
+                           them the base is folded in first -- which is
                            what the other two stores here do. */
                         if (ch == KEY_CTRL_M) {
                                 wp_ans[cwi][ilen] = '\0';
@@ -370,12 +364,9 @@ fail:
         wp_shwm(wp_fail[rndRng(0, 5)]);
 }
 
-/* STX links these immediately after wp_solv: wp_shwm 0x7c78,
-   wp_rtmp 0x7cac -- both bsr.s targets from it. */
-/* STX places wp_shwm between exitVdi (0x76d0) and the anagram
-   helpers (ag_cwda 0x7e9c). */
-/* wp_shwm: word-puzzle status message in green at (8,58).
-   addr: word_puzzle_show_status_message() */
+/* wp_shwm and wp_rtmp must follow wp_solv directly so its calls to
+   them stay short branches.
+   wp_shwm: word-puzzle status message in green at (8,58). */
 
 void
 wp_shwm(msg)
@@ -387,8 +378,7 @@ char *  msg;
 
 /* wp_rtmp: render puzzle template with player answers substituted for '@'.
    Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at
-   (x=1, y=0x28) -- byte-comparable.
-   addr: word_puzzle_render_template_with_answers() */
+   (x=1, y=0x28). */
 
 void
 wp_rtmp()
@@ -464,8 +454,7 @@ wp_rtmp()
         }
 }
 
-/* ag_cwda: clear the right-panel word display area (162,10)-(319,49).
-   addr: anagram_clear_word_display_area() */
+/* ag_cwda: clear the right-panel word display area (162,10)-(319,49). */
 
 void
 ag_cwda()
@@ -478,8 +467,7 @@ ag_cwda()
         exitVdi();
 }
 
-/* ag_cswa: clear the left-panel intro/instructions area (5,10)-(160,60).
-   addr: anagram_clear_scrambled_word_area() */
+/* ag_cswa: clear the left-panel intro/instructions area (5,10)-(160,60). */
 
 void
 ag_cswa()
@@ -492,8 +480,7 @@ ag_cswa()
         exitVdi();
 }
 
-/* ag_cgpa: clear the "Guess #N?" prompt bar (166,50)-(319,65).
-   addr: anagram_clear_guess_prompt_area() */
+/* ag_cgpa: clear the "Guess #N?" prompt bar (166,50)-(319,65). */
 
 void
 ag_cgpa()
@@ -506,8 +493,7 @@ ag_cgpa()
         exitVdi();
 }
 
-/* ag_csb: clear the bottom info bar (5,62)-(319,75).
-   addr: anagram_clear_status_bar() */
+/* ag_csb: clear the bottom info bar (5,62)-(319,75). */
 
 void
 ag_csb()
@@ -520,8 +506,7 @@ ag_csb()
         exitVdi();
 }
 
-/* ag_intr: draw the 5-line intro text in the left panel.
-   addr: anagram_show_intro_text() */
+/* ag_intr: draw the 5-line intro text in the left panel. */
 
 void
 ag_intr()
@@ -533,8 +518,7 @@ ag_intr()
         strPr("guess what it is.", 5, 49, COLOR_black);
 }
 
-/* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch.
-   addr: anagram_display_word_large() */
+/* ag_dwl: display a word in 20px text in right panel at (162,37), 12px pitch. */
 
 void
 ag_dwl(word, text_color)
@@ -546,8 +530,8 @@ short   text_color;
         ag_cwda();
         vst_h20();
         x = 0;
-        /* STX steps the pointer inside the body, before the pitch,
-           and both steps are memory-direct. */
+        /* The pointer is stepped inside the body, before the pitch;
+           this order matches the original's code. */
         while (*word != '\0') {
                 prCh((short) *word, x + 162, 37, text_color);
                 word++;
@@ -556,21 +540,20 @@ short   text_color;
         rst_vsth();
 }
 
-/* ag_sgp -> parts/ag_sgp.c (STX: 0x8052, after ag_intr). */
+/* ag_sgp lives in parts/; it must sit here, after ag_dwl. */
 
-#include "parts/ag_sgp.c"   /* STX: 0x8052, after ag_intr */
+#include "parts/ag_sgp.c"
 
 /* ag_ssw: pick a random word from the 150-entry dictionary (11 bytes/row),
    copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
-   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string.
-   addr: anagram_select_and_scramble_word() */
+   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string. */
 
 void
 ag_ssw()
 {
-        /* STX's frame is -18: no `idx`, one counter reused for the
-           copy index and the shuffle round, and a local copy of the
-           word length that the shuffle reads instead of g_agwol. */
+        /* One counter reused for the copy index and the shuffle round,
+           and a local copy of the word length that the shuffle reads
+           instead of g_agwol -- the original's locals exactly. */
         short   pos;
         short   len;
         short   ia;
@@ -581,7 +564,8 @@ ag_ssw()
         g_agorw = g_agwb + rndRng(0, 0x95) * 11;        /* 0..149 */
         pos     = 0;
         for (wp = g_agorw; *wp > ' ' && *wp != '.'; ) {
-                /* index first: the base folds into add.l #base,An */
+                /* Index first: this makes Alcyon fold the base into the
+                   address the way the original does. */
                 *(pos + g_agscw) = *wp;
                 wp++;
                 pos++;
@@ -606,17 +590,17 @@ ag_ssw()
 }
 
 /* ag_main: full anagram game loop.  Outer per-word / middle per-guess /
-   inner per-keypress.  Labels new_word/validate mirror the two
-   goto LAB_00018210 / LAB_00018562 jumps in the 1985 source.
-   addr: ag_main() (== anagram_main) */
+   inner per-keypress.  The new_word/validate labels are the 1985
+   code's own gotos and must stay. */
 
 #include "dat_games2.c"
 
 void
 ag_main()
 {
-        /* STX's frame is -28: twelve shorts, only six of which the
-           body touches. */
+        /* Twelve locals, only six of which the body touches.  The
+           unused ones must stay: removing them changes the compiled
+           code. */
         short   index;
         short   unused1;
         short   unused2;
@@ -644,8 +628,8 @@ new_word:
         g_aggun = 1;
         ag_ssw();
 
-        /* STX runs the round prologue ONCE per word and folds the
-           guess-count guard into a `while` condition.  A wrong guess
+        /* The round prologue runs ONCE per word and the guess-count
+           guard is folded into a `while` condition.  A wrong guess
            re-enters HERE, past the prologue, so the word is kept --
            only a solved or abandoned word goes back to new_word. */
 same_word:
@@ -694,13 +678,12 @@ same_word:
                                 return;
                         }
                         if (key_pressed == KEY_F1 && ag_clue == 0) {
-                                /* Braced: a bare `continue` folds into
-                                   the conditional branch, braces make
-                                   Alcyon emit beq-over-bra. */
-                                /* Not `continue`: LCP_STX jumps to a
-                                   label sitting ON the else arm's
-                                   statement, one test ahead of the
-                                   loop's own condition. */
+                                /* A goto, not `continue`: the original
+                                   jumps to a label sitting ON the else
+                                   arm's statement, one test ahead of the
+                                   loop's own condition.  The braces are
+                                   deliberate too; without them Alcyon
+                                   emits a different branch shape. */
                                 if (ag_matc(g_agorw, g_agscw) != 0) {
                                         goto again;
                                 }
@@ -752,11 +735,9 @@ again:                          if (word_complete != NO)
 validate:
                 if (word_complete != NO)
                         goto new_word;
-                /* The second test is a bare truthiness test, which
-                   is what makes Alcyon reach it with an indexed EA
-                   (movea.w idx,a0 / movea.l #base,a1 /
-                   tst.b (0,a0,a1.l)); spelling it `!= '\0'` emits the
-                   base+add form instead. */
+                /* The second test is deliberately a bare truthiness
+                   test: spelling it `!= '\0'` makes Alcyon address the
+                   array differently from the original. */
                 for (index = 0;
                      g_aginb[index] != ' ' && g_aginb[index];
                      index++) ;
@@ -794,22 +775,21 @@ validate:
         }
 }
 
-/* STX orders plEr after the anagram helpers (0x86e0, past ag_intr
-   at 0x7f84); see parts/plEr.c. */
+/* plEr and plErCol (in parts/) sit here, after the anagram code;
+   plErCol must follow plEr directly. */
 #include "parts/plEr.c"
-#include "parts/plErCol.c"   /* 0x871a, right after plEr */
+#include "parts/plErCol.c"
 
 
 /* pk_dbet: computer call/raise decision.  Returns 'c' or 'r'.
-   On raise: pk_dpos = money/10 clamped [1,20].
-   addr: poker_computer_decide_bet() */
+   On raise: pk_dpos = money/10 clamped [1,20]. */
 
 static short
 pk_dbet()
 {
-        /* No `ch` temporary in LCP_STX: early returns, and the
-           redundant `else` is real -- Alcyon emits its skip branch
-           even though the then arm returns. */
+        /* No temporary, just early returns.  The redundant `else` is
+           kept on purpose: Alcyon emits its skip branch even though
+           the then arm returns, and the original has it. */
         if (g_pcmon == 0)
                 return 'c';
         if (pk_bluff == NO && pk_chrk < HAND_TWO_PAIR)
@@ -826,8 +806,7 @@ pk_dbet()
 
 /* pk_evh: evaluate a 5-card hand.  *hand_rank <- 0=high card..9=royal flush.
    rank_flags[i]=1 for winning combo cards.  suit_flags: rank-sorted hand copy.
-   Preserves Ghidra shape (two goto exits) -- byte-comparable.
-   addr: poker_evaluate_hand() */
+   The two goto exits are the original's control flow. */
 
 static void
 pk_evh(hand, rank_flags, suit_flags, hand_rank)
@@ -836,19 +815,20 @@ short * rank_flags;
 short * suit_flags;
 short * hand_rank;
 {
-        /* LCP_STX's frame is -42: eleven declarations, four of them
-           zeroed on entry, and `j` doubles as the bubble-sort flag. */
-        short    straight;          /* -2  */
-        short    flush;             /* -4  */
-        short    unused;            /* -6, written once, never read */
-        short    ace_high;          /* -8  */
-        short    i;                 /* -10 */
-        short    j;                 /* -12, doubles as the sort flag */
-        short    tmp;               /* -14, doubles as the wheel flag */
-        short    rc[5];             /* -24 rank_flags scratch */
-        unsigned short  sc[5];      /* -34 pair-slot flag scratch */
-        short    hc;                /* -36 */
-        short    bp;                /* -38 */
+        /* Eleven declarations in this order, four of them zeroed on
+           entry; the order and the unused one must stay, or the
+           compiled code changes. */
+        short    straight;
+        short    flush;
+        short    unused;            /* written once, never read */
+        short    ace_high;
+        short    i;
+        short    j;                 /* doubles as the sort flag */
+        short    tmp;               /* doubles as the wheel flag */
+        short    rc[5];             /* rank_flags scratch */
+        unsigned short  sc[5];      /* pair-slot flag scratch */
+        short    hc;
+        short    bp;
 
         straight = 0;
         flush    = 0;
@@ -873,8 +853,8 @@ short * hand_rank;
                 }
         }
 
-        /* Ace-high is latched BEFORE the straight scan in LCP_STX, and
-           the wheel flag borrows the sort's tmp slot. */
+        /* Ace-high is latched BEFORE the straight scan, and the wheel
+           flag borrows the sort's tmp variable. */
         if (suit_flags[4] % CARDS_PER_SUIT == CARD_RANK_ACE)
                 ace_high = 1;
         straight = 1;
@@ -928,8 +908,8 @@ short * hand_rank;
                         }
                 }
                 /* Four of a kind: rank 7, flags = rc (the 4 matched
-                   cards).  LCP_STX handles it inline and jumps out
-                   rather than breaking to a tail block. */
+                   cards).  Handled inline with a jump out rather than
+                   a break to a tail block, as in the original. */
                 if (tmp == 4) {
                         hc = 7;
                         for (i = 0; i < 5; i++)
@@ -988,23 +968,22 @@ rank_from_hc_bp:
 /* pk_main: 5-card draw poker main loop.
    Init: Malloc, load cards, mg_stp, money=400 each.
    Per-round: ante, deal, bet, discard/draw, computer draw, final bet,
-   showdown.  Preserves goto LAB_00018da0 (cleanup), LAB_00018d72,
-   LAB_00019082, LAB_00019514, LAB_00019950 verbatim.
-   addr: pk_main() (== poker_main) */
+   showdown.  The labels and gotos are the original's control flow and
+   must stay. */
 
 #include "dat_games3.c"
 
 void
 pk_main()
 {
-        /* Six locals: loc8 doubles as the second key variable and as
-           the raise countdown; there is no `res`. */
-        short   ikey;           /* -2  */
-        short   loc8;           /* -4  */
-        short   i;              /* -6  */
-        short   card;           /* -8  */
-        short   dcount;         /* -10 */
-        BOOL16  in_use;         /* -12 */
+        /* Six locals in this order: loc8 doubles as the second key
+           variable and as the raise countdown. */
+        short   ikey;
+        short   loc8;
+        short   i;
+        short   card;
+        short   dcount;
+        BOOL16  in_use;
 
         crd_dat = (short *) Malloc(10400L);
         if (crd_dat == (short *) 0)
@@ -1383,20 +1362,19 @@ discard_loop:
 
 /* pk_show: showdown.  Reveal computer hand, evaluate both, walk the
    per-rank tiebreak ladder.  Winner blinks 5x then pk_annr transfers.
-   Sets pk_round=1.  Preserves Ghidra tiebreak shape (byte-comparable).
-   addr: poker_showdown() */
+   Sets pk_round=1. */
 
 static void
 pk_show()
 {
-        /* LCP_STX declares the loop counter first and has six locals,
-           not seven: the inner loops reuse `i`. */
+        /* The loop counter is declared first and the inner loops
+           reuse `i`; the original has exactly these six locals. */
         short   i;
         short   br;         /* blink counter, tested with (br & 1) */
-        short   pk;         /* -6  */
-        short   ck;         /* -8  */
-        short   ph;         /* -10 */
-        short   ch;         /* -12 */
+        short   pk;
+        short   ck;
+        short   ph;
+        short   ch;
 
         /* Reveal computer hand, animated. */
         for (i = 0; i < 5; i++) {
@@ -1541,17 +1519,17 @@ pk_show()
 }
 
 /* pk_cace: should the computer open?  Bluffing -> yes (0).
-   Otherwise "Jacks or better" -- returns best rank >= Q, else -1.
-   addr: poker_computer_check_ace() */
+   Otherwise "Jacks or better" -- returns best rank >= Q, else -1. */
 
 static short
 pk_cace()
 {
-        /* Two locals, no `ret`, and no value on the success path: the
-           last comparison leaves pk_ch[best] % 13 in d0, which is what
-           the caller reads. */
-        short   i;      /* -2 */
-        short   best;   /* -4 */
+        /* The bare `return;` on the success path is deliberate: the
+           last comparison leaves pk_ch[best] % 13 in the return
+           register, which is what the caller reads.  The original has
+           no explicit value there. */
+        short   i;
+        short   best;
 
         if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
                 for (best = 0, i = 0; i < 5; i++) {
@@ -1565,14 +1543,12 @@ pk_cace()
         return 0;
 }
 
-/* pk_blf: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff.
-   addr: poker_computer_decide_bluff() */
+/* pk_blf: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff. */
 
 static void
 pk_blf()
 {
-        /* No local: the roll is tested in place, and the rank guard is
-           written `> 1`, not `< 2`. */
+        /* No local: the roll is tested in place. */
         pk_bluff = NO;
         if (rndRng(0, 14) == 0 && pk_chrk <= HAND_ONE_PAIR)
                 pk_bluff = YES;
@@ -1581,20 +1557,19 @@ pk_blf()
 /* pk_cdrw: computer AI draw phase.
    Discard count by rank: 0->4, 1->3, 2->1, 3->2, >=4->stay.
    Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
-   replacements and animates the swap.
-   addr: poker_computer_draw_cards() */
+   replacements and animates the swap. */
 
 #include "dat_games4.c"
 
 static void
 pk_cdrw()
 {
-        /* Five locals in LCP_STX, counter first. */
-        short   i;                   /* -2  */
-        short   nc;                  /* -4, card_in_use flag */
-        short   dm;                  /* -6, inner counter / scratch */
-        short   card;                /* -8  */
-        short   n;                   /* -10, new_card */
+        /* Five locals, counter first; the order must stay. */
+        short   i;
+        short   nc;                  /* card_in_use flag */
+        short   dm;                  /* inner counter / scratch */
+        short   card;
+        short   n;                   /* new_card */
 
         for (i = 0; i < 5; i++)
                 pk_sel[i] = 0;
@@ -1694,8 +1669,7 @@ pk_cdrw()
 }
 
 /* pk_annr: transfer pot to winner one chip per tick
-   (winner=0 -> computer, winner=1 -> player).
-   addr: poker_ante_and_new_round() */
+   (winner=0 -> computer, winner=1 -> player). */
 
 void
 pk_annr(winner)
@@ -1722,8 +1696,7 @@ short   winner;
 }
 
 /* pk_cbet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
-   Returns 0 normally, -1 on timeout.
-   addr: poker_computer_bet_decision() */
+   Returns 0 normally, -1 on timeout. */
 
 static short
 pk_cbet(str)
@@ -1731,8 +1704,8 @@ char *  str;
 {
         /* Two locals: the key and a flag that ends the first prompt
            loop; the second loop is a plain while (1). */
-        short   r;      /* -2 */
-        short   go;     /* -4 */
+        short   r;
+        short   go;
 
         pk_bet  = 0;
         pk_pass = NO;
@@ -1781,8 +1754,7 @@ char *  str;
 }
 
 /* pk_ddec: animated chip transfer.  who=0 computer / 1 player.
-   Caps pk_bet at 20.
-   addr: poker_computer_draw_decision() */
+   Caps pk_bet at 20. */
 
 static void
 pk_ddec(who, n)
@@ -1817,18 +1789,17 @@ short   n;
 }
 
 /* pk_evhs: deal 5-card hands.  Draws 10 unique random cards; player
-   face-up, computer face-down.
-   addr: poker_evaluate_hands() */
+   face-up, computer face-down. */
 
 static void
 pk_evhs()
 {
-        /* Counter first in LCP_STX, then the drawn card, the inner
-           counter and the duplicate flag last. */
-        short   i;      /* -2 */
-        short   c;      /* -4 */
-        short   j;      /* -6 */
-        short   dup;    /* -8 */
+        /* Declaration order must stay: counter first, then the drawn
+           card, the inner counter and the duplicate flag last. */
+        short   i;
+        short   c;
+        short   j;
+        short   dup;
 
         for (i = 0; i < 5; i++) {
                 pk_ch[i] = CARD_NONE;
@@ -1866,8 +1837,7 @@ pk_evhs()
 }
 
 /* pk_drcs: blit one card sprite (15x23) at slot xi of row yi.
-   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly.
-   addr: poker_draw_card_sprite() */
+   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly. */
 
 void
 pk_drcs(card, xi, yi)
@@ -1891,12 +1861,11 @@ short   yi;
                               x, y, x + 15, y + 23);
 }
 
-/* STX: pk_ldCrd sits here (0xab04), ahead of pk_awp. */
+/* pk_ldCrd (in parts/) must sit here, ahead of pk_awp. */
 #include "parts/pk_ldCrd.c"
 
 /* pk_inph: wait for one of F-keys a/b/c or digits 1..5.
-   Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout.
-   addr: poker_input_handler() */
+   Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout. */
 
 short
 pk_inph(a, b, c)
@@ -1922,10 +1891,9 @@ short   c;
         }
 }
 
-/* pk_awp: display computer money count in the top-left panel.
-   Preserves the 3-digit hand-formatted, space-padded byte layout
-   from Ghidra verbatim (byte-comparable).
-   addr: poker_award_pot() */
+/* pk_awp: display computer money count in the top-left panel, as
+   3 hand-formatted, space-padded digits.  The assignments nested in
+   expressions and the spare str[] cells are the original's shape. */
 
 void
 pk_awp()
@@ -1948,8 +1916,7 @@ pk_awp()
         strPr(str, 5, 18, COLOR_black);
 }
 
-/* pk_dppm: display player money (same 3-digit format as pk_awp).
-   addr: poker_display_player_money() */
+/* pk_dppm: display player money (same 3-digit format as pk_awp). */
 
 void
 pk_dppm()
@@ -1972,8 +1939,7 @@ pk_dppm()
         strPr(str, 5, 58, COLOR_black);
 }
 
-/* pk_dpot: display the pot amount in the middle panel.
-   addr: poker_display_pot() */
+/* pk_dpot: display the pot amount in the middle panel. */
 
 void
 pk_dpot()
@@ -1997,8 +1963,7 @@ pk_dpot()
 }
 
 /* pk_ante: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit.
-   addr: poker_ante_phase() */
+   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit. */
 
 static void
 pk_ante()
@@ -2038,8 +2003,7 @@ pk_ante()
         }
 }
 
-/* pk_pmsg: print a green status message in the bottom info bar.
-   addr: poker_print_message() */
+/* pk_pmsg: print a green status message in the bottom info bar. */
 
 void
 pk_pmsg(str)
@@ -2050,16 +2014,16 @@ char *  str;
 }
 
 /* pk_rmch: pop card from top of `pile`; shift remaining entries down.
-   Returns CARD_NONE if empty.
-   addr: poker_remove_card_from_hand() */
+   Returns -1 if empty (a plain -1, not CARD_NONE). */
 
 short
 pk_rmch(pile, count)
 short * pile;
 short * count;
 {
-        /* STX's frame is 12 bytes: `card` and `i` are followed by two
-           more declared shorts the body never touches. */
+        /* `card` and `i` are followed by two more declared shorts the
+           body never touches.  They must stay: removing them changes
+           the compiled code. */
         short   card;
         short   i;
         short   unused1;
@@ -2068,8 +2032,9 @@ short * count;
         if (*count == 0)
                 return -1;
         card    = *pile;
-        /* STX decrements the count in place and returns early when the
-           pile is emptied, so `card` is returned from two places. */
+        /* The count is decremented in place with an early return when
+           the pile is emptied, so `card` is returned from two places,
+           as in the original. */
         if (--*count == 0)
                 return card;
         for (i = 0; i < 51; i++)
@@ -2077,8 +2042,7 @@ short * count;
         return card;
 }
 
-/* pk_actd: append val at pile[*idx]; increment idx.
-   addr: poker_add_card_to_discard() */
+/* pk_actd: append val at pile[*idx]; increment idx. */
 
 void
 pk_actd(pile, idx, val)
@@ -2095,8 +2059,7 @@ static void     pk_show();
 
 /* pk_wrMn: WAR mini-game main loop.
    Init: Malloc, load cards, mg_stp, 400-swap shuffle, split 26/26.
-   Per-round: reveal cards, compare mod-13, resolve win/loss/tie.
-   addr: pk_wrMn() (== poker_war_main) */
+   Per-round: reveal cards, compare mod-13, resolve win/loss/tie. */
 
 void
 pk_wrMn()
@@ -2147,11 +2110,12 @@ pk_wrMn()
         pk_dppm();
         pk_dpot();
 
-        /* Per-round loop (Ghidra LAB_0001b29c): a label and explicit
-           gotos, not a for(;;) -- every round-end branches straight
-           back here rather than to a loop-bottom edge.  The bare
-           `pk_dppm;` is in the original: a call whose parentheses
-           were left off, so Alcyon just loads its address into d0. */
+        /* Per-round loop: a label and explicit gotos, not a for(;;)
+           -- every round-end branches straight back here rather than
+           to a loop-bottom edge, as in the original.
+           1985 bug: the bare `pk_dppm;` is a call whose parentheses
+           were left off, so Alcyon just loads its address and drops
+           it.  Kept on purpose. */
 round:
                 pk_awp();
                 pk_dppm;
@@ -2289,18 +2253,19 @@ no_cards:
 
 /* pk_bjwr: nested war round.  Draw 3 face-down + 1 face-up each.
    On tie, loops with g_pchc++.
-   Returns 0 = normal, -1 = computer out / user quit, -2 = player out.
-   addr: poker_blackjack_war_round() */
+   Returns 0 = normal, -1 = computer out / user quit, -2 = player out. */
 
 static short
 pk_bjwr()
 {
-        short   idx;            /* -2  */
-        short   drawn;          /* -4  */
-        short   pot;            /* -6  */
-        short   prank;          /* -8  */
-        short   crank;          /* -10 */
-        short   unused;         /* -12 */
+        /* Declaration order and the unused local must stay: removing
+           or reordering them changes the compiled code. */
+        short   idx;
+        short   drawn;
+        short   pot;
+        short   prank;
+        short   crank;
+        short   unused;
 
         g_pchc = 0;
         for (idx = 1; idx < 52; idx++) {
@@ -2407,25 +2372,25 @@ pk_bjwr()
 /* pk_bjMn: BLACKJACK main game loop.
    Bet-entry (F1 add, F3 enter, F5 clear, 20 cap), deal, natural check,
    optional split, double-down, hit/stand rounds, dealer plays, settle.
-   Preserves Ghidra gotos LAB_0001bcbe, LAB_0001bd9e, LAB_0001beb6.
-   Alcyon 8-char link-name truncation prevents a body/wrapper split.
-   addr: pk_bjMn() (== poker_blackjack_main) */
+   The labels and gotos are the original's control flow and must stay.
+   Alcyon 8-char link-name truncation prevents a body/wrapper split. */
 
 void
 pk_bjMn()
 {
-        /* Ten locals in LCP_STX; four of them are never referenced and
-           the last is written once and never read. */
-        short   br;             /* -2, also every countdown */
-        short   hit;            /* -4  */
-        short   unused1;        /* -6  */
-        short   unused2;        /* -8  */
-        short   unused3;        /* -10 */
-        short   unused4;        /* -12 */
-        short   res;            /* -14 */
-        short   rv;             /* -16 */
-        short   round_ctr;      /* -18 */
-        short   phase_snap;     /* -20, written once, never read */
+        /* Ten locals; four of them are never referenced and the last
+           is written once and never read.  All must stay, in this
+           order: removing them changes the compiled code. */
+        short   br;             /* also every countdown */
+        short   hit;
+        short   unused1;
+        short   unused2;
+        short   unused3;
+        short   unused4;
+        short   res;
+        short   rv;
+        short   round_ctr;
+        short   phase_snap;     /* written once, never read */
 
         crd_dat = (short *) Malloc(0x28a0L);
         if (crd_dat == (short *) 0)
@@ -2696,8 +2661,9 @@ cleanup:
                                         goto cleanup;
                                 }
                         }
-                        /* A redundant re-test of pk_phase, already
-                           implied by the else. */
+                        /* Redundant re-test of pk_phase, already
+                           implied by the else.  Kept on purpose: it
+                           is part of the original code. */
                 } else if (pk_phase != 0) {
                         if (pk_c1bj == NO) {
                                 if (g_ppmon < g_pcbet) bj_key = 2;
@@ -3015,8 +2981,7 @@ cleanup:
 
 /* pk_chsc: blackjack card value.  ace_mode=0 all aces=1; ace_mode=1
    one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
-   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2.
-   addr: poker_calculate_hand_score() */
+   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2. */
 
 static short
 pk_chsc(hand, ace_mode)
@@ -3024,9 +2989,9 @@ short * hand;
 short   ace_mode;
 {
         /* Counter first; the scan terminates inside the loop body. */
-        short   i;              /* -2 */
-        short   ace_high;       /* -4 */
-        short   score;          /* -6 */
+        short   i;
+        short   ace_high;
+        short   score;
 
         ace_high = NO;
         score    = 0;
@@ -3052,8 +3017,7 @@ short   ace_mode;
 
 /* pk_bjr: play one blackjack round for `hand` at row.
    pk_wrf/pk_wcs forced-single-hit modes auto-deal one card + return.
-   Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout.
-   addr: poker_blackjack_round() */
+   Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout. */
 
 static short
 pk_bjr(hand, row, prompt)
@@ -3061,15 +3025,16 @@ short * hand;
 short   row;
 char *  prompt;
 {
-        /* Seven declarations in LCP_STX, two of them never referenced,
-           and no `res`; the pointer is not pre-seeded. */
-        short   i;              /* -2  */
-        short   unused1;        /* -4  */
-        short   j;              /* -6  */
-        short   unused2;        /* -8  */
-        short   score;          /* -10 */
-        short * cnt_ptr;        /* -14 */
-        short   forced;         /* -16 */
+        /* Seven declarations, two of them never referenced; they must
+           stay, in this order, or the compiled code changes.  cnt_ptr
+           is deliberately not initialised, as in the original. */
+        short   i;
+        short   unused1;
+        short   j;
+        short   unused2;
+        short   score;
+        short * cnt_ptr;
+        short   forced;
 
         if (hand == pk_ph)  cnt_ptr = &pk_pcc;
         if (hand == pk_psh) cnt_ptr = &pk_pscc;
@@ -3120,10 +3085,8 @@ char *  prompt;
                 if (mg_tofl != NO)
                         return -1;
                 if (bj_key == PK_IN_ARG_B) {
-                        pk_pmsg(" ");   /* s__0002b422 verified via
-                                          Ghidra HTTP /read_memory:
-                                          the F3-stand path just
-                                          blanks the message strip. */
+                        pk_pmsg(" ");   /* the F3-stand path just
+                                          blanks the message strip */
                         return 0;
                 } else if (bj_key == PK_IN_ARG_A) {
                         (*cnt_ptr)--;
@@ -3151,8 +3114,7 @@ char *  prompt;
         }
 }
 
-/* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two).
-   addr: poker_check_natural_blackjack() */
+/* pk_cnbj: check for natural blackjack (Ace + T/J/Q/K in first two). */
 
 static short
 pk_cnbj(hand)
@@ -3173,19 +3135,18 @@ short * hand;
 }
 
 /* pk_dchd: deal one card into hand at next CARD_NONE slot.
-   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full.
-   addr: poker_deal_card_to_hand() */
+   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full. */
 
 static short
 pk_dchd(hand, face_down)
 short * hand;
 short   face_down;
 {
-        short   i;              /* -2  */
-        short   dup;            /* -4  */
-        short   j;              /* -6  */
-        short   card;           /* -8  */
-        short   row;            /* -10 */
+        short   i;
+        short   dup;
+        short   j;
+        short   card;
+        short   row;
 
         for (i = 0; i < 5; i++) {
                 if (hand[i] == CARD_NONE)
@@ -3219,19 +3180,18 @@ short   face_down;
 }
 
 /* pk_dbhi: display bet with highlight.  sel=1 -> computer bet, else
-   player bet.  3-digit format as pk_awp/dppm/dpot.
-   addr: poker_display_bet_with_highlight() */
+   player bet.  3-digit format as pk_awp/dppm/dpot. */
 
 static void
 pk_dbhi(sel)
 short   sel;
 {
-        char    hund;           /* -2  */
-        char    tens;           /* -4  */
-        char    ones;           /* -6  */
-        char    str[4];         /* -10 */
-        short   rem;            /* -12 */
-        short   val;            /* -14 */
+        char    hund;
+        char    tens;
+        char    ones;
+        char    str[4];
+        short   rem;
+        short   val;
 
         if (sel == 1)
                 val = g_pcbet;
@@ -3255,8 +3215,7 @@ short   sel;
 /* pk_sbet: settle a bet.  winner: 0=computer, 1=player.
    mode: 0=normal, 1=natural blackjack double-collect,
          2=split -- suppress the second (player) transfer.
-   Sets pk_quit on mid-transfer bankruptcy.
-   addr: poker_settle_bet() */
+   Sets pk_quit on mid-transfer bankruptcy. */
 
 static void
 pk_sbet(bet_ptr, winner, mode)
@@ -3264,8 +3223,8 @@ short * bet_ptr;
 short   winner;
 short   mode;
 {
-        short   orig;           /* -2 */
-        short   loc8;           /* -4 */
+        short   orig;
+        short   loc8;
 
         if (winner == 0) {
                 orig = *bet_ptr;

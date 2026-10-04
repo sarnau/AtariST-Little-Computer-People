@@ -1,12 +1,11 @@
 ******************************************************************************
 *
-* blkcp_a.s -- LCP_STX's hand-assembly 32-byte block copy.
+* blkcp_a.s -- hand-assembled copy of `count` 32-byte blocks.
 *
-* At 0x17310 -- the last game function before the library -- LCP_STX
-* has an unrolled dbf loop that Alcyon C cannot emit: eight
-* post-increment long moves per iteration, driven by `dbf` on the
-* count.  It still carries the C calling frame, so the arguments sit
-* at the usual offsets (src 8, dst 12, count 16).
+* An unrolled loop Alcyon C cannot emit: eight post-increment long
+* moves per iteration, driven by `dbf` on the count.  It still carries
+* the C calling frame, so the arguments sit at the usual offsets
+* (src 8, dst 12, count 16).
 
 *
 ******************************************************************************

@@ -1,7 +1,4 @@
-/*
- * walk.c -- LCP & dog pathfinding + step animation.
- * addr: lcp_wkD(), lcp_path(), lcp_flwp(), dg_wkPth(), lcp_fstp()
- */
+/* walk.c -- LCP & dog pathfinding + step animation. */
 
 #include "types.h"
 #include "structs.h"
@@ -16,8 +13,7 @@
 #include "walk.h"
 
 /* lcp_wkD: pump lcp_path() until arrival.
-   Returns 0 on arrival, -1 on preemption when idle.
-   addr: lcp_wkD() */
+   Returns 0 on arrival, -1 on preemption when idle. */
 
 
 short
@@ -51,11 +47,11 @@ lcp_wkD()
         return result;
 }
 
-/* lcp_flwp -> parts/lcp_flwp.c (STX: 0x50bc, just before getFlrY). */
+/* lcp_flwp -> parts/lcp_flwp.c. */
 
-/* dg_wkPth -> parts/dg_wkPth.c (STX: 0x4586, immediately after dg_mvAni). */
+/* dg_wkPth -> parts/dg_wkPth.c. */
 
-/* lcp_fstp -> parts/lcp_fstp.c (STX: 0x4fec, in the 0x400c object with getFlrY). */
+/* lcp_fstp -> parts/lcp_fstp.c. */
 
 
-/* lcp_path -> parts/lcp_path.c (STX: 0x470a, in the 0x400c object). */
+/* lcp_path -> parts/lcp_path.c. */

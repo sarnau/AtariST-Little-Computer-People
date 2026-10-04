@@ -1,7 +1,7 @@
 /*
- * parts/p_sftvc.c -- one-line SFX wrapper.  The two revisions order
- * these differently inside their objects, so each configuration
- * includes them in LCP_STX's order (tvc, spe, hnd, grt).
+ * One-line SFX wrapper.  The four wrappers must stay in the order
+ * tvc, spe, hnd, grt.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void p_sftvc() { sf_sele(SFX_TV_CLICK,  2L); }

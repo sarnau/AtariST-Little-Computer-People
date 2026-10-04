@@ -21,10 +21,10 @@
 #include "sprload.h"
 #include "psgfreq.h"
 
-short           bj_key;         /* pk_bjMn's key variable (a global in STX) */
+short           bj_key;         /* pk_bjMn's key variable (a global, not a local) */
 char            psg_ovol;       /* psg_upEn's clamped output volume */
 unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
-unsigned short  ani_cnt;    /* STX: the & 7 test zero-extends */
+unsigned short  ani_cnt;    /* unsigned: the & 7 test zero-extends */
 short   g_secs;
 
 short   t_min;
@@ -40,15 +40,12 @@ BOOL16  in_evrt;
 
 short   lastAct;
 
-/* Ghidra's gameLoop always sets these via
-   hs_posXY() during boot.  Ghidra keeps both in BSS;
-   the cutscene sets them.  Port matches by leaving them at 0 -- the
-   cutscene stub in init.c writes (300, 190) before gameLoop
+/* Left at 0 in BSS; the move-in cutscene sets them before gameLoop
    runs. */
 short   lcp_x;
 short   lcp_y;
 BOOL16  g_lcldd;
-long    cprot_r;      /* STX tests it with tst.l */
+long    cprot_r;      /* long: tested as a 32-bit value */
 short   g_spdc;
 
 BOOL16  alarm_p;
@@ -62,17 +59,10 @@ long    g_sfret;
 BOOL16  g_actif;
 short   g_wtx;
 short   g_wty;
-/* A 10-short scratch buffer used
-   by action handlers (bathroom, food, house, leisure, idle, simple)
-   to cache a small set of state values indexed by variable expressions
-   like `i & 3`.  Port previously declared [4], which was one byte
-   short of a real out-of-bounds write via `pst_arr[4]` writes in the
-   bathroom/food/house paths -- the fifth slot overlapped lcp_frdO.
-
-   NOT Ghidra's triggered_event_list: this comment used to claim that
-   name and the address 0x2b6da, but 0x2b6da is g_trel, the event FIFO
-   putEv appends to.  pst_arr is Ghidra 0x573a8 and has no descriptive
-   name.  See tools/ghidra_globals_map.md. */
+/* A 10-short scratch buffer used by action handlers (bathroom, food,
+   house, leisure, idle, simple) to cache a small set of state values
+   indexed by variable expressions like `i & 3`.  The bathroom/food/house
+   paths write pst_arr[4], so it must hold more than four. */
 short   pst_arr[10];
 
 short   lcp_frdO;
@@ -86,15 +76,13 @@ short   lcp_bwlS;
 short   lcp_food;
 
 
-/* STX declares this a byte flag (tst.b at its use sites). */
+/* A byte flag, not BOOL16: every use tests it as a byte. */
 char    mi_play;
 short   dg_bwlch;
 short   g_sfplf;
 short   g_sfpli;
 char *  mi_sbuf;
-/* Ghidra sng/org song file counts, set at boot by cntSong().
-   BSS-zero to match Ghidra; port previously had org_cnt=8
-   as a guess. */
+/* Song file counts (.SNG / .ORG), set at boot by cntSong(). */
 short   sng_cnt;
 short   org_cnt;
 short   fire_dur;
@@ -103,37 +91,24 @@ short   tx_sctm;
 short   g_srsdc;
 short   g_cdibp;
 
-/* Letter subsystem storage.  g_ltlp[] and _greeting_table are
-   populated at runtime from letter.txt (see fl_ltpl);
-   NULL entries make lt_tysa a safe no-op on the
-   host build until the template loader is ported.  360 slots: that is
-   fl_ltpl's literal `for (linecount = 0; linecount < 360; ...)`, it is
-   the 4 sections x 96 pointers (section 3 uses 72) shape a_writl
-   indexes, LETTER.TXT decodes to 361 line segments, and LCP_STX's own
-   gap here is 1440 bytes = 360 pointers. */
+/* Letter subsystem storage.  g_ltlp[] is populated at runtime from
+   LETTER.TXT (see fl_ltpl).  360 slots: that is fl_ltpl's literal
+   `for (linecount = 0; linecount < 360; ...)`, it is the 4 sections x
+   96 pointers (section 3 uses 72) shape a_writl indexes, and
+   LETTER.TXT decodes to 361 line segments. */
 char *  g_lttx;
 char *  g_ltlp[360];
 
-/* Second ROM frame-id block (data 0x1200a-0x12026): closet door,
-   fire-off, filing cabinet, dresser, and the sc_drfc food marker. */
-/* FORTY bytes -- the reference's next used cell is 40 past this one,
-   not 64. */
+/* FORTY bytes, not 64: that is the room the original leaves for it. */
 char    g_ltscb[40];
-char    in_str[80];             /* LCP_STX gap; a screen line */
+char    in_str[80];             /* a screen line */
 /* comp_tok[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by fr_reac
    from the 15-byte header immediately following the size word. */
 /* scn_dic[15]: the 15-entry word dictionary at the head of a .SCN
-   file, and the size/buffer main uses while decoding one.  LCP_STX
-   keeps all three as globals -- the .SCN file handling is inlined in
-   main and only the nibble decoder is a function.
-
-   This IS the 30 bytes the older analysis called `scene_common_data`.
-   The port used to carry that as a second array, scn_cmn, which
-   nothing referenced: it came from the LCP_ORG-era Ghidra project,
-   where main called an unScn helper that LCP_STX does not have.  In
-   LCP_STX there is no room for it -- 0x3cf7c, where that symbol sits,
-   is inside scn_buf and runs over mf_scrp, g_inpmd and g_ltscb. */
+   file, and the size/buffer main uses while decoding one.  All three
+   are globals because the .SCN file handling is written out in main
+   and only the nibble decoder is a function. */
 short           scn_dic[15];
 unsigned char   comp_tok[15];
 short           scn_siz;
@@ -146,15 +121,15 @@ short * sv_headP;
    sentinel handle that the VDI stubs ignore. */
 short   vdihnd;
 short   vdi_hnd;    /* physical from graf_handle */
-/* LCP_STX's aes_init has an empty frame: graf_handle writes its four
-   cell/box metrics into globals, not into locals. */
+/* graf_handle writes its four cell/box metrics into these globals,
+   not into locals of aes_init. */
 short   gr_hwchar;
 short   gr_hhchar;
 short   gr_hwbox;
 short   gr_hhbox;
 
-/* The ROM's VDI parameter block (data 0x12054): the game-local
-   arrays used by vdiown.c's bindings and vdi_go. */
+/* The VDI parameter block: points at the game-local arrays used by
+   vdiown.c's bindings and vdi_go. */
 short * vdipb[5];
 
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
@@ -170,39 +145,34 @@ short   intout[128];
 short   ptsout[128];
 
 void *  g_dscp;
-char    g_mspha;   /* STX: byte */
+char    g_mspha;   /* a byte */
 unsigned char * mi_dbase;
 
 /* ---- MIDI sequencer state ------------------------------------------- */
 unsigned char * mi_sqpos;
 long            mi_env;
-char            psg_cvol;     /* STX: byte */
-/* mi_evi / mi_evcn live HERE in the ROM's data (0x120fa/0x120fc),
-   with mi_evcn initialized to 9. */
+char            psg_cvol;     /* a byte */
+/* mq_setp sets mi_evcn to 9, the loop stack's empty mark. */
 short           mi_evi;
 short           mi_evcn;
 
-/* Ticks per beat, published to the Timer-A handler.  ONE short: the
-   reference relocates all six accesses to a single cell, and the next
-   cell it uses is two bytes later.  The port declared aes_intO[16] and
-   wrote index 7 -- an array shape the text cannot confirm, because
-   Alcyon folds a constant subscript into the absolute address.  (The
-   cell does sit exactly 14 bytes past AESBIND's int_out, which is what
-   made "int_out[7]" tempting; declaring it that way collides with the
-   next global, since int_out is only 14 bytes.) */
+/* Ticks per beat, published to the Timer-A handler.  ONE short: every
+   access goes to a single cell, and the next cell is two bytes later.
+   It sits exactly 14 bytes past AESBIND's int_out, which makes
+   "int_out[7]" tempting -- but int_out is only 14 bytes, so declaring
+   it that way collides with the next global. */
 short           mi_tpb;
 long            g_mtcou;
 short           g_mtdiv;
-/* mi_nlp0 (ROM data 0x1210e, initialized 100 like its neighbours);
-   mq_stap resets it at song start. */
+/* mq_stap resets mi_nlp0 at song start. */
 short           mi_nlp0;
 
 /* The duration mq_pars computes for the event it is about to queue.
-   A SECOND cell in the reference -- mq_pars writes it and only
-   mq_qnne reads it, while mq_rdur's identical expression goes to
-   mi_nlp0, which drives the tick counters. */
+   A SECOND cell: mq_pars writes it and only mq_qnne reads it, while
+   mq_rdur's identical expression goes to mi_nlp0, which drives the
+   tick counters. */
 short           mi_ndur;
-long            mi_nxTk;       /* STX: long tick counters */
+long            mi_nxTk;       /* long tick counters */
 long            mi_lpTk;
 unsigned char   g_meve[4];
 
@@ -210,14 +180,11 @@ unsigned char   g_meve[4];
    Timer-A music engine. */
 
 /* Timer-A interrupt state.
-   mi_rlock -- reentrancy guard so the tick handler doesn't recurse
-                        into the sequencer if a game-code path (e.g. a UI
-                        response) triggers another timer event before the
-                        first handler completes.
-   mi_svtv  -- previous Timer-A vector, saved so cs_mvIn's shutdown
-                        path can restore it (currently we install for the
-                        lifetime of the process, but the slot is here
-                        for future symmetry with the ROM's teardown). */
+   mi_rlock (defined in mq_tick.s) -- reentrancy guard so the tick
+                        handler doesn't recurse into the sequencer if a
+                        game-code path triggers another timer event
+                        before the first handler completes.
+   mi_svtv  -- previous Timer-A vector, saved so it can be restored. */
 long            mi_svtv;
 
 /* ---- MIDI sequencer parse state -----------------------------------
@@ -228,9 +195,8 @@ long            mi_svtv;
    queue-note-event / send-note-off / send-program-change to reach
    the mq_dise dispatcher.
 
-   mi_ndt is the 32-entry duration lookup indexed by byte1[0..4] of
-   each note event; values pulled from ROM 0x298f6 (21 real
-   entries, rest are zero). */
+   mi_ndt (in the initialized data below) is the duration lookup
+   indexed by bits 0..4 of each note event's first byte. */
 
 unsigned char * mi_seqE;
 unsigned char * mi_dptr;
@@ -247,13 +213,11 @@ char            mi_nlpA;
    notes. */
 short           mi_evq[60];
 
-/* Loop stack -- {return_addr, remaining_count} pairs.  Max 24
-   nested loops (48 entries + 2 slack). */
+/* Loop stack -- {return_addr, remaining_count} pairs.  mq_setp starts
+   the index at 9 (which also means "empty") and mq_pshl only pushes
+   while it is below 49, so entries 9..48 hold at most 20 nested loops;
+   0..8 and 49 are never touched. */
 long            mi_lstk[50];
-
-/* mi_nOS was a second name for mi_noSt below -- one is written by the
-   note-on/off handler, the other read by mq_stop, and both map to the
-   SAME LCP_STX address (bss 0x27738).  Merged into mi_noSt. */
 
 /* ---- PSG envelope processor state -----------------------------------
    Bresenham-style integer ramp accumulator + delta, per channel.
@@ -270,7 +234,7 @@ long            mi_lstk[50];
 short           psg_rdel[3];      /* ramp_delta   */
 short           psg_racc[3];      /* ramp_accum   */
 
-/* mi_noSt (Ghidra midi_noteon_state @ 0x53df8): 128-entry table tracking
+/* mi_noSt: 128-entry table tracking
    which MIDI notes are currently sounding and on which logical channel.
    Value 0 = note not sounding.  Non-zero = the mi_chmap[] index (low
    nibble used) that owns the note, so mq_stop can emit a matching
@@ -278,11 +242,6 @@ short           psg_racc[3];      /* ramp_accum   */
 unsigned char   mi_noSt[128];
 unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psg_envelope[3];
-
-/* psg_freq[132] -- populated in psgfreq.c from first
-   principles (YM2149 formula: period = 2000000 / (16 * midi_freq)).
-   Definition lives in its own TU so the ~1KB of table data doesn't
-   clutter globals.c. */
 
 
 /* ---- SFX / Dosound state -------------------------------------------- */
@@ -292,60 +251,45 @@ short           g_sfddl;
 long            g_sfHz2;
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
-   a 4-byte terminator.  Populated at startup from the SOUNDS.LCP file.
-   32 slots covers the current SFX_* enum range. */
-/* Ghidra mi_ntLp @ 0x53f7a: 26 pointers (104 bytes to
-   next symbol).  sf_sl loops up to 500 iterations breaking on size==0,
-   so the array should be sized for the max number of entries in
-   SOUNDS.LCP; 64 gives plenty of headroom. */
-/* 25 slots: SOUNDS.LCP holds 23 blocks before the size-0 sentinel
-   that ends sf_sl's `index < 500` loop, and LCP_STX's gap here is 100
-   bytes = 25 pointers.  The 500 is a loop limit, not the size. */
+   a 4-byte terminator.  Populated at startup from SOUNDS.LCP.
+   25 slots: SOUNDS.LCP holds 23 blocks before the size-0 sentinel that
+   ends sf_sl's `index < 500` loop, and the original leaves room for 25
+   pointers.  The 500 is a loop limit, not the size. */
 unsigned char * mi_ntLp[25];
 /* Working buffer for the currently-playing Dosound sequence, copied
    from mi_ntLp[g_sfcur] each time a new effect starts.  FIFTY-SIX
-   bytes: that is the distance to the next cell the reference uses.
-   sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and the
-   file has effects longer than that, so ON THIS MODEL the original
-   overruns the buffer -- reproduced as written, not papered over with
-   a bigger one.
+   bytes: that is the room the original leaves before the next cell it
+   uses.  sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and
+   the file has longer effects -- blocks 8 (SFX_HEAD_NOD) and 17
+   (SFX_TOILET_REFILL) are 148 bytes -- so ON THIS MODEL the original
+   overruns the buffer by up to 92 bytes.  Reproduced as written, not
+   papered over with a bigger one.
 
-   That 56 is an INFERENCE, not a measurement: a declared array size
-   never reaches the codegen.  g_sfDoB..g_srlgb is exactly 400 bytes,
-   so the original may instead have had ONE 400-byte object with
-   g_sfdos/g_sfdoc as fields at +56/+58, and no overrun at all.  A
-   400-byte array plus two separate shorts is ruled out -- .comm packs
-   densely, so g_sfdos would land at +400 -- but a struct is not.  The
-   two readings are behaviourally identical and the image cannot
-   separate them; see CLAUDE.md.  Either way the shipped binary is
-   byte-identical, because the size never reaches the codegen.
+   That 56 is an INFERENCE: a declared array size never reaches the
+   compiled code.  g_sfDoB..g_srlgb is exactly 400 bytes, so the
+   original may instead have had ONE 400-byte struct with g_sfdos/
+   g_sfdoc as fields at +56/+58, and no overrun at all.  A 400-byte
+   array plus two separate shorts is ruled out -- .comm packs densely,
+   so g_sfdos would land at +400.  The two readings behave identically;
+   see CLAUDE.md.
 
-   Where the overrun LANDS is decided by the linker, and the two
-   builds disagree:
+   Where the overrun LANDS depends on the BSS layout:
 
-     * Shipped build.  bss_remap puts g_sfDoB at 0x3fe48, followed by
-       g_sfdos (+56) and g_sfdoc (+58) -- both WRITE-ONLY, set by
-       sf_so() and read nowhere -- and then 342 bytes that no symbol
-       claims (the next is g_srlgb at +400).  SOUNDS.LCP's largest
-       effects are blocks 8 (SFX_HEAD_NOD) and 17
-       (SFX_TOILET_REFILL), 148 bytes each, so the worst overrun is
-       92 bytes and dies in that hole.  Harmless -- which is why 1985
-       shipped it.
+     * Shipped build.  g_sfDoB is followed by g_sfdos (+56) and g_sfdoc
+       (+58) -- both WRITE-ONLY, set by sf_so() and read nowhere -- and
+       then 342 bytes that no symbol claims.  The overrun dies in that
+       hole, which is why 1985 shipped it.
 
-     * Gated test build.  bss_remap is SKIPPED, so lo68's own .comm
-       packing applies, and it puts g_obtah -- the 56-entry object
-       HEIGHT table -- at exactly +56.  The first head-nod or toilet
-       refill overwrites 46 of its entries; the next od_draw() then
-       passes g_obtah[i] - 1 to vro_cpyfm as a raster coordinate, TOS
-       computes a wild address from it and bus errors inside the VDI.
-       Measured: VBL 16983, reproducible to the frame, and the bytes
-       left in g_obtah are byte-for-byte SOUNDS.LCP block 17's
-       payload[56:].
+     * Gated test build.  The linker's own .comm packing applies, and it
+       puts g_obtah -- the 56-entry object HEIGHT table -- at exactly
+       +56.  The first head-nod or toilet refill overwrites it; the next
+       od_draw() passes g_obtah[i] - 1 to vro_cpyfm as a raster
+       coordinate, and TOS bus errors inside the VDI.
 
-   So the buffer is padded to 400 IN TEST BUILDS ONLY, reproducing
-   the original's gap so a long run stays representative.  The
-   shipped configuration keeps the original's 56 -- widening it there
-   would change the BSS size in the header and break byte identity. */
+   So the buffer is padded to 400 IN TEST BUILDS ONLY, reproducing the
+   original's gap so a long run stays representative.  The shipped
+   configuration keeps 56 -- widening it there would change the BSS
+   size in the header and break byte identity. */
 /* cp68 has no defined(), so the gates are collected one at a time. */
 #ifdef SKIP_COPYPROT
 #define LCP_SFDOB_PAD   1
@@ -366,29 +310,27 @@ char            g_sfDoB[56];
 void *  g_srlgb;
 void *  sv_lgb;
 void *  g_srptr;
-/* dsb_stor: dedicated 32 KB offscreen buffer where the
-   letter-typing status strip composites, kept separate from the
-   main house buffer.  fillTopR(27) writes rows
-   0..26 here so that the striped-white letter background is ready
-   for the typewriter animation; screen_render_8hz blkcp32's the
-   content into the compositor screen when the letter overlay is
-   active.
+/* dsb_stor: offscreen buffer where the letter-typing status strip
+   composites, kept separate from the main house buffer.
+   fillTopR(27) writes rows 0..26 here so that the striped-white letter
+   background is ready for the typewriter animation; sc_ren8
+   blkcp32's the content into the compositor screen when the letter
+   overlay is active.
    Sized from what fillTopR can actually write: its largest caller is
    mg_stp's fillTopR(0x4d), 77 rows of 160 bytes = 12320, and the
    align-up `(base + 512) & ~511` moves the start by at most 512 --
-   so 12832 bytes, 6416 shorts.  (LCP_STX's own gap here is 12836.)
+   so 12832 bytes, 6416 shorts.
    g_dsb points at the raw base; stpScrB re-points it to the ALIGNED
    start at run time. */
 short   dsb_stor[6416];
 
-/* scr_scal (Ghidra 0x47ED0) -- always 1 (REZ_ST_MEDIUM).
-   Multiplier for the 320x200 low-res screen dimensions in
-   sprite_init_MFDB, matching the shape of the 1985 code even though
-   the value is a constant. */
+/* scr_scal -- always 1 (REZ_ST_MEDIUM).
+   Multiplier for the 320x200 low-res screen dimensions in sp_iniM,
+   kept even though the value is a constant. */
 short   scr_scal;
 
-/* LCP_STX's vdi_init opens the workstation through GLOBAL work
-   arrays, not locals (its frame is only -6). */
+/* vdi_init opens the workstation through these GLOBAL work arrays,
+   not through locals. */
 short   work_in[11];
 short   wk_out[57];
 
@@ -399,22 +341,16 @@ short   wk_out[57];
 
    A SHORT ARRAY, not an MFDB: stpScrB clears MFDB_A[0] and MFDB_A[1]
    -- the two halves of fd_addr -- and cpyScr passes the array itself,
-   both at the same address.  Declared as a struct, the port wrote the
-   extents at +4/+6 and passed the base, which the reference's
-   relocations contradict. */
+   both at the same address. */
 short   MFDB_A[10];
 
-/* scrbufA / scrbufB (Ghidra SCREEN_BUFFER_A / _B) -- BSS scratch
-   for the two double-buffer compositing screens.
+/* scrbufA / scrbufB -- BSS scratch for the two double-buffer
+   compositing screens.
 
-   All four screen-pointer sites (stpScrB,
-   fillTopR, sprite_init_MFDBs,
-   screen_render_8hz alt) use the same align-up pattern:
-        aligned = (base + 0x200) & ~0x1FF        (verified via raw
-   disasm at 0x16576 / 0x1686c / 0x25116).  Ghidra's decompiler
-   folds the compile-time-known base + 0x200 into bogus literal
-   offsets ("+0x12F", "+0x7F", "+0xCD", "0x2CA00") which the port
-   MUST NOT reproduce -- our BSS placement is different.
+   Every screen-pointer site (stpScrB, fillTopR, sp_iniM, sc_ren8's
+   alternate) aligns the base up to 512 bytes:
+        aligned = (base + 0x200) & ~0x1FF
+   (the sprite path writes it as base + 0x1FF, masked the same way).
 
    Each holds ONE aligned screen: scrbufA the sprite compositor (also
    sc_ren8's alternate page-flip target -- there is no second screen
@@ -423,19 +359,9 @@ short   MFDB_A[10];
 
    Sized as screen + alignment slack, not as a round power of two.
    The ST hardware only needs a 256-byte-aligned base, which would
-   make 32000 + 255 enough -- but all three align-up sites in this
-   program mask to 512, verified in the binary:
-
-       sprites.c  0x15110  push scrbufA+0x1ff ; andi.l #-512,(sp)
-       stpScrB    0x65ae   addl #512,d0 ; andl #-512,d0
-       fillTopR   0x6880   addl #512,d0 ; andl #-512,d0
-
-   so the base can move up by 511 (the +0x1ff form) or 512 (the +512
-   forms) and the buffer needs 32000 + 512 = 32512.
-
-   Both fit LCP_STX's room for them -- scrbufA has 33045 bytes before
-   mi_dptr, scrbufB has 32600 before pk_quit -- with 533 and 88 bytes
-   over for globals the port does not have. */
+   make 32000 + 255 enough -- but this program masks to 512, so the
+   base can move up by as much as 512 and the buffer needs
+   32000 + 512 = 32512. */
 unsigned char   scrbufA[32512];
 unsigned char   scrbufB[32512];
 
@@ -445,15 +371,13 @@ short   g_sfdur;
 short   g_sfdos;
 short   g_sfdoc;
 
-/* Raw file buffers -- populated at startup by asset_load_all().
-   OBJECTS and SPRITES both size at 14000 bytes per Ghidra
-   ldObj / ldSpr decompiles. */
+/* Raw file buffers, filled at startup by ldObj / ldSpr.  OBJECTS
+   and SPRITES are each read into 14000 bytes. */
 unsigned char   obj_file[14000];
 unsigned char   spr_file[14000];
 
 /* Per-record MFDB tables + dimensions.  56 entries: main's OBJECTS
-   walk is a fixed `for (i = 0; i < 56; i++)`, and LCP_STX's gaps for
-   all three of these agree (1120 / 112 / 112). */
+   walk is a fixed `for (i = 0; i < 56; i++)`. */
 MFDB    g_obtmt[56];
 
 short   g_obtaw[56];
@@ -467,11 +391,8 @@ short   g_ptanf;
 union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
 long    last_vbc;
 /* sv_phb: TOS's original Physbase, captured once at boot by
-   aes_init via Physbase().  BSS-zero to match Ghidra's
-   binary (the port previously initialised it to 0x28000L which put it
-   in .data with a bogus fallback -- aes_init runs early so the
-   fallback was never read, but matching Ghidra's memory layout keeps
-   any future .data / BSS-boundary bug from being silently absorbed). */
+   aes_init via Physbase().  Deliberately uninitialised: an explicit
+   initialiser would move it from BSS into .data. */
 void *  sv_phb;
 
 /* g_srmfd / mf_scrp: the compositing target and the current
@@ -494,18 +415,13 @@ short   g_aprio;
 MFDB    g_semfi[SPRITE_HW_SLOTS];
 MFDB    g_semfm[SPRITE_HW_SLOTS];
 
-/* ---- NLP parser tables ------------------------------------------------
-   Wired in from the reference implementation in lcp/LCP.py, which was
-   derived from a Ghidra dump of the 1985 vocabulary + action-matching
-   tables.  160 vocabulary words, 33 matching rules.
-   Populated below by a Python generator run offline; see the parser
-   test for verification that "please play a game" now matches. */
+/* ---- NLP parser state ------------------------------------------------
+   g_ewb accumulates the bit masks of the recognised words; chk_encm
+   then matches it against the rule table. */
 
 char            g_ewb[10];
-/* Ghidra user_input_buffer @ 0x4b782: 42-byte ROM slot.  Port
-   previously declared [32] which cmd_upp() could overflow: it walks
-   input from g_cdinb (bounded < 38 chars) and writes one byte per
-   alphabetic char to usr_buf, potentially 38+ bytes. */
+/* 42 bytes: cmd_upp() walks input from g_cdinb (bounded < 38 chars)
+   and writes one byte per alphabetic char to usr_buf. */
 char            usr_buf[42];
 
 /* ---- Mini-game storage ----------------------------------------------- */
@@ -519,8 +435,8 @@ short           g_aggun;
 short           ag_clue;
 short           g_agwol;
 char            g_aginb[12];
-/* TEN bytes: the reference's next used cell is 10 past this one, so
-   the scrambled word buffer holds a 9-letter word and its NUL. */
+/* TEN bytes, the room the original leaves for it: the scrambled word
+   buffer holds a 9-letter word and its NUL. */
 char            g_agscw[10];
 
 /* Mini-game shared state.
@@ -541,17 +457,14 @@ short           g_pcmon;
 short           g_ppmon;
 short           g_ppppa;
 /* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
-   set by ag_ssw when a word is picked.  Ghidra treats it as char *.
-   The ROM places it between g_ppppa and pk_phase (data 0x124aa). */
+   set by ag_ssw when a word is picked. */
 char *          g_agorw;
 short           pk_phase;
 short           pk_dsc[52];
-/* Ghidra poker_computer_draw_pile @ 0x47e24 and poker_player_draw_pile
-   @ 0x3f712: 52-short ROM slots (104 bytes each).  Port previously
-   declared [26], which pk_rmch's unconditional
+/* Computer's and player's draw piles, 52 shorts each: pk_rmch's
+   unconditional
      for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
-   overflowed by 25 slots (50 bytes) per draw.  The sibling
-   pk_dpile[52] was already correctly sized. */
+   shifts the whole pile. */
 short           g_pcdrp[52];
 short           g_ppdrp[52];
 
@@ -559,13 +472,13 @@ short           g_ppdrp[52];
    deepest possible recursion (all cards ending up here) still fits.
    CARD_NONE sentinel terminates.  g_pchc counts the number of prior
    war rounds this hand (indexes further into the arrays). */
-short           pk_pwc[52];             /* poker_player_war_cards */
-short           pk_cwc[52];             /* poker_computer_war_cards */
-short           g_pchc;  /* poker_computer_hand_cards */
+short           pk_pwc[52];             /* player's war cards */
+short           pk_cwc[52];             /* computer's war cards */
+short           g_pchc;
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
    at the start of each round in pk_ante / pk_evhs / pk_show.
-   In the ROM pk_ch / pk_ph are the WAR hands: 26 shorts each. */
+   pk_ch / pk_ph also serve as the War hands. */
 short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
 short           pk_ph[5];           /* player_hand */
 short           pk_hrf[5];          /* hand_rank_flags   -- which cards
@@ -585,8 +498,7 @@ short           pk_sel[5];          /* card_selected -- 1 = discard */
 short           pk_disc;     /* discard_count */
 short           pk_dpile[13];       /* discard_pile of already-seen cards:
                                        at most 5 + 5 discards plus the
-                                       explicit pk_dpile[10] write, and
-                                       LCP_STX's gap here is 26 bytes */
+                                       explicit pk_dpile[10] write */
 short           pk_dpos;     /* deck_position -- reused as
                                        raise amount / draw counter */
 short           pk_phv;     /* player_hand_value -- saved bet */
@@ -602,20 +514,13 @@ BOOL16          pk_pass;    /* computer passed on the bet loop */
                 CARD_BJ_MAX = 3 for standard "up to 5 cards" rule;
                 each hit decrements by CARD_BJ_STEP = 1; stop at
                 CARD_BJ_STOP = 0).
-   pk_wpr    -- saved bet during split-hand bookkeeping (Ghidra
-                calls it poker_war_player_score).
-   pk_wrf / pk_wcs  -- split-hand round-active flags (Ghidra:
-                _poker_war_round / _poker_war_computer_score).
+   pk_wpr    -- saved bet during split-hand bookkeeping.
+   pk_wrf / pk_wcs  -- split-hand round-active flags.
    pk_c1bj / pk_c2bj -- first / second hand natural-blackjack
                 achieved this round (used to skip the hit loop).
-                Ghidra reused _poker_computer_card_count /
-                _poker_card_deck_index for these.
-   pk_bs1 / pk_bs2  -- first / second hand busted flag.  Ghidra
-                reused _poker_computer_hand_value_lo / _hi.
+   pk_bs1 / pk_bs2  -- first / second hand busted flag.
    pk_cscore / pk_pscore -- computer-picked / player-picked score
                 once the double-value-with-ace picker resolves.
-                Ghidra reused poker_display_x_offset and
-                midi_dma_start_lo.
 */
 short           pk_psh[5];      /* player_split_hand */
 short           pk_pcc; /* player_card_count       */
@@ -637,14 +542,13 @@ short           pk_pscore;
    wp_blk         -- count of blanks in the current puzzle (== rows
                      of wp_ans[] actually in use).
    The 3 flavor-text pointer arrays hold string literals shown to
-   the player during solve_phase, extracted verbatim from ROM via
-   the Ghidra HTTP /read_memory endpoint:
-      wp_prm  @ 0x2a46c   9 entries (0..4 random first-word, 5..8
-                                                        for word slots 2..5)
-      wp_succ @ 0x2a490   6 entries, random on solve
-      wp_fail @ 0x2a4a8   6 entries, random on wrong answer  */
-/* Five blanks, not ten: the decoded WORDPZ.TXT has at most five '@'
-   markers on a line, and LCP_STX's gap here is 60 bytes. */
+   the player during solve_phase:
+      wp_prm    9 entries (0..4 random first-word, 5..8 for word
+                slots 2..5)
+      wp_succ   6 entries, random on solve
+      wp_fail   6 entries, random on wrong answer
+   Five blanks, not ten: the decoded WORDPZ.TXT has at most five '@'
+   markers on a line. */
 char            wp_ans[5][12];
 short           wp_blk;
 
@@ -662,42 +566,41 @@ BOOL16  ph_hu;
    are added here.) */
 
 /* ==== initialized data ================================================
-   EVERY initialized global in the program, in LCP_STX DATA order.
+   EVERY initialized global in the program, in the original's DATA
+   order.
 
    The 1985 source kept all of this in ONE object: its data segment
-   interleaves what the port had split across globals.c, sprglobs.c,
-   tables.c, tick_tables.c, vocab.c, psgfreq.c, sprload.c, calendar.c
-   and events.c -- and data from separate objects cannot interleave.
+   interleaves tables whose code lives in sprglobs.c, tables.c,
+   tick_tables.c, vocab.c, psgfreq.c, sprload.c, calendar.c, events.c
+   and here -- and data from separate objects cannot interleave.
 
-   The order comes from relocation pairing (see CLAUDE.md, "DATA and BSS
-   layout"), not from taste.  DO NOT reorder by hand; re-derive it.
+   The order is the original's, not taste (see CLAUDE.md, "DATA and
+   BSS layout").  DO NOT reorder by hand.
    ==================================================================== */
 
 
-/* psg_register_offset_table @0x2985c.  Amp registers 8/9/10 with
+/* PSG register offsets.  Amp registers 8/9/10 with
    the PSG "write" bit (0x80) pre-set.  psg_upEn subtracts 0x80
    before calling psg_wr to recover the raw register number. */
 unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
 
 /* Three pointers at psg_env[0..2], one per PSG channel.  NOTHING in
-   the program references this table -- no text relocation targets it,
-   in either binary -- but LCP_STX carries it in DATA immediately
-   behind psg_rot (its three pointers are the data relocations at
-   0x184/0x188/0x18c, 14 bytes apart = sizeof(PSG_ENVELOPE)), and
-   Alcyon emits an unreferenced initialized global just the same. */
+   the program references this table, but the original carries it in
+   DATA immediately behind psg_rot, and Alcyon emits an unreferenced
+   initialized global just the same.  Do not delete. */
 PSG_ENVELOPE *  psg_epp[3] = { &psg_envelope[0], &psg_envelope[1],
                                &psg_envelope[2] };
 
 
-/* Ghidra midi_envelope_rate_table @0x2986c.  32-byte table indexed
-   by phase_timer (already loaded from an ADSR duration byte). */
+/* Envelope rate table.  32-byte table indexed by phase_timer
+   (already loaded from an ADSR duration byte). */
 short           mi_evrt[16] = {
              0,  360,  180,  120,   85,   72,   60,   45,
             30,   20,   15,   12,   10,    8,    6,    4
 };
 
 
-/* midi_envelope_time_table @0x2988c.  Reload value for phase_timer
+/* Envelope time table.  Reload value for phase_timer
    when transitioning between ADSR phases. */
 short           mi_evtt[16] = {
              0,    1,    2,    3,    4,    5,    6,    8,
@@ -705,7 +608,7 @@ short           mi_evtt[16] = {
 };
 
 
-/* midi_envelope_sustain_table @0x298cc.  Reload for phase_timer
+/* Envelope sustain table.  Reload for phase_timer
    during the sustain->release transition. */
 short           mi_evst[16] = {
              0,    1,    2,    4,    8,   18,   24,   40,
@@ -713,7 +616,7 @@ short           mi_evst[16] = {
 };
 
 
-/* midi_envelope_release_table @0x298ac.  Applied to ramp_delta
+/* Envelope release table.  Applied to ramp_delta
    during the sustain->release transition. */
 short           mi_evrl[16] = {
              0,  360,  180,   90,   45,   20,   15,    9,
@@ -726,19 +629,19 @@ BOOL16          g_moen     = YES;
 
 BOOL16          psg_out              = YES;
 
-/* Ghidra midi_channel_count @ 0x298F0 = 1 (byte).  Ports mh_chac
-   writes p[2] here and passes through mq_bust. */
+/* MIDI channel count; mq_parh's channel-count case writes p[2]
+   here. */
 short           g_mchcn                 = 1;
 
 short           mi_temp              = 120;
 
-/* Ghidra midi_ticks_per_beat @ 0x298F4 = 20; mi_temp @ 0x298F2 = 120. */
+/* Ticks per beat at the default tempo mi_temp = 120. */
 short           g_mtspb     = 20;
 
 
-/* 22 entries, not 32: LCP_STX's gap here is 44 bytes.  mq_pars indexes
-   it with a 5-bit field (`mi_ndt[*mi_sqpos & 0x1f]`), so 22..31 would
-   read past the end -- the .SNG data never produces them. */
+/* 22 entries, not 32: that is the room the original leaves.  mq_pars
+   indexes it with a 5-bit field (`mi_ndt[*mi_sqpos & 0x1f]`), so 22..31
+   would read past the end -- the .SNG data never produces them. */
 short           mi_ndt[22] = {
            0,    2,    2,    3,    4,    5,    6,    8,
            9,   12,   16,   18,   24,   32,   36,   48,
@@ -746,9 +649,9 @@ short           mi_ndt[22] = {
 };
 
 
-/* 128 entries, the values LCP_STX ships (its data gap here is 256
-   bytes).  Entries below index 23 are 0 -- flagged too-low by
-   mq_dise. */
+/* 128 entries, the values the original ships: YM2149 tone periods,
+   period = 2000000 / (16 * f) for MIDI note n.  Entries below index 23
+   are 0 -- flagged too-low by mq_dise. */
 short           psg_freq[128] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -768,25 +671,22 @@ short           psg_freq[128] = {
     0x000e, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-/* MIDI/PSG defaults.  Ghidra stores these as BYTES (not shorts) at their
-   addresses; the code accesses them via move.b / cmp.b instructions.
-   Values verified via disassembly at 0x101f4 / 0x10420 / 0x112a8 etc.
-     mi_vel            @ 0x29a22 = 0x7F (127) -- max MIDI velocity
-     mi_dvel    @ 0x29a24 = 0x7F (127)
-     psg_dvol       @ 0x29a26 = 0x0F (15)  -- max PSG volume
-   Port previously had mi_vel/default at 100 (guess). */
-char            mi_vel           = 127; /* STX: byte */
+/* MIDI/PSG defaults.  These are BYTES, not shorts: the code accesses
+   them with byte moves and compares.
+     mi_vel   = 127 -- max MIDI velocity
+     mi_dvel  = 127
+     psg_dvol = 15  -- max PSG volume */
+char            mi_vel           = 127; /* a byte */
 
-/* STX declares these two as char (byte compares/stores; Alcyon
-   word-aligns them, hence the 2-byte spacing). */
+/* These two are char (byte compares/stores; Alcyon word-aligns them,
+   hence the 2-byte spacing). */
 char            mi_dvel   = 127;
 
 char            psg_dvol      = 15;
 
-/* The note range the sequencer will play, HIGH first in the data.
-   The port had these two names swapped: 0x60 is the top of the range
-   and 0x24 the bottom, and mq_dise rejects a note above the first and
-   below the second. */
+/* The note range the sequencer will play, HIGH first in the data:
+   0x60 is the top of the range and 0x24 the bottom, and mq_dise
+   rejects a note above the first and below the second. */
 char            g_mnhi      = 0x60;
 
 char           g_mnlo       = 0x24;
@@ -800,13 +700,11 @@ char           g_mnlo       = 0x24;
 
 /* ---- PSG channel state ---------------------------------------------- */
 
-/* Referenced by the ROM text (bss 0x3df96 / 0x4549a / 0x1dc7c /
-   0x48bce). */
 char            g_mcpro[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 unsigned char   mi_chmap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/* LCP_STX's static content is 0..99 then 110..127, with the last 14
+/* The static content is 0..99 then 110..127, with the last 14
    entries zero -- the row 100..109 is simply missing from the 1985
    table.  Harmless: mq_bust rewrites all 132 entries (`g_mstr[i] = i`
    for i < 0x84) before anything reads them. */
@@ -825,10 +723,7 @@ unsigned char   g_mstr[132] = {
 
 /* g_msmsa is a BYTE and lives in the text segment behind mq_tick --
    see source/mq_tick.s. */
-/* g_msmk (Ghidra midi_scale_mask_table @ 0x29ad0): 16-byte chord-mask
-   lookup.  Dumped verbatim -- previous port had guessed the values
-   from Music Studio 2.0 documentation but the real ones diverge
-   significantly (e.g. slot 3 is 0x37 not 0x6F, slot 4 is 0x33 not 0x77). */
+/* g_msmk: 16-byte chord-mask lookup. */
 unsigned char   g_msmk[16] = {
         0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
         0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
@@ -836,43 +731,34 @@ unsigned char   g_msmk[16] = {
 
 
 /* The default program map, sixteen bytes of INITIALIZED data right
-   behind g_msmk -- the port had swallowed it as g_msmk's second half
-   and kept an empty BSS array for mi_pgmap to point at, which made
-   the pointer address itself.  The reference relocates mi_pgmap to
-   data 0x404, i.e. here.  Named mi_pgtab rather than mi_pgmapb
-   because Alcyon truncates a linkage name to eight characters and
-   _mi_pgmapb would collide with _mi_pgmap. */
+   behind g_msmk; mi_pgmap points here.  Named mi_pgtab rather than
+   mi_pgmapb because Alcyon truncates a linkage name to eight
+   characters and _mi_pgmapb would collide with _mi_pgmap. */
 unsigned char   mi_pgtab[16] = {
         0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11
 };
 
 
-/* Ghidra mi_varR @ 0x29af2 = 1 (byte).  Port previously had NO.
-   LCP_STX declares both as char -- sgPlay writes them with moveb. */
-
-
-/* One byte, one variable: sgPlay writes it (the port called that
-   write g_molof) and mq_pars reads it.  Both port names mapped to
-   the same LCP_STX address, data 0x414. */
+/* mi_slop and mi_varR are char: sgPlay writes them as bytes.
+   mi_slop is written by sgPlay and read by mq_pars. */
 char            mi_slop         = 1;
 
 char    mi_varR                      = YES;
 
-char *          mi_pgmap = (char *) mi_pgtab;   /* STX: byte pointer */
+char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer */
 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon
    emits a switch jump table into the .data of the object that holds
-   the function, and LCP_STX has mq_parh's table (7 case longs + 7
-   targets) and mq_dise's (5 targets) -- 76 bytes in all -- sitting
-   between mi_pgmap at data 0x418 and main_pal at 0x468.  Data from
-   separate objects cannot interleave, so the globals and the MIDI
-   code are ONE object, and the split point is exactly here.
+   the function, and the original has mq_parh's and mq_dise's tables
+   sitting between mi_pgmap and main_pal.  Data from separate objects
+   cannot interleave, so the globals and the MIDI code are ONE object,
+   and the split point is exactly here.
 
    tools/stx_units.txt therefore names midi_seq.c as this file's
-   constituent, and alcyon_link.sh puts globals.o where midi_seq.o
-   used to be (text 0x12a).
+   constituent, and alcyon_link.sh links globals.o as the first game
+   object.
    ---------------------------------------------------------------- */
 #include "midi_seq.c"
 
@@ -883,8 +769,5 @@ char *          mi_pgmap = (char *) mi_pgtab;   /* STX: byte pointer */
 
 /* No globals here for the 200 Hz clock or the VBL counter.  Both are
    ATARI ST SYSTEM VARIABLES in low memory -- _hz_200 at $04BA/$04BC
-   and _vbclock at $0462 -- and the code reads them there directly,
-   under Super, in sf_irqp and sc_ren8.  The port used to define
-   g_hzhi/g_hzlo/_vbclock as its own storage as well; nothing ever
-   relocated against them, so they were eight dead bytes in the data
-   segment. */
+   and _vbclock at $0462 -- and sf_irqp and sc_ren8 read them there
+   directly, under Super. */

@@ -1,9 +1,7 @@
 /*
- * parts/sp_regs.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x5bdc, in the 0x400c object between lc_load and gameLoop).
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u1.c; never compiled on its own.
  */
-/* sp_regs: Ghidra spritedata_create_with_mask.  Store per-sprite
+/* sp_regs: store per-sprite
    pointers and dimensions at slot spriteID, then auto-generate the
    1-bit mask into maskPtr. */
 void
@@ -18,8 +16,8 @@ short                   width;
         g_sedms[spriteID]   = (short *) maskPtr;
         g_sedeh[spriteID]             = height;
         g_sedew[spriteID]             = width;
-        /* STX reads the four values back out of the tables instead of
-           passing the parameters. */
+        /* The four values are read back out of the tables instead of
+           passing the parameters, as in the original. */
         sp_genma(g_sedim[spriteID], g_sedms[spriteID],
                  g_sedew[spriteID], g_sedeh[spriteID]);
 }

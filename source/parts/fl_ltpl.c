@@ -1,14 +1,12 @@
 /*
- * parts/fl_ltpl.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x648c, just before cpyScr). Files under parts/ are never
- * compiled standalone.
+ * parts/fl_ltpl.c -- included by stx_u1.c; never compiled on its own.
+ * Loads letter.txt and builds the line-pointer table g_ltlp.
  */
-/* addr: fl_ltpl() */
 void
 fl_ltpl()
 {
-        /* STX's frame is -12: an unused short ahead of linecount, then
-           the walking pointer. */
+        /* The unused short ahead of linecount must stay: removing it
+           changes the compiled code. */
         short   unused;
         short   linecount;
         char *  i;
@@ -22,7 +20,7 @@ fl_ltpl()
                 g_ltlp[linecount] = i;
 
                 /* Step once, then a plain `while` -- two increment
-                   sites, not a do/while's one. */
+                   sites, not a do/while's one, as in the original. */
                 i++;
                 while (*i >= ' ')
                         i++;

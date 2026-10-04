@@ -1,8 +1,6 @@
 /*
- * parts/a_opcbc.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_opcbc.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
@@ -58,12 +56,12 @@ short   value;
 
         hs_posXY(POS_MID_BEDROOM_CLOSET,
                               &g_wtx, &g_wty);
-        /* STX: -= straight to memory. */
+        /* Written as -= so the update goes straight to memory. */
         g_wty -= 3;
         g_wtx -= 10;
         g_actif = YES;
         lcp_wkD();
-        g_actif = NO;                   /* STX clears the flag first */
+        g_actif = NO;                   /* cleared before saving lcp_x, as in the original */
         saved_x = lcp_x;
 
         /* Close door behind: wide -> ajar -> lcp-inside. */

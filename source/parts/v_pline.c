@@ -1,7 +1,6 @@
 /*
- * parts/v_pline.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/v_pline.c -- included by vdistx.c, whose include order is the
+ * binding module's function order; never compiled on its own.
  */
 
 void
@@ -10,7 +9,9 @@ short   handle;
 short   count;
 short * pxy;
 {
-        /* STX aims the parameter block at the caller's points. */
+        /* Aim the parameter block's ptsin pointer at the caller's
+           points for the call instead of copying them, then restore
+           it. */
         vdipb[2]  = pxy;
         contrl[0] = VDI_V_PLINE;
         contrl[1] = count;

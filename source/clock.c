@@ -7,5 +7,4 @@
 #include "globals.h"
 
 /* Y offset uses index + 3 (quarter-turn phase shift) so the same
-   15-entry table serves both axes.
-   addr: cl_drwH() */
+   15-entry table serves both axes. */

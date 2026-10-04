@@ -1,16 +1,13 @@
 /*
- * parts/td_nois.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x13c74, immediately before td_line). Files under parts/ are
- * never compiled standalone.
+ * parts/td_nois.c -- included by stx_u2.c; never compiled on its own.
  */
 /* td_nois: random-colour antenna each frame while TV on.
-   Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette.
-   addr: td_nois() */
+   Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette. */
 
 void
 td_nois()
 {
-        /* STX has no local: the wrapper's result is masked in the
-           argument slot. */
+        /* No local: the wrapper's result is masked inside the
+           argument expression. */
         td_line((short) rnd() & COLOR_dk_brown);
 }

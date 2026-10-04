@@ -1,7 +1,6 @@
 /*
- * parts/vsl_color.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/vsl_color.c -- included by vdistx.c at its place in the VDI
+ * binding module; never compiled on its own.
  */
 
 void
@@ -9,7 +8,8 @@ vsl_color(handle, index)
 short   handle;
 short   index;
 {
-        /* intin first, and the binding RETURNS intout[0]. */
+        /* intin is set before contrl, and the binding RETURNS
+           intout[0]: the original binding's shape. */
         intin[0]  = index;
         contrl[0] = VDI_VSL_COLOR;
         contrl[1] = 0;

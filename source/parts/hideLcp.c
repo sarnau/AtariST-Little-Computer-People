@@ -1,10 +1,8 @@
 /*
- * parts/hideLcp.c -- shared body; LCP_STX links it in the 0xdece
- * object (see stx_u2.c).
+ * Stash the body/head image pointers, NULL them and raise g_lssh.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
-
-/* hideLcp: stash body/head image pointers, NULL them, raise g_lssh.
-   addr: hideLcp() */
 
 void
 hideLcp()

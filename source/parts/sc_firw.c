@@ -1,10 +1,8 @@
 /*
- * parts/sc_firw.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x16dcc, immediately after sc_sctd (bsr.s)). Files under
- * parts/ are never compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
-/* sc_firw: paint row (160 B) with 0x0FFF (palette entry 0xF, white).
-   addr: sc_firw() */
+/* sc_firw: fill one 160-byte scan line with colour index 14 (bit
+   planes 1-3 set, plane 0 clear) -- the letter paper. */
 
 void
 sc_firw(scrptr, row)
@@ -13,10 +11,11 @@ short                   row;
 {
         short   i;
 
-        /* STX: a 16-bit row multiply and post-incremented stores. */
+        /* A 16-bit row multiply (no (long) cast) and post-incremented
+           stores, as in the original. */
 #ifdef HOST
-        /* Alcyon takes a cast as an lvalue and the compound form is what
-           emits `add.l d0,mem`; clang cannot parse it at all.  Same
+        /* Alcyon accepts a cast as an lvalue, and the original uses
+           this compound form; clang cannot parse it at all.  Same
            arithmetic, spelled for the host.  See CLAUDE.md. */
         scrptr = (short *) ((char *) scrptr + row * 160);
 #else

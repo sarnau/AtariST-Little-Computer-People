@@ -1,14 +1,10 @@
 /*
- * parts/a_drink.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x121d6, immediately before updWtLv). Files under parts/ are
- * never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_drink()
 {
-        /* STX tests the call in place -- no local. */
-
         hs_posXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
         if (lcp_wkD() != 0)

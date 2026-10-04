@@ -1,40 +1,40 @@
 /*
- * parts/sc_ren8.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x15138, in the sprite object ahead of lcp_hwt). Files under
- * parts/ are never compiled standalone.
+ * parts/sc_ren8.c -- the per-frame compositor: throttles itself to the
+ * 200 Hz and VBL clocks, runs the dog AI and SFX chaining, copies the
+ * background, draws the sprites and flips the screen.  Included by
+ * stx_u3.c, ahead of lcp_hwt; never compiled on its own.
  */
-/* addr: sc_ren8() */
-
 void
 sc_ren8()
 {
-        /* STX inlines rd_hz/rd_vbc (each Super block keeps its own
-           pointer local; the supervisor stack pointer is shared), and
-           its frame is -76 -- twenty-one locals, most of them never
-           read.  _hz_200's low word lives at $04BC and _vbclock at
-           $0462. */
-        short           index;          /* -2 */
-        long            fill1;          /* -6 */
-        long            fill2;          /* -10 */
-        long            fill3;          /* -14 */
-        short *         p_hz;           /* -18 */
-        unsigned short  limit;          /* -20 */
-        unsigned short  save_hz200;     /* -22 */
-        char *          c26;            /* -26 */
-        char *          c30;            /* -30 */
-        long            saveSSP;        /* -34 */
-        long            fill4;          /* -38 */
-        long            fill5;          /* -42 */
-        long *          p_vbc;          /* -46 */
-        long            save_vbclock;   /* -50 */
-        long            vbc2;           /* -54 */
-        long            fill6;          /* -58 */
-        long *          p_vbc2;         /* -62 */
-        short           s64;            /* -64 */
-        short           s66;            /* -66 */
-        short           fill7;          /* -68 */
-        short           fill8;          /* -70 */
-        short           s72;            /* -72 */
+        /* The two system-clock reads are written out inline: each
+           Super block keeps its own pointer local, and the supervisor
+           stack pointer slot is shared.  Most of these twenty-one
+           locals are never read, but every one must stay, in this
+           order -- they set the stack frame.  _hz_200's low word lives
+           at $04BC and _vbclock at $0462. */
+        short           index;
+        long            fill1;
+        long            fill2;
+        long            fill3;
+        short *         p_hz;
+        unsigned short  limit;
+        unsigned short  save_hz200;
+        char *          c26;
+        char *          c30;
+        long            saveSSP;
+        long            fill4;
+        long            fill5;
+        long *          p_vbc;
+        long            save_vbclock;
+        long            vbc2;
+        long            fill6;
+        long *          p_vbc2;
+        short           s64;
+        short           s66;
+        short           fill7;
+        short           fill8;
+        short           s72;
 
         /* Frame-rate gate. */
         p_hz    = (short *) 0x04BCL;
@@ -74,9 +74,8 @@ sc_ren8()
             dg_idlcd != 0 && g_deact == NO)
                 dg_idlcd--;
 
-        /* STX inlines the target picker here (the port factored it out
-           as dg_pkTgt for readability).  base = s72, pick = s66,
-           dest_position = s64. */
+        /* The dog's target picker, written out inline.  base = s72,
+           pick = s66, dest_position = s64. */
         if (g_dtx == 0 && g_dty == 0 &&
             dg_idlcd == 0 && g_deact == NO) {
                 if (dg_vis != NO)
@@ -126,8 +125,8 @@ sc_ren8()
         }
 
         /* --- Background copy ---
-           STX reaches both MFDBs through pointer locals set up here,
-           and tests tx_sctm the other way round. */
+           Both MFDBs are reached through pointer locals set up here;
+           that, and the order of the tx_sctm tests, are the original's. */
         c26 = (char *) &mf_scrp;
         c30 = (char *) &g_srmfd;
         if (tx_sctm > 0) {
@@ -175,15 +174,11 @@ sc_ren8()
         }
 
         /* Toggle the compositing buffer.  The off-screen target is
-           the SAME aligned buffer sp_iniM uses -- LCP_STX stores the
-           one relocatable constant `scrbufA + 0x1FF` here and masks
-           it to a 512-byte boundary, exactly as sprites.c does.
-           (`&scrbufA[0x8000]` is NOT that: Alcyon's int is 16-bit, so
-           0x8000 is -32768 and the constant came out as
-           scrbufA - 32768, a pointer into the TEXT segment.  The
-           relocation pairing against LCP_STX is what caught it --
-           verify_bytes and stx_txtdiff both wildcard relocated
-           longwords, so the function still "matched".) */
+           the SAME aligned buffer sp_iniM uses: `scrbufA + 0x1FF`
+           masked down to a 512-byte boundary, exactly as sprites.c
+           does.  Do not write it as `&scrbufA[0x8000]`: Alcyon's int
+           is 16-bit, so 0x8000 is -32768 and that points far below
+           the buffer. */
         if (cur_mf->fd_addr != sv_phb)
                 cur_mf->fd_addr = sv_phb;
         else
@@ -192,8 +187,8 @@ sc_ren8()
 
         ani_cnt++;
 
-        /* Second inlined rd_vbc: its own pointer local, the shared
-           supervisor-stack slot. */
+        /* Second inline _vbclock read: its own pointer local, the
+           shared supervisor-stack slot. */
         p_vbc2  = (long *) 0x0462L;
         saveSSP = Super(0L);
         vbc2    = *p_vbc2;

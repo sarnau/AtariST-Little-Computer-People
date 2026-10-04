@@ -1,7 +1,6 @@
 /*
  * sim.c -- game-clock and needs simulation (gameSim1).
  * Called every 8 animation frames (~1 game-second).
- * addr: gameSim1()
  */
 
 #include "types.h"
@@ -18,8 +17,8 @@
 void
 gameSim1()
 {
-        /* STX has NO locals (frame -4): every counter steps in place
-           and every call result is consumed where it is produced. */
+        /* No locals on purpose: every counter steps in place and every
+           call result is consumed where it is produced. */
         if ((ani_cnt & 7) != 0)
                 return;
 
@@ -55,10 +54,10 @@ gameSim1()
                         if (lcp.sickness_level == SICKNESS_HEALTHY)
                                 lcp_upal();
                         else if (lcp.sickness_level > SICKNESS_CRITICAL)
-                                /* `==` where the author meant `=`: the
-                                   clamp never happens, and the binary
-                                   carries the discarded comparison.
-                                   Preserved as written. */
+                                /* 1985 bug: `==` where `=` was meant, so
+                                   the clamp never happens.  Kept on
+                                   purpose: it is part of the original
+                                   code. */
                                 lcp.sickness_level == SICKNESS_CRITICAL;
                         if (lcp.sickness_level >= SICKNESS_MODERATE)
                                 lcp.happiness = MOOD_SAD;

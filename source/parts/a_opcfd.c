@@ -1,8 +1,6 @@
 /*
- * parts/a_opcfd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * delivery functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_opcfd.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
@@ -21,7 +19,7 @@ short   door_st;
                 od_draw(od_fro2, 294, 151);
                 gameTick(2);
                 lcp_frdO = YES;
-        } else if (door_st != 0) {      /* STX re-tests the argument */
+        } else if (door_st != 0) {      /* redundant re-test, kept on purpose */
                 if (lcp_frdO == NO)
                         return;
                 od_draw(od_fro1, 294, 151);

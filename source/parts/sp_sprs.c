@@ -1,19 +1,17 @@
 /*
- * parts/sp_sprs.c -- shared body; LCP_STX links it in the 0xdece
- * object (see stx_u2.c). Files under parts/ are never compiled
- * standalone.
+ * parts/sp_sprs.c -- included by stx_u2.c; never compiled on its own.
  */
 
-/* sp_sprs: generic sprite activator (save.c, pet animations).
-   Recomputes 8-slot layout, copies definition into active slot.
-   Bypasses the pending double-buffer.
-   addr: sp_sprs() */
+/* Generic sprite activator (save.c, pet animations).
+   Recomputes the 8-slot layout and copies the definition into the
+   active slot, bypassing the pending double-buffer. */
 
 void
 sp_sprs(g_seix)
 short   g_seix;
 {
-        /* STX has no slot local: the map is subscripted at each use. */
+        /* No slot local: the map is subscripted at each use, as in
+           the original. */
         sp_upds();
         g_seaim[g_seslm[g_seix]]  = g_sedim[g_seix];
         g_seams[g_seslm[g_seix]]   = g_sedms[g_seix];

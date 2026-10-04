@@ -1,31 +1,14 @@
 /*
  * dat_games.c -- the initialized globals that belong to the games
- * OBJECT, in LCP_STX data order.
+ * object, in the original's data order.
  *
  * The 1985 sources declared their globals in the file that used them,
  * so each object's data segment is its own globals followed by the
- * string literals and switch tables its code emits.  The object that
- * owns a stretch of anonymous data is not a guess: a switch table's
- * relocation points into its own function, and a string is emitted in
- * the object that references it.  See CLAUDE.md, "DATA and BSS
- * layout".
+ * string literals and switch tables its code emits.  The position of
+ * this file's #include and the order of the declarations below set
+ * the data layout; do not reorder them.
  *
- * Not compiled standalone -- included by games.
- */
-
-/*
- * dat_games.c -- the initialized globals that belong to the games
- * OBJECT, in LCP_STX data order.
- *
- * The 1985 sources declared their globals in the file that used them,
- * so each object's data segment is its own globals followed by the
- * string literals and switch tables its code emits.  The object that
- * owns a stretch of anonymous data is not a guess: a switch table's
- * relocation points into its own function, and a string is emitted in
- * the object that references it.  See CLAUDE.md, "DATA and BSS
- * layout".
- *
- * Not compiled standalone -- included by games.
+ * Not compiled standalone -- included by games.c.
  */
 
 

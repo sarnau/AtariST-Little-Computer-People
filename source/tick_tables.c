@@ -3,14 +3,12 @@
  * gameTick (see tick.c).  Kept separate from globals.c
  * so Alcyon C168's fixed-size symbol table doesn't overflow.
  *
- * addr: (data-segment tables sourced from Ghidra addresses noted per
- * variable; state globals track runtime animation counters that the
- * 1985 binary stores in BSS).
+ * The state globals are runtime animation counters, kept in BSS.
  */
 
 #include "types.h"
 #include "enums.h"
 #include "tick_tables.h"
-BOOL16  g_alsts;   /* alarm_sound_started */
-short   g_phrc;    /* phone_ring_countdown */
-/* g_srsdc (screen_scroll_down_count) lives in globals.c. */
+BOOL16  g_alsts;   /* alarm sound has started */
+short   g_phrc;    /* phone ring countdown */
+/* g_srsdc (screen scroll-down count) lives in globals.c. */

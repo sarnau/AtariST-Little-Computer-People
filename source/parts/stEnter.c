@@ -1,15 +1,13 @@
 /*
- * parts/stEnter.c -- LCP_STX only; the 0x400c object carries it at
- * 0x718e, between st_titl and erChr.  Files under parts/ are never
- * compiled standalone.
+ * parts/stEnter.c -- included by stx_u1.c, between st_titl and erChr;
+ * never compiled on its own.
  */
 
 /* stEnter: read a fixed-width numeric field on the title screen.
    `tmpl` is both the prompt drawn into the field and the character
    restored by backspace, so every third column (the separator in
    MM/DD/YY and HH:MM) is skipped over rather than typed into.  The
-   digits land in in_str as values, not characters.
-   addr: 0x718e */
+   digits land in in_str as values, not characters. */
 
 void
 stEnter(x, y, tmpl, len, color)

@@ -1,13 +1,10 @@
 /*
- * parts/lcp_path.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x470a, in the 0x400c object). Files under parts/ are never
- * compiled standalone.
+ * parts/lcp_path.c -- included by stx_u1.c; never compiled on its own.
  */
 /* lcp_path: one 8Hz step along current waypoint.
    Waypoint reached -> done or pick next.  Not on stairs -> flat walk
    toward waypoint (X first, then Y).  On stairs -> stair-phase by Y
-   bucket.  Sets fs_trg on the two foot-plant frames.
-   addr: lcp_path() */
+   bucket.  Sets fs_trg on the two foot-plant frames. */
 
 void
 lcp_path()
@@ -15,18 +12,18 @@ lcp_path()
         /* Four locals; the stair branch reuses x_distance for the
            next-X pick, and the last two are written once and never
            read -- leftovers, kept as the original has them. */
-        short   x_distance;     /* -2  */
-        short   floor_num;      /* -4  */
-        short   ani_snap;       /* -6  */
-        short   spd_snap;       /* -8  */
+        short   x_distance;
+        short   floor_num; 
+        short   ani_snap;  
+        short   spd_snap;  
 
         fs_trg = NO;
 
         if (g_wtx == 0 && g_wty == 0)
                 return;
 
-        /* Dead stores.  g_wkadj is referenced exactly once in the
-           whole binary -- here. */
+        /* Dead stores, kept on purpose.  This is the only place that
+           reads g_wkadj. */
         ani_snap = ani_cnt;
         spd_snap = g_wkadj + g_spdc;
 
@@ -115,7 +112,7 @@ lcp_path()
                         if (lcp_y == 161) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F0;   /* STX enters at 9 */
+                                lcp_st = STATE_STR_CLIMB_F0;
                                 lcp_face = FACING_LEFT;
                                 lcp_x -= 6;
                                 lcp_y -= 2;
@@ -126,7 +123,7 @@ lcp_path()
                         } else if (lcp_y == 100) {
                                 if (g_lcyof != NO)
                                         sp_ssco(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F0;   /* STX enters at 9 */
+                                lcp_st = STATE_STR_CLIMB_F0;
                                 lcp_face = FACING_RIGHT;
                                 lcp_x += 3;
                                 lcp_y -= 2;

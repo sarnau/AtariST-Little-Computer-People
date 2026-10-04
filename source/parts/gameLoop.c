@@ -1,11 +1,7 @@
 /*
- * parts/gameLoop.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x5c76, in the 0x400c object between lc_load and chk_actT).
- * Files under parts/ are never compiled standalone.
+ * parts/gameLoop.c -- included by stx_u1.c; never compiled on its own.
+ * main()'s last step: the endless game loop.
  */
-/* gameLoop -- verified against Ghidra `endless_game_loop`.
-   main() calls it as the final step (Ghidra step 40), matching the
-   Ghidra decompile's structure and control flow one-for-one. */
 
 #include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
 
@@ -13,8 +9,8 @@
 void
 gameLoop()
 {
-        /* STX's frame is 54 bytes: 50 bytes of declared locals the
-           body never reads. */
+        /* 50 bytes of locals the body never reads.  They must stay:
+           removing them changes the compiled code. */
         short   unused[25];
 
         if (g_lcldd != 0) {
@@ -23,9 +19,8 @@ gameLoop()
                 lcp_x -= 10;
                 lcp_std(NO, NO);
         }
-        /* STX guards the other way round -- the sleep loop is the
-           fall-through -- and every loop is `while (1)`, which emits
-           the branch-to-condition shape `for (;;)` does not. */
+        /* The sleep loop is the fall-through of the guard, and every
+           loop is `while (1)`: `for (;;)` compiles differently. */
         if (cprot_r == 0)
                 while (1)
                         a_sleep(SLEEP_RANDOM);

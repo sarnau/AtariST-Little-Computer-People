@@ -1,8 +1,5 @@
 /*
  * renderx.c -- palette, TV, screen-scroll, and prCh.
- * Split from render.c. All functions are Ghidra-verified.
- * addr: pa_cloc(), pa_skic(), lcp_upal(), td_line(),
- *       td_nois(), sc_sctd(), prCh()
  */
 
 #include "types.h"
@@ -27,8 +24,7 @@
 
 /* pa_cloc: pick random/configured CLOTHING_COLOR_ID (0..15),
    load prim/sec colours to palette slots 1,2. Overshoot falls back
-   to lcp.clothing_color.
-   addr: pa_cloc() */
+   to lcp.clothing_color. */
 
 void
 pa_cloc()
@@ -44,8 +40,7 @@ pa_cloc()
         Setpalette(main_pal);
 }
 
-/* pa_skic: same as pa_cloc but 8-entry skin table.
-   addr: pa_skic() */
+/* pa_skic: same as pa_cloc but 8-entry skin table. */
 
 void
 pa_skic()
@@ -63,33 +58,25 @@ pa_skic()
 
 /* lcp_upal: refresh sickness tint at palette slot 6.
    ST_PEACH (0x743) healthy, ST_SICK_GREEN (0x363) sick.
-   Called from sim.c (recovery), health.c (onset), lc_load (HYBER restore).
-   addr: lcp_upal() */
+   Called from sim.c (recovery), health.c (onset), lc_load (HYBER restore). */
 
 
 /* td_line: draw 5-line rabbit-ear antenna on TV.
    Diagonal-up-right from (44..48, 51..49) to (44..48, 57..55).
    Colour: COLOR_white when off, random when on (static effect).
-   addr: td_line() */
+   Lives in parts/td_line.c. */
 
-/* td_line -> parts/td_line.c (STX: 0xdece object, 0x13c8a,
-   immediately after tt_off). */
+/* td_nois lives in parts/td_nois.c. */
 
-/* td_nois -> parts/td_nois.c (STX: 0x13c74, immediately before td_line). */
-
-/* sc_sctd -> parts/sc_sctd.c (STX: 0x16d5a, in the 0x148fe object ahead of sc_firw). */
+/* sc_sctd lives in parts/sc_sctd.c. */
 
 /* prCh: render one char via VDI.
    Sets logbase to backbuffer, MD_TRANS overlay via v_gtext, restores state.
    Setscreen (void*)-1 for phys/rez means "leave unchanged".
-   addr: prCh() */
+   Lives in parts/prCh.c. */
 
-/* prCh -> parts/prCh.c (STX: 0xdece object, 0x16ede, immediately after strPr). */
-
-/* rp_anim -> parts/rp_anim.c (STX: 0x13aec, in the 0xdece object between drwPixel and a_toggt). */
+/* rp_anim lives in parts/rp_anim.c. */
 
 /* strPr: paint NUL-terminated string at (x,y) via prCh, 8px/char advance
    (8x8 system font used by status strip / game menu).
-   addr: strPr() */
-
-/* strPr -> parts/strPr.c (STX: 0xdece object, 0x16ea8, immediately before prCh). */
+   Lives in parts/strPr.c. */

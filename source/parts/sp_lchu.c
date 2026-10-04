@@ -1,12 +1,9 @@
 /*
- * parts/sp_lchu.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x148fe object, after gameTick). Files under parts/ are
- * never compiled standalone.
+ * parts/sp_lchu.c -- included by stx_u3.c; never compiled on its own.
  */
 /* sp_lchu: pick head frame from PEx.LCP by happiness + g_hsfra,
    expand via sp_lcpf into slot 4.  Tracks body position; head lowers
-   1 px while carrying on stair states 13..16.
-   addr: sp_lchu() */
+   1 px while carrying on stair states 13..16. */
 
 void
 sp_lchu()
@@ -35,7 +32,8 @@ sp_lchu()
         if (dbg_hide != NO)
                 g_seacy[HW_SLOT_LCP_HEAD] = 300;
 
-        /* STX spells the stair range inclusively and steps in place. */
+        /* The stair range is spelled inclusively and the y stepped in
+           place; both shapes are the original's. */
         if (g_lcyof != NO &&
             lcp_st >= STATE_STR_TOP_F0 && lcp_st <= STATE_STR_TOP_F3S)
                 g_seacy[HW_SLOT_LCP_HEAD]++;

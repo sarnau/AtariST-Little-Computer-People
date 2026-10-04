@@ -1,10 +1,11 @@
 /*
- * parts/pk_ldCrd.c -- shared body; LCP_STX in the games object at 0xab04, right before pk_awp
- * (pk_main and pk_wrMn reach it with bsr).
+ * Must sit right before pk_awp; pk_main and pk_wrMn call it.
+ *
+ * Included by games.c; never compiled on its own.
  */
 
 /*
- * cards.c -- CARDS graphics file loader.
+ * CARDS graphics file loader.
  *
  * The CARDS file on the 1985 disk holds 53 16x24 pixel card bitmaps
  * in 4-bitplane low-res format (192 bytes per card): 12 face cards
@@ -27,8 +28,6 @@
  * per-suit "suit-only" card back (probably used during blind deals).
  * The single global back at crd_dat + 0x1380 is the standard
  * face-down card.
- *
- * addr: pk_ldCrd()
  */
 
 #include "types.h"
@@ -41,7 +40,6 @@
 #include "sprender.h"
 
 
-/* addr: pk_ldCrd() */
 void
 pk_ldCrd()
 {

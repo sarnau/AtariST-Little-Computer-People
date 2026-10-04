@@ -1,13 +1,11 @@
 /*
- * parts/plErCol.c -- LCP_STX only; the games object carries it at
- * 0x871a, immediately after plEr.  Files under parts/ are never
- * compiled standalone.
+ * parts/plErCol.c -- included by games.c immediately after plEr; never
+ * compiled on its own.
  */
 
-/* plErCol: plEr with an explicit fill colour.  Unlike plEr it does not
-   go through initVdi/exitVdi -- the four attribute calls are written
-   out here.
-   addr: 0x871a */
+/* plEr with an explicit fill colour.  Unlike plEr it does not go
+   through initVdi/exitVdi -- the four attribute calls are written out
+   here. */
 
 void
 plErCol(x1, y1, x2, y2, color)

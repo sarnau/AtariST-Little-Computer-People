@@ -15,10 +15,8 @@
  * All positioning is anchored to the resident's feet (lcp_x, lcp_y);
  * per-frame Y offsets come from body_yof[].
  *
- * addr: sp_updb(), sp_lchu(),
- *       sp_ssco/right(),
- *       update_carried_object_sprite() (carry branch of
- *       gameTick)
+ * Most of the functions live in parts/ and are included by the unity
+ * units at their places in the binary.
  */
 
 #include "types.h"
@@ -32,30 +30,26 @@
 #include "tables.h"
 #include "tick.h"
 
-/* sp_updb -> parts/sp_updb.c (STX: 0x148fe object, after gameTick). */
+/* sp_updb -> parts/sp_updb.c, included by stx_u3.c after gameTick. */
 
-/* sp_ssco -> parts/sp_ssco.c (0xdece object; stx_u2.c has it). */
+/* sp_ssco -> parts/sp_ssco.c, included by stx_u2.c. */
 
-/* sp_sprs -> parts/sp_sprs.c (0xdece object; stx_u2.c has it). */
+/* sp_sprs -> parts/sp_sprs.c, included by stx_u2.c. */
 
-/* lcp_hwt -> parts/lcp_hwt.c (STX places it immediately
-   before gameTick, which is why its call is a short bsr). */
+/* lcp_hwt -> parts/lcp_hwt.c, included by stx_u3.c immediately
+   before gameTick. */
 
-/* hideLcp -> parts/hideLcp.c (STX: 0xdece object). */
+/* hideLcp -> parts/hideLcp.c, included by stx_u2.c. */
 
-/* showLcp -> parts/showLcp.c (STX: 0xdece object). */
+/* showLcp -> parts/showLcp.c, included by stx_u2.c. */
 
-/* sp_ss02 -> parts/sp_ss02.c (STX: 0xdece object, 0x12108 --
-   a_kitcc reaches it with a bsr). */
+/* sp_ss02 -> parts/sp_ss02.c, included by stx_u2.c. */
 
-/* sp_lcpf -> parts/sp_lcpf.c (STX places it late in the 0x148fe
-   object -- stx_u3.c includes it there). */
+/* sp_lcpf -> parts/sp_lcpf.c, included late in stx_u3.c. */
 
 
-/* sp_flih: mirror sprite in place, preserving width (no expansion).
-   The STX revision links it in the alerts object right after
-   sp_spud (see alerts.c).
-   addr: sp_flih() */
+/* sp_flih (mirror a sprite in place, preserving width) lives in
+   alerts.c, right after sp_spud. */
 
 
 void
@@ -165,14 +159,11 @@ sp_upds()
         }
 }
 
-/* sp_lchu -> parts/sp_lchu.c (STX: 0x148fe object, after gameTick). */
+/* sp_lchu -> parts/sp_lchu.c, included by stx_u3.c after gameTick. */
 
 /* sp_imfs: populate 8 per-slot MFDB pairs, wire compositor MFDB
    (g_srmfd) at scrbufA-aligned, call sp_drin.  Zeroes last_hz so
-   the first sc_ren8 frame-gate sees 0->N delta and proceeds.
-   Note: 1985 code left this compositing target unaligned; VDI doesn't
-   require alignment and the shifter is pointed elsewhere via sc_ren8.
-   addr: sp_imfs() */
+   the first sc_ren8 frame-gate sees 0->N delta and proceeds. */
 
 
 void
@@ -189,34 +180,30 @@ sp_imfs()
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }
-        /* STX has no temporary: the relocatable base is pushed and
-           masked in the argument slot (512-align), and both extents
-           are 16-bit products. */
+        /* No temporary on purpose: the buffer base is aligned to 512
+           bytes right in the argument, and both extents are 16-bit
+           products. */
         sp_iniM(0L, &g_srmfd,
                 (void *) (((long) scrbufA + 0x1FFL) & ~511L),
                 scr_scal * 320, scr_scal * 200);
         sp_drin();
 }
 
-/* sp_drin -> parts/sp_drin.c (STX: 0x148fe object, after gameTick). */
+/* sp_drin -> parts/sp_drin.c, included by stx_u3.c after gameTick. */
 
-/* sp_lbbd: dilate 21-row body frame -> shape data.  Source is 168 bytes
-   (4 shorts/row); Ghidra packs as
+/* sp_lbbd: dilate a 21-row body frame into shape data.  The source is
+   168 bytes (4 shorts/row), packed per row as
        mask = src[3] | ((src[1] | src[0]) << 16) | src[2];
    Walk bits 30..1: each isolated ON bit smears into 3 (bit-1|bit|bit+1)
    -- 3-px silhouette dilation.  Second pass: vertical dilation, OR each
-   row into its predecessor.
-   addr: sp_lcp_build_all_body() */
+   row into its predecessor. */
 
 
-/* sp_lbal -> parts/sp_lbal.c (STX places it late in the 0x148fe
-   object -- stx_u3.c includes it there). */
+/* sp_lbal -> parts/sp_lbal.c, included late in stx_u3.c. */
 
 
-/* sp_lbbd -> parts/sp_lbbd.c (STX places it late in the 0x148fe
-   object -- stx_u3.c includes it there). */
+/* sp_lbbd -> parts/sp_lbbd.c, included late in stx_u3.c. */
 
 
-/* sp_lbhd -> parts/sp_lbhd.c (STX places it late in the 0x148fe
-   object -- stx_u3.c includes it there). */
+/* sp_lbhd -> parts/sp_lbhd.c, included late in stx_u3.c. */
 

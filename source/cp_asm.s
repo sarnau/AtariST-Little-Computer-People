@@ -1,10 +1,9 @@
 ******************************************************************************
 *
-* cp_asm.s -- LCP_STX's copy-protection check, cp_main.
+* cp_asm.s -- the copy-protection check, cp_main.
 *
-* This is hand-written assembly in the original -- the whole region
-* from 0x22c0 to 0x400b is one object with no C in it and no external
-* references at all: all 21 relocations point back inside itself.
+* This is hand-written assembly in the original: one self-contained
+* object with no C in it and no external references at all.
 *
 * What it does:
 *   - saves d1-d7/a0-a5 into its own static block (not the stack),
@@ -26,8 +25,9 @@
 * The 96 encrypted bytes at cpenc are emitted verbatim: they are not
 * valid instructions on disk, only after the decrypt loop has run.
 *
-* alcyon_link.sh links this file only for the default (LCP_STX)
-* build.
+* alcyon_link.sh links this file only for the default (shipped)
+* build.  Branch optimisation must stay off when assembling it: every
+* branch carries the size the original uses.
 *
 ******************************************************************************
 

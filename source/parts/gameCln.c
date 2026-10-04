@@ -1,12 +1,12 @@
 /*
- * parts/gameCln.c -- shared body; LCP_STX puts this static helper at
- * 0x75c8, between mg_stp and vst_h20.  Files under parts/ are never
- * compiled standalone.
+ * Must sit between mg_stp and vst_h20.
+ *
+ * Included by games.c; never compiled on its own.
  */
 
-/* Shared cleanup at exit from any game.  LCP_STX's version takes no
-   argument and does not free -- the minigame mains free their own
-   buffer inline -- and nothing in that build actually calls it. */
+/* Shared cleanup at exit from any game.  Takes no argument and does
+   not free -- the minigame mains free their own buffer inline.
+   Nothing calls it, but the original contains it, so it must stay. */
 
 static void
 gameCln()

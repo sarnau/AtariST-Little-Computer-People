@@ -1,7 +1,5 @@
 /*
- * parts/td_line.c -- shared body; LCP_STX links it in the 0xdece
- * object at 0x13c8a, immediately after tt_off. Files under parts/ are
- * never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void

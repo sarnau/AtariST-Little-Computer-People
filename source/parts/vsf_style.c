@@ -1,7 +1,6 @@
 /*
- * parts/vsf_style.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/vsf_style.c -- included by vdistx.c, whose include order is the
+ * binding module's function order; never compiled on its own.
  */
 
 void

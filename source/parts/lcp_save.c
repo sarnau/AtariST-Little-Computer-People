@@ -1,9 +1,8 @@
 /*
- * parts/lcp_save.c -- shared body; LCP_STX links it in at 0x1481c, the
- * last function in the 0xdece object. Files under parts/ are never
- * compiled standalone.
+ * The last function of the stx_u2 object.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
-/* addr: lcp_save() */
 void
 lcp_save(filename, size, addr)
 char *  filename;
@@ -24,7 +23,8 @@ void *  addr;
 
         for (;;) {
                 lVar1 = Fwrite(filehandle, (long) size, addr);
-                /* ROM evaluates the size cast first. */
+                /* The size cast stays on the left on purpose: swapping
+                   the operands changes the compiled code. */
                 if ((long) size == lVar1)
                         break;
                 er_write();

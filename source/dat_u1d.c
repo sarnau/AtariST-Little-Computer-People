@@ -1,5 +1,5 @@
 /*
- * dat_u1d.c -- the PEx.LCP filename, declared where the reference
+ * dat_u1d.c -- the PEx.LCP filename, declared where the original
  * declares it: after ldSpr and before main.
  *
  * A compilation unit's string bodies are emitted in the order c168

@@ -1,13 +1,11 @@
 /*
- * parts/lcp_lgt.c -- shared body; LCP_STX places it at the head of the 0xdece object (it
- * reaches lcp_wkD and sp_ssco there with bsr).
+ * parts/lcp_lgt.c -- included by stx_u2.c; never compiled on its own.
  */
 
 /* lcp_lgt: leave the game table for an interrupt event (alarm,
    bathroom, thirst, delivery).  Walks the resident to the kitchen
    sink area, tucks away the game-box + table-setting sprites, and
-   re-attaches the game-box in the "carried-behind" slot.
-   addr: lcp_leave_game_table() */
+   re-attaches the game-box in the "carried-behind" slot. */
 
 void
 lcp_lgt()
@@ -15,9 +13,8 @@ lcp_lgt()
         short   save_x;
         short   save_y;
 
-        /* g_inpmd, not no_keyin -- the reference relocates this store
-           and lcp_rgt's matching clear to the keyboard-input-mode
-           flag deal_kc and gameTick already test. */
+        /* g_inpmd, not no_keyin: this is the keyboard-input-mode flag
+           that deal_kc and gameTick test; lcp_rgt clears it again. */
         g_inpmd  = YES;
         g_actif  = YES;
         g_lcyof  = NO;

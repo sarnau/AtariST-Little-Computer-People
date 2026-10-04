@@ -1,15 +1,13 @@
 /*
- * parts/a_hello.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * asimple functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_hello.c -- the resident waves and talks at the screen.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_hello()
 {
-        /* Frame offsets pin STX's declaration order: saved_frame -2,
-           pick -4, wave_count -6, prev_pick -8, wait -10. */
+        /* Declaration order matters: it sets the stack-frame layout,
+           which must match the original. */
         short   saved_frame;
         short   pick;
         short   wave_count;
@@ -27,19 +25,19 @@ a_hello()
         g_hacur      = HEAD_ANIM_DISABLED;
 
         wave_count = rndRng(20, 40);
-        /* STX clears pick first. */
+        /* pick is cleared before prev_pick on purpose (statement order
+           shows in the compiled code). */
         pick       = 0;
         prev_pick  = 0;
-        /* STX drives the loop from a post-decrement in the
-           condition (read, subq to memory, test the old value). */
+        /* Post-decrement in the condition, testing the old value --
+           the original's loop shape. */
         while (wave_count--) {
                 while (pick == prev_pick)
                         pick = rndRng(0, 2);
                 prev_pick = pick;
 
-                /* STX dispatches with a switch (Alcyon emits the
-                   compare chain at the bottom); the port used an
-                   if/else-if ladder. */
+                /* Must stay a switch: an if/else-if ladder compiles to
+                   different code. */
                 switch (pick) {
                 case 0:
                         g_hsfra = 5;
@@ -57,8 +55,8 @@ a_hello()
                         p_sfhnd();
                         break;
                 }
-                /* STX nests the assignment in the call, so the value
-                   stays in the register. */
+                /* The assignment is nested in the call on purpose, so
+                   the value is reused from the register. */
                 gameTick(wait = rndRng(1, 2));
                 g_sfret = (long) wait;
         }

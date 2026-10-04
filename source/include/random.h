@@ -4,6 +4,6 @@
 #define RANDOM_H
 
 extern short rndRng();
-extern long rnd();              /* STX 0x69c6: bare Random() wrapper */
+extern long rnd();              /* bare Random() wrapper */
 
 #endif /* RANDOM_H */

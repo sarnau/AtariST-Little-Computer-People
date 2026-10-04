@@ -1,20 +1,18 @@
 /*
- * parts/cntSong.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x400c -- the FIRST function of the 0x400c object). Files
- * under parts/ are never compiled standalone.
+ * The first function of the stx_u1 object.
+ *
+ * Included by stx_u1.c; never compiled on its own.
  */
-/* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt.
-   addr: Ghidra count_songs (main step 8). */
+/* cntSong: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt. */
 
 
 void
 cntSong()
 {
-        /* No locals: both results are consumed in place, Fsfirst's
-           third argument is a WORD zero, the Fsfirst test is written
-           `!Fsfirst(...)` (which tests the word where `== 0` tests the
-           long), and the scan is a `while` whose body is just the
-           counter step. */
+        /* No locals: both results are consumed in place.  The Fsfirst
+           test is written `!Fsfirst(...)` (which tests the word where
+           `== 0` tests the long), and the scan is a `while` whose body
+           is just the counter step -- all as in the original. */
         sng_cnt = 0;
         org_cnt = 0;
         if (!Fsfirst("*.sng", F_NORMAL)) {

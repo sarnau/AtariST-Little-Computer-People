@@ -1,6 +1,6 @@
 /*
- * parts/exitVdi.c -- shared body; LCP_STX 0x76d0, right after
- * initVdi.  Files under parts/ are never compiled standalone.
+ * parts/exitVdi.c -- included by games.c; never compiled on its own.
+ * Restores the screen base saved before a minigame.
  */
 void
 exitVdi()

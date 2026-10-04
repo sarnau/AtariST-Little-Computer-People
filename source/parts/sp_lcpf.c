@@ -1,13 +1,10 @@
 /*
- * parts/sp_lcpf.c -- shared body; LCP_STX places it in the sprite object
- * (see stx_u3.c for the address).  Files under parts/ are never
- * compiled standalone.
+ * parts/sp_lcpf.c -- included by stx_u3.c; never compiled on its own.
  */
 /* sp_lcpf: expand 2-word (32-px) LCP source frame into 4-word (64-px)
    dest row, with optional horizontal mirror.  flipV picks left- vs
    right-half so mirrored frames land at the same screen X.
-   Called from sp_updb and sp_lchu.
-   addr: sp_lcpf() */
+   Called from sp_updb and sp_lchu. */
 
 void
 sp_lcpf(srcImg, srcMask, destImg, destMask,
@@ -21,8 +18,8 @@ short   height;
 short   flipH;
 short   flipV;
 {
-        /* w / m2 / x are register variables (d7/d6/d5); the frame
-           holds only mmask, y and m1. */
+        /* w, m2 and x must stay register variables, declared in this
+           order; only mmask, y and m1 live on the stack. */
         register short  w;
         register short  m2;
         register short  x;
@@ -87,7 +84,7 @@ short   flipV;
                         *destMask++ = mmask;
                 }
                 /* Plain short* arithmetic: the compiler supplies the
-                   ×2 scaling, so the source only shifts once. */
+                   x2 scaling, so the source only shifts once. */
                 srcImg  += width << 1;
                 srcMask += width;
         }

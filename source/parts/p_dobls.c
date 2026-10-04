@@ -1,6 +1,5 @@
 /*
- * parts/p_dobls.c -- shared body; LCP_STX links it in at 0x15f9a,
- * immediately after deal_kc. Files under parts/ are never compiled
- * standalone.
+ * parts/p_dobls.c -- included by stx_u3.c immediately after deal_kc;
+ * never compiled on its own.
  */
 void p_dobls() { sf_sele(SFX_DOORBELL,  4L); }

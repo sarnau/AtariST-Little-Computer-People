@@ -1,11 +1,9 @@
 /*
- * parts/a_kitcc.c -- shared body; LCP_STX links it in the 0xdece
- * object at 0x11354, far enough from a_eatm that its call is a long
- * bsr. Files under parts/ are never compiled standalone.
+ * The eat routine: takes one item of food from the cabinet, eats
+ * 10..20 bite/chew cycles at the table, and resets hunger at the end.
+ *
+ * Included by stx_u2.c; never compiled on its own.
  */
-
-/* a_kitcc: the eat routine.  Decrements food count, eats 10..20
-   bite/chew cycles, resets hunger at end.  addr: a_kitcc() */
 
 
 void

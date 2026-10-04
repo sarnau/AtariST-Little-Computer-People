@@ -17,8 +17,6 @@
  *   7. Play queued SFX via sf_irqp.
  *   8. Toggle compositing target between physbase and alt buffer.
  *   9. Bump ani_cnt.
- *
- * addr: sc_ren8()
  */
 
 #include "types.h"
@@ -38,8 +36,6 @@
 #include "sprglobs.h"
 
 
-/* LCP_STX inlines all three of the helpers the port used to keep
-   here -- the two Super-mode clock reads and the dog target picker --
-   directly into sc_ren8 (parts/sc_ren8.c), so they are gone. */
-
-/* sc_ren8 -> parts/sc_ren8.c (STX: 0x15138, in the sprite object ahead of lcp_hwt). */
+/* sc_ren8 lives in parts/sc_ren8.c, included by stx_u3.c ahead of
+   lcp_hwt.  The two Super-mode clock reads and the dog target picker
+   are written out inline there rather than kept as helpers. */

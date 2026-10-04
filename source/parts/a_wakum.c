@@ -1,14 +1,12 @@
 /*
- * parts/a_wakum.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * ahouse functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_wakum.c -- the morning routine after the alarm.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_wakum()
 {
-        /* STX has no local: the tick count is used in place. */
+        /* No local: the tick count is passed straight through. */
 
         g_actif = YES;
         alarm_p = YES;

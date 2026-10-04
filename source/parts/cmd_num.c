@@ -1,21 +1,18 @@
 /*
- * parts/cmd_num.c -- shared body; LCP_STX 0x17278, between prsCmd
- * and lcp_upp at the tail of the sprite object.  Files under parts/
- * are never compiled standalone.
+ * Included by stx_u3.c; never compiled on its own.
  */
 
-/* Decimal string -> number, with an optional leading '-'.  NOTHING in
-   LCP_STX calls this (no jsr or bsr anywhere in the image targets
-   0x17278); Alcyon emits a static even when nothing references it, so
-   the 1985 parser source still carried the helper.  Name invented --
-   the binary keeps no symbol for a static. */
+/* Decimal string -> number, with an optional leading '-'.  NOTHING
+   calls this, but Alcyon emits a static even when nothing references
+   it, so the 1985 parser source still carried the helper and it must
+   stay.  Name invented -- the binary keeps no symbol for a static. */
 static short
 cmd_num(p)
 char *  p;
 {
-        short   val;            /* -2  */
-        short   sign;           /* -4  */
-        short   c;              /* -6  */
+        short   val;
+        short   sign;
+        short   c;
 
         val = 0;
         if ((c = *p) == '-') {

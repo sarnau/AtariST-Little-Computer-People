@@ -1,6 +1,5 @@
 /*
  * keyboard.c -- keyboard polling + Ctrl-key event dispatch.
- * addr: getKey(), deal_kc()
  */
 
 #include "types.h"
@@ -16,7 +15,7 @@
 #include "sound.h"
 
 
-/* getKey -> parts/getKey.c (STX: 0x68ee, in the 0x400c object
-   just before rnd -- stx_u1.c includes it there). */
+/* getKey lives in parts/getKey.c, included by stx_u1.c just before
+   rnd. */
 
-/* deal_kc -> parts/deal_kc.c (STX: 0x15d72, stx_u3 object). */
+/* deal_kc lives in parts/deal_kc.c, included by stx_u3.c. */

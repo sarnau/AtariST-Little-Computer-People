@@ -1,7 +1,6 @@
 /*
- * parts/v_bar.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * parts/v_bar.c -- included by vdistx.c at its place in the binding
+ * module's order; never compiled on its own.
  */
 
 void
@@ -9,10 +8,9 @@ v_bar(handle, pxy)
 short   handle;
 short * pxy;
 {
-        /* STX points the parameter block's ptsin entry at the
-           caller's array for the duration of the call instead of
-           copying the points, then restores it -- the same trick
-           vdilib.c's vro_cpyfm uses. */
+        /* Point the parameter block's ptsin entry at the caller's
+           array for the duration of the call instead of copying the
+           points, then restore it -- the same trick vro_cpyfm uses. */
         vdipb[2]  = pxy;
         contrl[0] = VDI_V_GDP;
         contrl[1] = 2;

@@ -1,4 +1,5 @@
-/* ahouse.h -- extern declarations for ahouse.c. */
+/* ahouse.h -- extern declarations for one group of resident actions.  Their
+   bodies live in parts/, compiled as part of stx_u2.c. */
 
 #ifndef AHOUSE_H
 #define AHOUSE_H

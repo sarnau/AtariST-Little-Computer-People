@@ -1,16 +1,14 @@
 /*
- * parts/a_plawr.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * aleisure functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_plawr.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
  */
 
 void
 a_plawr()
 {
-        /* STX: link #-30 -- the walk result is tested in place;
-           psg_* at -2/-4/-6, prev_* at -8/-10/-12, i at -14 and
-           dta_ptr at -22. */
+        /* The walk result is tested in place, with no local for it.
+           The declaration order of these locals sets their stack
+           slots and must not change; xres is unused but must stay. */
         unsigned char   psg_a, psg_b, psg_c;
         unsigned char   prev_a, prev_b, prev_c;
         short           i;
@@ -67,8 +65,8 @@ a_plawr()
                 ;
 
         while (mi_play != NO) {
-                /* ROM: bare word-arg xbios shape here (no 0L pad),
-                   unlike sf_so's long-arg Giaccess writes. */
+                /* Plain word arguments here (no 0L), unlike sf_so's
+                   Giaccess writes: the argument shape changes the code. */
                 psg_a = Giaccess(0, PSG_VOL_A) & 0x1f;
                 psg_b = Giaccess(0, PSG_VOL_B) & 0x1f;
                 psg_c = Giaccess(0, PSG_VOL_C) & 0x1f;

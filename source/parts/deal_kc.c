@@ -1,7 +1,8 @@
 /*
- * parts/deal_kc.c -- shared body; LCP_STX links it in at 0x15d72 in
- * the 0x148fe object (stx_u3.c), with p_dobls and putEv right behind
- * it. Files under parts/ are never compiled standalone.
+ * Dispatches a typed key: the Ctrl delivery/call/water/alarm/pat
+ * commands, Return, erase, and plain characters into the command line.
+ *
+ * Included by stx_u3.c; never compiled on its own.
  */
 
 void
@@ -93,13 +94,12 @@ short   keycode;
                 /* Printable character in text-input mode. */
                 if (g_inpmd != NO)
                         return;
-                /* STX guards the append with one compound `if`, not
-                   two early returns: both tests branch to the `break`
-                   below rather than straight to the epilogue. */
+                /* One compound `if`, not two early returns, on purpose:
+                   both tests must branch to the `break` below rather
+                   than straight to the function end. */
                 if (g_cdibp < 38 && keycode >= 32) {
-                        /* Naming the index first folds the array base
-                           into `add.l #base,An` instead of loading it
-                           into a second address register. */
+                /* Index named first on purpose: this spelling
+                   reproduces the original's addressing code. */
                         *(g_cdibp + g_cdinb) = keycode;
                         g_cdibp++;
                         g_cdinb[g_cdibp] = '\0';

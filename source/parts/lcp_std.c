@@ -1,19 +1,18 @@
 /*
- * parts/lcp_std.c -- shared body; LCP_STX links it in right after
- * a_opcuc in the 0xdece object (a_opcuc reaches it with a short bsr).
+ * parts/lcp_std.c -- included by stx_u2.c right after a_opcuc, which
+ * must stay close enough for a short call; never compiled on its own.
  */
 
 /* Study-door save flow: close door, optionally write HYBER, reopen,
    walk resident back to door, close.  Food-count nibble (bits 9..11)
-   is preserved via the FE00 mask so the 3-bit delivery counter survives.
-   addr: lcp_std() */
+   is preserved via the FE00 mask so the 3-bit delivery counter survives. */
 void
 lcp_std(do_save, p_dosnd)
 BOOL16  do_save;
 BOOL16  p_dosnd;
 {
-        short   saved_x;        /* STX: link #-6, the delay is not
-                                   latched */
+        short   saved_x;        /* the delay is passed straight to
+                                   gameTick, not kept in a local */
 
         saved_x = lcp_x;
 
@@ -33,8 +32,8 @@ BOOL16  p_dosnd;
         /* Phase 2: repack door state and write HYBER. */
         if (do_save != NO) {
                 lcp.water_level = lcp_watr;
-                /* STX masks in place and ORs the bits back, lowest
-                   shift first with the front door last. */
+                /* Mask in place, then OR the bits back -- lowest shift
+                   first, front door last; this order is the original's. */
                 lcp.door_states_and_flags &= DSF_PRESERVE_UPPER_MASK;
                 lcp.door_states_and_flags |=
                         (studyDrO     << 1) |

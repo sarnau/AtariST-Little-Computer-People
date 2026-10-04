@@ -1,14 +1,11 @@
 ******************************************************************************
 *
-* psg_asm.s -- the LCP_STX revision's PSG / MIDI byte pokes.
+* psg_asm.s -- PSG / MIDI byte pokes.
 *
-* In LCP_STX these three routines are hand-assembly, not C: they have
-* no stack frame, address the hardware registers absolute-long, and
-* read their arguments straight off the stack.  They sit immediately
-* before the Timer-A ISR in the same object (0x2272, 0x2284, 0x22a6,
-* mq_tick at 0x22c0).
-*
-* c168 cannot emit the frameless absolute-long pokes these use.
+* In the original these three routines are hand-assembly, not C: they
+* have no stack frame, address the hardware registers absolute-long,
+* and read their arguments straight off the stack.  c168 cannot emit
+* such frameless pokes, so they live here.
 *
 ******************************************************************************
 

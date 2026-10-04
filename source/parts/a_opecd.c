@@ -1,8 +1,5 @@
 /*
- * parts/a_opecd.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * adoors functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
@@ -19,7 +16,7 @@ short   oc_stat;
                 gameTick(2);
                 od_draw(od_dro2, 97, 115);
                 gameTick(2);
-        } else if (oc_stat != 0) {      /* STX re-tests the argument */
+        } else if (oc_stat != 0) {      /* redundant re-test, kept on purpose */
                 if (lcp_drsO == NO)
                         return;
                 lcp_drsO = NO;

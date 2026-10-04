@@ -1,11 +1,7 @@
 /*
  * enums.h -- symbolic constants (Alcyon C has no enum; use #define).
  *
- * Values match the Ghidra enum definitions verified against LCP.PRG.
- * Only the constants referenced by the currently-ported modules are
- * defined here; add to this file as new subsystems come online.
- *
- * addr: enum blocks in Ghidra, mirrored from lcp/enums.py.
+ * Only the constants the code actually uses are defined here.
  */
 
 #ifndef ENUMS_H
@@ -62,7 +58,6 @@
 #define SPRITE_IN_FRONT         1
 
 /* ---- PLAYER_STATE ----------------------------------------------------
-   Dumped verbatim from Ghidra's PLAYER_STATE enum (LCP.PRG loaded).
      0..7     Walk cycle (frames 3 and 7 trigger footstep)
      8        STATE_STAND_IDLE (== stand at rest)
      9..12    Stair climb (frame 12 = FRAME_3_STEP)
@@ -163,10 +158,10 @@
 
 /* ---- Head animation modes (see HEAD_ANIM_MODE below for canonical set) */
 
-/* ---- color_enum (dumped from Ghidra) --------------------------------
+/* ---- color_enum -------------------------------------------------------
    Values 0..15 are color_enum indices, NOT VDI palette slots.  The
    drawing calls pass a color_enum through vdi_colt[] to get the
-   underlying VDI palette slot -- Ghidra's table is a permutation, so
+   underlying VDI palette slot -- that table is a permutation, so
    using the wrong color_enum here produces the wrong on-screen hue. */
 #define COLOR_black                              0
 #define COLOR_olive                              1
@@ -185,7 +180,7 @@
 #define COLOR_white                             14
 #define COLOR_dk_brown                          15
 
-/* ---- HEAD_ANIM_MODE (dumped from Ghidra) ------------------------------
+/* ---- HEAD_ANIM_MODE -------------------------------------------------
    Bit fields inside head_anim_mode (g_hamod):
      bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
                  the enum encodes it as value 3 for the "amplitude enabled"
@@ -205,7 +200,7 @@
 #define HEAD_ANIM_VERTICAL_RANGE        0x60
 #define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
-/* ---- HOUSE_POS (dumped verbatim from Ghidra HOUSE_POS enum) ----------- */
+/* ---- HOUSE_POS ------------------------------------------------------- */
 #define POS_TOP_LIVING_ROOM              0
 #define POS_TOP_DANCE_FLOOR              1
 #define POS_TOP_ARMCHAIR                 2
@@ -293,8 +288,8 @@
 #define SPRITE_DOG_LAY_DOWN             0x21
 /* cp68 truncates identifiers to 22 chars.  SPRITE_DOG_WALK_RIGHT_N is
    23 chars and all 9 collide on truncation -- use SPRITE_DOG_WLK_RN.
-   Ghidra's sprite_id enum skips _R6 (frames are 1..5, 7..9) -- the
-   walk cycle is 8 frames but the ROM naming is not sequential.  Last
+   The names skip _R6 (frames are 1..5, 7..9) -- the walk cycle is 8
+   frames but the naming is not sequential.  Last
    walk frame is _R9 at 0x29; 0x2a is SPRITE_DOG_EATING_1. */
 #define SPRITE_DOG_WLK_R1               0x22
 #define SPRITE_DOG_WLK_R2               0x23
@@ -319,11 +314,10 @@
 #define SPRITE_TYPING_4                 0x36
 #define SPRITE_COOKED_MEAL              0x37   /* carried stove -> cabinet after cooking */
 
-/* ---- object_id (Ghidra) -- asset table indices for od_draw() ---------
-   Dumped verbatim from Ghidra's object_id enum (LCP.PRG loaded).  These
-   are the fixed compile-time indices passed as the first argument to
-   od_draw().  cp68's 22-char macro-name limit forces the OBJ_ prefix
-   (vs. the full OBJECT_ID_ Ghidra name); values are byte-faithful. */
+/* ---- object_id -- asset table indices for od_draw() -------------------
+   The fixed compile-time indices passed as the first argument to
+   od_draw().  cp68's 22-char macro-name limit forces the short OBJ_
+   prefix. */
 #define OBJ_FILING_CABINET_CLOSED               0
 #define OBJ_FILING_CAB_OPEN_1                   1       /* filing_cabinet_open_1 */
 #define OBJ_FILING_CAB_OPEN_2                   2       /* filing_cabinet_open_2 */
@@ -386,7 +380,7 @@
 #define BOWL_HALF                       1
 #define BOWL_FULL                       2
 
-/* ---- Sound-effect IDs (dumped from Ghidra SOUND_EFFECT_ID) ------------ */
+/* ---- Sound-effect IDs (block index in SOUNDS.LCP) -------------------- */
 #define SFX_FOOTSTEP_STAIRS              0
 #define SFX_FOOTSTEP_CARPET              1
 #define SFX_FOOTSTEP_WOOD                2
@@ -412,9 +406,7 @@
 #define SFX_SNORING                     22
 
 /* ---- Palette values (12-bit RGB, Atari ST format) --------------------- */
-/* Skin-tone palette values differ between the two revisions:
-   The other revision uses 0x743/0x363, LCP_STX 0x754/0x453
-   (byte-observed in each binary's lcp_upal). */
+/* Skin tone used by lcp_upal: normal and sick. */
 #define ST_PEACH                        0x754
 #define ST_SICK_GREEN                   0x453
 
@@ -471,12 +463,11 @@
    takes rank 8 as the low card of a royal flush, and war's "Ace? I
    don't believe it!" is rank 12 -- and the images agree.
 
-   Ghidra's `card_type` enum (KING = 0 .. 2 = 11, ACE = 12) is the
-   order of the CARDS FILE, not of crd_mfdb: each suit there runs
+   The CARDS FILE uses a different order: each suit there runs
    K, Q, J, 10 .. 2, A, and pk_ldCrd reads the first twelve into slots
-   11..0 and the ace into slot 12.  Checked against the bitmaps in
-   DATA/CARDS on 2026-10-05 (file card 0 is the king of hearts, 11 the
-   two, 12 the ace).  These names follow crd_mfdb. */
+   11..0 and the ace into slot 12.  The bitmaps in DATA/CARDS show it
+   (file card 0 is the king of hearts, 11 the two, 12 the ace).  These
+   names follow crd_mfdb, not the file. */
 #define CARDS_PER_SUIT                  13
 #define CARD_RANK_2                      0
 #define CARD_RANK_3                      1
@@ -544,31 +535,21 @@
 #define CARD_CLUB_KING                  50
 #define CARD_CLUB_ACE                   51
 #define CARD_BACK                       52
-/* Ghidra: CARD_HIGHLIGHT.  The 53rd MFDB slot -- an all-background
+/* The 53rd MFDB slot -- an all-background
    coloured card used to clear a slot when the player selects a card
    for discard (shown while the replacement is animating in). */
 #define CARD_HIGHLIGHT                  53
-/* Ghidra: CARD_NONE = -1 (signed short sentinel used across war /
-   blackjack / poker hand arrays for "empty slot" and end-of-pile). */
-#define CARD_NONE                       255     /* LCP_STX stores 0xff */
+/* "Empty slot" / end-of-pile sentinel in the war, blackjack and poker
+   hand arrays.  It is 255, not -1: the original stores the byte 0xff. */
+#define CARD_NONE                       255
 
-/* Blackjack hit-counter constants.  Ghidra shows these as
-   CARD_HEART_10 / _QUEEN / _KING (its file-order card names, see
-   above) because the 1985 source aliased three unrelated ROM
-   constants onto card-name symbols; the values
-   encode the "at most 5 total cards, so at most 3 hits per hand"
-   rule.  Verified against the ORIGINAL disassembly:
-      poker_blackjack_main  0x1c492 / 0x1c49a
-        move.w #0x3, (0x501a6)  ; poker_player_card_count = 3
-        move.w #0x3, (0x50240)  ; poker_player_split_card_count = 3
-      poker_blackjack_round 0x1d3be / 0x1d51c
-        subq.w #0x1, (A1)         ; card_count -= 1
-      poker_blackjack_round 0x1d5e4
-        tst.w (A0); bne 0x1d600   ; loop while != 0
-   Confirms MAX=3, STEP=1, STOP=0 as ported. */
-#define CARD_BJ_MAX                     3       /* Ghidra: CARD_HEART_10 */
-#define CARD_BJ_STEP                    1       /* Ghidra: CARD_HEART_QUEEN */
-#define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
+/* Blackjack hit counter: at most 5 cards in a hand, so at most 3 hits.
+   The player's (and the split hand's) counter starts at CARD_BJ_MAX,
+   each hit subtracts CARD_BJ_STEP, and the hit loop runs while the
+   counter is not CARD_BJ_STOP. */
+#define CARD_BJ_MAX                     3
+#define CARD_BJ_STEP                    1
+#define CARD_BJ_STOP                    0
 
 /* Poker hand ranks -- what pk_evh stores through *hand_rank and what
    pk_chrk / pk_phrk hold.  Higher beats lower.  (pk_evh's hc/bp
@@ -598,10 +579,9 @@
 #define PK_IN_UNUSED                    255
 
 /* ---- VDI fill styles ------------------------------------------------
-   Match Ghidra's sc_ers at 0x166fe / screen_set_draw_to_backbuffer:
+   As used when drawing to the back buffer:
      vsf_interior(vdihnd, 2)   -- interior = PATTERN
-     vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0)
-   Numeric values must match the ROM byte-for-byte. */
+     vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0) */
 #define FILL_SOLID                      8
 #ifndef FIS_PATTERN
 #define FIS_PATTERN                     2       /* vsf_interior: pattern fill */
@@ -660,14 +640,11 @@
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
    The 1985 code uses a keycode_enum where Ctrl+X maps to X-'@' (i.e.
-   Ctrl+A=1, Ctrl+B=2, ...).  The Ghidra decompile uses names like
-   keycode_enum_ctrl_a_alarm; we split the semantic (what the game
-   does with it) from the raw scan value. */
-/* KEY_NONE (-1) is used to signal "nothing in the buffer".  Extended
-   keys (function + cursor) live above the 0..0xff ASCII range at
-   0x100 | scancode -- keeps them within positive-short territory. */
+   Ctrl+A=1, Ctrl+B=2, ...).  The names carry both the key and what the
+   game does with it. */
+/* KEY_NONE (-1) signals "nothing in the buffer". */
 #define KEY_NONE                        (-1)
-/* LCP_STX's getKey maps the extended keys to its own small codes
+/* getKey maps the extended keys to its own small codes
    (cursor-left -> 8, F1..F10 -> 241..250) instead of 0x100|scan. */
 #define KEY_CURSOR_LEFT                 8
 #define KEY_F1                          241
@@ -718,9 +695,9 @@
    field matches. */
 #define EW2A_END                        0xff
 
-/* ---- ACTION_ID (dumped verbatim from Ghidra) --------------------------
-   The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions
-   in the original binary, not appended at the end.  ACTION_NONE (-1)
+/* ---- ACTION_ID --------------------------------------------------------
+   The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions,
+   not appended at the end.  ACTION_NONE (-1)
    is the empty sentinel used by g_trac and the event FIFO. */
 #define ACTION_NONE                     (-1)
 #define ACTION_SIT_AND_EXERCISE          0
@@ -729,7 +706,7 @@
 #define ACTION_WASH_HANDS                3
 #define ACTION_GET_IN_OUT_OF_BED         4
 #define ACTION_LISTEN_SONG               5
-#define ACTION_STOP_RECORD               6       /* a_playp; Ghidra: PLAY_PIANO */
+#define ACTION_STOP_RECORD               6       /* a_playp */
 #define ACTION_WRITE_LETTER              7
 #define ACTION_DANCE                     8
 #define ACTION_YAWN_AND_STRETCH          9
@@ -749,7 +726,7 @@
 #define ACTION_FEED_DOG                 23
 #define ACTION_HELLO                    24
 #define ACTION_EAT_MEAL                 25
-#define ACTION_PLAY_PIANO               26       /* a_plawr; Ghidra: PLAY_WITH_RECORD */
+#define ACTION_PLAY_PIANO               26       /* a_plawr */
 #define ACTION_OPEN_UPSTAIRS_CLOSET     27
 #define ACTION_EVENT_RECORD_DELIVERY    28
 #define ACTION_EVENT_FOOD_DELIVERY      29
@@ -769,20 +746,14 @@
 #define ACTION_WAKE_UP_MORNING          43
 #define ACTION_GO_TO_BED_NIGHT          44
 
-/* ---- Word IDs (161 entries -- synced from Ghidra's WORD_ID enum) -----
-   Auto-derived via ~/ghidra_scripts/DumpWordIdEnum.java + Ghidra's
-   HTTP script executor.  Every name here matches the ROM's enum
-   character-for-character; the `2` suffixes on WORD_START2 /
-   WORD_LIKE2 / WORD_IS2 disambiguate the ROM's duplicated dictionary
-   entries; WORD_WHATS is spelt without the apostrophe so the name is
-   a legal C identifier (ROM's entry is literally "WHAT'S").
+/* ---- Word IDs (161 entries) -------------------------------------------
+   The `2` suffixes on WORD_START2 / WORD_LIKE2 / WORD_IS2 tell apart
+   the dictionary's duplicated entries; WORD_WHATS is spelt without the
+   apostrophe so the name is a legal C identifier (the dictionary entry
+   is literally "WHAT'S").
 
-   Port-specific divergence: WORD_NONE = -1 here rather than Ghidra's
-   0.  The port's `chk_vwd` in parser.c uses 0-indexed table iteration
-   (vwd_tab[0] = "PLEASE") and returns -1 as the not-found sentinel;
-   Ghidra's ROM uses 1-indexed iteration with entry 0 reserved as
-   WORD_NONE.  Aligning the port to Ghidra's scheme requires inserting
-   a sentinel at vwd_tab[0]; that reindexing is deferred. */
+   The values are 1-based (vwd_tab[0] is "PLEASE", WORD_PLEASE is 1),
+   and WORD_NONE is -1. */
 #define WORD_NONE                       (-1)
 #define WORD_PLEASE                      1
 #define WORD_DO                          2

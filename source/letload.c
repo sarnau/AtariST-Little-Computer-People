@@ -6,11 +6,8 @@
  *   +2    byte    comp_tok[15]  (15 most common bytes)
  *   +17   ...     compressed body (nibble stream; 15 = literal byte escape)
  *
- * Fidelity note: the 1985 code passes the *advanced* fbuffer to Mfree;
- * Alcyon's allocator tolerated that, modern free(3) traps.  We stash
- * the original pointer in fbuffer_orig.
- *
- * addr: fr_reac(), fl_ltpl()
+ * The 1985 code passes the *advanced* fbuffer to Mfree, not the
+ * pointer Malloc returned.  Kept as in the original.
  */
 
 #include "types.h"
@@ -22,6 +19,6 @@
 #include "save.h"
 
 
-/* fr_reac -> parts/fr_reac.c (STX: 0x53b8, in the 0x400c object ahead of main). */
+/* fr_reac -> parts/fr_reac.c. */
 
-/* fl_ltpl -> parts/fl_ltpl.c (STX: 0x648c, just before cpyScr). */
+/* fl_ltpl -> parts/fl_ltpl.c. */

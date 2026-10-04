@@ -1,7 +1,7 @@
 /*
- * parts/vst_color.c -- shared body.  vdistx.c includes it at its LCP_STX
- * position in the binding module.
- * Files under parts/ are never compiled standalone.
+ * Its position in vdistx.c's include list is the binding module's
+ * layout and must not change.
+ * Included by vdistx.c; never compiled on its own.
  */
 
 void

@@ -1,15 +1,13 @@
 /*
- * parts/a_brust.c -- shared body.  LCP_STX places it at its own
- * address inside the 0xdece object, far from the port's other
- * abathrm functions, so stx_u2.c includes it in LCP_STX order.
- * Files under parts/ are never compiled standalone.
+ * parts/a_brust.c -- the resident brushes his teeth at the bathroom sink.
+ * Included by stx_u2.c; never compiled on its own.
  */
 
 void
 a_brust()
 {
-        short           brush_cycles;   /* signed in STX: no clr.w */
-        /* STX tests the call in place -- no local. */
+        short           brush_cycles;   /* signed: unsigned compiles differently */
+        /* lcp_wkD()'s result is tested in place, not kept in a local. */
         short           x_left;
         short           x_right;
 
@@ -33,9 +31,9 @@ a_brust()
         g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;
         g_sepey[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = lcp_y - 24;
 
-        /* STX drives the loop from a post-decrement, so the body
-           sees the already-decremented value and tests it directly
-           (btst #0) instead of subtracting first. */
+        /* The loop is driven by a post-decrement, so the body sees the
+           already-decremented value.  Keep this shape: it is the
+           original's. */
         while (brush_cycles--) {
                 if (brush_cycles & 1)
                         g_sepex[g_seslm[SPRITE_STUDY_DOOR_FRAME]] = x_left;

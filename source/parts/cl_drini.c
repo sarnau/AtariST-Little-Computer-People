@@ -1,8 +1,7 @@
 /*
- * parts/cl_drini.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x133b4). Files under parts/ are never compiled standalone.
+ * Included by stx_u2.c; never compiled on its own.
  */
-/* cl_drini (Ghidra 0x233B4): paint clock-face center, cl_redrH. */
+/* Paint the clock-face centre, then the hands. */
 
 void
 cl_drini()

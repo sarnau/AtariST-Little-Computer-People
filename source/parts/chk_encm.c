@@ -1,15 +1,13 @@
 /*
- * parts/chk_encm.c -- shared body; LCP_STX links it in the 0xdece
- * object (0x16f9a, in the 0x148fe object between prCh and prsCmd).
- * Files under parts/ are never compiled standalone.
+ * parts/chk_encm.c -- included by stx_u3.c; never compiled on its own.
+ * Matches a typed command against the g_ew2a action table.
  */
-/* addr: chk_encm() */
 short
 chk_encm(str)
 char *  str;
 {
-        /* STX's frame is -10: no `rnd` temporary, and the priority
-           seed adds the roll FIRST. */
+        /* No `rnd` temporary, and the priority seed adds the roll
+           FIRST: both are the original's shape. */
         short   i;
         short   row;
         short   entered_word;
@@ -21,20 +19,22 @@ char *  str;
         /* Seed the priority from happiness + a small random nudge. */
         g_aprio = rndRng(0, 3) + mood_pri[lcp.happiness];
 
-        /* Tokenize and mask-accumulate.  STX breaks out of a
-           `while (1)`; the store's own flags drive the test. */
+        /* Tokenize and mask-accumulate, breaking out of a `while (1)`
+           as the original does. */
         while (1) {
                 if ((str = cmd_upp(str, usr_buf)) == (char *) 0)
                         break;
-                /* STX tests the store's own flags, so the
-                   "unrecognised" sentinel here is 0 -- even though
-                   chk_vwd returns -1 when it runs off the table. */
+                /* The "unrecognised" sentinel tested here is 0, even
+                   though chk_vwd returns -1 when it runs off the table.
+                   So the word at index 0 (PLEASE) never contributes its
+                   bit and takes the +4 penalty instead.  1985 behaviour,
+                   kept on purpose. */
                 if ((entered_word = chk_vwd(usr_buf)) == 0) {
                         /* Unrecognised word -- +4 priority penalty. */
                         g_aprio += 4;
                 } else if (entered_word > 0) {
-                        /* Both index tables are char[] in STX, and
-                           there are no temporaries. */
+                        /* Both index tables are char[], and there
+                           are no temporaries. */
                         g_ewb[ew2pos[entered_word]] |=
                                 bm_lo[g_ew2b[entered_word]];
                 }

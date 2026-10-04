@@ -1,7 +1,4 @@
-/*
- * movement.c -- coordinate mapping and floor lookup.
- * addr: hs_posXY(), getFlrY(), cWkday()
- */
+/* movement.c -- coordinate mapping and floor lookup. */
 
 #include "types.h"
 #include "calendar.h"
@@ -10,7 +7,6 @@
 #include "tables.h"
 #include "enums.h"
 
-/* addr: hs_posXY() */
 void
 hs_posXY(index, g_txx, g_txy)
 short   index;
@@ -31,11 +27,9 @@ short   *g_txy;
         else
                 floor_y_pos = 202;
 
-        /* The other revision reads one slot past the position index; the STX
-           revision indexes the height table directly. */
         *g_txy = floor_y_pos - g_rphs[index];
 }
 
-/* getFlrY -> parts/getFlrY.c (STX: 0x5224, after lcp_flwp). */
+/* getFlrY -> parts/getFlrY.c. */
 
-/* cWkday -> parts/cWkday.c (STX: 0x1332e, in the 0xdece object). */
+/* cWkday -> parts/cWkday.c. */
