@@ -47,18 +47,60 @@
    Ghidra 0x2a1d0 / 0x2a1f0 / 0x2a210. */
 
 short   g_atact[16] = {
-        27, 36,  2,  7, 37, 19, 30, 23,
-        24,  0,  2, 36, 19, 38,  2, 37
+        ACTION_OPEN_UPSTAIRS_CLOSET,
+        ACTION_CLEAN_UP,
+        ACTION_PLAY_COMPUTER,
+        ACTION_WRITE_LETTER,
+        ACTION_TIDY_HOUSE,
+        ACTION_SIT_ON_COUCH_WITH_DOG,
+        ACTION_EVENT_PHONE_CALL,
+        ACTION_FEED_DOG,
+        ACTION_HELLO,
+        ACTION_SIT_AND_EXERCISE,
+        ACTION_PLAY_COMPUTER,
+        ACTION_CLEAN_UP,
+        ACTION_SIT_ON_COUCH_WITH_DOG,
+        ACTION_CHECK_FRONT_DOOR,
+        ACTION_PLAY_COMPUTER,
+        ACTION_TIDY_HOUSE
 };
 
 short   g_atmod[16] = {
-        24,  8, 38, 39,  5, 26, 30, 39,
-         1, 10, 16, 27,  0, 24,  8, 30
+        ACTION_HELLO,
+        ACTION_DANCE,
+        ACTION_CHECK_FRONT_DOOR,
+        ACTION_TOGGLE_TV,
+        ACTION_LISTEN_SONG,
+        ACTION_PLAY_WITH_RECORD,
+        ACTION_EVENT_PHONE_CALL,
+        ACTION_TOGGLE_TV,
+        ACTION_READ_NEWSPAPER,
+        ACTION_PACE_NERVOUSLY,
+        ACTION_PLAY_A_GAME,
+        ACTION_OPEN_UPSTAIRS_CLOSET,
+        ACTION_SIT_AND_EXERCISE,
+        ACTION_HELLO,
+        ACTION_DANCE,
+        ACTION_EVENT_PHONE_CALL
 };
 
 short   g_atrel[16] = {
-         1, 42, 20,  5, 27, 39, 30, 19,
-        24, 12, 19, 42, 38,  6,  1, 39
+        ACTION_READ_NEWSPAPER,
+        ACTION_PET_DOG,
+        ACTION_LIGHT_FIREPLACE,
+        ACTION_LISTEN_SONG,
+        ACTION_OPEN_UPSTAIRS_CLOSET,
+        ACTION_TOGGLE_TV,
+        ACTION_EVENT_PHONE_CALL,
+        ACTION_SIT_ON_COUCH_WITH_DOG,
+        ACTION_HELLO,
+        ACTION_SLEEP,
+        ACTION_SIT_ON_COUCH_WITH_DOG,
+        ACTION_PET_DOG,
+        ACTION_CHECK_FRONT_DOOR,
+        ACTION_PLAY_PIANO,
+        ACTION_READ_NEWSPAPER,
+        ACTION_TOGGLE_TV
 };
 
 /* sch_tab[3][8] (Ghidra 0x2a230): (phase, activity_level) -> bucket.
