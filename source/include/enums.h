@@ -511,6 +511,33 @@
 #define CARD_BJ_STEP                    1       /* Ghidra: CARD_HEART_QUEEN */
 #define CARD_BJ_STOP                    0       /* Ghidra: CARD_HEART_KING */
 
+/* Poker hand ranks -- what pk_evh stores through *hand_rank and what
+   pk_chrk / pk_phrk hold.  Higher beats lower.  (pk_evh's hc/bp
+   counters use 1/3/7 as SCORES that are summed; those are not ranks.) */
+#define HAND_HIGH_CARD                  0
+#define HAND_ONE_PAIR                   1
+#define HAND_TWO_PAIR                   2
+#define HAND_THREE_OF_A_KIND            3
+#define HAND_STRAIGHT                   4
+#define HAND_FLUSH                      5
+#define HAND_FULL_HOUSE                 6
+#define HAND_FOUR_OF_A_KIND             7
+#define HAND_STRAIGHT_FLUSH             8
+#define HAND_ROYAL_FLUSH                9
+
+/* pk_inph(a, b, c) return values.  The first three name a POSITION in
+   the argument list, not a key: the caller decides which F-key each
+   one is.  Digits '1'..'5' come back as 4..8, so `r - PK_IN_DIGIT_1`
+   is the card slot 0..4.  An unused argument slot is passed as 255
+   (never a key code); pk_main's discard loop passes 0 instead. */
+#define PK_IN_ARG_A                     1
+#define PK_IN_ARG_B                     2
+#define PK_IN_ARG_C                     3
+#define PK_IN_DIGIT_1                   4
+#define PK_IN_DIGIT_5                   8
+#define PK_IN_TIMEOUT                   (-1)    /* mg_tofl set */
+#define PK_IN_UNUSED                    255
+
 /* ---- VDI fill styles ------------------------------------------------
    Match Ghidra's sc_ers at 0x166fe / screen_set_draw_to_backbuffer:
      vsf_interior(vdihnd, 2)   -- interior = PATTERN

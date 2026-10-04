@@ -812,7 +812,7 @@ pk_dbet()
            even though the then arm returns. */
         if (g_pcmon == 0)
                 return 'c';
-        if (pk_bluff == NO && pk_chrk < 2)
+        if (pk_bluff == NO && pk_chrk < HAND_TWO_PAIR)
                 return 'c';
         else {
                 pk_dpos = g_pcmon / 10;
@@ -854,7 +854,7 @@ short * hand_rank;
         flush    = 0;
         unused   = 0;
         ace_high = 0;
-        *hand_rank = 0;
+        *hand_rank = HAND_HIGH_CARD;
         for (i = 0; i < 5; i++)
                 suit_flags[i] = hand[i];
 
@@ -897,14 +897,14 @@ short * hand_rank;
                     suit_flags[i + 1] / 13)
                         flush = NO;
         }
-        if (straight != NO) *hand_rank = 4;
-        if (flush != NO)    *hand_rank = 5;
+        if (straight != NO) *hand_rank = HAND_STRAIGHT;
+        if (flush != NO)    *hand_rank = HAND_FLUSH;
         if (straight != NO && flush != NO)
-                *hand_rank = 8;
+                *hand_rank = HAND_STRAIGHT_FLUSH;
         /* Royal: T-J-Q-K-A of one suit -- rank[0] == 8 (ten). */
-        if (*hand_rank == 8 && suit_flags[0] % 13 == 8)
-                *hand_rank = 9;
-        if (*hand_rank != 0)
+        if (*hand_rank == HAND_STRAIGHT_FLUSH && suit_flags[0] % 13 == 8)
+                *hand_rank = HAND_ROYAL_FLUSH;
+        if (*hand_rank != HAND_HIGH_CARD)
                 return;
 
         for (i = 0; i < 5; i++) {
@@ -976,12 +976,12 @@ short * hand_rank;
         }
 
 rank_from_hc_bp:
-        if (hc + bp == 7) *hand_rank = 7;   /* 4-of-kind */
-        if (hc + bp == 3) *hand_rank = 3;   /* tmp */
-        if (hc + bp == 4) *hand_rank = 6;   /* full house */
-        if (hc + bp == 2) *hand_rank = 2;   /* two pair */
+        if (hc + bp == 7) *hand_rank = HAND_FOUR_OF_A_KIND;
+        if (hc + bp == 3) *hand_rank = HAND_THREE_OF_A_KIND;
+        if (hc + bp == 4) *hand_rank = HAND_FULL_HOUSE;
+        if (hc + bp == 2) *hand_rank = HAND_TWO_PAIR;
         if (hc + bp != 1) return;
-        *hand_rank = 1;                                          /* one pair */
+        *hand_rank = HAND_ONE_PAIR;
 }
 
 
@@ -1078,8 +1078,8 @@ cleanup:
                 /* One while loop: the key read is the condition, and
                    every re-prompt is a `continue`. */
 discard_loop:
-                while ((ikey = pk_inph(KEY_F1, KEY_F3, 0)) != 2) {
-                        if (ikey == -1)
+                while ((ikey = pk_inph(KEY_F1, KEY_F3, 0)) != PK_IN_ARG_B) {
+                        if (ikey == PK_IN_TIMEOUT)
                                 break;
                         for (i = 0; i < 5; i++)
                                 if (pk_sel[i] == 1)
@@ -1088,7 +1088,7 @@ discard_loop:
                                 strPr("F3 Stay", 225, 26, COLOR_red);
                         else
                                 strPr("F3 Stay", 225, 26, COLOR_lt_grey);
-                        if (ikey == 1) {
+                        if (ikey == PK_IN_ARG_A) {
                                 for (i = 0; i < 5; i++)
                                         if (pk_sel[i] == 1)
                                                 break;
@@ -1096,16 +1096,16 @@ discard_loop:
                                         continue;
                                 break;
                         }
-                        if (ikey < 4)
+                        if (ikey < PK_IN_DIGIT_1)
                                 continue;
-                        if (ikey > 8)
+                        if (ikey > PK_IN_DIGIT_5)
                                 continue;
-                        if (pk_sel[ikey - 4]) {
-                                pk_sel[ikey - 4] = 0;
-                                pk_drcs(pk_ph[ikey - 4], ikey - 4, 1);
+                        if (pk_sel[ikey - PK_IN_DIGIT_1]) {
+                                pk_sel[ikey - PK_IN_DIGIT_1] = 0;
+                                pk_drcs(pk_ph[ikey - PK_IN_DIGIT_1], ikey - PK_IN_DIGIT_1, 1);
                         } else {
-                                pk_sel[ikey - 4] = 1;
-                                pk_drcs(CARD_HIGHLIGHT, ikey - 4, 1);
+                                pk_sel[ikey - PK_IN_DIGIT_1] = 1;
+                                pk_drcs(CARD_HIGHLIGHT, ikey - PK_IN_DIGIT_1, 1);
                         }
                         for (i = 0; i < 5; i++)
                                 if (pk_sel[i] == 1)
@@ -1117,7 +1117,7 @@ discard_loop:
                 }
                 if (mg_tofl != NO)
                         goto cleanup;
-                if (ikey == 1) {
+                if (ikey == PK_IN_ARG_A) {
                         for (i = 0; i < 5; i++) {
                                 if (pk_sel[i] != 1) continue;
                                 in_use = YES;
@@ -1142,7 +1142,7 @@ discard_loop:
                                 gameTick(3);
                         }
                 }
-                if (ikey == 2) {
+                if (ikey == PK_IN_ARG_B) {
                         for (i = 0; i < 5; i++)
                                 if (pk_sel[i] == 1)
                                         break;
@@ -1159,7 +1159,7 @@ discard_loop:
                         goto cleanup;
                 }
                 if (pk_pass != NO) {
-                        if (pk_bluff == NO && pk_chrk == 0) {
+                        if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
                                 pk_pmsg("Ok, I'll call.");
                                 gameTick(10);
                                 pk_show();
@@ -1184,16 +1184,16 @@ discard_loop:
                                 plEr(225, 10, 319, 60);
                                 strPr("F1 See",  225, 18, COLOR_red);
                                 strPr("F3 Fold", 225, 34, COLOR_red);
-                                ikey = pk_inph(KEY_F1, 255, KEY_F3);
-                                if (ikey == -1) goto cleanup;
-                                if (ikey == 3) {
+                                ikey = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F3);
+                                if (ikey == PK_IN_TIMEOUT) goto cleanup;
+                                if (ikey == PK_IN_ARG_C) {
                                         plEr(225, 10, 319, 60);
                                         pk_pmsg("My pot.");
                                         gameTick(8);
                                         pk_annr(0);
                                         goto next_round;
                                 }
-                                if (ikey == 1) {
+                                if (ikey == PK_IN_ARG_A) {
                                         loc8   = pk_phv;
                                         pk_bet = 0;
                                         while (loc8--) {
@@ -1213,13 +1213,13 @@ discard_loop:
                                         pk_dpos = 0;
                                         while (1) {
                                                 loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                                if (loc8 == -1)
+                                                if (loc8 == PK_IN_TIMEOUT)
                                                         break;
-                                                if (loc8 == 3) {
+                                                if (loc8 == PK_IN_ARG_C) {
                                                         pk_show();
                                                         goto next_round;
                                                 }
-                                                if (loc8 == 1 && g_ppmon != 0) {
+                                                if (loc8 == PK_IN_ARG_A && g_ppmon != 0) {
                                                         pk_bet = 0;
                                                         pk_ddec(1, 1);
                                                         pk_dpos++;
@@ -1229,11 +1229,11 @@ discard_loop:
                                         if (mg_tofl != NO) goto cleanup;
                                         while (1) {
                                                 loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                                if (loc8 == -1)
+                                                if (loc8 == PK_IN_TIMEOUT)
                                                         break;
-                                                if (loc8 == 2)
+                                                if (loc8 == PK_IN_ARG_B)
                                                         break;
-                                                if (loc8 == 1) {
+                                                if (loc8 == PK_IN_ARG_A) {
                                                         pk_ddec(1, 1);
                                                         if (g_ppmon != 0)
                                                                 pk_dpos++;
@@ -1303,16 +1303,16 @@ discard_loop:
                                         plEr(225, 10, 319, 60);
                                         strPr("F1 See",  225, 18, COLOR_red);
                                         strPr("F3 Fold", 225, 34, COLOR_red);
-                                        ikey = pk_inph(KEY_F1, 255, KEY_F3);
-                                        if (ikey == -1) goto cleanup;
-                                        if (ikey == 3) {
+                                        ikey = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F3);
+                                        if (ikey == PK_IN_TIMEOUT) goto cleanup;
+                                        if (ikey == PK_IN_ARG_C) {
                                                 plEr(225, 10, 319, 60);
                                                 pk_pmsg("My pot.");
                                                 gameTick(8);
                                                 pk_annr(0);
                                                 goto next_round;
                                         }
-                                        if (ikey == 1) {
+                                        if (ikey == PK_IN_ARG_A) {
                                                 loc8   = pk_phv;
                                                 pk_bet = 0;
                                                 while (loc8--) {
@@ -1331,13 +1331,13 @@ discard_loop:
                                                 strPr("F5 Call",  225, 34, COLOR_red);
                                                 while (1) {
                                                         loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                                        if (loc8 == -1)
+                                                        if (loc8 == PK_IN_TIMEOUT)
                                                                 break;
-                                                        if (loc8 == 3) {
+                                                        if (loc8 == PK_IN_ARG_C) {
                                                                 pk_show();
                                                                 goto next_round;
                                                         }
-                                                        if (loc8 == 1 && g_ppmon != 0) {
+                                                        if (loc8 == PK_IN_ARG_A && g_ppmon != 0) {
                                                                 pk_bet = 0;
                                                                 pk_dpos = 0;
                                                                 pk_ddec(1, 1);
@@ -1348,11 +1348,11 @@ discard_loop:
                                                 if (mg_tofl != NO) goto cleanup;
                                                 while (1) {
                                                         loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                                                        if (loc8 == -1)
+                                                        if (loc8 == PK_IN_TIMEOUT)
                                                                 break;
-                                                        if (loc8 == 2)
+                                                        if (loc8 == PK_IN_ARG_B)
                                                                 break;
-                                                        if (loc8 == 1) {
+                                                        if (loc8 == PK_IN_ARG_A) {
                                                                 pk_ddec(1, 1);
                                                                 if (g_ppmon != 0)
                                                                         pk_dpos++;
@@ -1414,13 +1414,13 @@ pk_show()
 
                 /* Straight/flush/straight-flush tiebreak: compare
                    highest sorted-hand card rank. */
-                if ((pk_chrk == 8 || pk_chrk == 5 || pk_chrk == 4) &&
+                if ((pk_chrk == HAND_STRAIGHT_FLUSH || pk_chrk == HAND_FLUSH || pk_chrk == HAND_STRAIGHT) &&
                     pk_hsf[4] % 13 > pk_phsf[4] % 13)
                         pk_dslot = 0;
 
                 /* Trips, full house, quads: compare the pair/trip
                    card's rank. */
-                if (pk_chrk == 7 || pk_chrk == 6 || pk_chrk == 3) {
+                if (pk_chrk == HAND_FOUR_OF_A_KIND || pk_chrk == HAND_FULL_HOUSE || pk_chrk == HAND_THREE_OF_A_KIND) {
                         for (br = 0; br < 5; br++)
                                 if (pk_hrf[br] == 1)
                                         break;
@@ -1432,7 +1432,7 @@ pk_show()
                 }
 
                 /* Two pair tiebreak. */
-                if (pk_chrk == 2) {
+                if (pk_chrk == HAND_TWO_PAIR) {
                         pk = 0; ck = 0; ph = 0; ch = 0;
                         for (i = 0; i < 5; i++) {
                                 if (pk_hrf[i] &&
@@ -1467,7 +1467,7 @@ pk_show()
                 }
 
                 /* One pair: compare pair rank, then kicker ladder. */
-                if (pk_chrk == 1) {
+                if (pk_chrk == HAND_ONE_PAIR) {
                         pk = 0; ph = 0;
                         for (i = 0; i < 5; i++) {
                                 if (pk_hrf[i])  pk = pk_ch[i];
@@ -1490,7 +1490,7 @@ pk_show()
                 }
 
                 /* High card: pure kicker ladder from top down. */
-                if (pk_chrk == 0) {
+                if (pk_chrk == HAND_HIGH_CARD) {
                         for (i = 4; i >= 0; i--) {
                                 if (pk_hsf[i] % 13 >
                                     pk_phsf[i] % 13) {
@@ -1553,7 +1553,7 @@ pk_cace()
         short   i;      /* -2 */
         short   best;   /* -4 */
 
-        if (pk_bluff == NO && pk_chrk == NO) {
+        if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
                 for (best = 0, i = 0; i < 5; i++) {
                         if (pk_ch[i] % 13 > pk_ch[best] % 13)
                                 best = i;
@@ -1574,7 +1574,7 @@ pk_blf()
         /* No local: the roll is tested in place, and the rank guard is
            written `> 1`, not `< 2`. */
         pk_bluff = NO;
-        if (rndRng(0, 14) == 0 && pk_chrk <= 1)
+        if (rndRng(0, 14) == 0 && pk_chrk <= HAND_ONE_PAIR)
                 pk_bluff = YES;
 }
 
@@ -1613,25 +1613,25 @@ pk_cdrw()
                         }
                 }
         } else {
-                if (pk_chrk >= 4) {
+                if (pk_chrk >= HAND_STRAIGHT) {
                         nc = 0;
                 } else {
-                        if (pk_chrk == 3) {
+                        if (pk_chrk == HAND_THREE_OF_A_KIND) {
                                 nc = 2;
                                 for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
-                        } else if (pk_chrk == 2) {
+                        } else if (pk_chrk == HAND_TWO_PAIR) {
                                 nc = 1;
                                 for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
-                        } else if (pk_chrk == 1) {
+                        } else if (pk_chrk == HAND_ONE_PAIR) {
                                 nc = 3;
                                 for (i = 0; i < 5; i++)
                                         if (pk_hrf[i] == 0)
                                                 pk_sel[i] = 1;
-                        } else if (pk_chrk == 0) {
+                        } else if (pk_chrk == HAND_HIGH_CARD) {
                                 nc = 4;
                                 for (card = 0, i = 0; i < 5; i++) {
                                         if (pk_ch[i] % 13 > pk_ch[card] % 13)
@@ -1744,13 +1744,13 @@ char *  str;
         go = 0;
         while (!go) {
                 r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                if (r == -1)
+                if (r == PK_IN_TIMEOUT)
                         return -1;
-                if (r == 3) {
+                if (r == PK_IN_ARG_C) {
                         pk_pass = YES;
                         return 0;
                 }
-                if (r == 1) {
+                if (r == PK_IN_ARG_A) {
                         if (g_ppmon == 0)
                                 return -1;
                         pk_ddec(1, 1);
@@ -1760,13 +1760,13 @@ char *  str;
         }
         while (1) {
                 r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
-                if (r == -1)
+                if (r == PK_IN_TIMEOUT)
                         return -1;
-                if (r == 2 && pk_bet != 0)
+                if (r == PK_IN_ARG_B && pk_bet != 0)
                         return 0;
-                if (r == 1)
+                if (r == PK_IN_ARG_A)
                         pk_ddec(1, 1);
-                if (r == 3) {
+                if (r == PK_IN_ARG_C) {
                         if (pk_bet == 0) {
                                 pk_pass = YES;
                                 return 0;
@@ -2012,9 +2012,9 @@ pk_ante()
         pk_pmsg("Ante up to play.");
         r = 0;
         pk_quit = NO;
-        while (r != 1 && r != 3 && r != -1)
-                r = pk_inph(KEY_F1, 255, KEY_F10);
-        if (r == 3 || r == -1) {
+        while (r != PK_IN_ARG_A && r != PK_IN_ARG_C && r != PK_IN_TIMEOUT)
+                r = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F10);
+        if (r == PK_IN_ARG_C || r == PK_IN_TIMEOUT) {
                 pk_quit = YES;
                 return;
         } else if (g_ppmon == 0) {
@@ -2198,9 +2198,9 @@ no_cards:
                 strPr("F1  Show", 225, 18, COLOR_red);
                 strPr("F10 Quit", 225, 26, COLOR_red);
                 ikey = 0;
-                while (ikey != 1 && ikey != 2)
-                        ikey = pk_inph(KEY_F1, KEY_F10, 255);
-                if (ikey == 2)
+                while (ikey != PK_IN_ARG_A && ikey != PK_IN_ARG_B)
+                        ikey = pk_inph(KEY_F1, KEY_F10, PK_IN_UNUSED);
+                if (ikey == PK_IN_ARG_B)
                         goto cleanup;
 
                 pk_drcs(pk_pwc[0], 0, 1);
@@ -2354,7 +2354,7 @@ pk_bjwr()
 
                 pk_pmsg("Let's see what you've got...");
                 strPr("F1 Show", 225, 18, COLOR_red);
-                while (pk_inph(KEY_F1, 255, 255) != 1) {
+                while (pk_inph(KEY_F1, PK_IN_UNUSED, PK_IN_UNUSED) != PK_IN_ARG_A) {
                         if (mg_tofl != NO)
                                 return -1;
                 }
@@ -2454,9 +2454,9 @@ round:
                 pk_pmsg("What's your bet?");
                 bj_key  = 0;
                 pk_quit = NO;
-                while (bj_key != 1 && bj_key != 3)
-                        bj_key = pk_inph(KEY_F1, 255, KEY_F10);
-                if (bj_key == 3) {
+                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_C)
+                        bj_key = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F10);
+                if (bj_key == PK_IN_ARG_C) {
 cleanup:
                         tx_sctm  = 0;
                         no_keyin = NO;
@@ -2488,13 +2488,13 @@ cleanup:
                 bj_key = 0;
                 while (1) {
                         bj_key = 0;
-                        while (bj_key != 1 && bj_key != 2 &&
-                               bj_key != 3 && bj_key != -1) {
+                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B &&
+                               bj_key != PK_IN_ARG_C && bj_key != PK_IN_TIMEOUT) {
                                 gameTick(0);
                                 bj_key = pk_inph(KEY_F1, KEY_F3, KEY_F5);
                         }
                         if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == 3) {
+                        if (bj_key == PK_IN_ARG_C) {
                                 g_ppmon += pk_bet;
                                 pk_bet  = 0;
                                 g_pcbet = 0;
@@ -2503,7 +2503,7 @@ cleanup:
                                 pk_dpile[10] = CARD_BJ_STEP;
                                 break;
                         }
-                        if (bj_key == 1) {
+                        if (bj_key == PK_IN_ARG_A) {
                                 if (g_ppmon == 0) {
                                         pk_pmsg("Game's over. I win.");
                                         pk_quit = YES;
@@ -2517,7 +2517,7 @@ cleanup:
                                 pk_dbhi(1);
                                 pk_bet++;
                         }
-                        if (bj_key == 2) {
+                        if (bj_key == PK_IN_ARG_B) {
                                 break;
                         }
                 }
@@ -2586,12 +2586,12 @@ cleanup:
                         strPr("F1 Split",    225, 18, COLOR_red);
                         strPr("F3 No split", 225, 26, COLOR_red);
                         bj_key = 0;
-                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                                 gameTick(0);
-                                bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                bj_key = pk_inph(KEY_F1, KEY_F3, PK_IN_UNUSED);
                         }
                         if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == 1) {
+                        if (bj_key == PK_IN_ARG_A) {
                                 pk_phase = 1;
                                 pk_psh[0] = pk_ph[1];
                                 pk_ph[1]  = CARD_NONE;
@@ -2670,12 +2670,12 @@ cleanup:
                                 pk_pmsg("Do you wish to double-down?");
                                 bj_key = 0;
                         }
-                        while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                                 gameTick(0);
-                                bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                bj_key = pk_inph(KEY_F1, KEY_F3, PK_IN_UNUSED);
                         }
                         if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == 1) {
+                        if (bj_key == PK_IN_ARG_A) {
                                 pk_pcc = CARD_BJ_STEP;
                                 br      = g_pcbet;
                                 pk_wrf = YES;
@@ -2708,12 +2708,12 @@ cleanup:
                                         gameTick(0);
                                         bj_key = 0;
                                 }
-                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                                         gameTick(0);
-                                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                        bj_key = pk_inph(KEY_F1, KEY_F3, PK_IN_UNUSED);
                                 }
                                 if (mg_tofl != NO) goto cleanup;
-                                if (bj_key == 1) {
+                                if (bj_key == PK_IN_ARG_A) {
                                         pk_pcc = CARD_BJ_STEP;
                                         br      = g_pcbet;
                                         pk_wrf = YES;
@@ -2745,12 +2745,12 @@ cleanup:
                                         gameTick(0);
                                         bj_key = 0;
                                 }
-                                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                                         gameTick(0);
-                                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                                        bj_key = pk_inph(KEY_F1, KEY_F3, PK_IN_UNUSED);
                                 }
                                 if (mg_tofl != NO) goto cleanup;
-                                if (bj_key == 1) {
+                                if (bj_key == PK_IN_ARG_A) {
                                         pk_pscc = CARD_BJ_STEP;
                                         pk_wcs  = YES;
                                         br       = g_ppbet;
@@ -3113,19 +3113,19 @@ char *  prompt;
                         return 0;
         } else while (1) {
                 bj_key = 0;
-                while (bj_key != 1 && bj_key != 2 && bj_key != -1) {
+                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                         gameTick(0);
-                        bj_key = pk_inph(KEY_F1, KEY_F3, 255);
+                        bj_key = pk_inph(KEY_F1, KEY_F3, PK_IN_UNUSED);
                 }
                 if (mg_tofl != NO)
                         return -1;
-                if (bj_key == 2) {
+                if (bj_key == PK_IN_ARG_B) {
                         pk_pmsg(" ");   /* s__0002b422 verified via
                                           Ghidra HTTP /read_memory:
                                           the F3-stand path just
                                           blanks the message strip. */
                         return 0;
-                } else if (bj_key == 1) {
+                } else if (bj_key == PK_IN_ARG_A) {
                         (*cnt_ptr)--;
                         pk_dchd(hand, 0);
                         score = 0;
