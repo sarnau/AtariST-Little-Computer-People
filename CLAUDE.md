@@ -1329,6 +1329,12 @@ Flipping it would keep the binary byte-identical (the stored longword
 is the same either way) but moves the spec row, so it needs the
 regenerate-and-review cycle plus a prg_diff.
 
+**Decided (maintainer, 2026-10-04): do NOT flip it.**  The port keeps
+`+0x1FF` and base 0x1c867.  The evidence above is suggestive, not
+decisive, and the binary cannot settle it either way, so scrbufA stays
+the one category-E symbol as declared.  Do not re-propose the flip
+without new external evidence.
+
 **A constant subscript is not evidence of an array.**  Alcyon folds it
 into the absolute address, so `arr[7]` and a plain short emit the same
 instruction.  aes_intO[16] was a single short (now mi_tpb); the cell
