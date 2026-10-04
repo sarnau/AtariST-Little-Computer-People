@@ -115,7 +115,7 @@ The action dispatcher `do_action` switches on `ACTION_ID` (0–44) to invoke the
 |---|---|
 | `ACTION_PLAY_COMPUTER` | Walk to desk, sit, type with random clicking sounds |
 | `ACTION_WRITE_LETTER` | Get paper, sit at desk, procedurally generate letter text |
-| `ACTION_PLAY_PIANO` | Walk to piano, play music from .org files |
+| `ACTION_PLAY_ORGAN` | Walk to the organ, play music from .org files |
 | `ACTION_DANCE` | Put on record, dance to music with left/right steps |
 | `ACTION_LIGHT_FIREPLACE` | Get logs from outside, carry to fireplace, light fire |
 | `ACTION_TAKE_SHOWER` | Enter bathroom, shower animation with 5 poses |
@@ -237,7 +237,7 @@ The `g_seid` enum maps logical sprite indices to their purpose, identified by tr
 |---|---|---|
 | 3 | SPRITE_GLASS | Carried to water tap (action_drink) |
 | 4 | SPRITE_GAME_BOX | Carried to table (action_play_a_game) |
-| 7 | SPRITE_VINYL_RECORD | Shown at record shelf during browsing |
+| 7 | SPRITE_ORGAN_PROP | Shown on the organ while the resident plays |
 | 8 | SPRITE_TYPEWRITER | Shown at desk during letter writing |
 | 9 | SPRITE_FOOD_PACKAGE | Carried from fridge / food delivery |
 | 12 | SPRITE_TABLE_SETTING | Placed on table during eating/games |

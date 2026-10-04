@@ -3,10 +3,10 @@
  * never compiled on its own.
  */
 
-/* a_plawr: play a tune at the shelf spot (ACTION_PLAY_PIANO).  Any
-   record playing is stopped first (a_playp).  The resident walks to
-   POS_TOP_RECORD_SHELF, a prop sprite is shown, and a random *.ORG
-   file is picked and started with sgPlay.  While it plays he switches
+/* a_plawr: play the organ (ACTION_PLAY_ORGAN).  Any record playing is
+   stopped first (a_playp).  The resident walks to the organ on the top
+   floor (POS_TOP_ORGAN), a prop sprite is shown on the instrument, and a
+   random *.ORG file is picked and started with sgPlay.  While it plays he switches
    to a new random reaching pose whenever any PSG channel's volume
    rises, so he moves in time with the notes.  g_rbact is set
    throughout to keep rp_anim's record-player animation still, and the
@@ -24,10 +24,10 @@ a_plawr()
         _DTA *           dta_ptr;
         long            xres;
 
-        pst_arr[0] = STATE_VINYL_REACH_R;
-        pst_arr[1] = STATE_VINYL_IDLE;
-        pst_arr[2] = STATE_VINYL_REACH_L;
-        pst_arr[3] = STATE_VINYL_PULL_OUT;
+        pst_arr[0] = STATE_ORGAN_REACH_R;
+        pst_arr[1] = STATE_ORGAN_IDLE;
+        pst_arr[2] = STATE_ORGAN_REACH_L;
+        pst_arr[3] = STATE_ORGAN_PULL_OUT;
 
         prev_a = 0;
         prev_b = 0;
@@ -37,7 +37,7 @@ a_plawr()
                 a_playp();
         g_actif = NO;
 
-        hs_posXY(POS_TOP_RECORD_SHELF,
+        hs_posXY(POS_TOP_ORGAN,
                               &g_wtx, &g_wty);
         if (lcp_wkD() != 0)
                 return;
@@ -50,11 +50,11 @@ a_plawr()
         lcp_hwt();
         gameTick(4);
 
-        lcp_st = STATE_VINYL_REACH_R;
-        g_selaf[SPRITE_VINYL_RECORD] = SPRITE_IN_FRONT;
-        sp_sprs(SPRITE_VINYL_RECORD);
-        g_sepex[g_seslm[SPRITE_VINYL_RECORD]] = 146;
-        g_sepey[g_seslm[SPRITE_VINYL_RECORD]] =  54;
+        lcp_st = STATE_ORGAN_REACH_R;
+        g_selaf[SPRITE_ORGAN_PROP] = SPRITE_IN_FRONT;
+        sp_sprs(SPRITE_ORGAN_PROP);
+        g_sepex[g_seslm[SPRITE_ORGAN_PROP]] = 146;
+        g_sepey[g_seslm[SPRITE_ORGAN_PROP]] =  54;
         gameTick(1);
 
         i = rndRng(1, org_cnt);
@@ -101,7 +101,7 @@ a_plawr()
         gameTick(8);
 
         lcp_st = STATE_STAND_FACING_SCREEN;
-        g_selaf[SPRITE_VINYL_RECORD] = SPRITE_HIDDEN;
+        g_selaf[SPRITE_ORGAN_PROP] = SPRITE_HIDDEN;
         sp_upds();
         gameTick(0);
 

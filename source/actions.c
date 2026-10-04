@@ -52,7 +52,7 @@ doAct()
         case ACTION_FEED_DOG:                 a_feedd(0);                 break;
         case ACTION_HELLO:                    a_hello();                     break;
         case ACTION_EAT_MEAL:                 a_eatm();                  break;
-        case ACTION_PLAY_PIANO:               a_plawr();          break;
+        case ACTION_PLAY_ORGAN:               a_plawr();          break;
         case ACTION_OPEN_UPSTAIRS_CLOSET:     a_opcuc(1); break;
         case ACTION_GET_SNACK_FROM_FRIDGE:    a_gesff();     break;
         case ACTION_OPEN_BEDROOM_CLOSET:      a_opcbc(); break;

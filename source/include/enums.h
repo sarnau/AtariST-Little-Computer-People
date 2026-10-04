@@ -109,10 +109,10 @@
    Use the shorter F0 / F1 convention matching STATE_STR_CLIMB_F0 etc. */
 #define STATE_CARRY_WALK_F0                     36
 #define STATE_CARRY_WALK_F1                     37
-#define STATE_VINYL_IDLE                 38
-#define STATE_VINYL_REACH_L           39
-#define STATE_VINYL_REACH_R          40
-#define STATE_VINYL_PULL_OUT             41
+#define STATE_ORGAN_IDLE                38
+#define STATE_ORGAN_REACH_L             39
+#define STATE_ORGAN_REACH_R             40
+#define STATE_ORGAN_PULL_OUT            41
 #define STATE_STOKE_FIREPLACE                   42
 #define STATE_WRITE_AT_DESK                     43
 #define STATE_DESK_TYPE_L            44
@@ -205,7 +205,7 @@
 #define POS_TOP_GAME_TABLE               3
 #define POS_TOP_GAME_CHAIR_LEFT          4
 #define POS_TOP_GAME_CHAIR_RIGHT         5
-#define POS_TOP_RECORD_SHELF             6
+#define POS_TOP_ORGAN                   6
 #define POS_TOP_STUDY_DOOR               7
 #define POS_TOP_FIREPLACE_LEFT           8
 #define POS_TOP_FIREPLACE_CENTER         9
@@ -259,7 +259,7 @@
 #define SPRITE_GLASS                    0x03
 #define SPRITE_GAME_BOX                 0x04       /* also mini-game box */
 #define SPRITE_STUDY_DOOR_FRAME         0x06       /* also used as toothbrush */
-#define SPRITE_VINYL_RECORD             0x07
+#define SPRITE_ORGAN_PROP               0x07
 #define SPRITE_TYPEWRITER               0x08
 #define SPRITE_FOOD_PACKAGE             0x09
 #define SPRITE_TABLE_SETTING            0x0c
@@ -752,7 +752,7 @@
 #define ACTION_FEED_DOG                 23
 #define ACTION_HELLO                    24
 #define ACTION_EAT_MEAL                 25
-#define ACTION_PLAY_PIANO               26       /* a_plawr */
+#define ACTION_PLAY_ORGAN               26       /* a_plawr */
 #define ACTION_OPEN_UPSTAIRS_CLOSET     27
 #define ACTION_EVENT_RECORD_DELIVERY    28
 #define ACTION_EVENT_FOOD_DELIVERY      29
