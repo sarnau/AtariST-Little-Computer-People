@@ -1,23 +1,23 @@
 /*
- * enums.h -- symbolic constants (Alcyon C has no enum; use #define).
- *
- * Only the constants the code actually uses are defined here.
+ * enums.h -- symbolic constants.  Alcyon C has no enum, so every value
+ * is a #define.  Some groups list every value of a table or file (all
+ * animation states, house positions, objects, sounds, words) even where
+ * the code names only a few of them: they document the data.
  */
 
 #ifndef ENUMS_H
 #define ENUMS_H
 
-/* ---- Need levels ------------------------------------------------------- */
-#define NEED_NONE               0
+/* ---- Need levels: lcp.thirst_level / lcp.hunger_level ----------------
+   A need timer that runs out at NEED_SEVERE makes the resident sick
+   instead of raising the level further. */
+#define NEED_SATISFIED          0
 #define NEED_MILD               1
 #define NEED_MODERATE           2
 #define NEED_SEVERE             3
 
-/* ---- Hunger
-------------------------------------------------------- */
-#define NEED_SATISFIED                          0
-
-/* ---- Sickness ---------------------------------------------------------- */
+/* ---- Sickness: lcp.sickness_level, and the direction it moves in --------
+   (sickness_direction / happiness_direction add one of DIR_* per step). */
 #define SICKNESS_HEALTHY        0
 #define SICKNESS_MILD           1
 #define SICKNESS_MODERATE       2
@@ -57,7 +57,7 @@
 #define SPRITE_BEHIND_LCP       (-1)
 #define SPRITE_IN_FRONT         1
 
-/* ---- PLAYER_STATE ----------------------------------------------------
+/* ---- Resident animation states (lcp_st) -----------------------------
      0..7     Walk cycle (frames 3 and 7 trigger footstep)
      8        STATE_STAND_IDLE (== stand at rest)
      9..12    Stair climb (frame 12 = FRAME_3_STEP)
@@ -156,13 +156,11 @@
 #define STATE_SLP_BREATHE_O                 89
 #define STATE_REACH_INTO_CABINET                90
 
-/* ---- Head animation modes (see HEAD_ANIM_MODE below for canonical set) */
-
-/* ---- color_enum -------------------------------------------------------
-   Values 0..15 are color_enum indices, NOT VDI palette slots.  The
-   drawing calls pass a color_enum through vdi_colt[] to get the
+/* ---- Colours ---------------------------------------------------------
+   Values 0..15 are colour indices, NOT VDI palette slots.  The
+   drawing calls pass a colour index through vdi_colt[] to get the
    underlying VDI palette slot -- that table is a permutation, so
-   using the wrong color_enum here produces the wrong on-screen hue. */
+   using the wrong colour index here produces the wrong on-screen hue. */
 #define COLOR_black                              0
 #define COLOR_olive                              1
 #define COLOR_lt_green                           2
@@ -180,8 +178,8 @@
 #define COLOR_white                             14
 #define COLOR_dk_brown                          15
 
-/* ---- HEAD_ANIM_MODE -------------------------------------------------
-   Bit fields inside head_anim_mode (g_hamod):
+/* ---- Head animation modes (g_hamod, g_hatas) ------------------------
+   Bit fields inside g_hamod:
      bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
                  the enum encodes it as value 3 for the "amplitude enabled"
                  marker; sp_lcha masks with HEAD_MODE_H_AMPLITUDE = 0x07)
@@ -200,7 +198,7 @@
 #define HEAD_ANIM_VERTICAL_RANGE        0x60
 #define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
-/* ---- HOUSE_POS ------------------------------------------------------- */
+/* ---- House positions: the index hs_posXY looks up --------------------- */
 #define POS_TOP_LIVING_ROOM              0
 #define POS_TOP_DANCE_FLOOR              1
 #define POS_TOP_ARMCHAIR                 2
@@ -250,7 +248,7 @@
 #define POS_BTM_FRONT_DOOR              46
 #define POS_BTM_SCREEN_EDGE             47
 
-/* ---- SPRITE_ID (study doors + carried objects) ------------------------ */
+/* ---- Sprite ids (study doors and carried objects) --------------------- */
 /* Logical sprite-def IDs 0 and 1 are the LCP body and head sprites --
    pinned to hardware slots HW_SLOT_LCP_BODY / HW_SLOT_LCP_HEAD in
    g_seslm[] at boot.  Distinct from the sprite-layer values
@@ -314,7 +312,7 @@
 #define SPRITE_TYPING_4                 0x36
 #define SPRITE_COOKED_MEAL              0x37   /* carried stove -> cabinet after cooking */
 
-/* ---- object_id -- asset table indices for od_draw() -------------------
+/* ---- Object frames: indices into the OBJECTS table for od_draw() ------
    The fixed compile-time indices passed as the first argument to
    od_draw().  cp68's 22-char macro-name limit forces the short OBJ_
    prefix. */
@@ -442,7 +440,7 @@
 #define PSG_VOL_B                               9
 #define PSG_VOL_C                               10
 
-/* ---- ENV_PHASE (PSG envelope state machine) ------------------------- */
+/* ---- PSG envelope phases (psg_upEn's state machine) ----------------- */
 #define ENV_IDLE                                0
 #define ENV_ATTACK                              1
 #define ENV_DECAY                               2
@@ -618,7 +616,6 @@
 #define DSF_TOILET_DOOR                 0x020
 #define DSF_FILING_CABINET              0x040
 #define DSF_DOG_BOWL_MASK               0x180
-#define DSF_FOOD_COUNT_MASK             0xE00
 #define DSF_FOOD_MASK                   0xE00
 #define DSF_PRESERVE_UPPER_MASK         0xFE00
 /* The kitchen cabinet's food count lives in DSF_FOOD_MASK: a 3-bit
@@ -695,7 +692,7 @@
    field matches. */
 #define EW2A_END                        0xff
 
-/* ---- ACTION_ID --------------------------------------------------------
+/* ---- Action ids (doAct, the action queue, the AI tables) -------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions,
    not appended at the end.  ACTION_NONE (-1)
    is the empty sentinel used by g_trac and the event FIFO. */
@@ -746,7 +743,7 @@
 #define ACTION_WAKE_UP_MORNING          43
 #define ACTION_GO_TO_BED_NIGHT          44
 
-/* ---- Word IDs (161 entries) -------------------------------------------
+/* ---- Vocabulary word ids: index into vwd_tab (161 entries) ------------
    The `2` suffixes on WORD_START2 / WORD_LIKE2 / WORD_IS2 tell apart
    the dictionary's duplicated entries; WORD_WHATS is spelt without the
    apostrophe so the name is a legal C identifier (the dictionary entry
