@@ -33,7 +33,7 @@ chk_timA()
                 table_pick += 24;
 
         if (table_pick >= 18 || lcp.sickness_level >= 2) {
-                table_pick = 3;                 /* sleep/idle */
+                table_pick = TIER_SLEEP;
         } else {
                 /* sch_tab is a real 2-D array here -- the shifted
                    row/column offsets, the two ext.l and the trailing
@@ -42,10 +42,10 @@ chk_timA()
                 table_pick = sch_tab[table_pick][lcp.activity_level];
 
                 day = cWkday();
-                if (table_pick == 0 && day == WEEKDAY_SUNDAY)
-                        table_pick = 2;
-                else if (table_pick == 0 && day == WEEKDAY_SATURDAY)
-                        table_pick = 1;
+                if (table_pick == TIER_ACTIVE && day == WEEKDAY_SUNDAY)
+                        table_pick = TIER_RELAXED;
+                else if (table_pick == TIER_ACTIVE && day == WEEKDAY_SATURDAY)
+                        table_pick = TIER_MODERATE;
         }
 
         /* The three table arms carry NO return statement: each one
@@ -54,15 +54,15 @@ chk_timA()
            sleep arm returns explicitly, and it does so with a real
            `else`. */
 retry:
-        if (table_pick == 0) {
+        if (table_pick == TIER_ACTIVE) {
                 action_index = g_atact[rndRng(0, 15)];
                 if (action_index == lastAct)
                         goto retry;
-        } else if (table_pick == 1) {
+        } else if (table_pick == TIER_MODERATE) {
                 action_index = g_atmod[rndRng(0, 15)];
                 if (action_index == lastAct)
                         goto retry;
-        } else if (table_pick == 2) {
+        } else if (table_pick == TIER_RELAXED) {
                 action_index = g_atrel[rndRng(0, 15)];
                 if (action_index == lastAct)
                         goto retry;

@@ -687,6 +687,16 @@
 #define KEY_CTRL_R_RECORD               0x12
 #define KEY_CTRL_W_WATER                0x17
 
+/* ---- Activity tiers -- chk_timA's table_pick --------------------------
+   sch_tab maps (time of day, lcp.activity_level) to the first three;
+   each picks one of the action tables g_atact / g_atmod / g_atrel.
+   Sunday turns ACTIVE into RELAXED and Saturday into MODERATE.  SLEEP
+   (18+ hours awake, or sick) has no table: bed or nothing. */
+#define TIER_ACTIVE                     0       /* g_atact */
+#define TIER_MODERATE                   1       /* g_atmod */
+#define TIER_RELAXED                    2       /* g_atrel */
+#define TIER_SLEEP                      3
+
 /* ---- ACTION_ID (dumped verbatim from Ghidra) --------------------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions
    in the original binary, not appended at the end.  ACTION_NONE (-1)

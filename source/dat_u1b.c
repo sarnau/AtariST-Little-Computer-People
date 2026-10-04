@@ -103,16 +103,19 @@ short   g_atrel[16] = {
         ACTION_TOGGLE_TV
 };
 
-/* sch_tab[3][8] (Ghidra 0x2a230): (phase, activity_level) -> bucket.
+/* sch_tab[3][8] (Ghidra 0x2a230): (phase, activity_level) -> TIER_*.
    Indexed via *(sch_tab + hours_bucket*16 + activity_level*2).
    Row names shortened for Alcyon as68 8-char symbol truncation. */
 /* LCP_STX indexes a flat array here, not a row-pointer table: its
    chk_timA adds an immediate base and the table sits directly after
    g_atrel in data (106960/106992/107024/107056, 32 bytes apart). */
 short           sch_tab[3][8] = {
-        { 0, 0, 2, 2, 1, 1, 0, 1 },
-        { 2, 1, 0, 1, 2, 0, 2, 0 },
-        { 1, 2, 1, 0, 0, 2, 1, 2 }
+        { TIER_ACTIVE,    TIER_ACTIVE,    TIER_RELAXED,   TIER_RELAXED,
+          TIER_MODERATE,  TIER_MODERATE,  TIER_ACTIVE,    TIER_MODERATE },
+        { TIER_RELAXED,   TIER_MODERATE,  TIER_ACTIVE,    TIER_MODERATE,
+          TIER_RELAXED,   TIER_ACTIVE,    TIER_RELAXED,   TIER_ACTIVE },
+        { TIER_MODERATE,  TIER_RELAXED,   TIER_MODERATE,  TIER_ACTIVE,
+          TIER_ACTIVE,    TIER_RELAXED,   TIER_MODERATE,  TIER_RELAXED }
 };
 
 short           rv_msk[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
