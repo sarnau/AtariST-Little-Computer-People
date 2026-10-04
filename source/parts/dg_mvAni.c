@@ -47,7 +47,7 @@ dg_mvAni()
                 /* The assignment is embedded, so the index reuses
                    getFlrY's result in d0. */
                 if (dog_y <= flr_by[(floor_num = getFlrY(g_dyy)) - 1]) {
-                        if (floor_num == 3)
+                        if (floor_num == FLOOR_TOP)
                                 dg_stair = NO;
                         else if (stair_wp[(floor_num - 1) * 2 + 1] <= dog_y)
                                 dg_stair = NO;

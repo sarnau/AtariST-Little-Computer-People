@@ -22,17 +22,17 @@ lcp_fstp()
 
         floor = getFlrY(lcp_y);
         switch (floor) {
-        case 1:
+        case FLOOR_BOTTOM:
                 if (lcp_x < 166)
                         sf_sele(SFX_FOOTSTEP_CARPET, 2L);
                 else
                         sf_sele(SFX_FOOTSTEP_WOOD, 2L);
                 break;
-        case 2:
+        case FLOOR_MIDDLE:
                 if (lcp_x > 146 && lcp_x < 234)
                         sf_sele(SFX_FOOTSTEP_CARPET, 2L);
                 break;
-        case 3:
+        case FLOOR_TOP:
                 if (lcp_x > 136)
                         sf_sele(SFX_FOOTSTEP_WOOD, 2L);
                 break;

@@ -72,9 +72,9 @@ long    duration;
 void
 sf_so()
 {
-        Giaccess(0, 0x88);
-        Giaccess(0, 0x89);
-        Giaccess(0, 0x8a);
+        Giaccess(0, PSG_WRITE | PSG_VOL_A);
+        Giaccess(0, PSG_WRITE | PSG_VOL_B);
+        Giaccess(0, PSG_WRITE | PSG_VOL_C);
         g_sfdos  = 0xff;
         g_sfdoc = 0;
         g_sfplf    = NO;

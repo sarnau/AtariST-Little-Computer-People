@@ -41,6 +41,21 @@
 #define FACING_RIGHT            0
 #define FACING_LEFT             1
 
+/* ---- Floors -- what getFlrY() returns, counted from the ground ------- */
+#define FLOOR_BOTTOM            1       /* y > 140 */
+#define FLOOR_MIDDLE            2       /* y > 77  */
+#define FLOOR_TOP               3
+
+/* ---- Open/close argument of a_opcfd / a_opecc / a_opecd --------------
+   (front door, kitchen cabinet, dresser).  Each tests `== 0` for open
+   and re-tests `!= 0` for close, so any non-zero value closes. */
+#define DOOR_OPEN               0
+#define DOOR_CLOSE              1
+
+/* a_sleep(SLEEP_RANDOM) walks to the floor's centre line and sleeps
+   rndRng(7, 15) rounds; any other argument is the round count. */
+#define SLEEP_RANDOM            (-1)
+
 /* ---- Sprite layers ---------------------------------------------------- */
 #define SPRITE_HIDDEN           0
 #define SPRITE_BEHIND_LCP       (-1)
@@ -417,6 +432,24 @@
 #define MIDI_HDR_PROGRAM_CHANGE                 0xC0
 #define MIDI_HDR_END                            0xFF
 
+/* ---- Song body control bytes (mq_pars's switch) -------------------- */
+#define SEQ_BAR                                 0x82
+#define SEQ_LOOP_START                          0x85    /* + repeat count */
+#define SEQ_LOOP_END                            0x86
+#define SEQ_END                                 0xFF
+
+/* ---- YM2149 PSG registers ------------------------------------------
+   Giaccess(data, reg | PSG_WRITE) writes, Giaccess(0, reg) reads.
+   Note psg_wr(data, reg) takes the REGISTER second, like Giaccess.
+   Tone period for channel n is registers 2n (fine) / 2n+1 (coarse). */
+#define XBIOS_GIACCESS                          28
+#define PSG_WRITE                               0x80
+#define PSG_NOISE_PERIOD                        6
+#define PSG_MIXER                               7
+#define PSG_VOL_A                               8
+#define PSG_VOL_B                               9
+#define PSG_VOL_C                               10
+
 /* ---- ENV_PHASE (PSG envelope state machine) ------------------------- */
 #define ENV_IDLE                                0
 #define ENV_ATTACK                              1
@@ -606,6 +639,19 @@
 #define KEY_F8                          248
 #define KEY_F9                          249
 #define KEY_F10                         250
+
+/* The IKBD scancodes getKey translates into the codes above. */
+#define SCAN_F1                         0x3b
+#define SCAN_F2                         0x3c
+#define SCAN_F3                         0x3d
+#define SCAN_F4                         0x3e
+#define SCAN_F5                         0x3f
+#define SCAN_F6                         0x40
+#define SCAN_F7                         0x41
+#define SCAN_F8                         0x42
+#define SCAN_F9                         0x43
+#define SCAN_F10                        0x44
+#define SCAN_CURSOR_LEFT                0x4b
 #define KEY_CTRL_A_ALARM                0x01
 #define KEY_CTRL_B_BOOK                 0x02
 #define KEY_CTRL_C_CALL                 0x03

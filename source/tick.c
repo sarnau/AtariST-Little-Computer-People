@@ -142,7 +142,7 @@ short   counter;
                         }
                         if (dg_bwlch > 0) {
                                 lcp_bwlS++;
-                                if (lcp_bwlS > 2)
+                                if (lcp_bwlS > BOWL_FULL)
                                         lcp_bwlS = BOWL_FULL;
                         }
 

@@ -23,17 +23,17 @@ getKey()
                 return ret_key;
         else
                 switch (scancode) {
-                case 0x4b: return 8; break;
-                case 0x3b: return 241; break;
-                case 0x3c: return 242; break;
-                case 0x3d: return 243; break;
-                case 0x3e: return 244; break;
-                case 0x3f: return 245; break;
-                case 0x40: return 246; break;
-                case 0x41: return 247; break;
-                case 0x42: return 248; break;
-                case 0x43: return 249; break;
-                case 0x44: return 250; break;
+                case SCAN_CURSOR_LEFT: return KEY_CURSOR_LEFT; break;
+                case SCAN_F1: return KEY_F1; break;
+                case SCAN_F2: return KEY_F2; break;
+                case SCAN_F3: return KEY_F3; break;
+                case SCAN_F4: return KEY_F4; break;
+                case SCAN_F5: return KEY_F5; break;
+                case SCAN_F6: return KEY_F6; break;
+                case SCAN_F7: return KEY_F7; break;
+                case SCAN_F8: return KEY_F8; break;
+                case SCAN_F9: return KEY_F9; break;
+                case SCAN_F10: return KEY_F10; break;
                 default:   return KEY_NONE;
                 }
 }

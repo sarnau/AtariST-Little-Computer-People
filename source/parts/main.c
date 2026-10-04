@@ -182,12 +182,12 @@ char ** argv;
 
         /* Dog bowl: three explicit state tests with literal frame
            ids, not an index into g_obdea. */
-        if (lcp_bwlS == 0)
-                od_draw(51, 8, 190);
-        if (lcp_bwlS == 1)
-                od_draw(50, 8, 190);
-        if (lcp_bwlS == 2)
-                od_draw(49, 8, 190);
+        if (lcp_bwlS == BOWL_EMPTY)
+                od_draw(OBJ_DOG_FOOD_BOWL_3, 8, 190);
+        if (lcp_bwlS == BOWL_HALF)
+                od_draw(OBJ_DOG_FOOD_BOWL_2, 8, 190);
+        if (lcp_bwlS == BOWL_FULL)
+                od_draw(OBJ_DOG_FOOD_BOWL_1, 8, 190);
 
         /* Ghidra step 34 */  sc_drfc();                /* screen_draw_food_cabinet */
         /* Ghidra step 35 */  daily_rs();
@@ -197,7 +197,7 @@ char ** argv;
         /* Test builds only.  cp_main drives the 1772 directly to read
            the protected track, and no emulator here satisfies it: it
            returns 0, cs_mvIn parks the resident in
-           `while (1) a_sleep(-1);` -- which re-runs lcp_hwt() every
+           `while (1) a_sleep(SLEEP_RANDOM);` -- which re-runs lcp_hwt() every
            iteration, so it stands and waves for ever -- and gameLoop
            does the same.  A non-zero cprot_r is all either test wants;
            the real routine ORs 0xf0000000 into its count.  Skipping

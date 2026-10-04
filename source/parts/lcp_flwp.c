@@ -20,7 +20,7 @@ lcp_flwp()
                                  (getFlrY(lcp_y) - 1) * 2];
                 g_wyy = stair_wp[stair_index + 1];
 
-                if (getFlrY(lcp_y) == 2)
+                if (getFlrY(lcp_y) == FLOOR_MIDDLE)
                         if (getFlrY(lcp_y) > getFlrY(g_wty)) {
                                 g_wyx = stair_ty;
                                 g_wyy = stair_by;
@@ -36,7 +36,7 @@ lcp_flwp()
                                 g_wyy = stair_wp[stair_index - 1];
                                 g_wyx = stair_wp[stair_index - 2];
                         }
-                        if (getFlrY(lcp_y) == 1) {
+                        if (getFlrY(lcp_y) == FLOOR_BOTTOM) {
                                 g_wyx = stair_ty;
                                 g_wyy = stair_by;
                         }

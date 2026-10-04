@@ -28,7 +28,7 @@ gameLoop()
            the branch-to-condition shape `for (;;)` does not. */
         if (cprot_r == 0)
                 while (1)
-                        a_sleep(-1);
+                        a_sleep(SLEEP_RANDOM);
 
         g_spdc = 5;
         while (1) {

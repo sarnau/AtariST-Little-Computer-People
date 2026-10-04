@@ -19,7 +19,7 @@ short   value;
         if (lcp_stR != NO)
                 return;
 
-        if (value == -1) {
+        if (value == SLEEP_RANDOM) {
                 g_wtx = lcp_x;
                 g_wty = flr_cy[getFlrY(lcp_y) - 1];
                 if (lcp_wkD() != 0)
@@ -31,7 +31,7 @@ short   value;
         }
 
         duration = rndRng(7, 15);
-        if (value != -1)
+        if (value != SLEEP_RANDOM)
                 duration = value;
 
         i = 0;
@@ -46,7 +46,7 @@ short   value;
                 i++;
         }
 
-        if (value == -1) {
+        if (value == SLEEP_RANDOM) {
                 lcp_st = STATE_STAND_SIDE_VIEW;
                 gameTick(0);
         }

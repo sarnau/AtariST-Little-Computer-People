@@ -23,7 +23,7 @@ a_lighf()
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
-        a_opcfd(0);
+        a_opcfd(DOOR_OPEN);
         g_actif = YES;
 
         hs_posXY(POS_BTM_FRONT_DOOR,
@@ -54,7 +54,7 @@ a_lighf()
         sp_upds();
 
         if (lcp.initiative_threshold < rndRng(0, 100))
-                a_opcfd(1);
+                a_opcfd(DOOR_CLOSE);
 
         hs_posXY(POS_BTM_FIREPLACE_LOGS,
                               &g_wtx, &g_wty);

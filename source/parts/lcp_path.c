@@ -36,7 +36,7 @@ lcp_path()
         /* Exit stair mode when we've reached the target floor. */
         if (lcp_stR != NO) {
                 if (lcp_y <= flr_by[(floor_num = getFlrY(g_wyy)) - 1]) {
-                        if (floor_num == 3)
+                        if (floor_num == FLOOR_TOP)
                                 lcp_stR = NO;
                         else if (stair_wp[(floor_num - 1) * 2 + 1] <= lcp_y)
                                 lcp_stR = NO;

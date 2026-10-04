@@ -18,7 +18,8 @@
 
 	.text
 
-* psg_wr(reg, val): select register `reg`, write `val`.
+* psg_wr(val, reg): select register `reg` (the SECOND argument, 7(sp)),
+* then write `val` (the first, 5(sp)) -- every caller passes data first.
 * No frame: 4(sp) is the first argument word, so its byte is 5(sp).
 _psg_wr:
 	move.b	7(sp),$ffff8800

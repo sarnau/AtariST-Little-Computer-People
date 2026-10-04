@@ -18,7 +18,7 @@ er_recd()
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
-        a_opcfd(0);
+        a_opcfd(DOOR_OPEN);
 
         lcp_st = STATE_BEND_DOWN;
         gameTick(1);
@@ -30,7 +30,7 @@ er_recd()
         gameTick(0);
 
         if (lcp.initiative_threshold < rndRng(0, 100))
-                a_opcfd(1);
+                a_opcfd(DOOR_CLOSE);
 
         sp_ssco(SPRITE_VINYL_CARRY);
         hs_posXY(POS_TOP_DANCE_FLOOR,

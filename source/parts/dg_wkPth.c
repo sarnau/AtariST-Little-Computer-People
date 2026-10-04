@@ -23,7 +23,7 @@ dg_wkPth()
                 g_dyx = stair_wp[si = (getFlrY(dog_y) - 1) * 2];
                 g_dyy = stair_wp[si + 1];
 
-                if (getFlrY(dog_y) == 2) {
+                if (getFlrY(dog_y) == FLOOR_MIDDLE) {
                         if (getFlrY(dog_y) > getFlrY(g_dty)) {
                                 g_dyx = stair_ty - 3;
                                 g_dyy = stair_by;
@@ -32,7 +32,7 @@ dg_wkPth()
 
                 dg_stair = NO;
                 if (dog_x == g_dyx && dog_y == g_dyy) {
-                        if (getFlrY(dog_y) == 3)
+                        if (getFlrY(dog_y) == FLOOR_TOP)
                                 dog_x -= 8;
                         dg_stair = YES;
                         if (dog_y > g_dty) {
@@ -42,7 +42,7 @@ dg_wkPth()
                                 g_dyy = stair_wp[si - 1];
                                 g_dyx = stair_wp[si - 2];
                         }
-                        if (getFlrY(dog_y) == 1) {
+                        if (getFlrY(dog_y) == FLOOR_BOTTOM) {
                                 g_dyx = stair_ty;
                                 g_dyy = stair_by;
                         }

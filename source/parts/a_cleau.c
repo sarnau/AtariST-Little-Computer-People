@@ -71,7 +71,7 @@ a_cleau()
                 lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_hwt();
-                a_opecd(1);
+                a_opecd(DOOR_CLOSE);
         }
         if (lcp_cabO != NO) {
                 hs_posXY(POS_BTM_KITCHEN_CABINET,
@@ -82,7 +82,7 @@ a_cleau()
                 lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_hwt();
-                a_opecc(1);
+                a_opecc(DOOR_CLOSE);
         }
         if (lcp_frdO != NO) {
                 wkFrDr();
@@ -90,6 +90,6 @@ a_cleau()
                 lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_hwt();
-                a_opcfd(1);
+                a_opcfd(DOOR_CLOSE);
         }
 }

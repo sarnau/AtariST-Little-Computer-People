@@ -69,9 +69,9 @@ a_plawr()
         while (mi_play != NO) {
                 /* ROM: bare word-arg xbios shape here (no 0L pad),
                    unlike sf_so's long-arg Giaccess writes. */
-                psg_a = Giaccess(0, 8) & 0x1f;
-                psg_b = Giaccess(0, 9) & 0x1f;
-                psg_c = Giaccess(0, 10) & 0x1f;
+                psg_a = Giaccess(0, PSG_VOL_A) & 0x1f;
+                psg_b = Giaccess(0, PSG_VOL_B) & 0x1f;
+                psg_c = Giaccess(0, PSG_VOL_C) & 0x1f;
 
                 lcp_st = pst_arr[0];
                 if (psg_a > prev_a || psg_b > prev_b || psg_c > prev_c) {

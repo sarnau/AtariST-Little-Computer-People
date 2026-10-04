@@ -247,7 +247,7 @@ mq_pars()
                                 mq_qnne();
                 } else {
                         switch (*mi_sqpos++ & 0xff) {
-                        case 0x82:
+                        case SEQ_BAR:
                                 /* Bar marker: refresh mi_nlp0 for the
                                    next event only if none was decoded
                                    this pass. */
@@ -257,7 +257,7 @@ mq_pars()
                                                 return 0;
                                 }
                                 break;
-                        case 0x85:
+                        case SEQ_LOOP_START:
                                 /* Loop start: byte = count, push the
                                    return address. */
                                 mq_pshl(mi_sqpos + 1, *mi_sqpos);
@@ -266,7 +266,7 @@ mq_pars()
                                 if (mi_sqpos >= mi_seqE)
                                         return 0;
                                 break;
-                        case 0x86:
+                        case SEQ_LOOP_END:
                                 /* Loop end: pop, jump back if nonzero. */
                                 if ((mi_dptr = mq_popl()) != 0)
                                         mi_sqpos = mi_dptr;
@@ -274,7 +274,7 @@ mq_pars()
                                 if (mi_sqpos >= mi_seqE)
                                         return 0;
                                 break;
-                        case 0xff:
+                        case SEQ_END:
                                 return 0;
                                 break;
                         }
@@ -513,16 +513,16 @@ char            midi_ch;
                    nibble and mixer_bits the register number. */
                 attack_hi = psg_freq[*midiEvP + cVar4] / 60;
                 if (mi_dwrm == 1) {
-                        psg_wr(attack_hi, 6);
+                        psg_wr(attack_hi, PSG_NOISE_PERIOD);
                         psg_mix(mixer_bits, noise_mask | 0xc0);
                 } else {
                         /* The PSG writes go straight to the trap:
                            the Giaccess macro's (char) cast on the data
                            argument is not in the original here. */
-                        xbios(28, attack_hi, 0x86);
-                        xbios(28, xbios(28, 0, 7) &
+                        xbios(XBIOS_GIACCESS, attack_hi, PSG_WRITE | PSG_NOISE_PERIOD);
+                        xbios(XBIOS_GIACCESS, xbios(XBIOS_GIACCESS, 0, PSG_MIXER) &
                                   (long) (noise_mask | 0xc0) |
-                                  (long) mixer_bits, 0x87);
+                                  (long) mixer_bits, PSG_WRITE | PSG_MIXER);
                 }
 
                 mixer_bits = chosen << 1;
@@ -535,8 +535,8 @@ char            midi_ch;
                                 psg_wr(attack_hi, mixer_bits);
                                 psg_wr(noise_mask, mixer_bits + 1);
                         } else {
-                                xbios(28, attack_hi, mixer_bits + 0x80);
-                                xbios(28, noise_mask, mixer_bits + 0x81);
+                                xbios(XBIOS_GIACCESS, attack_hi, mixer_bits + PSG_WRITE);
+                                xbios(XBIOS_GIACCESS, noise_mask, mixer_bits + (PSG_WRITE | 1));
                         }
                 } else {
                         envelope_phase = ENV_FADEOUT;
@@ -652,9 +652,9 @@ mq_advs()
                         psg_envelope[1].phase =
                         psg_envelope[2].phase = ENV_IDLE;
                         mi_play = psg_ntAc = g_msmsa = NO;
-                        psg_wr(0, 8);
-                        psg_wr(0, 9);
-                        psg_wr(0, 10);
+                        psg_wr(0, PSG_VOL_A);
+                        psg_wr(0, PSG_VOL_B);
+                        psg_wr(0, PSG_VOL_C);
                 }
         }
 }
@@ -977,6 +977,6 @@ do_fadeout:
                            psg_envelope[i].max_volume
                          ? psg_envelope[i].max_volume
                          : psg_envelope[i].current_volume;
-                psg_wr(psg_ovol, psg_rot[i] - 0x80);
+                psg_wr(psg_ovol, psg_rot[i] - PSG_WRITE);
         }
 }

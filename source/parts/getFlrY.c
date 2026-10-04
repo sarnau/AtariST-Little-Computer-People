@@ -11,9 +11,9 @@ short   y;
         /* STX: one if/else-if/else chain -- each arm's return is
            followed by the else-skip branch. */
         if (y > 140)
-                return 1;
+                return FLOOR_BOTTOM;
         else if (y > 77)
-                return 2;
+                return FLOOR_MIDDLE;
         else
-                return 3;
+                return FLOOR_TOP;
 }

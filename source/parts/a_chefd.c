@@ -20,7 +20,7 @@ short   value;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
         if (lcp_frdO == NO)
-                a_opcfd(0);
+                a_opcfd(DOOR_OPEN);
         g_actif = YES;
 
         hs_posXY(POS_BTM_FRONT_DOOR,
@@ -56,7 +56,7 @@ short   value;
                 lcp_st              = STATE_STAND_FACING_SCREEN;
                 g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_hwt();
-                a_opcfd(1);
+                a_opcfd(DOOR_CLOSE);
         }
         g_actif = NO;
 }

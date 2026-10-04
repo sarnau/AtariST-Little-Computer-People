@@ -20,9 +20,9 @@ short   value;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
-        a_opecd(0);
+        a_opecd(DOOR_OPEN);
         if (lcp.initiative_threshold < rndRng(0, 100))
-                a_opecd(1);
+                a_opecd(DOOR_CLOSE);
 
         hs_posXY(POS_MID_BEDROOM_CLOSET,
                               &g_wtx, &g_wty);

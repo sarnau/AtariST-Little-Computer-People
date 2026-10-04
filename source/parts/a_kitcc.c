@@ -29,7 +29,7 @@ a_kitcc()
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
 
-        a_opecc(0);
+        a_opecc(DOOR_OPEN);
 
         food_count = (lcp.door_states_and_flags >> 9) & 7;
         if (food_count == 0) {
@@ -48,7 +48,7 @@ a_kitcc()
         gameTick(2);
 
         if (lcp.initiative_threshold < rndRng(0, 100))
-                a_opecc(1);
+                a_opecc(DOOR_CLOSE);
 
         sp_ssco(SPRITE_FOOD_PACKAGE);
         hs_posXY(POS_BTM_KITCHEN_CABINET,

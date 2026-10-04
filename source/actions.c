@@ -43,7 +43,7 @@ doAct()
         case ACTION_YAWN_AND_STRETCH:         a_yawas();          break;
         case ACTION_PACE_NERVOUSLY:           a_pacen();            break;
         case ACTION_WANDER_IDLY:              a_wandi();               break;
-        case ACTION_SLEEP:                    a_sleep(-1);                   break;
+        case ACTION_SLEEP:                    a_sleep(SLEEP_RANDOM);                   break;
         case ACTION_DRINK:                    a_drink();                     break;
         case ACTION_NOD_HEAD:                 a_nodh();                  break;
         case ACTION_PEEK_AROUND:              a_peeka();               break;

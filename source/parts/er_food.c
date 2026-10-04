@@ -19,7 +19,7 @@ er_food()
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         lcp_hwt();
-        a_opcfd(0);
+        a_opcfd(DOOR_OPEN);
 
         lcp_st = STATE_BEND_DOWN;
         gameTick(1);
@@ -31,7 +31,7 @@ er_food()
         gameTick(0);
 
         if (lcp.initiative_threshold < rndRng(0, 100))
-                a_opcfd(1);
+                a_opcfd(DOOR_CLOSE);
 
         if (g_dvdog != NO) {
                 sp_ssco(SPRITE_FOOD_PACKAGE);
@@ -57,7 +57,7 @@ er_food()
                 g_hatas   = HEAD_ANIM_HORIZONTAL_RANGE;
                 lcp_hwt();
 
-                a_opecc(0);
+                a_opecc(DOOR_OPEN);
 
                 /* The flag is tested a second time -- redundant inside
                    this arm, but that is what the original does. */
@@ -80,7 +80,7 @@ er_food()
                 }
 
                 if (lcp.initiative_threshold < rndRng(0, 100))
-                        a_opecc(1);
+                        a_opecc(DOOR_CLOSE);
                 g_actif = NO;
         }
 }

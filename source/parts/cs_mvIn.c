@@ -27,7 +27,7 @@ cs_mvIn()
 
         /* Front door swings open behind the doorbell sound. */
         od_draw(od_fro1, 294, 151);
-        sf_sele(14, 6L);
+        sf_sele(SFX_DOOR_OPEN, 6L);
         gameTick(2);
         od_draw(od_fro2, 294, 151);
         gameTick(2);
@@ -56,7 +56,7 @@ cs_mvIn()
            the resident asleep for ever. */
         if (cprot_r == 0)
                 while (1)
-                        a_sleep(-1);
+                        a_sleep(SLEEP_RANDOM);
 
         hs_posXY(POS_BTM_KITCHEN_CABINET, &g_wtx, &g_wty);
         lcp_wkD();
@@ -64,9 +64,9 @@ cs_mvIn()
         lcp_st   = STATE_STAND_FACING_SCREEN;
         g_hatas  = 12;
         lcp_hwt();
-        a_opecc(0);
+        a_opecc(DOOR_OPEN);
         gameTick(16);
-        a_opecc(1);
+        a_opecc(DOOR_CLOSE);
 
         hs_posXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
         lcp_wkD();
@@ -102,7 +102,7 @@ cs_mvIn()
         lcp_st   = STATE_STAND_FACING_SCREEN;
         g_hatas  = 12;
         lcp_hwt();
-        a_opcfd(0);
+        a_opcfd(DOOR_OPEN);
 
         /* Bend down and pick the suitcase up off the step. */
         lcp_st = STATE_BEND_DOWN;
@@ -124,7 +124,7 @@ cs_mvIn()
         sp_upds();
         g_lcyof = 0;
         lcp_hwt();
-        a_opecd(0);
+        a_opecd(DOOR_OPEN);
 
         /* Let the dog in and seed its first wander target. */
         hs_posXY(POS_BTM_FRONT_DOOR, &dog_x, &dog_y);
