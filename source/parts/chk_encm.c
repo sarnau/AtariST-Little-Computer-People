@@ -11,7 +11,7 @@ char *  str;
         /* STX's frame is -10: no `rnd` temporary, and the priority
            seed adds the roll FIRST. */
         short   i;
-        short   action_index;
+        short   row;
         short   entered_word;
 
         /* Clear the accumulated position/bit mask. */
@@ -45,18 +45,18 @@ char *  str;
            test breaks to the ACTION_NONE return placed after the loop;
            a row that fails jumps straight to the increment through an
            explicit goto, not a break plus an `i >= 10` re-test. */
-        action_index = 0;
+        row = 0;
         while (1) {
-                if (g_ew2a[action_index].table[0] == 0xff)
+                if (g_ew2a[row].table[0] == 0xff)
                         break;
                 for (i = 0; i < 10; i++)
-                        if ((g_ew2a[action_index].table[i] & g_ewb[i]) !=
-                            g_ew2a[action_index].table[i])
+                        if ((g_ew2a[row].table[i] & g_ewb[i]) !=
+                            g_ew2a[row].table[i])
                                 goto next;
-                g_aprio += g_ew2a[action_index].priority_offset;
-                return g_ew2a[action_index].action;
+                g_aprio += g_ew2a[row].priority_offset;
+                return g_ew2a[row].action;
 next:
-                action_index++;
+                row++;
         }
         return ACTION_NONE;
 }
