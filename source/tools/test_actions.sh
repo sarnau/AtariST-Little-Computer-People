@@ -40,11 +40,18 @@ CSRC=$(cd "$(dirname "$0")/.." && pwd)
 TABLE=$(python3 - "$CSRC/dat_u3b.c" "$CSRC/include/enums.h" <<'PY'
 import re, sys
 src = open(sys.argv[1]).read()
+# The tables name some values (ACTION_*, EW2A_END): resolve every plain
+# integer #define in enums.h so those count like the literals they are.
+defs = {}
+for m in re.finditer(r'^#define\s+(\w+)\s+\(?\s*(-?(?:0[xX][0-9a-fA-F]+|\d+))\s*\)?\s*(?:/\*.*)?$',
+                     open(sys.argv[2]).read(), re.M):
+    defs[m.group(1)] = int(m.group(2), 0)
 def nums(name, count):
     m = re.search(re.escape(name) + r'\s*\[\s*\d*\s*\]\s*=\s*\{(.*?)\};', src, re.S)
     body = re.sub(r'/\*.*?\*/', '', m.group(1), flags=re.S)
-    toks = re.findall(r'0[xX][0-9a-fA-F]+|-?\d+', body)
-    return [int(t, 16) if t.lower().startswith('0x') else int(t, 10) for t in toks][:count]
+    toks = re.findall(r'0[xX][0-9a-fA-F]+|-?\d+|[A-Za-z_]\w*', body)
+    return [defs[t] if t[0].isalpha() or t[0] == '_' else int(t, 0) if t.lower().startswith('0x')
+            else int(t, 10) for t in toks][:count]
 def strs(name):
     m = re.search(re.escape(name) + r'\s*\[\s*\d*\s*\]\s*=\s*\{(.*?)\};', src, re.S)
     return re.findall(r'"([^"]*)"', re.sub(r'/\*.*?\*/', '', m.group(1), flags=re.S))
