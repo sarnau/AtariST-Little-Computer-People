@@ -186,38 +186,94 @@ which first gets him out of bed if he is asleep -- any activity wakes him.
 
 ### Idle activities
 
-`pickIdleAction` ([`airandom.c`](../source/airandom.c)) counts the hours since
-his wake-up hour:
+`pickIdleAction` ([`airandom.c`](../source/airandom.c)) picks a tier from the
+hours since his wake-up hour, then draws an activity from that tier's table:
 
-- **18 hours or more, or moderately sick:** the sleep tier.  If he is awake
-  he goes to bed (`ACTION_GET_IN_OUT_OF_BED`); if he is asleep, nothing
-  happens and he sleeps on.
-- **Otherwise** the hours are grouped in two-hour slots that repeat every six
-  hours, and `scheduleTiers[slot][activityLevel]`
-  ([`dat_aitables.c`](../source/dat_aitables.c)) gives a tier:
+```mermaid
+flowchart TD
+    start(["pickIdleAction"]) --> hours["h = hours since wakeHour<br/>(0..23)"]
+    hours --> late{"h >= 18, or<br/>moderately sick?"}
+    late -->|yes| asleep{"asleep?"}
+    asleep -->|no| bed["ACTION_GET_IN_OUT_OF_BED<br/>(goes to bed)"]
+    asleep -->|yes| none["ACTION_NONE<br/>(sleeps on)"]
+    late -->|no| slot["slot = (h / 2) % 3"]
+    slot --> tier["tier = scheduleTiers[slot][activityLevel]"]
+    tier --> sun{"active and Sunday?"}
+    sun -->|yes| relaxed["relaxed"]
+    sun -->|no| sat{"active and Saturday?"}
+    sat -->|yes| moderate["moderate"]
+    sat -->|no| keep["tier unchanged"]
+    relaxed --> draw
+    moderate --> draw
+    keep --> draw["draw 1 of the tier's 16 entries"]
+    draw --> same{"same as lastAction?"}
+    same -->|yes| draw
+    same -->|no| run(["runAction"])
+```
 
-  | activity level | hours 0-1, 6-7, 12-13 | 2-3, 8-9, 14-15 | 4-5, 10-11, 16-17 |
-  |---|---|---|---|
-  | 0 | active | relaxed | moderate |
-  | 1 | active | moderate | relaxed |
-  | 2 | relaxed | active | moderate |
-  | 3 | relaxed | moderate | active |
-  | 4 | moderate | relaxed | active |
-  | 5 | moderate | active | relaxed |
-  | 6 | active | relaxed | moderate |
-  | 7 | moderate | active | relaxed |
+The two-hour slots repeat every six hours, and `scheduleTiers`
+([`dat_aitables.c`](../source/dat_aitables.c)) gives each activity level its
+own rhythm:
 
-  At weekends he takes it easier: on Sunday an active slot becomes relaxed,
-  on Saturday moderate.
+| activity level | hours 0-1, 6-7, 12-13 | 2-3, 8-9, 14-15 | 4-5, 10-11, 16-17 |
+|---|---|---|---|
+| 0 | active | relaxed | moderate |
+| 1 | active | moderate | relaxed |
+| 2 | relaxed | active | moderate |
+| 3 | relaxed | moderate | active |
+| 4 | moderate | relaxed | active |
+| 5 | moderate | active | relaxed |
+| 6 | active | relaxed | moderate |
+| 7 | moderate | active | relaxed |
 
-Each tier is a table of 16 activities; one is drawn at random, re-drawn if it
-is the same as the last activity.  Duplicates make some more likely:
+Each tier is a table of 16 activities; duplicates make some more likely:
 
-| Tier | Activities (count out of 16) |
-|---|---|
-| active (`activeActions`) | computer 3, clean up 2, tidy house 2, read in the armchair 2, study 1, write a letter 1, feed the dog 1, wave hello 1, exercise 1, check the front door 1, *nothing* 1 |
-| moderate (`moderateActions`) | wave hello 2, dance 2, TV on/off 2, *nothing* 2, check the front door 1, play a record 1, play the organ 1, read the newspaper 1, pace 1, play a game 1, study 1, exercise 1 |
-| relaxed (`relaxedActions`) | read the newspaper 2, wait to be patted 2, read in the armchair 2, TV on/off 2, light the fire 1, play a record 1, study 1, *nothing* 1, wave hello 1, doze off 1, check the front door 1, stop the record 1 |
+```mermaid
+pie showData title active tier (activeActions)
+    "computer" : 3
+    "clean up" : 2
+    "tidy house" : 2
+    "read in the armchair" : 2
+    "study" : 1
+    "write a letter" : 1
+    "feed the dog" : 1
+    "wave hello" : 1
+    "exercise" : 1
+    "check the front door" : 1
+    "nothing" : 1
+```
+
+```mermaid
+pie showData title moderate tier (moderateActions)
+    "wave hello" : 2
+    "dance" : 2
+    "TV on/off" : 2
+    "nothing" : 2
+    "check the front door" : 1
+    "play a record" : 1
+    "play the organ" : 1
+    "read the newspaper" : 1
+    "pace" : 1
+    "play a game" : 1
+    "study" : 1
+    "exercise" : 1
+```
+
+```mermaid
+pie showData title relaxed tier (relaxedActions)
+    "read the newspaper" : 2
+    "wait to be patted" : 2
+    "read in the armchair" : 2
+    "TV on/off" : 2
+    "light the fire" : 1
+    "play a record" : 1
+    "study" : 1
+    "nothing" : 1
+    "wave hello" : 1
+    "doze off" : 1
+    "check the front door" : 1
+    "stop the record" : 1
+```
 
 *Nothing*: each table contains `ACTION_EVENT_PHONE_CALL`, an event id that
 `runAction` has no case for.  Drawing it does nothing; the picker simply runs
