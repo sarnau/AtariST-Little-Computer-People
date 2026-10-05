@@ -87,9 +87,9 @@ writeLetter()
 
         headMode = HEAD_ANIM_READING;
         keysBlocked = YES;
-        fillPanel(0x1b);
+        fillPanel(PANEL_ROWS_TEXT);
 
-        letterText = (char *) Malloc(0x2900L);
+        letterText = (char *) Malloc((long) LETTER_TEXT_SIZE);
         if (letterText == (char *) 0)
                 outOfMemory();
         loadLetterText();
@@ -124,14 +124,15 @@ writeLetter()
         swap_a = rndRng(2, 4);
         for (i = 0; i < swap_a; i++) {
                 section_id     = section_order[i];
-                template_index = section_id * 0x60;
+                template_index = section_id * LETTER_SECTION_LINES;
                 if (section_id == 3)
-                        template_index += rndRng(0, 5) * 0xc;
+                        template_index += rndRng(0, 5) * LETTER_BLOCK_LINES;
                 else if (resident.sickness_level > SICKNESS_HEALTHY)
-                        template_index += rndRng(0, 1) * 0x30 + 0x24;
+                        template_index += rndRng(0, 1) * LETTER_HALF_LINES +
+                                          LETTER_SICK_BLOCK * LETTER_BLOCK_LINES;
                 else
-                        template_index += rndRng(0, 1) * 0x30 +
-                                          resident.happiness * 0xc;
+                        template_index += rndRng(0, 1) * LETTER_HALF_LINES +
+                                          resident.happiness * LETTER_BLOCK_LINES;
 
                 /* Opening line -- indent 5 spaces on the first
                    paragraph only; the whole call is duplicated. */

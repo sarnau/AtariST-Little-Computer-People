@@ -107,7 +107,7 @@ short   typedCursor;        /* cursor position in typedLine, 0..38 */
    96 pointers (section 3 uses 72) shape writeLetter indexes, and
    LETTER.TXT decodes to 361 line segments. */
 char *  letterText;
-char *  letterLines[360];
+char *  letterLines[LETTER_LINES];
 
 /* FORTY bytes, not 64: that is the room the original leaves for it. */
 char    letterWord[40];
@@ -323,12 +323,12 @@ void *  panelLogbase;     /* logical screen saved by panelBegin, restored by pan
 void *  housePtr;    /* 512-aligned start of houseBuf: the house picture VDI draws into */
 /* stripStore: offscreen buffer where the letter-typing status strip
    composites, kept separate from the main house buffer.
-   fillPanel(27) writes rows 0..26 here so that the striped-white letter
+   fillPanel(PANEL_ROWS_TEXT) writes rows 0..26 here so that the striped-white letter
    background is ready for the typewriter animation; renderFrame
    copyBlocks32's the content into the compositor screen when the letter
    overlay is active.
    Sized from what fillPanel can actually write: its largest caller is
-   mgSetup's fillPanel(0x4d), 77 rows of 160 bytes = 12320, and the
+   mgSetup's fillPanel(PANEL_ROWS_GAME), 77 rows of 160 bytes = 12320, and the
    align-up `(base + 512) & ~511` moves the start by at most 512 --
    so 12832 bytes, 6416 shorts.
    fillPanel points stripBuf at the ALIGNED start at run time. */

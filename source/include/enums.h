@@ -178,6 +178,13 @@
 #define COLOR_white                             14
 #define COLOR_dk_brown                          15
 
+/* ---- The resident's outfit and skin ----------------------------------
+   pickClothes and pickSkin roll over twice the table size; a roll in the
+   upper half keeps the colour from the save file instead, so that colour
+   comes up half the time. */
+#define CLOTHING_COLORS                 16      /* shirtPrimary/shirtSecondary */
+#define SKIN_COLORS                     8       /* skinColors */
+
 /* ---- Head frames in a PEx.LCP file ---------------------------------
    A PEx file holds three blocks of HEAD_FRAMES_PER_MOOD frames, in the
    order content, sad, happy (moodHeadBase).  In each block, frames 0..6
@@ -443,6 +450,22 @@
 #define KEYMENU_TOP                     10
 #define KEYMENU_RIGHT                   319
 #define KEYMENU_BOTTOM                  60
+
+/* ---- Top-of-screen panel (fillPanel's row count) ----------------------- */
+#define PANEL_ROWS_TEXT                 27      /* the typing strip */
+#define PANEL_ROWS_GAME                 77      /* a minigame's card table */
+
+/* ---- LETTER.TXT --------------------------------------------------------
+   Decoded, the file is 360 lines in four sections of 96.  Sections 0..2
+   each hold two alternative halves of 48 lines, and a half holds one
+   12-line block per MOOD_* plus a fourth block for a sick resident.
+   Section 3 is six mood-free 12-line blocks. */
+#define LETTER_TEXT_SIZE                10496   /* decoded bytes */
+#define LETTER_LINES                    360
+#define LETTER_SECTION_LINES            96
+#define LETTER_HALF_LINES               48
+#define LETTER_BLOCK_LINES              12
+#define LETTER_SICK_BLOCK               3
 
 /* ---- Furniture screen positions -------------------------------------
    Where drawObject paints each piece of furniture (the top-left corner of

@@ -10,10 +10,10 @@ loadLetterText()
         short   linecount;
         char *  i;
 
-        unpackFile("letter.txt", (unsigned char *) letterText, 10496);
+        unpackFile("letter.txt", (unsigned char *) letterText, LETTER_TEXT_SIZE);
 
         i = letterText;
-        for (linecount = 0; linecount < 360; linecount++) {
+        for (linecount = 0; linecount < LETTER_LINES; linecount++) {
                 letterLines[linecount] = i;
 
                 /* Step once, then a plain `while` -- two increment

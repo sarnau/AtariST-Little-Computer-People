@@ -220,7 +220,7 @@ short   counter;
                                                     key != KEY_CTRL_A_ALARM &&
                                                     key != KEY_CTRL_P_PATTING) {
                                                         if (textTimer == 0) {
-                                                                fillPanel(27);
+                                                                fillPanel(PANEL_ROWS_TEXT);
                                                                 typedCursor = 0;
                                                         }
                                                         textTimer = 160;

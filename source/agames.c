@@ -68,7 +68,7 @@ playGame()
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(5);
-        fillPanel(0x1b);
+        fillPanel(PANEL_ROWS_TEXT);
         textTimer = 300;
         keysBlocked = YES;
         printString("What game do you want to play?", 5,  8, COLOR_black);

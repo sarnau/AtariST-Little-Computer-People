@@ -20,17 +20,17 @@
 #include "protos.h"
 #include "globals.h"
 
-/* pickClothes: pick random/configured CLOTHING_COLOR_ID (0..15),
-   load prim/sec colours to palette slots 1,2. Overshoot falls back
-   to resident.clothing_color. */
+/* pickClothes: loads one of the CLOTHING_COLORS shirt colour pairs into
+   palette slots 1 and 2 -- a random one half the time, otherwise the
+   resident's own resident.clothing_color. */
 
 void
 pickClothes()
 {
         short   index;
 
-        index = rndRng(0, 0x1f);
-        if (index > 0xf)
+        index = rndRng(0, 2 * CLOTHING_COLORS - 1);
+        if (index > CLOTHING_COLORS - 1)
                 index = resident.clothing_color;
 
         mainPalette[1] = shirtPrimary[index];
@@ -38,15 +38,16 @@ pickClothes()
         Setpalette(mainPalette);
 }
 
-/* pickSkin: same as pickClothes but 8-entry skin table. */
+/* pickSkin: the same for the SKIN_COLORS skin tones and
+   resident.skin_color. */
 
 void
 pickSkin()
 {
         short   index;
 
-        index = rndRng(0, 0xf);
-        if (index > 7)
+        index = rndRng(0, 2 * SKIN_COLORS - 1);
+        if (index > SKIN_COLORS - 1)
                 index = resident.skin_color;
 
         mainPalette[1] = skinColors[index];

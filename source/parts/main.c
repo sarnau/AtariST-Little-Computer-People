@@ -73,7 +73,7 @@ char ** argv;
         decodeScn(scnBuffer, housePtr, 16000);
         Mfree(scnBuffer);
 
-        fillPanel(27);
+        fillPanel(PANEL_ROWS_TEXT);
         drawClock();
 
         /* body.lcp loads FIRST, then rollResident for a
