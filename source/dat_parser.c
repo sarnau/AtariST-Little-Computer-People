@@ -13,16 +13,19 @@
 
 
 
-/* 15-entry delta table. */
+/* One step of head turning, indexed by (target - current direction) + 7:
+   +1 or -1 moves the head one direction toward the target the short
+   way round, 0 means it is there, and HEAD_TURN_NONE marks the
+   half-turn, which has no short way. */
 short   headTurnStep[15]   = {
-         1,  1,  1, 99, -1, -1, -1,  0,
-         1,  1,  1, 99, -1, -1, -1
+         1,  1,  1, HEAD_TURN_NONE, -1, -1, -1,  0,
+         1,  1,  1, HEAD_TURN_NONE, -1, -1, -1
 };
 
 
 
-/* Per-tilt frame-index offset. */
-short   headTiltFrame[3]       = { 7, 12, 17 };
+/* First frame of each tilt row, indexed by the tilt bits of headPose. */
+short   headTiltFrame[3]       = { HEAD_ROW_LEVEL, HEAD_ROW_LOWER, HEAD_ROW_LOWEST };
 
 
 /* Head-animation delay countdown. */
@@ -30,8 +33,10 @@ short   headDelay                         = 1;
 
 
 
-/* Per-happiness-level head frame base index (into pexFrames). */
-short   moodHeadBase[3]  = { 44, 0, 22 };
+/* First head frame of each mood's block in pexFrames, indexed by
+   resident.happiness (MOOD_HAPPY, MOOD_CONTENT, MOOD_SAD): the file
+   stores content, sad, happy. */
+short   moodHeadBase[3]  = { 2 * HEAD_FRAMES_PER_MOOD, 0, HEAD_FRAMES_PER_MOOD };
 
 
 

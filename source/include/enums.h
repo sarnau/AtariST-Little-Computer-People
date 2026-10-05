@@ -178,6 +178,23 @@
 #define COLOR_white                             14
 #define COLOR_dk_brown                          15
 
+/* ---- Head frames in a PEx.LCP file ---------------------------------
+   A PEx file holds three blocks of HEAD_FRAMES_PER_MOOD frames, in the
+   order content, sad, happy (moodHeadBase).  In each block, frames 0..6
+   are special poses (eating uses 0..2, peeking 2, hello and the phone
+   4..6) and frames 7..21 are a grid of three tilt rows by five turn
+   directions -- 0 the face seen from the front, through to 4 the back
+   of the head; directions 5..7 reuse 3..1 mirrored.  Each lower row
+   tilts the head further down. */
+#define HEAD_FRAMES_PER_MOOD            22
+#define HEAD_TURN_FRAMES                5
+#define HEAD_ROW_LEVEL                  7       /* first frame of each tilt row */
+#define HEAD_ROW_LOWER                  (HEAD_ROW_LEVEL + HEAD_TURN_FRAMES)
+#define HEAD_ROW_LOWEST                 (HEAD_ROW_LOWER + HEAD_TURN_FRAMES)
+/* headTurnStep's marker for "no direct step from this direction to the
+   target"; stepHead then steps toward the state's rest direction. */
+#define HEAD_TURN_NONE                  99
+
 /* ---- Head animation modes (headMode, headTarget) ------------------------
    Bit fields inside headMode:
      bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but

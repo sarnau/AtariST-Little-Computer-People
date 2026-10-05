@@ -97,11 +97,11 @@ apply_current:
                 curDir = headPose & 7;
                 tgtDir = headTarget & 7;
                 target_frame = headTurnStep[(tgtDir - curDir) + 7];
-                if (target_frame == 99) {
+                if (target_frame == HEAD_TURN_NONE) {
                         faceDir = (headRestDir[animState] + (resFacing << 2)) & 7;
                         target_frame = headTurnStep[(faceDir - curDir) + 7];
                 }
-                if (target_frame == 99)
+                if (target_frame == HEAD_TURN_NONE)
                         target_frame = -1;
 
                 headPose = (headPose & 0x18) +
