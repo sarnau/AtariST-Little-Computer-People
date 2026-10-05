@@ -42,9 +42,9 @@
 #define FLOOR_MIDDLE    2       /* y > 77  */
 #define FLOOR_TOP       3
 
-/* ---- Open/close argument of openFrontDoor / openKitchenCab / openDresser --------------
-   (front door, kitchen cabinet, dresser).  Each tests `== 0` for open
-   and re-tests `!= 0` for close, so any non-zero value closes. */
+/* ---- The request openFrontDoor, openKitchenCab and openDresser take -----
+   Each tests `== DOOR_OPEN` for open and re-tests `!= DOOR_OPEN` for
+   close, so any other value closes. */
 #define DOOR_OPEN       0
 #define DOOR_CLOSE      1
 

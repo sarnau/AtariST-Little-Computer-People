@@ -1,14 +1,14 @@
-/* Open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the kitchen
+/* Open (DOOR_OPEN) or close (DOOR_CLOSE) the kitchen
    cabinet while the resident stands at it, updating kitchenCabOpen.  Both
    directions reach in and step the door through its ajar frame with
    the matching sound; opening also draws the food-count markers on
    the shelves (drawFoodCab).  A request matching the current state
    returns immediately. */
 void
-openKitchenCab(ocStat)
-short   ocStat;
+openKitchenCab(request)
+short   request;
 {
-        if (ocStat == 0) {
+        if (request == DOOR_OPEN) {
                 if (kitchenCabOpen != NO)
                         return;
                 kitchenCabOpen = YES;
@@ -21,7 +21,7 @@ short   ocStat;
                 drawFoodCab();
                 animState = STATE_STAND_FACING_SCREEN;
                 gameTick(2);
-        } else if (ocStat != 0) {      /* redundant re-test, kept on purpose */
+        } else if (request != DOOR_OPEN) {      /* redundant re-test, kept on purpose */
                 if (kitchenCabOpen == NO)
                         return;
                 kitchenCabOpen = NO;
