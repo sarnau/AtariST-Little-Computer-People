@@ -79,9 +79,44 @@ he **falls sick** (`fallSick`, [`health.c`](../source/health.c)).
 
 ### Bathroom
 
-Eating restarts the bathroom timer; when it runs out, `bathroomNeed` is set
-and he goes to the toilet at the next decision (`useToilet`), which clears it.
-So he needs the toilet 20..40 minutes after each meal.
+The toilet is driven by one timer, `bathroomTimer`, counted down once per game
+minute by `simStep`:
+
+```mermaid
+flowchart TD
+    meal["he eats a pack from the cabinet<br/>(eatFromCabinet)"] -->|"timer = bathroomTimerMax<br/>(20..40 min)"| count
+    count["timer counts down<br/>1 per game minute"] -->|"reaches 0"| need["bathroomNeed = YES<br/>timer parked at 9999"]
+    need --> decide{"next decision<br/>(chooseAction)"}
+    decide -->|"an event is queued<br/>or the alarm rings"| other["that first"] --> decide
+    decide -->|"otherwise, before thirst,<br/>hunger and everything else"| toilet["useToilet"]
+    game["playing a game<br/>with the player"] -->|"checked while waiting<br/>for a key"| toilet
+    toilet -->|"a queued event cuts<br/>the walk short"| decide
+    toilet -->|"done"| clear["bathroomNeed = NO<br/>timer parked at 9999"]
+    clear -.->|"until the next meal"| meal
+```
+
+- **Only a meal starts the timer.**  Every meal goes through
+  `eatFromCabinet`: the hunger snack, lunch and dinner (`cookMeal`),
+  breakfast in the morning routine and the snack in the night routine.  If
+  the cabinet is empty he eats nothing and the timer is not restarted.
+  Drinking has no effect on it.
+- **20..40 minutes later** (`bathroomTimerMax`, fixed per resident) the need
+  is set.  After the toilet the timer is parked at 9999 minutes, so there is
+  exactly one visit per meal; two meals inside the window give one visit,
+  timed from the later meal.
+- **It comes third** in the decision ladder: after a queued event (delivery,
+  phone call, ...) and the ringing alarm, before thirst, hunger, the daily
+  schedule, requests and idle activities.  A running activity is not
+  interrupted; he goes when it ends.
+- **Mid-game**, while a game waits for the player's key (`mgWaitKey`), the
+  need is checked there: he leaves the table, uses the toilet and comes back.
+- **A queued event** cuts the walk to the toilet short; the need stays set and
+  he tries again at the next decision.
+- **At night** the 23:00 snack restarts the timer, so 20..40 minutes after he
+  goes to bed he gets up for the toilet once, then goes back to bed.  The
+  breakfast at the wake hour does the same in the morning.
+- **The move-in** ends with a visit to the toilet, which parks the timer;
+  the new resident's next visit follows his first meal.
 
 ### Sickness
 
