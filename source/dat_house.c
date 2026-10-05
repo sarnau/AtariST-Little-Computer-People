@@ -23,9 +23,12 @@ char *  monthNames[12] = {
 
 BOOL16          mouseHidden = 1;   /* YES while the mouse is hidden; hideMouse/showMouse only call graf_mouse on a change.  Starts YES, so the first hideMouse is a no-op until showMouse has shown it */
 
-/* Object frame ids; the drawObject call sites read these slots rather
-   than enum constants. */
-short   stoveFrames[6]    = { 43, 44, 45, 30, 31, 32 };
+/* Lit-stove flame frames: cookMeal draws one of the first three at
+   random.  The last three are never read and are not stove frames (a
+   closet-door frame and two fireplace frames) -- leftovers in the
+   original's data, kept because the table's size sets the layout. */
+short   stoveFrames[6]    = { OBJ_STOVE_ON_1, OBJ_STOVE_ON_2, OBJ_STOVE_ON_3,
+                              OBJ_DOOR_CLOSET_OPEN_2, OBJ_FIRE_OFF, OBJ_FIRE_1 };
 
 /* TV pattern animation.
    Four vertical scanlines drawn inside the TV screen -- each is a
