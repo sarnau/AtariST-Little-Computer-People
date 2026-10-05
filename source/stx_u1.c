@@ -39,17 +39,15 @@
 
 #include "parts/countSongs.c"
 #include "parts/makeMask.c"
-/* moveDog is followed directly by walk.c's dogNextWaypt. */
+/* moveDog is followed directly by dogNextWaypt. */
 #include "parts/moveDog.c"
 #include "parts/dogNextWaypt.c"
-/* walk.c straddles two objects: walkStep and playFootstep live here
-   with floorOfY, while walkToTarget and friends are in stx_u2.c. */
+/* walkStep and its helpers are in this object; walkToTarget, which
+   drives them, is in stx_u2.c. */
 #include "parts/walkStep.c"
 #include "parts/playFootstep.c"
 #include "parts/nextWaypoint.c"
 #include "parts/floorOfY.c"
-/* assets.c straddles: the two asset loaders are in this object,
-   right after floorOfY.  They need the trap bindings. */
 #include "parts/loadObjects.c"
 #include "parts/loadSprites.c"
 #include "parts/decodeScn.c"
@@ -60,12 +58,8 @@
 #include "dat_pexname.c"
 #include "parts/main.c"
 #include "dog.c"
-/* save.c straddles too: loadSavedGame and defineSprite sit between placeDog and
-   gameLoop. */
 #include "parts/loadSavedGame.c"
 #include "parts/defineSprite.c"
-/* main.c straddles: gameLoop is in this object, between defineSprite
-   and runEvent. */
 #include "parts/gameLoop.c"
 #include "parts/chooseAction.c"
 #include "ai.c"
@@ -78,9 +72,6 @@
 #include "airandom.c"
 #include "movement.c"
 #include "parts/blitRect.c"
-/* letload.c straddles: loadLetterText is in this object, just ahead of
-   copyScreen.  gfx_prim.c straddles too: copyScreen, initHouseBuf and sprites.c's
-   initMfdb are in this object. */
 #include "parts/loadFrameFile.c"
 #include "parts/loadLetterText.c"
 #include "parts/copyScreen.c"
@@ -93,8 +84,7 @@
 #include "parts/initAes.c"
 #include "parts/initMirror.c"
 #include "parts/buildMirrorTable.c"
-/* fillPanel is in this object, not stx_u2's where render.c's other
-   functions live. */
+/* fillPanel is in this object, away from drawObject in stx_u2.c. */
 #include "parts/fillPanel.c"
 #include "parts/getKey.c"
 /* getKey's jump table lands in the data segment here, so the last
@@ -105,11 +95,9 @@
 #include "parts/rollResident.c"
 #include "parts/resetDailyFlags.c"
 #include "renderx.c"
-/* titleScreen is a real interactive title screen. */
 #include "parts/titleScreen.c"
 #include "parts/enterField.c"
 #include "parts/eraseChar.c"
-/* save.c's file helpers come near the end of this object. */
 #include "parts/openFile.c"
 #include "parts/readFile.c"
 /* outOfMemory closes the object. */

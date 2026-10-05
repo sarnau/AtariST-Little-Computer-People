@@ -1,5 +1,5 @@
 /*
- * parser_smoke.c -- host-side smoke test for the NLP command parser.
+ * t_parser.c -- host-side smoke test for the NLP command parser.
  *
  * Verifies that the parser correctly:
  *   1. Skips whitespace + punctuation on tokenisation.

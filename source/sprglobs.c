@@ -62,28 +62,28 @@ short   dogOnStairs;
    0/7 (used to hide the dog while off-screen).  Starts at 0 (BSS),
    so the dog is visible from frame one. */
 short   dogHidden;
-short * pendImage[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_image: image bitmap for next draw */
-short * pendMask[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_mask: 1-bit AND mask for next draw */
-short   pendX[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_x: X for next draw */
-short   pendY[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_y: Y for next draw */
-short   pendHeight[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_height: rows for next draw */
-short   pendWidth[SPRITE_HW_SLOTS_ALLOC]; /* sprite_pending_width: pixels for next draw */
-short * drawnImage[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_image: image currently drawn */
-short * drawnMask[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_mask: mask currently drawn */
-short   drawnX[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_x: X currently drawn */
-short   drawnY[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_y: Y currently drawn */
-short   drawnHeight[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_height: rows currently drawn */
-short   drawnWidth[SPRITE_HW_SLOTS_ALLOC]; /* sprite_active_width: pixels currently drawn */
+short * pendImage[SPRITE_HW_SLOTS_ALLOC]; /* image bitmap for next draw */
+short * pendMask[SPRITE_HW_SLOTS_ALLOC]; /* 1-bit AND mask for next draw */
+short   pendX[SPRITE_HW_SLOTS_ALLOC]; /* X for next draw */
+short   pendY[SPRITE_HW_SLOTS_ALLOC]; /* Y for next draw */
+short   pendHeight[SPRITE_HW_SLOTS_ALLOC]; /* rows for next draw */
+short   pendWidth[SPRITE_HW_SLOTS_ALLOC]; /* pixels for next draw */
+short * drawnImage[SPRITE_HW_SLOTS_ALLOC]; /* image currently drawn */
+short * drawnMask[SPRITE_HW_SLOTS_ALLOC]; /* mask currently drawn */
+short   drawnX[SPRITE_HW_SLOTS_ALLOC]; /* X currently drawn */
+short   drawnY[SPRITE_HW_SLOTS_ALLOC]; /* Y currently drawn */
+short   drawnHeight[SPRITE_HW_SLOTS_ALLOC]; /* rows currently drawn */
+short   drawnWidth[SPRITE_HW_SLOTS_ALLOC]; /* pixels currently drawn */
 
 /* ---- Sprite definitions (SPRITE_SLOTS logical slots) -------------------
    Populated once by defineSprite from the SPRITES asset file
    at boot.  Each logical slot holds a sprite's image bitmap, mask,
    height, and width; the hardware-slot pipeline above copies from
    these when a logical sprite is pushed to the screen. */
-short * spriteBitmap[SPRITE_SLOTS];          /* sprite_def_image[SPRITE_ID] */
-short * spriteMask[SPRITE_SLOTS];          /* sprite_def_mask[SPRITE_ID] */
-short   spriteHeight[SPRITE_SLOTS];          /* sprite_def_height[SPRITE_ID] */
-short   spriteWidth[SPRITE_SLOTS];          /* sprite_def_width[SPRITE_ID] */
+short * spriteBitmap[SPRITE_SLOTS];      /* image bitmap */
+short * spriteMask[SPRITE_SLOTS];        /* 1-bit AND mask */
+short   spriteHeight[SPRITE_SLOTS];      /* rows */
+short   spriteWidth[SPRITE_SLOTS];       /* pixels */
 
 /* The body and shape buffers must be ARRAYS, not pointer variables:
    indexing a real global array is what the original code compiles

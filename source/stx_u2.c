@@ -16,7 +16,7 @@
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
 #include "types.h"
-#include <osbind.h>       /* the sc_sdt* parts use Setscreen/Logbase */
+#include <osbind.h>       /* beginDraw/endDraw use Setscreen/Logbase */
 #include <stdio.h>        /* sprintf, for the letter writer */
 #ifdef HOST
 #include "hostgem.h"

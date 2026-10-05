@@ -79,7 +79,7 @@ short   relaxedActions[16] = {
 };
 
 /* scheduleTiers[3][8]: (phase, activity_level) -> TIER_*, i.e. byte offset
-   hours_bucket*16 + activity_level*2.  A real 2-D array, not a table
+   phase*16 + activity_level*2.  A real 2-D array, not a table
    of row pointers -- pickIdleAction's code depends on that -- and it must
    sit directly after relaxedActions in data. */
 short           scheduleTiers[3][8] = {

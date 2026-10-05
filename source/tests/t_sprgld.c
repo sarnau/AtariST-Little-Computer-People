@@ -1,8 +1,8 @@
 /*
- * sprite_golden.c -- golden-master render test for the sprite compositor.
+ * t_sprgld.c -- golden-master render test for the sprite compositor.
  *
  * Iterates animState = 0..29 (the animation range for which
- * body_sprite_frame_table has non-zero entries) x both facings, calling
+ * bodyIndex has non-zero entries) x both facings, calling
  * updateBody() for each, and packs all 60 outputs into a
  * single 4-column x 15-row atlas PGM (4*64 = 256 wide, 15*21 = 315 tall).
  *

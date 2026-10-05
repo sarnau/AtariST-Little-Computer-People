@@ -1,5 +1,5 @@
 /*
- * sounds_load.c -- smoke test for the SOUNDS.LCP loader.
+ * t_sounds.c -- smoke test for the SOUNDS.LCP loader.
  *
  * Loads the real 1985 SOUNDS.LCP file and verifies:
  *   1. At least a handful of records parse (SFX_DOORBELL etc. exist)

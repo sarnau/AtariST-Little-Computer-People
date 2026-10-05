@@ -232,16 +232,16 @@
    target"; stepHead then steps toward the state's rest direction. */
 #define HEAD_TURN_NONE                  99
 
-/* ---- Head animation modes (headMode, headTarget) ------------------------
-   Bit fields inside headMode:
-     bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
-                 the enum encodes it as value 3 for the "amplitude enabled"
-                 marker; stepHead masks with HEAD_MODE_H_AMPLITUDE = 0x07)
-     bit 3       HEAD_ANIM_HORIZONTAL_RANGE (0x08) or 0xC (see stepHead)
-     bits 5..6   HEAD_ANIM_VERTICAL_RANGE (0x60)
-     bit 7       HEAD_ANIM_VERTICAL_OVERRIDE (0x80)
-   Composite values (HEAD_ANIM_READING = 0x41, WALKING = 0x42, etc.) mix
-   the bits into ready-made mode selectors. */
+/* ---- Head animation modes (headMode) -----------------------------------
+   HEAD_ANIM_DISABLED (negative) freezes the head.  Otherwise headMode is
+   a set of fields that limit the random targets stepHead picks:
+     bits 0..1  HEAD_ANIM_HORIZONTAL_AMPLITUDE  turn by this minus one;
+                                                0 = a random amount
+     bits 2..3  HEAD_ANIM_HORIZONTAL_RANGE      0 = either side at random,
+                                                8 or more = the other side
+     bits 5..6  HEAD_ANIM_VERTICAL_RANGE        tilt range; 0 = random
+     bit 7      HEAD_ANIM_VERTICAL_OVERRIDE     take the tilt from bits 5..7
+   READING, WALKING and COMPUTER are ready-made combinations. */
 #define HEAD_ANIM_DISABLED              (-1)
 #define HEAD_ANIM_SHOWER                0x02
 #define HEAD_ANIM_HORIZONTAL_AMPLITUDE  0x03
@@ -376,8 +376,8 @@
    drawObject().  cp68's 22-char macro-name limit forces the short OBJ_
    prefix. */
 #define OBJ_FILING_CABINET_CLOSED               0
-#define OBJ_FILING_CAB_OPEN_1                   1       /* filing_cabinet_open_1 */
-#define OBJ_FILING_CAB_OPEN_2                   2       /* filing_cabinet_open_2 */
+#define OBJ_FILING_CAB_OPEN_1                   1
+#define OBJ_FILING_CAB_OPEN_2                   2
 #define OBJ_ALARM_1                             3
 #define OBJ_ALARM_2                             4
 #define OBJ_STOVE_1                             5
@@ -736,8 +736,7 @@
 #define SICK_DELAY_IMPROVING            5
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
-   The 1985 code uses a keycode_enum where Ctrl+X maps to X-'@' (i.e.
-   Ctrl+A=1, Ctrl+B=2, ...).  The names carry both the key and what the
+   Ctrl+X arrives as X-'@' (Ctrl+A=1, Ctrl+B=2, ...).  The names carry both the key and what the
    game does with it. */
 /* KEY_NONE (-1) signals "nothing in the buffer". */
 #define KEY_NONE                        (-1)

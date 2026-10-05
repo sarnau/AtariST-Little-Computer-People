@@ -1,14 +1,3 @@
-/* Head-animation mode bits (sprhead.c's own defines, repeated here so
-   the unity unit can compile this body). */
-#undef  HEAD_MODE_H_AMPLITUDE
-#undef  HEAD_MODE_H_RANGE
-#define HEAD_MODE_H_AMPLITUDE           0x03
-#define HEAD_MODE_H_RANGE               0x0c
-#ifndef HEAD_MODE_V_RANGE
-#define HEAD_MODE_V_RANGE               0x60
-#define HEAD_MODE_V_OVERRIDE            0x80
-#endif
-
 /* Moves the resident's head one step per tick.  headPose is the current
    head pose (direction in bits 0-2, tilt in bits 3-4) and headTarget the
    target.  Once the head has reached its target and the headDelay
@@ -49,14 +38,14 @@ stepHead()
 
         if ((rnd() & 0x10) == 0) {
                 /* Horizontal picker. */
-                if ((headMode & HEAD_MODE_H_AMPLITUDE) == 0)
-                        random_seed = ((rnd() & HEAD_MODE_H_AMPLITUDE) | 1) - 1;
+                if ((headMode & HEAD_ANIM_HORIZONTAL_AMPLITUDE) == 0)
+                        random_seed = ((rnd() & HEAD_ANIM_HORIZONTAL_AMPLITUDE) | 1) - 1;
                 else
-                        random_seed = (headMode & HEAD_MODE_H_AMPLITUDE) - 1;
+                        random_seed = (headMode & HEAD_ANIM_HORIZONTAL_AMPLITUDE) - 1;
 
-                if (((headMode & HEAD_MODE_H_RANGE) == 0 &&
+                if (((headMode & HEAD_ANIM_HORIZONTAL_RANGE) == 0 &&
                      (rnd() & 8) != 0) ||
-                    (headMode & HEAD_MODE_H_RANGE) >= 8)
+                    (headMode & HEAD_ANIM_HORIZONTAL_RANGE) >= 8)
                         random_seed = -random_seed;
 
                 random_seed = (headRestDir[animState] + random_seed) & HEAD_DIR_MASK;
@@ -66,14 +55,14 @@ stepHead()
         } else {
                 /* Vertical picker. */
                 /* Embedded: the store's own flags drive the test. */
-                if ((movement_mask = headMode & HEAD_MODE_V_RANGE) == 0) {
-                        movement_mask = rnd() & HEAD_MODE_V_RANGE;
+                if ((movement_mask = headMode & HEAD_ANIM_VERTICAL_RANGE) == 0) {
+                        movement_mask = rnd() & HEAD_ANIM_VERTICAL_RANGE;
                         if (movement_mask == 0)
                                 movement_mask = 0x40;
                 }
                 movement_mask = (movement_mask >> 5) - 1;
-                if ((headMode & (HEAD_MODE_V_OVERRIDE |
-                                HEAD_MODE_V_RANGE)) <= 0x80)
+                if ((headMode & (HEAD_ANIM_VERTICAL_OVERRIDE |
+                                 HEAD_ANIM_VERTICAL_RANGE)) <= 0x80)
                         movement_mask = ((rnd() & 4) >> 2) +
                                         (movement_mask & 1);
                 else

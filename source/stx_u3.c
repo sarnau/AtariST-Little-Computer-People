@@ -25,8 +25,6 @@
 
 #include "alerts.c"
 #include "sprites.c"
-/* renderf.c straddles: renderFrame is in this object, ahead of
-   waitHeadTurn. */
 #include "parts/renderFrame.c"
 /* waitHeadTurn immediately precedes gameTick. */
 #include "parts/waitHeadTurn.c"
@@ -41,18 +39,17 @@
 #include "parts/updateBody.c"
 #include "parts/stepHead.c"
 #include "parts/updateHead.c"
-/* sprites.c straddles within this object: these four sit past
-   updateHead, not with layoutSlots/initSlots at the front. */
+/* The mask builders sit here, past updateHead, not with
+   layoutSlots/initSlots in sprites.c at the front. */
 #include "parts/buildMasks.c"
 #include "parts/maskBody.c"
 #include "parts/maskHead.c"
 #include "parts/expandFrame.c"
-/* renderx.c and gfx_prim.c straddle: scrollStrip and paperRow sit in
-   this object, and paperRow must directly follow scrollStrip so the call
-   between them stays a short branch. */
+/* paperRow must directly follow scrollStrip so the call between them
+   stays a short branch. */
 #include "parts/scrollStrip.c"
 #include "parts/paperRow.c"
-#include "parts/sc_firsb.c" /* stripeRow, blackRow */
+#include "parts/stripeRow.c" /* stripeRow, blackRow */
 #include "parts/printString.c"
 #include "parts/printChar.c"
 #include "parts/matchCommand.c"

@@ -25,7 +25,7 @@ char ** argv;
 {
         /* The conterm clear, the .SCN file handling, and the object and
            sprite loading are all written out inline here, which is why
-           this function is so long.  pad1/pad2 are unused but must
+           this function is so long.  unused1/unused2 must
            stay, and the declaration order is the original's frame
            layout. */
         short   i;
@@ -34,8 +34,8 @@ char ** argv;
         short   w;
         short   h;
         short   wpr;
-        short   pad1;
-        short   pad2;
+        short   unused1;
+        short   unused2;
         short   fhandle;
         char *  conterm;
         long    ssp;

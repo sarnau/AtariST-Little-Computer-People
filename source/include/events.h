@@ -1,4 +1,4 @@
-/* events.h -- extern declarations for events.c. */
+/* events.h -- the event queue filled by queueEvent and drained by nextEvent. */
 
 #ifndef EVENTS_H
 #define EVENTS_H

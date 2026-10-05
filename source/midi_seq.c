@@ -113,7 +113,7 @@ armSequencer()
         seqPhase = songActive = YES;
 }
 
-/* pushLoop: push loop marker {return_addr, count-1} on loopStack (cap 49). */
+/* pushLoop: push loop marker {return position, count-1} on loopStack (cap 49). */
 
 void
 pushLoop(a, b)
@@ -276,7 +276,7 @@ peekNoteDur()
                 ticksToNext = 0;
 }
 
-/* queueNote: queue Note-On in noteQueue as {duration, note|sustain, phys_ch}
+/* queueNote: queue Note-On in noteQueue as {duration, note|sustain, physical channel}
    and dispatch Note-On via sendMidiEvent.  Queue entry fires paired Note-Off
    later via expireNotes + sendNoteOff. */
 
@@ -372,15 +372,15 @@ char    index;
 
 /* sendMidiEvent: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
-   MIDI OUT: octave-transpose note by (env_val - hi_nibble(midi_ch))
-     * -12 semitones, write via aciaWrite (seqBusy=1) or Midiws; restore
-     note before PSG path.
+   MIDI OUT: shift the note by (high nibble of midi_ch - 3) octaves,
+     write via aciaWrite (seqBusy=1) or Midiws; restore the note before
+     the PSG path.
    PSG path (Note-On 0x9n only):
      vel=0 -> Note-Off: find channel by note, ENV_RELEASE.
      vel>0 -> Note-On: alloc silent channel, else voice-steal by
        highest phase; guard [noteHigh, noteLow]; copy 8 ADSR bytes from
-       songAdsr + (g_mccha-1)*8; compute (2 - hi_nib(attack_dur))*12
-       octave offset; write PSG tone/mixer/noise; if freq<0x17 use
+       songAdsr + (noteChan-1)*8; take a (2 - N)*12 octave offset from
+       attack_duration's high nibble N; write PSG tone/mixer/noise; if freq<0x17 use
        ENV_FADEOUT instead of ENV_ATTACK; set psgActive.
    Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
@@ -758,7 +758,7 @@ short   value;
 
 /* stepEnvelopes: PSG software ADSR envelope processor.  50 Hz from timerAIsr.
    3 channels through attack->decay->sustain->release->fadeout.
-   Per phase: Bresenham accum, delta = (target-cur)*rate_table[t],
+   Per phase: Bresenham accum, delta = (target-cur)*envRateTab[t],
    accum += delta; while accum > 360, cur += dir; accum -= 360.
    phase_timer==0 with dur==0 -> immediate fall-through (gotos).
    Clamp cur to max_volume; write PSG amp reg 8/9/10 via psgWrite.

@@ -8,12 +8,12 @@ initHouseBuf()
 {
         /* The buffer size goes through a local that both arms of a
            vestigial if/else set to the same value, and the pointer is
-           aligned in the global itself.  The spare locals are unused.
+           aligned in the global itself.  The unused locals set the frame.
            All of this is the original's shape and must stay. */
         unsigned short  size;
-        short           spare1;
-        short           spare2;
-        short           spare3;
+        short           unused1;
+        short           unused2;
+        short           unused3;
 
         if (screenScale == 1)
                 size = 0xE800;

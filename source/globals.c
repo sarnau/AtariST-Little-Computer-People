@@ -3,7 +3,7 @@
  *
  * Definitions of every extern declared in globals.h.  Alcyon C places
  * zero-initialised globals in BSS automatically; explicit initialisers
- * here are only for values that matter at boot time before load_hyber()
+ * here are only for values that matter at boot time before loadSavedGame()
  * populates the PLAYER struct.
  */
 
@@ -141,7 +141,7 @@ short   boxWidth;
 short   boxHeight;
 
 /* The VDI parameter block: points at the game-local arrays used by
-   vdiown.c's bindings and vdi_go. */
+   the bindings in vdistx.c and their trap dispatcher, gsx1. */
 short * vdipb[5];
 
 /* GEM VDI shared scratch arrays.  Gemlib source (alcyon/gemlib/vdi.c)
@@ -225,7 +225,7 @@ char            noteAccent;        /* accent bit: full velocity and full PSG vol
    notes. */
 short           noteQueue[60];
 
-/* Loop stack -- {return_addr, remaining_count} pairs.  initSongState starts
+/* Loop stack -- {return position, remaining count} pairs.  initSongState starts
    the index at 9 (which also means "empty") and pushLoop only pushes
    while it is below 49, so entries 9..48 hold at most 20 nested loops;
    0..8 and 49 are never touched. */
@@ -243,8 +243,8 @@ long            loopStack[50];
    ampRegs is the {0x88, 0x89, 0x8a} amp-register-with-write-bit
    for the 3 PSG channels; the assembly subtracts 0x80 back off
    before the actual psgWrite call. */
-short           rampDelta[3];      /* ramp_delta   */
-short           rampAccum[3];      /* ramp_accum   */
+short           rampDelta[3];
+short           rampAccum[3];
 
 /* noteOwner: 128-entry table tracking
    which MIDI notes are currently sounding and on which logical channel.
@@ -469,7 +469,7 @@ short           bjBetSplit;        /* Blackjack: chips bet on the split hand */
 short           compChips;        /* the resident's chips (Poker/Blackjack, 400) or cards (War, 26) */
 short           plyrChips;        /* the player's chips or cards, likewise */
 short           potChips;        /* chips in the pot */
-/* anagram_original_word: pointer into anaDict dictionary (11-byte rows)
+/* anaAnswer: pointer into anaDict dictionary (11-byte rows)
    set by anaPickWord when a word is picked. */
 char *          anaAnswer;
 short           bjDidSplit;       /* Blackjack: 1 once the player has split */
@@ -492,29 +492,24 @@ short           warDepth;
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
    at the start of each round in pkrAnte / pkrDealHands / pkrShowdown.
    compHand / plyrHand also serve as the War hands. */
-short           compHand[5];           /* computer_hand -- CARD_TYPE 0..51 */
-short           plyrHand[5];           /* player_hand */
-short           compScoring[5];          /* hand_rank_flags   -- which cards
-                                       form computer's pair/trip/etc */
-short           compSorted[5];          /* hand_suit_flags   -- sorted copy
-                                       of computer hand (used as kicker
-                                       scratch by pkrShowdown) */
-short           plyrScoring[5];         /* player_hand_rank_flags */
-short           plyrSorted[5];         /* player_hand_suit_flags */
-short           compRank;     /* computer_hand_rank
-                                       0=high,1=pair,2=two-pair,3=trips,
-                                       4=straight,5=flush,6=full,7=four,
-                                       8=straight-flush,9=royal */
-short           plyrRank;     /* player_hand_rank */
-short           pkrWinner;     /* winner (0=comp, 1=player) */
-short           pkrSelected[5];          /* card_selected -- 1 = discard */
-short           pkrNumDisc;     /* discard_count */
-short           pkrDiscPile[13];       /* discard_pile of already-seen cards:
-                                       at most 5 + 5 discards plus the
-                                       explicit pkrDiscPile[10] write */
-short           pkrRaiseAmt;     /* deck_position -- reused as
-                                       raise amount / draw counter */
-short           pkrLastBet;     /* player_hand_value -- saved bet */
+short           compHand[5];           /* the resident's hand, CARD_TYPE 0..51 */
+short           plyrHand[5];           /* the player's hand */
+short           compScoring[5];        /* 1 for each of the resident's cards
+                                          that forms his pair, trips, ... */
+short           compSorted[5];         /* sorted copy of the resident's hand
+                                          (kicker scratch for pkrShowdown) */
+short           plyrScoring[5];        /* the same two for the player */
+short           plyrSorted[5];
+short           compRank;              /* HAND_* rank of the resident's hand */
+short           plyrRank;              /* HAND_* rank of the player's hand */
+short           pkrWinner;             /* winner (0=comp, 1=player) */
+short           pkrSelected[5];        /* 1 = card marked for discard */
+short           pkrNumDisc;            /* cards in pkrDiscPile */
+short           pkrDiscPile[13];       /* cards already seen: at most 5 + 5
+                                          discards plus the explicit
+                                          pkrDiscPile[10] write */
+short           pkrRaiseAmt;           /* raise amount, also a draw counter */
+short           pkrLastBet;            /* the player's previous bet */
 short           pkrBet;     /* current bet accumulator (shared) */
 BOOL16          pkrBluffing;    /* computer intends to bluff */
 BOOL16          pkrPassed;    /* computer passed on the bet loop */
@@ -535,11 +530,11 @@ BOOL16          pkrPassed;    /* computer passed on the bet loop */
    bjDealerScore / bjPlyrScore -- computer-picked / player-picked score
                 once the double-value-with-ace picker resolves.
 */
-short           bjSplitHand[5];      /* player_split_hand */
-short           bjHitsMain; /* player_card_count       */
-short           bjHitsDealer; /* computer_card_count     */
-short           bjHitsSplit; /* player_split_card_count */
-short           bjMatchBet; /* saved bet across split  */
+short           bjSplitHand[5];
+short           bjHitsMain;
+short           bjHitsDealer;
+short           bjHitsSplit;
+short           bjMatchBet;
 BOOL16          bjDblMain;
 BOOL16          bjDblSplit;
 BOOL16          bjNatMain;
@@ -555,7 +550,7 @@ short           bjPlyrScore;
    wpzBlanks         -- count of blanks in the current puzzle (== rows
                      of wpzAnswers[] actually in use).
    The 3 flavor-text pointer arrays hold string literals shown to
-   the player during solve_phase:
+   the player while solving:
       wpzPrompts    9 entries (0..4 random first-word, 5..8 for word
                 slots 2..5)
       wpzRightMsgs   6 entries, random on solve
@@ -573,18 +568,13 @@ MFDB            cardTableMfdb;       /* the 320x77 card-table area the cards are
 BOOL16  isDogDelivery;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
 BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and stop its ring */
 
-/* (gameTick animation tables + frame-state globals live
-   in tick_tables.c -- Alcyon C168's symbol-table overflows if they
-   are added here.) */
-
 /* ==== initialized data ================================================
    EVERY initialized global in the program, in the original's DATA
    order.
 
    The 1985 source kept all of this in ONE object: its data segment
-   interleaves tables whose code lives in sprglobs.c, tables.c,
-   tick_tables.c, vocab.c, psgfreq.c, sprload.c, calendar.c, events.c
-   and here -- and data from separate objects cannot interleave.
+   interleaves tables used all over the game, and data from separate
+   objects cannot interleave.
 
    The order is the original's, not taste (see docs/history.md, "DATA and
    BSS layout").  DO NOT reorder by hand.
@@ -595,7 +585,7 @@ BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and s
    before calling psgWrite to recover the raw register number. */
 unsigned char   ampRegs[3]  = { 0x88, 0x89, 0x8a };
 
-/* Three pointers at psg_env[0..2], one per PSG channel.  NOTHING in
+/* Three pointers at psgEnvelope[0..2], one per PSG channel.  NOTHING in
    the program references this table, but the original carries it in
    DATA immediately behind ampRegs, and Alcyon emits an unreferenced
    initialized global just the same.  Do not delete. */
@@ -623,7 +613,7 @@ short           envSusTab[16] = {
             45,   60,   72,   90,  120,  180,  360, 30000
 };
 
-/* Envelope release table.  Applied to ramp_delta
+/* Envelope release table.  Applied to rampDelta
    during the sustain->release transition. */
 short           envRelTab[16] = {
              0,  360,  180,   90,   45,   20,   15,    9,
@@ -735,9 +725,7 @@ unsigned char   keyScaleMask[16] = {
 };
 
 /* The default program map, sixteen bytes of INITIALIZED data right
-   behind keyScaleMask; progMap points here.  Named defProgMap rather than
-   mi_pgmapb because Alcyon truncates a linkage name to eight
-   characters and _mi_pgmapb would collide with _mi_pgmap. */
+   behind keyScaleMask; progMap points here. */
 unsigned char   defProgMap[16] = {
         0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11

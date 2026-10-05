@@ -6,13 +6,13 @@ loadFrameFile(filename, dest_buf)
 char *          filename;
 unsigned char * dest_buf;
 {
-        /* pad1/pad2 are unused, but they must stay ahead of the two
+        /* unused1/unused2 must stay ahead of the two
            header words and the handle: removing them changes the
            compiled code.  There is no size cap and no return value
            (despite the declared short) -- the header's second word IS
            the length. */
-        short   pad1;
-        short   pad2;
+        short   unused1;
+        short   unused2;
         short   count;
         short   total;
         short   fhnd;

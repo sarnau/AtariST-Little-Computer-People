@@ -1,5 +1,5 @@
 /*
- * hyber_roundtrip.c -- host-side smoke test for the HYBER save file.
+ * t_hyber.c -- host-side smoke test for the HYBER save file.
  *
  * Copies DATA/HYBER into the CWD as "hyber", calls loadSavedGame() to parse
  * it into the PLAYER struct, then saveFile() to write it back out and

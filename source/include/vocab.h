@@ -1,4 +1,4 @@
-/* vocab.h -- extern declarations for vocab.c. */
+/* vocab.h -- the parser's vocabulary and phrase tables. */
 
 #ifndef VOCAB_H
 #define VOCAB_H

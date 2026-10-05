@@ -8,7 +8,7 @@
  * result afterwards -- so what there is to verify is that the bytes
  * arrive intact through openFile/readFile/Fclose.
  *
- * loadFrameFile reads its two header words with raw two-byte fr_reads, so on
+ * loadFrameFile reads its two header words with raw two-byte readFile calls, so on
  * a little-endian host they come back byte-swapped and it would then
  * read the wrong length.  That is faithful ST code; the test writes a
  * host-endian copy of the header (payload untouched) so the loader's

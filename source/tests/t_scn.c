@@ -1,5 +1,5 @@
 /*
- * scn_decode.c -- smoke test for the compressed screen image decoder.
+ * t_scn.c -- smoke test for the compressed screen image decoder.
  *
  * Decodes DATA/HOUSE.SCN through decodeScn and
  * verifies the first 8 output words match the Python reference

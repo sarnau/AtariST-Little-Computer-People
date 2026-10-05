@@ -9,7 +9,7 @@
 * priority interrupts -- VBL, RS-232 -- can still preempt them), then
 * restore it on exit.  Ends with `rte`, not `rts`.
 *
-* Installed by hookTimerA in init.c via
+* Installed by hookTimerA via
 *     xbios(31, 0, 5, 0x28, (long) timerAIsr);
 *
 * Symbols (Alcyon truncates linkage names to 8 characters):

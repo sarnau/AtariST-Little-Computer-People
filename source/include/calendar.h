@@ -1,4 +1,4 @@
-/* calendar.h -- extern declarations for calendar.c. */
+/* calendar.h -- the month-length table and the calendar helpers. */
 
 #ifndef CALENDAR_H
 #define CALENDAR_H

@@ -9,11 +9,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-/* Under Alcyon C 4.14, external identifiers truncate to 7 C-name chars
-   at the linker layer.  alcyon_names.h aliases all colliding long
-   names to unique short ones and also #defines `void` -> `int` (Alcyon
-   has no `void` keyword).  Included transparently so every .c and
-   every extern block sees the same mapping. */
+/* alcnames.h patches the keywords Alcyon C 4.14 lacks (`void`,
+   `volatile`).  Included from here so every file sees it. */
 #ifdef __ALCYON__
 #include "alcnames.h"
 #endif

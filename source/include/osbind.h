@@ -61,7 +61,7 @@ extern short    Dsetpath();
 extern long     bios();
 extern long     xbios();
 
-/* access(2) is in <unistd.h> on POSIX; declared here so save.c doesn't
+/* access(2) is in <unistd.h> on POSIX; declared here so ensureFile doesn't
    need to drag POSIX headers in. */
 extern int      access();
 

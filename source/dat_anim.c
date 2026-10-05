@@ -22,16 +22,15 @@ short   eventQueue[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE
 };
 
-/* Sprite layer flags: entries 0,1 = SPRITE_IN_FRONT (1),
-   rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
-   0 and 7 in the hardware layout, per layoutSlots). */
+/* Layer of each logical sprite (SPRITE_HIDDEN, SPRITE_BEHIND_LCP or
+   SPRITE_IN_FRONT).  Only the resident's body and head start visible;
+   every other sprite is hidden until an action shows it. */
 short   spriteLayer[SPRITE_SLOTS] = { 1, 1 };
 
-/* Which hardware slot each logical
-   sprite is currently mapped to.  Entries 0..1 pin the LCP body/head
-   to their dedicated slots; the rest default to HW_SLOT_NONE (=9,
-   the compositor's off-screen sentinel) and get assigned dynamically
-   by sprite_update_slots when the sprite is queued. */
+/* Hardware slot each logical sprite is drawn through.  The resident's
+   body and head own slots 3 and 4 for good; every other sprite starts
+   at HW_SLOT_NONE, which the compositor never draws, and layoutSlots
+   hands it a slot by layer when it becomes visible. */
 short   spriteSlot[SPRITE_SLOTS] = {
         /* 0..9   */ HW_SLOT_LCP_BODY, HW_SLOT_LCP_HEAD,
                      HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
@@ -158,9 +157,8 @@ short   dogEatFrames[3]   = {
         SPRITE_DOG_EATING_1, SPRITE_DOG_EATING_2, SPRITE_DOG_EATING_3
 };
 
-/* Animation frame tables consumed by gameTick.  Every
-   value is an object_tab_mfdb index; gameTick indexes these by a
-   small counter to pick which sprite/frame to draw. */
+/* Animation frame tables for gameTick: each entry is an OBJ_* id that
+   drawObject blits, picked by a small frame counter. */
 short   clockFrames[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
                            OBJ_CLOCK_1, OBJ_CLOCK_3 };
 

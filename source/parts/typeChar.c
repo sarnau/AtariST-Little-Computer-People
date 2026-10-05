@@ -34,9 +34,9 @@ short   ch;
                 spriteLayer[SPRITE_TYPING_4] = SPRITE_HIDDEN;
                 layoutSlots();
 
-                /* Width-bracket sprite for buffer_pos (0..9/10..19/20..29/30+).
-                   i resolves to 0 here (buffer_pos just cleared);
-                   preserved verbatim. */
+                /* Width-bracket sprite for typedCursor (0..9/10..19/20..29/30+).
+                   i always resolves to 0 here (typedCursor was just
+                   cleared); kept as the original wrote it. */
                 i = 3;
                 if (typedCursor < 10)      i = 0;
                 else if (typedCursor < 20) i = 1;

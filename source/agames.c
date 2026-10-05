@@ -28,10 +28,12 @@
 void
 playGame()
 {
-        short   spare0;
+        /* The unused locals must stay, in this order: they set the
+           stack frame. */
+        short   unused1;
         short   keycode;
         short   waitedOnce;
-        short   spare3, spare4, spare5, spare6;
+        short   unused2, unused3, unused4, unused5;
         short   napsLeft;
 
         dogNoTopFlr = YES;

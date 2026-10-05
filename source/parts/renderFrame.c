@@ -31,27 +31,27 @@ renderFrame()
            order -- they set the stack frame.  _hz_200's low word lives
            at $04BC and _vbclock at $0462. */
         short           index;
-        long            fill1;
-        long            fill2;
-        long            fill3;
+        long            unused1;
+        long            unused2;
+        long            unused3;
         short *         p_hz;
         unsigned short  limit;
         unsigned short  save_hz200;
-        char *          c26;
-        char *          c30;
+        char *          srcMfdb;
+        char *          dstMfdb;
         long            saveSSP;
-        long            fill4;
-        long            fill5;
+        long            unused4;
+        long            unused5;
         long *          p_vbc;
         long            save_vbclock;
         long            vbc2;
-        long            fill6;
+        long            unused6;
         long *          p_vbc2;
-        short           s64;
-        short           s66;
-        short           fill7;
-        short           fill8;
-        short           s72;
+        short           dest;
+        short           pick;
+        short           unused7;
+        short           unused8;
+        short           base;
 
         /* Frame-rate gate. */
         p_hz = (short *) 0x04BCL;
@@ -91,21 +91,20 @@ renderFrame()
             dogIdleCount != 0 && dogEating == NO)
                 dogIdleCount--;
 
-        /* The dog's target picker, written out inline.  base = s72,
-           pick = s66, dest_position = s64. */
+        /* The dog's target picker, written out inline. */
         if (dogXTarget == 0 && dogYTarget == 0 &&
             dogIdleCount == 0 && dogEating == NO) {
                 if (dogNoTopFlr != NO)
-                        s72 = 3;
+                        base = 3;
                 else
-                        s72 = 0;
+                        base = 0;
                 do {
-                } while ((s66 = rndRng(s72, 8)) == dogLastPick);
-                posToXY(s64 = dogRoamSpots[s66], &dogXTarget, &dogYTarget);
-                dogYTarget += dogYNudge[s66];
-                dogXTarget += dogXNudge[s66];
-                dogLastPick = s66;
-                if (s64 == POS_BTM_STAIR_LANDING)
+                } while ((pick = rndRng(base, 8)) == dogLastPick);
+                posToXY(dest = dogRoamSpots[pick], &dogXTarget, &dogYTarget);
+                dogYTarget += dogYNudge[pick];
+                dogXTarget += dogXNudge[pick];
+                dogLastPick = pick;
+                if (dest == POS_BTM_STAIR_LANDING)
                         dogMayEat = YES;
                 dogIdleCount = rndRng(20, 200);
         }
@@ -144,24 +143,24 @@ renderFrame()
         /* --- Background copy ---
            Both MFDBs are reached through pointer locals set up here;
            that, and the order of the textTimer tests, are the original's. */
-        c26 = (char *) &houseMfdb;
-        c30 = (char *) &frameMfdb;
+        srcMfdb = (char *) &houseMfdb;
+        dstMfdb = (char *) &frameMfdb;
         if (textTimer > 0) {
                 /* Split copy for letter scroll. */
-                copyBlocks32(stripBuf, ((MFDB *) c30)->fd_addr, 135);
-                copyBlocks32((char *) ((MFDB *) c26)->fd_addr + 4320,
-                          (char *) ((MFDB *) c30)->fd_addr + 4320, 865);
+                copyBlocks32(stripBuf, ((MFDB *) dstMfdb)->fd_addr, 135);
+                copyBlocks32((char *) ((MFDB *) srcMfdb)->fd_addr + 4320,
+                          (char *) ((MFDB *) dstMfdb)->fd_addr + 4320, 865);
                 textTimer--;
         } else if (textTimer < 0) {
                 /* Partial (top-strip only). */
-                copyBlocks32(stripBuf, ((MFDB *) c30)->fd_addr, 385);
-                copyBlocks32((char *) ((MFDB *) c26)->fd_addr + 12320,
-                          (char *) ((MFDB *) c30)->fd_addr + 12320,
+                copyBlocks32(stripBuf, ((MFDB *) dstMfdb)->fd_addr, 385);
+                copyBlocks32((char *) ((MFDB *) srcMfdb)->fd_addr + 12320,
+                          (char *) ((MFDB *) dstMfdb)->fd_addr + 12320,
                           615);
         } else {
                 /* Full-screen. */
-                copyBlocks32(((MFDB *) c26)->fd_addr,
-                          ((MFDB *) c30)->fd_addr, 1000);
+                copyBlocks32(((MFDB *) srcMfdb)->fd_addr,
+                          ((MFDB *) dstMfdb)->fd_addr, 1000);
         }
 
         /* --- Sprite compositing --- */

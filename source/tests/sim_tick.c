@@ -100,19 +100,19 @@ char ** argv;
         CHECK(t_day == 2, "t_day did not advance to 2");
 
         /* thirst_timer counts down each minute; after 24*60=1440 minutes
-           with timer_max=30 it wraps 48 times.  Each wrap raises
-           thirst_level (capped at 3 then triggers lcp_become_sick).
+           with thirst_timer_max=30 it wraps 48 times.  Each wrap raises
+           thirst_level (capped at 3 then triggers fallSick).
            Timer at end: 1440 % 30 == 0 so it resets to 30.            */
         CHECK(resident.thirst_timer == 30, "thirst_timer end value wrong");
         CHECK(resident.thirst_level >= NEED_SEVERE,  "thirst_level should max out");
 
-        /* hunger_timer: 1440 minutes with timer_max=45 = 32 wraps.
-           At level 3 further wraps invoke lcp_become_sick which
+        /* hunger_timer: 1440 minutes with hunger_timer_max=45 = 32 wraps.
+           At level 3 further wraps invoke fallSick which
            leaves level unchanged.                                     */
         CHECK(resident.hunger_timer == 45, "hunger_timer end value wrong");
         CHECK(resident.hunger_level >= NEED_SEVERE,  "hunger_level should max out");
 
-        /* bathroom_timer: 1440 min, timer_max=120 -> wraps 12 times.
+        /* bathroom_timer: 1440 min, bathroom_timer_max=120 -> wraps 12 times.
            On first wrap bathroom_timer is set to 9999 and bathroom_need
            to YES, and stays that way.                                 */
         CHECK(resident.bathroom_need == YES, "bathroom_need should be YES");

@@ -1,7 +1,7 @@
 /* moveDog: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
-   equal steps to waypoint) and stair navigation (staircase_waypoint_
-   coords[] gate for the two staircase entrances).  Layer depth is
+   equal steps to waypoint) and stair navigation (stairWaypts gates the two
+   staircase entrances).  Layer depth is
    1 (in-front) when the dog is below the resident, -1 (behind) when
    above -- newspaper reading forces in-front so the dog doesn't disappear
    behind the paper. */

@@ -1,6 +1,6 @@
-/* Generic sprite activator (save.c, pet animations).
-   Recomputes the 8-slot layout and copies the definition into the
-   active slot, bypassing the pending double-buffer. */
+/* Shows a sprite at once: recomputes the 8-slot layout and copies the
+   definition straight into the active slot, bypassing the pending
+   double buffer. */
 
 void
 activateSprite(g_seix)

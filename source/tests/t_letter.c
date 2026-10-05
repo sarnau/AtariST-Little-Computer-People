@@ -36,8 +36,8 @@ char ** argv;
         (void) argv;
         setvbuf(stdout, NULL, _IONBF, 0);
 
-        /* Stage the compressed template in the CWD so file_load_letter_
-           template's file_open("letter.txt", 0) finds it. */
+        /* Stage the compressed template in the CWD so loadLetterText's
+           unpackFile("letter.txt", ...) finds it. */
         f = fopen("../../../DATA/LETTER.TXT", "rb");
         if (f == NULL) { perror("open DATA/LETTER.TXT"); return 1; }
         nread = fread(buf, 1, sizeof buf, f);

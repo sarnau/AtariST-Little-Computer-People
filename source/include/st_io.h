@@ -7,7 +7,7 @@
  * assigned to 0xFFFC04 in the link map).  On the host we can't do
  * that, so we define each symbol as a macro expanding to a volatile
  * dereference: on the ST it hits the real hardware, on the host it
- * hits a static scratch byte (declared in psg_io.c) that has no
+ * hits a static scratch byte (defined in hostasm.c) that has no
  * observable effect but keeps the code compilable.
  *
  * Register map:
@@ -26,7 +26,7 @@
 
 #ifdef HOST
 /* Host: hardware doesn't exist; each register aliases a scratch byte
-   defined in psg_io.c so the writes go somewhere real (avoids UB from
+   defined in hostasm.c so the writes go somewhere real (avoids UB from
    volatile deref of NULL) but produce no output. */
 extern volatile unsigned char   g_hmc;
 extern volatile unsigned char   g_hms;

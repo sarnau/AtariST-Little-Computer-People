@@ -24,12 +24,12 @@ short   mainPalette[16]           = {
         0x555, 0x007, 0x777, 0x410
 };
 
-/* colorPens: color_enum -> VDI-color permutation.  The table is
+/* colorPens: COLOR_* -> VDI-color permutation.  The table is
    exactly TOS's default ST-low permutation from VDI-index to
    palette-slot.
    The game names its own colours by palette slot (see mainPalette) and
-   calls vsl_color(colorPens[color_enum]) so that after TOS's
-   permutation the pen lands on palette slot `color_enum`.
+   calls vsl_color(colorPens[color]) so that after TOS's
+   permutation the pen lands on palette slot `color`.
 
    With a properly-opened VDI workstation
    (LCP.PRG launched directly from the GEM desktop / Hatari --auto),
@@ -60,11 +60,11 @@ short   keysBlocked          = NO;   /* YES while an activity owns the keyboard 
    as a .comm -- that is where the original has it. */
 short   pendReady[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
 
-short   headPose                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
+short   headPose                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose now: bits 0..2 angle, 3..4 tilt (HEAD_POSE); HEAD_ANIM_DISABLED stops the head animation */
 
 short   headTarget                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose the head animation is turning towards, same encoding */
 
-short   headMode                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* / sprhead.c bit-fields) */
+short   headMode                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* bit-fields) */
 
 /* Two bytes of -1 that nothing references, between headMode and
    nextAction.  Dead 1985 data that Alcyon still allocates; it must stay
@@ -152,7 +152,7 @@ short   headYOffset[93] = {
         20, 21, 20, 21, 21
 };
 
-/* Neutral head-facing angle per PLAYER_STATE (used by head_animate to
+/* Neutral head-facing angle per PLAYER_STATE (used by stepHead to
    pick the "resting" horizontal direction the head drifts toward). */
 short   headRestDir[93] = {
         HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /*  0.. 3 */
@@ -250,7 +250,7 @@ short   onStairs              = 0;
    floorBottomY[0] = bottom floor, [1] = middle floor, [2] = top. */
 short   floorBottomY[3]        = { 202, 140, 77 };
 
-/* spriteFileId: file-record index -> sprite_id slot to store its pointers in. */
+/* spriteFileId: file-record index -> SPRITE_* slot to store its pointers in. */
 short   spriteFileId[50] = {
         12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27,

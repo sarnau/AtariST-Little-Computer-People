@@ -5,7 +5,7 @@
  * On the Atari ST the port calls Fopen/Fread/Fwrite/Fclose/... which
  * expand (via <osbind.h>) to a real trap #1.  On the host we route
  * the file-I/O subset through stdio and provide plain-C stubs for
- * the memory/console entry points so save.c can round-trip a real
+ * the memory/console entry points so loadSavedGame/saveFile can round-trip a real
  * HYBER file to disk without needing an emulator.
  *
  * Only present when -DHOST is on; when building under Alcyon this

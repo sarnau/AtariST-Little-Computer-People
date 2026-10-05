@@ -1,8 +1,8 @@
 /*
- * sprite_compose.c -- host-side smoke test for the sprite compositor.
+ * t_sprite.c -- host-side smoke test for the sprite compositor.
  *
- * Loads DATA/BODY.LCP into memory, wires body_lcp_file and
- * bodyShapes into it, sets up a minimal PLAYER + world state,
+ * Loads DATA/BODY.LCP into memory, points bodyFrames and
+ * bodyShapes at it, sets up a minimal PLAYER + world state,
  * and calls updateBody().  Then:
  *   - asserts the compositor wrote non-zero pixels into bodyImage
  *   - asserts drawnX[3] / drawnY[3] track resX/y
