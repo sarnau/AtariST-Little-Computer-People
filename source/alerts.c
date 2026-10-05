@@ -32,7 +32,7 @@
    the frame's size, the dog's position (the frame's top is 17 lines
    above dogY) and the mask, but only one slot gets the image: the
    FRONT slot when layer is 1, the BACK slot otherwise, so the dog is
-   drawn in front of or behind the resident.  With flipH2 set the
+   drawn in front of or behind the resident.  With mirror set the
    frame is first mirrored into dogMirImage/dogMirMask (15 lines, 2 words)
    and those buffers are used instead. */
 void
