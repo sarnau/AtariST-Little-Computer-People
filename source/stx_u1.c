@@ -105,7 +105,7 @@
 /* The bare Random() wrapper, just past getKey. */
 #include "parts/rnd.c"
 #include "parts/rollResident.c"
-#include "calendar.c"
+#include "parts/resetDailyFlags.c"
 #include "renderx.c"
 /* titleScreen is a real interactive title screen. */
 #include "parts/titleScreen.c"

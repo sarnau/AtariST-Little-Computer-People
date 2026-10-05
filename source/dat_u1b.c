@@ -93,6 +93,6 @@ short           scheduleTiers[3][8] = {
 
 /* Bit-reversal pairs for buildMirrorTable: when bit mirrorSrcBit[i] is set in a
    byte, bit mirrorDstBit[i] is set in its mirror image in mirrorTable. */
-short           mirrorSrcBit[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+short           mirrorSrcBit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
-short           mirrorDstBit[8] = {   1,  2,  4,  8, 16, 32, 64, 128 };   /* mirror bit for mirrorSrcBit[i] */
+short           mirrorDstBit[8] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };   /* mirror bit for mirrorSrcBit[i] */

@@ -51,6 +51,8 @@ long    copyProtResult;      /* long: tested as a 32-bit value */
 short   walkSpeed;       /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
 
 BOOL16  alarmRinging;        /* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm clears it */
+BOOL16  alarmSounding;       /* the alarm's ring sound has started (gameTick) */
+short   ringCountdown;       /* gameTick's phone-ring countdown */
 short   waterLevel;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
 
 /* Typed-command queue: submitCommand appends the action matchCommand found and

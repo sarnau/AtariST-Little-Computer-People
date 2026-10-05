@@ -137,3 +137,13 @@ BOOL16  footstepDue;
    state from the previous tick; stepHead diffs against this to
    detect direction changes and pick the transition frame. */
 short   headLastWalk;
+
+/* Shared mask buffer (14 KB): defineSprite writes each sprite's
+   generated transparency mask here, parallel to its image bytes in
+   sprFileBuf, and spriteMask[id] points at that slice. */
+unsigned char   genMaskBuf[14000];
+
+/* 8-bit bit-reversal table used to mirror sprites.  Not shipped as
+   data: initMirror builds it at boot from mirrorSrcBit/mirrorDstBit, so
+   it lives in BSS. */
+short           mirrorTable[256];

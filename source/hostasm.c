@@ -21,6 +21,14 @@
 
 #include "types.h"
 
+/* --- st_io.h: the MIDI ACIA and YM2149 registers ------------------ */
+/* Host scratch bytes: st_io.h maps each hardware register onto one of
+   these.  volatile keeps the compiler from dropping the writes. */
+volatile unsigned char  g_hmc    = 2;    /* ACIA status: TDRE always set */
+volatile unsigned char  g_hms    = 0;
+volatile unsigned char  g_hgis   = 0;
+volatile unsigned char  g_hgiw   = 0;
+
 /* --- psg_asm.s: direct YM2149 register writes --------------------- */
 void psgWrite(reg, val)   short reg; short val;   { (void) reg; (void) val; }
 void psgMixer(mask)      short mask;             { (void) mask; }

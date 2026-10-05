@@ -1,4 +1,5 @@
-/* tick_tables.h -- extern declarations for tick_tables.c. */
+/* tick_tables.h -- extern declarations for gameTick's animation tables
+   and state (defined in the data files and globals.c). */
 
 #ifndef TICK_TABLES_H
 #define TICK_TABLES_H

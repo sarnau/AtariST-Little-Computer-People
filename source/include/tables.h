@@ -1,4 +1,5 @@
-/* tables.h -- extern declarations for tables.c. */
+/* tables.h -- extern declarations for the shared data tables (defined in
+   the data files, sprglobs.c and stx_u1's units). */
 
 #ifndef TABLES_H
 #define TABLES_H
