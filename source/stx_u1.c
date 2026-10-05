@@ -36,7 +36,7 @@
 #include "sprglobs.h"
 #include "sprites.h"
 
-#include "dat_u1.c"
+#include "dat_world.c"
 
 
 #include "parts/countSongs.c"
@@ -59,7 +59,7 @@
 #include "sprload.h"
 #include "tables.h"
 #include "tick_tables.h"
-#include "dat_u1d.c"
+#include "dat_pexname.c"
 #include "parts/main.c"
 #include "dog.c"
 /* save.c straddles too: loadSavedGame and defineSprite sit between placeDog and
@@ -75,7 +75,7 @@
 /* runEvent's and runAction's switch jump tables land in the data segment
    right here, so the globals that follow them come after this point,
    not with the rest at the top. */
-#include "dat_u1b.c"
+#include "dat_aitables.c"
 /* pickIdleAction sits between runAction and posToXY. */
 #include "airandom.c"
 #include "movement.c"
@@ -101,7 +101,7 @@
 #include "parts/getKey.c"
 /* getKey's jump table lands in the data segment here, so the last
    globals of this unit are declared behind it. */
-#include "dat_u1c.c"
+#include "dat_colors.c"
 /* The bare Random() wrapper, just past getKey. */
 #include "parts/rnd.c"
 #include "parts/rollResident.c"

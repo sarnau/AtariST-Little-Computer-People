@@ -37,7 +37,7 @@ CSRC=$(cd "$(dirname "$0")/.." && pwd)
 . "$CSRC/tools/hatari_probe.sh"
 
 # ---- derive the expectations from the shipped tables -----------------
-TABLE=$(python3 - "$CSRC/dat_u3b.c" "$CSRC/include/enums.h" <<'PY'
+TABLE=$(python3 - "$CSRC/dat_parser.c" "$CSRC/include/enums.h" <<'PY'
 import re, sys
 src = open(sys.argv[1]).read()
 # The tables name some values (ACTION_*, EW2A_END): resolve every plain

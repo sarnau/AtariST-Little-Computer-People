@@ -1,9 +1,9 @@
 /*
- * dat_u1c.c -- the tail of stx_u1's initialized data.
+ * dat_colors.c -- the tail of stx_u1's initialized data.
  *
  * getKey's switch jump table lands in the data segment immediately
  * after mirrorDstBit, and the three globals below follow it, so they are
- * declared after parts/getKey.c rather than with the rest of dat_u1b.
+ * declared after parts/getKey.c rather than with the rest of dat_aitables.
  * Their order here is the data layout and must not change.  Never
  * compiled standalone.
  */

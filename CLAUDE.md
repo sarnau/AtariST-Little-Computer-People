@@ -1668,8 +1668,8 @@ Roadmap:
     writeLetter.  Moving such a declaration moves BOTH its bytes and its
     string, so a neighbour sometimes has to move with it (typingSprites
     followed letterSignoffs).  The port carries this as per-object data files
-    included at the right points: dat_u1.c/dat_u1b.c/dat_u1c.c/
-    dat_u1d.c, dat_u2.c/dat_u2b.c, dat_u3a.c/dat_u3b.c and dat_u4.c,
+    included at the right points: dat_world.c/dat_aitables.c/dat_colors.c/
+    dat_pexname.c, dat_house.c/dat_letter.c, dat_anim.c/dat_parser.c and dat_sound.c,
     all listed in tools/stx_units.txt.  (games.c declares its globals
     inline at the same four points since 2026-10-05; the dat_games*.c
     files were folded in.)

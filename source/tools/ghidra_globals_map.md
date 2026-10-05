@@ -144,7 +144,7 @@ role").  Verified now, and the port side was on the wrong symbols:
     correctly, with `object_alarm_animation` / `object_clock_animation`
     / `object_phone_animation` further down.  `alarmFrames` appeared twice
     with contradictory meanings.  Confirmed by address: alarmFrames is
-    Ghidra 0x2b92a and dat_u3a.c's own comment reads
+    Ghidra 0x2b92a and dat_anim.c's own comment reads
     "alarm_animation @ 0x2B92A".
   * `triggered_event_list` is **eventQueue**, not `scratchArr`.  eventQueue is
     Ghidra 0x2b6da -- exactly the address globals.c cites for that

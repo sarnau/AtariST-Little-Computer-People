@@ -1,5 +1,5 @@
 /*
- * dat_u1b.c -- the initialized globals that belong to the stx_u1
+ * dat_aitables.c -- the initialized globals that belong to the stx_u1
  * object, in the original's data order.
  *
  * The 1985 sources declared their globals in the file that used them,
@@ -13,7 +13,7 @@
  * runEvent's and runAction's switch jump tables sit between pexName and
  * activeActions, and getKey's right after mirrorDstBit.  So these six globals are
  * declared between actions.c and parts/getKey.c in the unit, and
- * dat_u1c's three come after getKey.  Do not reorder.
+ * dat_colors's three come after getKey.  Do not reorder.
  */
 
 /* AI action tables: 16 ACTION_IDs each, picked by pickIdleAction() at the

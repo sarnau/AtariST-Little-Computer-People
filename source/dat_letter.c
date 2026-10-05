@@ -1,5 +1,5 @@
 /*
- * dat_u2b.c -- one global from the middle of stx_u2's data.
+ * dat_letter.c -- one global from the middle of stx_u2's data.
  *
  * Alcyon emits a string literal into the data segment where it first
  * meets it, so the literal pool follows the unit's source order.  In

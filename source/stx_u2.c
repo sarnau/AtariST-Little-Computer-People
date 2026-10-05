@@ -37,7 +37,7 @@
 #include "tables.h"
 #include "vdiown.h"
 
-#include "dat_u2.c"
+#include "dat_house.c"
 
 
 #include "parts/moffmon.c"     /* hideMouse, showMouse */
@@ -133,7 +133,7 @@
 #include "parts/tvOff.c"
 #include "parts/tvNoise.c"
 #include "parts/drawTvPicture.c"
-#include "dat_u2b.c"
+#include "dat_letter.c"
 #include "parts/writeLetter.c"
 #include "parts/typeString.c"
 #include "parts/typeChar.c"

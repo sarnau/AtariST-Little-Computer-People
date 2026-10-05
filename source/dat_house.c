@@ -1,5 +1,5 @@
 /*
- * dat_u2.c -- the initialized globals that belong to the stx_u2
+ * dat_house.c -- the initialized globals that belong to the stx_u2
  * object, in the original's data order.
  *
  * The 1985 sources declared their globals in the file that used them,

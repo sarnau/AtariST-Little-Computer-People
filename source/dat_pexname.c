@@ -1,5 +1,5 @@
 /*
- * dat_u1d.c -- the PEx.LCP filename, declared where the original
+ * dat_pexname.c -- the PEx.LCP filename, declared where the original
  * declares it: after loadSprites and before main.
  *
  * A compilation unit's string bodies are emitted in the order c168

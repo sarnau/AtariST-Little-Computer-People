@@ -22,7 +22,7 @@
 #include "events.h"
 #include "vocab.h"
 
-#include "dat_u3a.c"
+#include "dat_anim.c"
 
 
 #include "alerts.c"
@@ -64,4 +64,4 @@
 #include "parts/parseNumber.c"
 #include "parts/toUpper.c"
 
-#include "dat_u3b.c"
+#include "dat_parser.c"

@@ -1,5 +1,5 @@
 /*
- * dat_u4.c -- the initialized globals that belong to the stx_u4
+ * dat_sound.c -- the initialized globals that belong to the stx_u4
  * OBJECT, in the original's data order, which must not change.
  *
  * The 1985 sources declared their globals in the file that used them,

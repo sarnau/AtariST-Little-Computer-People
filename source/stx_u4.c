@@ -18,7 +18,7 @@
 #include "protos.h"
 #include "globals.h"
 
-#include "dat_u4.c"
+#include "dat_sound.c"
 
 
 #include "parts/playSongFile.c"    /* first of the object */

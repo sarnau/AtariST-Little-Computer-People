@@ -1,5 +1,5 @@
 /*
- * dat_u3a.c -- the initialized globals that belong to the stx_u3
+ * dat_anim.c -- the initialized globals that belong to the stx_u3
  * object, in the original's data order.
  *
  * The 1985 sources declared their globals in the file that used them,
