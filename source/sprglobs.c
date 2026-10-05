@@ -88,9 +88,9 @@ short   spriteWidth[SPRITE_SLOTS];          /* sprite_def_width[SPRITE_ID] */
 /* The body and shape buffers must be ARRAYS, not pointer variables:
    indexing a real global array is what the original code compiles
    from. */
-unsigned char   bodyFrames[BODY_FRAME_SLOTS][168];     /* LCP_BODY_FRAME_SIZE */
-unsigned char   bodyShapes[BODY_FRAMES][84];       /* LCP_BODY_SHAPE_SIZE */
-/* bodyShapes buffer (BODY_FRAMES * 84 = 8232 bytes):
+unsigned char   bodyFrames[BODY_FRAME_SLOTS][LCP_BODY_FRAME_SIZE];
+unsigned char   bodyShapes[BODY_FRAMES][LCP_BODY_SHAPE_SIZE];
+/* bodyShapes buffer (BODY_FRAMES * LCP_BODY_SHAPE_SIZE = 8232 bytes):
    destination for buildMasks's 30-bit dilation of the
    raw 168-byte body frames.  84 bytes = 21 rows * 2 words per row.
    BSS-resident so it survives to game end without heap traffic. */
@@ -120,8 +120,8 @@ short   headMask[LCP_BODY_DEST_WORDS];        /* expandFrame dest: head mask */
 short   headMirror;
 /* The loaded PEx.LCP frame table and the dilated head silhouettes are
    ARRAYS, not pointers, exactly like bodyFrames and bodyShapes. */
-unsigned char   pexFrames[HEAD_FRAMES][168];       /* LCP_BODY_FRAME_SIZE */
-unsigned char   headShapes[HEAD_FRAMES][84];         /* LCP_BODY_SHAPE_SIZE */
+unsigned char   pexFrames[HEAD_FRAMES][LCP_BODY_FRAME_SIZE];
+unsigned char   headShapes[HEAD_FRAMES][LCP_BODY_SHAPE_SIZE];
 
 /* ---- Walk-pathfinding state ------------------------------------------ */
 /* Intermediate waypoint the LCP walks through to reach `walkXTarget`/`walkYTarget`

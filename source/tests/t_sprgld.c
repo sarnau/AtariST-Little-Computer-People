@@ -45,8 +45,8 @@ extern short    pendReady[];
    pointers -- updateBody indexes them with an immediate base and no
    ext.l, which is what pinned the shape (see CLAUDE.md).  So the
    frames are COPIED in here; there is nothing to re-point. */
-extern unsigned char    bodyFrames[][168];
-extern unsigned char    bodyShapes[][84];
+extern unsigned char    bodyFrames[][LCP_BODY_FRAME_SIZE];
+extern unsigned char    bodyShapes[][LCP_BODY_SHAPE_SIZE];
 extern short    bodyImage[];
 extern void     updateBody();
 extern void     initMirror();
@@ -127,7 +127,7 @@ char ** argv;
         memcpy(bodyFrames, body_buf,
                (size_t) ((payload_bytes < 120L * 168L)
                          ? payload_bytes : 120L * 168L));
-        memset(bodyShapes, 0, BODY_FRAMES * 84);   /* the whole array */
+        memset(bodyShapes, 0, BODY_FRAMES * LCP_BODY_SHAPE_SIZE);   /* the whole array */
 
         /* mirrorTable is BSS in LCP_STX -- initMirror builds the
            bit-reversal LUT at boot (it used to be a shipped

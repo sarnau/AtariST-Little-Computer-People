@@ -3,6 +3,8 @@
 #ifndef SPRGLOBS_H
 #define SPRGLOBS_H
 
+#include "enums.h"        /* LCP_BODY_FRAME_SIZE / LCP_BODY_SHAPE_SIZE */
+
 #include "types.h"
 
 /* Number of logical sprite-definition slots: one shared 60-entry
@@ -99,8 +101,8 @@ extern short spriteSlot[];
 extern short bodyIndex[];
 extern short carryFrames[];
 extern short bodyYOffset[];
-extern unsigned char bodyFrames[][168];   /* LCP_BODY_FRAME_SIZE */
-extern unsigned char bodyShapes[][84];    /* LCP_BODY_SHAPE_SIZE */
+extern unsigned char bodyFrames[][LCP_BODY_FRAME_SIZE];
+extern unsigned char bodyShapes[][LCP_BODY_SHAPE_SIZE];
 extern short bodyImage[];
 extern short bodyMask[];
 extern short dogWalkSprites[];
@@ -113,8 +115,8 @@ extern short tickCount;
 extern short headImage[];
 extern short headMask[];
 extern short headMirror;
-extern unsigned char pexFrames[][168];    /* LCP_BODY_FRAME_SIZE */
-extern unsigned char headShapes[][84];      /* LCP_BODY_SHAPE_SIZE */
+extern unsigned char pexFrames[][LCP_BODY_FRAME_SIZE];
+extern unsigned char headShapes[][LCP_BODY_SHAPE_SIZE];
 extern short headDelay;
 extern short moodHeadBase[];
 extern short headXOffset[];

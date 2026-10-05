@@ -194,6 +194,18 @@
    size, which the BSS layout depends on. */
 #define BODY_FRAMES                     98
 #define BODY_FRAME_SLOTS                120
+
+/* Source-packed byte size of one 16x21 LCP body/head sprite frame:
+   21 rows * 4 bytes per row * 2 bit-planes.  Applies to every frame in
+   BODY.LCP and PEn.LCP, and to the source stride used by expandFrame and
+   maskBody / maskHead when walking the raw sprite table. */
+#define LCP_BODY_FRAME_SIZE     (21 * 4 * 2)
+
+/* Dilated body/head shape stride: 21 rows * 4 bytes per row.
+   Half of LCP_BODY_FRAME_SIZE because the shape buffers (bodyShapes,
+   headShapes) collapse the 2-plane source into a single-plane
+   silhouette used by maskBody / maskHead. */
+#define LCP_BODY_SHAPE_SIZE     (21 * 4)
 #define HEAD_ROW_LEVEL                  7       /* first frame of each tilt row */
 #define HEAD_ROW_LOWER                  (HEAD_ROW_LEVEL + HEAD_TURN_FRAMES)
 #define HEAD_ROW_LOWEST                 (HEAD_ROW_LOWER + HEAD_TURN_FRAMES)

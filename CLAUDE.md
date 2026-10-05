@@ -437,8 +437,10 @@ Structural rules of this build:
   the port carries `bodyFrames`/`bodyShapes` pointer variables assigned
   by al_locs from statics in assets.c.  Converted for the STX configuration: sprglobs.c defines
   bodyFrames[120][168] and bodyShapes[98][84] as globals, sprglobs.h
-  declares them with literal strides (sprglobs.h is included before
-  sprites.h, so LCP_BODY_FRAME_SIZE is not yet in scope there),
+  declares them with LCP_BODY_FRAME_SIZE / LCP_BODY_SHAPE_SIZE (these
+  used to be literal strides, because the two macros lived in sprites.h,
+  which is included after sprglobs.h; since 2026-10-05 they are in
+  enums.h),
   al_locs loads straight into bodyFrames, and updateBody indexes
   bodyFrames[frame] / bodyShapes[frame].  Same class as the
   g_obtmp->objMfdbs and
