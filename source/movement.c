@@ -22,7 +22,7 @@ short   *yOut;
 {
         short   floor_y_pos;
 
-        if (index > 3 * POS_PER_FLOOR - 1)
+        if (index > POS_BTM_SCREEN_EDGE)
                 index = POS_BTM_SCREEN_EDGE;
 
         *xOut = posXHalf[index] << 1;
