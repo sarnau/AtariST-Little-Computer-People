@@ -135,7 +135,7 @@ source ships; ad-hoc debug scaffolding does not.
   where subsequent `Setscreen` calls invalidate VDI line-attribute
   state, and `vsl_color` silently falls back to pen 15 (dark brown).
   This causes the water tank to render brown instead of blue — see
-  the comment above `beginDraw` in `source/gfx_prim.c`.
+  the comment above `beginDraw` in `source/parts/beginDraw.c`.
 - There is ONE SHIPPED build configuration, and it must stay
   byte-identical.  Two defines exist for test builds only:
   `-DSKIP_MIDI=1` (skips the Timer-A install for frame-hash
