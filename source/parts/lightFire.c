@@ -1,4 +1,4 @@
-/* lightFire: light the fireplace; does nothing if a fire is already
+/* Light the fireplace; does nothing if a fire is already
    burning.  The resident opens the front door, steps outside (the
    sitting-dog sprite waits on the porch) for 40 ticks, returns carrying
    firewood, perhaps shuts the door (random roll against

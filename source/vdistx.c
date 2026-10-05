@@ -57,7 +57,7 @@ short * workOut;
 
 #include "parts/v_pline.c"
 
-/* vqt_attributes: the DRI VDIBIND body, aiming the block's
+/* The DRI VDIBIND body, aiming the block's
    intout/ptsout entries at the caller's 12+ shorts. */
 void
 vqt_attributes(handle, attrib)
@@ -75,7 +75,7 @@ short * attrib;
         vdipb[4] = ptsout;
 }
 
-/* vro_cpyfm: the array-pxy blit.  Copies the rectangle pxy[0..3] of
+/* The array-pxy blit.  Copies the rectangle pxy[0..3] of
    the source MFDB to pxy[4..7] of the destination MFDB with writing
    mode `mode` (VDI opaque raster copy).  The parameter block's ptsin
    entry is aimed at the caller's pxy for the trap instead of copying
@@ -107,7 +107,7 @@ long    dst;
 #include "parts/vsl_color.c"
 #include "parts/vst_color.c"
 
-/* vst_height: the DRI VDIBIND body.  Sets the text character height
+/* The DRI VDIBIND body.  Sets the text character height
    in pixels for workstation `handle` and returns the resulting
    character width/height and cell width/height through the four
    pointers. */

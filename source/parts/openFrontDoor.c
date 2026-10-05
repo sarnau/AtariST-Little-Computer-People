@@ -1,4 +1,4 @@
-/* openFrontDoor: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the front door
+/* Open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the front door
    while the resident stands at it.  Opening reaches out, draws the
    door ajar then wide with the door-open sound and sets frontDoorOpen;
    closing draws it ajar then shut with the door-close sound and

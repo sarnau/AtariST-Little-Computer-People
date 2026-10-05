@@ -1,4 +1,4 @@
-/* readNewspaper: read the newspaper.  The TV is switched on first (tvOn),
+/* Read the newspaper.  The TV is switched on first (tvOn),
    then the resident walks to the armchair, sits, and reads for up to
    200 ticks -- holding the paper and turning a page about one tick in
    sixteen -- until a new action is queued.  He is lowered 8 pixels

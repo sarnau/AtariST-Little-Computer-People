@@ -1,4 +1,4 @@
-/* paperRow: fill one 160-byte scan line with colour index 14 (bit
+/* Fill one 160-byte scan line with colour index 14 (bit
    planes 1-3 set, plane 0 clear) -- the letter paper. */
 
 void

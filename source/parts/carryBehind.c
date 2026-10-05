@@ -1,4 +1,4 @@
-/* carryBehind: activate sprite as carried object in behind-LCP layer.
+/* Activate sprite as carried object in behind-LCP layer.
    The per-frame X/Y update happens in gameTick's carrying path. */
 
 void

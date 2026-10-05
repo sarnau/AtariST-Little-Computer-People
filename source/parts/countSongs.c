@@ -1,7 +1,7 @@
 /*
  * The first function of the stx_u1 object.
  */
-/* countSongs: enumerate *.SNG and *.ORG, count into songCount / organCount. */
+/* Enumerate *.SNG and *.ORG, count into songCount / organCount. */
 
 
 void

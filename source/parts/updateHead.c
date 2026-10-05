@@ -1,4 +1,4 @@
-/* updateHead: pick head frame from PEx.LCP by happiness + headFrame,
+/* Pick head frame from PEx.LCP by happiness + headFrame,
    expand via expandFrame into slot 4.  Tracks body position; head lowers
    1 px while carrying on stair states 13..16. */
 

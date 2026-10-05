@@ -1,4 +1,4 @@
-/* enterField: read a fixed-width numeric field on the title screen.
+/* Read a fixed-width numeric field on the title screen.
    `tmpl` is both the prompt drawn into the field and the character
    restored by backspace, so every third column (the separator in
    MM/DD/YY and HH:MM) is skipped over rather than typed into.  The

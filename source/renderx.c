@@ -20,7 +20,7 @@
 #include "protos.h"
 #include "globals.h"
 
-/* pickClothes: loads one of the CLOTHING_COLORS shirt colour pairs into
+/* Loads one of the CLOTHING_COLORS shirt colour pairs into
    palette slots 1 and 2 -- a random one half the time, otherwise the
    resident's own resident.clothingColor. */
 
@@ -38,7 +38,7 @@ pickClothes()
         Setpalette(mainPalette);
 }
 
-/* pickSkin: the same for the SKIN_COLORS skin tones and
+/* The same for the SKIN_COLORS skin tones and
    resident.skinColor. */
 
 void

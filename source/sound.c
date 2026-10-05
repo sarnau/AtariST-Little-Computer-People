@@ -15,7 +15,7 @@
    spe, hnd, grt -- stx_u2.c includes them there.  playDoorbell, typeKeySound
    and sfxClick live in parts/ too. */
 
-/* loadSounds: the SOUNDS.LCP block loader.  Each block is a 2-byte size
+/* The SOUNDS.LCP block loader.  Each block is a 2-byte size
    followed by its payload; a size of 0 ends the file.  Every block
    gets its own Malloc of size + 4, stored in sfxData[index], with the
    size in its first word and the payload behind it.  The details --

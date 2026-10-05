@@ -1,4 +1,4 @@
-/* titleScreen: the interactive title screen -- decode TITLE.SCN onto the
+/* The interactive title screen -- decode TITLE.SCN onto the
    spare screen buffer, then take the owner's name, the date and the
    time from the keyboard.  Nothing is validated until the whole field
    is typed, and a bad field simply re-runs its own entry. */

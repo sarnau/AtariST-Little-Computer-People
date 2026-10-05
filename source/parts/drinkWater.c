@@ -1,4 +1,4 @@
-/* drinkWater: get a drink of water.  The resident walks to the kitchen
+/* Get a drink of water.  The resident walks to the kitchen
    sink, picks up the glass and carries it to the water tap.  If the
    water tank (waterLevel) is not empty he bends, draws 3 units
    (updateWaterTank(-3)), drinks for 16 ticks and rinses the glass at the sink

@@ -1,4 +1,4 @@
-/* maskBody: build a body frame's mask.  Each 32-bit row is widened by
+/* Build a body frame's mask.  Each 32-bit row is widened by
    one pixel on either side of every run of set pixels, then merged
    vertically with its neighbouring row. */
 

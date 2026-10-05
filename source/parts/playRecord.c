@@ -1,4 +1,4 @@
-/* playRecord: pick a random .sng file and start it playing.
+/* Pick a random .sng file and start it playing.
    Uses foodSupply as a modulo index (the 1985 code reused the field). */
 
 void

@@ -1,4 +1,4 @@
-/* maskHead: build a head frame's mask.  Same packing as maskBody, but
+/* Build a head frame's mask.  Same packing as maskBody, but
    start with mask = 0xFFFFFFFF and shrink it from bit 31 down and from
    bit 0 up until the next bit hits set img pixels -- the outline plus
    1 bit of slack.  Then a vertical-OR merge (in the opposite direction

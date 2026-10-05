@@ -1,4 +1,4 @@
-/* tvNoise: random-colour antenna each frame while TV on.
+/* Random-colour antenna each frame while TV on.
    Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette. */
 
 void

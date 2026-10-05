@@ -1,4 +1,4 @@
-/* playFootstep: pick footstep SFX (carpet/wood/stairs) by floor + X.
+/* Pick footstep SFX (carpet/wood/stairs) by floor + X.
    footstepDue is set by walkStep on foot-plant frames. */
 
 void

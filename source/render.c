@@ -15,7 +15,7 @@
 #include "protos.h"
 #include "globals.h"
 
-/* drawObject: copy object frame obj (an OBJ_* id) from the OBJECTS
+/* Copy object frame obj (an OBJ_* id) from the OBJECTS
    bitmaps onto the house picture at (x, y), replace mode, through the
    game's own vro_cpyfm binding. */
 
@@ -38,7 +38,7 @@ short   y;
 
 /* -- Kitchen food-cabinet overlay -- */
 
-/* drawFoodCab: paint food-count markers in 4 cabinet slots.
+/* Paint food-count markers in 4 cabinet slots.
    Count = bits 9..11 of doorStatesAndFlags (0..4 packs). No-op if closed.
      1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151) */
 

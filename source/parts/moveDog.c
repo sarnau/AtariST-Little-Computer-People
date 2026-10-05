@@ -1,4 +1,4 @@
-/* moveDog: 8 Hz movement + walk-cycle advance.  If the dog
+/* 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
    equal steps to waypoint) and stair navigation (stairWaypts gates the two
    staircase entrances).  Layer depth is

@@ -1,4 +1,4 @@
-/* playOrgan: play the organ (ACTION_PLAY_ORGAN).  Any record playing is
+/* Play the organ (ACTION_PLAY_ORGAN).  Any record playing is
    stopped first (stopRecord).  The resident walks to the organ on the top
    floor (POS_TOP_ORGAN), a prop sprite is shown on the instrument, and a
    random *.ORG file is picked and started with playSongFile.  While it plays he switches

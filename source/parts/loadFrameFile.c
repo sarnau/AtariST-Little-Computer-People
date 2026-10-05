@@ -1,4 +1,4 @@
-/* loadFrameFile: load BODY.LCP / PE2..6.LCP into caller buffer.
+/* Load BODY.LCP / PE2..6.LCP into caller buffer.
    Header: {count:BE16, total_bytes:BE16, payload}.  Returns frame count. */
 
 short

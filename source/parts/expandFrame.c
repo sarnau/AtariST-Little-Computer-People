@@ -1,4 +1,4 @@
-/* expandFrame: expand 2-word (32-px) LCP source frame into 4-word (64-px)
+/* Expand 2-word (32-px) LCP source frame into 4-word (64-px)
    dest row, with optional horizontal mirror.  flipV picks left- vs
    right-half so mirrored frames land at the same screen X.
    Called from updateBody and updateHead. */

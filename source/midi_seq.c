@@ -49,7 +49,7 @@
 /* skipTextField comes first in this object. */
 #include "parts/skipTextField.c"
 
-/* startSong: song-lifecycle entry point.
+/* Song-lifecycle entry point.
    If a song is playing: signal SEQ_PHASE_SONG_ENDING and return
    without starting the new one; caller spins until songPlaying is false.
    Idle: position songEvents at buffer+0x1FE (event stream), parse header,
@@ -73,7 +73,7 @@ long            maxPos;
         songPlaying = YES;
 }
 
-/* initSongState: stash read cursor + end-of-song marker; init per-song
+/* Stash read cursor + end-of-song marker; init per-song
    driver state; publish ticks-per-beat via beatTicks.
    Envelope base = songEvents - 0x168 (360 bytes, ADSR block). */
 
@@ -99,7 +99,7 @@ long            maxPos;
         beatTicks = ticksPerBeat;
 }
 
-/* armSequencer: init timer counters + arm sequencer.
+/* Init timer counters + arm sequencer.
    All 4 tick counters seeded 100 (~500 ms grace before first event).
    seqBusy=0 selects XBIOS Midiws path (not direct ACIA). */
 
@@ -113,7 +113,7 @@ armSequencer()
         seqPhase = songActive = YES;
 }
 
-/* pushLoop: push loop marker {return position, count-1} on loopStack (cap 49). */
+/* Push loop marker {return position, count-1} on loopStack (cap 49). */
 
 void
 pushLoop(a, b)
@@ -128,7 +128,7 @@ short   b;
         }
 }
 
-/* popLoop: pop/decrement top of loop stack.  Returns loop-start ptr
+/* Pop/decrement top of loop stack.  Returns loop-start ptr
    if count nonzero, else NULL (fall through end). */
 
 unsigned char *
@@ -149,7 +149,7 @@ popLoop()
                 return ret;
 }
 
-/* parseEvents: walk compact event stream at songPos.
+/* Walk compact event stream at songPos.
    Byte forms:
      0x00        tick separator; returns 1, ticksToNext loaded
      0x01..0x7F  note event, 3 bytes:
@@ -262,7 +262,7 @@ parseEvents()
         return 1;
 }
 
-/* peekNoteDur: skip 0x00 pad at songPos; peek next event's dur-index nibble.
+/* Skip 0x00 pad at songPos; peek next event's dur-index nibble.
    High-bit-clear (note) -> ticksToNext = tick-count; else ticksToNext = 0. */
 
 void
@@ -276,7 +276,7 @@ peekNoteDur()
                 ticksToNext = 0;
 }
 
-/* queueNote: queue Note-On in noteQueue as {duration, note|sustain, physical channel}
+/* Queue Note-On in noteQueue as {duration, note|sustain, physical channel}
    and dispatch Note-On via sendMidiEvent.  Queue entry fires paired Note-Off
    later via expireNotes + sendNoteOff. */
 
@@ -324,7 +324,7 @@ queueNote()
         sendMidiEvent(midiMsg, (short) 3, ch);
 }
 
-/* sendNoteOff: send MIDI Note-Off (vel=0) for a queued note.
+/* Send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
    Fires only if note in [noteLow, noteHigh] and non-zero. */
 
@@ -350,7 +350,7 @@ short * nptr;
         sendMidiEvent(midiMsg, (short) 3, (short) nptr[0]);
 }
 
-/* sendProgChange: dispatch Program Change (0xCn) for logical channel `index`.
+/* Dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
    Current-program keyed by physical channel (chanMap & 0xf), so
    shared physical channels only get one PC per song load. */
@@ -370,7 +370,7 @@ char    index;
         sendMidiEvent(midiMsg, (short) 2, (short) 0);
 }
 
-/* sendMidiEvent: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
+/* Send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
    MIDI OUT: shift the note by (high nibble of midiCh - 3) octaves,
      write via aciaWrite (seqBusy=1) or Midiws; restore the note before
@@ -541,7 +541,7 @@ char            midiCh;
         return 1;
 }
 
-/* expireNotes: subtract val from each queued event's remaining duration;
+/* Subtract val from each queued event's remaining duration;
    when <=0, sendNoteOff + removeQueued. */
 
 void
@@ -566,7 +566,7 @@ short   val;
 /* timerAIsr lives in mq_tick.s: it needs privileged SR moves and an rte,
    which Alcyon C cannot emit. */
 
-/* seqAdvance: sequencer state-machine advance from timerAIsr.
+/* Sequencer state-machine advance from timerAIsr.
    WAIT_NOTE_EXPIRE (0): expire queued notes, reload prescaler, -> PARSE.
    PARSE_NEXT_EVENT (1): parseEvents() walks next batch; 0=end-of-song ->
      SONG_ENDING, else ticksToNext = ticks until next event.
@@ -622,7 +622,7 @@ seqAdvance()
         }
 }
 
-/* stopSequencer: stop sequencer.
+/* Stop sequencer.
    Drain pending events, send Note-Off for every noteOwner[] flag,
    clear songActive.  Nothing calls it, but the original contains it. */
 
@@ -664,7 +664,7 @@ stopSequencer()
 /* hookTimerA sits between stopSequencer and unhookTimerA. */
 #include "parts/hookTimerA.c"
 
-/* unhookTimerA: tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
+/* Tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
    saved ISR from oldTimerAVec.  Nothing calls it, but the original contains
    it. */
 
@@ -678,7 +678,7 @@ unhookTimerA()
 #include "parts/resetPrograms.c"
 #include "parts/parseSongHeader.c"
 
-/* unpackChanMap: unpack 30-byte channel/program map (90 bytes before songEvents).
+/* Unpack 30-byte channel/program map (90 bytes before songEvents).
    Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
    Values are 1-based on disk (0 = no-op sentinel); decrement on load.
    Logical channel 0 reserved for game SFX. */
@@ -756,7 +756,7 @@ short   value;
 /* copyEnvelope must sit right before stepEnvelopes. */
 #include "parts/copyEnvelope.c"
 
-/* stepEnvelopes: PSG software ADSR envelope processor, run by timerAIsr
+/* PSG software ADSR envelope processor, run by timerAIsr
    every fourth Timer-A tick (240 Hz).
    3 channels through attack->decay->sustain->release->fadeout.
    Per phase: Bresenham accum, delta = (target-cur)*envRateTab[t],

@@ -1,4 +1,4 @@
-/* dogNextWaypt: dog waypoint math.  Same shape as nextWaypoint but uses
+/* Dog waypoint math.  Same shape as nextWaypoint but uses
    dogX/y and applies -3 X on middle-floor landing + -8 X on stair
    crest. */
 

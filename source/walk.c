@@ -9,7 +9,7 @@
 #include "sprglobs.h"
 #include "sprites.h"
 
-/* walkToTarget: pump walkStep() until arrival.
+/* Pump walkStep() until arrival.
    Returns 0 on arrival, -1 on preemption when idle. */
 
 short

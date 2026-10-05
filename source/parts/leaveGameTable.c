@@ -1,4 +1,4 @@
-/* leaveGameTable: leave the game table for an interrupt event (alarm,
+/* Leave the game table for an interrupt event (alarm,
    bathroom, thirst, delivery).  Walks the resident to the kitchen
    sink area, tucks away the game-box + table-setting sprites, and
    re-attaches the game-box in the "carried-behind" slot. */

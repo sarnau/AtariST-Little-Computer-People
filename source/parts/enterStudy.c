@@ -1,4 +1,4 @@
-/* enterStudy: go into the study (upstairs closet).  The resident walks
+/* Go into the study (upstairs closet).  The resident walks
    to the study door, opens it if shut, walks in behind the wide-open
    door sprite and is hidden, then studyVisit takes over to close the door
    and bring him back out.  value non-zero asks studyVisit to save the

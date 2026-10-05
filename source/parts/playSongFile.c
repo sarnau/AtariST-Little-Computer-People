@@ -1,4 +1,4 @@
-/* playSongFile: load a .sng/.org from disk (10-byte Music Studio 2.0 header,
+/* Load a .sng/.org from disk (10-byte Music Studio 2.0 header,
    then up to 20000 bytes of sequence data) and hand it to startSong. */
 
 

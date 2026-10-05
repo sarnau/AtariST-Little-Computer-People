@@ -1,4 +1,4 @@
-/* danceToMusic: dance to a record.  If none is playing (recordPlaying) one is
+/* Dance to a record.  If none is playing (recordPlaying) one is
    started with playRecord first.  The resident then walks to the dance
    floor and alternates the left/right dance-step poses every two
    ticks for as long as music plays (songPlaying), stopping early when a

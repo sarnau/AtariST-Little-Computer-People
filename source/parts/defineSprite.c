@@ -1,4 +1,4 @@
-/* defineSprite: store per-sprite
+/* Store per-sprite
    pointers and dimensions at slot spriteID, then auto-generate the
    1-bit mask into maskPtr. */
 void

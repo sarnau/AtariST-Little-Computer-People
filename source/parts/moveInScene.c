@@ -1,4 +1,4 @@
-/* moveInScene: the new-resident move-in cutscene.  The screen is empty
+/* The new-resident move-in cutscene.  The screen is empty
    while the delivery van pulls up (two playDoorbell door-bell blasts), the
    front door opens, the dog is placed on the step, then the resident
    walks in and does a full tour of the house -- dresser, sink, food,

@@ -1,7 +1,7 @@
 /*
  * It must sit directly before floorOfY so the call to it stays short.
  */
-/* nextWaypoint: pick next waypoint.  Same-floor -> straight to walkXTarget/y;
+/* Pick next waypoint.  Same-floor -> straight to walkXTarget/y;
    cross-floor -> through stairWaypts[].  Middle floor has an extra
    xLanding/yLanding landing branch top/bottom don't need. */
 

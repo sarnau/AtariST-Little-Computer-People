@@ -1,4 +1,4 @@
-/* closeBedCloset: close the bedroom closet.  Assumes the resident is already
+/* Close the bedroom closet.  Assumes the resident is already
    standing at it: he turns to face the screen, reaches, the door is
    redrawn ajar then shut with the door-close sound, and bedClosetOpen is
    cleared.  Used by cleanUp and at the end of changeClothes. */

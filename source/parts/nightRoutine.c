@@ -1,4 +1,4 @@
-/* nightRoutine: the bedtime routine.  Chains five actions -- a shower (takeShower),
+/* The bedtime routine.  Chains five actions -- a shower (takeShower),
    changing in the bedroom closet (changeClothes(1), which also picks a new
    skin palette), a meal (eatFromCabinet), brushing teeth (brushTeeth) and
    getting into bed (getInOutOfBed) -- with noPreempt set before each so none

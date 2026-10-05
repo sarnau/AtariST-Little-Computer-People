@@ -1,4 +1,4 @@
-/* showResident: restore the pointers hideResident() stashed. */
+/* Restore the pointers hideResident() stashed. */
 
 void
 showResident()

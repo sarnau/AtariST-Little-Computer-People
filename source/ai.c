@@ -11,7 +11,7 @@
 #include "events.h"
 #include "globals.h"
 
-/* runEvent: dispatch a single deferred event to its handler.
+/* Dispatch a single deferred event to its handler.
    inEvent guards recursion; sleeper is forced out of bed first.
    Food-delivery drops silently if the 3-bit food-count is already 4. */
 

@@ -1,4 +1,4 @@
-/* openKitchenCab: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the kitchen
+/* Open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the kitchen
    cabinet while the resident stands at it, updating kitchenCabOpen.  Both
    directions reach in and step the door through its ajar frame with
    the matching sound; opening also draws the food-count markers on

@@ -1,4 +1,4 @@
-/* submitCommand: called from handleKey on Enter.  Runs matchCommand() on typedLine;
+/* Called from handleKey on Enter.  Runs matchCommand() on typedLine;
    valid ACTION_ID with queue room is appended at cmdPriority priority. */
 
 

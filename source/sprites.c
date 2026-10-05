@@ -135,7 +135,7 @@ layoutSlots()
         }
 }
 
-/* initSlots: populate 8 per-slot MFDB pairs, wire compositor MFDB
+/* Populate 8 per-slot MFDB pairs, wire compositor MFDB
    (frameMfdb) at altScreen-aligned, call deadHook.  Zeroes last_hz so
    the first renderFrame frame-gate sees 0->N delta and proceeds. */
 

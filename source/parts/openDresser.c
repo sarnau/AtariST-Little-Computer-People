@@ -1,4 +1,4 @@
-/* openDresser: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) a dresser drawer
+/* Open (DOOR_OPEN, 0) or close (DOOR_CLOSE) a dresser drawer
    while the resident stands at it, updating dresserOpen.  He bends and
    reaches while the drawer is drawn half then fully open or shut.
    Plays no sound.  A request matching the current state returns

@@ -1,4 +1,4 @@
-/* changeClothes: change in the bedroom closet.  The resident walks to the
+/* Change in the bedroom closet.  The resident walks to the
    dresser and opens a drawer (perhaps closing it again on a random
    roll), walks to the closet, opens it and steps inside; the closet
    sprites hide him while the door swings shut.  After 45..60 ticks

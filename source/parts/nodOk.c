@@ -1,4 +1,4 @@
-/* nodOk: nod in agreement.  Picks a head target from the direction the
+/* Nod in agreement.  Picks a head target from the direction the
    head currently faces (low three bits of headPose) and waits for it,
    then four times alternates between that direction level and tilted
    (bit 0x10) -- a nod -- before returning the head to where it started.

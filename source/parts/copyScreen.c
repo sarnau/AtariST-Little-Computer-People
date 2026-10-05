@@ -1,4 +1,4 @@
-/* copyScreen: vro_cpyfm the physbase screen into pdesMFDB.
+/* vro_cpyfm the physbase screen into pdesMFDB.
    Source screenMfdb.fd_addr=NULL is VDI "device screen" -- reads visible
    video RAM.  Mode ALL_WHITE (=0) irrelevant on ST with fd_addr=NULL. */
 

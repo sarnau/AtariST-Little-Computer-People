@@ -1,4 +1,4 @@
-/* cleanUp: tidy up.  Visits each door the house tracks as open --
+/* Tidy up.  Visits each door the house tracks as open --
    filing cabinet, study door, toilet, bedroom closet, dresser, kitchen
    cabinet, front door -- walks to it and closes it, clearing its
    lcp_*O / studyDoorOpen flag through the matching close routine.  Each

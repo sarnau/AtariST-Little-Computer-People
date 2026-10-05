@@ -1,4 +1,4 @@
-/* closeToiletDoor: close the toilet door.  Assumes the resident is already
+/* Close the toilet door.  Assumes the resident is already
    at it: he faces the screen, reaches, the door is redrawn ajar then
    shut with the door-close sound, and toiletDoorOpen is cleared.  Used by
    cleanUp and by the toilet routine useToilet. */

@@ -1,4 +1,4 @@
-/* cookMeal: cook and eat a meal.  The resident walks to the kitchen
+/* Cook and eat a meal.  The resident walks to the kitchen
    cabinet, takes out the cooking pot and carries it to the stove,
    where the pot sits on the hob while random flame frames flicker
    for 30..50 ticks; the stove is then drawn off and he carries the

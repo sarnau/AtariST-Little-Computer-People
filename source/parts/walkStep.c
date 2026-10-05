@@ -1,4 +1,4 @@
-/* walkStep: one 8Hz step along current waypoint.
+/* One 8Hz step along current waypoint.
    Waypoint reached -> done or pick next.  Not on stairs -> flat walk
    toward waypoint (X first, then Y).  On stairs -> stair-phase by Y
    bucket.  Sets footstepDue on the two foot-plant frames. */

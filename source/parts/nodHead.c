@@ -1,4 +1,4 @@
-/* nodHead: nod the head.  The resident turns side-on, his head is
+/* Nod the head.  The resident turns side-on, his head is
    settled at position 8, then head animation is suspended (headPose =
    headTarget = -1) so three head frames can be forced through headFrame in
    turn.  The saved frame and head position 8 are restored afterwards. */

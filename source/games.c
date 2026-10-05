@@ -85,7 +85,7 @@ static void  pkrCompDraw();
 /* gamePlWQ does not exist in the original; Alcyon emits a static even
    when nothing calls it, so it must not be defined here. */
 
-/* mgWaitKey: wait for a key while processing urgent game events.
+/* Wait for a key while processing urgent game events.
    The minigames' key reader: it first drains stale keys, then, while
    no key is pressed, lets the resident answer the alarm, use the
    toilet, drink, or run a queued event (each wrapped in leaveGameTable /
@@ -149,7 +149,7 @@ mgWaitKey()
    so the minigames reach it with a short call. */
 #include "parts/rndRng.c"
 
-/* anaStrMatch: character-by-character equality test for two C strings.
+/* Character-by-character equality test for two C strings.
    Keeps walking both strings after a mismatch and reports at the end. */
 
 short
@@ -184,7 +184,7 @@ char *  b;
 #include "parts/panelBegin.c"
 #include "parts/panelEnd.c"
 
-/* playWordPuzzle: WORD PUZZLE main loop.
+/* WORD PUZZLE main loop.
    Loads wordpz.txt into a 2000-byte buffer, indexes 66 line pointers
    (33 puzzles x {template, solution}).  F1 next / F2 prev (wraps 0..0x20)
    / F5 solve / F10 quit.  The next_puzzle and cleanup gotos are the
@@ -392,7 +392,7 @@ char *  msg;
         printString(msg, 8, 58, COLOR_green);
 }
 
-/* wpzRender: render puzzle template with player answers substituted for '@'.
+/* Render puzzle template with player answers substituted for '@'.
    Word-wraps at col 0x26 (literal) / 0x27 (answer).  Starts cursor at
    (x=1, y=0x28). */
 
@@ -470,7 +470,7 @@ wpzRender()
         }
 }
 
-/* anaClrWord: clear the right-panel word display area (162,10)-(319,49). */
+/* Clear the right-panel word display area (162,10)-(319,49). */
 
 void
 anaClrWord()
@@ -483,7 +483,7 @@ anaClrWord()
         panelEnd();
 }
 
-/* anaClrIntro: clear the left-panel intro/instructions area (5,10)-(160,60). */
+/* Clear the left-panel intro/instructions area (5,10)-(160,60). */
 
 void
 anaClrIntro()
@@ -496,7 +496,7 @@ anaClrIntro()
         panelEnd();
 }
 
-/* anaClrGuess: clear the "Guess #N?" prompt bar (166,50)-(319,65). */
+/* Clear the "Guess #N?" prompt bar (166,50)-(319,65). */
 
 void
 anaClrGuess()
@@ -509,7 +509,7 @@ anaClrGuess()
         panelEnd();
 }
 
-/* anaClrBottom: clear the bottom info bar (5,62)-(319,75). */
+/* Clear the bottom info bar (5,62)-(319,75). */
 
 void
 anaClrBottom()
@@ -522,7 +522,7 @@ anaClrBottom()
         panelEnd();
 }
 
-/* anaIntroText: draw the 5-line intro text in the left panel. */
+/* Draw the 5-line intro text in the left panel. */
 
 void
 anaIntroText()
@@ -534,7 +534,7 @@ anaIntroText()
         printString("guess what it is.", 5, 49, COLOR_black);
 }
 
-/* anaShowWord: display a word in 20px text in right panel at (162,37), 12px pitch. */
+/* Display a word in 20px text in right panel at (162,37), 12px pitch. */
 
 void
 anaShowWord(word, textColor)
@@ -560,7 +560,7 @@ short   textColor;
 
 #include "parts/anaDrawPrompt.c"
 
-/* anaPickWord: pick a random word from the 150-entry dictionary (11 bytes/row),
+/* Pick a random word from the 150-entry dictionary (11 bytes/row),
    copy into anaScrambled, scramble 10..20 swaps.  Re-scrambles on identity.
    Plants '\0' at anaDict row-tail so anaAnswer reads as a C string. */
 
@@ -605,7 +605,7 @@ anaPickWord()
         anaShowWord(anaScrambled, COLOR_green);
 }
 
-/* playAnagrams: full anagram game loop.  Outer per-word / middle per-guess /
+/* Full anagram game loop.  Outer per-word / middle per-guess /
    inner per-keypress.  The new_word/validate labels are the 1985
    code's own gotos and must stay. */
 
@@ -849,7 +849,7 @@ validate:
 #include "parts/panelErase.c"
 #include "parts/eraseRectColor.c"
 
-/* pkrCallOrRaise: computer call/raise decision.  Returns 'c' or 'r'.
+/* Computer call/raise decision.  Returns 'c' or 'r'.
    On raise: pkrRaiseAmt = money/10 clamped [1,20]. */
 
 static short
@@ -872,7 +872,7 @@ pkrCallOrRaise()
         }
 }
 
-/* pkrEvalHand: evaluate a 5-card hand.  *handRank <- 0=high card..9=royal flush.
+/* Evaluate a 5-card hand.  *handRank <- 0=high card..9=royal flush.
    rankFlags[i]=1 for winning combo cards.  suitFlags: rank-sorted hand copy.
    The two goto exits are the original's control flow. */
 
@@ -1032,7 +1032,7 @@ rank_from_hc_bp:
         *handRank = HAND_ONE_PAIR;
 }
 
-/* playPoker: 5-card draw poker main loop.
+/* 5-card draw poker main loop.
    Init: Malloc, load cards, mgSetup, money=400 each.
    Per-round: ante, deal, bet, discard/draw, computer draw, final bet,
    showdown.  The labels and gotos are the original's control flow and
@@ -1447,7 +1447,7 @@ discard_loop:
                         }
 }
 
-/* pkrShowdown: showdown.  Reveal computer hand, evaluate both, walk the
+/* Showdown.  Reveal computer hand, evaluate both, walk the
    per-rank tiebreak ladder.  Winner blinks 5x then potToWinner transfers.
    Sets pkrRound=1. */
 
@@ -1605,7 +1605,7 @@ pkrShowdown()
         }
 }
 
-/* pkrOpenRank: should the computer open?  Bluffing -> yes (0).
+/* Should the computer open?  Bluffing -> yes (0).
    Otherwise "Jacks or better" -- returns best rank >= Q, else -1. */
 
 static short
@@ -1630,7 +1630,7 @@ pkrOpenRank()
         return 0;
 }
 
-/* pkrDecideBluff: 1/15 chance of bluff when hand rank < 2.  Sets pkrBluffing. */
+/* 1/15 chance of bluff when hand rank < 2.  Sets pkrBluffing. */
 
 static void
 pkrDecideBluff()
@@ -1641,7 +1641,7 @@ pkrDecideBluff()
                 pkrBluffing = YES;
 }
 
-/* pkrCompDraw: computer AI draw phase.
+/* Computer AI draw phase.
    Discard count by rank: 0->4, 1->3, 2->1, 3->2, >=4->stay.
    Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
    replacements and animates the swap. */
@@ -1767,7 +1767,7 @@ pkrCompDraw()
         }
 }
 
-/* potToWinner: transfer pot to winner one chip per tick
+/* Transfer pot to winner one chip per tick
    (winner=0 -> computer, winner=1 -> player). */
 
 void
@@ -1794,7 +1794,7 @@ short   winner;
         potChips = 0;
 }
 
-/* pkrPlyrBet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
+/* Player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
    Returns 0 normally, -1 on timeout. */
 
 static short
@@ -1852,7 +1852,7 @@ char *  str;
         }
 }
 
-/* pkrAddChips: animated chip transfer.  who=0 computer / 1 player.
+/* Animated chip transfer.  who=0 computer / 1 player.
    Caps pkrBet at 20. */
 
 static void
@@ -1887,7 +1887,7 @@ short   n;
         }
 }
 
-/* pkrDealHands: deal 5-card hands.  Draws 10 unique random cards; player
+/* Deal 5-card hands.  Draws 10 unique random cards; player
    face-up, computer face-down. */
 
 static void
@@ -1935,7 +1935,7 @@ pkrDealHands()
         }
 }
 
-/* cardDraw: blit one card sprite (15x23) at slot xi of row yi.
+/* Blit one card sprite (15x23) at slot xi of row yi.
    card=CARD_BACK selects cardMfdb[52]; 0..51 index directly. */
 
 void
@@ -1963,7 +1963,7 @@ short   yi;
 /* cardLoad (in parts/) must sit here, ahead of dispCompChips. */
 #include "parts/cardLoad.c"
 
-/* cardKeyInput: wait for one of F-keys a/b/c or digits 1..5.
+/* Wait for one of F-keys a/b/c or digits 1..5.
    Returns 1..8 for a/b/c/1/2/3/4/5, or -1 on timeout. */
 
 short
@@ -1990,7 +1990,7 @@ short   c;
         }
 }
 
-/* dispCompChips: display computer money count in the top-left panel, as
+/* Display computer money count in the top-left panel, as
    3 hand-formatted, space-padded digits.  The assignments nested in
    expressions and the spare str[] cells are the original's shape. */
 
@@ -2015,7 +2015,7 @@ dispCompChips()
         printString(str, 5, 18, COLOR_black);
 }
 
-/* dispPlyrChips: display player money (same 3-digit format as dispCompChips). */
+/* Display player money (same 3-digit format as dispCompChips). */
 
 void
 dispPlyrChips()
@@ -2038,7 +2038,7 @@ dispPlyrChips()
         printString(str, 5, 58, COLOR_black);
 }
 
-/* dispPot: display the pot amount in the middle panel. */
+/* Display the pot amount in the middle panel. */
 
 void
 dispPot()
@@ -2061,7 +2061,7 @@ dispPot()
         printString(str, 31, 38, COLOR_black);
 }
 
-/* pkrAnte: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
+/* Opening prompt "Ante up to play." + F1 Ante / F10 Quit.
    On F1: both players contribute 1 chip.  On F10/timeout: sets cardQuit. */
 
 static void
@@ -2102,7 +2102,7 @@ pkrAnte()
         }
 }
 
-/* cardMessage: print a green status message in the bottom info bar. */
+/* Print a green status message in the bottom info bar. */
 
 void
 cardMessage(str)
@@ -2112,7 +2112,7 @@ char *  str;
         printString(str, 5, 71, COLOR_green);
 }
 
-/* popCard: pop card from top of `pile`; shift remaining entries down.
+/* Pop card from top of `pile`; shift remaining entries down.
    Returns -1 if empty (a plain -1, not CARD_NONE). */
 
 short
@@ -2141,7 +2141,7 @@ short * count;
         return card;
 }
 
-/* pushCard: append val at pile[*idx]; increment idx. */
+/* Append val at pile[*idx]; increment idx. */
 
 void
 pushCard(pile, idx, val)
@@ -2155,7 +2155,7 @@ short   val;
 
 static void     pkrShowdown();
 
-/* playWar: WAR mini-game main loop.
+/* WAR mini-game main loop.
    Init: Malloc, load cards, mgSetup, 400-swap shuffle, split 26/26.
    Per-round: reveal cards, compare mod-13, resolve win/loss/tie. */
 
@@ -2349,7 +2349,7 @@ no_cards:
                 }
 }
 
-/* warRound: nested war round.  Draw 3 face-down + 1 face-up each.
+/* Nested war round.  Draw 3 face-down + 1 face-up each.
    On tie, loops with warDepth++.
    Returns 0 = normal, -1 = computer out / user quit, -2 = player out. */
 
@@ -2467,7 +2467,7 @@ warRound()
         }
 }
 
-/* playBlackjack: BLACKJACK main game loop.
+/* BLACKJACK main game loop.
    Bet-entry (F1 add, F3 enter, F5 clear, 20 cap), deal, natural check,
    optional split, double-down, hit/stand rounds, dealer plays, settle.
    The labels and gotos are the original's control flow and must stay.
@@ -3077,7 +3077,7 @@ cleanup:
         goto next_round;
 }
 
-/* bjScore: blackjack card value.  aceMode=0 all aces=1; aceMode=1
+/* Blackjack card value.  aceMode=0 all aces=1; aceMode=1
    one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
    score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2. */
 
@@ -3113,7 +3113,7 @@ short   aceMode;
         return score;
 }
 
-/* bjPlayHand: play one blackjack round for `hand` at row.
+/* Play one blackjack round for `hand` at row.
    bjDblMain/bjDblSplit forced-single-hit modes auto-deal one card + return.
    Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout. */
 
@@ -3212,7 +3212,7 @@ char *  prompt;
         }
 }
 
-/* bjIsNatural: check for natural blackjack (Ace + T/J/Q/K in first two). */
+/* Check for natural blackjack (Ace + T/J/Q/K in first two). */
 
 static short
 bjIsNatural(hand)
@@ -3232,7 +3232,7 @@ short * hand;
         return result;
 }
 
-/* bjDealCard: deal one card into hand at next CARD_NONE slot.
+/* Deal one card into hand at next CARD_NONE slot.
    Rejects dups vs compHand/plyrHand/bjSplitHand.  Returns -1 if full. */
 
 static short
@@ -3277,7 +3277,7 @@ short   faceDown;
         return 0;
 }
 
-/* bjShowBet: display bet with highlight.  sel=1 -> computer bet, else
+/* Display bet with highlight.  sel=1 -> computer bet, else
    player bet.  3-digit format as dispCompChips/dppm/dpot. */
 
 static void
@@ -3310,7 +3310,7 @@ short   sel;
         printString(str, 31, 51, COLOR_black);
 }
 
-/* bjSettle: settle a bet.  winner: 0=computer, 1=player.
+/* Settle a bet.  winner: 0=computer, 1=player.
    mode: 0=normal, 1=natural blackjack double-collect,
          2=split -- suppress the second (player) transfer.
    Sets cardQuit on mid-transfer bankruptcy. */

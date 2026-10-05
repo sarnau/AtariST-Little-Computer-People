@@ -1,4 +1,4 @@
-/* getInOutOfBed: get into or out of bed, toggling resident.isSleeping.  Awake:
+/* Get into or out of bed, toggling resident.isSleeping.  Awake:
    the resident walks to the bed and, unless preempted, undresses,
    gets in and lies down, stepping left as each pose plays.  Asleep:
    the same poses play in reverse, stepping right, and he ends

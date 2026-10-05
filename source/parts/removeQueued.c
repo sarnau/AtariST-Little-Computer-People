@@ -1,4 +1,4 @@
-/* removeQueued: remove 3-word entry at noteQueue[val]; shift later down.
+/* Remove 3-word entry at noteQueue[val]; shift later down.
    Returns 1 if more remain, 0 if empty. */
 
 short

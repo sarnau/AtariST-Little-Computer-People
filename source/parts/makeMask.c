@@ -1,4 +1,4 @@
-/* makeMask: build a sprite mask from its colour image.  For each
+/* Build a sprite mask from its colour image.  For each
    16-pixel word group (4 interleaved bitplane words), OR the planes
    -- any non-colour-0 pixel becomes an opaque mask bit -- then
    broadcast the result to all 4 mask planes so the mask has the same

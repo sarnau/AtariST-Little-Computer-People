@@ -1,7 +1,7 @@
 /*
  * stripeRow then blackRow, adjacent as in the original.
  */
-/* stripeRow: paint row with 0x0033 (2 planes) -- light-cyan status stripe. */
+/* Paint row with 0x0033 (2 planes) -- light-cyan status stripe. */
 
 void
 stripeRow(scrptr, row)
@@ -26,7 +26,7 @@ short                   row;
         }
 }
 
-/* blackRow: paint row with 0 -> palette index 0 (black) separator. */
+/* Paint row with 0 -> palette index 0 (black) separator. */
 
 void
 blackRow(scraddr, row)
