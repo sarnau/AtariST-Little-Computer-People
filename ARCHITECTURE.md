@@ -320,11 +320,11 @@ A custom MIDI-like sequencer (`midi_seq_*` functions, 24 total) plays `.sng` son
 | 11 | current_volume | Current output volume (0–15) |
 | 12 | ramp_direction | +1 or -1 for volume interpolation |
 
-Envelope processing (`psg_process_envelopes`, called at 50 Hz) uses Bresenham-style integer interpolation for smooth volume ramping.
+Envelope processing (`psg_process_envelopes`, called at 240 Hz -- every fourth Timer A tick) uses Bresenham-style integer interpolation for smooth volume ramping.
 
 ### Timing
 
-Interrupt-driven via MFP Timer A at 200 Hz (`midi_seq_tick_handler`). The sequencer state machine (`MIDI_SEQ_PHASE` enum: WAIT_NOTE_EXPIRE, PARSE_NEXT_EVENT, SONG_ENDING) manages event parsing and note expiration.
+Interrupt-driven via MFP Timer A at 960 Hz (2.4576 MHz / 64 / 40; `midi_seq_tick_handler`). The sequencer state machine (`MIDI_SEQ_PHASE` enum: WAIT_NOTE_EXPIRE, PARSE_NEXT_EVENT, SONG_ENDING) manages event parsing and note expiration.
 
 ### .SNG File Format
 
@@ -344,10 +344,10 @@ Separate from the music engine, a sound effect system (`soundeffect_*`) plays am
 
 The binary includes floppy-disk-based copy protection (`copyprot_*`, 13 functions). Key characteristics:
 
-- **Self-modifying code**: XOR encryption with key 0x1567 (`copyprot_decrypt_code_block` / `copyprot_reencrypt_code_block`)
+- **Self-modifying code**: the 96-byte gap-measuring routine is stored encrypted; each of its 48 words has 0x1567 subtracted before it runs and added back afterwards (`copyprot_decrypt_code_block` / `copyprot_reencrypt_code_block`)
 - **Direct hardware access**: WD1772 FDC via DMA controller at 0xFF8604
-- **Raw track reading**: Reads MFM track data and searches for non-standard sector format
-- **Gap byte validation**: Checks gap byte counts in two ranges (< 16 and >= 80); both must be found
+- **Raw track reading**: RESTORE, SEEK to track 79, then up to eleven READ TRACK commands into a 6560-byte buffer
+- **Gap byte validation**: Counts the $FF gap bytes before track 79's first sector header; one read must give fewer than 15 and another 80 or more, within the same seek attempt
 - **Failure mode**: Sets `copyprot_check_return = 0` → character enters infinite `action_sleep(-1)` loop (permanently sleeps, never performs autonomous actions)
 
 ## Data Files

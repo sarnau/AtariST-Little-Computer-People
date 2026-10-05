@@ -56,10 +56,11 @@ outputs can operate simultaneously or independently, controlled by
 
 ### Timing Architecture
 
-The sequencer is driven by the **MFP Timer A** interrupt at 200 Hz:
+The sequencer is driven by the **MFP Timer A** interrupt at 960 Hz
+(2.4576 MHz / 64 / 40):
 
 ```
-midi_seq_tick_handler (200 Hz IRQ)
+midi_seq_tick_handler (960 Hz IRQ)
   |-- midi_tick_counter++
   |-- midi_tick_prescaler-- (tempo-scaled subdivider)
   |-- midi_tick_divider-- (event timing)
@@ -209,7 +210,7 @@ When the LCP plays the record player (`a_plawr`) or piano
 
 Since the YM2149's hardware envelope generator can only control one channel at a
 time with limited shapes, the game implements full software ADSR envelopes for all
-3 PSG channels. The processor runs at 50 Hz (every 4th call of the 200 Hz timer)
+3 PSG channels. The processor runs at 240 Hz (every 4th tick of the 960 Hz timer)
 via `psg_process_envelopes()`.
 
 ### PSG_ENVELOPE Struct (14 bytes per channel)
@@ -264,7 +265,7 @@ output = min(current_volume, max_volume)
 psg_write_register(8 + channel, output)
 ```
 
-This avoids floating-point arithmetic while providing smooth 50 Hz volume ramping
+This avoids floating-point arithmetic while providing smooth 240 Hz volume ramping
 across the 0–15 PSG amplitude range.
 
 ### Envelope Triggering
@@ -590,13 +591,13 @@ walk cycle), controlled by `footstep_trigger_flag`.
 | 0x113B4 | `mq_bust` | Build scale/transpose lookup table |
 | 0x11494 | `mowrit` | Write single byte to MIDI ACIA |
 | 0x114BC | `psg_write_register` | Write value to YM2149 register |
-| 0x1219A | `midi_seq_tick_handler` | 200 Hz MFP Timer A interrupt handler |
+| 0x1219A | `midi_seq_tick_handler` | 960 Hz MFP Timer A interrupt handler |
 
 ### PSG Envelope (3 functions)
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x115AE | `psg_process_envelopes` | Software ADSR envelope processor (50 Hz) |
+| 0x115AE | `psg_process_envelopes` | Software ADSR envelope processor (240 Hz) |
 | 0x11A0E | `psg_set_note_frequency` | Set PSG channel period from note number |
 | 0x119C6 | `psg_set_mixer_and_volume` | Configure mixer and volume registers |
 
@@ -627,7 +628,7 @@ walk cycle), controlled by `footstep_trigger_flag`.
 | `mi_sqpos` | uint8_t* | Current read position in event stream |
 | `g_mspha` | MIDI_SEQ_PHASE | Current sequencer state |
 | `mi_temp` | short | Ticks per beat (controls playback speed) |
-| `g_mtcou` | short | Raw 200 Hz tick counter |
+| `g_mtcou` | long | Raw 960 Hz Timer A tick counter |
 | `g_mtpre` | short | Tempo-scaled tick subdivider |
 | `g_moen` | BOOL16 | Enable external MIDI output |
 | `psg_out` | BOOL16 | Enable internal PSG synthesis |
