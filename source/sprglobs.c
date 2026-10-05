@@ -30,8 +30,9 @@ short   carriedSprite;
 BOOL16  lcpHidden;
 /* Diagnostic-only: while YES, the body and head sprite updates
    (updateBody / updateHead) force the sprite Y to 300 (below the
-   visible area) so a developer can look at the empty room. */
-short   debugHideLcp;
+   visible area) so a developer can look at the empty room.  Nothing in
+   the game sets it. */
+BOOL16  debugHideLcp;
 
 /* ---- Dog --------------------------------------------------------------- */
 /* Current screen position of the dog sprite (updated ~8Hz by

@@ -39,7 +39,7 @@ extern short    resY;
 extern short    animState;
 extern short    resFacing;
 extern short    isCarrying;
-extern short    debugHideLcp;
+extern BOOL16   debugHideLcp;
 extern short    pendReady[];
 /* bodyFrames and bodyShapes are real global ARRAYS in LCP_STX, not
    pointers -- updateBody indexes them with an immediate base and no
@@ -138,7 +138,7 @@ char ** argv;
         resX = 100;
         resY = 100;
         isCarrying = NO;
-        debugHideLcp = 0;
+        debugHideLcp = NO;
         pendReady[3] = 0;
 
         memset(atlas, 255, sizeof(atlas));

@@ -68,7 +68,7 @@ extern short resFacing;
 extern BOOL16 isCarrying;
 extern short carriedSprite;
 extern BOOL16 lcpHidden;
-extern short debugHideLcp;
+extern BOOL16 debugHideLcp;
 extern short dogX;
 extern short dogY;
 extern short dogXTarget;

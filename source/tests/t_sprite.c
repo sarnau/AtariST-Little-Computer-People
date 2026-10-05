@@ -33,7 +33,7 @@ extern short    resY;
 extern short    animState;
 extern short    resFacing;
 extern short    isCarrying;
-extern short    debugHideLcp;
+extern BOOL16   debugHideLcp;
 extern short    pendReady[];
 extern short    drawnX[];
 extern short    drawnY[];
@@ -163,7 +163,7 @@ char ** argv;
         animState = STATE_WALK_FRAME_0;
         resFacing = FACING_RIGHT;
         isCarrying = NO;
-        debugHideLcp = 0;
+        debugHideLcp = NO;
         pendReady[3] = 0;
 
         memset(bodyImage,  0, LCP_BODY_DEST_WORDS * sizeof(short));
