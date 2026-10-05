@@ -665,8 +665,8 @@ short           cardYPlyr[5] = { 37, 37, 37, 37, 37 };
    a word, the player types up to ten letters (cursor-left erases) and
    Return submits.  A right answer or too many guesses/clues starts a
    new word; a wrong one keeps the word and counts a guess (anaGuessNum).
-   F1 once per word swaps one letter of the scramble into place and
-   costs a guess.  F10 (or mgWaitKey's idle timeout) leaves the game. */
+   F1, once per guess, swaps one letter of the scramble into place
+   and costs a guess.  F10 (or mgWaitKey's idle timeout) leaves the game. */
 void
 playAnagrams()
 {
@@ -1605,8 +1605,10 @@ pkrShowdown()
         }
 }
 
-/* Should the computer open?  Bluffing -> yes (0).
-   Otherwise "Jacks or better" -- returns best rank >= Q, else -1. */
+/* Does the computer stay in?  -1 (fold) only when he is not
+   bluffing, holds no pair or better, and his best card is below an
+   ace; otherwise 0, or the ace's rank left in the return register.
+   The caller only tests for -1. */
 
 static short
 pkrOpenRank()
@@ -3079,7 +3081,8 @@ cleanup:
 
 /* Blackjack card value.  aceMode=0 all aces=1; aceMode=1
    one ace=11 (soft), rest=1.  Called mode 0 then 1 to pick better
-   score without busting.  Rank 12=Ace, 6..11=10, 0..5=rank+2. */
+   score without busting.  Rank 12 (ace) as above, ranks 8..11
+   (10, J, Q, K) = 10, ranks 0..7 (2..9) = rank+2. */
 
 static short
 bjScore(hand, aceMode)
@@ -3310,10 +3313,14 @@ short   sel;
         printString(str, 31, 51, COLOR_black);
 }
 
-/* Settle a bet.  winner: 0=computer, 1=player.
-   mode: 0=normal, 1=natural blackjack double-collect,
-         2=split -- suppress the second (player) transfer.
-   Sets cardQuit on mid-transfer bankruptcy. */
+/* Settle a bet.  The staked bet always goes to the winner (0 =
+   computer, 1 = player); mode says what the loser pays on top, in
+   multiples of the bet:
+                    computer wins   player wins
+     0  normal            0              1
+     1  natural           1              2
+     2  push              -              0   (the bet comes back)
+   Sets cardQuit when the paying side runs out of chips. */
 
 static void
 bjSettle(betPtr, winner, mode)
