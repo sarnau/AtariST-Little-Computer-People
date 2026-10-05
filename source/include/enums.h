@@ -326,9 +326,9 @@
 #define SPRITE_TYPEWRITER               0x08
 #define SPRITE_FOOD_PACKAGE             0x09
 #define SPRITE_TABLE_SETTING            0x0c
-#define SPRITE_DOOR_ANIM_1              0x0d
-#define SPRITE_DOOR_ANIM_2              0x0e
-#define SPRITE_DOOR_ANIM_3              0x0f
+#define SPRITE_WC_DOOR_1                0x0d
+#define SPRITE_WC_DOOR_2                0x0e
+#define SPRITE_WC_DOOR_3                0x0f
 #define SPRITE_CLOSET_LCP_INSIDE        0x10
 #define SPRITE_CLOSET_WIDE_OPEN         0x12
 #define SPRITE_CLOSET_AJAR              0x11

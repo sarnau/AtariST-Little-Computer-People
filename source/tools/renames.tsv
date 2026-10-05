@@ -683,3 +683,6 @@ POS_TOP_GAME_CHAIR_RIGHT	POS_TOP_ARMCHAIR_BACK	behind the blue armchair (a dog w
 POS_TOP_GAME_WALK_IN	POS_TOP_CABINET_RIGHT	right of the filing cabinet
 POS_TOP_GAME_WALK_OUT	POS_TOP_RIGHT_WALL	by the top floor's right wall
 POS_BTM_DOG_FOOD_STORE	POS_BTM_LAMP	by the living-room lamp
+SPRITE_DOOR_ANIM_1	SPRITE_WC_DOOR_1	the toilet (WC) door, frame 1: closed, ajar, wide open
+SPRITE_DOOR_ANIM_2	SPRITE_WC_DOOR_2	the toilet (WC) door, frame 2: closed, ajar, wide open
+SPRITE_DOOR_ANIM_3	SPRITE_WC_DOOR_3	the toilet (WC) door, frame 3: closed, ajar, wide open

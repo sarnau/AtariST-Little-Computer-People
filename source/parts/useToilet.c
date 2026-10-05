@@ -39,10 +39,10 @@ useToilet()
         }
 
         resFacing = FACING_RIGHT;
-        spriteLayer[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOOR_ANIM_3);
-        pendX[spriteSlot[SPRITE_DOOR_ANIM_3]] = 187;
-        pendY[spriteSlot[SPRITE_DOOR_ANIM_3]] = 87;
+        spriteLayer[SPRITE_WC_DOOR_3] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_WC_DOOR_3);
+        pendX[spriteSlot[SPRITE_WC_DOOR_3]] = 187;
+        pendY[spriteSlot[SPRITE_WC_DOOR_3]] = 87;
 
         posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         walkYTarget -= 3;
@@ -52,21 +52,21 @@ useToilet()
         savedX = resX;
 
         /* Close door behind resident (3 sprite phases). */
-        spriteLayer[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_WC_DOOR_3] = SPRITE_HIDDEN;
         layoutSlots();
-        spriteLayer[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOOR_ANIM_2);
-        pendX[spriteSlot[SPRITE_DOOR_ANIM_2]] = 187;
-        pendY[spriteSlot[SPRITE_DOOR_ANIM_2]] = 87;
+        spriteLayer[SPRITE_WC_DOOR_2] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_WC_DOOR_2);
+        pendX[spriteSlot[SPRITE_WC_DOOR_2]] = 187;
+        pendY[spriteSlot[SPRITE_WC_DOOR_2]] = 87;
         drawObject(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
         gameTick(1);
 
-        spriteLayer[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_WC_DOOR_2] = SPRITE_HIDDEN;
         layoutSlots();
-        spriteLayer[SPRITE_DOOR_ANIM_1] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOOR_ANIM_1);
-        pendX[spriteSlot[SPRITE_DOOR_ANIM_1]] = 187;
-        pendY[spriteSlot[SPRITE_DOOR_ANIM_1]] = 87;
+        spriteLayer[SPRITE_WC_DOOR_1] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_WC_DOOR_1);
+        pendX[spriteSlot[SPRITE_WC_DOOR_1]] = 187;
+        pendY[spriteSlot[SPRITE_WC_DOOR_1]] = 87;
         drawObject(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
         hideResident();
         sfxSelect(SFX_DOOR_CLOSE, 6L);
@@ -77,23 +77,23 @@ useToilet()
         sfxSelect(SFX_TOILET_FLUSH, 6L);
         gameTick(16);
 
-        spriteLayer[SPRITE_DOOR_ANIM_1] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_WC_DOOR_1] = SPRITE_HIDDEN;
         layoutSlots();
-        spriteLayer[SPRITE_DOOR_ANIM_2] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOOR_ANIM_2);
+        spriteLayer[SPRITE_WC_DOOR_2] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_WC_DOOR_2);
         showResident();
-        pendX[spriteSlot[SPRITE_DOOR_ANIM_2]] = 187;
-        pendY[spriteSlot[SPRITE_DOOR_ANIM_2]] = 87;
+        pendX[spriteSlot[SPRITE_WC_DOOR_2]] = 187;
+        pendY[spriteSlot[SPRITE_WC_DOOR_2]] = 87;
         drawObject(OBJ_DOOR_TOILET_OPEN_1, TOILET_DOOR_X, TOILET_DOOR_Y);
         sfxSelect(SFX_DOOR_OPEN, 6L);
         gameTick(1);
 
-        spriteLayer[SPRITE_DOOR_ANIM_2] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_WC_DOOR_2] = SPRITE_HIDDEN;
         layoutSlots();
-        spriteLayer[SPRITE_DOOR_ANIM_3] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOOR_ANIM_3);
-        pendX[spriteSlot[SPRITE_DOOR_ANIM_3]] = 187;
-        pendY[spriteSlot[SPRITE_DOOR_ANIM_3]] = 87;
+        spriteLayer[SPRITE_WC_DOOR_3] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_WC_DOOR_3);
+        pendX[spriteSlot[SPRITE_WC_DOOR_3]] = 187;
+        pendY[spriteSlot[SPRITE_WC_DOOR_3]] = 87;
         drawObject(OBJ_DOOR_TOILET_OPEN_2, TOILET_DOOR_X, TOILET_DOOR_Y);
         gameTick(1);
         toiletDoorOpen = YES;
@@ -103,7 +103,7 @@ useToilet()
         walkToTarget();
 
         if (toiletDoorOpen != NO) {
-                spriteLayer[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
+                spriteLayer[SPRITE_WC_DOOR_3] = SPRITE_HIDDEN;
                 layoutSlots();
                 gameTick(0);
         }
