@@ -38,6 +38,13 @@ The reverse engineering analysis is organized into the following documents:
 | [SOUND.md](SOUND.md) | MIDI sequencer engine, PSG envelope processor, 23 sound effects, Music Studio .SNG/.ORG file format, song catalog |
 | [IMAGEFORMAT.md](IMAGEFORMAT.md) | Pixel format, color palette, compressed screen images (.SCN), sprite/object files, playing cards, character body sprites (PE*.LCP) |
 
+## C Source Reconstruction
+
+[source/](source/README.md) holds a K&R C port that compiles under Alcyon C 4.14
+to a binary byte-identical to the shipped 1985 `LCP.PRG` (`DATA/LCP_STX.PRG`).
+Its names are the port's own readable ones, not the Ghidra names used in the
+documents above; [docs/history.md](docs/history.md) records how it was recovered.
+
 ## Data Files
 
 | File | Format | Description |
