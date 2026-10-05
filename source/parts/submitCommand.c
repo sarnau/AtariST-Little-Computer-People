@@ -13,8 +13,8 @@ submitCommand()
         parsedLine = typedLine;
         entered = matchCommand(parsedLine);    /* reloads the global on purpose */
         if (entered >= 0 && queueCount < 10) {
-                queueActions[queueCount]           = entered;
-                queuePriority[queueCount]  = cmdPriority;
+                queueActions[queueCount] = entered;
+                queuePriority[queueCount] = cmdPriority;
                 queueCount++;
         }
 }

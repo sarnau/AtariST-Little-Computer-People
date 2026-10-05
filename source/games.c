@@ -100,7 +100,7 @@ mgWaitKey()
         short           key;
         unsigned short  idle;
 
-        idle    = 0;
+        idle = 0;
         mgTimedOut = NO;
 
         /* Drain any keys the game accidentally left in the buffer. */
@@ -208,8 +208,7 @@ playWordPuzzle()
         if (wpzText == (char *) 0)
                 outOfMemory();
         mgSetup();
-        unpackFile("wordpz.txt",
-                             (unsigned char *) wpzText, 1536);
+        unpackFile("wordpz.txt", (unsigned char *) wpzText, 1536);
 
         /* Index the 66 lines. */
         parse_ptr = wpzText;
@@ -285,7 +284,7 @@ next_puzzle:
 
 cleanup:
         keysBlocked = NO;
-        textTimer  = 0;
+        textTimer = 0;
         Mfree(wpzText);          /* wpzText is deliberately not cleared */
 }
 #undef key
@@ -579,7 +578,7 @@ anaPickWord()
         char *  wp;
 
         anaAnswer = anaDict + rndRng(0, 149) * 11;        /* 0..149 */
-        pos     = 0;
+        pos = 0;
         for (wp = anaAnswer; *wp > ' ' && *wp != '.'; ) {
                 /* Index first: this makes Alcyon fold the base into the
                    address the way the original does. */
@@ -589,14 +588,14 @@ anaPickWord()
         }
         anaScrambled[pos] = '\0';
         *wp          = '\0';
-        len     = pos;
+        len = pos;
         anaWordLen = len;
 
         while (anaStrMatch(anaScrambled, anaAnswer) != 0) {
                 pos = 0;
                 while (rndRng(10, 20) > pos) {
-                        ia  = rndRng(0, len - 1);
-                        ib  = rndRng(0, len - 1);
+                        ia = rndRng(0, len - 1);
+                        ib = rndRng(0, len - 1);
                         tmp = anaScrambled[ib];
                         anaScrambled[ib] = anaScrambled[ia];
                         anaScrambled[ia] = tmp;
@@ -707,12 +706,12 @@ same_word:
         anaDrawPrompt(anaGuessNum);
         for (index = 0; index < 10; index++)
                 anaInput[index] = ' ';
-        anaInput[10]   = '\0';
+        anaInput[10] = '\0';
         gameTick(0);
         word_complete = NO;
         while (anaGuessNum < 9 || (anaGuessNum < 10 && anaExtraGuess != 0)) {
-                index         = 0;
-                key_pressed   = 0;
+                index = 0;
+                key_pressed = 0;
                 while (key_pressed != KEY_CTRL_M) {
                         printString(anaInput, 239, 57, COLOR_green);
                         key_pressed = mgWaitKey();
@@ -740,7 +739,7 @@ same_word:
                                 continue;
                         }
                         if (key_pressed == KEY_F10) {
-                                textTimer  = 0;
+                                textTimer = 0;
                                 keysBlocked = NO;
                                 Mfree(anaDict);
                                 return;
@@ -812,8 +811,7 @@ validate:
                 if (anaInput[index] == ' ')
                         anaInput[index] = '\0';
                 if (anaStrMatch(anaInput, anaAnswer) != 0) {
-                        printString("YOU GOT IT!!!!!!",
-                                             5, 69, COLOR_black);
+                        printString("YOU GOT IT!!!!!!", 5, 69, COLOR_black);
                         anaShowWord(anaAnswer, COLOR_black);
                         gameTick(30);
                         anaClrBottom();
@@ -829,12 +827,10 @@ validate:
 
                 /* Too many wrong guesses: show the answer, start a
                    new word. */
-                printString("Sorry, too many guesses!",
-                             5, 69, COLOR_black);
+                printString("Sorry, too many guesses!", 5, 69, COLOR_black);
                 gameTick(20);
                 anaClrBottom();
-                printString("Here is the word.",
-                             5, 69, COLOR_black);
+                printString("Here is the word.", 5, 69, COLOR_black);
                 anaShowWord(anaAnswer, COLOR_black);
                 gameTick(30);
                 anaClrWord();
@@ -1078,10 +1074,10 @@ playPoker()
         mgSetup();
 
         pkrRound = 0;
-        cardQuit  = NO;
-        compChips  = 400;
-        plyrChips  = 400;
-        potChips  = 0;
+        cardQuit = NO;
+        compChips = 400;
+        plyrChips = 400;
+        potChips = 0;
         dispCompChips();
         dispPlyrChips();
         dispPot();
@@ -1097,7 +1093,7 @@ round:
                 pkrAnte();
                 if (cardQuit == YES) {
 cleanup:
-                        textTimer  = 0;
+                        textTimer = 0;
                         keysBlocked = NO;
                         Mfree(cardImages);
                         hideMouse();
@@ -1357,7 +1353,7 @@ discard_loop:
                                         pkrMsgRaise[12] = pkrRaiseAmt % 10 + '0';
                                         cardMessage(pkrMsgRaise);
                                         ikey = pkrRaiseAmt;
-                                        pkrBet    = 0;
+                                        pkrBet = 0;
                                         while (ikey--) {
                                                 pkrAddChips(0, 1);
                                                 gameTick(0);
@@ -1805,7 +1801,7 @@ char *  str;
         short   r;
         short   go;
 
-        pkrBet  = 0;
+        pkrBet = 0;
         pkrPassed = NO;
         cardMessage(str);
         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
@@ -1844,7 +1840,7 @@ char *  str;
                         }
                         plyrChips += pkrBet;
                         potChips -= pkrBet;
-                        pkrBet   = 0;
+                        pkrBet = 0;
                         dispPlyrChips();
                         dispPot();
                 }
@@ -2129,7 +2125,7 @@ short * count;
 
         if (*count == 0)
                 return -1;
-        card    = *pile;
+        card = *pile;
         /* The count is decremented in place with an early return when
            the pile is emptied, so `card` is returned from two places,
            as in the original. */
@@ -2229,7 +2225,7 @@ out_of_cards:
                         cardMessage("I'm out of cards! You're too good!");
                         gameTick(20);
 cleanup:
-                        textTimer  = 0;
+                        textTimer = 0;
                         keysBlocked = NO;
                         Mfree(cardImages);
                         hideMouse();
@@ -2514,13 +2510,13 @@ round:
                 printString("F1  Bet",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                 cardMessage("What's your bet?");
-                bjKey  = 0;
+                bjKey = 0;
                 cardQuit = NO;
                 while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_C)
                         bjKey = cardKeyInput(KEY_F1, PK_IN_UNUSED, KEY_F10);
                 if (bjKey == PK_IN_ARG_C) {
 cleanup:
-                        textTimer  = 0;
+                        textTimer = 0;
                         keysBlocked = NO;
                         Mfree(cardImages);
                         hideMouse();
@@ -2528,8 +2524,8 @@ cleanup:
                 }
 
                 for (br = 0; br < 5; br++) {
-                        compHand[br]  = CARD_NONE;
-                        plyrHand[br]  = CARD_NONE;
+                        compHand[br] = CARD_NONE;
+                        plyrHand[br] = CARD_NONE;
                         bjSplitHand[br] = CARD_NONE;
                 }
                 panelErase(70, 10, 219, 62);
@@ -2558,7 +2554,7 @@ cleanup:
                         if (mgTimedOut != NO) goto cleanup;
                         if (bjKey == PK_IN_ARG_C) {
                                 plyrChips += pkrBet;
-                                pkrBet  = 0;
+                                pkrBet = 0;
                                 bjBetMain = 0;
                                 bjShowBet(1);
                                 dispPlyrChips();
@@ -2600,7 +2596,7 @@ cleanup:
                 bjDealCard(compHand, 0);
                 gameTick(10);
                 br = bjIsNatural(plyrHand);
-                hit  = bjIsNatural(compHand);
+                hit = bjIsNatural(compHand);
                 if (br != 0 && hit != 0) {
                         cardMessage("You have BLACKJACK...but so do I !!");
                         cardDraw(compHand[0], 0, 0);
@@ -2656,7 +2652,7 @@ cleanup:
                         if (bjKey == PK_IN_ARG_A) {
                                 bjDidSplit = 1;
                                 bjSplitHand[0] = plyrHand[1];
-                                plyrHand[1]  = CARD_NONE;
+                                plyrHand[1] = CARD_NONE;
                                 cardMessage("Here is your first hand.");
                                 bjMatchBet = bjBetMain;
                                 cardDraw(CARD_HIGHLIGHT, 1, 1);
@@ -2721,7 +2717,7 @@ cleanup:
                 }
                 bjDblMain = NO;
                 bjDblSplit = NO;
-                bjHitsMain  = CARD_BJ_MAX;
+                bjHitsMain = CARD_BJ_MAX;
                 bjHitsSplit = CARD_BJ_MAX;
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1 Double",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
@@ -2739,7 +2735,7 @@ cleanup:
                         if (mgTimedOut != NO) goto cleanup;
                         if (bjKey == PK_IN_ARG_A) {
                                 bjHitsMain = CARD_BJ_STEP;
-                                br      = bjBetMain;
+                                br = bjBetMain;
                                 bjDblMain = YES;
                                 while (br--) {
                                         if (plyrChips == 0) {
@@ -2778,7 +2774,7 @@ cleanup:
                                 if (mgTimedOut != NO) goto cleanup;
                                 if (bjKey == PK_IN_ARG_A) {
                                         bjHitsMain = CARD_BJ_STEP;
-                                        br      = bjBetMain;
+                                        br = bjBetMain;
                                         bjDblMain = YES;
                                         while (br--) {
                                                 if (plyrChips == 0) {
@@ -2815,8 +2811,8 @@ cleanup:
                                 if (mgTimedOut != NO) goto cleanup;
                                 if (bjKey == PK_IN_ARG_A) {
                                         bjHitsSplit = CARD_BJ_STEP;
-                                        bjDblSplit  = YES;
-                                        br       = bjBetSplit;
+                                        bjDblSplit = YES;
+                                        br = bjBetSplit;
                                         while (br--) {
                                                 if (plyrChips == 0) {
                                                         cardQuit = YES;
@@ -2943,7 +2939,7 @@ cleanup:
                         bjDealerScore = 0;
                         round_ctr = 0;
                         res = bjScore(compHand, 0);
-                        rv  = bjScore(compHand, 1);
+                        rv = bjScore(compHand, 1);
                         if (0x15 < res && 0x15 < rv) {
                                 round_ctr = 1;
                                 break;
@@ -2969,7 +2965,7 @@ cleanup:
                 if (br == 3 && round_ctr == 0) {
                         bjDealerScore = 0;
                         res = bjScore(compHand, 0);
-                        rv  = bjScore(compHand, 1);
+                        rv = bjScore(compHand, 1);
                         bjDealerScore = res;
                         if (res > 21)
                                 round_ctr = 1;

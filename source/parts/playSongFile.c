@@ -14,7 +14,7 @@ char *  filename;
         _DTA *   dta_ptr;
 
         useSongChan = YES;
-        fixedChan          = YES;
+        fixedChan = YES;
 
         if (songPlaying != NO) {
                 startSong(songBuf, songMaxPos);

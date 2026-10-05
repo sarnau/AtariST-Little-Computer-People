@@ -12,8 +12,8 @@ callDog()
         posToXY(POS_BTM_COUCH, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
-        animState              = STATE_STAND_SIDE_VIEW;
-        resFacing   = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         animState = STATE_CROUCH_DOWN;

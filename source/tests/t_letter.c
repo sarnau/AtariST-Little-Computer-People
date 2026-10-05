@@ -70,8 +70,7 @@ char ** argv;
                 }
                 printf("  [%3d] %.60s\n", i, letterLines[i]);
         }
-        printf("Line 45 (mid-body sample):\n  %.100s\n",
-               letterLines[45]);
+        printf("Line 45 (mid-body sample):\n  %.100s\n", letterLines[45]);
         printf("Line 359 (last):\n  %.100s\n", letterLines[359]);
         printf("PASS: 360 letter template lines decoded and indexed\n");
 

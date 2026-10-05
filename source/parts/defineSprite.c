@@ -10,9 +10,9 @@ short                   height;
 short                   width;
 {
         spriteBitmap[spriteID] = (short *) imgPtr;
-        spriteMask[spriteID]   = (short *) maskPtr;
-        spriteHeight[spriteID]             = height;
-        spriteWidth[spriteID]             = width;
+        spriteMask[spriteID] = (short *) maskPtr;
+        spriteHeight[spriteID] = height;
+        spriteWidth[spriteID] = width;
         /* The four values are read back out of the tables instead of
            passing the parameters, as in the original. */
         makeMask(spriteBitmap[spriteID], spriteMask[spriteID],

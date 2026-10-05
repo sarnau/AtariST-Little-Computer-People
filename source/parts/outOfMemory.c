@@ -6,8 +6,7 @@ void
 outOfMemory()
 {
 #ifdef HOST
-        fprintf(stderr,
-                "FATAL: Not enough memory.\n");
+        fprintf(stderr, "FATAL: Not enough memory.\n");
         exit(1);
 #else
         for (;;)

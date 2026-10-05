@@ -12,14 +12,13 @@ short   value;
            removing it changes the compiled code. */
         short   result;
 
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        headMode         = HEAD_ANIM_DISABLED;
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        headMode = HEAD_ANIM_DISABLED;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -44,8 +43,7 @@ short   value;
         pendX[spriteSlot[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_X;
         pendY[spriteSlot[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_Y;
 
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         /* Written as -= on purpose: `x = x - n` compiles differently. */
         walkYTarget -= 3;
         walkXTarget -= 10;

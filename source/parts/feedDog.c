@@ -11,18 +11,17 @@ short   value;
         /* The call is tested in place, with no local. */
 
         if (value == 0) {
-                posToXY(POS_BTM_FRIDGE,
-                                      &walkXTarget, &walkYTarget);
+                posToXY(POS_BTM_FRIDGE, &walkXTarget, &walkYTarget);
                 if (walkToTarget() != 0)
                         return;
 
-                resFacing   = FACING_RIGHT;
-                animState              = STATE_STAND_FACING_SCREEN;
+                resFacing = FACING_RIGHT;
+                animState = STATE_STAND_FACING_SCREEN;
                 headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
                 waitHeadTurn();
 
                 resFacing = FACING_LEFT;
-                animState            = STATE_REACH_INTO_CABINET;
+                animState = STATE_REACH_INTO_CABINET;
                 drawObject(OBJ_FRIDGE_CLOSED, FRIDGE_X, FRIDGE_Y);
                 gameTick(1);
                 drawObject(OBJ_FRIDGE_OPEN_1, FRIDGE_X, FRIDGE_Y);
@@ -52,13 +51,12 @@ short   value;
                 carryBehind(SPRITE_FOOD_PACKAGE);
         }
 
-        posToXY(POS_BTM_DOG_BOWL,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_DOG_BOWL, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
         layoutSlots();
@@ -70,13 +68,12 @@ short   value;
         animState = STATE_BEND_DOWN;    gameTick(1);
 
         bowlChange = 1;
-        bowlLevel  = BOWL_FULL;
+        bowlLevel = BOWL_FULL;
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
         carryBehind(SPRITE_FOOD_PACKAGE);
-        posToXY(POS_BTM_FRIDGE,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_FRIDGE, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
 

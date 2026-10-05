@@ -9,6 +9,6 @@
 static void
 gameCleanup()
 {
-        textTimer  = 0;
+        textTimer = 0;
         keysBlocked = NO;
 }

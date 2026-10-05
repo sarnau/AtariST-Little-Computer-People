@@ -13,8 +13,8 @@ char *  str;
         /* The point is set first and the string copied with the
            while (dst[i++] = *src++) idiom, masking to a byte; this
            exact shape is the original's. */
-        ptsin[0]  = x;
-        ptsin[1]  = y;
+        ptsin[0] = x;
+        ptsin[1] = y;
         i = 0;
         while (intin[i++] = *str++ & 0xff)
                 ;

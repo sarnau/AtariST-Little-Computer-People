@@ -11,12 +11,12 @@ leaveGameTable()
 
         /* typingOff, not keysBlocked: this is the keyboard-input-mode flag
            that handleKey and gameTick test; rejoinTable clears it again. */
-        typingOff  = YES;
-        noPreempt  = YES;
-        isCarrying  = NO;
-        resY   -= 8;
-        resX   -= 6;
-        animState   = STATE_STAND_SIDE_VIEW;
+        typingOff = YES;
+        noPreempt = YES;
+        isCarrying = NO;
+        resY -= 8;
+        resX -= 6;
+        animState = STATE_STAND_SIDE_VIEW;
         gameTick(0);
         posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();

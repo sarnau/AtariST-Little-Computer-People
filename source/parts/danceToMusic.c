@@ -19,14 +19,13 @@ danceToMusic()
         }
         noPreempt = NO;
 
-        posToXY(POS_TOP_DANCE_FLOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_DANCE_FLOOR, &walkXTarget, &walkYTarget);
         walkYTarget += 8;
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 

@@ -10,9 +10,7 @@ loadLetterText()
         short   linecount;
         char *  i;
 
-        unpackFile("letter.txt",
-                             (unsigned char *) letterText,
-                             10496);
+        unpackFile("letter.txt", (unsigned char *) letterText, 10496);
 
         i = letterText;
         for (linecount = 0; linecount < 360; linecount++) {

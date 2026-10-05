@@ -14,12 +14,11 @@ getInOutOfBed()
         scratchArr[2] = STATE_LIE_DOWN_IN_BED;
 
         if (resident.is_sleeping == NO) {
-                posToXY(POS_MID_BED,
-                                      &walkXTarget, &walkYTarget);
+                posToXY(POS_MID_BED, &walkXTarget, &walkYTarget);
                 if (walkToTarget() != 0)
                         return;
-                resFacing   = FACING_RIGHT;
-                animState              = STATE_STAND_IDLE;
+                resFacing = FACING_RIGHT;
+                animState = STATE_STAND_IDLE;
                 headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 resident.is_sleeping = YES;
@@ -37,7 +36,7 @@ getInOutOfBed()
                 resX += 10;
                 animState = scratchArr[0]; gameTick(2);
                 resident.is_sleeping = NO;
-                animState              = STATE_STAND_IDLE;
+                animState = STATE_STAND_IDLE;
                 headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 gameTick(2);

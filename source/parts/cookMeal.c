@@ -9,13 +9,12 @@ cookMeal()
         /* walkToTarget()'s result is tested in place, with no local for it. */
         short   counter;
 
-        posToXY(POS_BTM_KITCHEN_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -24,8 +23,7 @@ cookMeal()
         animState = STATE_STAND_FACING_SCREEN; gameTick(0);
 
         carryBehind(SPRITE_COOKING_POT);
-        posToXY(POS_BTM_STOVE,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_STOVE, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
 
@@ -37,7 +35,7 @@ cookMeal()
         pendY[spriteSlot[SPRITE_COOKING_POT]] = 172;
 
         resFacing = FACING_LEFT;
-        animState            = STATE_BEND_AND_REACH;
+        animState = STATE_BEND_AND_REACH;
 
         /* 30..50 tick cooking animation, rotating stove frames. */
         counter = rndRng(30, 50);
@@ -52,8 +50,7 @@ cookMeal()
         carryBehind(SPRITE_COOKED_MEAL);
 
         /* Back to cabinet, then chain into eatFromCabinet to eat. */
-        posToXY(POS_BTM_KITCHEN_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
         spriteLayer[SPRITE_COOKED_MEAL] = SPRITE_HIDDEN;

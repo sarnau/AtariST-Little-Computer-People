@@ -4,7 +4,6 @@
 void
 walkToFrontDoor()
 {
-        posToXY(POS_BTM_FRONT_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_FRONT_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
 }

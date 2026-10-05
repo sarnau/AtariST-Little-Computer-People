@@ -15,5 +15,5 @@ short * pxy;
         contrl[3] = 0;
         contrl[6] = handle;
         vdi_go();
-        vdipb[2]  = ptsin;
+        vdipb[2] = ptsin;
 }

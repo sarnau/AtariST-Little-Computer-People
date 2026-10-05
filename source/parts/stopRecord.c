@@ -12,8 +12,7 @@ stopRecord()
         if (recordPlaying == NO)
                 return;
 
-        posToXY(POS_TOP_DANCE_FLOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_DANCE_FLOOR, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 

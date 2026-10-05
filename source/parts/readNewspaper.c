@@ -16,14 +16,13 @@ readNewspaper()
         scratchArr[0] = STATE_READ_PAPER_HOLD;
         scratchArr[1] = STATE_READ_PAPER_TURN_PAGE;
         tvOn();
-        posToXY(POS_TOP_ARMCHAIR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_ARMCHAIR, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        headMode         = HEAD_ANIM_READING;
-        resFacing   = FACING_LEFT;
-        animState              = STATE_SIT_IN_ARMCHAIR;
+        headMode = HEAD_ANIM_READING;
+        resFacing = FACING_LEFT;
+        animState = STATE_SIT_IN_ARMCHAIR;
         headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
         waitHeadTurn();
         /* The limit is set before the coordinate steps, and
@@ -38,7 +37,7 @@ readNewspaper()
                 if (eventQueue[0] != ACTION_NONE)
                         break;
                 resFacing = FACING_LEFT;
-                animState            = scratchArr[0];
+                animState = scratchArr[0];
                 if ((Random() & 0xf) == 5)
                         animState = scratchArr[1];
                 gameTick(1);

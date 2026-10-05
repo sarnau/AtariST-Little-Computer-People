@@ -69,8 +69,7 @@ BOOL16  p_dosnd;
 
         /* Phase 4: walk resident back to the study door. */
         resX = saved_x;
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
         noPreempt = NO;

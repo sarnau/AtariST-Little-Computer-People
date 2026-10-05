@@ -6,10 +6,10 @@ paceNervously()
 {
         short   i;
 
-        scratchArr[0]  = STATE_PACE_SHIFT_LEFT;
-        scratchArr[1]  = STATE_PACE_SHIFT_RIGHT;
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_SIDE_VIEW;
+        scratchArr[0] = STATE_PACE_SHIFT_LEFT;
+        scratchArr[1] = STATE_PACE_SHIFT_RIGHT;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 

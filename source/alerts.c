@@ -58,8 +58,8 @@ BOOL16  flipH2;
 
         drawnHeight[HW_SLOT_DOG_BACK] = spriteHeight[SPRITE_DOG_LAY_DOWN];
         drawnHeight[HW_SLOT_DOG_FRONT] = spriteHeight[SPRITE_DOG_LAY_DOWN];
-        drawnWidth[HW_SLOT_DOG_BACK]  = spriteWidth[SPRITE_DOG_LAY_DOWN];
-        drawnWidth[HW_SLOT_DOG_FRONT]  = spriteWidth[SPRITE_DOG_LAY_DOWN];
+        drawnWidth[HW_SLOT_DOG_BACK] = spriteWidth[SPRITE_DOG_LAY_DOWN];
+        drawnWidth[HW_SLOT_DOG_FRONT] = spriteWidth[SPRITE_DOG_LAY_DOWN];
         pendX[HW_SLOT_DOG_BACK] = dogX;
         pendX[HW_SLOT_DOG_FRONT] = dogX;
         pendY[HW_SLOT_DOG_BACK] = dogY - 17;

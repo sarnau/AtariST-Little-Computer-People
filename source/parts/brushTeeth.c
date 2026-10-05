@@ -11,8 +11,7 @@ brushTeeth()
         short           x_right;
 
         brush_cycles = (unsigned short) rndRng(24, 35);
-        posToXY(POS_MID_BATHROOM_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_BATHROOM_SINK, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
@@ -25,7 +24,7 @@ brushTeeth()
 
         spriteLayer[SPRITE_STUDY_DOOR_FRAME] = SPRITE_BEHIND_LCP;
         activateSprite(SPRITE_STUDY_DOOR_FRAME);
-        x_left  = resX + 8;
+        x_left = resX + 8;
         x_right = resX + 12;
         pendX[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = x_left;
         pendY[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = resY - 24;

@@ -158,13 +158,13 @@ char ** argv;
         initMirror();
         /* Minimal player + world state, posed in the first walk frame. */
         memset(&resident, 0, sizeof(resident));
-        resX                    = 100;
-        resY                    = 100;
-        animState                = STATE_WALK_FRAME_0;
-        resFacing     = FACING_RIGHT;
+        resX = 100;
+        resY = 100;
+        animState = STATE_WALK_FRAME_0;
+        resFacing = FACING_RIGHT;
         isCarrying = 0;
         debugHideLcp = 0;
-        pendReady[3]   = 0;
+        pendReady[3] = 0;
 
         memset(bodyImage,  0, LCP_BODY_DEST_WORDS * sizeof(short));
         memset(bodyMask, 0, LCP_BODY_DEST_WORDS * sizeof(short));
@@ -183,10 +183,8 @@ char ** argv;
            y = resY + bodyYOffset[0] - 21. */
         expected_x = resX - 4;
         expected_y = resY + bodyYOffset[0] - 21;
-        CHECK(drawnX[3] == expected_x,
-              "g_seacx[3] mismatch after compose");
-        CHECK(drawnY[3] == expected_y,
-              "g_seacy[3] mismatch after compose");
+        CHECK(drawnX[3] == expected_x, "g_seacx[3] mismatch after compose");
+        CHECK(drawnY[3] == expected_y, "g_seacy[3] mismatch after compose");
 
         /* Dump the composited slot 3 image for visual inspection. */
         dump_pgm("sprite_slot3.pgm", bodyImage, 21, 4);

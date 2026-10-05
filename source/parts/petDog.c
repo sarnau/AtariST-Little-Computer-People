@@ -26,6 +26,6 @@ petDog()
         }
 
         patAllowed = NO;
-        animState         = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 }

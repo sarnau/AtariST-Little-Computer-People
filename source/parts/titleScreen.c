@@ -17,7 +17,7 @@ titleScreen()
         short   unused2;        /* never referenced */
         short   unused3;        /* never referenced */
 
-        stripBuf  = tosPhysbase;
+        stripBuf = tosPhysbase;
         fhandle = openFile("title.scn", RMODE_RD);
         readFile(fhandle, 2L, &scnSize);
         scnBuffer = (char *) Malloc((long) (scnSize - 32));
@@ -51,11 +51,11 @@ titleScreen()
         resident.owner_name[4] = 'E';
         resident.owner_name[5] = 'R';
         resident.owner_name[6] = 0;
-        t_mon   = 8;           /* September; titleScreen stores month - 1 */
+        t_mon = 8;           /* September; titleScreen stores month - 1 */
         t_day = 3;           /* the 4th;   likewise day - 1         */
-        t_year  = 26;
-        t_hour   = 10;
-        t_min    = 30;
+        t_year = 26;
+        t_hour = 10;
+        t_min = 30;
         colour = 0; n = 0; j = 0; ch = 0;   /* -Wall: set, never read */
         return;
 #else
@@ -89,9 +89,9 @@ titleScreen()
         printString("ENTER DATE:", 80, 122, colour);
 date_entry:
         enterField(176, 122, "MM/DD/YY", 8, colour);
-        t_mon   = inputLine[0] * 10 + inputLine[1] - 1;
+        t_mon = inputLine[0] * 10 + inputLine[1] - 1;
         t_day = inputLine[3] * 10 + inputLine[4] - 1;
-        t_year  = inputLine[6] * 10 + inputLine[7];
+        t_year = inputLine[6] * 10 + inputLine[7];
         if (t_mon < 0)
                 goto date_entry;
         if (t_mon >= 12)

@@ -9,7 +9,7 @@ moveInScene()
 {
         short   unused;         /* never referenced, but must stay */
 
-        dogHidden  = 1;
+        dogHidden = 1;
         movingIn = 1;
         hideResident();
         gameTick(240);
@@ -54,8 +54,8 @@ moveInScene()
         posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         walkToTarget();
         resFacing = FACING_RIGHT;
-        animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
+        animState = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openKitchenCab(DOOR_OPEN);
         gameTick(16);
@@ -76,8 +76,8 @@ moveInScene()
         posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         walkToTarget();
         resFacing = FACING_RIGHT;
-        animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
+        animState = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         changeClothes(0);
         useToilet();
@@ -92,8 +92,8 @@ moveInScene()
         checkFrontDoor(100);
         walkToFrontDoor();
         resFacing = FACING_RIGHT;
-        animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
+        animState = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
@@ -111,8 +111,8 @@ moveInScene()
         posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         walkToTarget();
         resFacing = FACING_RIGHT;
-        animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
+        animState = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_SUITCASE] = 0;
         layoutSlots();
         isCarrying = 0;
@@ -129,7 +129,7 @@ moveInScene()
         dogYWaypt = dogYTarget;
         dogOnStairs = 0;
         dogIdleCount = 20;
-        dogHidden  = 0;
+        dogHidden = 0;
         setDogSprite(SPRITE_DOG_LAY_DOWN, -1, 1);
 
         changeClothes(0);

@@ -13,21 +13,21 @@ sayHello()
         short   prev_pick;
         short   wait;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headMode         = HEAD_ANIM_DISABLED;
+        headMode = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame            = headFrame;
+        saved_frame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
-        headPose      = HEAD_ANIM_DISABLED;
+        headPose = HEAD_ANIM_DISABLED;
 
         wave_count = rndRng(20, 40);
         /* pick is cleared before prev_pick on purpose (statement order
            shows in the compiled code). */
-        pick       = 0;
-        prev_pick  = 0;
+        pick = 0;
+        prev_pick = 0;
         /* Post-decrement in the condition, testing the old value --
            the original's loop shape. */
         while (wave_count--) {
@@ -61,7 +61,7 @@ sayHello()
         }
 
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headPose      = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headFrame      = saved_frame;
+        headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headFrame = saved_frame;
         gameTick(0);
 }

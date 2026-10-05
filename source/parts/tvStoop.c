@@ -5,8 +5,8 @@
 void
 tvStoop()
 {
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         animState = STATE_BEND_DOWN;

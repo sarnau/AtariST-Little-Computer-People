@@ -32,8 +32,7 @@ playOrgan()
                 stopRecord();
         noPreempt = NO;
 
-        posToXY(POS_TOP_ORGAN,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_ORGAN, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 

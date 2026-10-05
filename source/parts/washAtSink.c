@@ -18,14 +18,13 @@ short   value;
         scratchArr[2] = STATE_WASH_HANDS_RIGHT;
 
         carryBehind(value);
-        posToXY(POS_BTM_KITCHEN_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkToTarget();
         spriteLayer[value] = SPRITE_HIDDEN;
         layoutSlots();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 

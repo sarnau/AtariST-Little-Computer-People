@@ -10,9 +10,9 @@ walkStep()
            next-X pick, and the last two are written once and never
            read -- leftovers, kept as the original has them. */
         short   x_distance;
-        short   floor_num; 
-        short   ani_snap;  
-        short   spd_snap;  
+        short   floor_num;
+        short   ani_snap;
+        short   spd_snap;
 
         footstepDue = NO;
 
@@ -42,7 +42,7 @@ walkStep()
                 if (resX == walkXTarget && resY == walkYTarget) {
                         walkXTarget = 0;
                         walkYTarget = 0;
-                        animState     = STATE_STAND_IDLE;
+                        animState = STATE_STAND_IDLE;
                         gameTick(0);
                         return;
                 } else

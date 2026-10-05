@@ -17,7 +17,7 @@ char *  filename;
                 return;
 
 again:
-        attr  = 0;
+        attr = 0;
         fhnd = Fcreate(filename, attr);
         if (fhnd < 0) {
                 writeErrorAlert();

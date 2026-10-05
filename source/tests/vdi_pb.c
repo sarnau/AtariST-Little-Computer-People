@@ -91,8 +91,7 @@ main()
            that vdipb[2] was restored. */
         expect("v_pline pts[0] intact", pts[0],     10);
         expect("v_pline pts[3] intact", pts[3],     40);
-        expect("v_pline vdipb[2] restored",
-               (short) (vdipb[2] == ptsin), 1);
+        expect("v_pline vdipb[2] restored", (short) (vdipb[2] == ptsin), 1);
 
         v_gtext(vdiHandle, 100, 200, "Hi");
         expect("v_gtext contrl[0]",     contrl[0],   8);
@@ -107,21 +106,17 @@ main()
         expect("v_bar contrl[0]",       contrl[0],  11);
         expect("v_bar contrl[5] sub",   contrl[5],   1);
         expect("v_bar pts[3] intact",   pts[3],      8);
-        expect("v_bar vdipb[2] restored",
-               (short) (vdipb[2] == ptsin), 1);
+        expect("v_bar vdipb[2] restored", (short) (vdipb[2] == ptsin), 1);
 
         src.fd_addr = (void *) 0x100000L;
         dst.fd_addr = (void *) 0x200000L;
-        blitRect(vdiHandle, 3, &src, &dst,
-                      0, 0, 15, 23,
-                      100, 100, 115, 123);
+        blitRect(vdiHandle, 3, &src, &dst, 0, 0, 15, 23, 100, 100, 115, 123);
         expect("vroCpyD contrl[0]", contrl[0], 109);
         expect("vroCpyD contrl[1]", contrl[1],   4);
         expect("vroCpyD intin[0]",  intin[0],    3);
         /* blitRect only builds a pxy[8] on the stack and defers to the
            array-form vro_cpyfm, which likewise aims vdipb[2] at it. */
-        expect("vroCpyD vdipb[2] restored",
-               (short) (vdipb[2] == ptsin), 1);
+        expect("vroCpyD vdipb[2] restored", (short) (vdipb[2] == ptsin), 1);
 
         if (fails == 0)
                 printf("PASS: all 10 VDI wrappers build correct parameter blocks\n");

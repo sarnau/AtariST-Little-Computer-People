@@ -83,8 +83,7 @@ main(void)
         p_fails = (result < 0);
         printf("check_entered_cmd : %s  (returned %d, negative = no match)\n",
                p_fails ? "FAIL" : "OK", result);
-        printf("  g_aprio after full parse = %d\n",
-               cmdPriority);
+        printf("  g_aprio after full parse = %d\n", cmdPriority);
 
         /* An all-unknown sentence.  On the ST this returns ACTION_NONE:
            matchCommand walks phraseTable until `table[0] == 0xff`, and Alcyon

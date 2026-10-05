@@ -17,7 +17,7 @@ answerPhone()
         callDog();
         noPreempt = NO;
 
-        headMode         = HEAD_ANIM_DISABLED;
+        headMode = HEAD_ANIM_DISABLED;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -25,18 +25,18 @@ answerPhone()
         animState = STATE_PHONE_PICKUP;
         gameTick(1);
 
-        phoneAnswered    = YES;
+        phoneAnswered = YES;
         phoneRinging = NO;
-        phoneHangUp      = YES;
+        phoneHangUp = YES;
         gameTick(0);
         drawObject(OBJ_PHONE_CALL, PHONE_X, PHONE_Y);
 
         animState = STATE_PHONE_TALKING;
         gameTick(1);
 
-        saved_frame            = headFrame;
+        saved_frame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
-        headPose      = HEAD_ANIM_DISABLED;
+        headPose = HEAD_ANIM_DISABLED;
 
         rounds = rndRng(40, 50);
         while (rounds-- != 0) {
@@ -63,7 +63,7 @@ answerPhone()
 
         headFrame = saved_frame;
         phoneHangUp = YES;
-        animState         = STATE_PHONE_PICKUP;
+        animState = STATE_PHONE_PICKUP;
         gameTick(1);
 
         resY -= 6;
@@ -76,7 +76,7 @@ answerPhone()
         patAllowed = NO;
         resY -= 2;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headPose      = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         animState = STATE_STAND_SIDE_VIEW;
         waitHeadTurn();
         gameTick(0);

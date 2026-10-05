@@ -34,16 +34,15 @@ playGame()
         short   spare3, spare4, spare5, spare6;
         short   napsLeft;
 
-        dogNoTopFlr        = YES;
+        dogNoTopFlr = YES;
         dogIdleCount = 1;
 
-        posToXY(POS_TOP_FILING_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_FILING_CABINET, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -63,18 +62,18 @@ playGame()
                 gameTick(1);
         }
 
-        animState              = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(5);
         fillPanel(0x1b);
-        textTimer      = 300;
+        textTimer = 300;
         keysBlocked = YES;
         printString("What game do you want to play?", 5,  8, COLOR_black);
         printString("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
         printString("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
 
-        keycode      = 0;
+        keycode = 0;
         waitedOnce = NO;
 
         while (keycode < '1' || keycode > '5') {
@@ -83,16 +82,16 @@ playGame()
 
         if (textTimer < 50 && waitedOnce == NO) {
                 /* First timeout: nap in the middle of the floor, then retry. */
-                textTimer      = 250;
-                napsLeft    = 8;
-                walkXTarget    = resX;
-                walkYTarget    = floorWalkY[floorOfY(resY) - 1];
+                textTimer = 250;
+                napsLeft = 8;
+                walkXTarget = resX;
+                walkYTarget = floorWalkY[floorOfY(resY) - 1];
                 noPreempt = YES;
                 walkToTarget();
                 noPreempt = NO;
 
-                resFacing   = FACING_RIGHT;
-                animState              = STATE_STAND_SIDE_VIEW;
+                resFacing = FACING_RIGHT;
+                animState = STATE_STAND_SIDE_VIEW;
                 headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                 waitHeadTurn();
 
@@ -106,13 +105,12 @@ playGame()
 
                 animState = STATE_STAND_SIDE_VIEW;
                 gameTick(0);
-                posToXY(POS_TOP_FILING_CABINET,
-                                      &walkXTarget, &walkYTarget);
+                posToXY(POS_TOP_FILING_CABINET, &walkXTarget, &walkYTarget);
                 noPreempt = YES;
                 walkToTarget();
                 noPreempt = NO;
 
-                animState              = STATE_STAND_SIDE_VIEW;
+                animState = STATE_STAND_SIDE_VIEW;
                 headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 waitedOnce = YES;
@@ -127,9 +125,9 @@ playGame()
 
         }
 
-        textTimer      = 0;
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        textTimer = 0;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -138,8 +136,7 @@ playGame()
         carryBehind(SPRITE_GAME_BOX);
         gameTick(0);
 
-        posToXY(POS_BTM_KITCHEN_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkYTarget += 6;
         walkXTarget += 2;
         noPreempt = YES;
@@ -150,14 +147,12 @@ playGame()
         pendX[spriteSlot[SPRITE_TABLE_SETTING]] = 103;
         pendY[spriteSlot[SPRITE_TABLE_SETTING]] = 180;
 
-        posToXY(POS_BTM_TABLE_RIGHT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_TABLE_LEFT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_LEFT, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        animState            = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
         carryInFront(SPRITE_GAME_BOX);
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
@@ -191,23 +186,20 @@ playGame()
         animState = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 
-        posToXY(POS_BTM_TABLE_RIGHT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_KITCHEN_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkYTarget += 5;
         walkToTarget();
 
         spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
 
-        posToXY(POS_TOP_FILING_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_FILING_CABINET, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();

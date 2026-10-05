@@ -59,33 +59,33 @@ char ** argv;
 
         /* Zero the PLAYER, then set known starting values. */
         memset(&resident, 0, sizeof(resident));
-        resident.thirst_timer_max    = 30;   /* thirst rises every 30 min */
-        resident.thirst_timer        = 30;
-        resident.hunger_timer_max    = 45;   /* hunger rises every 45 min */
-        resident.hunger_timer        = 45;
-        resident.bathroom_timer_max  = 120;
-        resident.bathroom_timer      = 120;
-        resident.happiness           = MOOD_CONTENT;
-        resident.mood_duration[MOOD_HAPPY]    = 6;
-        resident.mood_duration[MOOD_CONTENT]  = 4;
-        resident.mood_duration[MOOD_SAD]      = 6;
-        resident.happiness_duration_active    = 6;
+        resident.thirst_timer_max = 30;   /* thirst rises every 30 min */
+        resident.thirst_timer = 30;
+        resident.hunger_timer_max = 45;   /* hunger rises every 45 min */
+        resident.hunger_timer = 45;
+        resident.bathroom_timer_max = 120;
+        resident.bathroom_timer = 120;
+        resident.happiness = MOOD_CONTENT;
+        resident.mood_duration[MOOD_HAPPY] = 6;
+        resident.mood_duration[MOOD_CONTENT] = 4;
+        resident.mood_duration[MOOD_SAD] = 6;
+        resident.happiness_duration_active = 6;
         resident.happiness_direction = DIR_WORSENING;
-        resident.sickness_level      = SICKNESS_HEALTHY;
+        resident.sickness_level = SICKNESS_HEALTHY;
 
         /* Sim entry conditions. */
-        frameCount  = 0;    /* (counter & 7) == 0 -> tick */
-        t_sec    = 0;
-        t_min            = 0;
-        t_hour              = 6;    /* 06:00:00 */
-        t_day                = 1;
-        t_mon              = 0;
-        t_year               = 0;
+        frameCount = 0;    /* (counter & 7) == 0 -> tick */
+        t_sec = 0;
+        t_min = 0;
+        t_hour = 6;    /* 06:00:00 */
+        t_day = 1;
+        t_mon = 0;
+        t_year = 0;
 
         /* Suppress the random phone-call branch. */
-        movingIn   = YES;
-        phoneAnswered     = NO;
-        phoneRinging  = NO;
+        movingIn = YES;
+        phoneAnswered = NO;
+        phoneRinging = NO;
 
         /* Drive 24 game-hours (86400 game-seconds). */
         for (i = 0; i < 86400L; i++)
@@ -120,18 +120,18 @@ char ** argv;
         /* Second run: 1 full game-hour from 07:00 with no need
            mutation, verifying pure clock advance.                     */
         memset(&resident, 0, sizeof(resident));
-        resident.thirst_timer        = 9999;
-        resident.thirst_timer_max    = 9999;
-        resident.hunger_timer        = 9999;
-        resident.hunger_timer_max    = 9999;
-        resident.bathroom_timer      = 9999;
-        resident.bathroom_timer_max  = 9999;
+        resident.thirst_timer = 9999;
+        resident.thirst_timer_max = 9999;
+        resident.hunger_timer = 9999;
+        resident.hunger_timer_max = 9999;
+        resident.bathroom_timer = 9999;
+        resident.bathroom_timer_max = 9999;
         resident.happiness_duration_active = 9999;
-        frameCount  = 0;
-        t_sec    = 0;
-        t_min            = 0;
-        t_hour              = 7;
-        movingIn   = YES;
+        frameCount = 0;
+        t_sec = 0;
+        t_min = 0;
+        t_hour = 7;
+        movingIn = YES;
         for (i = 0; i < 3600L; i++)
                 simStep();
         CHECK(t_hour == 8,   "1-hour drive: t_hour != 8");

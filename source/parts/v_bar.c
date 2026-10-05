@@ -15,5 +15,5 @@ short * pxy;
         contrl[5] = GDP_BAR;
         contrl[6] = handle;
         vdi_go();
-        vdipb[2]  = ptsin;
+        vdipb[2] = ptsin;
 }

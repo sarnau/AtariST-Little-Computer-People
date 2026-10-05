@@ -9,13 +9,12 @@ tidyHouse()
 {
         /* The walk call is tested inline, with no local for it. */
 
-        posToXY(POS_TOP_FILING_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_FILING_CABINET, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         rummageCabinet();

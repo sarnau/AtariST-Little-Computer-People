@@ -73,12 +73,12 @@ layoutSlots()
                         }
 
                         if (i < SPRITE_HW_SLOTS) {
-                                pendX[spriteSlot[spriteID]]  = pendX[i];
-                                pendY[spriteSlot[spriteID]]  = pendY[i];
-                                drawnImage[spriteSlot[spriteID]]  = drawnImage[i];
-                                drawnMask[spriteSlot[spriteID]]  = drawnMask[i];
-                                drawnHeight[spriteSlot[spriteID]]  = drawnHeight[i];
-                                drawnWidth[spriteSlot[spriteID]]  = drawnWidth[i];
+                                pendX[spriteSlot[spriteID]] = pendX[i];
+                                pendY[spriteSlot[spriteID]] = pendY[i];
+                                drawnImage[spriteSlot[spriteID]] = drawnImage[i];
+                                drawnMask[spriteSlot[spriteID]] = drawnMask[i];
+                                drawnHeight[spriteSlot[spriteID]] = drawnHeight[i];
+                                drawnWidth[spriteSlot[spriteID]] = drawnWidth[i];
                                 if (spriteSlot[spriteID] != i)
                                         drawnImage[i] = NULL;
                         }
@@ -111,12 +111,12 @@ layoutSlots()
                         }
 
                         if (i < SPRITE_HW_SLOTS) {
-                                pendX[spriteSlot[spriteID]]  = pendX[i];
-                                pendY[spriteSlot[spriteID]]  = pendY[i];
-                                drawnImage[spriteSlot[spriteID]]  = drawnImage[i];
-                                drawnMask[spriteSlot[spriteID]]  = drawnMask[i];
-                                drawnHeight[spriteSlot[spriteID]]  = drawnHeight[i];
-                                drawnWidth[spriteSlot[spriteID]]  = drawnWidth[i];
+                                pendX[spriteSlot[spriteID]] = pendX[i];
+                                pendY[spriteSlot[spriteID]] = pendY[i];
+                                drawnImage[spriteSlot[spriteID]] = drawnImage[i];
+                                drawnMask[spriteSlot[spriteID]] = drawnMask[i];
+                                drawnHeight[spriteSlot[spriteID]] = drawnHeight[i];
+                                drawnWidth[spriteSlot[spriteID]] = drawnWidth[i];
                                 if (spriteSlot[spriteID] != i)
                                         drawnImage[i] = NULL;
                         }

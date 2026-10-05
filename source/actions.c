@@ -19,7 +19,7 @@ runAction()
         short   action_number;
 
         action_number = nextAction;
-        lastAction   = nextAction;
+        lastAction = nextAction;
         nextAction = ACTION_NONE;
 
         if (resident.is_sleeping != NO)

@@ -16,12 +16,11 @@ eatFromCabinet()
         scratchArr[1] = STATE_EAT_CHEW;
         noPreempt = YES;
 
-        posToXY(POS_BTM_KITCHEN_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -47,11 +46,9 @@ eatFromCabinet()
                 openKitchenCab(DOOR_CLOSE);
 
         carryBehind(SPRITE_FOOD_PACKAGE);
-        posToXY(POS_BTM_KITCHEN_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_KITCHEN_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkToTarget();
 
         spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
@@ -59,27 +56,25 @@ eatFromCabinet()
         pendX[spriteSlot[SPRITE_TABLE_SETTING]] = 103;
         pendY[spriteSlot[SPRITE_TABLE_SETTING]] = 180;
 
-        posToXY(POS_BTM_TABLE_RIGHT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_TABLE_LEFT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_LEFT, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        headMode       = HEAD_ANIM_DISABLED;
-        animState            = STATE_STAND_SIDE_VIEW;
+        headMode = HEAD_ANIM_DISABLED;
+        animState = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
         carryInFront(SPRITE_FOOD_PACKAGE);
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
-        animState        = scratchArr[0];
+        animState = scratchArr[0];
         resY += 8;
         resX += 6;
         saved_head_frame = headFrame;
-        eat_cycles       = rndRng(10, 20);
+        eat_cycles = rndRng(10, 20);
         headTarget = HEAD_ANIM_DISABLED;
-        headPose      = HEAD_ANIM_DISABLED;
+        headPose = HEAD_ANIM_DISABLED;
         gameTick(0);
         isCarrying = NO;
         pendX[spriteSlot[SPRITE_FOOD_PACKAGE]] += 3;
@@ -110,8 +105,8 @@ eatFromCabinet()
         }
 
         isCarrying = YES;
-        headTarget   = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headPose        = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         carryBehind(SPRITE_FOOD_PACKAGE);
         resY -= 8;
         resX -= 6;
@@ -119,21 +114,19 @@ eatFromCabinet()
         waitHeadTurn();
         gameTick(0);
 
-        posToXY(POS_BTM_TABLE_RIGHT,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_KITCHEN_SINK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkToTarget();
 
         spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
-        spriteLayer[SPRITE_FOOD_PACKAGE]  = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
         layoutSlots();
         isCarrying = NO;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(4);

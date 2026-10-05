@@ -12,8 +12,8 @@ recordDelivery()
         walkToFrontDoor();
         /* The pick-up sequence is written out in each delivery
            handler, not factored into a helper. */
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
@@ -31,12 +31,11 @@ recordDelivery()
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_VINYL_CARRY);
-        posToXY(POS_TOP_DANCE_FLOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_DANCE_FLOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_VINYL_CARRY] = SPRITE_HIDDEN;
         layoutSlots();

@@ -54,10 +54,10 @@ renderFrame()
         short           s72;
 
         /* Frame-rate gate. */
-        p_hz    = (short *) 0x04BCL;
-        p_vbc   = (long *) 0x0462L;
+        p_hz = (short *) 0x04BCL;
+        p_vbc = (long *) 0x0462L;
         saveSSP = Super(0L);
-        save_hz200   = *p_hz;
+        save_hz200 = *p_hz;
         save_vbclock = *p_vbc;
         Super(saveSSP);
         limit = last_hz + 25;
@@ -82,7 +82,7 @@ renderFrame()
             dogMayEat != NO &&
             dogEating == NO &&
             dogX < 0x14 && dogY > 0xa0) {
-                dogEating    = YES;
+                dogEating = YES;
                 dogEatCount = rndRng(82, 100);
         }
 
@@ -113,8 +113,8 @@ renderFrame()
         /* Eating animation cycle. */
         if (dogEating != NO) {
                 if (--dogEatCount == 0) {
-                        dogEating    = NO;
-                        dogMayEat   = NO;
+                        dogEating = NO;
+                        dogMayEat = NO;
                         bowlChange = -1;
                 } else {
                         if (dogEatCount == 60 ||
@@ -148,15 +148,13 @@ renderFrame()
         c30 = (char *) &frameMfdb;
         if (textTimer > 0) {
                 /* Split copy for letter scroll. */
-                copyBlocks32(stripBuf,
-                          ((MFDB *) c30)->fd_addr, 135);
+                copyBlocks32(stripBuf, ((MFDB *) c30)->fd_addr, 135);
                 copyBlocks32((char *) ((MFDB *) c26)->fd_addr + 4320,
                           (char *) ((MFDB *) c30)->fd_addr + 4320, 865);
                 textTimer--;
         } else if (textTimer < 0) {
                 /* Partial (top-strip only). */
-                copyBlocks32(stripBuf,
-                          ((MFDB *) c30)->fd_addr, 385);
+                copyBlocks32(stripBuf, ((MFDB *) c30)->fd_addr, 385);
                 copyBlocks32((char *) ((MFDB *) c26)->fd_addr + 12320,
                           (char *) ((MFDB *) c30)->fd_addr + 12320,
                           615);
@@ -169,13 +167,13 @@ renderFrame()
         /* --- Sprite compositing --- */
         for (index = 0; index < SPRITE_HW_SLOTS; index++) {
                 if (pendReady[index] == YES) {
-                        pendReady[index]  = NO;
-                        pendX[index]     = drawnX[index];
-                        pendY[index]     = drawnY[index];
-                        drawnImage[index]  = pendImage[index];
-                        drawnMask[index]   = pendMask[index];
+                        pendReady[index] = NO;
+                        pendX[index] = drawnX[index];
+                        pendY[index] = drawnY[index];
+                        drawnImage[index] = pendImage[index];
+                        drawnMask[index] = pendMask[index];
                         drawnHeight[index] = pendHeight[index];
-                        drawnWidth[index]  = pendWidth[index];
+                        drawnWidth[index] = pendWidth[index];
                 }
                 if (drawnImage[index] != NULL)
                         drawSlot(index);

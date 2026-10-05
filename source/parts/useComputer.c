@@ -17,13 +17,12 @@ useComputer()
         scratchArr[1] = STATE_HANDS_UP;
         scratchArr[2] = STATE_SITTING_AT_DESK;
 
-        posToXY(POS_MID_COMPUTER_DESK,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_COMPUTER_DESK, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         headMode = HEAD_ANIM_COMPUTER;
@@ -65,10 +64,10 @@ useComputer()
 
                 /* Rare "clear the screen" gesture. */
                 if ((Random() & 0x7f) < 3 && typed != 0) {
-                        headMode         = HEAD_ANIM_DISABLED;
-                        animState              = scratchArr[2];
+                        headMode = HEAD_ANIM_DISABLED;
+                        animState = scratchArr[2];
                         headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
-                        resFacing   = FACING_RIGHT;
+                        resFacing = FACING_RIGHT;
                         waitHeadTurn();
                         tvClearAnim();
                         gameTick(5);
@@ -80,8 +79,8 @@ useComputer()
                 type_counter++;
         }
 
-        animState            = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         resFacing = FACING_RIGHT;
-        headMode       = HEAD_ANIM_DISABLED;
+        headMode = HEAD_ANIM_DISABLED;
         gameTick(5);
 }

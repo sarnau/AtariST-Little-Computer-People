@@ -40,7 +40,7 @@ tvBounce()
         dx = 1;
         dy = 1;
 
-        limit  = Random() & 0xff;
+        limit = Random() & 0xff;
         limit |= 0x40;
         for (frame = 0; frame < limit; frame++) {
                 vsl_color(vdiHandle, (int) ((Random() & 0xf) | 1));

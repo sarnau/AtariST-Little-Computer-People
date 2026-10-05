@@ -15,8 +15,8 @@ foodDelivery()
         noPreempt = YES;
         walkToFrontDoor();
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
@@ -45,16 +45,15 @@ foodDelivery()
                 }
         } else {
                 carryBehind(SPRITE_FOOD_PACKAGE);
-                posToXY(POS_BTM_KITCHEN_CABINET,
-                                      &walkXTarget, &walkYTarget);
+                posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
                 walkToTarget();
 
                 spriteLayer[SPRITE_FOOD_PACKAGE] = SPRITE_HIDDEN;
                 layoutSlots();
                 isCarrying = NO;
-                resFacing     = FACING_RIGHT;
-                animState                = STATE_STAND_FACING_SCREEN;
-                headTarget   = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
+                resFacing = FACING_RIGHT;
+                animState = STATE_STAND_FACING_SCREEN;
+                headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
                 waitHeadTurn();
 
                 openKitchenCab(DOOR_OPEN);

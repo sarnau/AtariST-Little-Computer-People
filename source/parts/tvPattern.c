@@ -37,9 +37,7 @@ tvPattern()
                         pts[2] = pts[0] + 3;
                         pts[3] = pts[1];
                         beginDraw();
-                        vsl_color(vdiHandle,
-                                  colorPens[
-                                    tvBarColor[pattern]]);
+                        vsl_color(vdiHandle, colorPens[ tvBarColor[pattern]]);
                         v_pline(vdiHandle, 2, pts);
                         endDraw();
                         gameTick(1);

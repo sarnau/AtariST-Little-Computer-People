@@ -18,16 +18,15 @@ exercise()
         scratchArr[2] = STATE_EX_ARMS_CTR;
         scratchArr[3] = STATE_EX_ARMS_WIDE;
 
-        posToXY(POS_MID_COUCH,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_COUCH, &walkXTarget, &walkYTarget);
         /* `-=` and the inline test of the walk call are part of the
            original code. */
         walkYTarget -= 5;
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 

@@ -18,7 +18,7 @@ walkToTarget()
         short   result;
 
         result = 0;
-        headMode       = HEAD_ANIM_WALKING;
+        headMode = HEAD_ANIM_WALKING;
         headLastWalk = 0;
 
         while (walkXTarget != 0 || walkYTarget != 0) {

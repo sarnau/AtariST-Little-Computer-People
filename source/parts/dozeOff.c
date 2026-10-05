@@ -24,8 +24,8 @@ short   value;
                 walkYTarget = floorWalkY[floorOfY(resY) - 1];
                 if (walkToTarget() != 0)
                         return;
-                resFacing   = FACING_RIGHT;
-                animState              = STATE_STAND_SIDE_VIEW;
+                resFacing = FACING_RIGHT;
+                animState = STATE_STAND_SIDE_VIEW;
                 headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                 waitHeadTurn();
         }

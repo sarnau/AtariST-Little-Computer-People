@@ -5,9 +5,9 @@
 void
 hideResident()
 {
-        savedBodyImg  = drawnImage[HW_SLOT_LCP_BODY];
-        savedHeadImg  = drawnImage[HW_SLOT_LCP_HEAD];
+        savedBodyImg = drawnImage[HW_SLOT_LCP_BODY];
+        savedHeadImg = drawnImage[HW_SLOT_LCP_HEAD];
         drawnImage[HW_SLOT_LCP_BODY] = NULL;
         drawnImage[HW_SLOT_LCP_HEAD] = NULL;
-        lcpHidden     = YES;
+        lcpHidden = YES;
 }

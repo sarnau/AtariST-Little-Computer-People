@@ -17,13 +17,12 @@ useToilet()
         /* The walk call is tested in place, with no local. */
         short   saved_x;
 
-        posToXY(POS_MID_TOILET_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -47,8 +46,7 @@ useToilet()
         pendX[spriteSlot[SPRITE_DOOR_ANIM_3]] = 187;
         pendY[spriteSlot[SPRITE_DOOR_ANIM_3]] = 87;
 
-        posToXY(POS_MID_TOILET_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         walkYTarget -= 3;
         walkXTarget -= 10;
         noPreempt = YES;
@@ -103,8 +101,7 @@ useToilet()
         toiletDoorOpen = YES;
 
         resX = saved_x;
-        posToXY(POS_MID_TOILET_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
 
         if (toiletDoorOpen != NO) {
@@ -117,7 +114,7 @@ useToilet()
             movingIn != NO)
                 closeToiletDoor();
 
-        resident.bathroom_need  = NO;
+        resident.bathroom_need = NO;
         resident.bathroom_timer = BATHROOM_TIMER_OFF;
         noPreempt = NO;
 }

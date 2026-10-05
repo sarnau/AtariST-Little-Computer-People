@@ -20,7 +20,7 @@ unsigned short          height;
         wpr = width >> 2;
         n   = (wpr * height) >> 2;
         for (index = 0; index < n; index++) {
-                m  = *imgPtr++;
+                m = *imgPtr++;
                 m |= *imgPtr++;
                 m |= *imgPtr++;
                 m |= *imgPtr++;

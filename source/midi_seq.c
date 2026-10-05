@@ -82,7 +82,7 @@ initSongState(curPos, maxPos)
 unsigned char * curPos;
 long            maxPos;
 {
-        songPos     = curPos;
+        songPos = curPos;
         /* songEndPtr is the end-of-sequence pointer, and -1 is how "no
            limit" is spelled -- every caller passes songMaxPos, which
            is 0. */
@@ -92,11 +92,11 @@ long            maxPos;
                 songEndPtr = (unsigned char *) maxPos;
 
         songAdsr = (long) (songEvents - 0x168);
-        noteVel           = defVelocity;
-        noteVolume      = defPsgVol;
-        queueLen    = 0;
-        loopTop   = 9;
-        beatTicks          = ticksPerBeat;
+        noteVel = defVelocity;
+        noteVolume = defPsgVol;
+        queueLen = 0;
+        loopTop = 9;
+        beatTicks = ticksPerBeat;
 }
 
 /* armSequencer: init timer counters + arm sequencer.
@@ -429,8 +429,8 @@ char            midi_ch;
         /* ---- PSG path ---- */
         if (psgOutOn != NO) {
 
-                midiEvP  = saved_ptr;
-                midiEvS  = saved_size;
+                midiEvP = saved_ptr;
+                midiEvS = saved_size;
 
                 if ((*midiEvP++ & 0xf0) != 0x90)
                         return 0;
@@ -498,7 +498,7 @@ char            midi_ch;
                 mixer_bits = chosen << 1;
 
                 if (*midiEvP + oct_shift > 22) {
-                        attack_hi  = psgPeriod[*midiEvP + oct_shift];
+                        attack_hi = psgPeriod[*midiEvP + oct_shift];
                         noise_mask = (attack_hi >> 8) & 0xf;
                         attack_hi = attack_hi & 0xff;
                         if (seqBusy == 1) {
@@ -515,7 +515,7 @@ char            midi_ch;
                 psgChanNote[chosen] = *midiEvP;
                 if (envelope_phase == ENV_FADEOUT)
                         psgEnvelope[chosen].current_volume = 0;
-                psgEnvelope[chosen].max_volume  = noteVolume;
+                psgEnvelope[chosen].max_volume = noteVolume;
                 psgActive = psgEnvelope[chosen].phase_timer = 1;
                 psgEnvelope[chosen].phase = envelope_phase;
 
@@ -531,7 +531,7 @@ char            midi_ch;
                         return 0;
                 chosen--;
                 psgChanNote[chosen] = 0;
-                psgEnvelope[chosen].phase       = ENV_RELEASE;
+                psgEnvelope[chosen].phase = ENV_RELEASE;
                 psgEnvelope[chosen].phase_timer = 0;
 
                 }
@@ -580,14 +580,14 @@ seqAdvance()
         if (seqPhase == SEQ_PHASE_WAIT_NOTE_EXPIRE) {
                 res = timerTicks - lastExpTick;
                 expireNotes(res);
-                lastExpTick    = timerTicks;
-                seqCountdown    = beatTicks;
-                seqPhase    = SEQ_PHASE_PARSE_NEXT_EVENT;
-                nextEvTick   += beatTicks;
+                lastExpTick = timerTicks;
+                seqCountdown = beatTicks;
+                seqPhase = SEQ_PHASE_PARSE_NEXT_EVENT;
+                nextEvTick += beatTicks;
                 return;                 /* explicit return kept on purpose */
         } else if (seqPhase == SEQ_PHASE_PARSE_NEXT_EVENT) {
-                seqPhase    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
-                ticksToNext    = -1;
+                seqPhase = SEQ_PHASE_WAIT_NOTE_EXPIRE;
+                ticksToNext = -1;
                 /* The parse sits in a loop that returns from both arms;
                    that shape is part of the original code. */
                 while (ticksToNext < 0) {
@@ -607,9 +607,9 @@ seqAdvance()
         } else {
                 res = timerTicks - lastExpTick;
                 expireNotes(res);
-                lastExpTick    = timerTicks;
-                seqCountdown    = beatTicks;
-                nextEvTick   += beatTicks;
+                lastExpTick = timerTicks;
+                seqCountdown = beatTicks;
+                nextEvTick += beatTicks;
                 if (queueLen == 0) {
                         psgEnvelope[0].phase =
                         psgEnvelope[1].phase =

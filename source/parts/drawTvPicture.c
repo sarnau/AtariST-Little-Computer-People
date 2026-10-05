@@ -9,7 +9,5 @@ short   color;
         short   i;
 
         for (i = 0; i < 5; i++)
-                drawLine(i + 44, 51 - (i >> 1),
-                          i + 44, 57 - (i >> 1),
-                          color);
+                drawLine(i + 44, 51 - (i >> 1), i + 44, 57 - (i >> 1), color);
 }

@@ -7,6 +7,6 @@ mgSetup()
 {
         gameTick(5);
         fillPanel(0x4d);
-        textTimer      = -1;
+        textTimer = -1;
         keysBlocked = YES;
 }

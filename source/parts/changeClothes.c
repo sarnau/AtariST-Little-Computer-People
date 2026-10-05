@@ -12,27 +12,25 @@ short   value;
 {
         short   saved_x;
 
-        posToXY(POS_MID_DRESSER,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openDresser(DOOR_OPEN);
         if (resident.initiative_threshold < rndRng(0, 100))
                 openDresser(DOOR_CLOSE);
 
-        posToXY(POS_MID_BEDROOM_CLOSET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_BEDROOM_CLOSET, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
         noPreempt = NO;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -57,8 +55,7 @@ short   value;
         pendX[spriteSlot[SPRITE_CLOSET_WIDE_OPEN]] = 75;
         pendY[spriteSlot[SPRITE_CLOSET_WIDE_OPEN]] = 87;
 
-        posToXY(POS_MID_BEDROOM_CLOSET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_BEDROOM_CLOSET, &walkXTarget, &walkYTarget);
         /* Written as -= so the update goes straight to memory. */
         walkYTarget -= 3;
         walkXTarget -= 10;
@@ -119,8 +116,7 @@ short   value;
         bedClosetOpen = YES;
 
         resX = saved_x;
-        posToXY(POS_MID_BEDROOM_CLOSET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_BEDROOM_CLOSET, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();
         noPreempt = NO;

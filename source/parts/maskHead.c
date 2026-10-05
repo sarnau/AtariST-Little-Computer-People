@@ -23,7 +23,7 @@ short           height;
         dp = dest;
         for (h = 0; h < height; h++) {
                 mask = -1L;
-                img  = (long) *src++;
+                img = (long) *src++;
                 img |= (long) *src++;
                 img <<= 16;
                 img |= (long) *src++ & 0xffffL;

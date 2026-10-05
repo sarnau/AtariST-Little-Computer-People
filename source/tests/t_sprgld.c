@@ -115,7 +115,7 @@ char ** argv;
         f = fopen("../../../DATA/BODY.LCP", "rb");
         if (f == NULL) { perror("open DATA/BODY.LCP"); return 1; }
         if (fread(header, 1, 4, f) != 4) { perror("hdr"); return 1; }
-        count         = ((long) header[0] << 8) | header[1];
+        count = ((long) header[0] << 8) | header[1];
         payload_bytes = ((long) header[2] << 8) | header[3];
         body_buf = (unsigned char *) malloc(payload_bytes);
         if (body_buf == NULL) { perror("malloc"); return 1; }
@@ -135,11 +135,11 @@ char ** argv;
            frames come out blank. */
         initMirror();
         memset(&resident, 0, sizeof(resident));
-        resX                    = 100;
-        resY                    = 100;
+        resX = 100;
+        resY = 100;
         isCarrying = 0;
         debugHideLcp = 0;
-        pendReady[3]   = 0;
+        pendReady[3] = 0;
 
         memset(atlas, 255, sizeof(atlas));
 
@@ -149,7 +149,7 @@ char ** argv;
         for (i = 0; i < N_STATES; i++) {
                 int facing;
                 for (facing = 0; facing < 2; facing++) {
-                        animState            = i;
+                        animState = i;
                         resFacing = facing;
                         memset(bodyImage, 0, LCP_BODY_DEST_WORDS * sizeof(short));
                         /* Clear the double-buffer flag every iteration:

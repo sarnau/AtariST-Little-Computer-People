@@ -33,9 +33,9 @@ rejoinTable()
         posToXY(POS_BTM_TABLE_LEFT, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        animState   = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
-        headTarget  = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState = STATE_EAT_BITE;
@@ -43,5 +43,5 @@ rejoinTable()
         resX += 6;
         gameTick(0);
         typingOff = NO;
-        noPreempt  = NO;
+        noPreempt = NO;
 }

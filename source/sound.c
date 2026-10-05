@@ -55,8 +55,8 @@ long    duration;
         if (sfxPending == NO ||
             sfxPriority[sfxReqId] >=
             sfxPriority[sound_id]) {
-                sfxReqId     = sound_id;
-                sfxReqDur    = (short) duration;
+                sfxReqId = sound_id;
+                sfxReqDur = (short) duration;
                 sfxPending = YES;
         }
 }
@@ -68,8 +68,8 @@ stopSfx()
         Giaccess(0, PSG_WRITE | PSG_VOL_A);
         Giaccess(0, PSG_WRITE | PSG_VOL_B);
         Giaccess(0, PSG_WRITE | PSG_VOL_C);
-        sfxDosStat  = 0xff;
+        sfxDosStat = 0xff;
         sfxDosCtl = 0;
-        sfxPlaying    = NO;
+        sfxPlaying = NO;
 }
 

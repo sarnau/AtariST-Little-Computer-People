@@ -183,8 +183,7 @@ main()
 
                 if (copy_hdr_swapped("../../../DATA/PE2.LCP", "pe2.lcp",
                                      &count, &total)) return 1;
-                printf("PE2.LCP: %d frames, %d payload bytes\n",
-                       count, total);
+                printf("PE2.LCP: %d frames, %d payload bytes\n", count, total);
                 if (count != 66 || total != 11088) {
                         printf("  FAIL: header should be 66 frames / "
                                "11088 bytes\n");

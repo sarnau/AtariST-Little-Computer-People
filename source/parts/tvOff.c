@@ -9,8 +9,7 @@ tvOff()
         if (tvRunning == NO)
                 return;
 
-        posToXY(POS_TOP_LIVING_ROOM,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_LIVING_ROOM, &walkXTarget, &walkYTarget);
         walkXTarget += 0;
         if (walkToTarget() != 0)
                 return -1;

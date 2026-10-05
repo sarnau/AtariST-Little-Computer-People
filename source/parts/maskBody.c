@@ -19,10 +19,10 @@ short           height;
         short           flag;
 
         for (h = 0; h < height; h++) {
-                img  = 0L;
+                img = 0L;
                 /* The 32-bit row is assembled by four *src++ steps,
                    not from four subscripts. */
-                mask  = (long) *src++;
+                mask = (long) *src++;
                 mask |= (long) *src++;
                 mask <<= 16;
                 mask |= (long) *src++ & 0xffffL;

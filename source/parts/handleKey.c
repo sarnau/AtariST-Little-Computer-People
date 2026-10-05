@@ -37,10 +37,10 @@ short   keycode;
 
         case KEY_CTRL_P_PATTING:
                 if (patAllowed != NO && patActive == NO) {
-                        patFrame          = 0;
-                        patActive          = YES;
-                        resident.happiness               = MOOD_HAPPY;
-                        resident.happiness_direction     = DIR_WORSENING;
+                        patFrame = 0;
+                        patActive = YES;
+                        resident.happiness = MOOD_HAPPY;
+                        resident.happiness_direction = DIR_WORSENING;
                         resident.happiness_duration_active =
                                 resident.mood_duration[MOOD_HAPPY];
                 }

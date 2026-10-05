@@ -29,13 +29,12 @@ writeLetter()
         if (recordPlaying != NO)
                 stopRecord();
 
-        posToXY(POS_TOP_FILING_CABINET,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_FILING_CABINET, &walkXTarget, &walkYTarget);
         if (walkToTarget())
                 return;
 
-        resFacing   = FACING_RIGHT;
-        animState              = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -43,13 +42,11 @@ writeLetter()
         if (rndRng(0, 100) > resident.initiative_threshold)
                 closeFilingCab();
 
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         if (walkToTarget())
                 return;
 
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         walkXTarget -= 10;
         walkYTarget += 3;
         if (walkToTarget())
@@ -60,20 +57,19 @@ writeLetter()
         spriteLayer[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPEWRITER);
         pendX[spriteSlot[SPRITE_TYPEWRITER]] = 201;
-        pendY[spriteSlot[SPRITE_TYPEWRITER]] =  51;
+        pendY[spriteSlot[SPRITE_TYPEWRITER]] = 51;
         spriteLayer[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPING_2);
         pendX[spriteSlot[SPRITE_TYPING_2]] = 211;
         pendY[spriteSlot[SPRITE_TYPING_2]] =  44;
 
-        posToXY(POS_TOP_DESK_CHAIR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_DESK_CHAIR, &walkXTarget, &walkYTarget);
         walkYTarget -= 4;
         walkXTarget -= 14;
         walkToTarget();
 
-        animState              = STATE_STAND_SIDE_VIEW;
-        resFacing   = FACING_RIGHT;
+        animState = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
@@ -89,7 +85,7 @@ writeLetter()
         pendX[spriteSlot[SPRITE_TYPING_1]] = 211;
         pendY[spriteSlot[SPRITE_TYPING_1]] =  44;
 
-        headMode         = HEAD_ANIM_READING;
+        headMode = HEAD_ANIM_READING;
         keysBlocked = YES;
         fillPanel(0x1b);
 
@@ -177,9 +173,9 @@ writeLetter()
         gameTick(60);
 
         /* Cleanup: free buffer, hide typing sprites, walk out. */
-        textTimer        = 0;
+        textTimer = 0;
         typedCursor = 0;
-        keysBlocked   = NO;
+        keysBlocked = NO;
         Mfree(letterText);
 
         spriteLayer[SPRITE_TYPING_1] = SPRITE_HIDDEN;
@@ -193,19 +189,17 @@ writeLetter()
         pendY[spriteSlot[SPRITE_TYPING_2]] =  44;
         gameTick(4);
 
-        animState      = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         headMode = HEAD_ANIM_DISABLED;
         resY -= 6;
         gameTick(0);
         noPreempt = YES;
 
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         walkXTarget -= 10;
         walkYTarget += 3;
         walkToTarget();
-        posToXY(POS_TOP_STUDY_DOOR,
-                              &walkXTarget, &walkYTarget);
+        posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
 
         spriteLayer[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
