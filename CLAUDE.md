@@ -1669,8 +1669,10 @@ Roadmap:
     string, so a neighbour sometimes has to move with it (typingSprites
     followed letterSignoffs).  The port carries this as per-object data files
     included at the right points: dat_u1.c/dat_u1b.c/dat_u1c.c/
-    dat_u1d.c, dat_u2.c/dat_u2b.c, dat_u3a.c/dat_u3b.c, dat_u4.c and
-    dat_games.c/2/3/4, all listed in tools/stx_units.txt.
+    dat_u1d.c, dat_u2.c/dat_u2b.c, dat_u3a.c/dat_u3b.c and dat_u4.c,
+    all listed in tools/stx_units.txt.  (games.c declares its globals
+    inline at the same four points since 2026-10-05; the dat_games*.c
+    files were folded in.)
 
     **A switch jump table splits a data file.**  Alcyon emits the table
     into the .data of the object holding the function, so anything

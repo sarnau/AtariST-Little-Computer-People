@@ -89,8 +89,9 @@ source/
 │                       object's function order -- LCP_STX did not
 │                       group by source file, so aleisure's functions
 │                       alone run from 0xe338 to 0x12ca0.
-├── dat_u*.c            per-object data files.  A unit's .data comes
-│   dat_games*.c        out in source order and its string literals in
+├── dat_u*.c            per-object data files (games.c declares its own
+│                       inline).  A unit's .data comes
+│                       out in source order and its string literals in
 │                       the order c168 met them, so where a global is
 │                       declared is itself evidence.
 ├── globals.c           storage for every extern, plus data tables

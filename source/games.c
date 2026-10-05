@@ -25,7 +25,42 @@
 #include "sprglobs.h"
 #include "sprites.h"
 
-#include "dat_games.c"
+/* ---- Word Puzzles messages.  The games object's initialized globals
+   start here, in the original's data order: the position of these
+   declarations and their order set the data layout. */
+
+char *          wpzPrompts[9] = {
+        "OK, what's the first word?",
+        "Good luck! What's the first word?",
+        "Alright. Type in the first word.",
+        "This won't be easy! First word first.",
+        "Here we go. What's the first word?",
+        "What's the second word?",
+        "What's the third word?",
+        "What's the fourth word?",
+        "What's the fifth word?"
+};
+
+/* Word Puzzles: the six right-answer messages; wpzSolve shows one at
+   random through wpzMessage. */
+char *          wpzRightMsgs[6] = {
+        "You got it!!",
+        "Good going. That's right!",
+        "Congratulations. That's it!",
+        "I don't believe it!! You're right!",
+        "You're pretty good. That's right!",
+        "You got that one. How about another?"
+};
+
+/* Word Puzzles: the six wrong-answer messages, picked the same way. */
+char *          wpzWrongMsgs[6] = {
+        "Too bad. You missed it.",
+        "Better luck next time.",
+        "Good try, but that's the wrong answer.",
+        "That's not it. How about another try?",
+        "Nope.",
+        "Not quite."
+};
 
 
 /* These statics are defined after their first caller.  A static
@@ -583,7 +618,51 @@ anaPickWord()
    inner per-keypress.  The new_word/validate labels are the 1985
    code's own gotos and must stay. */
 
-#include "dat_games2.c"
+/* ---- Anagram prompts and messages, card positions.  Alcyon pools a
+   unit's string literals in the order it meets them; in the original
+   these strings sit between playWordPuzzle's screen text and
+   playAnagrams's, so the declarations must stay right here, between the
+   two functions. */
+
+/* anagram_guess_prompt_strings: shown per attempt.  Each is padded to
+   19 characters so it overwrites the previous prompt in place.
+   (0..8 -> "Guess #1?"..
+   "Guess #9?").  Rendered by anaDrawPrompt at (166, 57). */
+/* Ten slots for nine prompts and five for three messages: the original
+   sizes both arrays past their initializer lists and Alcyon zero-fills
+   the tail with NULLs.  Do not shrink them to the initializer count. */
+char *          anaPrompts[10] = {
+        "Guess #1?          ",
+        "Guess #2?          ",
+        "Guess #3?          ",
+        "Guess #4?          ",
+        "Guess #5?          ",
+        "Guess #6?          ",
+        "Guess #7?          ",
+        "Guess #8?          ",
+        "Guess #9?          "
+};
+
+short           anaExtraGuess          = 0;    /* anagram: set when a clue pushed the guess count to 9, allowing one more guess (cleared per round) */
+
+/* Anagram wrong-guess messages; playAnagrams picks one of the three with
+   rndRng(0, 2).  The last two slots are NULL. */
+char *          anaWrongMsgs[5] = {
+        "Nope, have another try.",
+        "Sorry, try again.",
+        "Missed, try again."
+};
+
+/* Card display positions -- 5 slots per row.  Row A = computer
+   (y=11 top strip), Row B = player (y=37 middle strip).  X columns
+   are spaced 28 pixels apart (15-px card + 13-px gutter). */
+short           cardXComp[5]         = { 70, 98, 126, 154, 182 };
+
+short           cardYComp[5]         = { 11, 11, 11, 11, 11 };    /* row A (computer) y per card slot */
+
+short           cardXPlyr[5]         = { 70, 98, 126, 154, 182 };    /* row B (player) x per card slot */
+
+short           cardYPlyr[5]         = { 37, 37, 37, 37, 37 };    /* row B (player) y per card slot; all four read by cardDraw */
 
 /* The Anagrams minigame.  Loads the "words" file into a 10000-byte
    Malloc buffer (freed on F10), then loops: anaPickWord picks and scrambles
@@ -968,7 +1047,22 @@ rank_from_hc_bp:
    showdown.  The labels and gotos are the original's control flow and
    must stay. */
 
-#include "dat_games3.c"
+/* ---- Poker's bet and raise templates.  Their strings are the last two
+   before playPoker's "Do you feel lucky today?", so these declarations
+   must stay immediately ahead of playPoker. */
+
+/* The resident's raise announcement: playPoker writes his raise
+   (pkrRaiseAmt, two digits, a leading zero blanked) over the underscores
+   at [11] and [12] before showing it. */
+char *          pkrMsgRaise     = "I'll raise __.";
+
+/* Editable poker prompts, patched in place before each is shown.  The
+   underscores are the digit slots the original ships -- pkrCallOrRaise and
+   dispPlyrChips overwrite the two in pkrMsgBet/pkrMsgRaise, pkrCompDraw the one in
+   pkrMsgTake (and the trailing "." becomes "s." for a plural draw).
+   They are POINTERS, not arrays, so every patch loads the pointer
+   first; declaring them as arrays changes the compiled code. */
+char *          pkrMsgBet     = "I'll bet __.";
 
 /* The Poker minigame (five-card draw against the resident).  Allocates
    and loads the card images into cardImages, gives both sides 400 chips,
@@ -1561,7 +1655,13 @@ pkrDecideBluff()
    Bluffing: 0..2 discards from non-rank cards.  Re-draws unique
    replacements and animates the swap. */
 
-#include "dat_games4.c"
+/* ---- Poker's draw template.  Its string lands between "You're so
+   lucky!!!" and "I'll stay!" in the literal pool, so the declaration
+   must stay just ahead of pkrCompDraw, its only user. */
+
+/* The resident's draw announcement: pkrCompDraw writes the count into
+   [10] and makes the ending "card." or "cards." from [16]. */
+char *          pkrMsgTake    = "I'll take _ cards.";
 
 /* The resident's draw.  Rates his hand with pkrEvalHand, marks the cards
    to throw in pkrSelected (the cards that are not part of the scoring

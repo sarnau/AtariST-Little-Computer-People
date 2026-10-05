@@ -13,4 +13,4 @@ stx_u3.c dat_u3a.c dat_u3b.c alerts.c sprites.c tick.c
 stx_u4.c dat_u4.c sound.c sfx_irq.c
 vdistx.c
 globals.c midi_seq.c
-games.c dat_games.c dat_games2.c dat_games3.c dat_games4.c
+games.c
