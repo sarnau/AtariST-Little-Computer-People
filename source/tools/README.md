@@ -20,6 +20,9 @@ another binary), `stx_extract.py` (files out of a Pasti .stx), `prg.py`
 **Music:** `sngdump.py`, `psgrender.py`, `render_psg_all.py`,
 `midicheck.py` -- decode and render the .SNG/.ORG songs.
 
+**Graphics:** `spritesheet.py` renders `DATA/SPRITES` with each sprite's
+name into `docs/images/sprites.png`.
+
 **Toolchain:** `build_toolchain.sh` rebuilds the Alcyon host tools.
 
 **archive/** -- one-off tools from the function-matching campaign

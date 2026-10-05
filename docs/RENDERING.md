@@ -78,6 +78,11 @@ the file and `defineSprite` stores each under the id `spriteFileId` gives it
 Masks are not stored in the file: `makeMask` builds them, with colour 0
 transparent.
 
+All 50, with their names: [images/sprites.png](images/sprites.png)
+(regenerate with `source/tools/spritesheet.py`).
+
+![The sprites](images/sprites.png)
+
 | Ids | Sprites |
 |---|---|
 | 0, 1 | the resident's body and head (built every tick, see below) |
