@@ -1,8 +1,13 @@
-# Alcyon-mangled name map
+# Port names -> the original Ghidra analysis names
 
-Under Alcyon C 4.14 the external symbol table truncates C names to 7 characters.  Colliding long names were renamed to unique short forms during the mechanical rename pass.  This table lets you trace short names back to the original long names used in the Ghidra decompile.
+The top-level analysis documents (ARCHITECTURE.md, PEOPLE.md, DOG.md,
+GAMES.md, SOUND.md, IMAGEFORMAT.md) use the descriptive names of the
+first Ghidra analysis, such as `action_brush_teeth`.  This table maps the
+port's names to them.
 
-**Five of these long names are no longer in Ghidra.**  On 2026-09-05 the project database was renamed to the port's own names, so `unScn`, `fLoad`, `lcp_load`, `al_lost` and `sp_reglp` now read `decodeScn`, `loadFrameFile`, `loadSavedGame`, `loadSprites` and `defineSprite` there.  The rows below are kept as history -- searching Ghidra for the long form will not find them.
+The Ghidra project itself now carries the port's names (re-synced
+2026-10-05), so the right-hand column is for reading those documents;
+searching Ghidra for it will not find anything.
 
 ## Functions
 
