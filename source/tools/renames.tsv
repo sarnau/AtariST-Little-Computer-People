@@ -686,3 +686,4 @@ POS_BTM_DOG_FOOD_STORE	POS_BTM_LAMP	by the living-room lamp
 SPRITE_DOOR_ANIM_1	SPRITE_WC_DOOR_1	the toilet (WC) door, frame 1: closed, ajar, wide open
 SPRITE_DOOR_ANIM_2	SPRITE_WC_DOOR_2	the toilet (WC) door, frame 2: closed, ajar, wide open
 SPRITE_DOOR_ANIM_3	SPRITE_WC_DOOR_3	the toilet (WC) door, frame 3: closed, ajar, wide open
+SPRITE_FRONT_DOOR_OPEN	SPRITE_FRONT_DOOR_3	the front door wide open; frames 1 and 2 (closed, ajar) are now named too

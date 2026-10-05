@@ -30,10 +30,10 @@ lightFire()
         walkToTarget();
 
         /* Sit-dog sprite waits at the porch. */
-        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_FRONT_DOOR_OPEN);
-        pendX[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 294;
-        pendY[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 151;
+        spriteLayer[SPRITE_FRONT_DOOR_3] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_FRONT_DOOR_3);
+        pendX[spriteSlot[SPRITE_FRONT_DOOR_3]] = 294;
+        pendY[spriteSlot[SPRITE_FRONT_DOOR_3]] = 151;
 
         posToXY(POS_BTM_FRONT_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
@@ -46,7 +46,7 @@ lightFire()
         walkXTarget -= 10;
         walkToTarget();
 
-        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_FRONT_DOOR_3] = SPRITE_HIDDEN;
         layoutSlots();
 
         if (resident.initiativeThreshold < rndRng(0, 100))

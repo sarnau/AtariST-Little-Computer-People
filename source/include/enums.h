@@ -332,7 +332,9 @@
 #define SPRITE_CLOSET_LCP_INSIDE        0x10
 #define SPRITE_CLOSET_WIDE_OPEN         0x12
 #define SPRITE_CLOSET_AJAR              0x11
-#define SPRITE_FRONT_DOOR_OPEN          0x15
+#define SPRITE_FRONT_DOOR_1             0x13    /* closed; unused */
+#define SPRITE_FRONT_DOOR_2             0x14    /* ajar; unused */
+#define SPRITE_FRONT_DOOR_3             0x15    /* wide open */
 #define SPRITE_FIREWOOD                 0x16
 #define SPRITE_COOKING_POT              0x17
 #define SPRITE_DOOR_STUDY_1             0x18
