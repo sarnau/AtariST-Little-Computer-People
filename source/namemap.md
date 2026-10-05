@@ -324,10 +324,6 @@ multiple items sharing prefixes not previously flagged.
 | anaWrongMsgs | anagram_wrong_guess_messages                     |
 | g_dsb   | dest_scr_buffer                                  |
 | stripBuf  | dest_screenbase_ptr                              |
-| g_hgis  | host_giselect_scratch                            |
-| g_hgiw  | host_giwrite_scratch                             |
-| g_hms   | host_midi_scratch                                |
-| g_hmc   | host_midictl_scratch                             |
 | letterSignoffs   | letter_greeting_table                            |
 | letterLines  | letter_line_ptr                                  |
 | letterText  | letter_txt_content                               |

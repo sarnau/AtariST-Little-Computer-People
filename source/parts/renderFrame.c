@@ -34,19 +34,19 @@ renderFrame()
         long            unused1;
         long            unused2;
         long            unused3;
-        short *         p_hz;
+        short *         pHz;
         unsigned short  limit;
-        unsigned short  save_hz200;
+        unsigned short  saveHz200;
         char *          srcMfdb;
         char *          dstMfdb;
         long            saveSSP;
         long            unused4;
         long            unused5;
-        long *          p_vbc;
-        long            save_vbclock;
+        long *          pVbc;
+        long            saveVbclock;
         long            vbc2;
         long            unused6;
-        long *          p_vbc2;
+        long *          pVbc2;
         short           dest;
         short           pick;
         short           unused7;
@@ -54,21 +54,21 @@ renderFrame()
         short           base;
 
         /* Frame-rate gate. */
-        p_hz = (short *) 0x04BCL;
-        p_vbc = (long *) 0x0462L;
+        pHz = (short *) 0x04BCL;
+        pVbc = (long *) 0x0462L;
         saveSSP = Super(0L);
-        save_hz200 = *p_hz;
-        save_vbclock = *p_vbc;
+        saveHz200 = *pHz;
+        saveVbclock = *pVbc;
         Super(saveSSP);
         limit = last_hz + 25;
-        if (save_hz200 - last_hz < 25)
+        if (saveHz200 - last_hz < 25)
                 return;
-        if (save_vbclock == lastFrameVbl)
+        if (saveVbclock == lastFrameVbl)
                 return;
-        if (lastFrameVbl + 1 == save_vbclock)
+        if (lastFrameVbl + 1 == saveVbclock)
                 return;
 
-        last_hz = save_hz200;
+        last_hz = saveHz200;
 
         /* --- Dog movement + wander AI --- */
         moveDog();
@@ -203,9 +203,9 @@ renderFrame()
 
         /* Second inline _vbclock read: its own pointer local, the
            shared supervisor-stack slot. */
-        p_vbc2  = (long *) 0x0462L;
+        pVbc2  = (long *) 0x0462L;
         saveSSP = Super(0L);
-        vbc2    = *p_vbc2;
+        vbc2    = *pVbc2;
         Super(saveSSP);
         lastFrameVbl = vbc2;
 }

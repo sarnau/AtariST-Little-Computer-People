@@ -51,8 +51,8 @@ int     argc;
 char ** argv;
 {
         long    i;
-        short   thirst_hits;
-        short   hunger_hits;
+        short   thirstHits;
+        short   hungerHits;
 
         (void) argc;
         (void) argv;
@@ -160,7 +160,7 @@ char ** argv;
         simStep();
         CHECK(t_sec == 42, "non-tick frame incremented counter");
 
-        (void) thirst_hits; (void) hunger_hits;
+        (void) thirstHits; (void) hungerHits;
 
         if (failures == 0) {
                 printf("sim_tick: PASS  (all clock/needs progressions match)\n");

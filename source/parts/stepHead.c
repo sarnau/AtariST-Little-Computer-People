@@ -11,16 +11,16 @@ stepHead()
 {
         /* `unused` is never touched but must stay: removing it changes
            the compiled code. */
-        short   anim_mode;
+        short   animMode;
         short   curTilt;
         short   tgtTilt;
-        short   current_pos;
+        short   currentPos;
         short   curDir;
         short   tgtDir;
         short   unused;
-        short   target_frame;
-        short   random_seed;
-        short   movement_mask;
+        short   targetFrame;
+        short   randomSeed;
+        short   movementMask;
         short   faceDir;
 
         if (headPose != headTarget ||
@@ -39,67 +39,67 @@ stepHead()
         if ((rnd() & 0x10) == 0) {
                 /* Horizontal picker. */
                 if ((headMode & HEAD_ANIM_HORIZONTAL_AMPLITUDE) == 0)
-                        random_seed = ((rnd() & HEAD_ANIM_HORIZONTAL_AMPLITUDE) | 1) - 1;
+                        randomSeed = ((rnd() & HEAD_ANIM_HORIZONTAL_AMPLITUDE) | 1) - 1;
                 else
-                        random_seed = (headMode & HEAD_ANIM_HORIZONTAL_AMPLITUDE) - 1;
+                        randomSeed = (headMode & HEAD_ANIM_HORIZONTAL_AMPLITUDE) - 1;
 
                 if (((headMode & HEAD_ANIM_HORIZONTAL_RANGE) == 0 &&
                      (rnd() & 8) != 0) ||
                     (headMode & HEAD_ANIM_HORIZONTAL_RANGE) >= 8)
-                        random_seed = -random_seed;
+                        randomSeed = -randomSeed;
 
-                random_seed = (headRestDir[animState] + random_seed) & HEAD_DIR_MASK;
+                randomSeed = (headRestDir[animState] + randomSeed) & HEAD_DIR_MASK;
                 if (resFacing == FACING_LEFT)
-                        random_seed = (HEAD_DIRS - random_seed) & HEAD_DIR_MASK;
-                headTarget = (headTarget & HEAD_TILT_MASK) | random_seed;
+                        randomSeed = (HEAD_DIRS - randomSeed) & HEAD_DIR_MASK;
+                headTarget = (headTarget & HEAD_TILT_MASK) | randomSeed;
         } else {
                 /* Vertical picker. */
                 /* Embedded: the store's own flags drive the test. */
-                if ((movement_mask = headMode & HEAD_ANIM_VERTICAL_RANGE) == 0) {
-                        movement_mask = rnd() & HEAD_ANIM_VERTICAL_RANGE;
-                        if (movement_mask == 0)
-                                movement_mask = 0x40;
+                if ((movementMask = headMode & HEAD_ANIM_VERTICAL_RANGE) == 0) {
+                        movementMask = rnd() & HEAD_ANIM_VERTICAL_RANGE;
+                        if (movementMask == 0)
+                                movementMask = 0x40;
                 }
-                movement_mask = (movement_mask >> 5) - 1;
+                movementMask = (movementMask >> 5) - 1;
                 if ((headMode & (HEAD_ANIM_VERTICAL_OVERRIDE |
                                  HEAD_ANIM_VERTICAL_RANGE)) <= 0x80)
-                        movement_mask = ((rnd() & 4) >> 2) +
-                                        (movement_mask & 1);
+                        movementMask = ((rnd() & 4) >> 2) +
+                                        (movementMask & 1);
                 else
-                        movement_mask = 7 - (headMode >> 5);
-                headTarget = (headTarget & HEAD_DIR_MASK) | (movement_mask << HEAD_TILT_SHIFT);
+                        movementMask = 7 - (headMode >> 5);
+                headTarget = (headTarget & HEAD_DIR_MASK) | (movementMask << HEAD_TILT_SHIFT);
         }
 
 apply_current:
         if (headTarget >= 0) {
                 curTilt = headPose & HEAD_TILT_MASK;
                 tgtTilt = headTarget & HEAD_TILT_MASK;
-                if ((current_pos = tgtTilt - curTilt) > 0)
+                if ((currentPos = tgtTilt - curTilt) > 0)
                         headPose += 8;
-                else if (current_pos < 0)
+                else if (currentPos < 0)
                         headPose -= 8;
 
                 curDir = headPose & HEAD_DIR_MASK;
                 tgtDir = headTarget & HEAD_DIR_MASK;
-                target_frame = headTurnStep[(tgtDir - curDir) + 7];
-                if (target_frame == HEAD_TURN_NONE) {
+                targetFrame = headTurnStep[(tgtDir - curDir) + 7];
+                if (targetFrame == HEAD_TURN_NONE) {
                         faceDir = (headRestDir[animState] + (resFacing << 2)) & HEAD_DIR_MASK;
-                        target_frame = headTurnStep[(faceDir - curDir) + 7];
+                        targetFrame = headTurnStep[(faceDir - curDir) + 7];
                 }
-                if (target_frame == HEAD_TURN_NONE)
-                        target_frame = -1;
+                if (targetFrame == HEAD_TURN_NONE)
+                        targetFrame = -1;
 
                 headPose = (headPose & HEAD_TILT_MASK) +
-                          ((headPose + target_frame) & HEAD_DIR_MASK);
+                          ((headPose + targetFrame) & HEAD_DIR_MASK);
         }
 
         if (headPose >= 0 && headPose < 0x80) {
                 headFrame = headTiltFrame[(headPose & HEAD_TILT_MASK) >> HEAD_TILT_SHIFT];
-                if ((anim_mode = headPose & HEAD_DIR_MASK) <= HEAD_DIR_BACK) {
-                        headFrame += anim_mode;
+                if ((animMode = headPose & HEAD_DIR_MASK) <= HEAD_DIR_BACK) {
+                        headFrame += animMode;
                         headMirror = NO;
                 } else {
-                        headFrame += HEAD_DIRS - anim_mode;
+                        headFrame += HEAD_DIRS - animMode;
                         headMirror = YES;
                 }
         }

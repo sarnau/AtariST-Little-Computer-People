@@ -6,13 +6,13 @@
 void
 peekAround()
 {
-        short   saved_frame;
+        short   savedFrame;
 
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headMode = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame = headFrame;
+        savedFrame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
         headPose = HEAD_ANIM_DISABLED;
         headFrame = 2;
@@ -20,6 +20,6 @@ peekAround()
 
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headFrame = saved_frame;
+        headFrame = savedFrame;
         gameTick(0);
 }

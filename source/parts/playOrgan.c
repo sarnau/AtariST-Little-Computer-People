@@ -12,8 +12,8 @@ playOrgan()
         /* The walk result is tested in place, with no local for it.
            The declaration order of these locals sets their stack
            slots and must not change; xres is unused but must stay. */
-        unsigned char   psg_a, psg_b, psg_c;
-        unsigned char   prev_a, prev_b, prev_c;
+        unsigned char   psgA, psgB, psgC;
+        unsigned char   prevA, prevB, prevC;
         short           i;
         char *          filename;
         _DTA *           dta_ptr;
@@ -24,9 +24,9 @@ playOrgan()
         scratchArr[2] = STATE_ORGAN_REACH_L;
         scratchArr[3] = STATE_ORGAN_PULL_OUT;
 
-        prev_a = 0;
-        prev_b = 0;
-        prev_c = 0;
+        prevA = 0;
+        prevB = 0;
+        prevC = 0;
         noPreempt = YES;
         if (recordPlaying != NO)
                 stopRecord();
@@ -69,12 +69,12 @@ playOrgan()
         while (songPlaying != NO) {
                 /* Plain word arguments here (no 0L), unlike stopSfx's
                    Giaccess writes: the argument shape changes the code. */
-                psg_a = Giaccess(0, PSG_VOL_A) & 0x1f;
-                psg_b = Giaccess(0, PSG_VOL_B) & 0x1f;
-                psg_c = Giaccess(0, PSG_VOL_C) & 0x1f;
+                psgA = Giaccess(0, PSG_VOL_A) & 0x1f;
+                psgB = Giaccess(0, PSG_VOL_B) & 0x1f;
+                psgC = Giaccess(0, PSG_VOL_C) & 0x1f;
 
                 animState = scratchArr[0];
-                if (psg_a > prev_a || psg_b > prev_b || psg_c > prev_c) {
+                if (psgA > prevA || psgB > prevB || psgC > prevC) {
                         i = rndRng(1, 3);
                         while (scratchArr[i] == animState)
                                 i = rndRng(1, 3);
@@ -84,7 +84,7 @@ playOrgan()
                                 animState = scratchArr[rndRng(1, 2)];
                         }
                 }
-                prev_a = psg_a; prev_b = psg_b; prev_c = psg_c;
+                prevA = psgA; prevB = psgB; prevC = psgC;
                 gameTick(0);
         }
 

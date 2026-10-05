@@ -23,31 +23,31 @@
 short
 pickIdleAction()
 {
-        /* Three locals, not four: `table_pick` doubles as the
+        /* Three locals, not four: `tablePick` doubles as the
            hours-since-wake temporary.  The retry is an explicit label
            rather than a loop, as in the original -- the last arm
            carries no branch back to the top. */
-        short   table_pick;
-        short   action_index;
+        short   tablePick;
+        short   actionIndex;
         short   day;
 
-        table_pick = t_hour - resident.wake_hour;
-        if (table_pick < 0)
-                table_pick += 24;
+        tablePick = t_hour - resident.wake_hour;
+        if (tablePick < 0)
+                tablePick += 24;
 
-        if (table_pick >= 18 || resident.sickness_level >= SICKNESS_MODERATE) {
-                table_pick = TIER_SLEEP;
+        if (tablePick >= 18 || resident.sickness_level >= SICKNESS_MODERATE) {
+                tablePick = TIER_SLEEP;
         } else {
                 /* scheduleTiers must stay a real 2-D array: a table of row
                    pointers compiles to different code. */
-                table_pick = (table_pick / 2) % 3;
-                table_pick = scheduleTiers[table_pick][resident.activity_level];
+                tablePick = (tablePick / 2) % 3;
+                tablePick = scheduleTiers[tablePick][resident.activity_level];
 
                 day = calcWeekday();
-                if (table_pick == TIER_ACTIVE && day == WEEKDAY_SUNDAY)
-                        table_pick = TIER_RELAXED;
-                else if (table_pick == TIER_ACTIVE && day == WEEKDAY_SATURDAY)
-                        table_pick = TIER_MODERATE;
+                if (tablePick == TIER_ACTIVE && day == WEEKDAY_SUNDAY)
+                        tablePick = TIER_RELAXED;
+                else if (tablePick == TIER_ACTIVE && day == WEEKDAY_SATURDAY)
+                        tablePick = TIER_MODERATE;
         }
 
         /* The three table arms deliberately have NO return statement:
@@ -56,17 +56,17 @@ pickIdleAction()
            arm returns explicitly, with a real `else`.  Do not add the
            missing returns -- they change the compiled code. */
 retry:
-        if (table_pick == TIER_ACTIVE) {
-                action_index = activeActions[rndRng(0, 15)];
-                if (action_index == lastAction)
+        if (tablePick == TIER_ACTIVE) {
+                actionIndex = activeActions[rndRng(0, 15)];
+                if (actionIndex == lastAction)
                         goto retry;
-        } else if (table_pick == TIER_MODERATE) {
-                action_index = moderateActions[rndRng(0, 15)];
-                if (action_index == lastAction)
+        } else if (tablePick == TIER_MODERATE) {
+                actionIndex = moderateActions[rndRng(0, 15)];
+                if (actionIndex == lastAction)
                         goto retry;
-        } else if (table_pick == TIER_RELAXED) {
-                action_index = relaxedActions[rndRng(0, 15)];
-                if (action_index == lastAction)
+        } else if (tablePick == TIER_RELAXED) {
+                actionIndex = relaxedActions[rndRng(0, 15)];
+                if (actionIndex == lastAction)
                         goto retry;
         } else {
                 /* Sleep bucket -- either bed or nothing. */

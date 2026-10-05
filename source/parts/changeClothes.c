@@ -10,7 +10,7 @@ void
 changeClothes(value)
 short   value;
 {
-        short   saved_x;
+        short   savedX;
 
         posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
@@ -62,7 +62,7 @@ short   value;
         noPreempt = YES;
         walkToTarget();
         noPreempt = NO;                   /* cleared before saving resX, as in the original */
-        saved_x = resX;
+        savedX = resX;
 
         /* Close door behind: wide -> ajar -> resident inside. */
         spriteLayer[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
@@ -115,7 +115,7 @@ short   value;
         gameTick(1);
         bedClosetOpen = YES;
 
-        resX = saved_x;
+        resX = savedX;
         posToXY(POS_MID_BEDROOM_CLOSET, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();

@@ -7,10 +7,10 @@ sayHello()
 {
         /* Declaration order matters: it sets the stack-frame layout,
            which must match the original. */
-        short   saved_frame;
+        short   savedFrame;
         short   pick;
-        short   wave_count;
-        short   prev_pick;
+        short   waveCount;
+        short   prevPick;
         short   wait;
 
         resFacing = FACING_RIGHT;
@@ -19,21 +19,21 @@ sayHello()
         headMode = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame = headFrame;
+        savedFrame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
         headPose = HEAD_ANIM_DISABLED;
 
-        wave_count = rndRng(20, 40);
-        /* pick is cleared before prev_pick on purpose (statement order
+        waveCount = rndRng(20, 40);
+        /* pick is cleared before prevPick on purpose (statement order
            shows in the compiled code). */
         pick = 0;
-        prev_pick = 0;
+        prevPick = 0;
         /* Post-decrement in the condition, testing the old value --
            the original's loop shape. */
-        while (wave_count--) {
-                while (pick == prev_pick)
+        while (waveCount--) {
+                while (pick == prevPick)
                         pick = rndRng(0, 2);
-                prev_pick = pick;
+                prevPick = pick;
 
                 /* Must stay a switch: an if/else-if ladder compiles to
                    different code. */
@@ -62,6 +62,6 @@ sayHello()
 
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headFrame = saved_frame;
+        headFrame = savedFrame;
         gameTick(0);
 }

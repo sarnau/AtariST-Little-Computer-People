@@ -9,7 +9,7 @@ char *  str;
            FIRST: both are the original's shape. */
         short   i;
         short   row;
-        short   entered_word;
+        short   enteredWord;
 
         /* Clear the accumulated position/bit mask. */
         for (i = 0; i < 10; i++)
@@ -28,14 +28,14 @@ char *  str;
                    So the word at index 0 (PLEASE) never contributes its
                    bit and takes the +4 penalty instead.  1985 behaviour,
                    kept on purpose. */
-                if ((entered_word = lookupWord(cmdWord)) == 0) {
+                if ((enteredWord = lookupWord(cmdWord)) == 0) {
                         /* Unrecognised word -- +4 priority penalty. */
                         cmdPriority += 4;
-                } else if (entered_word > 0) {
+                } else if (enteredWord > 0) {
                         /* Both index tables are char[], and there
                            are no temporaries. */
-                        phraseBits[wordByte[entered_word]] |=
-                                bitMask8[wordBit[entered_word]];
+                        phraseBits[wordByte[enteredWord]] |=
+                                bitMask8[wordBit[enteredWord]];
                 }
         }
 

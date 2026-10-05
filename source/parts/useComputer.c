@@ -7,11 +7,11 @@
 void
 useComputer()
 {
-        short   random_val;
+        short   randomVal;
         short   limit;
         short   typed;
-        short   type_counter;
-        short   is_even_frame;
+        short   typeCounter;
+        short   isEvenFrame;
 
         scratchArr[0] = STATE_HANDS_DOWN;
         scratchArr[1] = STATE_HANDS_UP;
@@ -28,25 +28,25 @@ useComputer()
         headMode = HEAD_ANIM_COMPUTER;
 
         /* The first draw is computed and thrown away. */
-        random_val = (Random() & 7) | 3;
+        randomVal = (Random() & 7) | 3;
         limit      = (Random() & 0x1ff) | 0x80;
 
         animState = scratchArr[2];
         gameTick(25);
 
-        type_counter = 0;
-        while (type_counter < limit) {
+        typeCounter = 0;
+        while (typeCounter < limit) {
                 if (movingIn != NO)
                         break;
                 if (eventQueue[0] != ACTION_NONE)
                         break;
-                random_val = Random() & 3;
-                if (type_counter & 1)
-                        is_even_frame = 0;
+                randomVal = Random() & 3;
+                if (typeCounter & 1)
+                        isEvenFrame = 0;
                 else
-                        is_even_frame = 1;
+                        isEvenFrame = 1;
 
-                if (is_even_frame == 0) {
+                if (isEvenFrame == 0) {
                         resFacing = (Random() & 2) >> 1;
                         typed = 1;
                         animState = scratchArr[0];
@@ -60,7 +60,7 @@ useComputer()
                 if (typed == 1)
                         gameTick(0);
                 else
-                        gameTick(random_val);
+                        gameTick(randomVal);
 
                 /* Rare "clear the screen" gesture. */
                 if ((Random() & 0x7f) < 3 && typed != 0) {
@@ -76,7 +76,7 @@ useComputer()
                         headMode = HEAD_ANIM_COMPUTER;
                 }
 
-                type_counter++;
+                typeCounter++;
         }
 
         animState = STATE_STAND_FACING_SCREEN;

@@ -15,9 +15,9 @@ short   val;
            compiles by saving the flags across the pointer increment;
            keep that form. */
         short   i;
-        short   word_length;
+        short   wordLength;
         short   ch;
-        BOOL16  word_wrap_needed;
+        BOOL16  wordWrapNeeded;
 
         if (val < 0 || typedCursor > 0) {
                 if (val < 0)
@@ -26,8 +26,8 @@ short   val;
                         typeChar(' ');
         }
 
-        word_wrap_needed = NO;
-        while (word_wrap_needed == NO) {
+        wordWrapNeeded = NO;
+        while (wordWrapNeeded == NO) {
                 /* Skip inter-word spaces (emit if line already started),
                    then step back onto the first non-space. */
                 while ((ch = *str++) == ' ')
@@ -43,7 +43,7 @@ short   val;
                         i++;
                 }
                 if (ch != ' ')
-                        word_wrap_needed = YES;
+                        wordWrapNeeded = YES;
                 else
                         str--;
 
@@ -51,8 +51,8 @@ short   val;
                 if (typedCursor + i > 39)
                         typeChar(13);
 
-                for (word_length = 0; word_length < i; word_length++) {
-                        ch = letterWord[word_length];
+                for (wordLength = 0; wordLength < i; wordLength++) {
+                        ch = letterWord[wordLength];
                         typeChar(ch);
                 }
         }

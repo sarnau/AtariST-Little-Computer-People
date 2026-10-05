@@ -31,27 +31,27 @@
    released, dogHidden) leaves the dog hidden.  Otherwise both slots get
    the frame's size, the dog's position (the frame's top is 17 lines
    above dogY) and the mask, but only one slot gets the image: the
-   FRONT slot when layer_p is 1, the BACK slot otherwise, so the dog is
+   FRONT slot when layer is 1, the BACK slot otherwise, so the dog is
    drawn in front of or behind the resident.  With flipH2 set the
    frame is first mirrored into dogMirImage/dogMirMask (15 lines, 2 words)
    and those buffers are used instead. */
 void
-setDogSprite(g_seid, layer_p, flipH2)
-short   g_seid;
-short   layer_p;
+setDogSprite(spriteId, layer, flipH2)
+short   spriteId;
+short   layer;
 BOOL16  flipH2;
 {
         drawnImage[HW_SLOT_DOG_BACK] = NULL;
         drawnImage[HW_SLOT_DOG_FRONT] = NULL;
 
-        if (g_seid < 0 || dogHidden != NO)
+        if (spriteId < 0 || dogHidden != NO)
                 return;
 
         if (flipH2 != NO) {
-                flipSprite(spriteBitmap[g_seid],
+                flipSprite(spriteBitmap[spriteId],
                                        (unsigned short *) dogMirImage,
                                        15, 2);
-                flipSprite(spriteMask[g_seid],
+                flipSprite(spriteMask[spriteId],
                                        (unsigned short *) dogMirMask,
                                        15, 2);
         }
@@ -66,19 +66,19 @@ BOOL16  flipH2;
         pendY[HW_SLOT_DOG_FRONT] = dogY - 17;
 
         if (flipH2 == NO) {
-                drawnMask[HW_SLOT_DOG_BACK] = spriteMask[g_seid];
-                drawnMask[HW_SLOT_DOG_FRONT] = spriteMask[g_seid];
+                drawnMask[HW_SLOT_DOG_BACK] = spriteMask[spriteId];
+                drawnMask[HW_SLOT_DOG_FRONT] = spriteMask[spriteId];
         } else {
                 drawnMask[HW_SLOT_DOG_BACK] = dogMirMask;
                 drawnMask[HW_SLOT_DOG_FRONT] = dogMirMask;
         }
         if (flipH2 == NO) {
-                if (layer_p == 1)
-                        drawnImage[HW_SLOT_DOG_FRONT] = spriteBitmap[g_seid];
+                if (layer == 1)
+                        drawnImage[HW_SLOT_DOG_FRONT] = spriteBitmap[spriteId];
                 else
-                        drawnImage[HW_SLOT_DOG_BACK] = spriteBitmap[g_seid];
+                        drawnImage[HW_SLOT_DOG_BACK] = spriteBitmap[spriteId];
         } else {
-                if (layer_p == 1)
+                if (layer == 1)
                         drawnImage[HW_SLOT_DOG_FRONT] = dogMirImage;
                 else
                         drawnImage[HW_SLOT_DOG_BACK] = dogMirImage;
@@ -102,15 +102,15 @@ short                   wdWidth;
         short                   planeIndex;
         short                   v;
         short                   hi;
-        unsigned short *        img_ptr;
+        unsigned short *        image;
 
         for (y = 0; y < pixH; y++) {
                 for (x = 0; x < wdWidth; x++) {
-                        img_ptr = source + (((wdWidth - 1) - x) << 2);
+                        image = source + (((wdWidth - 1) - x) << 2);
                         for (planeIndex = 0; planeIndex < 4;
                              planeIndex++) {
-                                v = *img_ptr;
-                                img_ptr++;
+                                v = *image;
+                                image++;
                                 hi = mirrorTable[v & 0xff] << 8;
                                 *dest = mirrorTable[(v >> 8) & 0xff] | hi;
                                 dest++;

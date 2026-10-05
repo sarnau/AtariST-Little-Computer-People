@@ -7,10 +7,10 @@
 void
 eatFromCabinet()
 {
-        short   food_count;
+        short   foodCount;
         short   inner;
-        short   eat_cycles;
-        short   saved_head_frame;
+        short   eatCycles;
+        short   savedHeadFrame;
 
         scratchArr[0] = STATE_EAT_BITE;
         scratchArr[1] = STATE_EAT_CHEW;
@@ -26,17 +26,17 @@ eatFromCabinet()
 
         openKitchenCab(DOOR_OPEN);
 
-        food_count = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
-        if (food_count == 0) {
+        foodCount = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        if (foodCount == 0) {
                 gameTick(2);
                 return;
         }
 
         animState = STATE_REACH_INTO_CABINET;
         gameTick(3);
-        food_count--;
+        foodCount--;
         resident.door_states_and_flags =
-                (food_count << DSF_FOOD_SHIFT) |
+                (foodCount << DSF_FOOD_SHIFT) |
                 (resident.door_states_and_flags & ~DSF_FOOD_MASK);
         drawFoodCab();
         animState = STATE_STAND_FACING_SCREEN;
@@ -71,8 +71,8 @@ eatFromCabinet()
         animState = scratchArr[0];
         resY += 8;
         resX += 6;
-        saved_head_frame = headFrame;
-        eat_cycles = rndRng(10, 20);
+        savedHeadFrame = headFrame;
+        eatCycles = rndRng(10, 20);
         headTarget = HEAD_ANIM_DISABLED;
         headPose = HEAD_ANIM_DISABLED;
         gameTick(0);
@@ -81,12 +81,12 @@ eatFromCabinet()
         pendY[spriteSlot[SPRITE_FOOD_PACKAGE]] -= 4;
         gameTick(0);
 
-        while (eat_cycles-- > 0) {
+        while (eatCycles-- > 0) {
                 animState = scratchArr[1];
                 gameTick(2);
                 headFrame = 0;
                 gameTick(rndRng(1, 2));
-                headFrame = saved_head_frame;
+                headFrame = savedHeadFrame;
                 animState = scratchArr[0];
                 gameTick(0);
 
@@ -94,14 +94,14 @@ eatFromCabinet()
                 while (inner-- > 0) {
                         if (eventQueue[0] != ACTION_NONE)
                                 break;
-                        headFrame = saved_head_frame;
+                        headFrame = savedHeadFrame;
                         gameTick(rndRng(1, 2));
                         headFrame = 1;
                         gameTick(0);
                         headFrame = 2;
                         gameTick(0);
                 }
-                headFrame = saved_head_frame;
+                headFrame = savedHeadFrame;
         }
 
         isCarrying = YES;

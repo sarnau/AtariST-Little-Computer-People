@@ -5,7 +5,7 @@
 short
 getKey()
 {
-        short   ret_key;
+        short   retKey;
         short   scancode;
         long    keycode;
 
@@ -13,10 +13,10 @@ getKey()
                 return KEY_NONE;
 
         keycode  = Crawcin();
-        ret_key  = keycode;
+        retKey  = keycode;
         scancode = keycode >> 16;
-        if (ret_key != 0)
-                return ret_key;
+        if (retKey != 0)
+                return retKey;
         else
                 switch (scancode) {
                 case SCAN_CURSOR_LEFT: return KEY_CURSOR_LEFT; break;

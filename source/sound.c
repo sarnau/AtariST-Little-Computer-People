@@ -48,14 +48,14 @@ loadSounds()
 
 /* Lower priority value wins. */
 void
-sfxSelect(sound_id, duration)
-short   sound_id;
+sfxSelect(soundId, duration)
+short   soundId;
 long    duration;
 {
         if (sfxPending == NO ||
             sfxPriority[sfxReqId] >=
-            sfxPriority[sound_id]) {
-                sfxReqId = sound_id;
+            sfxPriority[soundId]) {
+                sfxReqId = soundId;
                 sfxReqDur = (short) duration;
                 sfxPending = YES;
         }

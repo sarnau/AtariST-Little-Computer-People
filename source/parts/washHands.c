@@ -11,7 +11,7 @@ washHands()
            are declared in this order, all signed, as in washAtSink. */
         short           rnd;
         short           counter;
-        short           last_pick;
+        short           lastPick;
         short           val;
 
         scratchArr[0] = STATE_WASH_HANDS_CENTER;
@@ -30,7 +30,7 @@ washHands()
         rnd = (unsigned short)(Random() & 0x7f) | 4;
         sfxSelect(SFX_WATER_RUNNING, 10000L);
 
-        /* last_pick is never initialised (as in washAtSink), so the first
+        /* lastPick is never initialised (as in washAtSink), so the first
            comparison reads whatever the slot held.  1985 code, kept on
            purpose. */
         counter = 0;
@@ -38,9 +38,9 @@ washHands()
                 if (eventQueue[0] != ACTION_NONE)
                         break;
                 val = Random() & 3;
-                while (val == last_pick)
+                while (val == lastPick)
                         val = Random() & 3;
-                last_pick = val;
+                lastPick = val;
                 if (val != 3) {
                         animState = scratchArr[val];
                         resFacing = FACING_RIGHT;

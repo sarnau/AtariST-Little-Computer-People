@@ -3,14 +3,14 @@
    double buffer. */
 
 void
-activateSprite(g_seix)
-short   g_seix;
+activateSprite(spriteId)
+short   spriteId;
 {
         /* No slot local: the map is subscripted at each use, as in
            the original. */
         layoutSlots();
-        drawnImage[spriteSlot[g_seix]]  = spriteBitmap[g_seix];
-        drawnMask[spriteSlot[g_seix]]   = spriteMask[g_seix];
-        drawnHeight[spriteSlot[g_seix]] = spriteHeight[g_seix];
-        drawnWidth[spriteSlot[g_seix]]  = spriteWidth[g_seix];
+        drawnImage[spriteSlot[spriteId]]  = spriteBitmap[spriteId];
+        drawnMask[spriteSlot[spriteId]]   = spriteMask[spriteId];
+        drawnHeight[spriteSlot[spriteId]] = spriteHeight[spriteId];
+        drawnWidth[spriteSlot[spriteId]]  = spriteWidth[spriteId];
 }

@@ -9,14 +9,14 @@
 void
 moveDog()
 {
-        /* Six shorts, declared in this order; unused1 and next_x are
+        /* Six shorts, declared in this order; unused1 and nextX are
            never touched but must stay, as in the original. */
-        short   x_distance;
-        short   floor_num;
+        short   xDistance;
+        short   floorNum;
         short   unused1;
-        short   next_x;
-        short   depth_layer;
-        BOOL16  h_flip;
+        short   nextX;
+        short   depthLayer;
+        BOOL16  hFlip;
 
         dogStepIdx++;
         if (dogStepIdx > 7)
@@ -26,12 +26,12 @@ moveDog()
                 return;
 
         if ((short) (dogY + 5) <= resY)
-                depth_layer = -1;
+                depthLayer = -1;
         else
-                depth_layer = 1;
+                depthLayer = 1;
         if (animState == STATE_READ_PAPER_HOLD ||
             animState == STATE_READ_PAPER_TURN_PAGE)
-                depth_layer = 1;
+                depthLayer = 1;
 
         if (dogXWaypt == 0 && dogYWaypt == 0)
                 dogNextWaypt();
@@ -40,10 +40,10 @@ moveDog()
         if (dogOnStairs != NO) {
                 /* The assignment is embedded on purpose, so the index
                    reuses floorOfY's result without a reload. */
-                if (dogY <= floorBottomY[(floor_num = floorOfY(dogYWaypt)) - 1]) {
-                        if (floor_num == FLOOR_TOP)
+                if (dogY <= floorBottomY[(floorNum = floorOfY(dogYWaypt)) - 1]) {
+                        if (floorNum == FLOOR_TOP)
                                 dogOnStairs = NO;
-                        else if (stairWaypts[(floor_num - 1) * 2 + 1] <= dogY)
+                        else if (stairWaypts[(floorNum - 1) * 2 + 1] <= dogY)
                                 dogOnStairs = NO;
                 }
         }
@@ -55,7 +55,7 @@ moveDog()
                         dogXWaypt = 0;
                         dogYWaypt = 0;
                         dogSpriteId = SPRITE_DOG_LAY_DOWN;
-                        setDogSprite(dogSpriteId, depth_layer, NO);
+                        setDogSprite(dogSpriteId, depthLayer, NO);
                         return;
                 } else
                         dogNextWaypt();
@@ -65,19 +65,19 @@ moveDog()
 
         if (dogOnStairs == NO) {
                 if (dogX < dogXWaypt) {
-                        h_flip = NO;
+                        hFlip = NO;
                         dogX++;
                 } else if (dogX > dogXWaypt) {
-                        h_flip = YES;
+                        hFlip = YES;
                         dogX--;
                 }
                 /* An if/else with the store duplicated in both arms,
                    not a ternary, as in the original. */
                 if (dogX >= dogXWaypt)
-                        x_distance = dogX - dogXWaypt;
+                        xDistance = dogX - dogXWaypt;
                 else
-                        x_distance = dogXWaypt - dogX;
-                if (x_distance < 8) {
+                        xDistance = dogXWaypt - dogX;
+                if (xDistance < 8) {
                         if (dogY < dogYWaypt)
                                 dogY++;
                         else if (dogY > dogYWaypt)
@@ -97,19 +97,19 @@ moveDog()
                 if (dogY > dogYWaypt) {
                         /* Going up */
                         if (dogY == 0xa1) {
-                                h_flip = YES;
+                                hFlip = YES;
                                 dogX -= 17;
                                 dogY -= 2;
                         } else if (dogY == 100) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogX += 3;
                                 dogY -= 2;
                         } else if (dogY > 161 ||
                                    (dogY > 100 && dogY < 140)) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY -= 2;
                         } else if (dogY < 100) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY--;
                                 if (dogSpriteId != SPRITE_DOG_WLK_R9) {
                                         dogX++;
@@ -117,7 +117,7 @@ moveDog()
                                                 dogX++;
                                 }
                         } else if (dogY < 0xa1) {
-                                h_flip = YES;
+                                hFlip = YES;
                                 dogY--;
                                 if (dogSpriteId != SPRITE_DOG_WLK_R9) {
                                         dogX--;
@@ -128,19 +128,19 @@ moveDog()
                 } else if (dogY < dogYWaypt) {
                         /* Going down */
                         if (dogY == 0xa1) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY += 4;
                                 dogX++;
                         } else if (dogY == 100) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY += 2;
                                 dogX += 3;
                         } else if (dogY > 161 ||
                                    (dogY > 100 && dogY < 132)) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY++;
                         } else if (dogY < 100) {
-                                h_flip = YES;
+                                hFlip = YES;
                                 dogY++;
                                 if (dogSpriteId != SPRITE_DOG_WLK_R9) {
                                         dogX--;
@@ -148,7 +148,7 @@ moveDog()
                                                 dogX--;
                                 }
                         } else if (dogY < 0xa1) {
-                                h_flip = NO;
+                                hFlip = NO;
                                 dogY++;
                                 if (dogSpriteId != SPRITE_DOG_WLK_R9) {
                                         dogX++;
@@ -159,5 +159,5 @@ moveDog()
                 }
         }
 
-        setDogSprite(dogSpriteId, depth_layer, h_flip);
+        setDogSprite(dogSpriteId, depthLayer, hFlip);
 }

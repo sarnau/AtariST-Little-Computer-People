@@ -15,7 +15,7 @@ void
 useToilet()
 {
         /* The walk call is tested in place, with no local. */
-        short   saved_x;
+        short   savedX;
 
         posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
@@ -51,7 +51,7 @@ useToilet()
         walkXTarget -= 10;
         noPreempt = YES;
         walkToTarget();
-        saved_x = resX;
+        savedX = resX;
 
         /* Close door behind resident (3 sprite phases). */
         spriteLayer[SPRITE_DOOR_ANIM_3] = SPRITE_HIDDEN;
@@ -100,7 +100,7 @@ useToilet()
         gameTick(1);
         toiletDoorOpen = YES;
 
-        resX = saved_x;
+        resX = savedX;
         posToXY(POS_MID_TOILET_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
 

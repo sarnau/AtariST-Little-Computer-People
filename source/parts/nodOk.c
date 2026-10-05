@@ -9,12 +9,12 @@
 void
 nodOk()
 {
-        short   entry_current;
+        short   entryCurrent;
         short   h;
         /* Only two locals: h doubles as the loop counter below.
            Do not add a separate one. */
 
-        entry_current = headPose;
+        entryCurrent = headPose;
         h = headPose & HEAD_DIR_MASK;
 
         /* First turn toward a nearby front-ish pose, tilted lower. */
@@ -40,6 +40,6 @@ nodOk()
                 waitHeadTurn();
         }
 
-        headTarget = entry_current;
+        headTarget = entryCurrent;
         waitHeadTurn();
 }

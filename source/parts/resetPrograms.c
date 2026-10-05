@@ -5,19 +5,19 @@
 void
 resetPrograms()
 {
-        /* Byte counters, ch_index declared first: the original's
+        /* Byte counters, chIndex declared first: the original's
            types and order. */
-        char    ch_index;
+        char    chIndex;
         char    channel;
 
         /* The inner scan ends by forcing the counter, not with a
            break, as in the original. */
         for (channel = 0; channel < 16; channel++) {
-                for (ch_index = 1; ch_index < 16; ch_index++) {
-                        if ((chanMap[ch_index] & 0xf) == channel) {
-                                sentProgram[ch_index] = -1;
-                                sendProgChange(ch_index);
-                                ch_index = 15;
+                for (chIndex = 1; chIndex < 16; chIndex++) {
+                        if ((chanMap[chIndex] & 0xf) == channel) {
+                                sentProgram[chIndex] = -1;
+                                sendProgChange(chIndex);
+                                chIndex = 15;
                         }
                 }
         }

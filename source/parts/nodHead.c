@@ -5,7 +5,7 @@
 void
 nodHead()
 {
-        short   saved_frame;
+        short   savedFrame;
 
         scratchArr[0] = STATE_WALK_FRAME_3_STEP;
         scratchArr[1] = STATE_WALK_FRAME_4;
@@ -16,7 +16,7 @@ nodHead()
         headMode = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame = headFrame;
+        savedFrame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
         headPose = HEAD_ANIM_DISABLED;
 
@@ -29,6 +29,6 @@ nodHead()
 
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
-        headFrame = saved_frame;
+        headFrame = savedFrame;
         gameTick(0);
 }

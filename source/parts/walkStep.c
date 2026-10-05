@@ -6,13 +6,13 @@
 void
 walkStep()
 {
-        /* Four locals; the stair branch reuses x_distance for the
+        /* Four locals; the stair branch reuses xDistance for the
            next-X pick, and the last two are written once and never
            read -- leftovers, kept as the original has them. */
-        short   x_distance;
-        short   floor_num;
-        short   ani_snap;
-        short   spd_snap;
+        short   xDistance;
+        short   floorNum;
+        short   aniSnap;
+        short   spdSnap;
 
         footstepDue = NO;
 
@@ -21,18 +21,18 @@ walkStep()
 
         /* Dead stores, kept on purpose.  This is the only place that
            reads walkAdjust. */
-        ani_snap = frameCount;
-        spd_snap = walkAdjust + walkSpeed;
+        aniSnap = frameCount;
+        spdSnap = walkAdjust + walkSpeed;
 
         if (xWaypoint == 0 && yWaypoint == 0)
                 nextWaypoint();
 
         /* Exit stair mode when we've reached the target floor. */
         if (onStairs != NO) {
-                if (resY <= floorBottomY[(floor_num = floorOfY(yWaypoint)) - 1]) {
-                        if (floor_num == FLOOR_TOP)
+                if (resY <= floorBottomY[(floorNum = floorOfY(yWaypoint)) - 1]) {
+                        if (floorNum == FLOOR_TOP)
                                 onStairs = NO;
-                        else if (stairWaypts[(floor_num - 1) * 2 + 1] <= resY)
+                        else if (stairWaypts[(floorNum - 1) * 2 + 1] <= resY)
                                 onStairs = NO;
                 }
         }
@@ -82,10 +82,10 @@ walkStep()
                 }
 
                 if (resX >= xWaypoint)
-                        x_distance = resX - xWaypoint;
+                        xDistance = resX - xWaypoint;
                 else
-                        x_distance = xWaypoint - resX;
-                if (x_distance < 8) {
+                        xDistance = xWaypoint - resX;
+                if (xDistance < 8) {
                         if (resY < yWaypoint)
                                 resY++;
                         else if (resY > yWaypoint)

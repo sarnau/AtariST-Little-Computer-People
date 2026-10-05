@@ -11,8 +11,8 @@ chooseAction()
         /* Declaration order matters, and `unused` must stay: both
            are part of the original's stack frame. */
         short   index;
-        short   food_slots;
-        short   sickness_skip_probability;
+        short   foodSlots;
+        short   sicknessSkipProbability;
         short   unused;
         /* P1: process any deferred event first */
         if (eventQueue[0] != ACTION_NONE) {
@@ -35,15 +35,15 @@ chooseAction()
         /* Sickness bias: 66% skip healthy, 0% sick. */
         /* Tested this way round on purpose: it matches the original. */
         if (resident.sickness_level > SICKNESS_HEALTHY)
-                sickness_skip_probability = 0;
+                sicknessSkipProbability = 0;
         else
-                sickness_skip_probability = 66;
+                sicknessSkipProbability = 66;
         /* P4: thirst.  The water gate is a disjunction of two
            conjunctions that re-tests the sickness level in the second
            arm.  Redundant, but kept on purpose: it is the original's
            shape. */
         if (resident.thirst_level > NEED_SATISFIED) {
-                if (rndRng(1, 100) > sickness_skip_probability &&
+                if (rndRng(1, 100) > sicknessSkipProbability &&
                     ((resident.sickness_level != SICKNESS_HEALTHY &&
                       waterLevel != 0) ||
                      resident.sickness_level == SICKNESS_HEALTHY)) {
@@ -53,15 +53,15 @@ chooseAction()
                 }
         }
 
-        food_slots = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        foodSlots = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
 
         /* P5: hunger.  Same disjunctive shape; note that the lastAction
            gate applies ONLY to the healthy arm -- it is not
            `(healthy || food) && lastAction != KITCHEN`. */
         if (resident.hunger_level > NEED_SATISFIED) {
-                if (rndRng(1, 100) > sickness_skip_probability &&
+                if (rndRng(1, 100) > sicknessSkipProbability &&
                     ((resident.sickness_level != SICKNESS_HEALTHY &&
-                      food_slots != 0) ||
+                      foodSlots != 0) ||
                      (lastAction != ACTION_KITCHEN_CABINET &&
                       resident.sickness_level == SICKNESS_HEALTHY))) {
                         nextAction = ACTION_KITCHEN_CABINET;

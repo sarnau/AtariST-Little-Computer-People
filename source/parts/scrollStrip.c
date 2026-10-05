@@ -8,19 +8,19 @@ scrollStrip()
 {
         /* Declaration order and the unused short must stay: both set
            the stack-frame layout, which must match the original. */
-        char *  src_ptr;
-        char *  dest_ptr;
+        char *  srcPtr;
+        char *  destPtr;
         short   unused;
         short   row;
 
         /* The source pointer is biased once before the loop and both
            pointers step in place after the copy, as in the original. */
-        src_ptr  = (char *) stripBuf + 320;
-        dest_ptr = (char *) stripBuf;
+        srcPtr  = (char *) stripBuf + 320;
+        destPtr = (char *) stripBuf;
         for (row = 0; row < 13; row++) {
-                copyBlocks32(src_ptr, dest_ptr, 10);
-                src_ptr  += 320;
-                dest_ptr += 320;
+                copyBlocks32(srcPtr, destPtr, 10);
+                srcPtr  += 320;
+                destPtr += 320;
         }
         paperRow(stripBuf, 24);
         paperRow(stripBuf, 25);

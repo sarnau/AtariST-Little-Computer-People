@@ -14,11 +14,11 @@ startSfx()
         /* Declaration order fixes the stack frame; `unused` is never
            read or written but must stay for the same reason. */
         char *          effectPtr;
-        char *          dosound_ptr;
+        char *          dosoundPtr;
         short           size;
         short           i;
-        long            raw_lo;
-        short *         hz_ptr;
+        long            rawLo;
+        short *         hzPtr;
         short           unused;
         unsigned short  hz;
         long            ssp;
@@ -42,19 +42,19 @@ startSfx()
         size      = *(short *) sfxData[sfxReqId];
         effectPtr = sfxData[sfxReqId] + 2;
 
-        dosound_ptr = sfxBuffer;
+        dosoundPtr = sfxBuffer;
         for (i = 0; i < size; i++) {
-                *dosound_ptr = *effectPtr;
+                *dosoundPtr = *effectPtr;
                 effectPtr++;
-                dosound_ptr++;
+                dosoundPtr++;
         }
 
         /* Overwrite last 4 bytes with Dosound terminator (0,0,0,0). */
-        dosound_ptr -= 4;
-        *dosound_ptr++ = 0;
-        *dosound_ptr++ = 0;
-        *dosound_ptr++ = 0;
-        *dosound_ptr = 0;
+        dosoundPtr -= 4;
+        *dosoundPtr++ = 0;
+        *dosoundPtr++ = 0;
+        *dosoundPtr++ = 0;
+        *dosoundPtr = 0;
 
         effectPtr -= 4;
         sfxDurHi = *(short *) effectPtr;
@@ -66,16 +66,16 @@ startSfx()
 
         /* Convert Dosound envelope time (200 Hz) to 8 Hz game ticks;
            the 200 Hz counter is read inline under Super. */
-        hz_ptr = (short *) 0x4bcL;
+        hzPtr = (short *) 0x4bcL;
         ssp = Super(0L);
-        hz = *hz_ptr;
+        hz = *hzPtr;
         Super(ssp);
         sfxStartHz = hz & 0xffffL;
 
         sfxTicksLeft = sfxDurHi;
         sfxTicksLeft = (sfxTicksLeft << 16) & 0xffff0000L;
-        raw_lo = (long) sfxDurLo & 0xffffL;
-        sfxTicksLeft |= raw_lo;
+        rawLo = (long) sfxDurLo & 0xffffL;
+        sfxTicksLeft |= rawLo;
         sfxTicksLeft = sfxTicksLeft / 25L;
 
         /* -1 = use the auto-computed duration. */

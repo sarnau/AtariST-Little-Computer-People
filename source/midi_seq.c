@@ -372,7 +372,7 @@ char    index;
 
 /* sendMidiEvent: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
-   MIDI OUT: shift the note by (high nibble of midi_ch - 3) octaves,
+   MIDI OUT: shift the note by (high nibble of midiCh - 3) octaves,
      write via aciaWrite (seqBusy=1) or Midiws; restore the note before
      the PSG path.
    PSG path (Note-On 0x9n only):
@@ -385,10 +385,10 @@ char    index;
    Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
 short
-sendMidiEvent(midiEvP, midiEvS, midi_ch)
+sendMidiEvent(midiEvP, midiEvS, midiCh)
 char *          midiEvP;
 char            midiEvS;
-char            midi_ch;
+char            midiCh;
 {
         /* Both byte arguments are saved and restored around the MIDI
            OUT path, which walks them destructively.  The declaration
@@ -396,24 +396,24 @@ char            midi_ch;
         char            chosen;                 /* also the saved note */
         char            unused;                 /* unused, but it must stay */
         char            best;
-        char            oct_shift;
-        unsigned char * saved_ptr;
-        char            saved_size;
-        long            env_ptr;
-        char            envelope_phase;
-        short           attack_hi;
-        short           noise_mask;
-        short           mixer_bits;
+        char            octShift;
+        unsigned char * savedPtr;
+        char            savedSize;
+        long            envPtr;
+        char            envelopePhase;
+        short           attackHi;
+        short           noiseMask;
+        short           mixerBits;
 
-        saved_ptr  = midiEvP;
-        saved_size = midiEvS;
+        savedPtr  = midiEvP;
+        savedSize = midiEvS;
 
         /* ---- MIDI OUT path ---- */
         if (midiOutOn != NO) {
-                chosen = saved_ptr[1];
-                if (midi_ch != 0)
+                chosen = savedPtr[1];
+                if (midiCh != 0)
                         midiEvP[1] = (midiEvP[1] & 0xff) -
-                                (((3 - ((midi_ch >> 4) & 0xf)) * 12) & 0xff);
+                                (((3 - ((midiCh >> 4) & 0xf)) * 12) & 0xff);
                 if (seqBusy == 1) {
                         while (midiEvS) {
                                 aciaWrite(*midiEvP);
@@ -423,14 +423,14 @@ char            midi_ch;
                 } else {
                         Midiws(midiEvS - 1, midiEvP);
                 }
-                saved_ptr[1] = chosen;
+                savedPtr[1] = chosen;
         }
 
         /* ---- PSG path ---- */
         if (psgOutOn != NO) {
 
-                midiEvP = saved_ptr;
-                midiEvS = saved_size;
+                midiEvP = savedPtr;
+                midiEvS = savedSize;
 
                 if ((*midiEvP++ & 0xf0) != 0x90)
                         return 0;
@@ -461,9 +461,9 @@ char            midi_ch;
 
                 /* Copy 8 bytes of ADSR params from the .SNG envelope
                    block; the source address lands in a local first. */
-                env_ptr = (noteChan - 1) * 8 + songAdsr;
-                envelope_phase = ENV_ATTACK;
-                copyEnvelope(env_ptr,
+                envPtr = (noteChan - 1) * 8 + songAdsr;
+                envelopePhase = ENV_ATTACK;
+                copyEnvelope(envPtr,
                         (unsigned char *) &psgEnvelope[chosen] + 1,
                         8L);
 
@@ -471,53 +471,53 @@ char            midi_ch;
                    4 bits (start volume), high 4 bits stash the mixer flags;
                    attack_duration keeps its low 4 bits, high 4 bits encode
                    the octave shift (2 - N) * 12 semitones. */
-                attack_hi = (psgEnvelope[chosen].attack_start_vol >> 4) & 0xf;
+                attackHi = (psgEnvelope[chosen].attack_start_vol >> 4) & 0xf;
                 psgEnvelope[chosen].attack_start_vol &= 0xf;
-                oct_shift = (2 - ((psgEnvelope[chosen].attack_duration >> 4) & 0xf)) * 12;
+                octShift = (2 - ((psgEnvelope[chosen].attack_duration >> 4) & 0xf)) * 12;
                 psgEnvelope[chosen].attack_duration &= 0xf;
-                mixer_bits = attack_hi << chosen;
-                noise_mask = ~(9 << chosen);
+                mixerBits = attackHi << chosen;
+                noiseMask = ~(9 << chosen);
 
                 /* The three scratch shorts are reused from here on:
-                   attack_hi carries the period, noise_mask its high
-                   nibble and mixer_bits the register number. */
-                attack_hi = psgPeriod[*midiEvP + oct_shift] / 60;
+                   attackHi carries the period, noiseMask its high
+                   nibble and mixerBits the register number. */
+                attackHi = psgPeriod[*midiEvP + octShift] / 60;
                 if (seqBusy == 1) {
-                        psgWrite(attack_hi, PSG_NOISE_PERIOD);
-                        psgMixer(mixer_bits, noise_mask | 0xc0);
+                        psgWrite(attackHi, PSG_NOISE_PERIOD);
+                        psgMixer(mixerBits, noiseMask | 0xc0);
                 } else {
                         /* The PSG writes go straight to the trap:
                            the Giaccess macro's (char) cast on the data
                            argument is not in the original here. */
-                        xbios(XBIOS_GIACCESS, attack_hi, PSG_WRITE | PSG_NOISE_PERIOD);
+                        xbios(XBIOS_GIACCESS, attackHi, PSG_WRITE | PSG_NOISE_PERIOD);
                         xbios(XBIOS_GIACCESS, xbios(XBIOS_GIACCESS, 0, PSG_MIXER) &
-                                  (long) (noise_mask | 0xc0) |
-                                  (long) mixer_bits, PSG_WRITE | PSG_MIXER);
+                                  (long) (noiseMask | 0xc0) |
+                                  (long) mixerBits, PSG_WRITE | PSG_MIXER);
                 }
 
-                mixer_bits = chosen << 1;
+                mixerBits = chosen << 1;
 
-                if (*midiEvP + oct_shift > 22) {
-                        attack_hi = psgPeriod[*midiEvP + oct_shift];
-                        noise_mask = (attack_hi >> 8) & 0xf;
-                        attack_hi = attack_hi & 0xff;
+                if (*midiEvP + octShift > 22) {
+                        attackHi = psgPeriod[*midiEvP + octShift];
+                        noiseMask = (attackHi >> 8) & 0xf;
+                        attackHi = attackHi & 0xff;
                         if (seqBusy == 1) {
-                                psgWrite(attack_hi, mixer_bits);
-                                psgWrite(noise_mask, mixer_bits + 1);
+                                psgWrite(attackHi, mixerBits);
+                                psgWrite(noiseMask, mixerBits + 1);
                         } else {
-                                xbios(XBIOS_GIACCESS, attack_hi, mixer_bits + PSG_WRITE);
-                                xbios(XBIOS_GIACCESS, noise_mask, mixer_bits + (PSG_WRITE | 1));
+                                xbios(XBIOS_GIACCESS, attackHi, mixerBits + PSG_WRITE);
+                                xbios(XBIOS_GIACCESS, noiseMask, mixerBits + (PSG_WRITE | 1));
                         }
                 } else {
-                        envelope_phase = ENV_FADEOUT;
+                        envelopePhase = ENV_FADEOUT;
                 }
 
                 psgChanNote[chosen] = *midiEvP;
-                if (envelope_phase == ENV_FADEOUT)
+                if (envelopePhase == ENV_FADEOUT)
                         psgEnvelope[chosen].current_volume = 0;
                 psgEnvelope[chosen].max_volume = noteVolume;
                 psgActive = psgEnvelope[chosen].phase_timer = 1;
-                psgEnvelope[chosen].phase = envelope_phase;
+                psgEnvelope[chosen].phase = envelopePhase;
 
                 }       /* range guard */
 
@@ -709,8 +709,8 @@ buildNoteMap(value)
 short   value;
 {
         short           i;
-        short           note_shift;
-        char            chord_mask;
+        short           noteShift;
+        char            chordMask;
 
         for (i = 0; i < 0x84; i++)
                 noteMap[i] = i;
@@ -724,32 +724,32 @@ short   value;
                 return 1;
 
         if (value > 8)
-                note_shift = -1;
+                noteShift = -1;
         else
-                note_shift = 1;
+                noteShift = 1;
 
         for (i = 0; i < 0x84; i += 12) {
-                chord_mask = keyScaleMask[value];
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 11] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 9] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 7] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 5] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 4] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i + 2] += note_shift;
-                chord_mask >>= 1;
-                if ((chord_mask & 1) == 0)
-                        noteMap[i] += note_shift;
+                chordMask = keyScaleMask[value];
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 11] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 9] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 7] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 5] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 4] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i + 2] += noteShift;
+                chordMask >>= 1;
+                if ((chordMask & 1) == 0)
+                        noteMap[i] += noteShift;
         }
 }
 

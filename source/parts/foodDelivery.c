@@ -9,7 +9,7 @@
 void
 foodDelivery()
 {
-        short   food_count;
+        short   foodCount;
         short   roll;           /* unused, but it must stay: removing it changes the compiled code */
 
         noPreempt = YES;
@@ -62,14 +62,14 @@ foodDelivery()
                    this arm, but that is what the original does. */
                 if (isDogDelivery == NO) {
                         while (1) {
-                                food_count =
+                                foodCount =
                                         (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
-                                food_count++;
-                                if (food_count > FOOD_PACKS_MAX)
+                                foodCount++;
+                                if (foodCount > FOOD_PACKS_MAX)
                                         break;
-                                food_count = food_count << DSF_FOOD_SHIFT;
+                                foodCount = foodCount << DSF_FOOD_SHIFT;
                                 resident.door_states_and_flags &= ~DSF_FOOD_MASK;
-                                resident.door_states_and_flags |= food_count;
+                                resident.door_states_and_flags |= foodCount;
                                 animState = STATE_REACH_INTO_CABINET;
                                 gameTick(3);
                                 drawFoodCab();

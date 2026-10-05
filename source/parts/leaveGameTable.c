@@ -6,8 +6,8 @@
 void
 leaveGameTable()
 {
-        short   save_x;
-        short   save_y;
+        short   saveX;
+        short   saveY;
 
         /* typingOff, not keysBlocked: this is the keyboard-input-mode flag
            that handleKey and gameTick test; rejoinTable clears it again. */
@@ -27,12 +27,12 @@ leaveGameTable()
         spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
 
-        save_x = pendX[spriteSlot[SPRITE_GAME_BOX]];
-        save_y = pendY[spriteSlot[SPRITE_GAME_BOX]];
+        saveX = pendX[spriteSlot[SPRITE_GAME_BOX]];
+        saveY = pendY[spriteSlot[SPRITE_GAME_BOX]];
         spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
         carryBehind(SPRITE_GAME_BOX);
         isCarrying = NO;
-        pendX[spriteSlot[SPRITE_GAME_BOX]] = save_x;
-        pendY[spriteSlot[SPRITE_GAME_BOX]] = save_y;
+        pendX[spriteSlot[SPRITE_GAME_BOX]] = saveX;
+        pendY[spriteSlot[SPRITE_GAME_BOX]] = saveY;
 }

@@ -4,10 +4,10 @@
    Plays no sound.  A request matching the current state returns
    immediately. */
 void
-openDresser(oc_stat)
-short   oc_stat;
+openDresser(ocStat)
+short   ocStat;
 {
-        if (oc_stat == 0) {
+        if (ocStat == 0) {
                 if (dresserOpen != NO)
                         return;
                 dresserOpen = YES;
@@ -17,7 +17,7 @@ short   oc_stat;
                 gameTick(2);
                 drawObject(OBJ_DRESSER_OPEN_2, DRESSER_X, DRESSER_Y);
                 gameTick(2);
-        } else if (oc_stat != 0) {      /* redundant re-test, kept on purpose */
+        } else if (ocStat != 0) {      /* redundant re-test, kept on purpose */
                 if (dresserOpen == NO)
                         return;
                 dresserOpen = NO;

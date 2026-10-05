@@ -181,8 +181,8 @@ void *  p;
 void *
 Fgetdta()
 {
-        static char host_dta[64];
-        return host_dta;
+        static char hostDta[64];
+        return hostDta;
 }
 
 short Fsfirst(pat, attr)  char *pat; short attr; { (void)pat; (void)attr; return -1; }

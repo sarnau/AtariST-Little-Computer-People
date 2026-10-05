@@ -45,16 +45,16 @@ short   y;
 void
 drawFoodCab()
 {
-        short           cabinet_content;    /* signed on purpose: the compares must be signed */
+        short           cabinetContent;    /* signed on purpose: the compares must be signed */
 
         if (kitchenCabOpen == NO)
                 return;
 
-        cabinet_content = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        cabinetContent = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         drawObject(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
 
-        if (cabinet_content >= 1) drawObject(OBJ_CABINET_ITEM, 50, 159);
-        if (cabinet_content >= 2) drawObject(OBJ_CABINET_ITEM, 58, 159);
-        if (cabinet_content >= 3) drawObject(OBJ_CABINET_ITEM, 50, 151);
-        if (cabinet_content >= 4) drawObject(OBJ_CABINET_ITEM, 58, 151);
+        if (cabinetContent >= 1) drawObject(OBJ_CABINET_ITEM, 50, 159);
+        if (cabinetContent >= 2) drawObject(OBJ_CABINET_ITEM, 58, 159);
+        if (cabinetContent >= 3) drawObject(OBJ_CABINET_ITEM, 50, 151);
+        if (cabinetContent >= 4) drawObject(OBJ_CABINET_ITEM, 58, 151);
 }

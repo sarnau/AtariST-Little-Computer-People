@@ -64,11 +64,11 @@ static int      failures = 0;
    per pixel-word for now, so any non-zero word => set silhouette. */
 
 static void
-dump_pgm(path, buf, rows, words_per_row)
+dump_pgm(path, buf, rows, wordsPerRow)
 char *          path;
 short *         buf;
 int             rows;
-int             words_per_row;
+int             wordsPerRow;
 {
         FILE *  f;
         int     r;
@@ -78,10 +78,10 @@ int             words_per_row;
 
         f = fopen(path, "wb");
         if (f == NULL) { perror(path); return; }
-        fprintf(f, "P5\n%d %d\n255\n", words_per_row * 16, rows);
+        fprintf(f, "P5\n%d %d\n255\n", wordsPerRow * 16, rows);
         for (r = 0; r < rows; r++) {
-                for (w = 0; w < words_per_row; w++) {
-                        v = (unsigned short) buf[r * words_per_row + w];
+                for (w = 0; w < wordsPerRow; w++) {
+                        v = (unsigned short) buf[r * wordsPerRow + w];
                         for (b = 15; b >= 0; b--) {
                                 unsigned char px;
                                 px = (v >> b) & 1 ? 0 : 255;
@@ -100,55 +100,55 @@ char ** argv;
         FILE *          f;
         unsigned char   header[4];
         long            count;
-        long            frame_size;
-        long            payload_bytes;
-        unsigned char * body_buf;
-        unsigned char * shape_buf;
+        long            frameSize;
+        long            payloadBytes;
+        unsigned char * bodyBuf;
+        unsigned char * shapeBuf;
         int             i;
         int             nonzero;
-        short           expected_x;
-        short           expected_y;
+        short           expectedX;
+        short           expectedY;
 
         (void) argc;
         (void) argv;
 
         /* Load DATA/BODY.LCP.  Header is 2 big-endian shorts
-           (count, frame_size), payload follows. */
+           (count, frameSize), payload follows. */
         f = fopen("../../../DATA/BODY.LCP", "rb");
         if (f == NULL) { perror("open DATA/BODY.LCP"); return 1; }
         if (fread(header, 1, 4, f) != 4) {
                 perror("read BODY.LCP header"); return 1;
         }
         count         = ((long) header[0] << 8) | header[1];
-        payload_bytes = ((long) header[2] << 8) | header[3];
-        frame_size    = payload_bytes / (count ? count : 1);
+        payloadBytes = ((long) header[2] << 8) | header[3];
+        frameSize    = payloadBytes / (count ? count : 1);
         printf("BODY.LCP header: count=%ld, payload=%ld bytes, "
-               "per-frame=%ld\n", count, payload_bytes, frame_size);
+               "per-frame=%ld\n", count, payloadBytes, frameSize);
         CHECK(count > 0,             "BODY.LCP count is zero");
-        CHECK(payload_bytes > 0,     "BODY.LCP payload is zero");
-        CHECK(frame_size == LCP_BODY_FRAME_SIZE,
-                                     "BODY.LCP frame_size != LCP_BODY_FRAME_SIZE");
-        body_buf = (unsigned char *) malloc(payload_bytes);
-        if (body_buf == NULL) { perror("malloc body_buf"); return 1; }
-        if ((long) fread(body_buf, 1, payload_bytes, f) != payload_bytes) {
+        CHECK(payloadBytes > 0,     "BODY.LCP payload is zero");
+        CHECK(frameSize == LCP_BODY_FRAME_SIZE,
+                                     "BODY.LCP frameSize != LCP_BODY_FRAME_SIZE");
+        bodyBuf = (unsigned char *) malloc(payloadBytes);
+        if (bodyBuf == NULL) { perror("malloc bodyBuf"); return 1; }
+        if ((long) fread(bodyBuf, 1, payloadBytes, f) != payloadBytes) {
                 perror("read BODY.LCP payload"); return 1;
         }
         fclose(f);
 
         /* Verify the payload has some non-zero pixel data. */
         nonzero = 0;
-        for (i = 0; i < payload_bytes; i++)
-                if (body_buf[i]) { nonzero = 1; break; }
+        for (i = 0; i < payloadBytes; i++)
+                if (bodyBuf[i]) { nonzero = 1; break; }
         CHECK(nonzero, "BODY.LCP payload is all zeros");
 
         /* Set up a zero mask buffer -- no separate shape file loaded. */
-        shape_buf = (unsigned char *) calloc(1, payload_bytes);
-        if (shape_buf == NULL) { perror("calloc shape_buf"); return 1; }
+        shapeBuf = (unsigned char *) calloc(1, payloadBytes);
+        if (shapeBuf == NULL) { perror("calloc shapeBuf"); return 1; }
 
         /* Wire globals. */
-        memcpy(bodyFrames, body_buf,
-               (size_t) ((payload_bytes < 120L * 168L)
-                         ? payload_bytes : 120L * 168L));
+        memcpy(bodyFrames, bodyBuf,
+               (size_t) ((payloadBytes < 120L * 168L)
+                         ? payloadBytes : 120L * 168L));
         memset(bodyShapes, 0, BODY_FRAMES * LCP_BODY_SHAPE_SIZE);   /* the whole array */
 
         /* mirrorTable is BSS in LCP_STX -- initMirror builds the
@@ -181,17 +181,17 @@ char ** argv;
 
         /* Position: FACING_RIGHT (=1) picks the "x - 4" branch.
            y = resY + bodyYOffset[0] - 21. */
-        expected_x = resX - 4;
-        expected_y = resY + bodyYOffset[0] - 21;
-        CHECK(drawnX[3] == expected_x, "g_seacx[3] mismatch after compose");
-        CHECK(drawnY[3] == expected_y, "g_seacy[3] mismatch after compose");
+        expectedX = resX - 4;
+        expectedY = resY + bodyYOffset[0] - 21;
+        CHECK(drawnX[3] == expectedX, "g_seacx[3] mismatch after compose");
+        CHECK(drawnY[3] == expectedY, "g_seacy[3] mismatch after compose");
 
         /* Dump the composited slot 3 image for visual inspection. */
         dump_pgm("sprite_slot3.pgm", bodyImage, 21, 4);
         printf("wrote sprite_slot3.pgm (64x21 silhouette)\n");
 
-        free(body_buf);
-        free(shape_buf);
+        free(bodyBuf);
+        free(shapeBuf);
 
         if (failures == 0) {
                 printf("sprite_compose: PASS  (compositor produced output)\n");

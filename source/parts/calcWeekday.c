@@ -4,20 +4,20 @@
 short
 calcWeekday()
 {
-        /* Only two locals: day_offset is stepped in place and the
+        /* Only two locals: dayOffset is stepped in place and the
            month lengths accumulate straight into it. */
-        short   day_offset;
+        short   dayOffset;
         short   i;
 
-        day_offset = 1;
+        dayOffset = 1;
         for (i = 0; i < t_year; i++) {
-                day_offset++;
+                dayOffset++;
                 if ((i % 4) == 0)
-                        day_offset++;
+                        dayOffset++;
         }
         for (i = 0; i < t_mon; i++)
-                day_offset += daysInMonth(t_mon, t_year);
-        day_offset += t_day;
-        day_offset %= 7;
-        return day_offset;
+                dayOffset += daysInMonth(t_mon, t_year);
+        dayOffset += t_day;
+        dayOffset %= 7;
+        return dayOffset;
 }

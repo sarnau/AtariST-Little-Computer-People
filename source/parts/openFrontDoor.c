@@ -5,10 +5,10 @@
    clears frontDoorOpen.  A request matching the current state returns
    immediately. */
 void
-openFrontDoor(door_st)
-short   door_st;
+openFrontDoor(doorSt)
+short   doorSt;
 {
-        if (door_st == 0) {
+        if (doorSt == 0) {
                 if (frontDoorOpen != NO)
                         return;
                 resFacing = FACING_RIGHT;
@@ -20,7 +20,7 @@ short   door_st;
                 drawObject(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
                 gameTick(2);
                 frontDoorOpen = YES;
-        } else if (door_st != 0) {      /* redundant re-test, kept on purpose */
+        } else if (doorSt != 0) {      /* redundant re-test, kept on purpose */
                 if (frontDoorOpen == NO)
                         return;
                 drawObject(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);

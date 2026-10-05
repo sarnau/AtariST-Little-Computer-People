@@ -76,14 +76,14 @@ short *         buf;
         int     word;
         int     bit;
         unsigned short v;
-        int     px_x;
+        int     pxX;
 
         for (row = 0; row < TILE_H; row++) {
                 for (word = 0; word < 4; word++) {
                         v = (unsigned short) buf[row * 4 + word];
                         for (bit = 15; bit >= 0; bit--) {
-                                px_x = word * 16 + (15 - bit);
-                                dst[row * ATLAS_W + px_x]
+                                pxX = word * 16 + (15 - bit);
+                                dst[row * ATLAS_W + pxX]
                                         = (v >> bit) & 1 ? 0 : 255;
                         }
                 }
@@ -98,11 +98,11 @@ char ** argv;
         FILE *          f;
         unsigned char   header[4];
         long            count;
-        long            payload_bytes;
-        unsigned char * body_buf;
-        unsigned char * shape_buf;
+        long            payloadBytes;
+        unsigned char * bodyBuf;
+        unsigned char * shapeBuf;
         int             i;
-        int             tile_ix;
+        int             tileIx;
         int             row;
         int             col;
         FILE *          ref;
@@ -116,17 +116,17 @@ char ** argv;
         if (f == NULL) { perror("open DATA/BODY.LCP"); return 1; }
         if (fread(header, 1, 4, f) != 4) { perror("hdr"); return 1; }
         count = ((long) header[0] << 8) | header[1];
-        payload_bytes = ((long) header[2] << 8) | header[3];
-        body_buf = (unsigned char *) malloc(payload_bytes);
-        if (body_buf == NULL) { perror("malloc"); return 1; }
-        if ((long) fread(body_buf, 1, payload_bytes, f) != payload_bytes) {
+        payloadBytes = ((long) header[2] << 8) | header[3];
+        bodyBuf = (unsigned char *) malloc(payloadBytes);
+        if (bodyBuf == NULL) { perror("malloc"); return 1; }
+        if ((long) fread(bodyBuf, 1, payloadBytes, f) != payloadBytes) {
                 perror("payload"); return 1;
         }
         fclose(f);
-        shape_buf = (unsigned char *) calloc(1, payload_bytes);
-        memcpy(bodyFrames, body_buf,
-               (size_t) ((payload_bytes < 120L * 168L)
-                         ? payload_bytes : 120L * 168L));
+        shapeBuf = (unsigned char *) calloc(1, payloadBytes);
+        memcpy(bodyFrames, bodyBuf,
+               (size_t) ((payloadBytes < 120L * 168L)
+                         ? payloadBytes : 120L * 168L));
         memset(bodyShapes, 0, BODY_FRAMES * LCP_BODY_SHAPE_SIZE);   /* the whole array */
 
         /* mirrorTable is BSS in LCP_STX -- initMirror builds the
@@ -145,7 +145,7 @@ char ** argv;
 
         /* 60 renders: 30 states x 2 facings, laid out row-major into
            the ATLAS_COLS x ATLAS_ROWS grid. */
-        tile_ix = 0;
+        tileIx = 0;
         for (i = 0; i < N_STATES; i++) {
                 int facing;
                 for (facing = 0; facing < 2; facing++) {
@@ -160,12 +160,12 @@ char ** argv;
                         pendReady[3] = 0;
                         updateBody();
 
-                        row = tile_ix / ATLAS_COLS;
-                        col = tile_ix % ATLAS_COLS;
+                        row = tileIx / ATLAS_COLS;
+                        col = tileIx % ATLAS_COLS;
                         render_tile(&atlas[row * TILE_H * ATLAS_W
                                            + col * TILE_W],
                                     bodyImage);
-                        tile_ix++;
+                        tileIx++;
                 }
         }
         (void) count;
@@ -193,21 +193,21 @@ char ** argv;
                 fclose(ref);
                 printf("sprite_golden: SEEDED %s from this run.  "
                        "Inspect it, then re-run to verify.\n", REF_PATH);
-                free(body_buf); free(shape_buf);
+                free(bodyBuf); free(shapeBuf);
                 return 0;
         }
 
         /* Diff against reference. */
         {
-                unsigned char   ref_hdr[64];
-                unsigned char * ref_buf;
+                unsigned char   refHdr[64];
+                unsigned char * refBuf;
                 size_t          got;
                 int             c;
 
                 /* Skip the PGM header (3 whitespace-separated tokens
                    after "P5\n" -- width, height, maxval). */
-                if (fread(ref_hdr, 1, 3, ref) != 3
-                    || ref_hdr[0] != 'P' || ref_hdr[1] != '5') {
+                if (fread(refHdr, 1, 3, ref) != 3
+                    || refHdr[0] != 'P' || refHdr[1] != '5') {
                         printf("sprite_golden: reference has bad magic\n");
                         return 1;
                 }
@@ -220,8 +220,8 @@ char ** argv;
                                 if (c == '\n') newlines++;
                         }
                 }
-                ref_buf = (unsigned char *) malloc(sizeof(atlas));
-                got = fread(ref_buf, 1, sizeof(atlas), ref);
+                refBuf = (unsigned char *) malloc(sizeof(atlas));
+                got = fread(refBuf, 1, sizeof(atlas), ref);
                 fclose(ref);
                 if (got != sizeof(atlas)) {
                         printf("sprite_golden: reference size wrong "
@@ -230,11 +230,11 @@ char ** argv;
                                (unsigned long) sizeof(atlas));
                         return 1;
                 }
-                mismatch = memcmp(atlas, ref_buf, sizeof(atlas));
-                free(ref_buf);
+                mismatch = memcmp(atlas, refBuf, sizeof(atlas));
+                free(refBuf);
         }
 
-        free(body_buf); free(shape_buf);
+        free(bodyBuf); free(shapeBuf);
 
         if (mismatch == 0) {
                 printf("sprite_golden: PASS  (60 renders match reference)\n");

@@ -65,24 +65,24 @@ int
 main(void)
 {
         short   result;
-        int     t_fails, k_fails, p_fails;
+        int     tFails, kFails, pFails;
 
         setvbuf(stdout, NULL, _IONBF, 0);
 
-        t_fails = test_toupper();
-        printf("lcp_upp       : %s\n", t_fails ? "FAIL" : "OK");
+        tFails = test_toupper();
+        printf("lcp_upp       : %s\n", tFails ? "FAIL" : "OK");
 
-        k_fails = test_tokenize();
-        printf("cmd_upp  : %s\n", k_fails ? "FAIL" : "OK");
+        kFails = test_tokenize();
+        printf("cmd_upp  : %s\n", kFails ? "FAIL" : "OK");
 
         /* End-to-end: parse a sentence with the real 160-word vocab.
            "please play a game" should resolve to ACTION_PLAY_A_GAME
            (16) via the "PLAY" + "GAME" combination in the parser's
            action-matching table. */
         result = matchCommand("please play a game");
-        p_fails = (result < 0);
+        pFails = (result < 0);
         printf("check_entered_cmd : %s  (returned %d, negative = no match)\n",
-               p_fails ? "FAIL" : "OK", result);
+               pFails ? "FAIL" : "OK", result);
         printf("  g_aprio after full parse = %d\n", cmdPriority);
 
         /* An all-unknown sentence.  On the ST this returns ACTION_NONE:
@@ -102,5 +102,5 @@ main(void)
                        r2, ACTION_NONE);
         }
 
-        return (t_fails | k_fails | p_fails) ? 1 : 0;
+        return (tFails | kFails | pFails) ? 1 : 0;
 }

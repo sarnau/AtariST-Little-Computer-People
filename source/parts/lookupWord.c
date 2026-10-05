@@ -10,20 +10,20 @@ char *  word;
         /* The scanned character gets a short of its own, and the
            function simply falls out of the loop -- the missing trailing
            `return WORD_NONE` is deliberate (the original has none). */
-        short   word_index;
+        short   wordIndex;
         short   c;
-        char *  dict_ptr;
-        char *  input_ptr;
+        char *  dictPtr;
+        char *  inputPtr;
 
-        for (word_index = 0; word_index < 9999; word_index++) {
-                dict_ptr = vocabulary[word_index];
-                if (dict_ptr == (char *) 0)
+        for (wordIndex = 0; wordIndex < 9999; wordIndex++) {
+                dictPtr = vocabulary[wordIndex];
+                if (dictPtr == (char *) 0)
                         return WORD_NONE;
 
-                input_ptr = word;
-                while ((c = *input_ptr++) == *dict_ptr++) {
+                inputPtr = word;
+                while ((c = *inputPtr++) == *dictPtr++) {
                         if (c == 0)
-                                return word_index;
+                                return wordIndex;
                 }
         }
 }

@@ -9,7 +9,7 @@
 void
 answerPhone()
 {
-        short   saved_frame;
+        short   savedFrame;
         short   rounds;
         short   subpick;
 
@@ -34,7 +34,7 @@ answerPhone()
         animState = STATE_PHONE_TALKING;
         gameTick(1);
 
-        saved_frame = headFrame;
+        savedFrame = headFrame;
         headTarget = HEAD_ANIM_DISABLED;
         headPose = HEAD_ANIM_DISABLED;
 
@@ -53,7 +53,7 @@ answerPhone()
                                 sfxGreeting();
                         break;
                 case 2:
-                        headFrame = saved_frame;
+                        headFrame = savedFrame;
                         sfxHeadNod();
                         break;
                 }
@@ -61,7 +61,7 @@ answerPhone()
                 sfxTicksLeft = (long) subpick;
         }
 
-        headFrame = saved_frame;
+        headFrame = savedFrame;
         phoneHangUp = YES;
         animState = STATE_PHONE_PICKUP;
         gameTick(1);

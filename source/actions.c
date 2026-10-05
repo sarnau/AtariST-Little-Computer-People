@@ -16,16 +16,16 @@
 void
 runAction()
 {
-        short   action_number;
+        short   actionNumber;
 
-        action_number = nextAction;
+        actionNumber = nextAction;
         lastAction = nextAction;
         nextAction = ACTION_NONE;
 
         if (resident.is_sleeping != NO)
                 getInOutOfBed();
 
-        switch (action_number) {
+        switch (actionNumber) {
         case ACTION_SIT_AND_EXERCISE:         exercise();          break;
         case ACTION_READ_NEWSPAPER:           readNewspaper();            break;
         case ACTION_PLAY_COMPUTER:            useComputer();             break;

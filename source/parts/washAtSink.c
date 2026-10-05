@@ -10,7 +10,7 @@ short   value;
            which must match the original. */
         short           rnd;
         short           counter;
-        short           last_pick;
+        short           lastPick;
         short           pick;
 
         scratchArr[0] = STATE_WASH_HANDS_CENTER;
@@ -31,14 +31,14 @@ short   value;
         rnd = (unsigned short)(Random() & 0x1f) | 4;
         sfxSelect(SFX_WATER_RUNNING, 10000L);
 
-        /* last_pick is never initialised, so the first comparison
+        /* lastPick is never initialised, so the first comparison
            reads whatever the stack slot held.  That is how the 1985
            code is written; do not "fix" it. */
         for (counter = 0; counter < rnd; counter++) {
                 pick = Random() & 3;
-                while (pick == last_pick)
+                while (pick == lastPick)
                         pick = Random() & 3;
-                last_pick = pick;
+                lastPick = pick;
                 if (pick != 3) {
                         animState = scratchArr[pick];
                         resFacing = FACING_RIGHT;

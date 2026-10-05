@@ -2,14 +2,14 @@
    walk resident back to door, close.  Food-count nibble (bits 9..11)
    is preserved via the FE00 mask so the 3-bit delivery counter survives. */
 void
-studyVisit(do_save, p_dosnd)
-BOOL16  do_save;
-BOOL16  p_dosnd;
+studyVisit(doSave, dosndPtr)
+BOOL16  doSave;
+BOOL16  dosndPtr;
 {
-        short   saved_x;        /* the delay is passed straight to
+        short   savedX;        /* the delay is passed straight to
                                    gameTick, not kept in a local */
 
-        saved_x = resX;
+        savedX = resX;
 
         /* Phase 1: door closes (sprite in front of the resident). */
         spriteLayer[SPRITE_DOOR_STUDY_1] = SPRITE_IN_FRONT;
@@ -18,14 +18,14 @@ BOOL16  p_dosnd;
         pendY[spriteSlot[SPRITE_DOOR_STUDY_1]] = STUDY_DOOR_Y;
         drawObject(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
 
-        if (p_dosnd != NO)
+        if (dosndPtr != NO)
                 sfxSelect(SFX_DOOR_CLOSE, 6L);
 
         gameTick(1);
         gameTick(rndRng(15, 30));
 
         /* Phase 2: repack door state and write HYBER. */
-        if (do_save != NO) {
+        if (doSave != NO) {
                 resident.water_level = waterLevel;
                 /* Mask in place, then OR the bits back -- lowest shift
                    first, front door last; this order is the original's. */
@@ -68,7 +68,7 @@ BOOL16  p_dosnd;
         gameTick(1);
 
         /* Phase 4: walk resident back to the study door. */
-        resX = saved_x;
+        resX = savedX;
         posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
         noPreempt = YES;
         walkToTarget();

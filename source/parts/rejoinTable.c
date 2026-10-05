@@ -5,8 +5,8 @@
 void
 rejoinTable()
 {
-        short   save_x;
-        short   save_y;
+        short   saveX;
+        short   saveY;
 
         noPreempt = YES;
         posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
@@ -14,14 +14,14 @@ rejoinTable()
         walkYTarget += 2;
         walkToTarget();
 
-        save_x = pendX[spriteSlot[SPRITE_GAME_BOX]];
-        save_y = pendY[spriteSlot[SPRITE_GAME_BOX]];
+        saveX = pendX[spriteSlot[SPRITE_GAME_BOX]];
+        saveY = pendY[spriteSlot[SPRITE_GAME_BOX]];
         spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
         spriteLayer[SPRITE_GAME_BOX] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_GAME_BOX);
-        pendX[spriteSlot[SPRITE_GAME_BOX]] = save_x;
-        pendY[spriteSlot[SPRITE_GAME_BOX]] = save_y;
+        pendX[spriteSlot[SPRITE_GAME_BOX]] = saveX;
+        pendY[spriteSlot[SPRITE_GAME_BOX]] = saveY;
 
         spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TABLE_SETTING);

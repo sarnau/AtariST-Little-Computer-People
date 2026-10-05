@@ -2,15 +2,15 @@
    The per-frame X/Y update happens in gameTick's carrying path. */
 
 void
-carryBehind(g_seix)
-short   g_seix;
+carryBehind(spriteId)
+short   spriteId;
 {
-        spriteLayer[g_seix] = SPRITE_BEHIND_LCP;
+        spriteLayer[spriteId] = SPRITE_BEHIND_LCP;
         layoutSlots();
-        drawnImage[spriteSlot[g_seix]] = spriteBitmap[g_seix];
-        drawnMask[spriteSlot[g_seix]] = spriteMask[g_seix];
-        drawnHeight[spriteSlot[g_seix]] = spriteHeight[g_seix];
-        drawnWidth[spriteSlot[g_seix]] = spriteWidth[g_seix];
+        drawnImage[spriteSlot[spriteId]] = spriteBitmap[spriteId];
+        drawnMask[spriteSlot[spriteId]] = spriteMask[spriteId];
+        drawnHeight[spriteSlot[spriteId]] = spriteHeight[spriteId];
+        drawnWidth[spriteSlot[spriteId]] = spriteWidth[spriteId];
         isCarrying = YES;
-        carriedSprite = g_seix;
+        carriedSprite = spriteId;
 }

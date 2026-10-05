@@ -20,7 +20,7 @@ short   index;
 short   *xOut;
 short   *yOut;
 {
-        short   floor_y_pos;
+        short   floorYPos;
 
         if (index > POS_BTM_SCREEN_EDGE)
                 index = POS_BTM_SCREEN_EDGE;
@@ -28,12 +28,12 @@ short   *yOut;
         *xOut = posXHalf[index] << 1;
 
         if (index < POS_PER_FLOOR)
-                floor_y_pos = 77;
+                floorYPos = 77;
         else if (index < 2 * POS_PER_FLOOR)
-                floor_y_pos = 140;
+                floorYPos = 140;
         else
-                floor_y_pos = 202;
+                floorYPos = 202;
 
-        *yOut = floor_y_pos - posYOffset[index];
+        *yOut = floorYPos - posYOffset[index];
 }
 

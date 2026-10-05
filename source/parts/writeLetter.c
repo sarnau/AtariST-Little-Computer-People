@@ -12,19 +12,19 @@ void
 writeLetter()
 {
         /* Declaration order fixes the stack-frame layout, so keep it:
-           nine scalars and the section array LAST.  swap_a doubles as
-           the paragraph count and line_spacing as the '-' test, and
+           nine scalars and the section array LAST.  swapA doubles as
+           the paragraph count and lineSpacing as the '-' test, and
            every call result is consumed in place. */
-        short   section_id;
+        short   sectionId;
         short   i;
-        short   swap_a;
-        short   swap_b;
-        short   swap_temp;
-        short   template_index;
-        short   cursor_y;
-        short   line_spacing;
-        short   full_year;
-        short   section_order[4];
+        short   swapA;
+        short   swapB;
+        short   swapTemp;
+        short   templateIndex;
+        short   cursorY;
+        short   lineSpacing;
+        short   fullYear;
+        short   sectionOrder[4];
 
         if (recordPlaying != NO)
                 stopRecord();
@@ -97,10 +97,10 @@ writeLetter()
         textTimer = 9999;
         gameTick(2);
 
-        full_year = t_year + 1900;
+        fullYear = t_year + 1900;
         sprintf(inputLine, "%s %d, %4d",
                 monthNames[t_mon],
-                t_day + 1, full_year);
+                t_day + 1, fullYear);
         typedCursor = 0;
         typeString(inputLine, -12);
         typeChar('\r');
@@ -111,57 +111,57 @@ writeLetter()
 
         /* Shuffle the 4 section indices via 16 random swaps. */
         for (i = 0; i < 4; i++)
-                section_order[i] = i;
+                sectionOrder[i] = i;
         for (i = 0; i < 16; i++) {
-                swap_a = rndRng(0, 3);
-                swap_b = rndRng(0, 3);
-                swap_temp = section_order[swap_a];
-                section_order[swap_a] = section_order[swap_b];
-                section_order[swap_b] = swap_temp;
+                swapA = rndRng(0, 3);
+                swapB = rndRng(0, 3);
+                swapTemp = sectionOrder[swapA];
+                sectionOrder[swapA] = sectionOrder[swapB];
+                sectionOrder[swapB] = swapTemp;
         }
 
         /* Body: 2..4 paragraphs from the shuffled sections. */
-        swap_a = rndRng(2, 4);
-        for (i = 0; i < swap_a; i++) {
-                section_id     = section_order[i];
-                template_index = section_id * LETTER_SECTION_LINES;
-                if (section_id == 3)
-                        template_index += rndRng(0, 5) * LETTER_BLOCK_LINES;
+        swapA = rndRng(2, 4);
+        for (i = 0; i < swapA; i++) {
+                sectionId     = sectionOrder[i];
+                templateIndex = sectionId * LETTER_SECTION_LINES;
+                if (sectionId == 3)
+                        templateIndex += rndRng(0, 5) * LETTER_BLOCK_LINES;
                 else if (resident.sickness_level > SICKNESS_HEALTHY)
-                        template_index += rndRng(0, 1) * LETTER_HALF_LINES +
+                        templateIndex += rndRng(0, 1) * LETTER_HALF_LINES +
                                           LETTER_SICK_BLOCK * LETTER_BLOCK_LINES;
                 else
-                        template_index += rndRng(0, 1) * LETTER_HALF_LINES +
+                        templateIndex += rndRng(0, 1) * LETTER_HALF_LINES +
                                           resident.happiness * LETTER_BLOCK_LINES;
 
                 /* Opening line -- indent 5 spaces on the first
                    paragraph only; the whole call is duplicated. */
                 if (i == 0)
-                        cursor_y = typeString(
-                                letterLines[rndRng(0, 3) + template_index],
+                        cursorY = typeString(
+                                letterLines[rndRng(0, 3) + templateIndex],
                                 -5);
                 else
-                        cursor_y = typeString(
-                                letterLines[rndRng(0, 3) + template_index],
+                        cursorY = typeString(
+                                letterLines[rndRng(0, 3) + templateIndex],
                                 2);
 
                 /* Middle line */
-                if (cursor_y == '-')
-                        line_spacing = 0;
+                if (cursorY == '-')
+                        lineSpacing = 0;
                 else
-                        line_spacing = 1;
-                cursor_y = typeString(
-                        letterLines[rndRng(0, 3) + template_index + 4],
-                        line_spacing);
+                        lineSpacing = 1;
+                cursorY = typeString(
+                        letterLines[rndRng(0, 3) + templateIndex + 4],
+                        lineSpacing);
 
                 /* Ending line */
-                if (cursor_y == '-')
-                        line_spacing = 0;
+                if (cursorY == '-')
+                        lineSpacing = 0;
                 else
-                        line_spacing = 1;
+                        lineSpacing = 1;
                 typeString(
-                        letterLines[rndRng(0, 3) + template_index + 8],
-                        line_spacing);
+                        letterLines[rndRng(0, 3) + templateIndex + 8],
+                        lineSpacing);
         }
 
         /* Sign-off. */

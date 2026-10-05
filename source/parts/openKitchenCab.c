@@ -5,10 +5,10 @@
    the shelves (drawFoodCab).  A request matching the current state
    returns immediately. */
 void
-openKitchenCab(oc_stat)
-short   oc_stat;
+openKitchenCab(ocStat)
+short   ocStat;
 {
-        if (oc_stat == 0) {
+        if (ocStat == 0) {
                 if (kitchenCabOpen != NO)
                         return;
                 kitchenCabOpen = YES;
@@ -21,7 +21,7 @@ short   oc_stat;
                 drawFoodCab();
                 animState = STATE_STAND_FACING_SCREEN;
                 gameTick(2);
-        } else if (oc_stat != 0) {      /* redundant re-test, kept on purpose */
+        } else if (ocStat != 0) {      /* redundant re-test, kept on purpose */
                 if (kitchenCabOpen == NO)
                         return;
                 kitchenCabOpen = NO;

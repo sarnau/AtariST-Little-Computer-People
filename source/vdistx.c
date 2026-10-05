@@ -35,14 +35,14 @@ extern void     wr_dst();       /* vdistx_a.s: contrl[9..10] = long */
 /* v_opnvwk points the block's intin/intout/ptsout entries
    at the caller's arrays for the call, then restores all four. */
 void
-v_opnvwk(work_in, handle, work_out)
-short * work_in;
+v_opnvwk(workIn, handle, workOut)
+short * workIn;
 short * handle;
-short * work_out;
+short * workOut;
 {
-        vdipb[1] = work_in;
-        vdipb[3] = work_out;
-        vdipb[4] = (short *) ((long) work_out + 90);
+        vdipb[1] = workIn;
+        vdipb[3] = workOut;
+        vdipb[4] = (short *) ((long) workOut + 90);
         contrl[0] = VDI_V_OPNVWK;
         contrl[1] = 0;
         contrl[3] = 11;
@@ -112,13 +112,13 @@ long    dst;
    character width/height and cell width/height through the four
    pointers. */
 void
-vst_height(handle, height, char_w, char_h, cell_w, cell_h)
+vst_height(handle, height, charW, charH, cellW, cellH)
 short   handle;
 short   height;
-short * char_w;
-short * char_h;
-short * cell_w;
-short * cell_h;
+short * charW;
+short * charH;
+short * cellW;
+short * cellH;
 {
         ptsin[0] = 0;
         ptsin[1] = height;
@@ -127,9 +127,9 @@ short * cell_h;
         contrl[3] = 0;
         contrl[6] = handle;
         vdi_go();
-        *char_w = ptsout[0];
-        *char_h = ptsout[1];
-        *cell_w = ptsout[2];
-        *cell_h = ptsout[3];
+        *charW = ptsout[0];
+        *charH = ptsout[1];
+        *cellW = ptsout[2];
+        *cellH = ptsout[3];
 }
 

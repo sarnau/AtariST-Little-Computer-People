@@ -1,16 +1,16 @@
 /*
  * Sits ahead of main.
  */
-/* Decompress LETTER.TXT into out_buf for the letter writer.
+/* Decompress LETTER.TXT into outBuf for the letter writer.
    File layout: a short holding the uncompressed size + 0x11 header
    bytes, then the 15 most common bytes, then a nibble stream where
    nibbles 0..14 pick one of those bytes and 15 escapes to a literal
    byte.  outsize is the *uncompressed* byte count (10496 for
    LETTER.TXT). */
 void
-unpackFile(filename, out_buf, outsize)
+unpackFile(filename, outBuf, outsize)
 char *          filename;
-unsigned char * out_buf;
+unsigned char * outBuf;
 short           outsize;
 {
         /* Seven locals, declared in this order.  There is no copy of
@@ -20,7 +20,7 @@ short           outsize;
         short           flag;
         short           nibble;
         short           count;
-        short           word_index;
+        short           wordIndex;
         short           fsize;
         unsigned char * fbuffer;
         short           filehandle;
@@ -47,13 +47,13 @@ short           outsize;
                 flag = (flag != 0) ? 0 : 1;
 
                 if (nibble != 0xf) {
-                        *out_buf = nibbleBytes[nibble];
-                        out_buf++;
+                        *outBuf = nibbleBytes[nibble];
+                        outBuf++;
                 } else {
                         /* Escape: the next 2 nibbles are a literal. */
                         nibble = 0;
-                        for (word_index = 0; word_index < 2;
-                             word_index++) {
+                        for (wordIndex = 0; wordIndex < 2;
+                             wordIndex++) {
                                 nibble = nibble << 4;
                                 if (flag != 0) {
                                         nibble |= (*fbuffer >> 4) & 0x0f;
@@ -63,8 +63,8 @@ short           outsize;
                                 }
                                 flag = (flag != 0) ? 0 : 1;
                         }
-                        *out_buf = nibble;
-                        out_buf++;
+                        *outBuf = nibble;
+                        outBuf++;
                 }
         }
 
