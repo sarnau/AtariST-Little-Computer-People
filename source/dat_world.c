@@ -82,11 +82,11 @@ short   nextAction = ACTION_NONE;
 
 /* YES while a record is playing (animates the player); saved in
    resident.recordPlaying. */
-short   recordPlaying = 0;
+BOOL16  recordPlaying = NO;
 
 /* YES while the TV is on (tvNoise draws the picture); saved in
    resident.tvOn. */
-short   tvRunning = 0;
+BOOL16  tvRunning = NO;
 
 /* Phone is ringing: set by simStep or Ctrl-C, cleared when answered. */
 BOOL16  phoneRinging = NO;

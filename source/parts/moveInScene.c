@@ -24,7 +24,7 @@ moveInScene()
         gameTick(2);
         drawObject(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
         gameTick(2);
-        frontDoorOpen = 1;
+        frontDoorOpen = YES;
 
         /* The dog is waiting on the step. */
         spriteLayer[SPRITE_DOG_SIT] = 1;

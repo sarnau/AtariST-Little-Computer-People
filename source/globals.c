@@ -91,13 +91,13 @@ short   scratchArr[10];
 /* Open (YES) / closed (NO) state of the house's doors and cupboards,
    unpacked from resident.doorStatesAndFlags by loadSavedGame and packed back
    by studyVisit; main draws each one accordingly at boot. */
-short   frontDoorOpen;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
-short   studyDoorOpen;       /* DSF_STUDY_DOOR */
-short   bedClosetOpen;       /* DSF_CLOSET_DOOR */
-short   kitchenCabOpen;       /* DSF_KITCHEN_CABINET */
-short   dresserOpen;       /* DSF_DRESSER */
-short   toiletDoorOpen;       /* DSF_TOILET_DOOR */
-short   filingCabOpen;       /* DSF_FILING_CABINET */
+BOOL16  frontDoorOpen;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
+BOOL16  studyDoorOpen;       /* DSF_STUDY_DOOR */
+BOOL16  bedClosetOpen;       /* DSF_CLOSET_DOOR */
+BOOL16  kitchenCabOpen;       /* DSF_KITCHEN_CABINET */
+BOOL16  dresserOpen;       /* DSF_DRESSER */
+BOOL16  toiletDoorOpen;       /* DSF_TOILET_DOOR */
+BOOL16  filingCabOpen;       /* DSF_FILING_CABINET */
 short   bowlLevel;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
 short   foodSupply;       /* working copy of resident.foodSupply */
 
