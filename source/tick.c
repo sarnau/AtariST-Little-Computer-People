@@ -101,9 +101,11 @@ short   counter;
 
                         /* Ctrl-P petting-hand animation cycle. */
                         if (patActive != NO) {
-                                /* Tested as `> 10` with the finish arm
-                                   first, as in the original. */
-                                if (patFrame > 10) {
+                                /* The finish arm comes first, as in the
+                                   original.  patFrame == PAT_FRAMES still
+                                   draws a frame: it reads patSprites one
+                                   past its end (see PAT_FRAMES). */
+                                if (patFrame > PAT_FRAMES) {
                                         spriteLayer[patLastSprite] =
                                                 SPRITE_HIDDEN;
                                         layoutSlots();

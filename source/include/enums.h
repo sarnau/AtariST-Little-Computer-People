@@ -275,8 +275,12 @@
 #define SPRITE_DOOR_STUDY_1             0x18
 #define SPRITE_DOOR_STUDY_AJAR          0x19
 #define SPRITE_DOOR_STUDY_WIDE_OPEN     0x1a
-/* Head-pat / petting-dog hand animation frames.
-   Consumed by patSprites[11] in tick_tables.c. */
+/* Ctrl-P petting-hand animation frames, cycled through patSprites
+   (dat_anim.c).  The table has PAT_FRAMES entries, but gameTick steps
+   patFrame from 0 up to PAT_FRAMES inclusive: the last frame reads one
+   past the table, into patLastSprite (SPRITE_PET_HAND_1).  That is the
+   original's behaviour and what ends the cycle on hand 1. */
+#define PAT_FRAMES                      10
 #define SPRITE_PET_HAND_1               0x1b
 #define SPRITE_PET_HAND_2               0x1c
 #define SPRITE_PET_HAND_3               0x1d

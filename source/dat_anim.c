@@ -198,10 +198,11 @@ short   fireFrames[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
 
 
 
-/* Petting-dog sprite frames -- sprite ids the petting animation
-   cycles through: ping-pong over frames 1..6 back down to 2.  TEN
-   entries, with no trailing SPRITE_PET_HAND_1 and no 0 terminator. */
-short   patSprites[10]    = {
+/* Ctrl-P petting-hand sprite frames: ping-pong over hands 1..6 and back
+   down to 2.  PAT_FRAMES entries; the animation's final frame, hand 1,
+   is read from patLastSprite just past the table (see PAT_FRAMES), so
+   do not add it here and do not move patLastSprite away. */
+short   patSprites[PAT_FRAMES]    = {
         SPRITE_PET_HAND_1, SPRITE_PET_HAND_2, SPRITE_PET_HAND_3,
         SPRITE_PET_HAND_4, SPRITE_PET_HAND_5, SPRITE_PET_HAND_6,
         SPRITE_PET_HAND_5, SPRITE_PET_HAND_4, SPRITE_PET_HAND_3,

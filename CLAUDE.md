@@ -1356,6 +1356,13 @@ decisive, and the binary cannot settle it either way, so altScreen stays
 the one category-E symbol as declared.  Do not re-propose the flip
 without new external evidence.
 
+**`sizeof` on an `extern T a[]` declaration is silently wrong in
+Alcyon** (found 2026-10-05).  Where a unit sees the array only through
+the header's size-less declaration, `sizeof(a)/sizeof(a[0])` compiles
+to 1 -- Alcyon takes the element size for the whole array and raises no
+error.  Name the count instead (PAT_FRAMES sizes patSprites and bounds
+its loop).
+
 **A constant subscript is not evidence of an array.**  Alcyon folds it
 into the absolute address, so `arr[7]` and a plain short emit the same
 instruction.  aes_intO[16] was a single short (now beatTicks); the cell
