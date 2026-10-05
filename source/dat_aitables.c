@@ -4,7 +4,7 @@
  *
  * The 1985 sources declared their globals in the file that used them,
  * so each object's data segment is its own globals followed by the
- * string literals and switch tables its code emits.  See CLAUDE.md,
+ * string literals and switch tables its code emits.  See docs/history.md,
  * "DATA and BSS layout".
  *
  *

@@ -43,7 +43,7 @@ extern short    debugHideLcp;
 extern short    pendReady[];
 /* bodyFrames and bodyShapes are real global ARRAYS in LCP_STX, not
    pointers -- updateBody indexes them with an immediate base and no
-   ext.l, which is what pinned the shape (see CLAUDE.md).  So the
+   ext.l, which is what pinned the shape (see docs/history.md).  So the
    frames are COPIED in here; there is nothing to re-point. */
 extern unsigned char    bodyFrames[][LCP_BODY_FRAME_SIZE];
 extern unsigned char    bodyShapes[][LCP_BODY_SHAPE_SIZE];

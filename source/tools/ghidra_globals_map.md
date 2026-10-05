@@ -59,7 +59,7 @@ have a data-symbol rename -- `POST /rename_data` with
 `{"address": ..., "newName": ...}`, and `POST /analyze_data_region` to
 see what is there first.  Use that for a one-symbol correction instead
 of closing Ghidra for the headless script.  Full recipe and the
-parameter-name trap are in CLAUDE.md.
+parameter-name trap are in docs/history.md.
 
 Three things to get right when building the list: Ghidra address =
 link address + 0x10000; for BSS take the address from

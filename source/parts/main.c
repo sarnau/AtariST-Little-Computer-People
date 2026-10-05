@@ -104,7 +104,7 @@ char ** argv;
 #ifdef HOST
                 /* Alcyon takes a cast as an lvalue and the compound form is what
                    emits `add.l d0,mem`; clang cannot parse it at all.  Same
-                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                   arithmetic, spelled for the host.  See docs/history.md. */
                 p = (void *) ((char *) p + ((wpr * h) << 3));
 #else
                 (char *) p += (wpr * h) << 3;
@@ -126,7 +126,7 @@ char ** argv;
 #ifdef HOST
                 /* Alcyon takes a cast as an lvalue and the compound form is what
                    emits `add.l d0,mem`; clang cannot parse it at all.  Same
-                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                   arithmetic, spelled for the host.  See docs/history.md. */
                 p = (void *) ((char *) p + ((wpr * h) << 3));
 #else
                 (char *) p += (wpr * h) << 3;
@@ -134,7 +134,7 @@ char ** argv;
 #ifdef HOST
                 /* Alcyon takes a cast as an lvalue and the compound form is what
                    emits `add.l d0,mem`; clang cannot parse it at all.  Same
-                   arithmetic, spelled for the host.  See CLAUDE.md. */
+                   arithmetic, spelled for the host.  See docs/history.md. */
                 q = (void *) ((char *) q + ((wpr * h) << 3));
 #else
                 (char *) q += (wpr * h) << 3;

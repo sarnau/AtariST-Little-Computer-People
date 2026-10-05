@@ -282,7 +282,7 @@ unsigned char * sfxData[25];
    sfxDosCtl as fields at +56/+58, and no overrun at all.  A 400-byte
    array plus two separate shorts is ruled out -- .comm packs densely,
    so sfxDosStat would land at +400.  The two readings behave identically;
-   see CLAUDE.md.
+   see docs/history.md.
 
    Where the overrun LANDS depends on the BSS layout:
 
@@ -586,7 +586,7 @@ BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and s
    tick_tables.c, vocab.c, psgfreq.c, sprload.c, calendar.c, events.c
    and here -- and data from separate objects cannot interleave.
 
-   The order is the original's, not taste (see CLAUDE.md, "DATA and
+   The order is the original's, not taste (see docs/history.md, "DATA and
    BSS layout").  DO NOT reorder by hand.
    ==================================================================== */
 

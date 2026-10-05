@@ -7,7 +7,7 @@
  * string literals and switch tables its code emits.  The object that
  * owns a stretch of anonymous data is not a guess: a switch table's
  * relocation points into its own function, and a string is emitted in
- * the object that references it.  See CLAUDE.md, "DATA and BSS
+ * the object that references it.  See docs/history.md, "DATA and BSS
  * layout".
  *
  */

@@ -6,7 +6,7 @@
  * so each object's data segment is its own globals followed by the
  * string literals and switch tables its code emits.  The ORDER of the
  * declarations below is the data layout and must not change.  See
- * CLAUDE.md, "DATA and BSS layout".
+ * docs/history.md, "DATA and BSS layout".
  *
  */
 

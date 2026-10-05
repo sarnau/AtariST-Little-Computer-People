@@ -70,7 +70,7 @@ are set.  Rebuild clean before checking `prg_diff` again.
 ## Layout
 
 The file structure is NOT free: it reproduces LCP_STX's own object
-partition, recovered from the binary (see CLAUDE.md, "Recovering
+partition, recovered from the binary (see docs/history.md, "Recovering
 LCP_STX's C sources").  A `bsr` from A to B proves everything between
 them is one object, which bounds the original's ~7 huge game objects.
 The port therefore builds **unity translation units** that `#include`
@@ -234,7 +234,7 @@ have had one 400-byte object with `g_sfdos`/`g_sfdoc` as fields inside
 it — in which case there is no overrun at all.  Both readings are
 behaviourally identical and produce the same bytes.  The Music Studio
 disk was checked and rules itself out: `sf_irqp` shares ZERO of its
-456 bytes with it.  See CLAUDE.md, "Is the 56 real?".
+456 bytes with it.  See docs/history.md, "Is the 56 real?".
 
 Everything the older version of this section listed is CLOSED, and
 each was wrong in an instructive way:
@@ -253,7 +253,7 @@ each was wrong in an instructive way:
   a 36 000-VBL run; the resident simply had not chosen the record
   player autonomously.  Ask it to play a record.
 
-CLAUDE.md's corresponding section is titled "Issue log — ALL CLOSED".
+docs/history.md's corresponding section is titled "Issue log — ALL CLOSED".
 
 ## History
 
@@ -300,7 +300,7 @@ CLAUDE.md's corresponding section is titled "Issue log — ALL CLOSED".
   order, and its `.comm` allocation.  cp_main turned out to be hand
   assembly; the VDI layer to be one dispatcher where the port had
   three; and ~30 recurring source-shape rules had to be recovered
-  one site at a time.  See CLAUDE.md.
+  one site at a time.  See docs/history.md.
 - **v8 (2026-09-06)**: verification caught up with the code.  A crash
   that killed every long run at VBL 16983 was diagnosed as `sf_irqp`
   overrunning `g_sfDoB` — and it also explained the missing dog and the

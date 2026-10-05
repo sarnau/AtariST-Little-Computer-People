@@ -13,7 +13,7 @@ short                   row;
 #ifdef HOST
         /* Alcyon accepts a cast as an lvalue, and the original uses
            this compound form; clang cannot parse it at all.  Same
-           arithmetic, spelled for the host.  See CLAUDE.md. */
+           arithmetic, spelled for the host.  See docs/history.md. */
         scrptr = (short *) ((char *) scrptr + row * 160);
 #else
         (char *) scrptr += row * 160;
