@@ -1050,9 +1050,9 @@ cleanup:
 
                 pk_disc = 0;
                 pk_pmsg("Do you want any cards?");
-                plEr(225, 10, 319, 60);
-                strPr("F1 Draw", 225, 18, COLOR_red);
-                strPr("F3 Stay", 225, 26, COLOR_red);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                strPr("F1 Draw", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                strPr("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                 for (i = 0; i < 5; i++)
                         pk_sel[i] = 0;
 
@@ -1066,9 +1066,9 @@ discard_loop:
                                 if (pk_sel[i] == 1)
                                         break;
                         if (i == 5)
-                                strPr("F3 Stay", 225, 26, COLOR_red);
+                                strPr("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                         else
-                                strPr("F3 Stay", 225, 26, COLOR_lt_grey);
+                                strPr("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_lt_grey);
                         if (ikey == PK_IN_ARG_A) {
                                 for (i = 0; i < 5; i++)
                                         if (pk_sel[i] == 1)
@@ -1092,9 +1092,9 @@ discard_loop:
                                 if (pk_sel[i] == 1)
                                         break;
                         if (i == 5)
-                                strPr("F3 Stay", 225, 26, COLOR_red);
+                                strPr("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                         else
-                                strPr("F3 Stay", 225, 26, COLOR_lt_grey);
+                                strPr("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_lt_grey);
                 }
                 if (mg_tofl != NO)
                         goto cleanup;
@@ -1162,13 +1162,13 @@ discard_loop:
                                 gameTick(10);
                                 pk_pmsg("Will you see my bet?");
                                 pk_phv = pk_bet;
-                                plEr(225, 10, 319, 60);
-                                strPr("F1 See",  225, 18, COLOR_red);
-                                strPr("F3 Fold", 225, 34, COLOR_red);
+                                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                                strPr("F1 See",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                                strPr("F3 Fold", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                                 ikey = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F3);
                                 if (ikey == PK_IN_TIMEOUT) goto cleanup;
                                 if (ikey == PK_IN_ARG_C) {
-                                        plEr(225, 10, 319, 60);
+                                        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                         pk_pmsg("My pot.");
                                         gameTick(8);
                                         pk_annr(0);
@@ -1186,11 +1186,11 @@ discard_loop:
                                                 gameTick(10);
                                                 goto cleanup;
                                         }
-                                        plEr(225, 10, 319, 60);
+                                        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                         plEr(5, 63, 319, 75);
-                                        strPr("F1 Raise", 225, 18, COLOR_red);
-                                        strPr("F3 Enter", 225, 26, COLOR_red);
-                                        strPr("F5 Call",  225, 34, COLOR_red);
+                                        strPr("F1 Raise", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                                        strPr("F3 Enter", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
+                                        strPr("F5 Call",  KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                                         pk_dpos = 0;
                                         while (1) {
                                                 loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
@@ -1281,13 +1281,13 @@ discard_loop:
                                         gameTick(8);
                                         pk_pmsg("You think I'm bluffin'?");
                                         pk_phv = pk_dpos;
-                                        plEr(225, 10, 319, 60);
-                                        strPr("F1 See",  225, 18, COLOR_red);
-                                        strPr("F3 Fold", 225, 34, COLOR_red);
+                                        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                                        strPr("F1 See",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                                        strPr("F3 Fold", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                                         ikey = pk_inph(KEY_F1, PK_IN_UNUSED, KEY_F3);
                                         if (ikey == PK_IN_TIMEOUT) goto cleanup;
                                         if (ikey == PK_IN_ARG_C) {
-                                                plEr(225, 10, 319, 60);
+                                                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                                 pk_pmsg("My pot.");
                                                 gameTick(8);
                                                 pk_annr(0);
@@ -1305,11 +1305,11 @@ discard_loop:
                                                         gameTick(10);
                                                         goto cleanup;
                                                 }
-                                                plEr(225, 10, 319, 60);
+                                                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                                 plEr(5, 63, 319, 75);
-                                                strPr("F1 Raise", 225, 18, COLOR_red);
-                                                strPr("F3 Enter", 225, 26, COLOR_red);
-                                                strPr("F5 Call",  225, 34, COLOR_red);
+                                                strPr("F1 Raise", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                                                strPr("F3 Enter", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
+                                                strPr("F5 Call",  KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                                                 while (1) {
                                                         loc8 = pk_inph(KEY_F1, KEY_F3, KEY_F5);
                                                         if (loc8 == PK_IN_TIMEOUT)
@@ -1718,10 +1718,10 @@ char *  str;
         pk_bet  = 0;
         pk_pass = NO;
         pk_pmsg(str);
-        plEr(225, 10, 319, 60);
-        strPr("F1 Bet",       225, 18, COLOR_red);
-        strPr("F3 Enter",     225, 26, COLOR_red);
-        strPr("F5 Pass/Clr", 225, 34, COLOR_red);
+        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+        strPr("F1 Bet",       KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+        strPr("F3 Enter",     KEYMENU_X, KEYMENU_LINE2, COLOR_red);
+        strPr("F5 Pass/Clr", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
         go = 0;
         while (!go) {
                 r = pk_inph(KEY_F1, KEY_F3, KEY_F5);
@@ -1979,9 +1979,9 @@ pk_ante()
         short   r;
 
         g_ppppa = 0;
-        plEr(225, 10, 319, 60);
-        strPr("F1  Ante", 225, 18, COLOR_red);
-        strPr("F10 Quit", 225, 34, COLOR_red);
+        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+        strPr("F1  Ante", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+        strPr("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
         pk_pmsg("Ante up to play.");
         r = 0;
         pk_quit = NO;
@@ -2129,7 +2129,7 @@ round:
                 pk_dppm;
                 pk_dpot();
                 plEr(5, 63, 319, 75);
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 plEr(70, 10, 219, 62);
 
                 /* Every exit is a goto: the two message blocks and
@@ -2167,8 +2167,8 @@ no_cards:
                 pk_awp();
 
                 pk_pmsg("Show me your card, Ace.");
-                strPr("F1  Show", 225, 18, COLOR_red);
-                strPr("F10 Quit", 225, 26, COLOR_red);
+                strPr("F1  Show", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                strPr("F10 Quit", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                 ikey = 0;
                 while (ikey != PK_IN_ARG_A && ikey != PK_IN_ARG_B)
                         ikey = pk_inph(KEY_F1, KEY_F10, PK_IN_UNUSED);
@@ -2176,7 +2176,7 @@ no_cards:
                         goto cleanup;
 
                 pk_drcs(pk_pwc[0], 0, 1);
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 gameTick(5);
 
                 /* Both ranks land in locals before the compare, and
@@ -2326,13 +2326,13 @@ pk_bjwr()
                 gameTick(3);
 
                 pk_pmsg("Let's see what you've got...");
-                strPr("F1 Show", 225, 18, COLOR_red);
+                strPr("F1 Show", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 while (pk_inph(KEY_F1, PK_IN_UNUSED, PK_IN_UNUSED) != PK_IN_ARG_A) {
                         if (mg_tofl != NO)
                                 return -1;
                 }
                 pk_drcs(pk_pwc[g_pchc * 4 + idx], idx, 1);
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 gameTick(5);
 
                 if ((prank = pk_pwc[g_pchc * 4 + idx] % CARDS_PER_SUIT) >
@@ -2421,9 +2421,9 @@ round:
                 g_pcbet = 0;
                 g_ppbet = 0;
                 pk_phase = 0;
-                plEr(225, 10, 319, 60);
-                strPr("F1  Bet",  225, 18, COLOR_red);
-                strPr("F10 Quit", 225, 34, COLOR_red);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                strPr("F1  Bet",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                strPr("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                 pk_pmsg("What's your bet?");
                 bj_key  = 0;
                 pk_quit = NO;
@@ -2454,9 +2454,9 @@ cleanup:
                 g_pcbet++;
                 pk_dbhi(1);
                 pk_bet = 1;
-                strPr("F3  Enter", 225, 26, COLOR_red);
-                strPr("F10 Quit",  225, 34, COLOR_lt_grey);
-                strPr("F5  Clear", 225, 34, COLOR_red);
+                strPr("F3  Enter", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
+                strPr("F10 Quit",  KEYMENU_X, KEYMENU_LINE3, COLOR_lt_grey);
+                strPr("F5  Clear", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
 
                 bj_key = 0;
                 while (1) {
@@ -2504,7 +2504,7 @@ cleanup:
                         goto cleanup;
                 }
                 pk_pmsg(" ");
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 pk_dchd(pk_ph, 0);
                 pk_dchd(pk_ch, 1);
                 pk_dchd(pk_ph, 0);
@@ -2555,9 +2555,9 @@ cleanup:
                 if ((short) pk_ph[0] % CARDS_PER_SUIT ==
                     (short) pk_ph[1] % CARDS_PER_SUIT) {
                         pk_pmsg("Do you wish to split?");
-                        plEr(225, 10, 319, 60);
-                        strPr("F1 Split",    225, 18, COLOR_red);
-                        strPr("F3 No split", 225, 26, COLOR_red);
+                        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                        strPr("F1 Split",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                        strPr("F3 No split", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                         bj_key = 0;
                         while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
                                 gameTick(0);
@@ -2634,9 +2634,9 @@ cleanup:
                 pk_wcs = NO;
                 pk_pcc  = CARD_BJ_MAX;
                 pk_pscc = CARD_BJ_MAX;
-                plEr(225, 10, 319, 60);
-                strPr("F1 Double",    225, 18, COLOR_red);
-                strPr("F3 No double", 225, 26, COLOR_red);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
+                strPr("F1 Double",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                strPr("F3 No double", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                 if (pk_phase == 0) {
                         if (g_ppmon < g_pcbet) bj_key = 2;
                         else {
@@ -2763,7 +2763,7 @@ cleanup:
                                 }
                                 goto next_round;
                         }
-                        plEr(225, 10, 319, 60);
+                        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 } else {
                         for (br = 0; br < 5; br++)
                                 pk_drcs(CARD_HIGHLIGHT, br, 1);
@@ -2814,7 +2814,7 @@ cleanup:
                                 }
                         }
                 }
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
 
                 /* Dealer turn + settle. */
                 if (pk_phase != 0 && (pk_bs1 != NO || pk_c1bj != NO) &&
@@ -2896,7 +2896,7 @@ cleanup:
                         gameTick(0x14);
                 }
 
-                plEr(225, 10, 319, 60);
+                plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 if (pk_phase == 0) {
                         res = pk_chsc(pk_ph, 0);
                         rv  = pk_chsc(pk_ph, 1);
@@ -3048,14 +3048,14 @@ char *  prompt;
         if (hand == pk_psh) cnt_ptr = &pk_pscc;
         if (hand == pk_ch)  cnt_ptr = &pk_ccc;
 
-        plEr(225, 10, 319, 60);
+        plEr(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
         forced = NO;
         if ((hand == pk_ph  && pk_wrf != NO) ||
             (hand == pk_psh && pk_wcs != NO))
                 forced = YES;
         else {
-                strPr("F1 Hit",   225, 18, COLOR_red);
-                strPr("F3 Stand", 225, 26, COLOR_red);
+                strPr("F1 Hit",   KEYMENU_X, KEYMENU_LINE1, COLOR_red);
+                strPr("F3 Stand", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
         }
         for (i = 0; hand[i] != CARD_NONE; i++)
                 pk_drcs(hand[i], i, row);

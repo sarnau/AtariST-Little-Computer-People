@@ -157,7 +157,7 @@ char ** argv;
         r[1] = 175;
         r[2] = r[0] + 11;
         r[3] = r[1];
-        vsl_color(vdihnd, vdi_colt[0xb]);
+        vsl_color(vdihnd, vdi_colt[COLOR_grey]);
         v_pline(vdihnd, 2, r);
         sc_sdtf();
 

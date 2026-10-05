@@ -373,6 +373,18 @@
 #define OBJ_WHITE_BLUE                         54
 #define OBJ_TYPEWRITER                         55
 
+/* ---- Minigame key menu -----------------------------------------------
+   The card games list their function-key choices in a panel on the
+   right of the screen, one prompt per line (F1, F3, then F5 or F10),
+   and wipe the panel with plEr before showing the next set. */
+#define KEYMENU_X                       225
+#define KEYMENU_LINE1                   18
+#define KEYMENU_LINE2                   26
+#define KEYMENU_LINE3                   34
+#define KEYMENU_TOP                     10
+#define KEYMENU_RIGHT                   319
+#define KEYMENU_BOTTOM                  60
+
 /* ---- Furniture screen positions -------------------------------------
    Where od_draw paints each piece of furniture (the top-left corner of
    its object frame).  Every open/closed frame of one piece is drawn at

@@ -156,11 +156,11 @@ char ** argv;
            data table).  Without this the mirrored, right-facing
            frames come out blank. */
         initBRev();
-        /* Minimal player + world state.  lcp_st=0 => idle stand pose. */
+        /* Minimal player + world state, posed in the first walk frame. */
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
         lcp_y                    = 100;
-        lcp_st                = 0;
+        lcp_st                = STATE_WALK_FRAME_0;
         lcp_face     = FACING_RIGHT;
         g_lcyof = 0;
         dbg_hide = 0;

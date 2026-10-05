@@ -14,5 +14,5 @@ initVdi()
         vswr_mode(vdihnd, MD_REPLACE);
         vsf_interior(vdihnd, FIS_PATTERN);
         vsf_style(vdihnd, FILL_SOLID);
-        vsf_color(vdihnd, vdi_colt[0xc]);
+        vsf_color(vdihnd, vdi_colt[COLOR_lt_grey]);
 }
