@@ -44,6 +44,10 @@ house that changes is painted into that picture rather than drawn each frame:
 At start-up `main` paints every door and cabinet in its saved state.  Once
 painted, an object stays until something paints over it.
 
+All 56 objects, under their `OBJ_*` names (drawn opaque, colour 0 included):
+
+![The 56 objects](images/objects.png)
+
 ## The compositor
 
 `renderFrame` ([`parts/renderFrame.c`](../source/parts/renderFrame.c)) makes one

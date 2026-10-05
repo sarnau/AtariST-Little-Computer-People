@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-"""spritesheet.py -- render DATA/SPRITES as a labelled sprite sheet.
+"""spritesheet.py -- render DATA/SPRITES and DATA/OBJECTS as labelled sheets.
 
-Each of the 50 graphics in SPRITES is drawn with the game's start-up
-palette (mainPalette in dat_world.c), under the id spriteFileId assigns
-it and its SPRITE_* name from include/enums.h.  Transparent pixels
-(colour 0, which makeMask leaves out of the mask) show as a checkerboard.
+Each graphic is drawn with the game's start-up palette (mainPalette in
+dat_world.c) under its id and its name from include/enums.h:
 
-SPRITES record: height word, width word, then the image as interleaved
-four-plane 16-pixel chunks (rows of ceil(width/16) chunks, 8 bytes each).
+  sprites  the 50 graphics in SPRITES, under the id spriteFileId assigns
+           and their SPRITE_* name.  Colour 0 is transparent (makeMask
+           leaves it out of the mask) and shows as a checkerboard.
+  objects  the 56 graphics in OBJECTS, under their file position and
+           their OBJ_* name.  drawObject blits them opaque, so colour 0
+           is drawn as a colour.
 
-usage: spritesheet.py [out.png]      default: docs/images/sprites.png
+Both files hold records of: height word, width word, then the image as
+interleaved four-plane 16-pixel chunks (rows of ceil(width/16) chunks,
+8 bytes each).  Only the first `width` columns are drawn.
+
+usage: spritesheet.py [sprites|objects] [out.png]
+       with no argument, writes docs/images/sprites.png and objects.png
 Needs Pillow.
 """
 import os
@@ -22,7 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.dirname(HERE)
 ROOT = os.path.dirname(SRC)
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'docs', 'images', 'sprites.png')
+IMAGES = os.path.join(ROOT, 'docs', 'images')
 
 SCALE = 3
 COLS = 5
@@ -43,23 +50,28 @@ def font(size):
     return ImageFont.load_default()
 
 
-def main():
+def palette():
     world = open(os.path.join(SRC, 'dat_world.c')).read()
-    palette = []
+    pal = []
     for v in re.findall(r'0x([0-9a-fA-F]{3})', c_array(world, 'mainPalette')):
         c = int(v, 16)
-        palette.append(tuple(((c >> s) & 7) * 255 // 7 for s in (8, 4, 0)))
-    file_id = [int(x) for x in re.findall(r'\d+', c_array(world, 'spriteFileId'))]
+        pal.append(tuple(((c >> s) & 7) * 255 // 7 for s in (8, 4, 0)))
+    return pal
 
-    names = {}
-    for name, val in re.findall(r'#define\s+(SPRITE_\w+)\s+(0x[0-9a-fA-F]+)',
-                                open(os.path.join(SRC, 'include', 'enums.h')).read()):
-        names.setdefault(int(val, 16), []).append(name)
 
-    data = open(os.path.join(ROOT, 'DATA', 'SPRITES'), 'rb').read()
-    sprites = []
+def names(prefix):
+    out = {}
+    enums = open(os.path.join(SRC, 'include', 'enums.h')).read()
+    for name, val in re.findall(r'#define\s+(' + prefix + r'\w+)\s+(0x[0-9a-fA-F]+|\d+)\b', enums):
+        out.setdefault(int(val, 0), []).append(name)
+    return out
+
+
+def read_records(path, count, pal, transparent):
+    data = open(path, 'rb').read()
+    out = []
     pos = 0
-    for i in range(len(file_id)):
+    for _ in range(count):
         h, w = struct.unpack('>hh', data[pos:pos + 4])
         pos += 4
         chunks = (w + 15) // 16
@@ -71,27 +83,28 @@ def main():
                 for x in range(16):
                     bit = 15 - x
                     v = sum(((planes[p] >> bit) & 1) << p for p in range(4))
-                    if v:
-                        img.putpixel((c * 16 + x, y), palette[v] + (255,))
+                    if v or not transparent:
+                        img.putpixel((c * 16 + x, y), pal[v] + (255,))
         pos += chunks * h * 8
-        sprites.append((file_id[i], w, h, img))
-    sprites.sort()
+        out.append((w, h, img.crop((0, 0, w, h))))     # the blits stop at w
+    return out
 
-    cell_w = max(img.width for _, _, _, img in sprites) * SCALE + 2 * PAD
-    cell_w = max(cell_w, 230)
-    cell_h = max(img.height for _, _, _, img in sprites) * SCALE + 2 * PAD + LABEL_H
-    rows = (len(sprites) + COLS - 1) // COLS
+
+def render(entries, label_of, out):
+    """entries: list of (id, w, h, image), sorted by id."""
+    cell_w = max(max(img.width for _, _, _, img in entries) * SCALE + 2 * PAD, 230)
+    cell_h = max(img.height for _, _, _, img in entries) * SCALE + 2 * PAD + LABEL_H
+    rows = (len(entries) + COLS - 1) // COLS
     sheet = Image.new('RGB', (COLS * cell_w, rows * cell_h), (236, 236, 236))
     draw = ImageDraw.Draw(sheet)
     f_name, f_info = font(13), font(11)
 
-    for n, (sid, w, h, img) in enumerate(sprites):
+    for n, (gid, w, h, img) in enumerate(entries):
         x0 = (n % COLS) * cell_w
         y0 = (n // COLS) * cell_h
         draw.rectangle((x0, y0, x0 + cell_w - 1, y0 + cell_h - 1), outline=(200, 200, 200))
-        label = ', '.join(names.get(sid, ['(unnamed)']))
-        draw.text((x0 + PAD, y0 + 6), label, fill=(20, 20, 20), font=f_name)
-        draw.text((x0 + PAD, y0 + 21), '%d (0x%02x)  %dx%d' % (sid, sid, w, h),
+        draw.text((x0 + PAD, y0 + 6), label_of(gid), fill=(20, 20, 20), font=f_name)
+        draw.text((x0 + PAD, y0 + 21), '%d (0x%02x)  %dx%d' % (gid, gid, w, h),
                   fill=(110, 110, 110), font=f_info)
         big = img.resize((img.width * SCALE, img.height * SCALE), Image.NEAREST)
         bx, by = x0 + PAD, y0 + LABEL_H + PAD
@@ -103,9 +116,36 @@ def main():
                                fill=shade)
         sheet.paste(big, (bx, by), big)
 
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    sheet.save(OUT, optimize=True)
-    print('wrote %s: %d sprites, %dx%d' % (OUT, len(sprites), sheet.width, sheet.height))
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    sheet.save(out, optimize=True)
+    print('wrote %s: %d graphics, %dx%d' % (out, len(entries), sheet.width, sheet.height))
+
+
+def sprites(out):
+    world = open(os.path.join(SRC, 'dat_world.c')).read()
+    file_id = [int(x) for x in re.findall(r'\d+', c_array(world, 'spriteFileId'))]
+    recs = read_records(os.path.join(ROOT, 'DATA', 'SPRITES'), len(file_id), palette(), True)
+    entries = sorted((file_id[i], w, h, img) for i, (w, h, img) in enumerate(recs))
+    nm = names('SPRITE_')
+    render(entries, lambda gid: ', '.join(nm.get(gid, ['(unnamed)'])), out)
+
+
+def objects(out):
+    recs = read_records(os.path.join(ROOT, 'DATA', 'OBJECTS'), 56, palette(), False)
+    entries = [(i, w, h, img) for i, (w, h, img) in enumerate(recs)]
+    nm = names('OBJ_')
+    render(entries, lambda gid: ', '.join(nm.get(gid, ['(unnamed)'])), out)
+
+
+def main():
+    kinds = {'sprites': sprites, 'objects': objects}
+    if len(sys.argv) > 1:
+        kind = sys.argv[1]
+        out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(IMAGES, kind + '.png')
+        kinds[kind](out)
+    else:
+        for kind, fn in kinds.items():
+            fn(os.path.join(IMAGES, kind + '.png'))
 
 
 if __name__ == '__main__':
