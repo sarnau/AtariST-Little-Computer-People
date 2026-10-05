@@ -15,9 +15,9 @@
 #endif
 
 /* Boot-time AES set-up: appl_init, then graf_handle for the
-   workstation handle (vdi_hnd) and the system character/box metrics,
-   load the game palette main_pal, and remember TOS's own physical
-   screen base in sv_phb so the compositor can tell it apart from its
+   workstation handle (physHandle) and the system character/box metrics,
+   load the game palette mainPalette, and remember TOS's own physical
+   screen base in tosPhysbase so the compositor can tell it apart from its
    buffers.  It does NOT open the virtual workstation -- that is
    vdiInit's job. */
 void
@@ -25,8 +25,8 @@ initAes()
 {
 
         appl_init();
-        vdi_hnd = graf_handle(&gr_hwchar, &gr_hhchar,
-                                 &gr_hwbox,  &gr_hhbox);
-        Setpalette(main_pal);
-        sv_phb = (void *) Physbase();
+        physHandle = graf_handle(&charWidth, &charHeight,
+                                 &boxWidth,  &boxHeight);
+        Setpalette(mainPalette);
+        tosPhysbase = (void *) Physbase();
 }

@@ -10,14 +10,14 @@
 #define LCP_BODY_FRAME_SIZE     (21 * 4 * 2)
 
 /* Dilated body/head shape stride: 21 rows * 4 bytes per row.
-   Half of LCP_BODY_FRAME_SIZE because the shape buffers (body_shp,
-   hd_shp) collapse the 2-plane source into a single-plane
+   Half of LCP_BODY_FRAME_SIZE because the shape buffers (bodyShapes,
+   headShapes) collapse the 2-plane source into a single-plane
    silhouette used by maskBody / maskHead. */
 #define LCP_BODY_SHAPE_SIZE     (21 * 4)
 
 /* Expanded-sprite buffer size in SHORTS (image or mask, one plane
-   set) that expandFrame writes into g_lsimg / g_lsmas / g_hsbuf /
-   g_hsmas.  Both call sites pass width=2, height=21 and expandFrame
+   set) that expandFrame writes into bodyImage / bodyMask / headImage /
+   headMask.  Both call sites pass width=2, height=21 and expandFrame
    writes 4 shorts per (x,y), so only 21*2*4 = 168 are ever touched --
    but the original declares a round 256 for all four buffers, and
    the memory layout depends on that size. */

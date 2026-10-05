@@ -4,7 +4,7 @@
  */
 /* Install timerAIsr as the MFP Timer-A interrupt (prescaler /64, data
    0x28), saving the old vector first.  The sequencer is driven
-   entirely by this interrupt: without it playOrgan's wait for mi_play
+   entirely by this interrupt: without it playOrgan's wait for songPlaying
    never ends. */
 
 void
@@ -14,9 +14,9 @@ hookTimerA()
         /* Test builds: Timer-A jitter breaks frame-hash goldens. */
         (void) 0;
 #else
-        g_mtpre = 100;
-        g_mtdiv = 4;
-        mi_svtv = Setexc(VEC_TIMER_A, SETEXC_QUERY);
+        seqCountdown = 100;
+        envDivider = 4;
+        oldTimerAVec = Setexc(VEC_TIMER_A, SETEXC_QUERY);
         Xbtimer(XB_TIMER_A, MFP_DIV64, 0x28, (long) timerAIsr);
 #endif
 }

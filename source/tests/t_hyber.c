@@ -25,7 +25,7 @@
 #include "../include/types.h"
 #include "../include/structs.h"
 
-extern PLAYER   lcp;
+extern PLAYER   resident;
 extern short    loadSavedGame();
 extern void     saveFile();
 
@@ -59,14 +59,14 @@ char ** argv;
                 fprintf(stderr, "lc_load returned 0 (file missing?)\n");
                 return 2;
         }
-        printf("owner   = %.24s\n", lcp.owner_name);
-        printf("resident= %.10s\n", lcp.character_name);
+        printf("owner   = %.24s\n", resident.owner_name);
+        printf("resident= %.10s\n", resident.character_name);
         printf("schedule (raw shorts, expect ST big-endian):\n");
         printf("  bedtime=%d wake=%d lunch=%d dinner=%d\n",
-               lcp.bedtime_hour, lcp.wake_hour,
-               lcp.lunch_hour, lcp.dinner_hour);
+               resident.bedtime_hour, resident.wake_hour,
+               resident.lunch_hour, resident.dinner_hour);
 
-        saveFile("hyber_roundtrip", 128, &lcp);
+        saveFile("hyber_roundtrip", 128, &resident);
 
         f = fopen("hyber_roundtrip", "rb");
         if (f == NULL) { perror("open roundtrip"); return 3; }

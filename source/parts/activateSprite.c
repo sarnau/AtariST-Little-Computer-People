@@ -13,8 +13,8 @@ short   g_seix;
         /* No slot local: the map is subscripted at each use, as in
            the original. */
         layoutSlots();
-        g_seaim[g_seslm[g_seix]]  = g_sedim[g_seix];
-        g_seams[g_seslm[g_seix]]   = g_sedms[g_seix];
-        g_seach[g_seslm[g_seix]] = g_sedeh[g_seix];
-        g_seacw[g_seslm[g_seix]]  = g_sedew[g_seix];
+        drawnImage[spriteSlot[g_seix]]  = spriteBitmap[g_seix];
+        drawnMask[spriteSlot[g_seix]]   = spriteMask[g_seix];
+        drawnHeight[spriteSlot[g_seix]] = spriteHeight[g_seix];
+        drawnWidth[spriteSlot[g_seix]]  = spriteWidth[g_seix];
 }

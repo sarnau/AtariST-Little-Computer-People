@@ -2,9 +2,9 @@
  * Included by stx_u1.c; never compiled on its own.
  */
 
-/* Sets up the off-screen picture buffer at boot: g_srptr becomes
-   scrbufB rounded up to a 512-byte boundary, mf_scrp describes it as a
-   320x200 (scaled by scr_scal) bitmap, MFDB_A's NULL address names the
+/* Sets up the off-screen picture buffer at boot: housePtr becomes
+   houseBuf rounded up to a 512-byte boundary, houseMfdb describes it as a
+   320x200 (scaled by screenScale) bitmap, screenMfdb's NULL address names the
    physical screen, and copyScreen copies what is on screen into the new
    buffer. */
 void
@@ -19,18 +19,18 @@ initHouseBuf()
         short           spare2;
         short           spare3;
 
-        if (scr_scal == 1)
+        if (screenScale == 1)
                 size = 0xE800;
         else
                 size = 0xE800;
         /* fd_addr = NULL, written as its two halves; copyScreen passes the
            same address.  It is the NULL address that means "the device
            screen" to the VDI. */
-        MFDB_A[0] = 0;
-        MFDB_A[1] = 0;
-        g_srptr = (void *) scrbufB;
-        g_srptr = (void *) (((long) g_srptr + 0x200L) & ~0x1FFL);
-        initMfdb((long) (size >> 3), &mf_scrp, g_srptr,
-                scr_scal * 0x140, scr_scal * 200);
-        copyScreen(vdihnd, &mf_scrp);
+        screenMfdb[0] = 0;
+        screenMfdb[1] = 0;
+        housePtr = (void *) houseBuf;
+        housePtr = (void *) (((long) housePtr + 0x200L) & ~0x1FFL);
+        initMfdb((long) (size >> 3), &houseMfdb, housePtr,
+                screenScale * 0x140, screenScale * 200);
+        copyScreen(vdiHandle, &houseMfdb);
 }

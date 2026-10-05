@@ -61,49 +61,49 @@ char ** argv;
         initHouseBuf();
         initMirror();
         countSongs();
-        g_lcldd = loadSavedGame();
+        loadedSave = loadSavedGame();
         titleScreen();
 
         /* The .SCN file handling is inlined here; only the nibble
            decoder is a function.  Note the handle is never closed. */
         fhandle = openFile("house.scn", RMODE_RD);
-        readFile(fhandle, 2L, &scn_siz);
-        scn_buf = (char *) Malloc((long) (scn_siz - 32));
-        if (scn_buf == (char *) 0)
+        readFile(fhandle, 2L, &scnSize);
+        scnBuffer = (char *) Malloc((long) (scnSize - 32));
+        if (scnBuffer == (char *) 0)
                 outOfMemory();
-        readFile(fhandle, 30L, scn_dic);
-        readFile(fhandle, (long) (scn_siz - 32), scn_buf);
-        decodeScn(scn_buf, g_srptr, 16000);
-        Mfree(scn_buf);
+        readFile(fhandle, 30L, scnDict);
+        readFile(fhandle, (long) (scnSize - 32), scnBuffer);
+        decodeScn(scnBuffer, housePtr, 16000);
+        Mfree(scnBuffer);
 
         fillPanel(27);
         drawClock();
 
         /* body.lcp loads FIRST, then rollResident for a
            new game, then the PEx filename is patched and loaded. */
-        loadFrameFile("body.lcp", (unsigned char *) body_ptr);
-        if (g_lcldd == 0)
+        loadFrameFile("body.lcp", (unsigned char *) bodyFrames);
+        if (loadedSave == 0)
                 rollResident();
-        pex_name[2] = lcp.character_sprite_id + '0';
-        loadFrameFile(pex_name, (unsigned char *) pex_ptr);
+        pexName[2] = resident.character_sprite_id + '0';
+        loadFrameFile(pexName, (unsigned char *) pexFrames);
 
         buildMasks();
 
         /* Object and sprite tables: a fixed 56- and 50-iteration walk
            with no zero-record or size check. */
         loadObjects();
-        p = (short *) obj_file;
+        p = (short *) objFileBuf;
         for (i = 0; i < 56; i++) {
                 h = *p;
                 p++;
-                g_obtah[i] = h;
+                objHeights[i] = h;
                 w = *p;
-                g_obtaw[i] = w;
+                objWidths[i] = w;
                 p++;
                 wpr = w / 16;
                 if (w % 16)
                         wpr++;
-                initMfdb(0L, &g_obtmt[i], p, wpr << 4, h);
+                initMfdb(0L, &objMfdbs[i], p, wpr << 4, h);
 #ifdef HOST
                 /* Alcyon takes a cast as an lvalue and the compound form is what
                    emits `add.l d0,mem`; clang cannot parse it at all.  Same
@@ -115,8 +115,8 @@ char ** argv;
         }
 
         loadSprites();
-        p = (short *) spr_file;
-        q = (short *) sp_mbuf;
+        p = (short *) sprFileBuf;
+        q = (short *) genMaskBuf;
         for (i = 0; i < 50; i++) {
                 h = *p;
                 p++;
@@ -125,7 +125,7 @@ char ** argv;
                 wpr = w / 16;
                 if (w % 16)
                         wpr++;
-                defineSprite(sp_fidx[i], p, q, h, wpr << 4);
+                defineSprite(spriteFileId[i], p, q, h, wpr << 4);
 #ifdef HOST
                 /* Alcyon takes a cast as an lvalue and the compound form is what
                    emits `add.l d0,mem`; clang cannot parse it at all.  Same
@@ -146,7 +146,7 @@ char ** argv;
 
         loadSounds();
         placeDog();
-        if (g_lcldd == 0)
+        if (loadedSave == 0)
                 setDogSprite(-1, 1, NO);
         updateWaterTank(0);
 
@@ -157,8 +157,8 @@ char ** argv;
         r[1] = 175;
         r[2] = r[0] + 11;
         r[3] = r[1];
-        vsl_color(vdihnd, vdi_colt[COLOR_grey]);
-        v_pline(vdihnd, 2, r);
+        vsl_color(vdiHandle, colorPens[COLOR_grey]);
+        v_pline(vdiHandle, 2, r);
         endDraw();
 
         /* Door / cabinet draws.  HOUSE.SCN has a placeholder rectangle
@@ -166,42 +166,42 @@ char ** argv;
            closed object over each one (skip them and the placeholders
            show as streaks).  Each is a full if/else with the whole
            drawObject call duplicated, not a ternary in the argument. */
-        if (lcp_cabO == NO)
+        if (kitchenCabOpen == NO)
                 drawObject(OBJ_CABINET_CLOSED, KITCHEN_CAB_X, KITCHEN_CAB_Y);
         else
                 drawObject(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
-        if (lcp_frdO != NO)
+        if (frontDoorOpen != NO)
                 drawObject(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
         else
                 drawObject(OBJ_DOOR_FRONT_CLOSED, FRONT_DOOR_X, FRONT_DOOR_Y);
-        if (lcp_drsO != NO)
+        if (dresserOpen != NO)
                 drawObject(OBJ_DRESSER_OPEN_2, DRESSER_X, DRESSER_Y);
         else
                 drawObject(OBJ_DRESSER_CLOSED, DRESSER_X, DRESSER_Y);
-        if (lcp_clsO != NO)
+        if (bedClosetOpen != NO)
                 drawObject(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
         else
                 drawObject(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
-        if (studyDrO != NO)
+        if (studyDoorOpen != NO)
                 drawObject(OBJ_DOOR_STUDY_OPEN_2, STUDY_DOOR_X, STUDY_DOOR_Y);
         else
                 drawObject(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
-        if (lcp_toiO != NO)
+        if (toiletDoorOpen != NO)
                 drawObject(OBJ_DOOR_TOILET_OPEN_2, TOILET_DOOR_X, TOILET_DOOR_Y);
         else
                 drawObject(OBJ_DOOR_TOILET_CLOSED, TOILET_DOOR_X, TOILET_DOOR_Y);
-        if (lcp_flcO != NO)
+        if (filingCabOpen != NO)
                 drawObject(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
         else
                 drawObject(OBJ_FILING_CABINET_CLOSED, FILING_CAB_X, FILING_CAB_Y);
 
         /* Dog bowl: three explicit state tests with literal frame
-           ids, not an index into g_obdea. */
-        if (lcp_bwlS == BOWL_EMPTY)
+           ids, not an index into bowlFrames. */
+        if (bowlLevel == BOWL_EMPTY)
                 drawObject(OBJ_DOG_FOOD_BOWL_3, DOG_BOWL_X, DOG_BOWL_Y);
-        if (lcp_bwlS == BOWL_HALF)
+        if (bowlLevel == BOWL_HALF)
                 drawObject(OBJ_DOG_FOOD_BOWL_2, DOG_BOWL_X, DOG_BOWL_Y);
-        if (lcp_bwlS == BOWL_FULL)
+        if (bowlLevel == BOWL_FULL)
                 drawObject(OBJ_DOG_FOOD_BOWL_1, DOG_BOWL_X, DOG_BOWL_Y);
 
         drawFoodCab();
@@ -213,7 +213,7 @@ char ** argv;
            returns 0, moveInScene parks the resident in
            `while (1) dozeOff(SLEEP_RANDOM);` -- which re-runs waitHeadTurn() every
            iteration, so it stands and waves for ever -- and gameLoop
-           does the same.  A non-zero cprot_r is all either test wants;
+           does the same.  A non-zero copyProtResult is all either test wants;
            the real routine ORs 0xf0000000 into its count.  Skipping
            the CALL rather than the check also avoids the FDC wait,
            which never terminates when the program was launched from a
@@ -221,12 +221,12 @@ char ** argv;
 
            This is NOT part of the shipped configuration: the default
            build must stay byte-identical to the original. */
-        cprot_r = 0xf000000aL;
+        copyProtResult = 0xf000000aL;
 #else
-        cprot_r = checkCopyProt();  /* copy-protection check */
+        copyProtResult = checkCopyProt();  /* copy-protection check */
 #endif
         initSlots();
-        if (g_lcldd == 0)
+        if (loadedSave == 0)
                 moveInScene();        /* new game: move-in cutscene */
 
         /* gameLoop never returns; there is no Pterm here. */

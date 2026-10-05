@@ -17,9 +17,9 @@
 
 /* loadSounds: the SOUNDS.LCP block loader.  Each block is a 2-byte size
    followed by its payload; a size of 0 ends the file.  Every block
-   gets its own Malloc of size + 4, stored in mi_ntLp[index], with the
+   gets its own Malloc of size + 4, stored in sfxData[index], with the
    size in its first word and the payload behind it.  The details --
-   the result stored into mi_ntLp and read back, `(long) size + 4`
+   the result stored into sfxData and read back, `(long) size + 4`
    widening, block++ before the payload read -- are the original's
    shape and must stay. */
 void
@@ -35,8 +35,8 @@ loadSounds()
                 readFile(fhandle, 2L, &size);
                 if (size == 0)
                         break;
-                mi_ntLp[index] = (unsigned char *) Malloc((long) size + 4);
-                block = (short *) mi_ntLp[index];
+                sfxData[index] = (unsigned char *) Malloc((long) size + 4);
+                block = (short *) sfxData[index];
                 if (block == (short *) 0)
                         outOfMemory();
                 *block = size;
@@ -52,12 +52,12 @@ sfxSelect(sound_id, duration)
 short   sound_id;
 long    duration;
 {
-        if (g_sfacf == NO ||
-            sf_pri[g_sfcur] >=
-            sf_pri[sound_id]) {
-                g_sfcur     = sound_id;
-                g_sfdur    = (short) duration;
-                g_sfacf = YES;
+        if (sfxPending == NO ||
+            sfxPriority[sfxReqId] >=
+            sfxPriority[sound_id]) {
+                sfxReqId     = sound_id;
+                sfxReqDur    = (short) duration;
+                sfxPending = YES;
         }
 }
 
@@ -68,9 +68,9 @@ stopSfx()
         Giaccess(0, PSG_WRITE | PSG_VOL_A);
         Giaccess(0, PSG_WRITE | PSG_VOL_B);
         Giaccess(0, PSG_WRITE | PSG_VOL_C);
-        g_sfdos  = 0xff;
-        g_sfdoc = 0;
-        g_sfplf    = NO;
+        sfxDosStat  = 0xff;
+        sfxDosCtl = 0;
+        sfxPlaying    = NO;
 }
 
 

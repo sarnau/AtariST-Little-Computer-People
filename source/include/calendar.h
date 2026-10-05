@@ -3,7 +3,7 @@
 #ifndef CALENDAR_H
 #define CALENDAR_H
 
-extern short days_pmo[];
+extern short daysPerMonth[];
 
 extern short daysInMonth();
 extern void resetDailyFlags();

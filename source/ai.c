@@ -1,6 +1,6 @@
 /*
  * ai.c -- AI decision engine and event dispatcher.
- * chooseAction: ~1 Hz priority ladder -> runAction(g_trac).
+ * chooseAction: ~1 Hz priority ladder -> runAction(nextAction).
  * runEvent: dispatch deferred events from FIFO.
  */
 
@@ -12,16 +12,16 @@
 #include "globals.h"
 
 /* runEvent: dispatch a single deferred event to its handler.
-   in_evrt guards recursion; sleeper is forced out of bed first.
+   inEvent guards recursion; sleeper is forced out of bed first.
    Food-delivery drops silently if the 3-bit food-count is already 4. */
 
 void
 runEvent(event)
 short   event;
 {
-        in_evrt = YES;
+        inEvent = YES;
 
-        if (lcp.is_sleeping != NO)
+        if (resident.is_sleeping != NO)
                 getInOutOfBed();
 
         /* The arms are in the original's source order (BOOK_DELIVERY
@@ -35,7 +35,7 @@ short   event;
                 recordDelivery();
                 break;
         case ACTION_EVENT_FOOD_DELIVERY:
-                if (((lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
+                if (((resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
                         break;
                 foodDelivery();
                 break;
@@ -50,7 +50,7 @@ short   event;
                 break;
         }
 
-        in_evrt = NO;
+        inEvent = NO;
 }
 
 /* chooseAction -> parts/chooseAction.c. */

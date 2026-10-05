@@ -16,7 +16,7 @@ PRG = sys.argv[3] if len(sys.argv) > 3 else find_prg()
 RATE = 44100
 HEADROOM = 0.89
 
-# psg_freq lives at a different address in each binary; load_psg_freq resolves
+# psgPeriod lives at a different address in each binary; load_psg_freq resolves
 # it from the literal that binary's sendMidiEvent uses.
 freq = load_psg_freq(PRG)
 songs = sorted(glob.glob(os.path.join(SRC, '*.SNG')) +

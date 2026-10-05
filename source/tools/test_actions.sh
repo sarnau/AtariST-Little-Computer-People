@@ -5,7 +5,7 @@
 #
 # This replaces a version that DID NOT RUN.  It built with
 # -DTEST_ACTIONS=n to switch on a harness in moveInScene that pushed one
-# event into g_trel; that harness was removed during the LCP_STX
+# event into eventQueue; that harness was removed during the LCP_STX
 # restructuring, so the flag compiled to nothing and the script
 # reported success while exercising no hook.  Its action-ID table had
 # also gone stale against enums.h -- it listed ACTION_HELLO as 18 where
@@ -19,14 +19,14 @@
 # from the data -- a wrong mask test, a wrong first-match rule, a
 # broken bit accumulation.
 #
-# How the parser works: each recognised word ORs bm_lo[g_ew2b[w]] into
-# g_ewb[ew2pos[w]]; each g_ew2a row is a 10-byte mask plus an action at
+# How the parser works: each recognised word ORs bitMask8[wordBit[w]] into
+# phraseBits[wordByte[w]]; each phraseTable row is a 10-byte mask plus an action at
 # +10; a row fires when its mask is a SUBSET of the accumulated bits,
-# first match winning.  submitCommand appends the result to g_aqueu[g_aliss].
+# first match winning.  submitCommand appends the result to queueActions[queueCount].
 #
 # Two rows can never fire and the script asserts that they do not:
 #   row 0  ACTION_HELLO -- needs byte 9 bit 0x01 and no word supplies it
-#   row 6  MESSY IS HOME -- needs the `IS` at vwd_tab index 84, a
+#   row 6  MESSY IS HOME -- needs the `IS` at vocabulary index 84, a
 #          duplicate that lookupWord can never return
 #
 # Env: NO_REBUILD=1, KEEP_LOG=1, HATARI=, TOS_IMG=, GAME_DIR=.
@@ -56,9 +56,9 @@ def strs(name):
     m = re.search(re.escape(name) + r'\s*\[\s*\d*\s*\]\s*=\s*\{(.*?)\};', src, re.S)
     return re.findall(r'"([^"]*)"', re.sub(r'/\*.*?\*/', '', m.group(1), flags=re.S))
 
-ew2pos = nums('ew2pos', 161); g_ew2b = nums('g_ew2b', 160)
-bm_lo  = nums('bm_lo', 8);    words  = strs('vwd_tab')
-flat   = nums('g_ew2a', 34 * 12)
+wordByte = nums('wordByte', 161); wordBit = nums('wordBit', 160)
+bitMask8  = nums('bitMask8', 8);    words  = strs('vocabulary')
+flat   = nums('phraseTable', 34 * 12)
 rows   = [flat[i*12:(i+1)*12] for i in range(34)]
 
 # lookupWord returns the FIRST spelling match, and matchCommand reads a return
@@ -71,7 +71,7 @@ for i, w in enumerate(words):
     live[w] = i
 prov = {}
 for w, i in live.items():
-    prov.setdefault((ew2pos[i] & 0xff, bm_lo[g_ew2b[i] & 0xff]), []).append(w)
+    prov.setdefault((wordByte[i] & 0xff, bitMask8[wordBit[i] & 0xff]), []).append(w)
 
 for idx, r in enumerate(rows):
     if r[0] & 0xff == 0xff:
@@ -93,7 +93,7 @@ for idx, r in enumerate(rows):
         w = sorted(c, key=len)[0]
         sel.append(w)
         i = live[w]
-        acc[ew2pos[i] & 0xff] |= bm_lo[g_ew2b[i] & 0xff]
+        acc[wordByte[i] & 0xff] |= bitMask8[wordBit[i] & 0xff]
     if not ok:
         # Unreachable: build the nearest command anyway so the script
         # can assert that typing it yields NOTHING.
@@ -114,8 +114,8 @@ PY
 [ -z "$TABLE" ] && { echo "SETUP: derived table is empty" >&2; exit 2; }
 
 probe_start
-A_ALISS=$(probe_addr _g_aliss)
-A_AQUEU=$(probe_addr _g_aqueu)
+A_ALISS=$(probe_addr _queueCo)
+A_AQUEU=$(probe_addr _queueAc)
 
 echo "load base \$$(probe_base);  $(echo "$TABLE" | wc -l | tr -d ' ') rows derived"
 echo ""
@@ -129,7 +129,7 @@ pass=0; fail=0; results=""
 # The queue is only 10 deep and submitCommand silently DROPS anything past
 # that, so 33 commands cannot simply be poured in and read back -- and
 # waiting for the resident to work each one off would take the whole
-# game day.  Reset g_aliss to empty before every command instead: what
+# game day.  Reset queueCount to empty before every command instead: what
 # the command produced is then unambiguously slot 0, and the queue can
 # never fill.  Discarding queued actions costs this test nothing; it is
 # the PARSER under test, not the AI.

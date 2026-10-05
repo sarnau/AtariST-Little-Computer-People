@@ -8,47 +8,47 @@ recordDelivery()
 {
         short   unused;         /* never written, but must stay */
 
-        g_actif = YES;
+        noPreempt = YES;
         walkToFrontDoor();
         /* The pick-up sequence is written out in each delivery
            handler, not factored into a helper. */
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_REACH_FORWARD;
+        animState = STATE_REACH_FORWARD;
         gameTick(2);
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        if (lcp.initiative_threshold < rndRng(0, 100))
+        if (resident.initiative_threshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_VINYL_CARRY);
         posToXY(POS_TOP_DANCE_FLOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        g_selaf[SPRITE_VINYL_CARRY] = SPRITE_HIDDEN;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        spriteLayer[SPRITE_VINYL_CARRY] = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
+        isCarrying = NO;
         waitHeadTurn();
 
-        lcp_st = STATE_BEND_DOWN;    gameTick(1);
-        lcp_st = STATE_REACH_FORWARD; gameTick(2);
-        lcp_st = STATE_BEND_DOWN;    gameTick(1);
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_BEND_DOWN;    gameTick(1);
+        animState = STATE_REACH_FORWARD; gameTick(2);
+        animState = STATE_BEND_DOWN;    gameTick(1);
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        lcp_food++;                 /* 1985 typo, kept on purpose */
-        g_actif = NO;
+        foodSupply++;                 /* 1985 typo, kept on purpose */
+        noPreempt = NO;
 }

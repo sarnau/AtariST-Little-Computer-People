@@ -13,30 +13,30 @@ leaveGameTable()
         short   save_x;
         short   save_y;
 
-        /* g_inpmd, not no_keyin: this is the keyboard-input-mode flag
+        /* typingOff, not keysBlocked: this is the keyboard-input-mode flag
            that handleKey and gameTick test; rejoinTable clears it again. */
-        g_inpmd  = YES;
-        g_actif  = YES;
-        g_lcyof  = NO;
-        lcp_y   -= 8;
-        lcp_x   -= 6;
-        lcp_st   = STATE_STAND_SIDE_VIEW;
+        typingOff  = YES;
+        noPreempt  = YES;
+        isCarrying  = NO;
+        resY   -= 8;
+        resX   -= 6;
+        animState   = STATE_STAND_SIDE_VIEW;
         gameTick(0);
-        posToXY(POS_BTM_TABLE_RIGHT, &g_wtx, &g_wty);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
-        g_wty += 5;
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
+        walkYTarget += 5;
         walkToTarget();
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
 
-        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
-        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
+        save_x = pendX[spriteSlot[SPRITE_GAME_BOX]];
+        save_y = pendY[spriteSlot[SPRITE_GAME_BOX]];
+        spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
         carryBehind(SPRITE_GAME_BOX);
-        g_lcyof = NO;
-        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
-        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
+        isCarrying = NO;
+        pendX[spriteSlot[SPRITE_GAME_BOX]] = save_x;
+        pendY[spriteSlot[SPRITE_GAME_BOX]] = save_y;
 }

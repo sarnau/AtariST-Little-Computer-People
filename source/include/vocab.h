@@ -5,9 +5,9 @@
 
 #include "structs.h"
 
-extern char* vwd_tab[];
-extern char ew2pos[];
-extern char g_ew2b[];
-extern WORD_TO_ACTION g_ew2a[];
+extern char* vocabulary[];
+extern char wordByte[];
+extern char wordBit[];
+extern WORD_TO_ACTION phraseTable[];
 
 #endif /* VOCAB_H */

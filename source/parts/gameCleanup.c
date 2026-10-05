@@ -11,6 +11,6 @@
 static void
 gameCleanup()
 {
-        tx_sctm  = 0;
-        no_keyin = NO;
+        textTimer  = 0;
+        keysBlocked = NO;
 }

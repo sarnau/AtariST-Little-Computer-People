@@ -3,20 +3,20 @@
 #ifndef TABLES_H
 #define TABLES_H
 
-extern short g_rpxs[];
-/* rev_tab is a plain (signed) short array, built at boot by initMirror
-   from rv_msk/rv_val -- it is BSS, not initialised data. */
-extern short rev_tab[];
-extern short rv_msk[];
-extern short rv_val[];
+extern short posXHalf[];
+/* mirrorTable is a plain (signed) short array, built at boot by initMirror
+   from mirrorSrcBit/mirrorDstBit -- it is BSS, not initialised data. */
+extern short mirrorTable[];
+extern short mirrorSrcBit[];
+extern short mirrorDstBit[];
 extern void buildMirrorTable();
-extern short g_atact[];
-extern short g_atmod[];
-extern short g_atrel[];
-extern short sch_tab[][8];
-extern short g_rphs[];
-extern long bm32or[];
-extern long bm32and[];
+extern short activeActions[];
+extern short moderateActions[];
+extern short relaxedActions[];
+extern short scheduleTiers[][8];
+extern short posYOffset[];
+extern long bitSet32[];
+extern long bitClear32[];
 
 
 #endif /* TABLES_H */

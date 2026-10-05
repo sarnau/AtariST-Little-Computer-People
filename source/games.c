@@ -62,7 +62,7 @@ static void  pkrCompDraw();
    toilet, drink, or run a queued event (each wrapped in leaveGameTable /
    rejoinTable so he leaves and returns to the table) and advances the
    game by one gameTick.  On 7200 idle frames (~15 min) sets
-   mg_tofl=YES and returns KEY_F10, which the games treat as quit.
+   mgTimedOut=YES and returns KEY_F10, which the games treat as quit.
    The player's care keys (Ctrl-A/B/C/D/F/W) are passed to handleKey
    before the key is returned. */
 short
@@ -72,34 +72,34 @@ mgWaitKey()
         unsigned short  idle;
 
         idle    = 0;
-        mg_tofl = NO;
+        mgTimedOut = NO;
 
         /* Drain any keys the game accidentally left in the buffer. */
         do ; while (getKey() != KEY_NONE);
 
         while ((key = getKey()) == KEY_NONE) {
-                if (alarm_p != NO) {
+                if (alarmRinging != NO) {
                         leaveGameTable();
                         wakeFromAlarm();
                         rejoinTable();
                 }
-                if (lcp.bathroom_need != NO) {
+                if (resident.bathroom_need != NO) {
                         leaveGameTable();
                         useToilet();
                         rejoinTable();
                 }
                 /* The GLOBAL tank level, not the saved copy in the
-                   lcp struct. */
-                if (lcp.thirst_level > NEED_SATISFIED && lcp_watr != 0) {
+                   resident struct. */
+                if (resident.thirst_level > NEED_SATISFIED && waterLevel != 0) {
                         leaveGameTable();
                         drinkWater();
                         rejoinTable();
                 }
                 if (idle++ > 7200) {
-                        mg_tofl = YES;
+                        mgTimedOut = YES;
                         return KEY_F10;
                 }
-                if (g_trel[0] != ACTION_NONE) {
+                if (eventQueue[0] != ACTION_NONE) {
                         leaveGameTable();
                         runEvent(nextEvent());
                         rejoinTable();
@@ -177,17 +177,17 @@ playWordPuzzle()
         long    unused2;
 #define key     cur
 
-        g_wpdb = (char *) Malloc(2000L);
-        if (g_wpdb == (char *) 0)
+        wpzText = (char *) Malloc(2000L);
+        if (wpzText == (char *) 0)
                 outOfMemory();
         mgSetup();
         unpackFile("wordpz.txt",
-                             (unsigned char *) g_wpdb, 1536);
+                             (unsigned char *) wpzText, 1536);
 
         /* Index the 66 lines. */
-        parse_ptr = g_wpdb;
+        parse_ptr = wpzText;
         for (line_index = 0; line_index < 0x42; line_index++) {
-                g_ltlp[line_index] = parse_ptr;
+                letterLines[line_index] = parse_ptr;
                 /* Step once, then a plain `while` -- two increment
                    sites, not a do/while's one; the original has this
                    shape. */
@@ -198,7 +198,7 @@ playWordPuzzle()
                         parse_ptr++;
         }
 
-        g_wpci = 0;
+        wpzIndex = 0;
         printString("**WORD PUZZLE #  **", 8, 8, COLOR_black);
 
         /* No outer loop: `next_puzzle` is a plain label and every arm
@@ -212,23 +212,23 @@ next_puzzle:
         panelErase(128,  0, 143,  8);
         panelErase(  0, 50, 319, 69);
 
-        /* Count '@' blanks; seed wp_ans[i][0] with char after '@'. */
-        parse_ptr = g_ltlp[g_wpci << 1];
-        wp_blk = 0;
+        /* Count '@' blanks; seed wpzAnswers[i][0] with char after '@'. */
+        parse_ptr = letterLines[wpzIndex << 1];
+        wpzBlanks = 0;
         while (1) {
                 cur = *parse_ptr;
                 parse_ptr++;
                 if (cur < ' ') break;
                 if (cur == '@') {
-                        wp_ans[wp_blk][0] = *parse_ptr;
-                        wp_ans[wp_blk][1] = '\0';
-                        wp_blk++;
+                        wpzAnswers[wpzBlanks][0] = *parse_ptr;
+                        wpzAnswers[wpzBlanks][1] = '\0';
+                        wpzBlanks++;
                 }
         }
 
         panelErase(128, 0, 135, 8);
-        sprintf(in_str, "%2d", g_wpci + 1);
-        printString(in_str, 128, 8, COLOR_black);
+        sprintf(inputLine, "%2d", wpzIndex + 1);
+        printString(inputLine, 128, 8, COLOR_black);
         wpzRender();
 
         while (1) {
@@ -236,18 +236,18 @@ next_puzzle:
                 key = mgWaitKey();
                 switch (key) {
                 case KEY_F1:
-                        g_wpci++;
-                        if (g_wpci >= 33)
-                                g_wpci = 0;
+                        wpzIndex++;
+                        if (wpzIndex >= 33)
+                                wpzIndex = 0;
                         goto next_puzzle;
                 case KEY_F2:
-                        g_wpci--;
-                        if (g_wpci < 0)
-                                g_wpci = 0x20;
+                        wpzIndex--;
+                        if (wpzIndex < 0)
+                                wpzIndex = 0x20;
                         goto next_puzzle;
                 case KEY_F5:
                         wpzSolve();
-                        if (mg_tofl != NO)
+                        if (mgTimedOut != NO)
                                 goto cleanup;
                         gameTick(0x28);
                         goto next_puzzle;
@@ -257,9 +257,9 @@ next_puzzle:
         }
 
 cleanup:
-        no_keyin = NO;
-        tx_sctm  = 0;
-        Mfree(g_wpdb);          /* g_wpdb is deliberately not cleared */
+        keysBlocked = NO;
+        textTimer  = 0;
+        Mfree(wpzText);          /* wpzText is deliberately not cleared */
 }
 #undef key
 
@@ -267,7 +267,7 @@ cleanup:
    stays a short branch.
    wpzSolve: solve phase.  Per blank: prompt, read A-Z (10-char max),
    Enter confirms, F10 quits.  Then walk solution line, compare
-   token-by-token; show wp_succ or wp_fail. */
+   token-by-token; show wpzRightMsgs or wpzWrongMsgs. */
 
 void
 wpzSolve()
@@ -291,7 +291,7 @@ wpzSolve()
                         wi = rndRng(0, 4);
                 else
                         wi = cwi + 4;
-                wpzMessage(wp_prm[wi]);
+                wpzMessage(wpzPrompts[wi]);
                 ilen = 0;
                 while (1) {
                         gameTick(0);
@@ -304,36 +304,36 @@ wpzSolve()
                            them the base is folded in first -- which is
                            what the other two stores here do. */
                         if (ch == KEY_CTRL_M) {
-                                wp_ans[cwi][ilen] = '\0';
+                                wpzAnswers[cwi][ilen] = '\0';
                                 break;
                         } else if (ch == KEY_CURSOR_LEFT && ilen > 0) {
                                 ilen--;
-                                wp_ans[0][cwi * 12 + (long) ilen] = '\0';
+                                wpzAnswers[0][cwi * 12 + (long) ilen] = '\0';
                                 panelErase(ilen * 8 + 8, 60,
                                           ilen * 8 + 16, 68);
                         } else if (ilen < 10 && ch >= 'A') {
                                 ch = toUpper(ch);
-                                wp_ans[0][cwi * 12 + (long) ilen] = ch;
+                                wpzAnswers[0][cwi * 12 + (long) ilen] = ch;
                                 ilen++;
-                                wp_ans[cwi][ilen] = '\0';
-                                printString(wp_ans[cwi], 8, 68, COLOR_white);
+                                wpzAnswers[cwi][ilen] = '\0';
+                                printString(wpzAnswers[cwi], 8, 68, COLOR_white);
                         }
                 }
                 gameTick(8);
                 cwi++;
                 panelErase(0, 60, 319, 69);
-        } while (cwi < wp_blk);
+        } while (cwi < wpzBlanks);
 
-        slp = g_ltlp[(g_wpci << 1) + 1];
+        slp = letterLines[(wpzIndex << 1) + 1];
         wi  = 0;
-        while (wi < wp_blk) {
+        while (wi < wpzBlanks) {
                 /* The assignment is INSIDE the condition, so the
                    compare uses the loaded value rather than reloading
                    `ch` from the frame. */
                 do {
                 } while ((ch = *slp++) <= ' ');
                 slp--;
-                psp = wp_ans[wi];
+                psp = wpzAnswers[wi];
                 while (1) {
                         if ((ch = *slp++) <= ' ')
                                 break;
@@ -346,12 +346,12 @@ wpzSolve()
         }
         wpzRender();
         gameTick(8);
-        wpzMessage(wp_succ[rndRng(0, 5)]);
+        wpzMessage(wpzRightMsgs[rndRng(0, 5)]);
         return;
 fail:
         wpzRender();
         gameTick(8);
-        wpzMessage(wp_fail[rndRng(0, 5)]);
+        wpzMessage(wpzWrongMsgs[rndRng(0, 5)]);
 }
 
 /* wpzMessage and wpzRender must follow wpzSolve directly so its calls to
@@ -384,7 +384,7 @@ wpzRender()
         char *  tp;
 
         panelErase(0, 31, 319, 49);
-        tp = g_ltlp[g_wpci << 1];
+        tp = letterLines[wpzIndex << 1];
         cx = 1;
         ai = 0;
         cy = 0x28;
@@ -400,13 +400,13 @@ wpzRender()
                 }
                 if (cur == '@') {
                         for (wlen = 0; wlen < 12; wlen++)
-                                if (wp_ans[ai][wlen] <= ' ')
+                                if (wpzAnswers[ai][wlen] <= ' ')
                                         break;
                         if (cx + wlen > 0x27) {
                                 cx = 1;
                                 cy += 8;
                         }
-                        printString(wp_ans[ai], cx << 3, cy, COLOR_blue);
+                        printString(wpzAnswers[ai], cx << 3, cy, COLOR_blue);
                         cx += wlen;
                         tp++;
                         ai++;
@@ -422,13 +422,13 @@ wpzRender()
                 }
 
                 /* Literal word. */
-                in_str[0] = cur;
+                inputLine[0] = cur;
                 for (wlen = 1; wlen < 0x10; wlen++) {
                         /* if/else, not an early break: the else arm's
                            `break` becomes a branch past the body's own
                            jump to the increment. */
                         if ((cur = *tp) > ' ') {
-                                in_str[wlen] = cur;
+                                inputLine[wlen] = cur;
                                 tp++;
                         } else
                                 break;
@@ -438,7 +438,7 @@ wpzRender()
                         cy += 8;
                 }
                 for (ci = 0; ci < wlen; ci++) {
-                        printChar(in_str[ci], cx << 3, cy, COLOR_blue);
+                        printChar(inputLine[ci], cx << 3, cy, COLOR_blue);
                         cx++;
                 }
         }
@@ -453,7 +453,7 @@ anaClrWord()
         rect[0] = 162; rect[1] = 10;
         rect[2] = 319; rect[3] = 49;
         panelBegin();
-        v_bar(vdihnd, rect);
+        v_bar(vdiHandle, rect);
         panelEnd();
 }
 
@@ -466,7 +466,7 @@ anaClrIntro()
         rect[0] = 5;   rect[1] = 10;
         rect[2] = 160; rect[3] = 60;
         panelBegin();
-        v_bar(vdihnd, rect);
+        v_bar(vdiHandle, rect);
         panelEnd();
 }
 
@@ -479,7 +479,7 @@ anaClrGuess()
         rect[0] = 166; rect[1] = 50;
         rect[2] = 319; rect[3] = 65;
         panelBegin();
-        v_bar(vdihnd, rect);
+        v_bar(vdiHandle, rect);
         panelEnd();
 }
 
@@ -492,7 +492,7 @@ anaClrBottom()
         rect[0] = 5;   rect[1] = 62;
         rect[2] = 319; rect[3] = 75;
         panelBegin();
-        v_bar(vdihnd, rect);
+        v_bar(vdiHandle, rect);
         panelEnd();
 }
 
@@ -535,15 +535,15 @@ short   text_color;
 #include "parts/anaDrawPrompt.c"
 
 /* anaPickWord: pick a random word from the 150-entry dictionary (11 bytes/row),
-   copy into g_agscw, scramble 10..20 swaps.  Re-scrambles on identity.
-   Plants '\0' at g_agwb row-tail so g_agorw reads as a C string. */
+   copy into anaScrambled, scramble 10..20 swaps.  Re-scrambles on identity.
+   Plants '\0' at anaDict row-tail so anaAnswer reads as a C string. */
 
 void
 anaPickWord()
 {
         /* One counter reused for the copy index and the shuffle round,
            and a local copy of the word length that the shuffle reads
-           instead of g_agwol -- the original's locals exactly. */
+           instead of anaWordLen -- the original's locals exactly. */
         short   pos;
         short   len;
         short   ia;
@@ -551,32 +551,32 @@ anaPickWord()
         char    tmp;
         char *  wp;
 
-        g_agorw = g_agwb + rndRng(0, 0x95) * 11;        /* 0..149 */
+        anaAnswer = anaDict + rndRng(0, 0x95) * 11;        /* 0..149 */
         pos     = 0;
-        for (wp = g_agorw; *wp > ' ' && *wp != '.'; ) {
+        for (wp = anaAnswer; *wp > ' ' && *wp != '.'; ) {
                 /* Index first: this makes Alcyon fold the base into the
                    address the way the original does. */
-                *(pos + g_agscw) = *wp;
+                *(pos + anaScrambled) = *wp;
                 wp++;
                 pos++;
         }
-        g_agscw[pos] = '\0';
+        anaScrambled[pos] = '\0';
         *wp          = '\0';
         len     = pos;
-        g_agwol = len;
+        anaWordLen = len;
 
-        while (anaStrMatch(g_agscw, g_agorw) != 0) {
+        while (anaStrMatch(anaScrambled, anaAnswer) != 0) {
                 pos = 0;
                 while (rndRng(10, 0x14) > pos) {
                         ia  = rndRng(0, len - 1);
                         ib  = rndRng(0, len - 1);
-                        tmp = g_agscw[ib];
-                        g_agscw[ib] = g_agscw[ia];
-                        g_agscw[ia] = tmp;
+                        tmp = anaScrambled[ib];
+                        anaScrambled[ib] = anaScrambled[ia];
+                        anaScrambled[ia] = tmp;
                         pos++;
                 }
         }
-        anaShowWord(g_agscw, COLOR_green);
+        anaShowWord(anaScrambled, COLOR_green);
 }
 
 /* playAnagrams: full anagram game loop.  Outer per-word / middle per-guess /
@@ -589,7 +589,7 @@ anaPickWord()
    Malloc buffer (freed on F10), then loops: anaPickWord picks and scrambles
    a word, the player types up to ten letters (cursor-left erases) and
    Return submits.  A right answer or too many guesses/clues starts a
-   new word; a wrong one keeps the word and counts a guess (g_aggun).
+   new word; a wrong one keeps the word and counts a guess (anaGuessNum).
    F1 once per word swaps one letter of the scramble into place and
    costs a guess.  F10 (or mgWaitKey's idle timeout) leaves the game. */
 void
@@ -611,18 +611,18 @@ playAnagrams()
         short   unused6;
         BOOL16  word_complete;
 
-        g_agwb = (char *) Malloc(10000L);
-        if (g_agwb == (char *) 0)
+        anaDict = (char *) Malloc(10000L);
+        if (anaDict == (char *) 0)
                 outOfMemory();
-        unpackFile("words", (unsigned char *) g_agwb, 10000);
+        unpackFile("words", (unsigned char *) anaDict, 10000);
         mgSetup();
         printString("***ANAGRAMS***", 5, 8, COLOR_black);
         anaIntroText();
 
 new_word:
         anaClrBottom();
-        g_agclc = 0;
-        g_aggun = 1;
+        anaNumClues = 0;
+        anaGuessNum = 1;
         anaPickWord();
 
         /* The round prologue runs ONCE per word and the guess-count
@@ -630,95 +630,95 @@ new_word:
            re-enters HERE, past the prologue, so the word is kept --
            only a solved or abandoned word goes back to new_word. */
 same_word:
-        g_agacu = 0;
-        ag_clue = 0;
+        anaExtraGuess = 0;
+        anaClueUsed = 0;
         printString("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
-        anaDrawPrompt(g_aggun);
+        anaDrawPrompt(anaGuessNum);
         for (index = 0; index < 10; index++)
-                g_aginb[index] = ' ';
-        g_aginb[10]   = '\0';
+                anaInput[index] = ' ';
+        anaInput[10]   = '\0';
         gameTick(0);
         word_complete = NO;
-        while (g_aggun < 9 || (g_aggun < 10 && g_agacu != 0)) {
+        while (anaGuessNum < 9 || (anaGuessNum < 10 && anaExtraGuess != 0)) {
                 index         = 0;
                 key_pressed   = 0;
                 while (key_pressed != KEY_CTRL_M) {
-                        printString(g_aginb, 239, 57, COLOR_green);
+                        printString(anaInput, 239, 57, COLOR_green);
                         key_pressed = mgWaitKey();
                         if (key_pressed >= 'A' && key_pressed <= 'Z')
                                 key_pressed += 0x20;
                         if (key_pressed <= 'z' && key_pressed >= 'a') {
-                                g_aginb[index] = key_pressed;
+                                anaInput[index] = key_pressed;
                                 if (++index >= 10) {
                                         index = 9;
-                                        anaDrawPrompt(g_aggun);
+                                        anaDrawPrompt(anaGuessNum);
                                 }
                         }
                         if (key_pressed == KEY_CURSOR_LEFT) {
                                 if (index != 0) {
                                         if (index == 9 &&
-                                            g_aginb[index] != ' ')
-                                                g_aginb[index] = ' ';
+                                            anaInput[index] != ' ')
+                                                anaInput[index] = ' ';
                                         else {
                                                 index--;
-                                                *(index + g_aginb) = ' ';
+                                                *(index + anaInput) = ' ';
                                         }
                                 } else
-                                        g_aginb[index] = ' ';
-                                anaDrawPrompt(g_aggun);
+                                        anaInput[index] = ' ';
+                                anaDrawPrompt(anaGuessNum);
                                 continue;
                         }
                         if (key_pressed == KEY_F10) {
-                                tx_sctm  = 0;
-                                no_keyin = NO;
-                                Mfree(g_agwb);
+                                textTimer  = 0;
+                                keysBlocked = NO;
+                                Mfree(anaDict);
                                 return;
                         }
-                        if (key_pressed == KEY_F1 && ag_clue == 0) {
+                        if (key_pressed == KEY_F1 && anaClueUsed == 0) {
                                 /* A goto, not `continue`: the original
                                    jumps to a label sitting ON the else
                                    arm's statement, one test ahead of the
                                    loop's own condition.  The braces are
                                    deliberate too; without them Alcyon
                                    emits a different branch shape. */
-                                if (anaStrMatch(g_agorw, g_agscw) != 0) {
+                                if (anaStrMatch(anaAnswer, anaScrambled) != 0) {
                                         goto again;
                                 }
                                 /* Clue path: reveal one letter. */
-                                g_agclc++;
-                                g_aggun++;
-                                anaDrawPrompt(g_aggun);
-                                if (g_aggun == 9)
-                                        g_agacu = 1;
-                                ag_clue = 1;
+                                anaNumClues++;
+                                anaGuessNum++;
+                                anaDrawPrompt(anaGuessNum);
+                                if (anaGuessNum == 9)
+                                        anaExtraGuess = 1;
+                                anaClueUsed = 1;
                                 panelErase(182, 0, 319, 9);
                                 printString("         F10 Quit", 183, 8,
                                       COLOR_blue);
                                 for (guess_count = 0;
-                                     guess_count < g_agwol;
+                                     guess_count < anaWordLen;
                                      guess_count++)
-                                        if (g_agorw[guess_count] !=
-                                            g_agscw[guess_count])
+                                        if (anaAnswer[guess_count] !=
+                                            anaScrambled[guess_count])
                                                 break;
-                                if (guess_count != g_agwol) {
-                                        clue_count = g_agwol - 1;
+                                if (guess_count != anaWordLen) {
+                                        clue_count = anaWordLen - 1;
                                         for (;;) {
-                                                if (g_agorw[guess_count] ==
-                                                    g_agscw[clue_count])
+                                                if (anaAnswer[guess_count] ==
+                                                    anaScrambled[clue_count])
                                                         break;
                                                 clue_count--;
                                         }
-                                        typed_char = g_agscw[clue_count];
-                                        g_agscw[clue_count] =
-                                                g_agscw[guess_count];
-                                        g_agscw[guess_count] = typed_char;
+                                        typed_char = anaScrambled[clue_count];
+                                        anaScrambled[clue_count] =
+                                                anaScrambled[guess_count];
+                                        anaScrambled[guess_count] = typed_char;
                                 }
-                                anaShowWord(g_agscw, COLOR_green);
-                                if (anaStrMatch(g_agorw, g_agscw) != 0) {
+                                anaShowWord(anaScrambled, COLOR_green);
+                                if (anaStrMatch(anaAnswer, anaScrambled) != 0) {
                                         anaClrBottom();
                                         printString("You took too many clues!",
                                               5, 69, COLOR_black);
-                                        anaShowWord(g_agorw, COLOR_black);
+                                        anaShowWord(anaAnswer, COLOR_black);
                                         gameTick(0x14);
                                         word_complete = YES;
                                 }
@@ -736,21 +736,21 @@ validate:
                    test: spelling it `!= '\0'` makes Alcyon address the
                    array differently from the original. */
                 for (index = 0;
-                     g_aginb[index] != ' ' && g_aginb[index];
+                     anaInput[index] != ' ' && anaInput[index];
                      index++) ;
-                if (g_aginb[index] == ' ')
-                        g_aginb[index] = '\0';
-                if (anaStrMatch(g_aginb, g_agorw) != 0) {
+                if (anaInput[index] == ' ')
+                        anaInput[index] = '\0';
+                if (anaStrMatch(anaInput, anaAnswer) != 0) {
                         printString("YOU GOT IT!!!!!!",
                                              5, 69, COLOR_black);
-                        anaShowWord(g_agorw, COLOR_black);
+                        anaShowWord(anaAnswer, COLOR_black);
                         gameTick(0x1e);
                         anaClrBottom();
                         goto new_word;
                 /* The guess counter steps in the condition itself,
                    so both arms see it incremented. */
-                } else if (g_aggun++ < 8) {
-                        printString(g_agwgm[rndRng(0, 2)], 5, 69, COLOR_black);
+                } else if (anaGuessNum++ < 8) {
+                        printString(anaWrongMsgs[rndRng(0, 2)], 5, 69, COLOR_black);
                         gameTick(0x14);
                         anaClrBottom();
                         goto same_word;
@@ -764,7 +764,7 @@ validate:
                 anaClrBottom();
                 printString("Here is the word.",
                              5, 69, COLOR_black);
-                anaShowWord(g_agorw, COLOR_black);
+                anaShowWord(anaAnswer, COLOR_black);
                 gameTick(0x1e);
                 anaClrWord();
                 goto new_word;
@@ -779,7 +779,7 @@ validate:
 
 
 /* pkrCallOrRaise: computer call/raise decision.  Returns 'c' or 'r'.
-   On raise: pk_dpos = money/10 clamped [1,20]. */
+   On raise: pkrRaiseAmt = money/10 clamped [1,20]. */
 
 static short
 pkrCallOrRaise()
@@ -787,16 +787,16 @@ pkrCallOrRaise()
         /* No temporary, just early returns.  The redundant `else` is
            kept on purpose: Alcyon emits its skip branch even though
            the then arm returns, and the original has it. */
-        if (g_pcmon == 0)
+        if (compChips == 0)
                 return 'c';
-        if (pk_bluff == NO && pk_chrk < HAND_TWO_PAIR)
+        if (pkrBluffing == NO && compRank < HAND_TWO_PAIR)
                 return 'c';
         else {
-                pk_dpos = g_pcmon / 10;
-                if (pk_dpos == 0)
-                        pk_dpos = 1;
-                else if (pk_dpos > 20)
-                        pk_dpos = 20;
+                pkrRaiseAmt = compChips / 10;
+                if (pkrRaiseAmt == 0)
+                        pkrRaiseAmt = 1;
+                else if (pkrRaiseAmt > 20)
+                        pkrRaiseAmt = 20;
                 return 'r';
         }
 }
@@ -971,9 +971,9 @@ rank_from_hc_bp:
 #include "dat_games3.c"
 
 /* The Poker minigame (five-card draw against the resident).  Allocates
-   and loads the card images into crd_dat, gives both sides 400 chips,
-   then plays rounds until pkrAnte sets pk_quit, a side runs out of
-   chips, or mgWaitKey times out; every exit frees crd_dat and hides the
+   and loads the card images into cardImages, gives both sides 400 chips,
+   then plays rounds until pkrAnte sets cardQuit, a side runs out of
+   chips, or mgWaitKey times out; every exit frees cardImages and hides the
    mouse through the cleanup label. */
 void
 playPoker()
@@ -987,17 +987,17 @@ playPoker()
         short   dcount;
         BOOL16  in_use;
 
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
+        cardImages = (short *) Malloc(10400L);
+        if (cardImages == (short *) 0)
                 outOfMemory();
         cardLoad();
         mgSetup();
 
-        pk_round = 0;
-        pk_quit  = NO;
-        g_pcmon  = 400;
-        g_ppmon  = 400;
-        g_ppppa  = 0;
+        pkrRound = 0;
+        cardQuit  = NO;
+        compChips  = 400;
+        plyrChips  = 400;
+        potChips  = 0;
         dispCompChips();
         dispPlyrChips();
         dispPot();
@@ -1011,50 +1011,50 @@ next_round:
 round:
                 panelErase(70, 10, 219, 62);
                 pkrAnte();
-                if (pk_quit == YES) {
+                if (cardQuit == YES) {
 cleanup:
-                        tx_sctm  = 0;
-                        no_keyin = NO;
-                        Mfree(crd_dat);
+                        textTimer  = 0;
+                        keysBlocked = NO;
+                        Mfree(cardImages);
                         hideMouse();
                         return;
                 }
                 pkrDealHands();
 
                 if (pkrPlyrBet("Do you feel lucky today?") == -1) {
-                        if (mg_tofl != NO)
+                        if (mgTimedOut != NO)
                                 goto cleanup;
                         cardMessage("Sorry, you're all out!");
                         gameTick(10);
                         goto cleanup;
                 }
-                if (pk_pass != NO) {
+                if (pkrPassed != NO) {
                         cardMessage("That's all right with me.");
                         gameTick(10);
                 } else {
                         cardMessage("I'll see your bet.");
-                        while (pk_bet--) {
-                                if (g_pcmon == 0) {
+                        while (pkrBet--) {
+                                if (compChips == 0) {
                                         cardMessage("Sorry, I'm all out!");
                                         gameTick(10);
                                         goto cleanup;
                                 }
-                                g_pcmon--;
+                                compChips--;
                                 dispCompChips();
-                                g_ppppa++;
+                                potChips++;
                                 dispPot();
                                 gameTick(0);
                         }
                 }
                 gameTick(0x10);
 
-                pk_disc = 0;
+                pkrNumDisc = 0;
                 cardMessage("Do you want any cards?");
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1 Draw", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                 for (i = 0; i < 5; i++)
-                        pk_sel[i] = 0;
+                        pkrSelected[i] = 0;
 
                 /* One while loop: the key read is the condition, and
                    every re-prompt is a `continue`. */
@@ -1063,7 +1063,7 @@ discard_loop:
                         if (ikey == PK_IN_TIMEOUT)
                                 break;
                         for (i = 0; i < 5; i++)
-                                if (pk_sel[i] == 1)
+                                if (pkrSelected[i] == 1)
                                         break;
                         if (i == 5)
                                 printString("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
@@ -1071,7 +1071,7 @@ discard_loop:
                                 printString("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_lt_grey);
                         if (ikey == PK_IN_ARG_A) {
                                 for (i = 0; i < 5; i++)
-                                        if (pk_sel[i] == 1)
+                                        if (pkrSelected[i] == 1)
                                                 break;
                                 if (i == 5)
                                         continue;
@@ -1081,51 +1081,51 @@ discard_loop:
                                 continue;
                         if (ikey > PK_IN_DIGIT_5)
                                 continue;
-                        if (pk_sel[ikey - PK_IN_DIGIT_1]) {
-                                pk_sel[ikey - PK_IN_DIGIT_1] = 0;
-                                cardDraw(pk_ph[ikey - PK_IN_DIGIT_1], ikey - PK_IN_DIGIT_1, 1);
+                        if (pkrSelected[ikey - PK_IN_DIGIT_1]) {
+                                pkrSelected[ikey - PK_IN_DIGIT_1] = 0;
+                                cardDraw(plyrHand[ikey - PK_IN_DIGIT_1], ikey - PK_IN_DIGIT_1, 1);
                         } else {
-                                pk_sel[ikey - PK_IN_DIGIT_1] = 1;
+                                pkrSelected[ikey - PK_IN_DIGIT_1] = 1;
                                 cardDraw(CARD_HIGHLIGHT, ikey - PK_IN_DIGIT_1, 1);
                         }
                         for (i = 0; i < 5; i++)
-                                if (pk_sel[i] == 1)
+                                if (pkrSelected[i] == 1)
                                         break;
                         if (i == 5)
                                 printString("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                         else
                                 printString("F3 Stay", KEYMENU_X, KEYMENU_LINE2, COLOR_lt_grey);
                 }
-                if (mg_tofl != NO)
+                if (mgTimedOut != NO)
                         goto cleanup;
                 if (ikey == PK_IN_ARG_A) {
                         for (i = 0; i < 5; i++) {
-                                if (pk_sel[i] != 1) continue;
+                                if (pkrSelected[i] != 1) continue;
                                 in_use = YES;
                                 while (in_use != NO) {
                                         card = rndRng(0, 51);
                                         in_use = NO;
                                         for (dcount = 0; dcount < 5; dcount++) {
-                                                if (pk_ch[dcount] == card)
+                                                if (compHand[dcount] == card)
                                                         in_use = YES;
-                                                if (pk_ph[dcount] == card)
+                                                if (plyrHand[dcount] == card)
                                                         in_use = YES;
                                         }
-                                        dcount = pk_disc;
+                                        dcount = pkrNumDisc;
                                         while (dcount--)
-                                                if (pk_dpile[dcount] == card)
+                                                if (pkrDiscPile[dcount] == card)
                                                         in_use = YES;
                                 }
-                                pk_dpile[pk_disc] = pk_ph[i];
-                                pk_disc++;
-                                pk_ph[i] = card;
+                                pkrDiscPile[pkrNumDisc] = plyrHand[i];
+                                pkrNumDisc++;
+                                plyrHand[i] = card;
                                 cardDraw(card, i, 1);
                                 gameTick(3);
                         }
                 }
                 if (ikey == PK_IN_ARG_B) {
                         for (i = 0; i < 5; i++)
-                                if (pk_sel[i] == 1)
+                                if (pkrSelected[i] == 1)
                                         break;
                         if (i != 5)
                                 goto discard_loop;
@@ -1133,35 +1133,35 @@ discard_loop:
 
                 pkrCompDraw();
                 if (pkrPlyrBet("Want to make a bet?") == -1) {
-                        if (mg_tofl != NO)
+                        if (mgTimedOut != NO)
                                 goto cleanup;
                         cardMessage("Sorry, you're all out!");
                         gameTick(10);
                         goto cleanup;
                 }
-                if (pk_pass != NO) {
-                        if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
+                if (pkrPassed != NO) {
+                        if (pkrBluffing == NO && compRank == HAND_HIGH_CARD) {
                                 cardMessage("Ok, I'll call.");
                                 gameTick(10);
                                 pkrShowdown();
                                 goto next_round;
                         } else {
                                 i = rndRng(5, 15);
-                                if (i > g_pcmon)
-                                        i = g_pcmon;
-                                pk_bm[9] = i / 10 + '0';
-                                if (pk_bm[9] == '0')
-                                        pk_bm[9] = ' ';
-                                pk_bm[10] = i % 10 + '0';
-                                cardMessage(pk_bm);
-                                pk_bet = 0;
+                                if (i > compChips)
+                                        i = compChips;
+                                pkrMsgBet[9] = i / 10 + '0';
+                                if (pkrMsgBet[9] == '0')
+                                        pkrMsgBet[9] = ' ';
+                                pkrMsgBet[10] = i % 10 + '0';
+                                cardMessage(pkrMsgBet);
+                                pkrBet = 0;
                                 while (i--) {
                                         pkrAddChips(0, 1);
                                         gameTick(0);
                                 }
                                 gameTick(10);
                                 cardMessage("Will you see my bet?");
-                                pk_phv = pk_bet;
+                                pkrLastBet = pkrBet;
                                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                 printString("F1 See",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                                 printString("F3 Fold", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
@@ -1175,13 +1175,13 @@ discard_loop:
                                         goto next_round;
                                 }
                                 if (ikey == PK_IN_ARG_A) {
-                                        loc8   = pk_phv;
-                                        pk_bet = 0;
+                                        loc8   = pkrLastBet;
+                                        pkrBet = 0;
                                         while (loc8--) {
                                                 pkrAddChips(1, 1);
                                                 gameTick(0);
                                         }
-                                        if (g_ppmon == 0) {
+                                        if (plyrChips == 0) {
                                                 cardMessage("Sorry, you're all out!");
                                                 gameTick(10);
                                                 goto cleanup;
@@ -1191,7 +1191,7 @@ discard_loop:
                                         printString("F1 Raise", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                                         printString("F3 Enter", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                                         printString("F5 Call",  KEYMENU_X, KEYMENU_LINE3, COLOR_red);
-                                        pk_dpos = 0;
+                                        pkrRaiseAmt = 0;
                                         while (1) {
                                                 loc8 = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
                                                 if (loc8 == PK_IN_TIMEOUT)
@@ -1200,14 +1200,14 @@ discard_loop:
                                                         pkrShowdown();
                                                         goto next_round;
                                                 }
-                                                if (loc8 == PK_IN_ARG_A && g_ppmon != 0) {
-                                                        pk_bet = 0;
+                                                if (loc8 == PK_IN_ARG_A && plyrChips != 0) {
+                                                        pkrBet = 0;
                                                         pkrAddChips(1, 1);
-                                                        pk_dpos++;
+                                                        pkrRaiseAmt++;
                                                         break;
                                                 }
                                         }
-                                        if (mg_tofl != NO) goto cleanup;
+                                        if (mgTimedOut != NO) goto cleanup;
                                         while (1) {
                                                 loc8 = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
                                                 if (loc8 == PK_IN_TIMEOUT)
@@ -1216,20 +1216,20 @@ discard_loop:
                                                         break;
                                                 if (loc8 == PK_IN_ARG_A) {
                                                         pkrAddChips(1, 1);
-                                                        if (g_ppmon != 0)
-                                                                pk_dpos++;
+                                                        if (plyrChips != 0)
+                                                                pkrRaiseAmt++;
                                                 }
                                         }
-                                        if (mg_tofl != NO) goto cleanup;
-                                        if (g_pcmon < pk_dpos) {
+                                        if (mgTimedOut != NO) goto cleanup;
+                                        if (compChips < pkrRaiseAmt) {
                                                 cardMessage("Sorry, I,m all out.");
                                                 gameTick(10);
                                                 goto cleanup;
                                         }
                                         cardMessage("Ok. I'll see your bet.");
                                         gameTick(8);
-                                        loc8   = pk_dpos;
-                                        pk_bet = 0;
+                                        loc8   = pkrRaiseAmt;
+                                        pkrBet = 0;
                                         while (loc8--) {
                                                 pkrAddChips(0, 1);
                                                 gameTick(0);
@@ -1249,14 +1249,14 @@ discard_loop:
                                 potToWinner(1);
                                 goto next_round;
                         }
-                        if (g_pcmon < pk_bet) {
+                        if (compChips < pkrBet) {
                                         cardMessage("Sorry, I'm all out!");
                                         gameTick(10);
                                         goto cleanup;
                                 }
                                 cardMessage("Ok. I'll see your bet.");
-                                i = pk_bet;
-                                pk_bet = 0;
+                                i = pkrBet;
+                                pkrBet = 0;
                                 while (i--) {
                                         pkrAddChips(0, 1);
                                         gameTick(0);
@@ -1267,20 +1267,20 @@ discard_loop:
                                         pkrShowdown();
                                         goto next_round;
                                 } else {
-                                        pk_rm[11] = pk_dpos / 10 + '0';
-                                        if (pk_rm[11] == '0')
-                                                pk_rm[11] = ' ';
-                                        pk_rm[12] = pk_dpos % 10 + '0';
-                                        cardMessage(pk_rm);
-                                        ikey = pk_dpos;
-                                        pk_bet    = 0;
+                                        pkrMsgRaise[11] = pkrRaiseAmt / 10 + '0';
+                                        if (pkrMsgRaise[11] == '0')
+                                                pkrMsgRaise[11] = ' ';
+                                        pkrMsgRaise[12] = pkrRaiseAmt % 10 + '0';
+                                        cardMessage(pkrMsgRaise);
+                                        ikey = pkrRaiseAmt;
+                                        pkrBet    = 0;
                                         while (ikey--) {
                                                 pkrAddChips(0, 1);
                                                 gameTick(0);
                                         }
                                         gameTick(8);
                                         cardMessage("You think I'm bluffin'?");
-                                        pk_phv = pk_dpos;
+                                        pkrLastBet = pkrRaiseAmt;
                                         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                                         printString("F1 See",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                                         printString("F3 Fold", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
@@ -1294,13 +1294,13 @@ discard_loop:
                                                 goto next_round;
                                         }
                                         if (ikey == PK_IN_ARG_A) {
-                                                loc8   = pk_phv;
-                                                pk_bet = 0;
+                                                loc8   = pkrLastBet;
+                                                pkrBet = 0;
                                                 while (loc8--) {
                                                         pkrAddChips(1, 1);
                                                         gameTick(0);
                                                 }
-                                                if (g_ppmon == 0) {
+                                                if (plyrChips == 0) {
                                                         cardMessage("Sorry, you're all out!");
                                                         gameTick(10);
                                                         goto cleanup;
@@ -1318,15 +1318,15 @@ discard_loop:
                                                                 pkrShowdown();
                                                                 goto next_round;
                                                         }
-                                                        if (loc8 == PK_IN_ARG_A && g_ppmon != 0) {
-                                                                pk_bet = 0;
-                                                                pk_dpos = 0;
+                                                        if (loc8 == PK_IN_ARG_A && plyrChips != 0) {
+                                                                pkrBet = 0;
+                                                                pkrRaiseAmt = 0;
                                                                 pkrAddChips(1, 1);
-                                                                pk_dpos++;
+                                                                pkrRaiseAmt++;
                                                                 break;
                                                         }
                                                 }
-                                                if (mg_tofl != NO) goto cleanup;
+                                                if (mgTimedOut != NO) goto cleanup;
                                                 while (1) {
                                                         loc8 = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
                                                         if (loc8 == PK_IN_TIMEOUT)
@@ -1335,19 +1335,19 @@ discard_loop:
                                                                 break;
                                                         if (loc8 == PK_IN_ARG_A) {
                                                                 pkrAddChips(1, 1);
-                                                                if (g_ppmon != 0)
-                                                                        pk_dpos++;
+                                                                if (plyrChips != 0)
+                                                                        pkrRaiseAmt++;
                                                         }
                                                 }
-                                                if (mg_tofl != NO) goto cleanup;
-                                                if (g_pcmon < pk_dpos) {
+                                                if (mgTimedOut != NO) goto cleanup;
+                                                if (compChips < pkrRaiseAmt) {
                                                         cardMessage("Sorry, I'm all out.");
                                                         gameTick(10);
                                                         goto cleanup;
                                                 }
                                                 cardMessage("Ok. I'll see your bet.");
-                                                loc8   = pk_dpos;
-                                                pk_bet = 0;
+                                                loc8   = pkrRaiseAmt;
+                                                pkrBet = 0;
                                                 while (loc8--) {
                                                         pkrAddChips(0, 1);
                                                         gameTick(0);
@@ -1364,7 +1364,7 @@ discard_loop:
 
 /* pkrShowdown: showdown.  Reveal computer hand, evaluate both, walk the
    per-rank tiebreak ladder.  Winner blinks 5x then potToWinner transfers.
-   Sets pk_round=1. */
+   Sets pkrRound=1. */
 
 static void
 pkrShowdown()
@@ -1380,113 +1380,113 @@ pkrShowdown()
 
         /* Reveal computer hand, animated. */
         for (i = 0; i < 5; i++) {
-                cardDraw(pk_ch[i], i, 0);
+                cardDraw(compHand[i], i, 0);
                 gameTick(2);
         }
-        pkrEvalHand(pk_ch, pk_hrf,  pk_hsf,  &pk_chrk);
-        pkrEvalHand(pk_ph, pk_phrf, pk_phsf, &pk_phrk);
+        pkrEvalHand(compHand, compScoring,  compSorted,  &compRank);
+        pkrEvalHand(plyrHand, plyrScoring, plyrSorted, &plyrRank);
 
-        if (pk_chrk > pk_phrk) pk_dslot = 0;
-        if (pk_chrk < pk_phrk) pk_dslot = 1;
+        if (compRank > plyrRank) pkrWinner = 0;
+        if (compRank < plyrRank) pkrWinner = 1;
 
-        if (pk_chrk == pk_phrk) {
-                pk_dslot = 1;
+        if (compRank == plyrRank) {
+                pkrWinner = 1;
 
                 /* Straight/flush/straight-flush tiebreak: compare
                    highest sorted-hand card rank. */
-                if ((pk_chrk == HAND_STRAIGHT_FLUSH || pk_chrk == HAND_FLUSH || pk_chrk == HAND_STRAIGHT) &&
-                    pk_hsf[4] % CARDS_PER_SUIT > pk_phsf[4] % CARDS_PER_SUIT)
-                        pk_dslot = 0;
+                if ((compRank == HAND_STRAIGHT_FLUSH || compRank == HAND_FLUSH || compRank == HAND_STRAIGHT) &&
+                    compSorted[4] % CARDS_PER_SUIT > plyrSorted[4] % CARDS_PER_SUIT)
+                        pkrWinner = 0;
 
                 /* Trips, full house, quads: compare the pair/trip
                    card's rank. */
-                if (pk_chrk == HAND_FOUR_OF_A_KIND || pk_chrk == HAND_FULL_HOUSE || pk_chrk == HAND_THREE_OF_A_KIND) {
+                if (compRank == HAND_FOUR_OF_A_KIND || compRank == HAND_FULL_HOUSE || compRank == HAND_THREE_OF_A_KIND) {
                         for (br = 0; br < 5; br++)
-                                if (pk_hrf[br] == 1)
+                                if (compScoring[br] == 1)
                                         break;
                         for (i = 0; i < 5; i++)
-                                if (pk_phrf[i] == 1)
+                                if (plyrScoring[i] == 1)
                                         break;
-                        if (pk_ch[br] % CARDS_PER_SUIT > pk_ph[i] % CARDS_PER_SUIT)
-                                pk_dslot = 0;
+                        if (compHand[br] % CARDS_PER_SUIT > plyrHand[i] % CARDS_PER_SUIT)
+                                pkrWinner = 0;
                 }
 
                 /* Two pair tiebreak. */
-                if (pk_chrk == HAND_TWO_PAIR) {
+                if (compRank == HAND_TWO_PAIR) {
                         pk = 0; ck = 0; ph = 0; ch = 0;
                         for (i = 0; i < 5; i++) {
-                                if (pk_hrf[i] &&
-                                    pk_ch[i] % CARDS_PER_SUIT > pk % CARDS_PER_SUIT)
-                                        pk = pk_ch[i];
-                                if (pk_hrf[i] &&
-                                    pk_ch[i] % CARDS_PER_SUIT < pk % CARDS_PER_SUIT)
-                                        ck = pk_ch[i];
-                                if (pk_phrf[i] &&
-                                    pk_ph[i] % CARDS_PER_SUIT > ph % CARDS_PER_SUIT)
-                                        ph = pk_ph[i];
-                                if (pk_phrf[i] &&
-                                    pk_ph[i] % CARDS_PER_SUIT < ph % CARDS_PER_SUIT)
-                                        ch = pk_ph[i];
+                                if (compScoring[i] &&
+                                    compHand[i] % CARDS_PER_SUIT > pk % CARDS_PER_SUIT)
+                                        pk = compHand[i];
+                                if (compScoring[i] &&
+                                    compHand[i] % CARDS_PER_SUIT < pk % CARDS_PER_SUIT)
+                                        ck = compHand[i];
+                                if (plyrScoring[i] &&
+                                    plyrHand[i] % CARDS_PER_SUIT > ph % CARDS_PER_SUIT)
+                                        ph = plyrHand[i];
+                                if (plyrScoring[i] &&
+                                    plyrHand[i] % CARDS_PER_SUIT < ph % CARDS_PER_SUIT)
+                                        ch = plyrHand[i];
                         }
                         if (pk % CARDS_PER_SUIT > ph % CARDS_PER_SUIT) {
-                                pk_dslot = 0;
+                                pkrWinner = 0;
                         } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT &&
                                    ck % CARDS_PER_SUIT > ch % CARDS_PER_SUIT) {
-                                pk_dslot = 0;
+                                pkrWinner = 0;
                         } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT &&
                                    ck % CARDS_PER_SUIT == ch % CARDS_PER_SUIT) {
                                 for (i = 0; i < 5; i++)
-                                        if (!pk_hrf[i])
+                                        if (!compScoring[i])
                                                 break;
                                 for (br = 0; br < 5; br++)
-                                        if (!pk_phrf[br])
+                                        if (!plyrScoring[br])
                                                 break;
-                                if (pk_ch[i] % CARDS_PER_SUIT > pk_ph[br] % CARDS_PER_SUIT)
-                                        pk_dslot = 0;
+                                if (compHand[i] % CARDS_PER_SUIT > plyrHand[br] % CARDS_PER_SUIT)
+                                        pkrWinner = 0;
                         }
                 }
 
                 /* One pair: compare pair rank, then kicker ladder. */
-                if (pk_chrk == HAND_ONE_PAIR) {
+                if (compRank == HAND_ONE_PAIR) {
                         pk = 0; ph = 0;
                         for (i = 0; i < 5; i++) {
-                                if (pk_hrf[i])  pk = pk_ch[i];
-                                if (pk_phrf[i]) ph = pk_ph[i];
+                                if (compScoring[i])  pk = compHand[i];
+                                if (plyrScoring[i]) ph = plyrHand[i];
                         }
                         if (pk % CARDS_PER_SUIT > ph % CARDS_PER_SUIT) {
-                                pk_dslot = 0;
+                                pkrWinner = 0;
                         } else if (pk % CARDS_PER_SUIT == ph % CARDS_PER_SUIT) {
                                 for (i = 4; i >= 0; i--) {
-                                        if (pk_hsf[i] % CARDS_PER_SUIT >
-                                            pk_phsf[i] % CARDS_PER_SUIT) {
-                                                pk_dslot = 0; break;
+                                        if (compSorted[i] % CARDS_PER_SUIT >
+                                            plyrSorted[i] % CARDS_PER_SUIT) {
+                                                pkrWinner = 0; break;
                                         }
-                                        if (pk_hsf[i] % CARDS_PER_SUIT <
-                                            pk_phsf[i] % CARDS_PER_SUIT) {
-                                                pk_dslot = 1; break;
+                                        if (compSorted[i] % CARDS_PER_SUIT <
+                                            plyrSorted[i] % CARDS_PER_SUIT) {
+                                                pkrWinner = 1; break;
                                         }
                                 }
                         }
                 }
 
                 /* High card: pure kicker ladder from top down. */
-                if (pk_chrk == HAND_HIGH_CARD) {
+                if (compRank == HAND_HIGH_CARD) {
                         for (i = 4; i >= 0; i--) {
-                                if (pk_hsf[i] % CARDS_PER_SUIT >
-                                    pk_phsf[i] % CARDS_PER_SUIT) {
-                                        pk_dslot = 0; break;
+                                if (compSorted[i] % CARDS_PER_SUIT >
+                                    plyrSorted[i] % CARDS_PER_SUIT) {
+                                        pkrWinner = 0; break;
                                 }
-                                if (pk_hsf[i] % CARDS_PER_SUIT <
-                                    pk_phsf[i] % CARDS_PER_SUIT) {
-                                        pk_dslot = 1; break;
+                                if (compSorted[i] % CARDS_PER_SUIT <
+                                    plyrSorted[i] % CARDS_PER_SUIT) {
+                                        pkrWinner = 1; break;
                                 }
                         }
                 }
         }
 
-        pk_round = 1;
+        pkrRound = 1;
 
-        if (pk_dslot == 0) {
+        if (pkrWinner == 0) {
                 cardMessage("I win!!!");
                 for (br = 0; br < 10; br++) {
                         gameTick(2);
@@ -1495,14 +1495,14 @@ pkrShowdown()
                                         cardDraw(CARD_HIGHLIGHT, i, 0);
                         } else {
                                 for (i = 0; i < 5; i++)
-                                        cardDraw(pk_ch[i], i, 0);
+                                        cardDraw(compHand[i], i, 0);
                         }
                 }
                 for (i = 0; i < 5; i++)
-                        cardDraw(pk_ch[i], i, 0);
+                        cardDraw(compHand[i], i, 0);
                 potToWinner(0);
         }
-        if (pk_dslot == 1) {
+        if (pkrWinner == 1) {
                 cardMessage("You're so lucky!!!");
                 for (br = 0; br < 10; br++) {
                         gameTick(2);
@@ -1511,11 +1511,11 @@ pkrShowdown()
                                         cardDraw(CARD_HIGHLIGHT, i, 1);
                         } else {
                                 for (i = 0; i < 5; i++)
-                                        cardDraw(pk_ph[i], i, 1);
+                                        cardDraw(plyrHand[i], i, 1);
                         }
                 }
                 for (i = 0; i < 5; i++)
-                        cardDraw(pk_ph[i], i, 1);
+                        cardDraw(plyrHand[i], i, 1);
                 potToWinner(1);
         }
 }
@@ -1527,33 +1527,33 @@ static short
 pkrOpenRank()
 {
         /* The bare `return;` on the success path is deliberate: the
-           last comparison leaves pk_ch[best] % 13 in the return
+           last comparison leaves compHand[best] % 13 in the return
            register, which is what the caller reads.  The original has
            no explicit value there. */
         short   i;
         short   best;
 
-        if (pk_bluff == NO && pk_chrk == HAND_HIGH_CARD) {
+        if (pkrBluffing == NO && compRank == HAND_HIGH_CARD) {
                 for (best = 0, i = 0; i < 5; i++) {
-                        if (pk_ch[i] % CARDS_PER_SUIT > pk_ch[best] % CARDS_PER_SUIT)
+                        if (compHand[i] % CARDS_PER_SUIT > compHand[best] % CARDS_PER_SUIT)
                                 best = i;
                 }
-                if (pk_ch[best] % CARDS_PER_SUIT < CARD_RANK_ACE)
+                if (compHand[best] % CARDS_PER_SUIT < CARD_RANK_ACE)
                         return -1;
                 return;
         }
         return 0;
 }
 
-/* pkrDecideBluff: 1/15 chance of bluff when hand rank < 2.  Sets pk_bluff. */
+/* pkrDecideBluff: 1/15 chance of bluff when hand rank < 2.  Sets pkrBluffing. */
 
 static void
 pkrDecideBluff()
 {
         /* No local: the roll is tested in place. */
-        pk_bluff = NO;
-        if (rndRng(0, 14) == 0 && pk_chrk <= HAND_ONE_PAIR)
-                pk_bluff = YES;
+        pkrBluffing = NO;
+        if (rndRng(0, 14) == 0 && compRank <= HAND_ONE_PAIR)
+                pkrBluffing = YES;
 }
 
 /* pkrCompDraw: computer AI draw phase.
@@ -1564,11 +1564,11 @@ pkrDecideBluff()
 #include "dat_games4.c"
 
 /* The resident's draw.  Rates his hand with pkrEvalHand, marks the cards
-   to throw in pk_sel (the cards that are not part of the scoring
+   to throw in pkrSelected (the cards that are not part of the scoring
    rank, or 0..2 random ones when pkrDecideBluff decides to bluff), announces
-   the count through the pk_tcm message, and deals each replacement
+   the count through the pkrMsgTake message, and deals each replacement
    from cards not in either hand or the discard pile, moving the old
-   card onto pk_dpile. */
+   card onto pkrDiscPile. */
 static void
 pkrCompDraw()
 {
@@ -1580,49 +1580,49 @@ pkrCompDraw()
         short   n;                   /* new_card */
 
         for (i = 0; i < 5; i++)
-                pk_sel[i] = 0;
-        pkrEvalHand(pk_ch, pk_hrf, pk_hsf, &pk_chrk);
+                pkrSelected[i] = 0;
+        pkrEvalHand(compHand, compScoring, compSorted, &compRank);
         pkrDecideBluff();
 
-        if (pk_bluff != NO) {
+        if (pkrBluffing != NO) {
                 nc = rndRng(0, 2);
                 i  = nc;
                 for (card = 0; card < 5; card++) {
                         if (i == 0)
                                 break;
-                        if (pk_hrf[card] == 0) {
-                                pk_sel[card] = 1;
+                        if (compScoring[card] == 0) {
+                                pkrSelected[card] = 1;
                                 i--;
                         }
                 }
         } else {
-                if (pk_chrk >= HAND_STRAIGHT) {
+                if (compRank >= HAND_STRAIGHT) {
                         nc = 0;
                 } else {
-                        if (pk_chrk == HAND_THREE_OF_A_KIND) {
+                        if (compRank == HAND_THREE_OF_A_KIND) {
                                 nc = 2;
                                 for (i = 0; i < 5; i++)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == HAND_TWO_PAIR) {
+                                        if (compScoring[i] == 0)
+                                                pkrSelected[i] = 1;
+                        } else if (compRank == HAND_TWO_PAIR) {
                                 nc = 1;
                                 for (i = 0; i < 5; i++)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == HAND_ONE_PAIR) {
+                                        if (compScoring[i] == 0)
+                                                pkrSelected[i] = 1;
+                        } else if (compRank == HAND_ONE_PAIR) {
                                 nc = 3;
                                 for (i = 0; i < 5; i++)
-                                        if (pk_hrf[i] == 0)
-                                                pk_sel[i] = 1;
-                        } else if (pk_chrk == HAND_HIGH_CARD) {
+                                        if (compScoring[i] == 0)
+                                                pkrSelected[i] = 1;
+                        } else if (compRank == HAND_HIGH_CARD) {
                                 nc = 4;
                                 for (card = 0, i = 0; i < 5; i++) {
-                                        if (pk_ch[i] % CARDS_PER_SUIT > pk_ch[card] % CARDS_PER_SUIT)
+                                        if (compHand[i] % CARDS_PER_SUIT > compHand[card] % CARDS_PER_SUIT)
                                                 card = i;
                                 }
                                 for (i = 0; i < 5; i++)
                                         if (i != card)
-                                                pk_sel[i] = 1;
+                                                pkrSelected[i] = 1;
                         }
                         /* No final else: ranks 0..3 are all covered,
                            and >= 4 already cleared nc. */
@@ -1635,41 +1635,41 @@ pkrCompDraw()
                 return;
         }
 
-        pk_tcm[10] = nc + '0';
+        pkrMsgTake[10] = nc + '0';
         if (nc == 1) {
-                pk_tcm[16] = '.';
-                pk_tcm[17] = '\0';
+                pkrMsgTake[16] = '.';
+                pkrMsgTake[17] = '\0';
         } else {
-                pk_tcm[16] = 's';
-                pk_tcm[17] = '.';
+                pkrMsgTake[16] = 's';
+                pkrMsgTake[17] = '.';
         }
-        cardMessage(pk_tcm);
+        cardMessage(pkrMsgTake);
         gameTick(8);
 
         for (i = 0; i < 5; i++) {
-                if (pk_sel[i] == 1) {
+                if (pkrSelected[i] == 1) {
                         dm = YES;
                         while (dm != NO) {
                                 card = rndRng(0, 51);
                                 dm   = NO;
                                 for (n = 0; n < 5; n++) {
-                                        if (pk_ch[n] == card) dm = YES;
-                                        if (pk_ph[n] == card) dm = YES;
+                                        if (compHand[n] == card) dm = YES;
+                                        if (plyrHand[n] == card) dm = YES;
                                 }
-                                n = pk_disc;
+                                n = pkrNumDisc;
                                 while (n--) {
-                                        if (pk_dpile[n] == card) dm = YES;
+                                        if (pkrDiscPile[n] == card) dm = YES;
                                 }
-                                pk_dpile[pk_disc] = pk_ch[i];
-                                pk_disc++;
-                                pk_ch[i] = card;
+                                pkrDiscPile[pkrNumDisc] = compHand[i];
+                                pkrNumDisc++;
+                                compHand[i] = card;
                                 cardDraw(CARD_HIGHLIGHT, i, 0);
                                 gameTick(3);
                         }
                 }
         }
         for (i = 0; i < 5; i++) {
-                if (pk_sel[i] == 1) {
+                if (pkrSelected[i] == 1) {
                         cardDraw(CARD_BACK, i, 0);
                         gameTick(1);
                 }
@@ -1687,20 +1687,20 @@ short   winner;
            (n--)` loads the value, subtracts straight to memory and
            tests the OLD copy -- so it runs one past zero and the tail
            assignment puts the pot back to 0. */
-        while (g_ppppa--) {
+        while (potChips--) {
                 if (winner == 0) {
-                        g_pcmon++;
+                        compChips++;
                         dispCompChips();
                         dispPot();
                         gameTick(0);
                 } else {
-                        g_ppmon++;
+                        plyrChips++;
                         dispPlyrChips();
                         dispPot();
                         gameTick(0);
                 }
         }
-        g_ppppa = 0;
+        potChips = 0;
 }
 
 /* pkrPlyrBet: player betting UI: F1 Bet (hold), F3 Enter, F5 Pass/Clr.
@@ -1715,8 +1715,8 @@ char *  str;
         short   r;
         short   go;
 
-        pk_bet  = 0;
-        pk_pass = NO;
+        pkrBet  = 0;
+        pkrPassed = NO;
         cardMessage(str);
         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
         printString("F1 Bet",       KEYMENU_X, KEYMENU_LINE1, COLOR_red);
@@ -1728,11 +1728,11 @@ char *  str;
                 if (r == PK_IN_TIMEOUT)
                         return -1;
                 if (r == PK_IN_ARG_C) {
-                        pk_pass = YES;
+                        pkrPassed = YES;
                         return 0;
                 }
                 if (r == PK_IN_ARG_A) {
-                        if (g_ppmon == 0)
+                        if (plyrChips == 0)
                                 return -1;
                         pkrAddChips(1, 1);
                         go = 1;
@@ -1743,18 +1743,18 @@ char *  str;
                 r = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
                 if (r == PK_IN_TIMEOUT)
                         return -1;
-                if (r == PK_IN_ARG_B && pk_bet != 0)
+                if (r == PK_IN_ARG_B && pkrBet != 0)
                         return 0;
                 if (r == PK_IN_ARG_A)
                         pkrAddChips(1, 1);
                 if (r == PK_IN_ARG_C) {
-                        if (pk_bet == 0) {
-                                pk_pass = YES;
+                        if (pkrBet == 0) {
+                                pkrPassed = YES;
                                 return 0;
                         }
-                        g_ppmon += pk_bet;
-                        g_ppppa -= pk_bet;
-                        pk_bet   = 0;
+                        plyrChips += pkrBet;
+                        potChips -= pkrBet;
+                        pkrBet   = 0;
                         dispPlyrChips();
                         dispPot();
                 }
@@ -1762,7 +1762,7 @@ char *  str;
 }
 
 /* pkrAddChips: animated chip transfer.  who=0 computer / 1 player.
-   Caps pk_bet at 20. */
+   Caps pkrBet at 20. */
 
 static void
 pkrAddChips(who, n)
@@ -1772,26 +1772,26 @@ short   n;
         /* No local: the count is decremented in the loop condition
            (the argument itself), and the two side branches are
            written out in order. */
-        if (pk_bet == 20)
+        if (pkrBet == 20)
                 return;
         while (n--) {
-                if (who == 0 && g_pcmon == 0)
+                if (who == 0 && compChips == 0)
                         return;
-                if (who == 1 && g_ppmon == 0)
+                if (who == 1 && plyrChips == 0)
                         return;
                 if (who == 0) {
-                        g_pcmon--;
+                        compChips--;
                         dispCompChips();
-                        g_ppppa++;
+                        potChips++;
                         dispPot();
-                        pk_bet++;
+                        pkrBet++;
                 }
                 if (who == 1) {
-                        g_ppmon--;
+                        plyrChips--;
                         dispPlyrChips();
-                        g_ppppa++;
+                        potChips++;
                         dispPot();
-                        pk_bet++;
+                        pkrBet++;
                 }
         }
 }
@@ -1810,8 +1810,8 @@ pkrDealHands()
         short   dup;
 
         for (i = 0; i < 5; i++) {
-                pk_ch[i] = CARD_NONE;
-                pk_ph[i] = CARD_NONE;
+                compHand[i] = CARD_NONE;
+                plyrHand[i] = CARD_NONE;
         }
         for (i = 0; i < 5; i++) {
                 dup = YES;
@@ -1819,25 +1819,25 @@ pkrDealHands()
                         c   = rndRng(0, 51);
                         dup = NO;
                         for (j = 0; j < 5; j++) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                if (compHand[j] == c || plyrHand[j] == c)
                                         dup = YES;
                         }
                 }
-                pk_ch[i] = c;
+                compHand[i] = c;
                 dup = YES;
                 while (dup != NO) {
                         c   = rndRng(0, 51);
                         dup = NO;
                         for (j = 0; j < 5; j++) {
-                                if (pk_ch[j] == c || pk_ph[j] == c)
+                                if (compHand[j] == c || plyrHand[j] == c)
                                         dup = YES;
                         }
                 }
-                pk_ph[i] = c;
+                plyrHand[i] = c;
         }
         panelErase(70, 10, 219, 62);
         for (i = 0; i < 5; i++) {
-                cardDraw(pk_ph[i], i, 1);
+                cardDraw(plyrHand[i], i, 1);
                 gameTick(3);
                 cardDraw(CARD_BACK, i, 0);
                 gameTick(3);
@@ -1845,7 +1845,7 @@ pkrDealHands()
 }
 
 /* cardDraw: blit one card sprite (15x23) at slot xi of row yi.
-   card=CARD_BACK selects crd_mfdb[52]; 0..51 index directly. */
+   card=CARD_BACK selects cardMfdb[52]; 0..51 index directly. */
 
 void
 cardDraw(card, xi, yi)
@@ -1857,14 +1857,14 @@ short   yi;
         short   y;
 
         if (yi == 0) {
-                x = crd_xa[xi];
-                y = crd_ya[xi];
+                x = cardXComp[xi];
+                y = cardYComp[xi];
         } else {
-                x = crd_xb[xi];
-                y = crd_yb[xi];
+                x = cardXPlyr[xi];
+                y = cardYPlyr[xi];
         }
-        blitRect(vdihnd, S_ONLY,
-                              (long) &crd_mfdb[card], (long) &mf_scb_c,
+        blitRect(vdiHandle, S_ONLY,
+                              (long) &cardMfdb[card], (long) &cardTableMfdb,
                               0, 0, 15, 23,
                               x, y, x + 15, y + 23);
 }
@@ -1894,7 +1894,7 @@ short   c;
                 if (ch == 0x33) return 6;         /* '3' */
                 if (ch == 0x34) return 7;         /* '4' */
                 if (ch == 0x35) return 8;         /* '5' */
-                if (mg_tofl != NO)
+                if (mgTimedOut != NO)
                         return -1;
         }
 }
@@ -1911,10 +1911,10 @@ dispCompChips()
 
         panelErase(5, 10, 31, 20);
         str[3] = '\0';
-        str[0] = (str[8] = g_pcmon / 100) + '0';
+        str[0] = (str[8] = compChips / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (rem = g_pcmon % 100) / 10;
+        str[6] = (rem = compChips % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
@@ -1934,10 +1934,10 @@ dispPlyrChips()
 
         panelErase(5, 50, 31, 60);
         str[3] = '\0';
-        str[0] = (str[8] = g_ppmon / 100) + '0';
+        str[0] = (str[8] = plyrChips / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (rem = g_ppmon % 100) / 10;
+        str[6] = (rem = plyrChips % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
@@ -1957,10 +1957,10 @@ dispPot()
 
         panelErase(31, 30, 57, 40);
         str[3] = '\0';
-        str[0] = (str[8] = g_ppppa / 100) + '0';
+        str[0] = (str[8] = potChips / 100) + '0';
         if (str[0] == '0')
                 str[0] = ' ';
-        str[6] = (rem = g_ppppa % 100) / 10;
+        str[6] = (rem = potChips % 100) / 10;
         if (str[0] == ' ' && str[6] == '\0')
                 str[1] = ' ';
         else
@@ -1971,42 +1971,42 @@ dispPot()
 }
 
 /* pkrAnte: opening prompt "Ante up to play." + F1 Ante / F10 Quit.
-   On F1: both players contribute 1 chip.  On F10/timeout: sets pk_quit. */
+   On F1: both players contribute 1 chip.  On F10/timeout: sets cardQuit. */
 
 static void
 pkrAnte()
 {
         short   r;
 
-        g_ppppa = 0;
+        potChips = 0;
         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
         printString("F1  Ante", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
         printString("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
         cardMessage("Ante up to play.");
         r = 0;
-        pk_quit = NO;
+        cardQuit = NO;
         while (r != PK_IN_ARG_A && r != PK_IN_ARG_C && r != PK_IN_TIMEOUT)
                 r = cardKeyInput(KEY_F1, PK_IN_UNUSED, KEY_F10);
         if (r == PK_IN_ARG_C || r == PK_IN_TIMEOUT) {
-                pk_quit = YES;
+                cardQuit = YES;
                 return;
-        } else if (g_ppmon == 0) {
+        } else if (plyrChips == 0) {
                 cardMessage("Sorry, you're all out!!!");
                 gameTick(0x1e);
-                pk_quit = YES;
-        } else if (g_pcmon == 0) {
+                cardQuit = YES;
+        } else if (compChips == 0) {
                 cardMessage("I'm all out!!!");
                 gameTick(0x1e);
-                pk_quit = YES;
+                cardQuit = YES;
         } else {
                 panelErase(5, 63, 319, 75);
-                g_ppmon--;
+                plyrChips--;
                 dispPlyrChips();
-                g_ppppa++;
+                potChips++;
                 dispPot();
-                g_pcmon--;
+                compChips--;
                 dispCompChips();
-                g_ppppa++;
+                potChips++;
                 dispPot();
         }
 }
@@ -2083,34 +2083,34 @@ playWar()
         short   saved_head_frame;
         short   saved_head_mode;
 
-        crd_dat = (short *) Malloc(10400L);
-        if (crd_dat == (short *) 0)
+        cardImages = (short *) Malloc(10400L);
+        if (cardImages == (short *) 0)
                 outOfMemory();
         cardLoad();
         mgSetup();
 
-        g_pcmon = 26;
-        g_ppmon = 26;
-        g_ppppa = 0;
+        compChips = 26;
+        plyrChips = 26;
+        potChips = 0;
 
         /* Deck 0..51 then Fisher-Yates-lite 400-swap shuffle. */
         for (ikey = 0; ikey < 52; ikey++)
-                pk_dsc[ikey] = ikey;
+                warDeck[ikey] = ikey;
         j = 400;
         while (j--) {
                 ikey = rndRng(0, 51);
                 do {
                         cidx = rndRng(0, 51);
                 } while (ikey == cidx);
-                t = pk_dsc[cidx];
-                pk_dsc[cidx] = pk_dsc[ikey];
-                pk_dsc[ikey] = t;
+                t = warDeck[cidx];
+                warDeck[cidx] = warDeck[ikey];
+                warDeck[ikey] = t;
         }
         ikey = 0;
         for (cidx = 0; ikey < 52; cidx++) {
-                g_pcdrp[cidx] = pk_dsc[ikey];
+                compPile[cidx] = warDeck[ikey];
                 ikey++;
-                g_ppdrp[cidx] = pk_dsc[ikey];
+                plyrPile[cidx] = warDeck[ikey];
                 ikey++;
         }
 
@@ -2135,18 +2135,18 @@ round:
                 /* Every exit is a goto: the two message blocks and
                    the cleanup are labels the war round jumps back
                    into, and the cleanup returns. */
-                if (g_pcmon == 0) {
+                if (compChips == 0) {
 out_of_cards:
                         cardMessage("I'm out of cards! You're too good!");
                         gameTick(0x14);
 cleanup:
-                        tx_sctm  = 0;
-                        no_keyin = NO;
-                        Mfree(crd_dat);
+                        textTimer  = 0;
+                        keysBlocked = NO;
+                        Mfree(cardImages);
                         hideMouse();
                         return;
                 }
-                if (g_ppmon == 0) {
+                if (plyrChips == 0) {
 no_cards:
                         cardMessage("No cards, huh? Better luck next time.");
                         gameTick(0x14);
@@ -2154,15 +2154,15 @@ no_cards:
                 }
 
                 gameTick(5);
-                pk_pwc[0] = popCard(g_ppdrp, &g_ppmon);
-                g_ppppa++;
+                plyrWarCards[0] = popCard(plyrPile, &plyrChips);
+                potChips++;
                 cardDraw(CARD_BACK, 0, 1);
                 dispPot();
                 dispPlyrChips();
                 gameTick(3);
-                pk_cwc[0] = popCard(g_pcdrp, &g_pcmon);
-                g_ppppa++;
-                cardDraw(pk_cwc[0], 0, 0);
+                compWarCards[0] = popCard(compPile, &compChips);
+                potChips++;
+                cardDraw(compWarCards[0], 0, 0);
                 dispPot();
                 dispCompChips();
 
@@ -2175,14 +2175,14 @@ no_cards:
                 if (ikey == PK_IN_ARG_B)
                         goto cleanup;
 
-                cardDraw(pk_pwc[0], 0, 1);
+                cardDraw(plyrWarCards[0], 0, 1);
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 gameTick(5);
 
                 /* Both ranks land in locals before the compare, and
                    the loser's branch recomputes them the other way
                    round. */
-                if ((ikey = pk_pwc[0] % CARDS_PER_SUIT) > (cidx = pk_cwc[0] % CARDS_PER_SUIT)) {
+                if ((ikey = plyrWarCards[0] % CARDS_PER_SUIT) > (cidx = compWarCards[0] % CARDS_PER_SUIT)) {
                         /* Player wins. */
                         if (ikey == CARD_RANK_ACE) {
                                 sp = "Ace? I don't believe it!";
@@ -2200,11 +2200,11 @@ no_cards:
                         gameTick(8);
                         potToWinner(1);
                         panelErase(70, 10, 219, 62);
-                        g_ppmon -= 2;
-                        pushCard(g_ppdrp, &g_ppmon, pk_pwc[0]);
-                        pushCard(g_ppdrp, &g_ppmon, pk_cwc[0]);
+                        plyrChips -= 2;
+                        pushCard(plyrPile, &plyrChips, plyrWarCards[0]);
+                        pushCard(plyrPile, &plyrChips, compWarCards[0]);
                         goto round;
-                } else if ((ikey = pk_cwc[0] % CARDS_PER_SUIT) > (cidx = pk_pwc[0] % CARDS_PER_SUIT)) {
+                } else if ((ikey = compWarCards[0] % CARDS_PER_SUIT) > (cidx = plyrWarCards[0] % CARDS_PER_SUIT)) {
                         /* Computer wins by margin (ikey - cidx). */
                         if (ikey == CARD_RANK_ACE) {
                                 sp = "Ace takes it!";
@@ -2234,22 +2234,22 @@ no_cards:
                                 }
                         }
                         cardMessage(sp);
-                        saved_head_frame = g_hsfra;
-                        saved_head_mode  = g_hamod;
+                        saved_head_frame = headFrame;
+                        saved_head_mode  = headMode;
                         peekAround();
-                        g_hamod = saved_head_mode;
+                        headMode = saved_head_mode;
                         gameTick(8);
                         potToWinner(0);
                         panelErase(70, 10, 219, 62);
-                        g_pcmon -= 2;
-                        pushCard(g_pcdrp, &g_pcmon, pk_pwc[0]);
-                        pushCard(g_pcdrp, &g_pcmon, pk_cwc[0]);
-                        g_hsfra = saved_head_frame;
+                        compChips -= 2;
+                        pushCard(compPile, &compChips, plyrWarCards[0]);
+                        pushCard(compPile, &compChips, compWarCards[0]);
+                        headFrame = saved_head_frame;
                         goto round;
                 } else {
                         /* Tie -> war round. */
                         ikey = warRound();
-                        if (mg_tofl != NO)
+                        if (mgTimedOut != NO)
                                 goto cleanup;
                         if (ikey == -1)
                                 goto out_of_cards;
@@ -2260,7 +2260,7 @@ no_cards:
 }
 
 /* warRound: nested war round.  Draw 3 face-down + 1 face-up each.
-   On tie, loops with g_pchc++.
+   On tie, loops with warDepth++.
    Returns 0 = normal, -1 = computer out / user quit, -2 = player out. */
 
 static short
@@ -2275,34 +2275,34 @@ warRound()
         short   crank;
         short   unused;
 
-        g_pchc = 0;
+        warDepth = 0;
         for (idx = 1; idx < 52; idx++) {
-                pk_cwc[idx] = -1;
-                pk_pwc[idx] = -1;
+                compWarCards[idx] = -1;
+                plyrWarCards[idx] = -1;
         }
         for (;;) {
                 cardMessage("... WAR!! ...");
                 gameTick(10);
-                if (g_pcmon == 0)
+                if (compChips == 0)
                         return -1;
-                if (g_ppmon == 0)
+                if (plyrChips == 0)
                         return -2;
 
                 for (idx = 1; idx < 4; idx++) {
-                        if (g_ppmon == 1)
+                        if (plyrChips == 1)
                                 break;
-                        if (g_pcmon == 1)
+                        if (compChips == 1)
                                 break;
-                        drawn = popCard(g_ppdrp, &g_ppmon);
-                        pk_pwc[g_pchc * 4 + idx] = drawn;
-                        g_ppppa++;
+                        drawn = popCard(plyrPile, &plyrChips);
+                        plyrWarCards[warDepth * 4 + idx] = drawn;
+                        potChips++;
                         cardDraw(CARD_BACK, idx, 1);
                         dispPot();
                         dispPlyrChips();
                         gameTick(3);
-                        drawn = popCard(g_pcdrp, &g_pcmon);
-                        pk_cwc[g_pchc * 4 + idx] = drawn;
-                        g_ppppa++;
+                        drawn = popCard(compPile, &compChips);
+                        compWarCards[warDepth * 4 + idx] = drawn;
+                        potChips++;
                         cardDraw(CARD_BACK, idx, 0);
                         dispPot();
                         dispCompChips();
@@ -2310,16 +2310,16 @@ warRound()
                 }
 
                 /* Final face-up card each. */
-                drawn = popCard(g_ppdrp, &g_ppmon);
-                pk_pwc[g_pchc * 4 + idx] = drawn;
-                g_ppppa++;
+                drawn = popCard(plyrPile, &plyrChips);
+                plyrWarCards[warDepth * 4 + idx] = drawn;
+                potChips++;
                 cardDraw(CARD_BACK, idx, 1);
                 dispPot();
                 dispPlyrChips();
                 gameTick(3);
-                drawn = popCard(g_pcdrp, &g_pcmon);
-                pk_cwc[g_pchc * 4 + idx] = drawn;
-                g_ppppa++;
+                drawn = popCard(compPile, &compChips);
+                compWarCards[warDepth * 4 + idx] = drawn;
+                potChips++;
                 cardDraw(drawn, idx, 0);
                 dispPot();
                 dispCompChips();
@@ -2328,52 +2328,52 @@ warRound()
                 cardMessage("Let's see what you've got...");
                 printString("F1 Show", KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 while (cardKeyInput(KEY_F1, PK_IN_UNUSED, PK_IN_UNUSED) != PK_IN_ARG_A) {
-                        if (mg_tofl != NO)
+                        if (mgTimedOut != NO)
                                 return -1;
                 }
-                cardDraw(pk_pwc[g_pchc * 4 + idx], idx, 1);
+                cardDraw(plyrWarCards[warDepth * 4 + idx], idx, 1);
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 gameTick(5);
 
-                if ((prank = pk_pwc[g_pchc * 4 + idx] % CARDS_PER_SUIT) >
-                    (crank = pk_cwc[g_pchc * 4 + idx] % CARDS_PER_SUIT)) {
+                if ((prank = plyrWarCards[warDepth * 4 + idx] % CARDS_PER_SUIT) >
+                    (crank = compWarCards[warDepth * 4 + idx] % CARDS_PER_SUIT)) {
                         /* Player wins the war round. */
                         cardMessage("You win the war!!!");
                         gameTick(8);
                         while (--idx) {
-                                cardDraw(pk_cwc[g_pchc * 4 + idx], idx, 0);
+                                cardDraw(compWarCards[warDepth * 4 + idx], idx, 0);
                                 gameTick(1);
                         }
                         gameTick(10);
-                        pot = g_ppppa;
+                        pot = potChips;
                         potToWinner(1);
-                        g_ppmon -= pot;
-                        for (idx = 0; pk_cwc[idx] != -1; idx++) {
-                                pushCard(g_ppdrp, &g_ppmon, pk_pwc[idx]);
-                                pushCard(g_ppdrp, &g_ppmon, pk_cwc[idx]);
+                        plyrChips -= pot;
+                        for (idx = 0; compWarCards[idx] != -1; idx++) {
+                                pushCard(plyrPile, &plyrChips, plyrWarCards[idx]);
+                                pushCard(plyrPile, &plyrChips, compWarCards[idx]);
                         }
                         return 0;
                 }
-                if ((prank = pk_pwc[g_pchc * 4 + idx] % CARDS_PER_SUIT) <
-                    (crank = pk_cwc[g_pchc * 4 + idx] % CARDS_PER_SUIT)) {
+                if ((prank = plyrWarCards[warDepth * 4 + idx] % CARDS_PER_SUIT) <
+                    (crank = compWarCards[warDepth * 4 + idx] % CARDS_PER_SUIT)) {
                         /* Computer wins the war round. */
                         cardMessage("I win the war!!!");
                         gameTick(8);
                         while (--idx) {
-                                cardDraw(pk_pwc[g_pchc * 4 + idx], idx, 1);
+                                cardDraw(plyrWarCards[warDepth * 4 + idx], idx, 1);
                                 gameTick(1);
                         }
                         gameTick(10);
-                        pot = g_ppppa;
+                        pot = potChips;
                         potToWinner(0);
-                        g_pcmon -= pot;
-                        for (idx = 0; pk_cwc[idx] != -1; idx++) {
-                                pushCard(g_pcdrp, &g_pcmon, pk_pwc[idx]);
-                                pushCard(g_pcdrp, &g_pcmon, pk_cwc[idx]);
+                        compChips -= pot;
+                        for (idx = 0; compWarCards[idx] != -1; idx++) {
+                                pushCard(compPile, &compChips, plyrWarCards[idx]);
+                                pushCard(compPile, &compChips, compWarCards[idx]);
                         }
                         return 0;
                 }
-                g_pchc++;
+                warDepth++;
         }
 }
 
@@ -2400,13 +2400,13 @@ playBlackjack()
         short   round_ctr;
         short   phase_snap;     /* written once, never read */
 
-        crd_dat = (short *) Malloc(0x28a0L);
-        if (crd_dat == (short *) 0)
+        cardImages = (short *) Malloc(0x28a0L);
+        if (cardImages == (short *) 0)
                 outOfMemory();
         cardLoad();
         mgSetup();
-        g_pcmon = 400;
-        g_ppmon = 400;
+        compChips = 400;
+        plyrChips = 400;
         dispCompChips();
         dispPlyrChips();
 
@@ -2418,106 +2418,106 @@ next_round:
 round:
                 panelErase(70, 10, 219, 62);
                 panelErase(31, 43, 57, 53);
-                g_pcbet = 0;
-                g_ppbet = 0;
-                pk_phase = 0;
+                bjBetMain = 0;
+                bjBetSplit = 0;
+                bjDidSplit = 0;
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1  Bet",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
                 cardMessage("What's your bet?");
-                bj_key  = 0;
-                pk_quit = NO;
-                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_C)
-                        bj_key = cardKeyInput(KEY_F1, PK_IN_UNUSED, KEY_F10);
-                if (bj_key == PK_IN_ARG_C) {
+                bjKey  = 0;
+                cardQuit = NO;
+                while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_C)
+                        bjKey = cardKeyInput(KEY_F1, PK_IN_UNUSED, KEY_F10);
+                if (bjKey == PK_IN_ARG_C) {
 cleanup:
-                        tx_sctm  = 0;
-                        no_keyin = NO;
-                        Mfree(crd_dat);
+                        textTimer  = 0;
+                        keysBlocked = NO;
+                        Mfree(cardImages);
                         hideMouse();
                         return;
                 }
 
                 for (br = 0; br < 5; br++) {
-                        pk_ch[br]  = CARD_NONE;
-                        pk_ph[br]  = CARD_NONE;
-                        pk_psh[br] = CARD_NONE;
+                        compHand[br]  = CARD_NONE;
+                        plyrHand[br]  = CARD_NONE;
+                        bjSplitHand[br] = CARD_NONE;
                 }
                 panelErase(70, 10, 219, 62);
-                if (g_ppmon == 0) {
+                if (plyrChips == 0) {
                         cardMessage("Game's over. I win.");
                         gameTick(0x14);
                         goto cleanup;
                 }
-                g_ppmon--;
+                plyrChips--;
                 dispPlyrChips();
-                g_pcbet++;
+                bjBetMain++;
                 bjShowBet(1);
-                pk_bet = 1;
+                pkrBet = 1;
                 printString("F3  Enter", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
                 printString("F10 Quit",  KEYMENU_X, KEYMENU_LINE3, COLOR_lt_grey);
                 printString("F5  Clear", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
 
-                bj_key = 0;
+                bjKey = 0;
                 while (1) {
-                        bj_key = 0;
-                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B &&
-                               bj_key != PK_IN_ARG_C && bj_key != PK_IN_TIMEOUT) {
+                        bjKey = 0;
+                        while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B &&
+                               bjKey != PK_IN_ARG_C && bjKey != PK_IN_TIMEOUT) {
                                 gameTick(0);
-                                bj_key = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
+                                bjKey = cardKeyInput(KEY_F1, KEY_F3, KEY_F5);
                         }
-                        if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == PK_IN_ARG_C) {
-                                g_ppmon += pk_bet;
-                                pk_bet  = 0;
-                                g_pcbet = 0;
+                        if (mgTimedOut != NO) goto cleanup;
+                        if (bjKey == PK_IN_ARG_C) {
+                                plyrChips += pkrBet;
+                                pkrBet  = 0;
+                                bjBetMain = 0;
                                 bjShowBet(1);
                                 dispPlyrChips();
-                                pk_dpile[10] = CARD_BJ_STEP;
+                                pkrDiscPile[10] = CARD_BJ_STEP;
                                 break;
                         }
-                        if (bj_key == PK_IN_ARG_A) {
-                                if (g_ppmon == 0) {
+                        if (bjKey == PK_IN_ARG_A) {
+                                if (plyrChips == 0) {
                                         cardMessage("Game's over. I win.");
-                                        pk_quit = YES;
+                                        cardQuit = YES;
                                         break;
                                 }
-                                if (pk_bet == 20)
+                                if (pkrBet == 20)
                                         continue;
-                                g_ppmon--;
+                                plyrChips--;
                                 dispPlyrChips();
-                                g_pcbet++;
+                                bjBetMain++;
                                 bjShowBet(1);
-                                pk_bet++;
+                                pkrBet++;
                         }
-                        if (bj_key == PK_IN_ARG_B) {
+                        if (bjKey == PK_IN_ARG_B) {
                                 break;
                         }
                 }
 
-                if (pk_dpile[10] != CARD_BJ_STOP) {
-                        pk_dpile[10] = CARD_BJ_STOP;
+                if (pkrDiscPile[10] != CARD_BJ_STOP) {
+                        pkrDiscPile[10] = CARD_BJ_STOP;
                         goto round;
                 }
-                if (pk_quit != NO) {
+                if (cardQuit != NO) {
                         gameTick(20);
                         goto cleanup;
                 }
                 cardMessage(" ");
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
-                bjDealCard(pk_ph, 0);
-                bjDealCard(pk_ch, 1);
-                bjDealCard(pk_ph, 0);
-                bjDealCard(pk_ch, 0);
+                bjDealCard(plyrHand, 0);
+                bjDealCard(compHand, 1);
+                bjDealCard(plyrHand, 0);
+                bjDealCard(compHand, 0);
                 gameTick(10);
-                br = bjIsNatural(pk_ph);
-                hit  = bjIsNatural(pk_ch);
+                br = bjIsNatural(plyrHand);
+                hit  = bjIsNatural(compHand);
                 if (br != 0 && hit != 0) {
                         cardMessage("You have BLACKJACK...but so do I !!");
-                        cardDraw(pk_ch[0], 0, 0);
+                        cardDraw(compHand[0], 0, 0);
                         gameTick(0x14);
-                        bjSettle(&g_pcbet, 1, 2);
-                        if (pk_quit != NO) {
+                        bjSettle(&bjBetMain, 1, 2);
+                        if (cardQuit != NO) {
                                 cardMessage("Game's over. I win.");
                                 gameTick(0x14);
                                 goto cleanup;
@@ -2526,9 +2526,9 @@ cleanup:
                 } else if (br != 0) {
                         cardMessage("You have BLACKJACK!!");
                         gameTick(0x14);
-                        phase_snap = g_pcbet;
-                        bjSettle(&g_pcbet, 1, 1);
-                        if (pk_quit != NO) {
+                        phase_snap = bjBetMain;
+                        bjSettle(&bjBetMain, 1, 1);
+                        if (cardQuit != NO) {
                                 cardMessage("I'm all out!!");
                                 gameTick(0x14);
                                 goto cleanup;
@@ -2537,12 +2537,12 @@ cleanup:
                 } else if (hit != 0) {
                         cardMessage("I have BLACKJACK!!");
                         gameTick(10);
-                        cardDraw(pk_ch[0], 0, 0);
+                        cardDraw(compHand[0], 0, 0);
                         gameTick(0x14);
                         cardMessage("I win double the bet.");
                         gameTick(0x14);
-                        bjSettle(&g_pcbet, 0, 1);
-                        if (pk_quit != NO) {
+                        bjSettle(&bjBetMain, 0, 1);
+                        if (cardQuit != NO) {
                                 cardMessage("Game's over. I win.");
                                 gameTick(0x14);
                                 goto cleanup;
@@ -2551,195 +2551,195 @@ cleanup:
                 }
                 /* Neither had a natural.  Split, double-down,
                    hit/stand, dealer -- the meat of the game. */
-                pk_phase = 0;
-                if ((short) pk_ph[0] % CARDS_PER_SUIT ==
-                    (short) pk_ph[1] % CARDS_PER_SUIT) {
+                bjDidSplit = 0;
+                if ((short) plyrHand[0] % CARDS_PER_SUIT ==
+                    (short) plyrHand[1] % CARDS_PER_SUIT) {
                         cardMessage("Do you wish to split?");
                         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                         printString("F1 Split",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                         printString("F3 No split", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
-                        bj_key = 0;
-                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
+                        bjKey = 0;
+                        while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B && bjKey != PK_IN_TIMEOUT) {
                                 gameTick(0);
-                                bj_key = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
+                                bjKey = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
                         }
-                        if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == PK_IN_ARG_A) {
-                                pk_phase = 1;
-                                pk_psh[0] = pk_ph[1];
-                                pk_ph[1]  = CARD_NONE;
+                        if (mgTimedOut != NO) goto cleanup;
+                        if (bjKey == PK_IN_ARG_A) {
+                                bjDidSplit = 1;
+                                bjSplitHand[0] = plyrHand[1];
+                                plyrHand[1]  = CARD_NONE;
                                 cardMessage("Here is your first hand.");
-                                pk_wpr = g_pcbet;
+                                bjMatchBet = bjBetMain;
                                 cardDraw(CARD_HIGHLIGHT, 1, 1);
                                 gameTick(8);
-                                bjDealCard(pk_ph, 0);
-                                pk_c1bj = NO;
-                                pk_c2bj = NO;
-                                if (bjIsNatural(pk_ph)) {
+                                bjDealCard(plyrHand, 0);
+                                bjNatMain = NO;
+                                bjNatSplit = NO;
+                                if (bjIsNatural(plyrHand)) {
                                         cardMessage("You have BLACKJACK!!");
                                         gameTick(0x14);
-                                        bjSettle(&g_pcbet, 1, 1);
-                                        if (pk_quit != NO) {
+                                        bjSettle(&bjBetMain, 1, 1);
+                                        if (cardQuit != NO) {
                                                 cardMessage("I'm all out!!");
                                                 gameTick(20);
                                                 goto cleanup;
                                         }
-                                        pk_c1bj = YES;
+                                        bjNatMain = YES;
                                 }
                                 gameTick(20);
                                 cardDraw(CARD_HIGHLIGHT, 0, 1);
                                 cardDraw(CARD_HIGHLIGHT, 1, 1);
-                                g_ppbet = 0;
+                                bjBetSplit = 0;
                                 bjShowBet(2);
                                 cardMessage("Here is your second hand.");
-                                cardDraw(pk_psh[0], 0, 1);
+                                cardDraw(bjSplitHand[0], 0, 1);
                                 gameTick(10);
-                                bjDealCard(pk_psh, 0);
-                                while (g_ppbet != pk_wpr) {
-                                        if (g_ppmon == 0) {
-                                                pk_quit = YES;
+                                bjDealCard(bjSplitHand, 0);
+                                while (bjBetSplit != bjMatchBet) {
+                                        if (plyrChips == 0) {
+                                                cardQuit = YES;
                                                 break;
                                         }
-                                        g_ppmon--;
+                                        plyrChips--;
                                         dispPlyrChips();
-                                        g_ppbet++;
+                                        bjBetSplit++;
                                         bjShowBet(2);
                                         gameTick(0);
                                 }
-                                if (pk_quit != NO) {
+                                if (cardQuit != NO) {
                                         cardMessage("Sorry, you're all out!!");
                                         gameTick(20);
                                         goto cleanup;
                                 }
-                                if (bjIsNatural(pk_psh)) {
+                                if (bjIsNatural(bjSplitHand)) {
                                         cardMessage("You have BLACKJACK!!");
                                         gameTick(20);
-                                        bjSettle(&g_ppbet, 1, 1);
-                                        if (pk_quit != NO) {
+                                        bjSettle(&bjBetSplit, 1, 1);
+                                        if (cardQuit != NO) {
                                                 cardMessage("I'm all out!!");
                                                 gameTick(0x14);
                                                 goto cleanup;
                                         }
-                                        pk_c2bj = YES;
+                                        bjNatSplit = YES;
                                 }
                                 gameTick(0x14);
                         }
                 }
 
                 /* Double-down / hit-loop phase. */
-                if (pk_phase != 0 && pk_c1bj != NO && pk_c2bj != NO) {
+                if (bjDidSplit != 0 && bjNatMain != NO && bjNatSplit != NO) {
                         goto next_round;
                 }
-                pk_wrf = NO;
-                pk_wcs = NO;
-                pk_pcc  = CARD_BJ_MAX;
-                pk_pscc = CARD_BJ_MAX;
+                bjDblMain = NO;
+                bjDblSplit = NO;
+                bjHitsMain  = CARD_BJ_MAX;
+                bjHitsSplit = CARD_BJ_MAX;
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1 Double",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F3 No double", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
-                if (pk_phase == 0) {
-                        if (g_ppmon < g_pcbet) bj_key = 2;
+                if (bjDidSplit == 0) {
+                        if (plyrChips < bjBetMain) bjKey = 2;
                         else {
                                 cardMessage("Do you wish to double-down?");
-                                bj_key = 0;
+                                bjKey = 0;
                         }
-                        while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
+                        while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B && bjKey != PK_IN_TIMEOUT) {
                                 gameTick(0);
-                                bj_key = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
+                                bjKey = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
                         }
-                        if (mg_tofl != NO) goto cleanup;
-                        if (bj_key == PK_IN_ARG_A) {
-                                pk_pcc = CARD_BJ_STEP;
-                                br      = g_pcbet;
-                                pk_wrf = YES;
+                        if (mgTimedOut != NO) goto cleanup;
+                        if (bjKey == PK_IN_ARG_A) {
+                                bjHitsMain = CARD_BJ_STEP;
+                                br      = bjBetMain;
+                                bjDblMain = YES;
                                 while (br--) {
-                                        if (g_ppmon == 0) {
-                                                pk_quit = YES;
+                                        if (plyrChips == 0) {
+                                                cardQuit = YES;
                                                 break;
                                         }
-                                        g_ppmon--;
+                                        plyrChips--;
                                         dispPlyrChips();
-                                        g_pcbet++;
+                                        bjBetMain++;
                                         bjShowBet(1);
                                         gameTick(0);
                                 }
-                                if (pk_quit != NO) {
+                                if (cardQuit != NO) {
                                         cardMessage("Game's over. I win.");
                                         gameTick(0x14);
                                         goto cleanup;
                                 }
                         }
-                        /* Redundant re-test of pk_phase, already
+                        /* Redundant re-test of bjDidSplit, already
                            implied by the else.  Kept on purpose: it
                            is part of the original code. */
-                } else if (pk_phase != 0) {
-                        if (pk_c1bj == NO) {
-                                if (g_ppmon < g_pcbet) bj_key = 2;
+                } else if (bjDidSplit != 0) {
+                        if (bjNatMain == NO) {
+                                if (plyrChips < bjBetMain) bjKey = 2;
                                 else {
                                         cardMessage("Double-down on your first hand?");
-                                        cardDraw(pk_ph[0], 0, 1);
-                                        cardDraw(pk_ph[1], 1, 1);
+                                        cardDraw(plyrHand[0], 0, 1);
+                                        cardDraw(plyrHand[1], 1, 1);
                                         gameTick(0);
-                                        bj_key = 0;
+                                        bjKey = 0;
                                 }
-                                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
+                                while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B && bjKey != PK_IN_TIMEOUT) {
                                         gameTick(0);
-                                        bj_key = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
+                                        bjKey = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
                                 }
-                                if (mg_tofl != NO) goto cleanup;
-                                if (bj_key == PK_IN_ARG_A) {
-                                        pk_pcc = CARD_BJ_STEP;
-                                        br      = g_pcbet;
-                                        pk_wrf = YES;
+                                if (mgTimedOut != NO) goto cleanup;
+                                if (bjKey == PK_IN_ARG_A) {
+                                        bjHitsMain = CARD_BJ_STEP;
+                                        br      = bjBetMain;
+                                        bjDblMain = YES;
                                         while (br--) {
-                                                if (g_ppmon == 0) {
-                                                        pk_quit = YES;
+                                                if (plyrChips == 0) {
+                                                        cardQuit = YES;
                                                         break;
                                                 }
-                                                g_ppmon--;
+                                                plyrChips--;
                                                 dispPlyrChips();
-                                                g_pcbet++;
+                                                bjBetMain++;
                                                 bjShowBet(1);
                                                 gameTick(0);
                                         }
-                                        if (pk_quit != NO) {
+                                        if (cardQuit != NO) {
                                                 cardMessage("Games over. I win.");
                                                 gameTick(0x14);
                                                 goto cleanup;
                                         }
                                 }
                         }
-                        if (pk_c2bj == NO) {
+                        if (bjNatSplit == NO) {
                                 gameTick(10);
-                                if (g_ppmon < g_ppbet) bj_key = 2;
+                                if (plyrChips < bjBetSplit) bjKey = 2;
                                 else {
                                         cardMessage("Double-down on your second hand?");
-                                        cardDraw(pk_psh[0], 0, 1);
-                                        cardDraw(pk_psh[1], 1, 1);
+                                        cardDraw(bjSplitHand[0], 0, 1);
+                                        cardDraw(bjSplitHand[1], 1, 1);
                                         gameTick(0);
-                                        bj_key = 0;
+                                        bjKey = 0;
                                 }
-                                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
+                                while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B && bjKey != PK_IN_TIMEOUT) {
                                         gameTick(0);
-                                        bj_key = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
+                                        bjKey = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
                                 }
-                                if (mg_tofl != NO) goto cleanup;
-                                if (bj_key == PK_IN_ARG_A) {
-                                        pk_pscc = CARD_BJ_STEP;
-                                        pk_wcs  = YES;
-                                        br       = g_ppbet;
+                                if (mgTimedOut != NO) goto cleanup;
+                                if (bjKey == PK_IN_ARG_A) {
+                                        bjHitsSplit = CARD_BJ_STEP;
+                                        bjDblSplit  = YES;
+                                        br       = bjBetSplit;
                                         while (br--) {
-                                                if (g_ppmon == 0) {
-                                                        pk_quit = YES;
+                                                if (plyrChips == 0) {
+                                                        cardQuit = YES;
                                                         break;
                                                 }
-                                                g_ppmon--;
+                                                plyrChips--;
                                                 dispPlyrChips();
-                                                g_ppbet++;
+                                                bjBetSplit++;
                                                 bjShowBet(2);
                                                 gameTick(0);
                                         }
-                                        if (pk_quit != NO) {
+                                        if (cardQuit != NO) {
                                                 cardMessage("Game's over. I win.");
                                                 gameTick(0x14);
                                                 goto cleanup;
@@ -2749,14 +2749,14 @@ cleanup:
                 }
 
                 /* Hit/stand rounds. */
-                if (pk_phase == 0) {
-                        if (bjPlayHand(pk_ph, 1, "Do you want a hit?") == -1) {
-                                if (mg_tofl != NO)
+                if (bjDidSplit == 0) {
+                        if (bjPlayHand(plyrHand, 1, "Do you want a hit?") == -1) {
+                                if (mgTimedOut != NO)
                                         goto cleanup;
                                 cardMessage("You've busted!!!");
                                 gameTick(10);
-                                while (g_pcbet--) {
-                                        g_pcmon++;
+                                while (bjBetMain--) {
+                                        compChips++;
                                         dispCompChips();
                                         bjShowBet(1);
                                         gameTick(0);
@@ -2767,46 +2767,46 @@ cleanup:
                 } else {
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
-                        pk_bs1 = NO;
-                        pk_bs2 = NO;
-                        if (pk_c1bj == NO) {
+                        bjBustMain = NO;
+                        bjBustSplit = NO;
+                        if (bjNatMain == NO) {
                                 for (br = 0; br < 5; br++) {
-                                        if (pk_ph[br] == CARD_NONE)
+                                        if (plyrHand[br] == CARD_NONE)
                                                 break;
-                                        cardDraw(pk_ph[br], br, 1);
+                                        cardDraw(plyrHand[br], br, 1);
                                 }
                                 bjShowBet(1);
-                                if (bjPlayHand(pk_ph, 1,
+                                if (bjPlayHand(plyrHand, 1,
                                                       "Need a hit on your first hand?") == -1) {
-                                        if (mg_tofl != NO) goto cleanup;
+                                        if (mgTimedOut != NO) goto cleanup;
                                         cardMessage("Your first hand is busted !!");
                                         gameTick(20);
-                                        pk_bs1 = YES;
-                                        while (g_pcbet--) {
-                                                g_pcmon++;
+                                        bjBustMain = YES;
+                                        while (bjBetMain--) {
+                                                compChips++;
                                                 dispCompChips();
                                                 bjShowBet(1);
                                                 gameTick(0);
                                         }
                                 }
                         }
-                        if (pk_c2bj == NO) {
+                        if (bjNatSplit == NO) {
                                 for (br = 0; br < 5; br++)
                                         cardDraw(CARD_HIGHLIGHT, br, 1);
                                 for (br = 0; br < 5; br++) {
-                                        if (pk_psh[br] == CARD_NONE)
+                                        if (bjSplitHand[br] == CARD_NONE)
                                                 break;
-                                        cardDraw(pk_psh[br], br, 1);
+                                        cardDraw(bjSplitHand[br], br, 1);
                                 }
                                 bjShowBet(2);
-                                if (bjPlayHand(pk_psh, 1,
+                                if (bjPlayHand(bjSplitHand, 1,
                                                       "Need a hit on your second hand?") == -1) {
-                                        if (mg_tofl != NO) goto cleanup;
+                                        if (mgTimedOut != NO) goto cleanup;
                                         cardMessage("Your second hand is busted!!");
                                         gameTick(0x14);
-                                        pk_bs2 = YES;
-                                        while (g_ppbet--) {
-                                                g_pcmon++;
+                                        bjBustSplit = YES;
+                                        while (bjBetSplit--) {
+                                                compChips++;
                                                 dispCompChips();
                                                 bjShowBet(2);
                                                 gameTick(0);
@@ -2817,53 +2817,53 @@ cleanup:
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
 
                 /* Dealer turn + settle. */
-                if (pk_phase != 0 && (pk_bs1 != NO || pk_c1bj != NO) &&
-                    (pk_bs2 != NO || pk_c2bj != NO))
+                if (bjDidSplit != 0 && (bjBustMain != NO || bjNatMain != NO) &&
+                    (bjBustSplit != NO || bjNatSplit != NO))
                         goto next_round;
-                if (pk_phase != 0 && pk_bs1 == NO && pk_c1bj == NO) {
+                if (bjDidSplit != 0 && bjBustMain == NO && bjNatMain == NO) {
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
                         cardMessage("Here is your first hand again.");
                         gameTick(0x14);
                         for (br = 0; br < 5; br++) {
-                                if (pk_ph[br] == CARD_NONE)
+                                if (plyrHand[br] == CARD_NONE)
                                         break;
-                                cardDraw(pk_ph[br], br, 1);
+                                cardDraw(plyrHand[br], br, 1);
                         }
                         bjShowBet(1);
-                } else if (pk_phase != 0 &&
-                           pk_bs2 == NO && pk_c2bj == NO) {
+                } else if (bjDidSplit != 0 &&
+                           bjBustSplit == NO && bjNatSplit == NO) {
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
                         cardMessage("Here is your second hand.");
                         gameTick(0x14);
                         for (br = 0; br < 5; br++) {
-                                if (pk_psh[br] == CARD_NONE)
+                                if (bjSplitHand[br] == CARD_NONE)
                                         break;
-                                cardDraw(pk_psh[br], br, 1);
+                                cardDraw(bjSplitHand[br], br, 1);
                         }
                         bjShowBet(2);
                 }
 
                 cardMessage("Now here's my down card.");
                 gameTick(10);
-                cardDraw(pk_ch[0], 0, 0);
+                cardDraw(compHand[0], 0, 0);
                 gameTick(0x14);
 
                 for (br = 0; br < 3; br++) {
-                        pk_cscore = 0;
+                        bjDealerScore = 0;
                         round_ctr = 0;
-                        res = bjScore(pk_ch, 0);
-                        rv  = bjScore(pk_ch, 1);
+                        res = bjScore(compHand, 0);
+                        rv  = bjScore(compHand, 1);
                         if (0x15 < res && 0x15 < rv) {
                                 round_ctr = 1;
                                 break;
                         }
                         if (rv <= 21)
-                                pk_cscore = rv;
+                                bjDealerScore = rv;
                         else
-                                pk_cscore = res;
-                        if (pk_cscore >= 17) {
+                                bjDealerScore = res;
+                        if (bjDealerScore >= 17) {
                                 cardMessage("I'll stand.");
                                 gameTick(0x14);
                                 break;
@@ -2875,17 +2875,17 @@ cleanup:
                         else if (br == 2)
                                 cardMessage("I'll take one more.");
                         gameTick(10);
-                        bjDealCard(pk_ch, 0);
+                        bjDealCard(compHand, 0);
                 }
                 if (br == 3 && round_ctr == 0) {
-                        pk_cscore = 0;
-                        res = bjScore(pk_ch, 0);
-                        rv  = bjScore(pk_ch, 1);
-                        pk_cscore = res;
+                        bjDealerScore = 0;
+                        res = bjScore(compHand, 0);
+                        rv  = bjScore(compHand, 1);
+                        bjDealerScore = res;
                         if (res > 21)
                                 round_ctr = 1;
                         else if (rv <= 21)
-                                pk_cscore = rv;
+                                bjDealerScore = rv;
                         else {
                                 cardMessage("I'll stand.");
                                 gameTick(0x14);
@@ -2897,89 +2897,89 @@ cleanup:
                 }
 
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
-                if (pk_phase == 0) {
-                        res = bjScore(pk_ph, 0);
-                        rv  = bjScore(pk_ph, 1);
+                if (bjDidSplit == 0) {
+                        res = bjScore(plyrHand, 0);
+                        rv  = bjScore(plyrHand, 1);
                         if (rv <= 21)
-                                pk_pscore = rv;
+                                bjPlyrScore = rv;
                         else
-                                pk_pscore = res;
-                        if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                bjPlyrScore = res;
+                        if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                 cardMessage("You win.");
                                 gameTick(0x14);
-                                bjSettle(&g_pcbet, 1, 0);
-                        } else if (pk_cscore == pk_pscore) {
+                                bjSettle(&bjBetMain, 1, 0);
+                        } else if (bjDealerScore == bjPlyrScore) {
                                 cardMessage("It's a tie and nobody wins.");
                                 gameTick(0x14);
-                                bjSettle(&g_pcbet, 1, 2);
+                                bjSettle(&bjBetMain, 1, 2);
                         } else {
                                 cardMessage("I win.");
                                 gameTick(0x14);
-                                bjSettle(&g_pcbet, 0, 0);
+                                bjSettle(&bjBetMain, 0, 0);
                         }
                         goto next_round;
                 } else {
-                        if (pk_bs1 == NO && pk_c1bj == NO) {
+                        if (bjBustMain == NO && bjNatMain == NO) {
                                 for (br = 0; br < 5; br++)
                                         cardDraw(CARD_HIGHLIGHT, br, 1);
                                 for (br = 0; br < 5; br++) {
-                                        if (pk_ph[br] == CARD_NONE)
+                                        if (plyrHand[br] == CARD_NONE)
                                                 break;
-                                        cardDraw(pk_ph[br], br, 1);
+                                        cardDraw(plyrHand[br], br, 1);
                                 }
                                 bjShowBet(1);
-                                res = bjScore(pk_ph, 0);
-                                rv  = bjScore(pk_ph, 1);
+                                res = bjScore(plyrHand, 0);
+                                rv  = bjScore(plyrHand, 1);
                                 if (rv <= 21)
-                                        pk_pscore = rv;
+                                        bjPlyrScore = rv;
                                 else
-                                        pk_pscore = res;
-                                if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                        bjPlyrScore = res;
+                                if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                                 cardMessage("You win with your first hand.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_pcbet, 1, 0);
+                                                bjSettle(&bjBetMain, 1, 0);
 
-                                } else if (pk_cscore == pk_pscore) {
+                                } else if (bjDealerScore == bjPlyrScore) {
                                                 cardMessage("First hand ties, nobody wins.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_pcbet, 1, 2);
+                                                bjSettle(&bjBetMain, 1, 2);
 
                                 } else {
                                                 cardMessage("Your first hand loses.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_pcbet, 0, 0);
+                                                bjSettle(&bjBetMain, 0, 0);
 
                                 }
                         }
-                        if (pk_bs2 == NO && pk_c2bj == NO) {
+                        if (bjBustSplit == NO && bjNatSplit == NO) {
                                 for (br = 0; br < 5; br++)
                                         cardDraw(CARD_HIGHLIGHT, br, 1);
                                 for (br = 0; br < 5; br++) {
-                                        if (pk_psh[br] == CARD_NONE)
+                                        if (bjSplitHand[br] == CARD_NONE)
                                                 break;
-                                        cardDraw(pk_psh[br], br, 1);
+                                        cardDraw(bjSplitHand[br], br, 1);
                                 }
                                 bjShowBet(2);
-                                res = bjScore(pk_psh, 0);
-                                rv  = bjScore(pk_psh, 1);
+                                res = bjScore(bjSplitHand, 0);
+                                rv  = bjScore(bjSplitHand, 1);
                                 if (rv <= 21)
-                                        pk_pscore = rv;
+                                        bjPlyrScore = rv;
                                 else
-                                        pk_pscore = res;
-                                if (round_ctr != 0 || pk_cscore < pk_pscore) {
+                                        bjPlyrScore = res;
+                                if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                                 cardMessage("You win with your second hand.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_ppbet, 1, 0);
+                                                bjSettle(&bjBetSplit, 1, 0);
 
-                                } else if (pk_cscore == pk_pscore) {
+                                } else if (bjDealerScore == bjPlyrScore) {
                                                 cardMessage("Second hand ties, nobody wins.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_ppbet, 1, 2);
+                                                bjSettle(&bjBetSplit, 1, 2);
 
                                 } else {
                                                 cardMessage("Your second hand loses.");
                                                 gameTick(0x14);
-                                                bjSettle(&g_ppbet, 0, 0);
+                                                bjSettle(&bjBetSplit, 0, 0);
 
                                 }
                         }
@@ -3024,7 +3024,7 @@ short   ace_mode;
 }
 
 /* bjPlayHand: play one blackjack round for `hand` at row.
-   pk_wrf/pk_wcs forced-single-hit modes auto-deal one card + return.
+   bjDblMain/bjDblSplit forced-single-hit modes auto-deal one card + return.
    Otherwise F1 Hit / F3 Stand.  Returns 0 on stand, -1 on bust/timeout. */
 
 static short
@@ -3044,14 +3044,14 @@ char *  prompt;
         short * cnt_ptr;
         short   forced;
 
-        if (hand == pk_ph)  cnt_ptr = &pk_pcc;
-        if (hand == pk_psh) cnt_ptr = &pk_pscc;
-        if (hand == pk_ch)  cnt_ptr = &pk_ccc;
+        if (hand == plyrHand)  cnt_ptr = &bjHitsMain;
+        if (hand == bjSplitHand) cnt_ptr = &bjHitsSplit;
+        if (hand == compHand)  cnt_ptr = &bjHitsDealer;
 
         panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
         forced = NO;
-        if ((hand == pk_ph  && pk_wrf != NO) ||
-            (hand == pk_psh && pk_wcs != NO))
+        if ((hand == plyrHand  && bjDblMain != NO) ||
+            (hand == bjSplitHand && bjDblSplit != NO))
                 forced = YES;
         else {
                 printString("F1 Hit",   KEYMENU_X, KEYMENU_LINE1, COLOR_red);
@@ -3085,18 +3085,18 @@ char *  prompt;
                 else
                         return 0;
         } else while (1) {
-                bj_key = 0;
-                while (bj_key != PK_IN_ARG_A && bj_key != PK_IN_ARG_B && bj_key != PK_IN_TIMEOUT) {
+                bjKey = 0;
+                while (bjKey != PK_IN_ARG_A && bjKey != PK_IN_ARG_B && bjKey != PK_IN_TIMEOUT) {
                         gameTick(0);
-                        bj_key = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
+                        bjKey = cardKeyInput(KEY_F1, KEY_F3, PK_IN_UNUSED);
                 }
-                if (mg_tofl != NO)
+                if (mgTimedOut != NO)
                         return -1;
-                if (bj_key == PK_IN_ARG_B) {
+                if (bjKey == PK_IN_ARG_B) {
                         cardMessage(" ");   /* the F3-stand path just
                                           blanks the message strip */
                         return 0;
-                } else if (bj_key == PK_IN_ARG_A) {
+                } else if (bjKey == PK_IN_ARG_A) {
                         (*cnt_ptr)--;
                         bjDealCard(hand, 0);
                         score = 0;
@@ -3143,7 +3143,7 @@ short * hand;
 }
 
 /* bjDealCard: deal one card into hand at next CARD_NONE slot.
-   Rejects dups vs pk_ch/pk_ph/pk_psh.  Returns -1 if full. */
+   Rejects dups vs compHand/plyrHand/bjSplitHand.  Returns -1 if full. */
 
 static short
 bjDealCard(hand, face_down)
@@ -3168,14 +3168,14 @@ short   face_down;
                 card = rndRng(0, 51);
                 dup  = 0;
                 for (j = 0; j < 5; j++) {
-                        if (pk_ch[j]  == card ||
-                            pk_ph[j]  == card ||
-                            pk_psh[j] == card)
+                        if (compHand[j]  == card ||
+                            plyrHand[j]  == card ||
+                            bjSplitHand[j] == card)
                                 dup = 1;
                 }
         }
         hand[i] = card;
-        if (hand == pk_ch)
+        if (hand == compHand)
                 row = 0;
         else
                 row = 1;
@@ -3202,9 +3202,9 @@ short   sel;
         short   val;
 
         if (sel == 1)
-                val = g_pcbet;
+                val = bjBetMain;
         else
-                val = g_ppbet;
+                val = bjBetSplit;
         panelErase(31, 43, 57, 53);
         str[3] = '\0';
         str[0] = (hund = val / 100) + '0';
@@ -3223,7 +3223,7 @@ short   sel;
 /* bjSettle: settle a bet.  winner: 0=computer, 1=player.
    mode: 0=normal, 1=natural blackjack double-collect,
          2=split -- suppress the second (player) transfer.
-   Sets pk_quit on mid-transfer bankruptcy. */
+   Sets cardQuit on mid-transfer bankruptcy. */
 
 static void
 bjSettle(bet_ptr, winner, mode)
@@ -3237,9 +3237,9 @@ short   mode;
         if (winner == 0) {
                 orig = *bet_ptr;
                 while ((*bet_ptr)--) {
-                        g_pcmon++;
+                        compChips++;
                         dispCompChips();
-                        if (bet_ptr == &g_pcbet)
+                        if (bet_ptr == &bjBetMain)
                                 bjShowBet(1);
                         else
                                 bjShowBet(2);
@@ -3247,13 +3247,13 @@ short   mode;
                 }
                 if (mode != 0) {
                         while (orig--) {
-                                if (g_ppmon == 0) {
-                                        pk_quit = YES;
+                                if (plyrChips == 0) {
+                                        cardQuit = YES;
                                         return;
                                 }
-                                g_ppmon--;
+                                plyrChips--;
                                 dispPlyrChips();
-                                g_pcmon++;
+                                compChips++;
                                 dispCompChips();
                                 gameTick(0);
                         }
@@ -3262,9 +3262,9 @@ short   mode;
                 orig = *bet_ptr;
                 loc8 = *bet_ptr;
                 while ((*bet_ptr)--) {
-                        g_ppmon++;
+                        plyrChips++;
                         dispPlyrChips();
-                        if (bet_ptr == &g_pcbet)
+                        if (bet_ptr == &bjBetMain)
                                 bjShowBet(1);
                         else
                                 bjShowBet(2);
@@ -3272,26 +3272,26 @@ short   mode;
                 }
                 if (mode != 2) {
                         while (loc8--) {
-                                if (g_pcmon == 0) {
-                                        pk_quit = YES;
+                                if (compChips == 0) {
+                                        cardQuit = YES;
                                         break;
                                 }
-                                g_pcmon--;
+                                compChips--;
                                 dispCompChips();
-                                g_ppmon++;
+                                plyrChips++;
                                 dispPlyrChips();
                                 gameTick(0);
                         }
                 }
                 if (mode == 1) {
                         while (orig--) {
-                                if (g_pcmon == 0) {
-                                        pk_quit = YES;
+                                if (compChips == 0) {
+                                        cardQuit = YES;
                                         return;
                                 }
-                                g_pcmon--;
+                                compChips--;
                                 dispCompChips();
-                                g_ppmon++;
+                                plyrChips++;
                                 dispPlyrChips();
                                 gameTick(0);
                         }

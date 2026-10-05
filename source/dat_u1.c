@@ -14,40 +14,40 @@
 
 
 
-/* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).
+/* mainPalette[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.
-   initAes loads this via Setpalette(main_pal) at boot -- there is no
+   initAes loads this via Setpalette(mainPalette) at boot -- there is no
    later runtime palette rewrite from this table; slot 0 is the
    background (black), slot 14 white, etc.  pickClothes overwrites slots
    1 and 2 from the primary/secondary clothing tables; slot 6 is
    overwritten by setSkinColor for the sickness skin. */
-short   main_pal[16]           = {
+short   mainPalette[16]           = {
         0x000, 0x442, 0x265, 0x754,
         0x310, 0x040, 0x754, 0x760,
         0x247, 0x631, 0x700, 0x333,
         0x555, 0x007, 0x777, 0x410
 };
 
-/* vdi_colt: color_enum -> VDI-color permutation.  The table is
+/* colorPens: color_enum -> VDI-color permutation.  The table is
    exactly TOS's default ST-low permutation from VDI-index to
    palette-slot.
-   The game names its own colours by palette slot (see main_pal) and
-   calls vsl_color(vdi_colt[color_enum]) so that after TOS's
+   The game names its own colours by palette slot (see mainPalette) and
+   calls vsl_color(colorPens[color_enum]) so that after TOS's
    permutation the pen lands on palette slot `color_enum`.
 
    With a properly-opened VDI workstation
    (LCP.PRG launched directly from the GEM desktop / Hatari --auto),
    TOS applies its default permutation and color_enum 13 (blue) ->
-   vdi_colt[13] = 15 -> palette 13 = main_pal[13] = 0x007 blue.
+   colorPens[13] = 15 -> palette 13 = mainPalette[13] = 0x007 blue.
    Launching via COMMAND.PRG leaves the workstation in a state that
    collapses vsl_color's colour arg into pen 15 (dark brown 0x410)
    regardless of index -- see the beginDraw comment. */
-short   vdi_colt[16]            = {
+short   colorPens[16]            = {
         0,  2,  3,  6,  4,  7,  5,  8,
         9, 10, 11, 14, 12, 15, 13,  1
 };
 
-short   no_keyin          = NO;   /* YES while an activity owns the keyboard (letter writing, minigames): gameTick stops reading keys */
+short   keysBlocked          = NO;   /* YES while an activity owns the keyboard (letter writing, minigames): gameTick stops reading keys */
 
 /* ---- Hardware sprite double-buffer (SPRITE_HW_SLOTS) -------------------
    Two parallel state sets per hardware slot: `pe` = pending (what game
@@ -62,46 +62,46 @@ short   no_keyin          = NO;   /* YES while an activity owns the keyboard (le
    original, so the declaration order matters. */
 /* Explicitly initialized, so it lands in DATA (all zeros) rather than
    as a .comm -- that is where the original has it. */
-short   g_sepef[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
+short   pendReady[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
 
-short   g_hacur                         = 8;    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
+short   headPose                         = 8;    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
 
-short   g_hatas                         = 8;    /* head pose the head animation is turning towards, same encoding */
+short   headTarget                         = 8;    /* head pose the head animation is turning towards, same encoding */
 
-short   g_hamod                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* / sprhead.c bit-fields) */
+short   headMode                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* / sprhead.c bit-fields) */
 
-/* Two bytes of -1 that nothing references, between g_hamod and
-   g_trac.  Dead 1985 data that Alcyon still allocates; it must stay
+/* Two bytes of -1 that nothing references, between headMode and
+   nextAction.  Dead 1985 data that Alcyon still allocates; it must stay
    for the layout. */
-short   g_unus3                         = -1;
+short   spareWord                         = -1;
 
-short   g_trac                  = ACTION_NONE;   /* action chooseAction chose for runAction to run; ACTION_NONE = none */
+short   nextAction                  = ACTION_NONE;   /* action chooseAction chose for runAction to run; ACTION_NONE = none */
 
-short   lcp_recP              = 0;   /* YES while a record is playing (animates the player); saved in lcp.record_playing */
+short   recordPlaying              = 0;   /* YES while a record is playing (animates the player); saved in resident.record_playing */
 
-short   lcp_tv                       = 0;   /* YES while the TV is on (tvNoise draws the picture); saved in lcp.tv_on */
+short   tvRunning                       = 0;   /* YES while the TV is on (tvNoise draws the picture); saved in resident.tv_on */
 
-BOOL16  ph_call  = NO;   /* phone is ringing: set by simStep or Ctrl-C, cleared when answered */
+BOOL16  phoneRinging  = NO;   /* phone is ringing: set by simStep or Ctrl-C, cleared when answered */
 
-BOOL16  fire_act                = NO;   /* fireplace is burning: animated each tick until fire_dur runs out */
+BOOL16  fireBurning                = NO;   /* fireplace is burning: animated each tick until fireTimeLeft runs out */
 
-BOOL16  ph_ans     = NO;   /* resident is on the phone (answerPhone); blocks new calls */
+BOOL16  phoneAnswered     = NO;   /* resident is on the phone (answerPhone); blocks new calls */
 
 /* Once-a-day flags for chooseAction's scheduled lunch, dinner, wake-up and
    bedtime actions: set when the action fires at its hour, cleared at
    midnight by resetDailyFlags. */
-BOOL16  lunT_trg      = NO;
+BOOL16  lunchDone      = NO;
 
-BOOL16  dinT_trg     = NO;   /* dinner already triggered today */
+BOOL16  dinnerDone     = NO;   /* dinner already triggered today */
 
-BOOL16  wkT_trg  = NO;   /* wake-up already triggered today */
+BOOL16  wakeupDone  = NO;   /* wake-up already triggered today */
 
-BOOL16  bedT_trg         = NO;   /* bedtime already triggered today */
+BOOL16  bedtimeDone         = NO;   /* bedtime already triggered today */
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
-/* body_frT: maps lcp_st -> body-frame index into body.lcp /
-   body_shp. */
-short   body_frT[93] = {
+/* bodyIndex: maps animState -> body-frame index into body.lcp /
+   bodyShapes. */
+short   bodyIndex[93] = {
          0,  1,  2,  3,  4,  1,  6,  7,     /*  0..7  */
         43,  9, 10, 11, 12, 20, 21, 22,     /*  8..15 */
         21, 13, 14, 15, 16, 17, 18, 19,     /* 16..23 */
@@ -116,16 +116,16 @@ short   body_frT[93] = {
         96, 97, 26,  5,  8                  /* 88..92 */
 };
 
-/* cy_frT: alternate arms-up frames used while carrying an object in
+/* carryFrames: alternate arms-up frames used while carrying an object in
    walking states 0..24. */
-short   cy_frT[25]      = {
+short   carryFrames[25]      = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
 
 /* Per-PLAYER_STATE horizontal offset for the head anchor (93
    entries, one per state 0..92). */
-short   hd_xoff[93] = {
+short   headXOffset[93] = {
          0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,
          0,  0,  0,  0,  0,  0,  0,  0,
@@ -141,7 +141,7 @@ short   hd_xoff[93] = {
 };
 
 /* Per-PLAYER_STATE head Y contribution (subtracted from body top). */
-short   hd_hgt[93] = {
+short   headYOffset[93] = {
         21, 21, 21, 21, 21, 21, 21, 21,
         21, 21, 21, 21, 21, 21, 21, 21,
         21, 21, 21, 21, 21, 21, 21, 21,
@@ -158,7 +158,7 @@ short   hd_hgt[93] = {
 
 /* Neutral head-facing angle per PLAYER_STATE (used by head_animate to
    pick the "resting" horizontal direction the head drifts toward). */
-short   hd_dang[93] = {
+short   headRestDir[93] = {
          2,  2,  2,  2,  2,  2,  2,  2,
          2,  2,  2,  2,  2,  4,  4,  4,
          4,  2,  2,  2,  2,  0,  0,  0,
@@ -173,10 +173,10 @@ short   hd_dang[93] = {
          0,  0,  4,  3,  1
 };
 
-/* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
+/* posXHalf[48]: X half-pixel coordinate per HOUSE_POS.
    Table value gets left-shifted by 1 at the call site to yield the
    full-pixel X (see posToXY). */
-short   g_rpxs[48] = {
+short   posXHalf[48] = {
         /* Floor 3 -- top       0..15 */
          22,  36,  49,  55,  60,  56,  73,  96,
         106, 118, 113, 110, 131,  47, 133, 146,
@@ -188,8 +188,8 @@ short   g_rpxs[48] = {
          67,  70, 106, 110, 123, 132, 147, 140
 };
 
-/* g_rphs[48]: Y offset from floor baseline per HOUSE_POS. */
-short   g_rphs[48] = {
+/* posYOffset[48]: Y offset from floor baseline per HOUSE_POS. */
+short   posYOffset[48] = {
           9,  14,   9,  10,  11,  14,  12,  13,
          12,  12,  12,   6,  15,  10,  14,   3,
           3,   3,   8,  15,  13,  13,  12,  13,
@@ -198,8 +198,8 @@ short   g_rphs[48] = {
          14,  12,  13,   7,  14,  12,  13,   2
 };
 
-/* body_yof: Y anchor offset per lcp_st. */
-short   body_yof[109] = {
+/* bodyYOffset: Y anchor offset per animState. */
+short   bodyYOffset[109] = {
         -2, -2, -2, -1, -2, -2, -2, -1,     /*   0..7  */
         -2,  0,  0,  0,  0,  0,  0,  0,     /*   8..15 */
          0,  0,  0,  0,  0,  0,  0,  0,     /*  16..23 */
@@ -217,33 +217,33 @@ short   body_yof[109] = {
 };
 
 /* Staircase waypoints.  The two values that follow in memory (124,
-   137) are the separate globals stair_ty and stair_by, not part of
+   137) are the separate globals xLanding and yLanding, not part of
    this table. */
-short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
+short   stairWaypts[6]    = { 170, 185, 133, 124, 182, 72 };
 
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
    The middle-floor branch of nextWaypoint uses these to
    route through the between-floor landing instead of the raw
-   stair_wp entries. */
-short   stair_ty           = 124;
+   stairWaypts entries. */
+short   xLanding           = 124;
 
-short   stair_by        = 137;   /* landing Y; stair_ty (above) is the landing X */
+short   yLanding        = 137;   /* landing Y; xLanding (above) is the landing X */
 
-short   flr_cy[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed floorOfY() - 1: bottom, middle, top */
+short   floorWalkY[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed floorOfY() - 1: bottom, middle, top */
 
 /* On-stairs flag (short, YES/NO).  YES while
    the path stepper is inside a stair-traversal path; drives the
    stair-specific sprite-state sequence 9..24 and the wood-stairs SFX
    selection. */
-short   lcp_stR              = 0;
+short   onStairs              = 0;
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
-   flr_by[0] = bottom floor, [1] = middle floor, [2] = top. */
-short   flr_by[3]        = { 202, 140, 77 };
+   floorBottomY[0] = bottom floor, [1] = middle floor, [2] = top. */
+short   floorBottomY[3]        = { 202, 140, 77 };
 
-/* sp_fidx: file-record index -> sprite_id slot to store its pointers in. */
-short   sp_fidx[50] = {
+/* spriteFileId: file-record index -> sprite_id slot to store its pointers in. */
+short   spriteFileId[50] = {
         12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27,
         28, 29, 30, 31, 32, 33, 34, 35,
@@ -254,8 +254,8 @@ short   sp_fidx[50] = {
 };
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
-/* g_dwanf: 8 sprite ids the walk cycle rotates through in moveDog. */
-short   g_dwanf[8] = {
+/* dogWalkSprites: 8 sprite ids the walk cycle rotates through in moveDog. */
+short   dogWalkSprites[8] = {
         SPRITE_DOG_WLK_R1, SPRITE_DOG_WLK_R2,
         SPRITE_DOG_WLK_R3, SPRITE_DOG_WLK_R4,
         SPRITE_DOG_WLK_R5, SPRITE_DOG_WLK_R7,

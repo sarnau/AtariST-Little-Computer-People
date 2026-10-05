@@ -19,26 +19,26 @@ walkToTarget()
         short   result;
 
         result = 0;
-        g_hamod       = HEAD_ANIM_WALKING;
-        g_hastl = 0;
+        headMode       = HEAD_ANIM_WALKING;
+        headLastWalk = 0;
 
-        while (g_wtx != 0 || g_wty != 0) {
+        while (walkXTarget != 0 || walkYTarget != 0) {
                 walkStep();
-                if (in_evrt != NO)
+                if (inEvent != NO)
                         continue;
-                if (g_trel[0] == ACTION_NONE)
+                if (eventQueue[0] == ACTION_NONE)
                         continue;
-                if (g_lcyof != NO)
+                if (isCarrying != NO)
                         continue;
-                if (introSeq != NO)
+                if (movingIn != NO)
                         continue;
-                if (lcp_stR != NO)
+                if (onStairs != NO)
                         continue;
-                if (g_actif != NO)
+                if (noPreempt != NO)
                         continue;
                 result = -1;
-                g_wtx = 0;
-                g_wty = 0;
+                walkXTarget = 0;
+                walkYTarget = 0;
                 break;
         }
         return result;

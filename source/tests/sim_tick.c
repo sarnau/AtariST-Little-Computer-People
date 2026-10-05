@@ -8,7 +8,7 @@
  * This is a pure-logic test: no HYBER file, no file I/O.  The PLAYER
  * struct is populated with host-native short values (skipping the
  * usual big-endian file load) so we can reason about the counters
- * directly.  introSeq is asserted to suppress the random
+ * directly.  movingIn is asserted to suppress the random
  * daytime phone-call branch, keeping the test deterministic.
  *
  * Build: make sim_test
@@ -22,17 +22,17 @@
 #include "../include/structs.h"
 #include "../include/enums.h"
 
-extern PLAYER   lcp;
+extern PLAYER   resident;
 extern short    t_min;
 extern short    t_hour;
 extern short    t_day;
 extern short    t_mon;
 extern short    t_year;
-extern short    ani_cnt;
+extern short    frameCount;
 extern short    t_sec;
-extern BOOL16   ph_ans;
-extern BOOL16   ph_call;
-extern BOOL16   introSeq;
+extern BOOL16   phoneAnswered;
+extern BOOL16   phoneRinging;
+extern BOOL16   movingIn;
 extern void     simStep();
 
 static int      failures = 0;
@@ -58,23 +58,23 @@ char ** argv;
         (void) argv;
 
         /* Zero the PLAYER, then set known starting values. */
-        memset(&lcp, 0, sizeof(lcp));
-        lcp.thirst_timer_max    = 30;   /* thirst rises every 30 min */
-        lcp.thirst_timer        = 30;
-        lcp.hunger_timer_max    = 45;   /* hunger rises every 45 min */
-        lcp.hunger_timer        = 45;
-        lcp.bathroom_timer_max  = 120;
-        lcp.bathroom_timer      = 120;
-        lcp.happiness           = MOOD_CONTENT;
-        lcp.happiness_initial_countdown  = 6;
-        lcp.happiness_duration_happy     = 4;
-        lcp.happiness_duration_content   = 6;
-        lcp.happiness_duration_active    = 6;
-        lcp.happiness_direction = DIR_WORSENING;
-        lcp.sickness_level      = SICKNESS_HEALTHY;
+        memset(&resident, 0, sizeof(resident));
+        resident.thirst_timer_max    = 30;   /* thirst rises every 30 min */
+        resident.thirst_timer        = 30;
+        resident.hunger_timer_max    = 45;   /* hunger rises every 45 min */
+        resident.hunger_timer        = 45;
+        resident.bathroom_timer_max  = 120;
+        resident.bathroom_timer      = 120;
+        resident.happiness           = MOOD_CONTENT;
+        resident.happiness_initial_countdown  = 6;
+        resident.happiness_duration_happy     = 4;
+        resident.happiness_duration_content   = 6;
+        resident.happiness_duration_active    = 6;
+        resident.happiness_direction = DIR_WORSENING;
+        resident.sickness_level      = SICKNESS_HEALTHY;
 
         /* Sim entry conditions. */
-        ani_cnt  = 0;    /* (counter & 7) == 0 -> tick */
+        frameCount  = 0;    /* (counter & 7) == 0 -> tick */
         t_sec    = 0;
         t_min            = 0;
         t_hour              = 6;    /* 06:00:00 */
@@ -83,9 +83,9 @@ char ** argv;
         t_year               = 0;
 
         /* Suppress the random phone-call branch. */
-        introSeq   = YES;
-        ph_ans     = NO;
-        ph_call  = NO;
+        movingIn   = YES;
+        phoneAnswered     = NO;
+        phoneRinging  = NO;
 
         /* Drive 24 game-hours (86400 game-seconds). */
         for (i = 0; i < 86400L; i++)
@@ -103,35 +103,35 @@ char ** argv;
            with timer_max=30 it wraps 48 times.  Each wrap raises
            thirst_level (capped at 3 then triggers lcp_become_sick).
            Timer at end: 1440 % 30 == 0 so it resets to 30.            */
-        CHECK(lcp.thirst_timer == 30, "thirst_timer end value wrong");
-        CHECK(lcp.thirst_level >= NEED_SEVERE,  "thirst_level should max out");
+        CHECK(resident.thirst_timer == 30, "thirst_timer end value wrong");
+        CHECK(resident.thirst_level >= NEED_SEVERE,  "thirst_level should max out");
 
         /* hunger_timer: 1440 minutes with timer_max=45 = 32 wraps.
            At level 3 further wraps invoke lcp_become_sick which
            leaves level unchanged.                                     */
-        CHECK(lcp.hunger_timer == 45, "hunger_timer end value wrong");
-        CHECK(lcp.hunger_level >= NEED_SEVERE,  "hunger_level should max out");
+        CHECK(resident.hunger_timer == 45, "hunger_timer end value wrong");
+        CHECK(resident.hunger_level >= NEED_SEVERE,  "hunger_level should max out");
 
         /* bathroom_timer: 1440 min, timer_max=120 -> wraps 12 times.
            On first wrap bathroom_timer is set to 9999 and bathroom_need
            to YES, and stays that way.                                 */
-        CHECK(lcp.bathroom_need == YES, "bathroom_need should be YES");
+        CHECK(resident.bathroom_need == YES, "bathroom_need should be YES");
 
         /* Second run: 1 full game-hour from 07:00 with no need
            mutation, verifying pure clock advance.                     */
-        memset(&lcp, 0, sizeof(lcp));
-        lcp.thirst_timer        = 9999;
-        lcp.thirst_timer_max    = 9999;
-        lcp.hunger_timer        = 9999;
-        lcp.hunger_timer_max    = 9999;
-        lcp.bathroom_timer      = 9999;
-        lcp.bathroom_timer_max  = 9999;
-        lcp.happiness_duration_active = 9999;
-        ani_cnt  = 0;
+        memset(&resident, 0, sizeof(resident));
+        resident.thirst_timer        = 9999;
+        resident.thirst_timer_max    = 9999;
+        resident.hunger_timer        = 9999;
+        resident.hunger_timer_max    = 9999;
+        resident.bathroom_timer      = 9999;
+        resident.bathroom_timer_max  = 9999;
+        resident.happiness_duration_active = 9999;
+        frameCount  = 0;
         t_sec    = 0;
         t_min            = 0;
         t_hour              = 7;
-        introSeq   = YES;
+        movingIn   = YES;
         for (i = 0; i < 3600L; i++)
                 simStep();
         CHECK(t_hour == 8,   "1-hour drive: t_hour != 8");
@@ -139,16 +139,16 @@ char ** argv;
 
         /* Sub-minute drive (30 seconds): only t_sec
            should advance; nothing else.                               */
-        memset(&lcp, 0, sizeof(lcp));
-        lcp.thirst_timer = lcp.thirst_timer_max = 9999;
-        lcp.hunger_timer = lcp.hunger_timer_max = 9999;
-        lcp.bathroom_timer = lcp.bathroom_timer_max = 9999;
-        lcp.happiness_duration_active = 9999;
-        ani_cnt = 0;
+        memset(&resident, 0, sizeof(resident));
+        resident.thirst_timer = resident.thirst_timer_max = 9999;
+        resident.hunger_timer = resident.hunger_timer_max = 9999;
+        resident.bathroom_timer = resident.bathroom_timer_max = 9999;
+        resident.happiness_duration_active = 9999;
+        frameCount = 0;
         t_sec = 0;
         t_min = 0;
         t_hour = 10;
-        introSeq = YES;
+        movingIn = YES;
         for (i = 0; i < 30L; i++)
                 simStep();
         CHECK(t_sec == 30, "30-sec drive: counter wrong");
@@ -156,7 +156,7 @@ char ** argv;
 
         /* Non-tick frame: counter & 7 != 0 -> function must early-return. */
         t_sec = 42;
-        ani_cnt = 3;      /* 3 & 7 == 3 != 0 */
+        frameCount = 3;      /* 3 & 7 == 3 != 0 */
         simStep();
         CHECK(t_sec == 42, "non-tick frame incremented counter");
 

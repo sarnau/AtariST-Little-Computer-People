@@ -3,7 +3,7 @@
  *
  * Included by stx_u1.c; never compiled on its own.
  */
-/* countSongs: enumerate *.SNG and *.ORG, count into sng_cnt / org_cnt. */
+/* countSongs: enumerate *.SNG and *.ORG, count into songCount / organCount. */
 
 
 void
@@ -13,16 +13,16 @@ countSongs()
            test is written `!Fsfirst(...)` (which tests the word where
            `== 0` tests the long), and the scan is a `while` whose body
            is just the counter step -- all as in the original. */
-        sng_cnt = 0;
-        org_cnt = 0;
+        songCount = 0;
+        organCount = 0;
         if (!Fsfirst("*.sng", F_NORMAL)) {
-                sng_cnt = 1;
+                songCount = 1;
                 while (gemdos(GEMDOS_FSNEXT) == 0)
-                        sng_cnt++;
+                        songCount++;
         }
         if (!Fsfirst("*.org", F_NORMAL)) {
-                org_cnt = 1;
+                organCount = 1;
                 while (gemdos(GEMDOS_FSNEXT) == 0)
-                        org_cnt++;
+                        organCount++;
         }
 }

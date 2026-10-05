@@ -9,8 +9,8 @@ identical, because the text and data are -- and reports every way the
 port's variable structure disagrees with the original's:
 
   A  one port cell -> several reference cells
-     The port MERGED two of the original's variables (mi_nlp0 hid
-     mi_ndur this way).
+     The port MERGED two of the original's variables (ticksToNext hid
+     noteDur this way).
   B  several port cells -> one reference cell
      The original ALIASED storage the port keeps apart.  One is
      expected: last_hz and the sequencer's mi_lasT really are one cell.

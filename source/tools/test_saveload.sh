@@ -5,10 +5,10 @@
 #
 # The port boots two ways depending on whether HYBER is present:
 #
-#   no HYBER   loadSavedGame returns 0, g_lcldd stays 0, and main runs
+#   no HYBER   loadSavedGame returns 0, loadedSave stays 0, and main runs
 #              moveInScene -- the move-in cutscene that seeds the resident
 #   HYBER OK   loadSavedGame reads 128 bytes into `lcp`, unpacks the door
-#              bits and calls setSkinColor; g_lcldd is 1 and moveInScene is
+#              bits and calls setSkinColor; loadedSave is 1 and moveInScene is
 #              skipped entirely
 #
 # The previous version of this script never ran at all: it looked for
@@ -21,7 +21,7 @@
 #
 # So this checks the values.  The synthesised save carries distinctive
 # numbers and the test reads them back out of `lcp` in memory.  Note
-# that main is `g_lcldd = loadSavedGame(); titleScreen();`, and with SKIP_TITLE
+# that main is `loadedSave = loadSavedGame(); titleScreen();`, and with SKIP_TITLE
 # titleScreen overwrites owner_name and the date, so the fields asserted
 # here are deliberately ones titleScreen never touches.
 #
@@ -91,7 +91,7 @@ PY
 }
 
 field() {                                # $1 = offset -> decimal value
-    probe_word "$(printf '%x' $(( 0x$(probe_addr _lcp) + $1 )))"
+    probe_word "$(printf '%x' $(( 0x$(probe_addr _residen) + $1 )))"
 }
 
 # Build once; both paths run the same binary.
@@ -105,11 +105,11 @@ echo "==== A. no HYBER (fresh boot) ===="
 rm -f "$HYBER"
 NO_REBUILD=1 probe_start
 echo "load base \$$(probe_base)"
-printf '%-34s ' "g_lcldd == 0 (nothing loaded)"
-v=$(probe_word "$(probe_addr _g_lcldd)")
-[ "$v" = "0" ] && ok "path A  g_lcldd = 0" || bad "path A" "g_lcldd = $v, expected 0"
+printf '%-34s ' "loadedSave == 0 (nothing loaded)"
+v=$(probe_word "$(probe_addr _loadedS)")
+[ "$v" = "0" ] && ok "path A  loadedSave = 0" || bad "path A" "loadedSave = $v, expected 0"
 printf '%-34s ' "reached gameplay"
-ok "path A  cutscene completed (introSeq cleared)"   # probe_start asserts it
+ok "path A  cutscene completed (movingIn cleared)"   # probe_start asserts it
 probe_stop
 echo ""
 
@@ -120,9 +120,9 @@ write_hyber
 NO_REBUILD=1 probe_start
 echo "load base \$$(probe_base)"
 
-printf '%-34s ' "g_lcldd == 1 (save loaded)"
-v=$(probe_word "$(probe_addr _g_lcldd)")
-[ "$v" = "1" ] && ok "path B  g_lcldd = 1" || bad "path B" "g_lcldd = $v, expected 1"
+printf '%-34s ' "loadedSave == 1 (save loaded)"
+v=$(probe_word "$(probe_addr _loadedS)")
+[ "$v" = "1" ] && ok "path B  loadedSave = 1" || bad "path B" "loadedSave = $v, expected 1"
 
 # The point of the test: the file's numbers must be IN the struct.
 for spec in "$OFF_WATER:$WANT_WATER:water_level" \

@@ -5,7 +5,7 @@
  *   1. Skips whitespace + punctuation on tokenisation.
  *   2. Uppercases lowercase input via toUpper.
  *   3. Returns WORD_NONE for words not in the (empty) vocabulary and
- *      bumps g_aprio accordingly.
+ *      bumps cmdPriority accordingly.
  *   4. Falls through to ACTION_NONE when the action table has only a
  *      sentinel row.
  *
@@ -27,8 +27,8 @@ extern short    matchCommand();
 extern short    check_valid_word_input();
 extern char *   nextWord();
 extern short    toUpper();
-extern short    g_aprio;
-extern unsigned char g_ewb[];
+extern short    cmdPriority;
+extern unsigned char phraseBits[];
 
 static int
 test_toupper(void)
@@ -84,10 +84,10 @@ main(void)
         printf("check_entered_cmd : %s  (returned %d, negative = no match)\n",
                p_fails ? "FAIL" : "OK", result);
         printf("  g_aprio after full parse = %d\n",
-               g_aprio);
+               cmdPriority);
 
         /* An all-unknown sentence.  On the ST this returns ACTION_NONE:
-           matchCommand walks g_ew2a until `table[0] == 0xff`, and Alcyon
+           matchCommand walks phraseTable until `table[0] == 0xff`, and Alcyon
            narrows that 0xff to a signed char, so the comparison against
            the sentinel row's -1 succeeds.  Clang does not narrow the
            constant -- (char)-1 == 255 is false -- so the walk runs off

@@ -8,7 +8,7 @@ Usage:
   python3 tools/find_syms.py [SYM1 SYM2 ...]
 
 With no args, prints every global symbol.  DRI-style names begin with
-an underscore -- pass `_lcp_x`, not `lcp_x`.
+an underscore -- pass `_resX`, not `resX`.
 
 The output BASE-relative offset is what the Hatari-driven tests
 (test_stairs.sh, test_stairs_up.sh) add to their `BASE` variable to

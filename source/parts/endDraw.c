@@ -3,9 +3,9 @@
  */
 
 /* Ends a beginDraw bracket: restores the logical screen saved in
-   g_srlgb. */
+   drawLogbase. */
 void
 endDraw()
 {
-        Setscreen(g_srlgb, (void *)-1L, -1);
+        Setscreen(drawLogbase, (void *)-1L, -1);
 }

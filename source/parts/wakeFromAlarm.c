@@ -9,12 +9,12 @@ wakeFromAlarm()
         /* The walk call is tested inline, without a local. */
 
         posToXY(POS_MID_BEDROOM_WALK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() == 0) {
-                lcp_face   = FACING_RIGHT;
-                lcp_st              = STATE_STAND_FACING_SCREEN;
-                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+                resFacing   = FACING_RIGHT;
+                animState              = STATE_STAND_FACING_SCREEN;
+                headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
                 waitHeadTurn();
-                alarm_p = NO;
+                alarmRinging = NO;
         }
 }

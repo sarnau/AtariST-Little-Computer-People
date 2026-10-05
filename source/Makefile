@@ -132,7 +132,7 @@ alcyon-link:
 # Any failure fails the target.
 # CI_VBLS: 15000 VBLs runs cleanly on the current tip -- the previous
 # v_gtext crash at VBL 2361 was resolved incidentally by the initMirror
-# fix (rev_tab was BSS-zero, sprite mirroring smeared garbage into
+# fix (mirrorTable was BSS-zero, sprite mirroring smeared garbage into
 # BSS regions that overlapped TOS's font table pointers).  Bump higher
 # if you want more coverage; a 30000-VBL run also runs clean.
 CI_VBLS ?= 15000

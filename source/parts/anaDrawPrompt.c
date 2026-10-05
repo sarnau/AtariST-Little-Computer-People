@@ -9,5 +9,5 @@ anaDrawPrompt(guess)
 short   guess;
 {
         anaClrGuess();
-        printString(g_aggpr[guess - 1], 166, 57, COLOR_black);
+        printString(anaPrompts[guess - 1], 166, 57, COLOR_black);
 }

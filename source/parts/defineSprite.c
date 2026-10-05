@@ -12,12 +12,12 @@ unsigned short *        maskPtr;
 short                   height;
 short                   width;
 {
-        g_sedim[spriteID] = (short *) imgPtr;
-        g_sedms[spriteID]   = (short *) maskPtr;
-        g_sedeh[spriteID]             = height;
-        g_sedew[spriteID]             = width;
+        spriteBitmap[spriteID] = (short *) imgPtr;
+        spriteMask[spriteID]   = (short *) maskPtr;
+        spriteHeight[spriteID]             = height;
+        spriteWidth[spriteID]             = width;
         /* The four values are read back out of the tables instead of
            passing the parameters, as in the original. */
-        makeMask(g_sedim[spriteID], g_sedms[spriteID],
-                 g_sedew[spriteID], g_sedeh[spriteID]);
+        makeMask(spriteBitmap[spriteID], spriteMask[spriteID],
+                 spriteWidth[spriteID], spriteHeight[spriteID]);
 }

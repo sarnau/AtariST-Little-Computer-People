@@ -6,13 +6,13 @@
 void
 tvStoop()
 {
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(4);
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 }

@@ -15,107 +15,107 @@
 # generated tools/gen_ghidra_verify.py list names every port symbol, and
 # pushing all 694 would overwrite the descriptive names Ghidra's own
 # analysis carries for the globals the map has never covered
-# (mi_pgtab is `midi_channel_volume` there).  Confirming one of those is
+# (defProgMap is `midi_channel_volume` there).  Confirming one of those is
 # research, not a mechanical push -- see ghidra_globals_map.md.  Add a row
 # here only once the pairing is established.
 A	0x296dc	ctrl_cn
-A	0x29922	psg_freq
-A	0x29ae0	mi_pgtab
-A	0x29ecc	g_rpxs
-A	0x2a084	sp_fidx
-A	0x2a0f8	pex_name
-A	0x2a1d0	g_atact
-A	0x2a1f0	g_atmod
-A	0x2a210	g_atrel
-A	0x2a260	rv_msk
-A	0x2a270	rv_val
-A	0x2b466	mi_sig
-A	0x2b472	g_momap
-A	0x2b4b6	g_obisa
-A	0x2b54a	days_pmo
-A	0x2b5a6	rec_ledt
-A	0x2b6da	g_trel
-A	0x2b7de	bm32or
-A	0x2b85e	bm32and
-A	0x2b922	g_obcla
-A	0x2b92a	g_obala
-A	0x2b92e	g_obpha
-A	0x2b93e	g_ptdsi
-A	0x2bf98	mood_pri
-A	0x2bad4	g_ew2b
-A	0x2bf90	bm_lo
-A	0x2ba32	ew2pos
-A	0x2bdf8	g_ew2a
-A	0x2bb74	vwd_tab
-A	0x2c6ce	scn_dic
+A	0x29922	psgPeriod
+A	0x29ae0	defProgMap
+A	0x29ecc	posXHalf
+A	0x2a084	spriteFileId
+A	0x2a0f8	pexName
+A	0x2a1d0	activeActions
+A	0x2a1f0	moderateActions
+A	0x2a210	relaxedActions
+A	0x2a260	mirrorSrcBit
+A	0x2a270	mirrorDstBit
+A	0x2b466	studioSig
+A	0x2b472	songMaxPos
+A	0x2b4b6	stoveFrames
+A	0x2b54a	daysPerMonth
+A	0x2b5a6	vuLedMasks
+A	0x2b6da	eventQueue
+A	0x2b7de	bitSet32
+A	0x2b85e	bitClear32
+A	0x2b922	clockFrames
+A	0x2b92a	alarmFrames
+A	0x2b92e	phoneFrames
+A	0x2b93e	patSprites
+A	0x2bf98	moodPriority
+A	0x2bad4	wordBit
+A	0x2bf90	bitMask8
+A	0x2ba32	wordByte
+A	0x2bdf8	phraseTable
+A	0x2bb74	vocabulary
+A	0x2c6ce	scnDict
 A	0x2c700	vdipb
 A	0x2c714	ldivr
-A	0x2c864	in_evrt
-A	0x34a82	scrbufB
-A	0x3ca44	pk_wpr
-A	0x3ca46	pk_wrf
-A	0x3ca48	pk_wcs
-A	0x3cce6	psg_ovol
-A	0x3ccec	g_wyx
-A	0x3cf82	g_wyy
-A	0x3cf84	g_sedeh
-A	0x3d128	pk_c1bj
-A	0x3f6dc	pk_bs1
-A	0x3f6de	pk_bs2
-A	0x3f6e0	pk_c2bj
-A	0x3f6e6	g_ewb
+A	0x2c864	inEvent
+A	0x34a82	houseBuf
+A	0x3ca44	bjMatchBet
+A	0x3ca46	bjDblMain
+A	0x3ca48	bjDblSplit
+A	0x3cce6	envOutVol
+A	0x3ccec	xWaypoint
+A	0x3cf82	yWaypoint
+A	0x3cf84	spriteHeight
+A	0x3d128	bjNatMain
+A	0x3f6dc	bjBustMain
+A	0x3f6de	bjBustSplit
+A	0x3f6e0	bjNatSplit
+A	0x3f6e6	phraseBits
 A	0x3f79a	global
-A	0x3f7ba	g_wkadj
-A	0x44770	spr_file
-A	0x47ea6	psg_cvol
+A	0x3f7ba	walkAdjust
+A	0x44770	sprFileBuf
+A	0x47ea6	noteVolume
 A	0x47ea8	work_in
-A	0x480d2	pk_ccc
-A	0x48102	dsb_stor
-A	0x4b77c	bj_key
-A	0x4cf7a	scn_buf
-A	0x4cf94	g_ltscb
-A	0x4cfcc	g_wtx
-A	0x4cfce	g_wty
-A	0x4cfd0	scn_siz
+A	0x480d2	bjHitsDealer
+A	0x48102	stripStore
+A	0x4b77c	bjKey
+A	0x4cf7a	scnBuffer
+A	0x4cf94	letterWord
+A	0x4cfcc	walkXTarget
+A	0x4cfce	walkYTarget
+A	0x4cfd0	scnSize
 A	0x4cfd4	control
 A	0x4cfdc	int_in
 A	0x4cffc	int_out
-A	0x4d00e	rev_tab
+A	0x4d00e	mirrorTable
 A	0x4d218	wk_out
-A	0x4d2da	pex_ptr
-A	0x4fe46	pk_pscore
+A	0x4d2da	pexFrames
+A	0x4fe46	bjPlyrScore
 A	0x5018a	ad_c
-A	0x501a8	pk_cscore
-A	0x53a5c	fs_trg
-A	0x53b1e	pk_round
-A	0x53e96	pk_phrk
+A	0x501a8	bjDealerScore
+A	0x53a5c	footstepDue
+A	0x53b1e	pkrRound
+A	0x53e96	plyrRank
 A	0x53e98	addr_in
-A	0x53ec2	g_sedew
-A	0x53f3a	wp_ans
-A	0x53fde	mi_ndur
-A	0x53fe0	mi_nlpA
-A	0x54016	g_sedms
-A	0x5a156	g_sedim
+A	0x53ec2	spriteWidth
+A	0x53f3a	wpzAnswers
+A	0x53fde	noteDur
+A	0x53fe0	noteAccent
+A	0x54016	spriteMask
+A	0x5a156	spriteBitmap
 A	0x5a248	addr_ou
-A	0x5a2cc	pst_arr
+A	0x5a2cc	scratchArr
 # Truncation repairs, found by the generated verify on 2026-09-07: an
 # earlier sync pushed lcp_sym.68k's 8-character LINKAGE names, the same
 # way it once produced `lcp_pat` for `walkStep`.
-A	0x3d23c	body_shp
-A	0x3f8b0	body_ptr
+A	0x3d23c	bodyShapes
+A	0x3f8b0	bodyFrames
 F	0x278c0	evnt_timer
 F	0x278e2	form_alert
 # Labels Ghidra never created, because nothing in the image references
 # these cells (2026-09-07).  All four are DATA, whose segment is
 # byte-identical to the reference, so the addresses are lcp_sym.68k's
-# own and involve no inference -- unlike scrbufA, whose base is only
+# own and involve no inference -- unlike altScreen, whose base is only
 # known from a +511 reference, which is why it is NOT in this list.
-A	0x29860	psg_epp
-A	0x29b9c	g_unus3
-A	0x29f2c	g_rphs
-A	0x2b444	psg_vrg
-# scrbufA (2026-09-07).  This one is the PORT'S model, not a fact
-# recovered from the image: scrbufA is referenced only at +511 through
+A	0x29860	envPtrs
+A	0x29b9c	spareWord
+A	0x29f2c	posYOffset
+A	0x2b444	psgVolRegs
+# altScreen (2026-09-07).  This one is the PORT'S model, not a fact
+# recovered from the image: altScreen is referenced only at +511 through
 # the align-up constant, and that constant sits inside a relocated
 # longword, so `base+0x1FF` and `base-1+0x200` store the same value and
 # the binary cannot tell them apart (reloc_audit category E).  0x2c867
@@ -123,4 +123,4 @@ A	0x2b444	psg_vrg
 # note in CLAUDE.md: three independent indications point at 0x2c866
 # instead, and if the port ever moves, the generated verify list moves
 # with it and a sync corrects this label.
-A	0x2c867	scrbufA
+A	0x2c867	altScreen

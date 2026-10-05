@@ -10,6 +10,6 @@ mgSetup()
 {
         gameTick(5);
         fillPanel(0x4d);
-        tx_sctm      = -1;
-        no_keyin = YES;
+        textTimer      = -1;
+        keysBlocked = YES;
 }

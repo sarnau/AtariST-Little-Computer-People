@@ -18,13 +18,13 @@ scrollStrip()
 
         /* The source pointer is biased once before the loop and both
            pointers step in place after the copy, as in the original. */
-        src_ptr  = (char *) g_dscp + 320;
-        dest_ptr = (char *) g_dscp;
+        src_ptr  = (char *) stripBuf + 320;
+        dest_ptr = (char *) stripBuf;
         for (row = 0; row < 13; row++) {
                 copyBlocks32(src_ptr, dest_ptr, 10);
                 src_ptr  += 320;
                 dest_ptr += 320;
         }
-        paperRow(g_dscp, 24);
-        paperRow(g_dscp, 25);
+        paperRow(stripBuf, 24);
+        paperRow(stripBuf, 25);
 }

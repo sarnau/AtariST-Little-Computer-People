@@ -1,7 +1,7 @@
 /*
  * parts/parseSongHeader.c -- included by midi_seq.c; never compiled on its own.
  */
-/* parseSongHeader: walk header from mi_dbase to first 0xFF.
+/* parseSongHeader: walk header from songEvents to first 0xFF.
    Commands: 0x80/0x81/0x83/0x84 (config), 0xC0 (program change),
    0x01..0x7F (note-stride skip, 3 bytes).  Also parses the 90-byte
    channel/program-map block preceding the header events. */
@@ -33,29 +33,29 @@ unsigned char * p;
                    original's shape. */
                 switch (*p & 0xff) {
                 case MIDI_HDR_SET_KEY:
-                        buildNoteMap(g_mkey = p[2]);
+                        buildNoteMap(songKey = p[2]);
                         p += 3;
                         break;
                 case MIDI_HDR_SET_TEMPO:
-                        mi_temp = p[1] & 0xff;
-                        g_mtspb = 2400;
-                        g_mtspb /= mi_temp;
+                        songTempo = p[1] & 0xff;
+                        ticksPerBeat = 2400;
+                        ticksPerBeat /= songTempo;
                         p += 2;
                         break;
                 case MIDI_HDR_SET_VOLUME:
                         p += 2;
                         break;
                 case MIDI_HDR_SET_VELOCITY:
-                        mi_dvel = p[2];
-                        if      (mi_dvel < 0x17) psg_dvol = 5;
-                        else if (mi_dvel < 0x27) psg_dvol = 7;
-                        else if (mi_dvel < 0x37) psg_dvol = 9;
-                        else if (mi_dvel < 0x57) psg_dvol = 11;
-                        else if (mi_dvel < 0x67) psg_dvol = 13;
+                        defVelocity = p[2];
+                        if      (defVelocity < 0x17) defPsgVol = 5;
+                        else if (defVelocity < 0x27) defPsgVol = 7;
+                        else if (defVelocity < 0x37) defPsgVol = 9;
+                        else if (defVelocity < 0x57) defPsgVol = 11;
+                        else if (defVelocity < 0x67) defPsgVol = 13;
                         /* Alcyon narrows 0x80 to a signed byte, so
                            this compare is trivially true and the
                            store is dead -- kept, the original has it. */
-                        else if (mi_dvel < 0x80) psg_dvol = 15;
+                        else if (defVelocity < 0x80) defPsgVol = 15;
                         p += 3;
                         break;
                 case MIDI_HDR_PROGRAM_CHANGE:

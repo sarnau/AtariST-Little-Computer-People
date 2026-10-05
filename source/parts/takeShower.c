@@ -5,11 +5,11 @@
 
 /* ACTION_TAKE_SHOWER (also nightRoutine and morningRoutine).  The resident walks
    to the shower door -- giving up if interrupted there -- then, now
-   committed (g_actif), steps into the stall and showers for 20..25
+   committed (noPreempt), steps into the stall and showers for 20..25
    rounds, each a random choice of washing or scrubbing left/right,
    with the head on HEAD_ANIM_SHOWER.  Afterwards he steps down out of
    the stall, walks back to the door and the head animation and
-   g_actif are reset. */
+   noPreempt are reset. */
 void
 takeShower()
 {
@@ -17,48 +17,48 @@ takeShower()
         short   count;
 
         posToXY(POS_MID_SHOWER_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
         posToXY(POS_MID_SHOWER_INSIDE,
-                              &g_wtx, &g_wty);
-        g_actif = YES;
+                              &walkXTarget, &walkYTarget);
+        noPreempt = YES;
         walkToTarget();
 
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_SHOWER_STAND;
-        lcp_x -= 8;
-        lcp_y -= 23;
-        g_hatas = 8;
+        resFacing = FACING_RIGHT;
+        animState = STATE_SHOWER_STAND;
+        resX -= 8;
+        resY -= 23;
+        headTarget = 8;
         waitHeadTurn();
-        g_hamod = HEAD_ANIM_SHOWER;
+        headMode = HEAD_ANIM_SHOWER;
 
         count = rndRng(20, 25);
         while (count-- != 0) {          /* post-decrement test, on purpose */
                 /* The call is tested in place; the arm order is the
                    original's and affects the compiled code. */
                 if (rndRng(0, 1) != 0) {
-                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
-                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
-                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
-                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
-                        lcp_st = STATE_SHOWER_STAND;       gameTick(4);
+                        animState = STATE_SHR_WASH_L;   gameTick(2);
+                        animState = STATE_SHR_WASH_R;  gameTick(2);
+                        animState = STATE_SHR_WASH_L;   gameTick(2);
+                        animState = STATE_SHR_WASH_R;  gameTick(2);
+                        animState = STATE_SHOWER_STAND;       gameTick(4);
                 } else {
-                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
-                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
-                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
-                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
-                        lcp_st = STATE_SHOWER_STAND;       gameTick(4);
+                        animState = STATE_SHR_SCRUB_L;  gameTick(2);
+                        animState = STATE_SHR_SCRUB_R; gameTick(2);
+                        animState = STATE_SHR_SCRUB_L;  gameTick(2);
+                        animState = STATE_SHR_SCRUB_R; gameTick(2);
+                        animState = STATE_SHOWER_STAND;       gameTick(4);
                 }
         }
 
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        lcp_y += 29;
+        animState = STATE_STAND_FACING_SCREEN;
+        resY += 29;
         gameTick(2);
         posToXY(POS_MID_SHOWER_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
-        g_hamod = HEAD_ANIM_DISABLED;
-        g_actif = NO;
+        headMode = HEAD_ANIM_DISABLED;
+        noPreempt = NO;
 }

@@ -5,8 +5,8 @@ WHY THIS EXISTS.  LcpVerifyNames.java used to read a hand-written
 `~/ghidra_scripts/lcp_verify.tsv` that was not version-controlled and was
 edited by hand during a sync session.  So renaming a port symbol made
 `sync_ghidra_names.sh verify` report a FALSE mismatch until someone
-remembered to edit that file too -- renaming dg_petok to pat_ok produced
-exactly that (`want=dg_petok got=pat_ok`), with Ghidra being the CORRECT
+remembered to edit that file too -- renaming dg_petok to patAllowed produced
+exactly that (`want=dg_petok got=patAllowed`), with Ghidra being the CORRECT
 side.  An expectation file that has to be maintained by hand alongside the
 thing it checks will drift, and a checker that cries wolf gets ignored.
 
@@ -163,7 +163,7 @@ def bss_addresses(path):
             if len(c) != 3:
                 continue
             rows.setdefault(c[0], {})[int(c[1], 16)] = int(c[2], 16)
-    # Most symbols have an offset-0 row.  scrbufA does not: it is only ever
+    # Most symbols have an offset-0 row.  altScreen does not: it is only ever
     # referenced at +511 through the align-up constant (reloc_audit's
     # category E), so its base is derived from whatever offset it does have.
     return dict((name, (offs[0] if 0 in offs else

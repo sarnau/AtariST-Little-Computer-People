@@ -10,13 +10,13 @@
 void
 putInFridge()
 {
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_REACH_INTO_CABINET;
+        resFacing = FACING_LEFT;
+        animState = STATE_REACH_INTO_CABINET;
         drawObject(OBJ_FRIDGE_CLOSED, FRIDGE_X, FRIDGE_Y);
         gameTick(1);
         drawObject(OBJ_FRIDGE_OPEN_1, FRIDGE_X, FRIDGE_Y);
@@ -25,16 +25,16 @@ putInFridge()
         drawObject(OBJ_FRIDGE_OPEN_2, FRIDGE_X, FRIDGE_Y);
         gameTick(1);
 
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(2);
 
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_REACH_INTO_CABINET;
+        resFacing = FACING_LEFT;
+        animState = STATE_REACH_INTO_CABINET;
         gameTick(3);
 
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(8);
 
         drawObject(OBJ_FRIDGE_OPEN_1, FRIDGE_X, FRIDGE_Y);

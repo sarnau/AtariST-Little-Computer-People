@@ -19,7 +19,7 @@ extern short    contrl[];
 extern short    intin[];
 extern short    ptsin[];
 extern short *  vdipb[];
-extern short    vdihnd;
+extern short    vdiHandle;
 
 extern void     vsl_color();
 extern void     vst_color();
@@ -53,35 +53,35 @@ main()
         MFDB    src, dst;
 
         setvbuf(stdout, NULL, _IONBF, 0);
-        vdihnd = 42;
+        vdiHandle = 42;
 
-        vsl_color(vdihnd, 5);
+        vsl_color(vdiHandle, 5);
         expect("vsl_color contrl[0]",   contrl[0],  17);
         expect("vsl_color contrl[3]",   contrl[3],   1);
         expect("vsl_color intin[0]",    intin[0],    5);
 
-        vst_color(vdihnd, 7);
+        vst_color(vdiHandle, 7);
         expect("vst_color contrl[0]",   contrl[0],  22);
         expect("vst_color intin[0]",    intin[0],    7);
 
-        vsf_color(vdihnd, 9);
+        vsf_color(vdiHandle, 9);
         expect("vsf_color contrl[0]",   contrl[0],  25);
         expect("vsf_color intin[0]",    intin[0],    9);
 
-        vsf_interior(vdihnd, 1);
+        vsf_interior(vdiHandle, 1);
         expect("vsf_interior contrl[0]",contrl[0],  23);
         expect("vsf_interior intin[0]", intin[0],    1);
 
-        vsf_style(vdihnd, 3);
+        vsf_style(vdiHandle, 3);
         expect("vsf_style contrl[0]",   contrl[0],  24);
         expect("vsf_style intin[0]",    intin[0],    3);
 
-        vswr_mode(vdihnd, 2);
+        vswr_mode(vdiHandle, 2);
         expect("vswr_mode contrl[0]",   contrl[0],  32);
         expect("vswr_mode intin[0]",    intin[0],    2);
 
         pts[0] = 10; pts[1] = 20; pts[2] = 30; pts[3] = 40;
-        v_pline(vdihnd, 2, pts);
+        v_pline(vdiHandle, 2, pts);
         expect("v_pline contrl[0]",     contrl[0],   6);
         expect("v_pline contrl[1]",     contrl[1],   2);
         /* LCP_STX's v_pline does NOT copy the points into ptsin: it
@@ -94,7 +94,7 @@ main()
         expect("v_pline vdipb[2] restored",
                (short) (vdipb[2] == ptsin), 1);
 
-        v_gtext(vdihnd, 100, 200, "Hi");
+        v_gtext(vdiHandle, 100, 200, "Hi");
         expect("v_gtext contrl[0]",     contrl[0],   8);
         expect("v_gtext contrl[3]",     contrl[3],   2);
         expect("v_gtext ptsin[0]",      ptsin[0],  100);
@@ -103,7 +103,7 @@ main()
         expect("v_gtext intin[1]",      intin[1],  'i');
 
         pts[0] = 5; pts[1] = 6; pts[2] = 7; pts[3] = 8;
-        v_bar(vdihnd, pts);
+        v_bar(vdiHandle, pts);
         expect("v_bar contrl[0]",       contrl[0],  11);
         expect("v_bar contrl[5] sub",   contrl[5],   1);
         expect("v_bar pts[3] intact",   pts[3],      8);
@@ -112,7 +112,7 @@ main()
 
         src.fd_addr = (void *) 0x100000L;
         dst.fd_addr = (void *) 0x200000L;
-        blitRect(vdihnd, 3, &src, &dst,
+        blitRect(vdiHandle, 3, &src, &dst,
                       0, 0, 15, 23,
                       100, 100, 115, 123);
         expect("vroCpyD contrl[0]", contrl[0], 109);

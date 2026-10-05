@@ -1,8 +1,8 @@
 /*
  * t_assets.c -- smoke test for the four asset loaders.
  *
- * loadObjects() and loadSprites() slurp OBJECTS and SPRITES into obj_file[] and
- * spr_file[]; loadFrameFile() reads a {count:BE16, total:BE16, payload}
+ * loadObjects() and loadSprites() slurp OBJECTS and SPRITES into objFileBuf[] and
+ * sprFileBuf[]; loadFrameFile() reads a {count:BE16, total:BE16, payload}
  * file into a caller buffer.  None of them returns a record count any
  * more -- the loaders in LCP_STX just move bytes, and main() walks the
  * result afterwards -- so what there is to verify is that the bytes
@@ -27,8 +27,8 @@
 extern void             loadObjects();
 extern void             loadSprites();
 extern short            loadFrameFile();
-extern unsigned char    obj_file[];
-extern unsigned char    spr_file[];
+extern unsigned char    objFileBuf[];
+extern unsigned char    sprFileBuf[];
 
 static int      fails;
 
@@ -150,11 +150,11 @@ main()
            so compare against each file's real length. */
         printf("OBJECTS -> obj_file[]\n");
         loadObjects();
-        check_bytes("ldObj", obj_file, "objects", 0L, file_size("objects"));
+        check_bytes("ldObj", objFileBuf, "objects", 0L, file_size("objects"));
 
         printf("SPRITES -> spr_file[]\n");
         loadSprites();
-        check_bytes("ldSpr", spr_file, "sprites", 0L, file_size("sprites"));
+        check_bytes("ldSpr", sprFileBuf, "sprites", 0L, file_size("sprites"));
 
         {
                 static unsigned char    buf[20160];

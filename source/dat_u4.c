@@ -20,10 +20,10 @@
    three amplitude registers and 0xff reads as the terminator, each
    entry followed by a zero byte.  Kept verbatim; do not "simplify" it
    to a short[4], which would lay the bytes down as 00 08 00 09 ...  */
-char            psg_vrg[8] = { 8, 0, 9, 0, 10, 0, -1, 0 };
+char            psgVolRegs[8] = { 8, 0, 9, 0, 10, 0, -1, 0 };
 
 
-/* sf_pri: SOUND_EFFECT_ID -> priority, one byte per entry.  Lower
+/* sfxPriority: SOUND_EFFECT_ID -> priority, one byte per entry.  Lower
    value = higher priority (a new effect preempts the current one when
    its priority is <= the current one's).  SFX 12/13 (DOORBELL,
    DOORBELL_ECHO) at 0 beat everything; footsteps 0..5 at 30 lose to
@@ -31,7 +31,7 @@ char            psg_vrg[8] = { 8, 0, 9, 0, 10, 0, -1, 0 };
 
    Twenty-six entries: one per sound effect.  The bytes that follow
    are the start of the file signature below, not more priorities. */
-char    sf_pri[26] = {
+char    sfxPriority[26] = {
          30,  30,  30,  30,  30,  30,  15,  15,
          15,  15,  15,  15,   0,   0,  15,  15,
          15,  15,  15,  14,  16,   1,  15,   0,
@@ -44,14 +44,14 @@ char    sf_pri[26] = {
    Declared but never referenced: loadSounds and mq_inti skip the header by
    a fixed byte count rather than comparing it.  Eleven bytes with the
    terminator, which Alcyon pads to twelve. */
-char            mi_sig[12] = "\315Mstudio\315\002";
+char            studioSig[12] = "\315Mstudio\315\002";
 
 
 
-/* g_momap: the "maxPos" argument passed to
+/* songMaxPos: the "maxPos" argument passed to
    startSong at song start.  0 means "no explicit end-of-song
    offset -- let the sequencer walk the event stream to its natural
    terminator" (in which case initSongState stores -1 into
    g_msmap).  A .SNG file may carry a real byte offset
    here to trigger clean loop-back or fade-out at a specific point. */
-long            g_momap  = 0;
+long            songMaxPos  = 0;

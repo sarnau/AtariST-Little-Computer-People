@@ -35,7 +35,7 @@ short           outsize;
         if (fbuffer == (unsigned char *) 0)
                 outOfMemory();
 
-        readFile(filehandle, 0xfL, comp_tok);
+        readFile(filehandle, 0xfL, nibbleBytes);
         readFile(filehandle, (long) (fsize - 0x11), fbuffer);
 
         flag = 1;
@@ -49,7 +49,7 @@ short           outsize;
                 flag = (flag != 0) ? 0 : 1;
 
                 if (nibble != 0xf) {
-                        *out_buf = comp_tok[nibble];
+                        *out_buf = nibbleBytes[nibble];
                         out_buf++;
                 } else {
                         /* Escape: the next 2 nibbles are a literal. */

@@ -18,20 +18,20 @@ tvPattern()
         for (pattern = 0; pattern < 4; pattern++) {
                 rnd = Random() & 7;
                 if (pattern == 0) {
-                        xs = g_tp0xc;
-                        ys = g_tp0yc;
+                        xs = tvBar0X;
+                        ys = tvBar0Y;
                 }
                 if (pattern == 1) {
-                        xs = g_tp1xc;
-                        ys = g_tp1yc;
+                        xs = tvBar1X;
+                        ys = tvBar1Y;
                 }
                 if (pattern == 2) {
-                        xs = g_tp2xc;
-                        ys = g_tp2yc;
+                        xs = tvBar2X;
+                        ys = tvBar2Y;
                 }
                 if (pattern == 3) {
-                        xs = g_tp3xc;
-                        ys = g_tp3yc;
+                        xs = tvBar3X;
+                        ys = tvBar3Y;
                 }
 
                 for (i = 0; i <= rnd; i++) {
@@ -40,10 +40,10 @@ tvPattern()
                         pts[2] = pts[0] + 3;
                         pts[3] = pts[1];
                         beginDraw();
-                        vsl_color(vdihnd,
-                                  vdi_colt[
-                                    g_tpcoi[pattern]]);
-                        v_pline(vdihnd, 2, pts);
+                        vsl_color(vdiHandle,
+                                  colorPens[
+                                    tvBarColor[pattern]]);
+                        v_pline(vdiHandle, 2, pts);
                         endDraw();
                         gameTick(1);
                 }

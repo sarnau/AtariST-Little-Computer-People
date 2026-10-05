@@ -16,7 +16,7 @@
 #include "../include/types.h"
 
 extern void             loadSounds();
-extern unsigned char *  mi_ntLp[];
+extern unsigned char *  sfxData[];
 
 /* loadSounds reads each block's size with a raw two-byte readFile into a
    short, so on a little-endian host every size comes back byte-swapped
@@ -78,13 +78,13 @@ main()
 
         printf("First 16 loaded SFX slots:\n");
         for (i = 0; i < 16; i = i + 1) {
-                if (mi_ntLp[i] == NULL) {
+                if (sfxData[i] == NULL) {
                         printf("  [%2d] (empty)\n", i);
                         continue;
                 }
                 nonempty++;
-                short size = *(short *) mi_ntLp[i];
-                unsigned char *body = mi_ntLp[i] + 2;
+                short size = *(short *) sfxData[i];
+                unsigned char *body = sfxData[i] + 2;
                 printf("  [%2d] size=%d  first bytes: %02x %02x %02x %02x\n",
                        i, size, body[0], body[1], body[2], body[3]);
                 if (size <= 0 || size > 512) {

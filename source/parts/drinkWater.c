@@ -4,7 +4,7 @@
 
 /* drinkWater: get a drink of water.  The resident walks to the kitchen
    sink, picks up the glass and carries it to the water tap.  If the
-   water tank (lcp_watr) is not empty he bends, draws 3 units
+   water tank (waterLevel) is not empty he bends, draws 3 units
    (updateWaterTank(-3)), drinks for 16 ticks and rinses the glass at the sink
    (washAtSink).  Thirst is reset to satisfied with a full timer whether or
    not there was water, and startRecovery may start recovery from sickness. */
@@ -12,47 +12,47 @@ void
 drinkWater()
 {
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        g_actif = YES;
+        noPreempt = YES;
         carryBehind(SPRITE_GLASS);
         posToXY(POS_BTM_WATER_TAP,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_selaf[SPRITE_GLASS] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_GLASS] = SPRITE_HIDDEN;
         layoutSlots();
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        if (lcp_watr != 0) {
-                lcp_st = STATE_BEND_DOWN;
-                lcp_face = FACING_RIGHT;
+        if (waterLevel != 0) {
+                animState = STATE_BEND_DOWN;
+                resFacing = FACING_RIGHT;
                 gameTick(0);
                 updateWaterTank(-3);
-                g_hamod = HEAD_ANIM_DISABLED;
-                lcp_st = STATE_DRINK_FROM_GLASS;
+                headMode = HEAD_ANIM_DISABLED;
+                animState = STATE_DRINK_FROM_GLASS;
                 gameTick(16);
-                lcp_st = STATE_STAND_FACING_SCREEN;
-                lcp_y++;
+                animState = STATE_STAND_FACING_SCREEN;
+                resY++;
                 gameTick(3);
                 washAtSink(3);
         }
 
-        lcp.thirst_level = NEED_SATISFIED;
-        lcp.thirst_timer = lcp.thirst_timer_max;
+        resident.thirst_level = NEED_SATISFIED;
+        resident.thirst_timer = resident.thirst_timer_max;
         startRecovery();
-        g_selaf[SPRITE_GLASS] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_GLASS] = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
-        g_actif = NO;
+        isCarrying = NO;
+        noPreempt = NO;
 }

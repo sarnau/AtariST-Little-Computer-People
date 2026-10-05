@@ -5,7 +5,7 @@ The 1985 linker allocated `.comm` blocks in an order none of the
 surviving toolchain linkers reproduce (native lo68/link68 allocate
 hash-grouped, the 1990 ALN.PRG allocates alphabetically; the
 reference's order matches neither, nor first-mention order, and it
-does not even align its commons -- scrbufA lands on an odd address).
+does not even align its commons -- altScreen lands on an odd address).
 TEXT, DATA and the relocation stream come out byte-identical anyway;
 the only bytes that differ are relocated longwords whose targets sit
 in BSS, because the two linkers packed the same commons at different

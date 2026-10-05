@@ -5,5 +5,5 @@
 void
 panelEnd()
 {
-        Setscreen(sv_lgb, (void *)-1L, -1);     /* rez as word */
+        Setscreen(panelLogbase, (void *)-1L, -1);     /* rez as word */
 }

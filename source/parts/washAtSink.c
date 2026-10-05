@@ -15,20 +15,20 @@ short   value;
         short           last_pick;
         short           pick;
 
-        pst_arr[0] = STATE_WASH_HANDS_CENTER;
-        pst_arr[1] = STATE_WASH_HANDS_LEFT;
-        pst_arr[2] = STATE_WASH_HANDS_RIGHT;
+        scratchArr[0] = STATE_WASH_HANDS_CENTER;
+        scratchArr[1] = STATE_WASH_HANDS_LEFT;
+        scratchArr[2] = STATE_WASH_HANDS_RIGHT;
 
         carryBehind(value);
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
-        g_selaf[value] = SPRITE_HIDDEN;
+        spriteLayer[value] = SPRITE_HIDDEN;
         layoutSlots();
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
         rnd = (unsigned short)(Random() & 0x1f) | 4;
@@ -43,20 +43,20 @@ short   value;
                         pick = Random() & 3;
                 last_pick = pick;
                 if (pick != 3) {
-                        lcp_st = pst_arr[pick];
-                        lcp_face = FACING_RIGHT;
+                        animState = scratchArr[pick];
+                        resFacing = FACING_RIGHT;
                 } else {
-                        lcp_st = pst_arr[1];
-                        lcp_face = FACING_LEFT;
+                        animState = scratchArr[1];
+                        resFacing = FACING_LEFT;
                 }
                 gameTick(1);
         }
 
-        if (g_sfplf != NO &&
-            g_sfpli == SFX_WATER_RUNNING)
+        if (sfxPlaying != NO &&
+            sfxCurId == SFX_WATER_RUNNING)
                 stopSfx();
 
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 }

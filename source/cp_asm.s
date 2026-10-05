@@ -22,7 +22,7 @@
 *
 * The return value is assembled by a chain of six mutually recursive
 * stubs (cpsum1..cpsum6) that each add a constant -- an obfuscation,
-* not a computation.  main stores the result in cprot_r and moveInScene
+* not a computation.  main stores the result in copyProtResult and moveInScene
 * parks the resident asleep for ever if it is zero.
 *
 * The 96 encrypted bytes at cpenc are emitted verbatim: they are not

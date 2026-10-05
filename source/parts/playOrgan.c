@@ -8,7 +8,7 @@
    floor (POS_TOP_ORGAN), a prop sprite is shown on the instrument, and a
    random *.ORG file is picked and started with playSongFile.  While it plays he switches
    to a new random reaching pose whenever any PSG channel's volume
-   rises, so he moves in time with the notes.  g_rbact is set
+   rises, so he moves in time with the notes.  organPlaying is set
    throughout to keep animRecPlayer's record-player animation still, and the
    song buffer is freed at the end. */
 void
@@ -24,40 +24,40 @@ playOrgan()
         _DTA *           dta_ptr;
         long            xres;
 
-        pst_arr[0] = STATE_ORGAN_REACH_R;
-        pst_arr[1] = STATE_ORGAN_IDLE;
-        pst_arr[2] = STATE_ORGAN_REACH_L;
-        pst_arr[3] = STATE_ORGAN_PULL_OUT;
+        scratchArr[0] = STATE_ORGAN_REACH_R;
+        scratchArr[1] = STATE_ORGAN_IDLE;
+        scratchArr[2] = STATE_ORGAN_REACH_L;
+        scratchArr[3] = STATE_ORGAN_PULL_OUT;
 
         prev_a = 0;
         prev_b = 0;
         prev_c = 0;
-        g_actif = YES;
-        if (lcp_recP != NO)
+        noPreempt = YES;
+        if (recordPlaying != NO)
                 stopRecord();
-        g_actif = NO;
+        noPreempt = NO;
 
         posToXY(POS_TOP_ORGAN,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        g_rbact = YES;
-        g_hamod = HEAD_ANIM_DISABLED;
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        organPlaying = YES;
+        headMode = HEAD_ANIM_DISABLED;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
         gameTick(4);
 
-        lcp_st = STATE_ORGAN_REACH_R;
-        g_selaf[SPRITE_ORGAN_PROP] = SPRITE_IN_FRONT;
+        animState = STATE_ORGAN_REACH_R;
+        spriteLayer[SPRITE_ORGAN_PROP] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_ORGAN_PROP);
-        g_sepex[g_seslm[SPRITE_ORGAN_PROP]] = 146;
-        g_sepey[g_seslm[SPRITE_ORGAN_PROP]] =  54;
+        pendX[spriteSlot[SPRITE_ORGAN_PROP]] = 146;
+        pendY[spriteSlot[SPRITE_ORGAN_PROP]] =  54;
         gameTick(1);
 
-        i = rndRng(1, org_cnt);
+        i = rndRng(1, organCount);
         Fsfirst("*.org", F_NORMAL);
         while (--i != 0)
                 Fsnext();
@@ -68,46 +68,46 @@ playOrgan()
         filename[i + 4] = '\0';
         playSongFile(filename);
 
-        g_hamod = HEAD_ANIM_WALKING;
-        while (mi_play == NO)
+        headMode = HEAD_ANIM_WALKING;
+        while (songPlaying == NO)
                 ;
 
-        while (mi_play != NO) {
+        while (songPlaying != NO) {
                 /* Plain word arguments here (no 0L), unlike stopSfx's
                    Giaccess writes: the argument shape changes the code. */
                 psg_a = Giaccess(0, PSG_VOL_A) & 0x1f;
                 psg_b = Giaccess(0, PSG_VOL_B) & 0x1f;
                 psg_c = Giaccess(0, PSG_VOL_C) & 0x1f;
 
-                lcp_st = pst_arr[0];
+                animState = scratchArr[0];
                 if (psg_a > prev_a || psg_b > prev_b || psg_c > prev_c) {
                         i = rndRng(1, 3);
-                        while (pst_arr[i] == lcp_st)
+                        while (scratchArr[i] == animState)
                                 i = rndRng(1, 3);
-                        lcp_st = pst_arr[i];
-                        if (pst_arr[3] == lcp_st) {
+                        animState = scratchArr[i];
+                        if (scratchArr[3] == animState) {
                                 gameTick(0);
-                                lcp_st = pst_arr[rndRng(1, 2)];
+                                animState = scratchArr[rndRng(1, 2)];
                         }
                 }
                 prev_a = psg_a; prev_b = psg_b; prev_c = psg_c;
                 gameTick(0);
         }
 
-        g_hamod = HEAD_ANIM_DISABLED;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_st = pst_arr[0];
+        headMode = HEAD_ANIM_DISABLED;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        animState = scratchArr[0];
         waitHeadTurn();
         gameTick(8);
 
-        lcp_st = STATE_STAND_FACING_SCREEN;
-        g_selaf[SPRITE_ORGAN_PROP] = SPRITE_HIDDEN;
+        animState = STATE_STAND_FACING_SCREEN;
+        spriteLayer[SPRITE_ORGAN_PROP] = SPRITE_HIDDEN;
         layoutSlots();
         gameTick(0);
 
-        if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
-                mi_sbuf = (char *) 0;
+        if (songBuf != (char *) 0) {
+                Mfree(songBuf);
+                songBuf = (char *) 0;
         }
-        g_rbact = NO;
+        organPlaying = NO;
 }

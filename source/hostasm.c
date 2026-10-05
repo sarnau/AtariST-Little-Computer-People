@@ -28,11 +28,11 @@ void aciaWrite(val)        short val;              { (void) val; }
 
 /* --- mq_tick.s: the Timer-A ISR and the five bytes behind it ------ */
 void  timerAIsr()  { }
-BOOL16 mi_dwrm;
-BOOL16 mi_rlock;
-short  g_mtpre;
-char   psg_ntAc;
-char   g_msmsa;
+BOOL16 seqBusy;
+BOOL16 envBusy;
+short  seqCountdown;
+char   psgActive;
+char   songActive;
 
 /* --- cp_asm.s: the copy protection -------------------------------- */
 /* Non-zero, as a passing check returns -- the host has no FDC. */

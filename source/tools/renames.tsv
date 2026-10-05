@@ -1,0 +1,672 @@
+# renames.tsv -- old name -> new name for the 2026-10-05 rename of every
+# function and global.  Older commits, the Ghidra project and history notes
+# use the old names; this table maps them.  The linker keeps 8 characters,
+# so a symbol file shows "_" + the first 7 characters of the new name.
+a_brust	brushTeeth	ACTION_BRUSH_TEETH: brushes teeth at the bathroom sink
+a_calld	callDog	ACTION_CALL_DOG: walks to the couch by the phone and crouches, sets pat_ok
+a_chefd	checkFrontDoor	ACTION_CHECK_FRONT_DOOR: opens the front door and steps outside for `value` ticks
+a_cleau	cleanUp	ACTION_CLEAN_UP: walks round closing every door/drawer flagged open
+a_clocd	closeBedCloset	closes the bedroom closet (resident already at it), clears lcp_clsO
+a_clotd	closeToiletDoor	closes the toilet door (resident already at it), clears lcp_toiO
+a_dance	danceToMusic	ACTION_DANCE: starts a record if none plays, dances while mi_play
+a_drink	drinkWater	ACTION_DRINK: fetches the glass, draws water from the tank, drinks
+a_driwa	washAtSink	carries sprite `value` to the kitchen sink and washes it with the water running
+a_eatm	cookMeal	ACTION_EAT_MEAL: cooks on the stove, then eats via a_kitcc
+a_feedd	feedDog	ACTION_FEED_DOG: fills the dog bowl from a food package
+a_gesff	goToFridge	ACTION_GET_SNACK_FROM_FRIDGE: walks to the fridge, then a_opecf
+a_gioob	getInOutOfBed	ACTION_GET_IN_OUT_OF_BED: toggles lcp.is_sleeping with the bed poses
+a_gotbn	nightRoutine	ACTION_GO_TO_BED_NIGHT: shower, change, eat, brush teeth, bed
+a_hello	sayHello	ACTION_HELLO: waves and talks at the screen
+a_kitcc	eatFromCabinet	ACTION_KITCHEN_CABINET: takes food from the cabinet and eats it at the table
+a_lighf	lightFire	ACTION_LIGHT_FIREPLACE: fetches firewood and lights the fireplace
+a_lists	playRecord	ACTION_LISTEN_SONG: picks a random .sng and starts it
+a_nodh	nodHead	ACTION_NOD_HEAD: forces three head frames for a nod
+a_nodok	nodOk	ACTION_NOD_OK: nods in agreement (head target up/down four times)
+a_opcbc	changeClothes	ACTION_OPEN_BEDROOM_CLOSET: steps into the closet, new clothing (or skin) palette
+a_opcfc	closeFilingCab	closes the filing cabinet drawer (resident already at it), clears lcp_flcO
+a_opcfd	openFrontDoor	opens (DOOR_OPEN) or closes (DOOR_CLOSE) the front door, lcp_frdO
+a_opcuc	enterStudy	ACTION_OPEN_UPSTAIRS_CLOSET: walks into the study; value != 0 saves the game
+a_opecc	openKitchenCab	opens or closes the kitchen cabinet, lcp_cabO, draws food markers
+a_opecd	openDresser	opens or closes a dresser drawer, lcp_drsO
+a_opecf	putInFridge	opens the fridge, reaches in, shuts it (ends a_feedd and a_gesff)
+a_pacen	paceNervously	ACTION_PACE_NERVOUSLY: alternates the pacing poses on the spot
+a_peeka	peekAround	ACTION_PEEK_AROUND: quick glance by forcing head frame 2
+a_petd	petDog	ACTION_PET_DOG: crouches on the couch and waits for the player's Ctrl-P pat
+a_plaag	playGame	ACTION_PLAY_A_GAME: the minigame menu, keys 1..5
+a_plawr	playOrgan	ACTION_PLAY_ORGAN: plays a random .ORG file at the organ
+a_playc	useComputer	ACTION_PLAY_COMPUTER: sits and types at the computer
+a_playp	stopRecord	ACTION_STOP_RECORD: walks to the dance floor, drains and frees the song
+a_readn	readNewspaper	ACTION_READ_NEWSPAPER: TV on, reads in the armchair, TV off
+a_sitae	exercise	ACTION_SIT_AND_EXERCISE: arm-exercise poses on the middle-floor couch
+a_sleep	dozeOff	ACTION_SLEEP: breathing/snoring rounds, random count or `value` rounds
+a_socwd	sitWithDog	ACTION_SIT_ON_COUCH_WITH_DOG: sits on the couch petting the dog
+a_takes	takeShower	ACTION_TAKE_SHOWER: showers 20..25 rounds in the stall
+a_tidyh	tidyHouse	ACTION_TIDY_HOUSE: rummages in the filing cabinet
+a_toggt	toggleTv	ACTION_TOGGLE_TV: tvOff if lcp_tv, else tvOn
+a_uset	useToilet	ACTION_USE_TOILET: toilet door, flush, resets bathroom need
+a_wakfa	wakeFromAlarm	ACTION_WAKE_FROM_ALARM: walks to the bedroom and clears alarm_p
+a_wakum	morningRoutine	ACTION_WAKE_UP_MORNING: alarm, out of bed, shower, teeth, dress, cook
+a_wandi	idleShrug	ACTION_WANDER_IDLY: despite the name, turns side-on and shrugs
+a_washh	washHands	ACTION_WASH_HANDS: hand-washing poses at the bathroom sink
+a_watat	rummageCabinet	rummages in the filing cabinet, opening it if shut
+a_writl	writeLetter	ACTION_WRITE_LETTER: types a letter to the player from LETTER.TXT
+a_yawas	yawnAndStretch	ACTION_YAWN_AND_STRETCH: alternates yawn and stretch for 15 ticks
+aes_init	initAes	boot AES setup: appl_init, graf_handle, palette, save TOS Physbase
+ag_cgpa	anaClrGuess	Anagrams: clear the "Guess #N?" prompt bar
+ag_clue	anaClueUsed	Anagrams: 1 once F1 has given a clue for this guess
+ag_csb	anaClrBottom	Anagrams: clear the bottom info bar
+ag_cswa	anaClrIntro	Anagrams: clear the left-panel intro/instructions area
+ag_cwda	anaClrWord	Anagrams: clear the right-panel word display area
+ag_dwl	anaShowWord	Anagrams: draw a word in 20px text in the right panel
+ag_intr	anaIntroText	Anagrams: draw the 5-line intro text
+ag_main	playAnagrams	Anagrams minigame main loop
+ag_matc	anaStrMatch	Anagrams: string equality test (walks both strings fully)
+ag_sgp	anaDrawPrompt	Anagrams: draw "Guess #N?" for the current attempt
+ag_ssw	anaPickWord	Anagrams: pick a dictionary word and scramble it
+al_hnd	allocHandle	host-only: give an open FILE the first free GEMDOS-style handle slot
+al_loal	loadFrameFile	loads BODY.LCP / PEx.LCP frame file (count, length, payload) into a buffer
+alarm_p	alarmRinging	YES while the alarm clock rings (Ctrl-A / a_wakum set, a_wakfa clears)
+ani_cnt	frameCount	rendered-frame counter bumped by sc_ren8; gameTick waits on it
+bedT_trg	bedtimeDone	once-a-day flag: bedtime action already triggered today
+bj_key	bjKey	Blackjack: key read by playBlackjack (a global)
+blkcp32	copyBlocks32	hand-assembled copy of N 32-byte blocks (unrolled dbf loop)
+bm32and	bitClear32	32 longs ~(1<<i): clears bit i of a sprite mask (sp_lbhd)
+bm32or	bitSet32	32 longs 1<<i: sets/tests bit i while dilating body frames (sp_lbbd)
+bm_lo	bitMask8	8 byte masks 1<<i; parser ORs one into the word-bit accumulator
+body_frT	bodyIndex	lcp_st -> body-frame index into bodyFrames/bodyShapes
+body_ptr	bodyFrames	the loaded BODY.LCP frames, 168 bytes each
+body_shp	bodyShapes	dilated body silhouettes (84 bytes each) built by sp_lbal
+body_yof	bodyYOffset	per-lcp_st Y anchor offset of the body (and head) sprite
+chk_actT	chooseAction	AI priority ladder: events, alarm, needs, meals, typed commands, random
+chk_encm	matchCommand	matches a typed line against g_ew2a, returns the action, sets priority
+chk_timA	pickIdleAction	random idle action from the time-of-day/mood tier tables
+chk_vwd	lookupWord	index of a word in vwd_tab, WORD_NONE if absent
+cl_drini	drawClock	paints the wall-clock centre, then the hands
+cl_drwH	drawHands	draws both clock hands for a minute/hour in a colour
+cl_redrH	redrawHands	erases old hands and draws new ones when the minute changes
+cmd_inp	parsedLine	the line prsCmd hands to chk_encm (always g_cdinb)
+cmd_num	parseNumber	decimal string -> number (static, never called)
+cmd_upp	nextWord	tokenizer: copies the next letter run uppercased, returns scan position
+cntSong	countSongs	counts the *.SNG and *.ORG files at boot into sng_cnt/org_cnt
+comp_tok	nibbleBytes	the 15 commonest bytes that LETTER.TXT nibbles 0..14 decode to
+cp_main	checkCopyProt	Activision copy-protection routine (cp_asm.s); returns the long result
+cprot_r	copyProtResult	cp_main's result; 0 parks the resident in cs_mvIn
+cpyScr	copyScreen	vro_cpyfm of the visible screen into a destination MFDB
+crd_dat	cardImages	Malloc'd card bitmaps for War, Poker, Blackjack
+crd_mfdb	cardMfdb	54 card MFDBs (52 faces, back, highlight)
+crd_xa	cardXComp	card slot x positions, computer (top) row
+crd_xb	cardXPlyr	card slot x positions, player (middle) row
+crd_ya	cardYComp	card slot y positions, computer (top) row
+crd_yb	cardYPlyr	card slot y positions, player (middle) row
+crFile	ensureFile	create the save file empty if access() does not find it
+cs_mvIn	moveInScene	the new-resident move-in cutscene
+cur_mf	flipMfdb	sc_ren8's page-flip MFDB pointer
+cWkday	calcWeekday	day of the week (0..6) computed from t_day/t_mon/t_year
+cy_frT	carryFrames	arms-up body frames per walk state while carrying an object
+daily_rs	resetDailyFlags	clears the four once-a-day triggers
+days_pmo	daysPerMonth	days per month, January first
+daysInMo	daysInMonth	days in a month (leap-year aware)
+dbg_hide	debugHideLcp	diagnostic: forces resident body/head sprites off-screen (Y=300)
+deal_kc	handleKey	dispatches a key: Ctrl commands, Return, erase, typed characters
+dg_bwlch	bowlChange	dog-bowl change request for tick.c: -1 emptier, +1 fuller, 0 none
+dg_idlcd	dogIdleCount	frames the dog idles before picking its next wander target
+dg_init	dogHidden	non-zero keeps sp_spud from drawing the dog (set during the move-in)
+dg_ipos	placeDog	puts the dog at its startup spot and clears its sprite slots
+dg_ltgtI	dogLastPick	index of the last wander target picked; never repeated
+dg_mvAni	moveDog	8 Hz dog movement and walk-cycle step
+dg_nrbwl	dogMayEat	set when the stair-landing target is picked; lets the dog eat at its bowl
+dg_stair	dogOnStairs	YES while the dog is traversing a flight of stairs
+dg_vis	dogNoTopFlr	YES during a minigame: wander picker skips entries 0..2 (the top-floor targets)
+dg_wkPth	dogNextWaypt	dog's next waypoint (lcp_flwp's counterpart for the dog)
+dinT_trg	dinnerDone	once-a-day flag: dinner action already triggered today
+doAct	runAction	dispatches g_trac to its a_* routine
+dog_x	dogX	dog sprite screen X
+dog_y	dogY	dog sprite screen Y
+drwLine	drawLine	one line into the house picture via the VDI, colour mapped through the pen table
+drwPixel	drawPixel	one pixel as a degenerate polyline into the house picture
+dsb_stor	stripStore	backing store for the text strip; g_dscp is its 512-aligned start
+er_bood	bookDelivery	ACTION_EVENT_BOOK_DELIVERY handler
+er_dogf	dogFoodDelivery	ACTION_EVENT_DOG_FOOD handler (food delivery with g_dvdog)
+er_food	foodDelivery	ACTION_EVENT_FOOD_DELIVERY handler: stocks cabinet or feeds dog
+er_nomem	outOfMemory	fatal out-of-memory alert, never returns
+er_recd	recordDelivery	ACTION_EVENT_RECORD_DELIVERY handler
+er_write	writeErrorAlert	"Unable to write. Check disk." RETRY alert
+erChr	eraseChar	blanks one 8x8 character cell
+ev_ansPh	answerPhone	ACTION_EVENT_PHONE_CALL: answers and talks on the phone
+ew2pos	wordByte	word id -> byte index into g_ewb
+execEv	runEvent	dispatches one queued event to its handler
+exitVdi	panelEnd	restore the logical screen saved by panelBegin
+fillTopR	fillPanel	aligns the strip buffer and paints its top panel (paper/stripe rows + black separator)
+fire_act	fireBurning	fireplace is burning
+fire_dur	fireTimeLeft	frames until the fire burns out
+fire_ext	fireDouse	request for tick.c to put the fire out and redraw the grate
+fl_ltpl	loadLetterText	unpack letter.txt and build the 360-entry line pointer table
+flr_by	floorBottomY	bottom Y of each floor (bottom, middle, top)
+flr_cy	floorWalkY	walking-line Y per floor
+food_dlv	pantryFull	set when Ctrl-F is refused because the food cabinet is full
+fOpen	openFile	Fopen with retries and a "Bad file open" alert loop
+fr_reac	unpackFile	read and nibble-decompress a packed file (LETTER.TXT) into a buffer
+fr_read	readFile	Fread with retries and a "Bad file read" alert loop
+fs_trg	footstepDue	latched on walk frames 3/7; lcp_fstp plays the footstep and clears it
+g_actif	noPreempt	YES while an activity runs, so lcp_wkD walks are not preempted
+g_agacu	anaExtraGuess	Anagrams: a clue pushed the count to 9, allow one more guess
+g_agclc	anaNumClues	Anagrams: clues taken for this word (write-only)
+g_aggpr	anaPrompts	Anagrams: "Guess #1?".."Guess #9?" prompt strings
+g_aggun	anaGuessNum	Anagrams: guess number 1..9
+g_aginb	anaInput	Anagrams: the guess being typed
+g_agorw	anaAnswer	Anagrams: pointer to the unscrambled dictionary word
+g_agscw	anaScrambled	Anagrams: scrambled-word buffer
+g_agwb	anaDict	Anagrams: Malloc'd "words" dictionary, 11-byte rows
+g_agwgm	anaWrongMsgs	Anagrams: wrong-guess messages
+g_agwol	anaWordLen	Anagrams: length of the current word
+g_aliss	queueCount	number of queued typed commands, 0..10
+g_alsts	alarmSounding	YES once the alarm sound has started
+g_aprio	cmdPriority	priority of the command chk_encm is matching
+g_apriq	queuePriority	priorities of the queued typed commands
+g_aqueu	queueActions	queued typed-command action ids
+g_atact	activeActions	random-action table for TIER_ACTIVE
+g_atmod	moderateActions	random-action table for TIER_MODERATE
+g_atrel	relaxedActions	random-action table for TIER_RELAXED
+g_cdibp	typedCursor	cursor position in g_cdinb, 0..38
+g_cdinb	typedLine	the command line being typed
+g_chhop	hourHandXY	hour-hand x/y offset table for the clock
+g_chhou	clockHour	hour the clock hands were last drawn for
+g_clcop	shirtPrimary	primary shirt colour (ST RGB) per clothing colour id
+g_clcos	shirtSecondary	secondary shirt colour per clothing colour id
+g_cmmin	clockMinute	minute the clock hands were last drawn for
+g_cmmip	minuteHandXY	minute-hand x/y offset table for the clock
+g_ddipt	dogRoamSpots	nine HOUSE_POS targets the dog picks to wander to
+g_ddxot	dogXNudge	X nudge added to the dog's wander target, per target entry
+g_ddyot	dogYNudge	Y nudge added to the dog's wander target, per target entry
+g_deact	dogEating	YES while the dog is eating
+g_decou	dogEatCount	frames of eating left
+g_dfimb	dogMirImage	the dog's mirrored sprite image (sp_flih)
+g_dfmab	dogMirMask	the dog's mirrored sprite mask (sp_flih)
+g_dgitx	dogStartPos	house position of the dog's first wander target (move-in)
+g_dgiyo	dogYStartNudge	Y nudge added to the dog's first target (move-in)
+g_dscp	stripBuf	512-aligned dsb_stor: the text-strip/panel buffer drawn into
+g_dseat	dogEatFrames	dog eating sprite frames
+g_dsid	dogSpriteId	current dog sprite id
+g_dtx	dogXTarget	dog's final destination X; both 0 = idle
+g_dty	dogYTarget	dog's final destination Y; both 0 = idle
+g_dvdog	isDogDelivery	YES while er_dogf runs er_food for a dog-food delivery
+g_dwanc	dogStepIdx	0..7 index into the dog walk-cycle sprite table
+g_dwanf	dogWalkSprites	8 sprite ids of the dog walk cycle
+g_dyx	dogXWaypt	dog's intermediate stair waypoint X
+g_dyy	dogYWaypt	dog's intermediate stair waypoint Y
+g_ew2a	phraseTable	command rows: 10-byte word mask, action id, priority
+g_ew2b	wordBit	word id -> bit number within its g_ewb byte
+g_ewb	phraseBits	bit mask accumulated from the words of a typed command
+g_hacur	headPose	current head pose (direction bits 0-2, tilt bits 3-4)
+g_hadec	headDelay	countdown before the head animation picks a new random target
+g_hamod	headMode	head animation mode / limits (HEAD_ANIM_*), <0 disables
+g_hastl	headLastWalk	last head target lcp_path set while walking, so it is set once per direction
+g_hatas	headTarget	head pose the animation is turning towards
+g_hsbuf	headImage	sp_lcpf destination: head sprite image
+g_hsfra	headFrame	head sprite frame derived by sp_lcha; actions override it to nod/talk
+g_hsmas	headMask	sp_lcpf destination: head sprite mask
+g_hsmif	headMirror	YES = head frame is drawn horizontally flipped
+g_inpmd	typingOff	YES while only the Ctrl hot keys work (resident away from a minigame)
+g_lcieo	carriedSprite	logical sprite id of the item the resident is carrying
+g_lcldd	loadedSave	lc_load's result: 1 = saved resident loaded, 0 = new game
+g_lcyof	isCarrying	YES while the resident carries an item (carry body frames, carried-sprite follow)
+g_lsimg	bodyImage	sp_lcpf destination: body sprite image
+g_lsmas	bodyMask	sp_lcpf destination: body sprite mask
+g_lssh	lcpHidden	YES = body/head sprite pointers forced NULL, resident invisible
+g_ltcwt	typingSprites	SPRITE_TYPING_1..4 shown by carriage position
+g_ltg	letterSignoffs	four letter sign-off strings
+g_ltlic	needlePos	record-player needle sweep position (rp_anim)
+g_ltlp	letterLines	pointers to each line of the loaded letter text
+g_ltpac	vuLeds	record-player VU LEDs lit, one bit each
+g_ltscb	letterWord	40-byte word buffer for typeString
+g_lttx	letterText	Malloc'd letter-template text
+g_mcpro	sentProgram	MIDI program last sent on each physical channel (-1 = none)
+g_meve	midiMsg	MIDI message being assembled for mq_dise
+g_mkey	songKey	key signature byte from the song header, handed to mq_bust
+g_mnhi	noteHigh	highest MIDI note the sequencer plays (0x60)
+g_mnlo	noteLow	lowest MIDI note the sequencer plays (0x24)
+g_moen	midiOutOn	YES: send notes to MIDI OUT
+g_momap	songMaxPos	maxPos passed to mq_inis; 0 = play to the stream's own end
+g_msmk	keyScaleMask	per-key mask of which scale degrees stay unshifted (mq_bust)
+g_msmsa	songActive	asm byte: non-zero while a song is playing (tested by mq_tick)
+g_mspha	seqPhase	sequencer SEQ_PHASE_* state stepped by mq_advs
+g_mstr	noteMap	note translation table rebuilt from the key by mq_bust
+g_mtcou	timerTicks	master Timer-A tick counter incremented by mq_tick
+g_mtdiv	envDivider	divider; mq_tick steps the PSG envelopes when it wraps
+g_mtpre	seqCountdown	asm word: ticks left until the next sequencer step
+g_mtspb	ticksPerBeat	ticks per beat derived from the header tempo (2400/tempo)
+g_obala	alarmFrames	ringing alarm-clock object frames
+g_obcla	clockFrames	wall-clock object frames
+g_obdea	bowlFrames	dog-bowl object per fill level
+g_obfia	fireFrames	fireplace flame object frames
+g_obisa	stoveFrames	stove cooking object frames (a_eatm)
+g_obpha	phoneFrames	ringing phone object frames
+g_obtah	objHeights	height of each of the 56 objects
+g_obtaw	objWidths	width of each of the 56 objects
+g_obtmt	objMfdbs	MFDB per object (56)
+g_pcbet	bjBetMain	Blackjack: chips bet on the player's first hand
+g_pcdrp	compPile	War: the computer's draw pile
+g_pchc	warDepth	War: number of tied war rounds so far this hand (index into war cards)
+g_pcmon	compChips	resident's chips (Poker/Blackjack) or cards (War)
+g_phrc	ringCountdown	phone ring animation countdown in gameTick
+g_ppbet	bjBetSplit	Blackjack: chips bet on the split hand
+g_ppdrp	plyrPile	War: the player's draw pile
+g_ppmon	plyrChips	player's chips or cards
+g_ppppa	potChips	chips in the pot
+g_ptanf	patFrame	frame of the Ctrl-P patting-hand animation
+g_ptdoa	patActive	YES while a Ctrl-P pat animation is running
+g_ptdsi	patSprites	ping-pong sprite id sequence for the patting hand
+g_ptlss	patLastSprite	last patting-hand sprite drawn
+g_rbact	organPlaying	set by a_plawr while the organ plays; stills the record-player anim
+g_rphs	posYOffset	Y offset above the floor baseline per HOUSE_POS
+g_rpxs	posXHalf	X at half resolution per HOUSE_POS (doubled by hs_posXY)
+g_seach	drawnHeight	per hardware slot: height currently drawn
+g_seacw	drawnWidth	per hardware slot: width currently drawn
+g_seacx	drawnX	per hardware slot: X currently drawn
+g_seacy	drawnY	per hardware slot: Y currently drawn
+g_seaim	drawnImage	per hardware slot: image currently drawn (NULL = empty)
+g_seams	drawnMask	per hardware slot: mask currently drawn
+g_sedeh	spriteHeight	per logical sprite: definition height
+g_sedew	spriteWidth	per logical sprite: definition width
+g_sedim	spriteBitmap	per logical sprite: definition image bitmap
+g_sedms	spriteMask	per logical sprite: definition mask
+g_selaf	spriteLayer	per logical sprite: layer flag (HIDDEN / IN_FRONT / BEHIND_LCP)
+g_semfi	slotImgMfdb	per hardware slot: MFDB for the image blit
+g_semfm	slotMaskMfdb	per hardware slot: MFDB for the mask blit
+g_sepef	pendReady	per hardware slot: YES = a new frame is pending for the compositor
+g_sepeh	pendHeight	per hardware slot: height for next draw
+g_sepew	pendWidth	per hardware slot: width for next draw
+g_sepex	pendX	per hardware slot: X for next draw
+g_sepey	pendY	per hardware slot: Y for next draw
+g_sepim	pendImage	per hardware slot: image for next draw
+g_sepms	pendMask	per hardware slot: mask for next draw
+g_seslm	spriteSlot	logical sprite -> hardware slot map (HW_SLOT_NONE = not drawn)
+g_sfacf	sfxPending	YES: an effect request from sf_sele is pending
+g_sfcup	sfxCurPrio	sf_pri priority of the effect now playing, for preemption
+g_sfcur	sfxReqId	requested effect id (index into mi_ntLp / sf_pri)
+g_sfddh	sfxDurHi	effect duration from its trailing bytes, high word
+g_sfddl	sfxDurLo	effect duration, low word
+g_sfDoB	sfxBuffer	Dosound buffer the playing effect is copied into
+g_sfdoc	sfxDosCtl	cell set to 0 by sf_so, read nowhere (Ghidra: dosound_control)
+g_sfdos	sfxDosStat	cell set to 0xff by sf_so, read nowhere (Ghidra: dosound_status)
+g_sfdur	sfxReqDur	requested effect duration in game ticks; -1 = the effect's own
+g_sfHz2	sfxStartHz	200 Hz clock when the effect started (write-only)
+g_sfplf	sfxPlaying	YES while a sound effect is playing
+g_sfpli	sfxCurId	id of the effect now playing
+g_sfret	sfxTicksLeft	game ticks until the current effect is stopped
+g_spdc	walkSpeed	walk speed, 5 from gameLoop; read only in lcp_path's dead store
+g_srlgb	drawLogbase	logical screen saved by beginDraw, restored by endDraw
+g_srmfd	frameMfdb	compositing target MFDB, flipped to the screen each frame
+g_srptr	housePtr	512-aligned base of the house picture buffer
+g_srsdc	stripScroll	frames left of the text strip's scroll after Return
+g_tp0xc	tvBar0X	TV pattern bar 0 X per step
+g_tp0yc	tvBar0Y	TV pattern bar 0 Y per step
+g_tp1xc	tvBar1X	TV pattern bar 1 X per step
+g_tp1yc	tvBar1Y	TV pattern bar 1 Y per step
+g_tp2xc	tvBar2X	TV pattern bar 2 X per step
+g_tp2yc	tvBar2Y	TV pattern bar 2 Y per step
+g_tp3xc	tvBar3X	TV pattern bar 3 X per step
+g_tp3yc	tvBar3Y	TV pattern bar 3 Y per step
+g_tpcoi	tvBarColor	colour index per TV pattern bar
+g_trac	nextAction	action chk_actT chose for doAct; ACTION_NONE = none
+g_trel	eventQueue	FIFO of up to ten pending ACTION_EVENT_* events
+g_unus3	spareWord	unreferenced data word
+g_wkadj	walkAdjust	walk-speed adjustment read in lcp_path's dead store
+g_wpci	wpzIndex	Word Puzzles: current puzzle 0..32
+g_wpdb	wpzText	Word Puzzles: Malloc'd puzzle text
+g_wtx	walkXTarget	resident's walk target X; both 0 = arrived
+g_wty	walkYTarget	resident's walk target Y; both 0 = arrived
+g_wyx	xWaypoint	X of the intermediate waypoint to another floor (lcp_flwp)
+g_wyy	yWaypoint	Y of the intermediate waypoint to another floor (lcp_flwp)
+gameCln	gameCleanup	uncalled minigame cleanup: clears text timer and keyboard block
+gameSim1	simStep	advances the game clock and the resident's needs (acts every 8th frame)
+getEv	nextEvent	pops the head of the event/action queue
+getFlrY	floorOfY	which floor a screen Y belongs to
+gr_hhbox	boxHeight	graf_handle box height metric
+gr_hhchar	charHeight	graf_handle character height metric
+gr_hwbox	boxWidth	graf_handle box width metric
+gr_hwchar	charWidth	graf_handle character width metric
+hd_dang	headRestDir	neutral head-facing direction per resident state
+hd_hgt	headYOffset	head Y offset per resident state
+hd_mvd	headTurnStep	head turn delta table indexed by direction difference + 7
+hd_shp	headShapes	dilated head silhouette frames (like body_shp)
+hd_tilt	headTiltFrame	head frame-index offset per tilt
+hd_xoff	headXOffset	head X anchor offset per resident state
+hideLcp	hideResident	hides the resident's sprites (stashes body/head pointers)
+hs_posXY	posToXY	house position index -> screen X/Y
+in_evrt	inEvent	YES while execEv runs a deferred event
+in_str	inputLine	a screen line of typed input (title fields, letter)
+initBRev	initMirror	wrapper that builds the bit-reversal (mirror) table at boot
+initVdi	panelBegin	make the minigame/letter panel buffer the logical screen, set VDI modes
+introSeq	movingIn	YES while the move-in cutscene runs
+last_vbc	lastFrameVbl	VBL count at sc_ren8's last frame, for pacing
+lastAct	lastAction	action doAct last ran (same 7-char linkage as before)
+lc_load	loadSavedGame	restore the resident from "hyber" if present
+lcp	resident	the resident's record (PLAYER), saved to "hyber"
+lcp_bwlS	bowlLevel	dog-bowl fill, BOWL_EMPTY..BOWL_FULL
+lcp_cabO	kitchenCabOpen	kitchen cabinet open (DSF_KITCHEN_CABINET)
+lcp_clsO	bedClosetOpen	closet door open (DSF_CLOSET_DOOR)
+lcp_crnd	rollResident	rolls a new random resident: looks, schedule, personality, name
+lcp_drsO	dresserOpen	dresser open (DSF_DRESSER)
+lcp_face	resFacing	resident's facing direction (FACING_LEFT/RIGHT)
+lcp_flcO	filingCabOpen	filing cabinet open (DSF_FILING_CABINET)
+lcp_flwp	nextWaypoint	pick the resident's next waypoint (straight or via the stairs)
+lcp_food	foodSupply	working copy of lcp.food_supply
+lcp_frdO	frontDoorOpen	front door open (DSF_FRONT_DOOR)
+lcp_fstp	playFootstep	picks the footstep sound (carpet/wood/stairs)
+lcp_hwt	waitHeadTurn	ticks until the head reaches its target pose
+lcp_lgt	leaveGameTable	walk away from the minigame table to handle an interrupt
+lcp_path	walkStep	one 8 Hz step of the resident along the current waypoint
+lcp_rcov	startRecovery	turns sickness to improving once hunger and thirst are satisfied
+lcp_recP	recordPlaying	YES while a record is playing
+lcp_rgt	rejoinTable	walk back to the minigame table and sit down again
+lcp_save	saveFile	create a file and write a buffer to it, retrying on error
+lcp_sick	fallSick	makes the resident sick when a need timer expires at its worst
+lcp_st	animState	resident's animation state (PLAYER_STATE)
+lcp_std	studyVisit	study-door flow: close, optionally save "hyber", reopen, walk out
+lcp_stR	onStairs	YES while the resident's path stepper is on a staircase
+lcp_toiO	toiletDoorOpen	toilet door open (DSF_TOILET_DOOR)
+lcp_tv	tvRunning	YES while the TV is on
+lcp_upal	setSkinColor	sets the palette's skin colour: peach when healthy, green when sick
+lcp_upp	toUpper	toupper for the command parser
+lcp_watr	waterLevel	water tank level, 0..WATER_MAX
+lcp_wkD	walkToTarget	runs walkStep until arrival; -1 when pre-empted
+lcp_x	resX	resident's screen X
+lcp_y	resY	resident's screen Y
+ldObj	loadObjects	read the OBJECTS file into obj_file
+ldSpr	loadSprites	read the SPRITES file into spr_file
+li_lool	tvStoop	face-screen-and-bend gesture, the copy tt_on/tt_off use
+li_loor	recordStoop	face-screen-and-bend gesture, the copy a_lists/a_playp use
+lt_sets	typeKeySound	typewriter key sound on carriage return
+lt_tyca	typeChar	types one letter character (or CR) at the desk
+lt_tysa	typeString	types a string word by word with wrapping
+lunT_trg	lunchDone	once-a-day flag: lunch action already triggered today
+main_pal	mainPalette	the game's 16-colour palette
+mf_scb_c	cardTableMfdb	MFDB of the 320x77 card-table area
+mf_scrp	houseMfdb	MFDB describing the house picture buffer
+MFDB_A	screenMfdb	short[10] standing in for the physical-screen MFDB (NULL fd_addr), source of copyScreen
+mg_stp	mgSetup	prepare top strip for a minigame, disable parser input
+mg_tofl	mgTimedOut	minigame quit because of the idle timeout
+mg_wkev	mgWaitKey	minigame key reader that keeps the house running
+mi_ccha	noteChan	logical channel of the note being parsed
+mi_chmap	chanMap	logical song channel -> physical MIDI channel
+mi_cnot	noteNum	MIDI note number of the note being parsed
+mi_dbase	songEvents	start of the loaded song's event stream
+mi_dptr	loopTarget	loop-back address popped by mq_popl
+mi_dvel	defVelocity	velocity of an unaccented note, from the song header
+mi_dwrm	seqBusy	asm word: non-zero while mq_advs runs; selects direct ACIA writes in mq_dise
+mi_env	songAdsr	address of the song's ADSR block, 8 bytes per channel
+mi_evcn	loopTop	index of the top of the loop stack mi_lstk (9 = empty)
+mi_evi	queueLen	number of shorts in use in mi_evq
+mi_evq	noteQueue	queue of sounding notes: {duration, note|flags, channel}
+mi_evrl	envRelTab	envelope release-rate table
+mi_evrt	envRateTab	envelope rate table indexed by phase timer
+mi_evst	envSusTab	envelope sustain reload table
+mi_evTf	noteDecoded	set once a note was decoded in this parse pass
+mi_evtt	envTimeTab	envelope phase-time reload table
+mi_lpTk	lastExpTick	g_mtcou when queued notes were last expired
+mi_lstk	loopStack	loop stack of {return address, remaining count}
+mi_ndt	durTable	note duration table indexed by the 5-bit duration field
+mi_ndur	noteDur	duration mq_pars computed for the note to queue
+mi_nlp0	ticksToNext	ticks until the next event
+mi_nlpA	noteAccent	accent bit of the note being parsed
+mi_nmof	noteMode	transpose-mode bits of the note being parsed
+mi_nnOf	noteIsOff	non-zero: the event is a note-off
+mi_nnOn	noteToQueue	non-zero: queue the note
+mi_noSt	noteOwner	per MIDI note: logical channel sounding it, 0 = silent
+mi_ntLp	sfxData	Malloc'd SOUNDS.LCP blocks, one per effect
+mi_nxTk	nextEvTick	g_mtcou value of the next event
+mi_pgmap	progMap	pointer to the MIDI program per logical channel
+mi_pgtab	defProgMap	default program map that mi_pgmap points at
+mi_play	songPlaying	byte flag: a song is playing
+mi_rloc	envBusy	asm label of mi_rlock (7-char truncation; must equal mi_rlock's new name)
+mi_rlock	envBusy	non-zero while psg_upEn runs; re-entrancy lock in mq_tick
+mi_sbuf	songBuf	Malloc'd copy of the loaded .SNG/.ORG file
+mi_seqE	songEndPtr	end-of-stream pointer, -1 = no limit
+mi_sig	studioSig	Music Studio file signature (unreferenced data)
+mi_slop	useSongChan	YES: notes keep their own channel and program; NO: all use mi_varR
+mi_sqpos	songPos	read position in the event stream
+mi_svtv	oldTimerAVec	the Timer-A vector saved before the sequencer hooks it
+mi_temp	songTempo	song tempo in BPM from the header
+mi_tpb	beatTicks	ticks per beat published to the Timer-A side (reloads g_mtpre)
+mi_varR	fixedChan	channel every note uses when mi_slop is NO
+mi_vel	noteVel	velocity of the note being parsed
+mo_names	monthNames	three-letter month names
+moff	hideMouse	idempotent AES mouse hide (pair: mon)
+moff_f	mouseHidden	YES while the mouse is hidden
+mon	showMouse	shows the mouse again (pair of hideMouse)
+mood_hfo	moodHeadBase	head frame base index per mood
+mood_pri	moodPriority	base command priority per mood
+mowrit	aciaWrite	asm: wait for the MIDI ACIA and send one byte
+mq_advs	seqAdvance	sequencer state-machine step called from mq_tick
+mq_bust	buildNoteMap	rebuilds g_mstr from the song's key signature
+mq_dise	sendMidiEvent	dispatches a MIDI event to MIDI OUT and/or the PSG voices
+mq_expN	expireNotes	ages queued notes and sends note-offs for expired ones
+mq_extm	unhookTimerA	restores the saved Timer-A vector (uncalled)
+mq_inis	startSong	starts a song (or ends the playing one)
+mq_intim	hookTimerA	installs mq_tick as the Timer-A interrupt
+mq_pacm	unpackChanMap	unpacks the header's channel/program map
+mq_parh	parseSongHeader	walks the song header's config commands
+mq_pars	parseEvents	parses the next batch of song events
+mq_popl	popLoop	pops/decrements the loop stack
+mq_pshl	pushLoop	pushes a loop marker on the loop stack
+mq_qnne	queueNote	queues a note and sends its note-on
+mq_rdur	peekNoteDur	peeks the next event's duration into mi_nlp0
+mq_resp	resetPrograms	marks programs unsent and re-sends a program change per channel
+mq_rmev	removeQueued	removes one entry from the note queue
+mq_sepc	sendProgChange	sends a Program Change for a logical channel if it changed
+mq_setp	initSongState	stores stream bounds and resets per-song driver state
+mq_skip	skipTextField	steps over a zero-terminated text field in song data
+mq_snof	sendNoteOff	sends the note-off for a queued note
+mq_stap	armSequencer	seeds the tick counters and sets the sequencer running
+mq_stop	stopSequencer	drains notes, sends note-offs, stops (uncalled)
+mq_tick	timerAIsr	asm: the Timer-A interrupt routine driving the sequencer
+no_keyin	keysBlocked	YES while an activity owns the keyboard; gameTick stops reading keys
+obj_file	objFileBuf	raw 14000-byte OBJECTS file buffer
+od_draw	drawObject	blits object n from its MFDB at (x,y)
+org_cnt	organCount	number of *.ORG files found at boot
+p_dobls	playDoorbell	plays the doorbell sound effect
+p_sfgrt	sfxGreeting	plays SFX_GREETING
+p_sfhnd	sfxHeadNod	plays SFX_HEAD_NOD
+p_sfspe	sfxSpeech	plays SFX_SPEECH
+p_sftvc	sfxTvClick	plays SFX_TV_CLICK
+pa_cloc	pickClothes	choose clothing colour and load it into palette slots 1,2
+pa_skic	pickSkin	choose skin colour and load it into the palette
+pat_ok	patAllowed	set by a_calld: the player may pat the resident (Ctrl-P)
+pex_name	pexName	"pex.lcp" head-file name, digit patched by character id
+pex_ptr	pexFrames	the loaded PEx.LCP head frames, 168 bytes each
+ph_ans	phoneAnswered	resident is on the phone; blocks new calls
+ph_call	phoneRinging	phone is ringing
+ph_hu	phoneHangUp	request for gameTick to hang up the phone and stop the ring
+pk_actd	pushCard	append a card to a pile and bump its count
+pk_annr	potToWinner	move the pot to the winner one chip per tick
+pk_ante	pkrAnte	Poker: "Ante up" prompt, each side antes one chip
+pk_awp	dispCompChips	display the resident's chip count
+pk_bet	pkrBet	Poker: chips bet in the current betting step
+pk_bjMn	playBlackjack	Blackjack minigame main loop
+pk_bjr	bjPlayHand	Blackjack: hit/stand loop for one hand
+pk_bjwr	warRound	War: nested war round on a tie
+pk_blf	pkrDecideBluff	Poker: 1/15 chance to bluff on a weak hand
+pk_bluff	pkrBluffing	Poker: resident intends to bluff
+pk_bm	pkrMsgBet	Poker: "I'll bet __." message
+pk_bs1	bjBustMain	Blackjack: first hand busted
+pk_bs2	bjBustSplit	Blackjack: split hand busted
+pk_c1bj	bjNatMain	Blackjack: first hand has a natural blackjack
+pk_c2bj	bjNatSplit	Blackjack: split hand has a natural blackjack
+pk_cace	pkrOpenRank	Poker: should the resident open (jacks-or-better rank, or -1)
+pk_cbet	pkrPlyrBet	Poker: player betting UI (Bet/Enter/Pass)
+pk_ccc	bjHitsDealer	Blackjack: hits remaining for the dealer
+pk_cdrw	pkrCompDraw	Poker: the resident's discard-and-draw
+pk_ch	compHand	computer's hand (Poker, War, Blackjack dealer)
+pk_chrk	compRank	Poker: computer hand rank 0..9
+pk_chsc	bjScore	Blackjack: hand value with aces low or one ace soft
+pk_cnbj	bjIsNatural	Blackjack: is this hand a natural blackjack
+pk_cscore	bjDealerScore	Blackjack: dealer's final score
+pk_cwc	compWarCards	War: the computer's war cards
+pk_dbet	pkrCallOrRaise	Poker: resident's call/raise decision
+pk_dbhi	bjShowBet	Blackjack: display the bet of hand 1 or 2
+pk_dchd	bjDealCard	Blackjack: deal one unused card into a hand
+pk_ddec	pkrAddChips	Poker: move n chips from a side into the pot (cap 20)
+pk_disc	pkrNumDisc	Poker: count of cards on the discard pile
+pk_dpile	pkrDiscPile	Poker: already-seen discarded cards
+pk_dpos	pkrRaiseAmt	Poker: the resident's raise amount / counter
+pk_dpot	dispPot	display the pot
+pk_dppm	dispPlyrChips	display the player's chip count
+pk_drcs	cardDraw	blit one card at a slot of a row
+pk_dsc	warDeck	War: shuffled deck dealt into the two piles
+pk_dslot	pkrWinner	Poker: showdown winner (0 resident, 1 player)
+pk_evh	pkrEvalHand	Poker: evaluate a 5-card hand
+pk_evhs	pkrDealHands	Poker: deal both 5-card hands
+pk_hrf	compScoring	Poker: flags of the computer's scoring cards
+pk_hsf	compSorted	Poker: rank-sorted copy of the computer's hand
+pk_inph	cardKeyInput	card games: wait for one of three F-keys or 1..5
+pk_ldCrd	cardLoad	load the CARDS file and build the card MFDBs
+pk_main	playPoker	Poker minigame main loop
+pk_pass	pkrPassed	Poker: a side passed in the bet loop
+pk_pcc	bjHitsMain	Blackjack: hits remaining for the first hand
+pk_ph	plyrHand	player's hand (Poker, War, Blackjack)
+pk_phase	bjDidSplit	Blackjack: 1 once the player has split
+pk_phrf	plyrScoring	Poker: flags of the player's scoring cards
+pk_phrk	plyrRank	Poker: player hand rank 0..9
+pk_phsf	plyrSorted	Poker: rank-sorted copy of the player's hand
+pk_phv	pkrLastBet	Poker: the bet just made, to be called
+pk_pmsg	cardMessage	card games: green status message in the bottom bar
+pk_pscc	bjHitsSplit	Blackjack: hits remaining for the split hand
+pk_pscore	bjPlyrScore	Blackjack: player's final score
+pk_psh	bjSplitHand	Blackjack: the player's split hand
+pk_pwc	plyrWarCards	War: the player's war cards
+pk_quit	cardQuit	YES ends the card game
+pk_rm	pkrMsgRaise	Poker: "I'll raise __." message
+pk_rmch	popCard	pop the top card of a pile (-1 if empty)
+pk_round	pkrRound	Poker: 0 at start, 1 after a showdown (read nowhere)
+pk_sbet	bjSettle	Blackjack: settle a bet
+pk_sel	pkrSelected	Poker: cards marked for discard
+pk_show	pkrShowdown	Poker: showdown
+pk_tcm	pkrMsgTake	Poker: "I'll take _ cards." message
+pk_wcs	bjDblSplit	Blackjack: split hand doubled down (one forced hit)
+pk_wpr	bjMatchBet	Blackjack: first-hand bet the split hand must match
+pk_wrf	bjDblMain	Blackjack: first hand doubled down (one forced hit)
+pk_wrMn	playWar	War minigame main loop
+plEr	panelErase	clear a rectangle of the panel with v_bar
+plErCol	eraseRectColor	fills a rectangle with an explicit colour
+prCh	printChar	draws one character into the strip buffer
+prsCmd	submitCommand	on Return: chk_encm on the typed line, enqueue the action
+psg_chNt	psgChanNote	MIDI note on each PSG channel A/B/C
+psg_cpE	copyEnvelope	copies 8 ADSR bytes into a PSG_ENVELOPE
+psg_cvol	noteVolume	PSG volume of the note being parsed
+psg_dvol	defPsgVol	PSG volume of an unaccented note, from the header
+psg_envelope	psgEnvelope	software ADSR state per PSG channel
+psg_epp	envPtrs	pointers to the three PSG envelopes (unreferenced data)
+psg_freq	psgPeriod	YM2149 tone period per MIDI note
+psg_mix	psgMixer	asm: read-modify-write PSG mixer register 7
+psg_ntA	psgActi	asm label of psg_ntAc (7-char truncation of psgActive)
+psg_ntAc	psgActive	non-zero while a PSG note envelope is running
+psg_out	psgOutOn	YES: play notes on the YM2149
+psg_ovol	envOutVol	psg_upEn's clamped output volume
+psg_racc	rampAccum	envelope ramp accumulator per channel
+psg_rdel	rampDelta	envelope ramp delta per channel
+psg_rot	ampRegs	PSG amplitude registers 8/9/10 with the write bit set
+psg_upE	stepEnv	asm label of psg_upEn (7-char truncation of stepEnvelopes)
+psg_upEn	stepEnvelopes	PSG software ADSR envelope step, from mq_tick
+psg_vrg	psgVolRegs	PSG volume register list (unreferenced data)
+psg_wr	psgWrite	asm: write one PSG register
+pst_arr	scratchArr	10-short scratch buffer shared by action handlers
+putEv	queueEvent	appends an outside event to the queue
+rec_ledt	vuLedMasks	record player VU-meter LED bit masks
+rev_tab	mirrorTable	8-bit bit-reversal table used to mirror sprites
+rp_anim	animRecPlayer	animate the record player needle and VU LEDs
+rst_vsth	textNormal	restore the VDI text height saved by textBig
+rv_bld	buildMirrorTable	builds the byte bit-reversal table
+rv_msk	mirrorSrcBit	source bit masks for building mirrorTable
+rv_val	mirrorDstBit	mirrored bit for each mirrorSrcBit entry
+sc_drfc	drawFoodCab	draws the kitchen cabinet's food-pack markers
+sc_firb	blackRow	fills one strip row with black (separator)
+sc_firs	stripeRow	fills one strip row with the two-plane stripe
+sc_firw	paperRow	fills one strip row with letter-paper colour
+sc_ren8	renderFrame	per-frame compositor: background copy, sprites, page flip
+sc_sctd	scrollStrip	scrolls the letter text strip up two lines
+sc_sdtb	beginDraw	saves logbase and makes the house picture the VDI target
+sc_sdtf	endDraw	restores the saved logical screen
+sch_tab	scheduleTiers	(time of day, activity level) -> activity tier table
+scn_buf	scnBuffer	buffer holding a compressed .SCN file
+scn_dec	decodeScn	the .SCN nibble decoder
+scn_dic	scnDict	15-entry word dictionary at the head of a .SCN file
+scn_siz	scnSize	size word of the .SCN file being loaded
+scr_scal	screenScale	screen scale factor (1 = low res)
+scrbufA	altScreen	the alternate frame buffer the compositor flips with
+scrbufB	houseBuf	storage for the off-screen house picture
+sf_irqp	startSfx	starts the requested effect via Dosound (from sc_ren8)
+sf_pri	sfxPriority	priority per effect; lower wins
+sf_sele	sfxSelect	requests an effect if it outranks the pending one
+sf_sl	loadSounds	SOUNDS.LCP block loader
+sf_so	stopSfx	silences the PSG and marks no effect playing
+sfClick	sfxClick	plays SFX_CLICK (typing)
+sgPlay	playSongFile	loads a .SNG/.ORG file and starts it
+showLcp	showResident	restores what hideResident stashed
+skin_pal	skinColors	skin colour per SKIN_COLOR_ID (12-bit RGB)
+sng_cnt	songCount	number of *.SNG files found at boot
+sp_draw	drawSlot	blit one hardware sprite slot (mask then image) into the compositor
+sp_drin	deadHook	empty hook kept from the original
+sp_fidx	spriteFileId	SPRITES file record index -> logical sprite id
+sp_flih	flipSprite	mirrors a 4-plane sprite image horizontally
+sp_genma	makeMask	builds a sprite mask from its colour image
+sp_imfs	initSlots	sets up the 8 per-slot MFDB pairs and the compositor MFDB
+sp_iniM	initMfdb	fill an MFDB for a 4-plane buffer
+sp_lbal	buildMasks	builds the masks for all resident frames
+sp_lbbd	maskBody	builds one body frame's mask
+sp_lbhd	maskHead	builds one head frame's mask
+sp_lcha	stepHead	step the resident's head animation one notch per tick
+sp_lchu	updateHead	picks and places the head frame
+sp_lcpf	expandFrame	expands a 32-px frame to 64 px, optionally mirrored
+sp_mbuf	genMaskBuf	14 KB buffer of masks generated by sp_regs
+sp_regs	defineSprite	stores a sprite definition and generates its mask
+sp_sprs	activateSprite	copies a definition straight into its active slot
+sp_spud	setDogSprite	load a dog frame into the two dog hardware slots
+sp_ss02	carryInFront	shows a carried object in front of the resident
+sp_ssco	carryBehind	shows a carried object behind the resident
+sp_updb	updateBody	picks and places the body frame
+sp_upds	layoutSlots	reassigns hardware slots by sprite layer
+spr_file	sprFileBuf	raw 14000-byte SPRITES file buffer
+st_titl	titleScreen	interactive title screen: name, date, time
+stair_by	yLanding	middle-floor stair landing Y
+stair_ty	xLanding	middle-floor stair landing X
+stair_wp	stairWaypts	staircase waypoint table
+stEnter	enterField	read a fixed-width numeric field on the title screen
+stpScrB	initHouseBuf	boot setup of the house picture buffer and its MFDB
+strPr	printString	draws a string via printChar, 8 px apart
+studyDrO	studyDoorOpen	study door open/closed state
+subAniC	tickCount	game-tick counter driving slow overlay animations
+sv_bodyP	savedBodyImg	resident body image saved by hideLcp
+sv_headP	savedHeadImg	resident head image saved by hideLcp
+sv_lgb	panelLogbase	logical screen saved by initVdi, restored by exitVdi
+sv_phb	tosPhysbase	TOS's original Physbase captured at boot
+sv_vqta	savedTextAttr	VDI text attributes saved before minigame title rendering
+td_line	drawTvPicture	the five-line picture on the living-room TV
+td_nois	tvNoise	TV picture in a random colour each tick
+tt_off	tvOff	walks to the TV and switches it off
+tt_on	tvOn	walks to the TV and switches it on
+tv_boul	tvBounce	computer screen: bouncing dot animation
+tv_patl	tvPattern	computer screen: pattern lines animation
+tv_scrc	tvClearAnim	clears the small screen then plays a random animation
+tx_sctm	textTimer	text-strip timer: frames until the typed line expires
+updWtLv	updateWaterTank	draws/changes the water tank level
+usr_buf	cmdWord	one uppercased command word from cmd_upp
+vdi_cls	vdiClear	resets fill attributes, hides mouse, clears the screen
+vdi_colt	colorPens	game colour -> VDI pen map
+vdi_hnd	physHandle	physical workstation handle from graf_handle
+vdi_init	vdiInit	opens the virtual workstation, requires low res
+vdihnd	vdiHandle	virtual workstation handle for every VDI call
+vroCpyD	blitRect	vro_cpyfm wrapper taking coordinates as separate args
+vst_h20	textBig	save VDI text attributes, set 20-pixel text height
+vwd_tab	vocabulary	the 160 recognised words, NULL-terminated
+wkFrDr	walkToFrontDoor	walks the resident to the ground-floor front door
+wkT_trg	wakeupDone	once-a-day flag: wake-up action already triggered today
+wp_ans	wpzAnswers	Word Puzzles: the player's typed answers
+wp_blk	wpzBlanks	Word Puzzles: number of blanks in the puzzle
+wp_fail	wpzWrongMsgs	Word Puzzles: wrong-answer messages
+wp_main	playWordPuzzle	Word Puzzles minigame main loop
+wp_prm	wpzPrompts	Word Puzzles: per-word answer prompts
+wp_rtmp	wpzRender	Word Puzzles: render template with answers filled in
+wp_shwm	wpzMessage	Word Puzzles: green status message
+wp_solv	wpzSolve	Word Puzzles: solve phase
+wp_succ	wpzRightMsgs	Word Puzzles: right-answer messages

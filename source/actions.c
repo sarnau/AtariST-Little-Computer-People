@@ -8,8 +8,8 @@
 #include "protos.h"
 #include "globals.h"
 
-/* Run the action chooseAction chose.  Consumes g_trac (copying it into
-   lastAct so the random picker avoids repeating it, then clearing it
+/* Run the action chooseAction chose.  Consumes nextAction (copying it into
+   lastAction so the random picker avoids repeating it, then clearing it
    to ACTION_NONE), gets the resident out of bed first if he is
    asleep, and dispatches to the matching a_* action routine.  Unknown
    action numbers fall through and do nothing. */
@@ -18,11 +18,11 @@ runAction()
 {
         short   action_number;
 
-        action_number = g_trac;
-        lastAct   = g_trac;
-        g_trac = ACTION_NONE;
+        action_number = nextAction;
+        lastAction   = nextAction;
+        nextAction = ACTION_NONE;
 
-        if (lcp.is_sleeping != NO)
+        if (resident.is_sleeping != NO)
                 getInOutOfBed();
 
         switch (action_number) {

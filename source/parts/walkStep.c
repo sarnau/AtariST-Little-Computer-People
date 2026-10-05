@@ -4,7 +4,7 @@
 /* walkStep: one 8Hz step along current waypoint.
    Waypoint reached -> done or pick next.  Not on stairs -> flat walk
    toward waypoint (X first, then Y).  On stairs -> stair-phase by Y
-   bucket.  Sets fs_trg on the two foot-plant frames. */
+   bucket.  Sets footstepDue on the two foot-plant frames. */
 
 void
 walkStep()
@@ -17,35 +17,35 @@ walkStep()
         short   ani_snap;  
         short   spd_snap;  
 
-        fs_trg = NO;
+        footstepDue = NO;
 
-        if (g_wtx == 0 && g_wty == 0)
+        if (walkXTarget == 0 && walkYTarget == 0)
                 return;
 
         /* Dead stores, kept on purpose.  This is the only place that
-           reads g_wkadj. */
-        ani_snap = ani_cnt;
-        spd_snap = g_wkadj + g_spdc;
+           reads walkAdjust. */
+        ani_snap = frameCount;
+        spd_snap = walkAdjust + walkSpeed;
 
-        if (g_wyx == 0 && g_wyy == 0)
+        if (xWaypoint == 0 && yWaypoint == 0)
                 nextWaypoint();
 
         /* Exit stair mode when we've reached the target floor. */
-        if (lcp_stR != NO) {
-                if (lcp_y <= flr_by[(floor_num = floorOfY(g_wyy)) - 1]) {
+        if (onStairs != NO) {
+                if (resY <= floorBottomY[(floor_num = floorOfY(yWaypoint)) - 1]) {
                         if (floor_num == FLOOR_TOP)
-                                lcp_stR = NO;
-                        else if (stair_wp[(floor_num - 1) * 2 + 1] <= lcp_y)
-                                lcp_stR = NO;
+                                onStairs = NO;
+                        else if (stairWaypts[(floor_num - 1) * 2 + 1] <= resY)
+                                onStairs = NO;
                 }
         }
 
         /* Waypoint reached? */
-        if (lcp_x == g_wyx && lcp_y == g_wyy) {
-                if (lcp_x == g_wtx && lcp_y == g_wty) {
-                        g_wtx = 0;
-                        g_wty = 0;
-                        lcp_st     = STATE_STAND_IDLE;
+        if (resX == xWaypoint && resY == yWaypoint) {
+                if (resX == walkXTarget && resY == walkYTarget) {
+                        walkXTarget = 0;
+                        walkYTarget = 0;
+                        animState     = STATE_STAND_IDLE;
                         gameTick(0);
                         return;
                 } else
@@ -53,250 +53,250 @@ walkStep()
         }
 
         /* ---- Flat walking (not on stairs) --------------------------- */
-        if (lcp_stR == NO) {
-                if (g_lcyof != NO)
-                        carryBehind(g_lcieo);
+        if (onStairs == NO) {
+                if (isCarrying != NO)
+                        carryBehind(carriedSprite);
 
-                if (lcp_x < g_wyx) {
-                        lcp_face = FACING_RIGHT;
-                        if (lcp_st > STATE_WALK_FRAME_7_STEP)
-                                lcp_st = STATE_WALK_FRAME_0;
-                        else if (++lcp_st > STATE_WALK_FRAME_7_STEP)
-                                lcp_st = STATE_WALK_FRAME_0;
-                        lcp_x++;
-                        if (g_hastl != 10) {
-                                g_hatas = 10;
-                                g_hastl = g_hatas;
+                if (resX < xWaypoint) {
+                        resFacing = FACING_RIGHT;
+                        if (animState > STATE_WALK_FRAME_7_STEP)
+                                animState = STATE_WALK_FRAME_0;
+                        else if (++animState > STATE_WALK_FRAME_7_STEP)
+                                animState = STATE_WALK_FRAME_0;
+                        resX++;
+                        if (headLastWalk != 10) {
+                                headTarget = 10;
+                                headLastWalk = headTarget;
                         }
-                } else if (lcp_x > g_wyx) {
-                        lcp_face = FACING_LEFT;
-                        if (lcp_st > STATE_WALK_FRAME_7_STEP)
-                                lcp_st = STATE_WALK_FRAME_0;
-                        else if (++lcp_st > STATE_WALK_FRAME_7_STEP)
-                                lcp_st = STATE_WALK_FRAME_0;
-                        lcp_x--;
-                        if (g_hastl != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
-                                g_hastl = g_hatas;
+                } else if (resX > xWaypoint) {
+                        resFacing = FACING_LEFT;
+                        if (animState > STATE_WALK_FRAME_7_STEP)
+                                animState = STATE_WALK_FRAME_0;
+                        else if (++animState > STATE_WALK_FRAME_7_STEP)
+                                animState = STATE_WALK_FRAME_0;
+                        resX--;
+                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
+                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                headLastWalk = headTarget;
                         }
                 } else {
-                        if (++lcp_st > STATE_WALK_FRAME_7_STEP)
-                                lcp_st = STATE_WALK_FRAME_0;
+                        if (++animState > STATE_WALK_FRAME_7_STEP)
+                                animState = STATE_WALK_FRAME_0;
                 }
 
-                if (lcp_x >= g_wyx)
-                        x_distance = lcp_x - g_wyx;
+                if (resX >= xWaypoint)
+                        x_distance = resX - xWaypoint;
                 else
-                        x_distance = g_wyx - lcp_x;
+                        x_distance = xWaypoint - resX;
                 if (x_distance < 8) {
-                        if (lcp_y < g_wyy)
-                                lcp_y++;
-                        else if (lcp_y > g_wyy)
-                                lcp_y--;
+                        if (resY < yWaypoint)
+                                resY++;
+                        else if (resY > yWaypoint)
+                                resY--;
                 } else {
-                        if (flr_cy[floorOfY(lcp_y) - 1] > lcp_y)
-                                lcp_y++;
-                        if (flr_cy[floorOfY(lcp_y) - 1] < lcp_y)
-                                lcp_y--;
+                        if (floorWalkY[floorOfY(resY) - 1] > resY)
+                                resY++;
+                        if (floorWalkY[floorOfY(resY) - 1] < resY)
+                                resY--;
                 }
 
-                if (lcp_st == STATE_WALK_FRAME_3_STEP ||
-                    lcp_st == STATE_WALK_FRAME_7_STEP)
-                        fs_trg = YES;
+                if (animState == STATE_WALK_FRAME_3_STEP ||
+                    animState == STATE_WALK_FRAME_7_STEP)
+                        footstepDue = YES;
         }
 
         /* ---- Stair traversal --------------------------------------- */
-        if (lcp_stR != NO) {
-                if (lcp_y > g_wyy) {
+        if (onStairs != NO) {
+                if (resY > yWaypoint) {
                         /* Ascending */
-                        if (lcp_y == 161) {
-                                if (g_lcyof != NO)
-                                        carryBehind(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F0;
-                                lcp_face = FACING_LEFT;
-                                lcp_x -= 6;
-                                lcp_y -= 2;
-                                if (g_hastl != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
-                                        g_hastl = g_hatas;
+                        if (resY == 161) {
+                                if (isCarrying != NO)
+                                        carryBehind(carriedSprite);
+                                animState = STATE_STR_CLIMB_F0;
+                                resFacing = FACING_LEFT;
+                                resX -= 6;
+                                resY -= 2;
+                                if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
+                                        headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                        headLastWalk = headTarget;
                                 }
-                        } else if (lcp_y == 100) {
-                                if (g_lcyof != NO)
-                                        carryBehind(g_lcieo);
-                                lcp_st = STATE_STR_CLIMB_F0;
-                                lcp_face = FACING_RIGHT;
-                                lcp_x += 3;
-                                lcp_y -= 2;
-                                if (g_hastl != 10) {
-                                        g_hatas = 10;
-                                        g_hastl = g_hatas;
+                        } else if (resY == 100) {
+                                if (isCarrying != NO)
+                                        carryBehind(carriedSprite);
+                                animState = STATE_STR_CLIMB_F0;
+                                resFacing = FACING_RIGHT;
+                                resX += 3;
+                                resY -= 2;
+                                if (headLastWalk != 10) {
+                                        headTarget = 10;
+                                        headLastWalk = headTarget;
                                 }
-                        } else if (lcp_y > 161 ||
-                                   (lcp_y > 100 && lcp_y < 140)) {
+                        } else if (resY > 161 ||
+                                   (resY > 100 && resY < 140)) {
                                 /* Top-of-stair frame (state 13..16). */
-                                if (g_lcyof != NO) {
-                                        g_selaf[g_lcieo] = SPRITE_BEHIND_LCP;
+                                if (isCarrying != NO) {
+                                        spriteLayer[carriedSprite] = SPRITE_BEHIND_LCP;
                                         layoutSlots();
                                 }
-                                if (lcp_st < STATE_STR_TOP_F0 || lcp_st > STATE_STR_TOP_F3S) {
-                                        lcp_st = STATE_STR_TOP_F0;
+                                if (animState < STATE_STR_TOP_F0 || animState > STATE_STR_TOP_F3S) {
+                                        animState = STATE_STR_TOP_F0;
                                 } else {
                                         /* Wraps to F0, and flips the
                                            facing on the wrap. */
-                                        if (++lcp_st > STATE_STR_TOP_F3S) {
-                                                lcp_st = STATE_STR_TOP_F0;
-                                                lcp_face ^= FACING_LEFT;
+                                        if (++animState > STATE_STR_TOP_F3S) {
+                                                animState = STATE_STR_TOP_F0;
+                                                resFacing ^= FACING_LEFT;
                                         }
-                                        if (lcp_st == STATE_STR_TOP_F3S ||
-                                            lcp_st == STATE_STR_TOP_F0)
-                                                lcp_y -= 2;
-                                        if (lcp_st == STATE_STR_TOP_F3S)
-                                                fs_trg = YES;
+                                        if (animState == STATE_STR_TOP_F3S ||
+                                            animState == STATE_STR_TOP_F0)
+                                                resY -= 2;
+                                        if (animState == STATE_STR_TOP_F3S)
+                                                footstepDue = YES;
                                 }
-                                if (g_hastl != HEAD_ANIM_HORIZONTAL_RANGE) {
-                                        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-                                        g_hastl = g_hatas;
+                                if (headLastWalk != HEAD_ANIM_HORIZONTAL_RANGE) {
+                                        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+                                        headLastWalk = headTarget;
                                 }
                         } else {
-                                if (lcp_y < 100) {
+                                if (resY < 100) {
                                         /* Upper flight of stairs, going up-right */
-                                        if (g_lcyof != NO)
-                                                carryBehind(g_lcieo);
-                                        lcp_face = FACING_RIGHT;
-                                        lcp_y--;
-                                        if (lcp_st != STATE_STR_CLIMB_F3S) {
-                                                lcp_x++;
-                                                if (lcp_x != g_wyx)
-                                                        lcp_x++;
+                                        if (isCarrying != NO)
+                                                carryBehind(carriedSprite);
+                                        resFacing = FACING_RIGHT;
+                                        resY--;
+                                        if (animState != STATE_STR_CLIMB_F3S) {
+                                                resX++;
+                                                if (resX != xWaypoint)
+                                                        resX++;
                                         }
-                                        if (++lcp_st > STATE_STR_CLIMB_F3S)
-                                                lcp_st = STATE_STR_CLIMB_F0;
-                                        if (lcp_st == STATE_STR_CLIMB_F3S)
-                                                fs_trg = YES;
-                                        if (g_hastl != 10) {
-                                                g_hatas = 10;
-                                                g_hastl = g_hatas;
+                                        if (++animState > STATE_STR_CLIMB_F3S)
+                                                animState = STATE_STR_CLIMB_F0;
+                                        if (animState == STATE_STR_CLIMB_F3S)
+                                                footstepDue = YES;
+                                        if (headLastWalk != 10) {
+                                                headTarget = 10;
+                                                headLastWalk = headTarget;
                                         }
-                                } else if (lcp_y < 161) {
+                                } else if (resY < 161) {
                                         /* Lower flight, going up-left */
-                                        if (g_lcyof != NO)
-                                                carryBehind(g_lcieo);
-                                        lcp_face = FACING_LEFT;
-                                        lcp_y--;
-                                        if (lcp_st != STATE_STR_CLIMB_F3S) {
-                                                lcp_x--;
-                                                if (lcp_x != g_wyx)
-                                                        lcp_x--;
+                                        if (isCarrying != NO)
+                                                carryBehind(carriedSprite);
+                                        resFacing = FACING_LEFT;
+                                        resY--;
+                                        if (animState != STATE_STR_CLIMB_F3S) {
+                                                resX--;
+                                                if (resX != xWaypoint)
+                                                        resX--;
                                         }
-                                        if (++lcp_st > STATE_STR_CLIMB_F3S)
-                                                lcp_st = STATE_STR_CLIMB_F0;
-                                        if (lcp_st == STATE_STR_CLIMB_F3S)
-                                                fs_trg = YES;
-                                        if (g_hastl != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
-                                                g_hastl = g_hatas;
+                                        if (++animState > STATE_STR_CLIMB_F3S)
+                                                animState = STATE_STR_CLIMB_F0;
+                                        if (animState == STATE_STR_CLIMB_F3S)
+                                                footstepDue = YES;
+                                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
+                                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                                headLastWalk = headTarget;
                                         }
                                 }
                         }
-                } else if (lcp_y < g_wyy) {
+                } else if (resY < yWaypoint) {
                         /* Descending */
-                        if (g_lcyof != NO)
-                                carryBehind(g_lcieo);
+                        if (isCarrying != NO)
+                                carryBehind(carriedSprite);
 
-                        if (lcp_y == 161) {
-                                lcp_st = STATE_STR_BTM_F0;
-                                lcp_face = FACING_RIGHT;
-                                lcp_y += 4;
-                                lcp_x += 6;
-                                if (g_hastl != 8) {
-                                        g_hatas = 8;
-                                        g_hastl = g_hatas;
+                        if (resY == 161) {
+                                animState = STATE_STR_BTM_F0;
+                                resFacing = FACING_RIGHT;
+                                resY += 4;
+                                resX += 6;
+                                if (headLastWalk != 8) {
+                                        headTarget = 8;
+                                        headLastWalk = headTarget;
                                 }
-                                if (g_lcyof != NO)
-                                        carryInFront(g_lcieo);
-                        } else if (lcp_y == 100) {
-                                lcp_st = STATE_STR_BTM_F0;
-                                lcp_face = FACING_RIGHT;
-                                lcp_y += 2;
-                                lcp_x -= 2;
-                                if (g_hastl != 8) {
-                                        g_hatas = 8;
-                                        g_hastl = g_hatas;
+                                if (isCarrying != NO)
+                                        carryInFront(carriedSprite);
+                        } else if (resY == 100) {
+                                animState = STATE_STR_BTM_F0;
+                                resFacing = FACING_RIGHT;
+                                resY += 2;
+                                resX -= 2;
+                                if (headLastWalk != 8) {
+                                        headTarget = 8;
+                                        headLastWalk = headTarget;
                                 }
-                                if (g_lcyof != NO)
-                                        carryInFront(g_lcieo);
-                        } else if (lcp_y > 161 ||
-                                   (lcp_y > 100 && lcp_y < 132)) {
+                                if (isCarrying != NO)
+                                        carryInFront(carriedSprite);
+                        } else if (resY > 161 ||
+                                   (resY > 100 && resY < 132)) {
                                 /* Bottom-of-stair frame (state 21..24). */
-                                if (g_lcyof != NO)
-                                        carryInFront(g_lcieo);
-                                if (lcp_st < STATE_STR_BTM_F0 || lcp_st > STATE_STR_BTM_F3) {
-                                        lcp_st = STATE_STR_BTM_F0;
-                                        lcp_x += 2;
+                                if (isCarrying != NO)
+                                        carryInFront(carriedSprite);
+                                if (animState < STATE_STR_BTM_F0 || animState > STATE_STR_BTM_F3) {
+                                        animState = STATE_STR_BTM_F0;
+                                        resX += 2;
                                 } else {
-                                        if (++lcp_st > STATE_STR_BTM_F3) {
-                                                lcp_st = STATE_STR_BTM_F0;
-                                                lcp_face ^= FACING_LEFT;
+                                        if (++animState > STATE_STR_BTM_F3) {
+                                                animState = STATE_STR_BTM_F0;
+                                                resFacing ^= FACING_LEFT;
                                         }
-                                        if (lcp_st == STATE_STR_BTM_F1 ||
-                                            lcp_st == STATE_STR_BTM_F2)
-                                                lcp_y += 2;
-                                        if (lcp_st == STATE_STR_BTM_F3)
-                                                fs_trg = YES;
+                                        if (animState == STATE_STR_BTM_F1 ||
+                                            animState == STATE_STR_BTM_F2)
+                                                resY += 2;
+                                        if (animState == STATE_STR_BTM_F3)
+                                                footstepDue = YES;
                                 }
-                                if (g_hastl != 8) {
-                                        g_hatas = 8;
-                                        g_hastl = g_hatas;
+                                if (headLastWalk != 8) {
+                                        headTarget = 8;
+                                        headLastWalk = headTarget;
                                 }
                         } else {
-                                if (lcp_y < 100) {
+                                if (resY < 100) {
                                         /* Upper flight, going down-left */
-                                        if (g_lcyof != NO)
-                                                carryInFront(g_lcieo);
-                                        lcp_face = FACING_LEFT;
-                                        lcp_y++;
-                                        if (lcp_st != STATE_STR_DESC_F3S) {
-                                                lcp_x--;
-                                                if (lcp_x != g_wyx)
-                                                        lcp_x--;
+                                        if (isCarrying != NO)
+                                                carryInFront(carriedSprite);
+                                        resFacing = FACING_LEFT;
+                                        resY++;
+                                        if (animState != STATE_STR_DESC_F3S) {
+                                                resX--;
+                                                if (resX != xWaypoint)
+                                                        resX--;
                                         }
                                         /* Wraps to F0, it does not
                                            clamp at F3S. */
-                                        if (lcp_st > STATE_STR_DESC_F3S ||
-                                            lcp_st < STATE_STR_DESC_F0)
-                                                lcp_st = STATE_STR_DESC_F0;
-                                        else if (++lcp_st > STATE_STR_DESC_F3S)
-                                                lcp_st = STATE_STR_DESC_F0;
-                                        if (g_hastl != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                                g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
-                                                g_hastl = g_hatas;
+                                        if (animState > STATE_STR_DESC_F3S ||
+                                            animState < STATE_STR_DESC_F0)
+                                                animState = STATE_STR_DESC_F0;
+                                        else if (++animState > STATE_STR_DESC_F3S)
+                                                animState = STATE_STR_DESC_F0;
+                                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
+                                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                                headLastWalk = headTarget;
                                         }
-                                        if (lcp_st == STATE_STR_DESC_F1)
-                                                fs_trg = YES;
-                                } else if (lcp_y < 161) {
+                                        if (animState == STATE_STR_DESC_F1)
+                                                footstepDue = YES;
+                                } else if (resY < 161) {
                                         /* Lower flight, going down-right */
-                                        if (g_lcyof != NO)
-                                                carryInFront(g_lcieo);
-                                        lcp_face = FACING_RIGHT;
-                                        lcp_y++;
-                                        if (lcp_st != STATE_STR_DESC_F3S) {
-                                                lcp_x++;
-                                                if (lcp_x != g_wyx)
-                                                        lcp_x++;
+                                        if (isCarrying != NO)
+                                                carryInFront(carriedSprite);
+                                        resFacing = FACING_RIGHT;
+                                        resY++;
+                                        if (animState != STATE_STR_DESC_F3S) {
+                                                resX++;
+                                                if (resX != xWaypoint)
+                                                        resX++;
                                         }
                                         /* Wraps to F0, it does not
                                            clamp at F3S. */
-                                        if (lcp_st > STATE_STR_DESC_F3S ||
-                                            lcp_st < STATE_STR_DESC_F0)
-                                                lcp_st = STATE_STR_DESC_F0;
-                                        else if (++lcp_st > STATE_STR_DESC_F3S)
-                                                lcp_st = STATE_STR_DESC_F0;
-                                        if (g_hastl != 10) {
-                                                g_hatas = 10;
-                                                g_hastl = g_hatas;
+                                        if (animState > STATE_STR_DESC_F3S ||
+                                            animState < STATE_STR_DESC_F0)
+                                                animState = STATE_STR_DESC_F0;
+                                        else if (++animState > STATE_STR_DESC_F3S)
+                                                animState = STATE_STR_DESC_F0;
+                                        if (headLastWalk != 10) {
+                                                headTarget = 10;
+                                                headLastWalk = headTarget;
                                         }
-                                        if (lcp_st == STATE_STR_DESC_F1)
-                                                fs_trg = YES;
+                                        if (animState == STATE_STR_DESC_F1)
+                                                footstepDue = YES;
                                 }
                         }
                 }
@@ -304,11 +304,11 @@ walkStep()
 
         /* Sickness slows the walk: two ticks per step and delayed
            footstep sound.  Healthy: one tick with immediate sound. */
-        if (lcp.sickness_level != SICKNESS_HEALTHY) {
+        if (resident.sickness_level != SICKNESS_HEALTHY) {
                 gameTick(0);
                 playFootstep();
         }
         gameTick(0);
-        if (lcp.sickness_level == SICKNESS_HEALTHY)
+        if (resident.sickness_level == SICKNESS_HEALTHY)
                 playFootstep();
 }

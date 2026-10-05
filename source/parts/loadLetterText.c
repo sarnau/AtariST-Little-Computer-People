@@ -1,6 +1,6 @@
 /*
  * parts/loadLetterText.c -- included by stx_u1.c; never compiled on its own.
- * Loads letter.txt and builds the line-pointer table g_ltlp.
+ * Loads letter.txt and builds the line-pointer table letterLines.
  */
 void
 loadLetterText()
@@ -12,12 +12,12 @@ loadLetterText()
         char *  i;
 
         unpackFile("letter.txt",
-                             (unsigned char *) g_lttx,
+                             (unsigned char *) letterText,
                              10496);
 
-        i = g_lttx;
+        i = letterText;
         for (linecount = 0; linecount < 360; linecount++) {
-                g_ltlp[linecount] = i;
+                letterLines[linecount] = i;
 
                 /* Step once, then a plain `while` -- two increment
                    sites, not a do/while's one, as in the original. */

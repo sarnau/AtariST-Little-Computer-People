@@ -13,59 +13,59 @@
 *     xbios(31, 0, 5, 0x28, (long) timerAIsr);
 *
 * Symbols (Alcyon truncates linkage names to 8 characters):
-*     g_mtcou    long     master tick counter
-*     g_msmsa    byte     MIDI sequencer active
-*     psg_ntAc   byte     PSG notes active
-*     g_mtpre    word     MIDI tick prescaler
-*     g_mtdiv    word     tick divider (stepEnvelopes runs when it wraps)
-*     mi_rlock   word     re-entrancy lock
-*     mi_dwrm    word     MIDI direct-write mode
+*     timerTicks    long     master tick counter
+*     songActive    byte     MIDI sequencer active
+*     psgActive   byte     PSG notes active
+*     seqCountdown    word     MIDI tick prescaler
+*     envDivider    word     tick divider (stepEnvelopes runs when it wraps)
+*     envBusy   word     re-entrancy lock
+*     seqBusy    word     MIDI direct-write mode
 *     stepEnvelopes            advance the PSG envelopes
 *     seqAdvance             advance the MIDI sequencer
 *
 ******************************************************************************
 
 	.globl	_timerAI
-	.globl	_g_mtcou
-	.globl	_g_msmsa
-	.globl	_psg_ntA
-	.globl	_g_mtpre
-	.globl	_g_mtdiv
-	.globl	_mi_rloc
-	.globl	_mi_dwrm
+	.globl	_timerTi
+	.globl	_songAct
+	.globl	_psgActi
+	.globl	_seqCoun
+	.globl	_envDivi
+	.globl	_envBusy
+	.globl	_seqBusy
 	.globl	_seqAdva
 	.globl	_stepEnv
 
-* timerAIsr: the Timer-A interrupt routine.  Counts g_mtcou, steps the
-* PSG envelopes every 4th tick (via g_mtdiv) when the sequencer or a PSG
-* note is active, and steps the MIDI sequencer each time g_mtpre runs
+* timerAIsr: the Timer-A interrupt routine.  Counts timerTicks, steps the
+* PSG envelopes every 4th tick (via envDivider) when the sequencer or a PSG
+* note is active, and steps the MIDI sequencer each time seqCountdown runs
 * out.  Each sub-call is guarded so it is never re-entered.
 _timerAI:
 	ori.w	#$0700,sr		* mask all interrupts (IPL=7)
-	addq.l	#1,_g_mtcou		* ++g_mtcou
+	addq.l	#1,_timerTi		* ++timerTicks
 
-	tst.b	_g_msmsa		* test g_msmsa (a BYTE here)
+	tst.b	_songAct		* test songActive (a BYTE here)
 	bne.s	L_seqA			* sequencer active
-	tst.b	_psg_ntA		* test psg_ntAc (a BYTE here)
+	tst.b	_psgActi		* test psgActive (a BYTE here)
 	beq	L_ack			* psg idle -> just ack
-	subq.w	#1,_g_mtdiv		* --g_mtdiv
+	subq.w	#1,_envDivi		* --envDivider
 	bne	L_ack			* not yet -> ack
 	bra.s	L_psg			* fall to PSG call
 
 L_seqA:
-	subq.w	#1,_g_mtpre		* --g_mtpre
-	subq.w	#1,_g_mtdiv		* --g_mtdiv
+	subq.w	#1,_seqCoun		* --seqCountdown
+	subq.w	#1,_envDivi		* --envDivider
 	bne.s	L_seq			* divider still ticking
 
 * -----------------------------------------------------------------------
-* Sub-call 1: stepEnvelopes (called every 4 ticks when g_mtdiv wraps)
+* Sub-call 1: stepEnvelopes (called every 4 ticks when envDivider wraps)
 * -----------------------------------------------------------------------
 
 L_psg:
-	move.w	#4,_g_mtdiv		* reset divider
-	cmpi.w	#1,_mi_rloc		* re-entered?
+	move.w	#4,_envDivi		* reset divider
+	cmpi.w	#1,_envBusy		* re-entered?
 	beq	L_ack			* yes -> skip
-	addq.w	#1,_mi_rloc		* ++mi_rlock
+	addq.w	#1,_envBusy		* ++envBusy
 	bclr.b	#5,$fffffa0f		* ack MFP ISRA before long call
 	movem.l	d0-d7/a0-a6,-(sp)	* save every reg
 	move.w	sr,d0			* save current SR
@@ -74,24 +74,24 @@ L_psg:
 	move.w	d0,sr			* install
 	jsr	_stepEnv		* advance PSG envelopes
 	movem.l	(sp)+,d0-d7/a0-a6	* restore regs
-	subq.w	#1,_mi_rloc		* --mi_rlock
+	subq.w	#1,_envBusy		* --envBusy
 	bra	L_ack
 
 * -----------------------------------------------------------------------
-* Sub-call 2: seqAdvance (called when g_mtpre reaches 0 while active)
+* Sub-call 2: seqAdvance (called when seqCountdown reaches 0 while active)
 * -----------------------------------------------------------------------
 
 L_seq:
-	tst.w	_g_mtpre		* test g_mtpre
+	tst.w	_seqCoun		* test seqCountdown
 	beq.s	L_seq2			* 0 -> advance
 	bpl	L_ack			* positive -> not yet
 
 L_seq2:
-	cmpi.w	#1,_mi_dwrm		* mi_dwrm >= 1 ?
+	cmpi.w	#1,_seqBusy		* seqBusy >= 1 ?
 	bge	L_ack			* yes -> skip
-	cmpi.w	#1,_mi_rloc		* re-entered ?
+	cmpi.w	#1,_envBusy		* re-entered ?
 	beq	L_ack			* yes -> skip
-	addq.w	#1,_mi_dwrm		* ++mi_dwrm
+	addq.w	#1,_seqBusy		* ++seqBusy
 	bclr.b	#5,$fffffa0f		* ack MFP ISRA
 	movem.l	d0-d7/a0-a6,-(sp)	* save
 	move.w	sr,d0			* save SR
@@ -100,7 +100,7 @@ L_seq2:
 	move.w	d0,sr			* install
 	jsr	_seqAdva		* advance MIDI sequencer
 	movem.l	(sp)+,d0-d7/a0-a6	* restore
-	subq.w	#1,_mi_dwrm		* --mi_dwrm
+	subq.w	#1,_seqBusy		* --seqBusy
 
 L_ack:
 	bclr.b	#5,$fffffa0f		* final ISRA ack
@@ -114,17 +114,17 @@ L_ack:
 * above address them directly.
 * -----------------------------------------------------------------------
 
-* mi_dwrm: non-zero while seqAdvance is running; a tick that finds it set
+* seqBusy: non-zero while seqAdvance is running; a tick that finds it set
 * skips the sequencer step.
-_mi_dwrm:	.ds.w	1
-* mi_rlock: non-zero while stepEnvelopes is running; blocks both sub-calls.
-_mi_rloc:	.ds.w	1
-* g_mtpre: ticks left until the next sequencer step; the sequencer
-* reloads it (mi_tpb / mi_nlp0).
-_g_mtpre:	.ds.w	1
-* psg_ntAc: non-zero while a PSG note's envelope is running, so the
+_seqBusy:	.ds.w	1
+* envBusy: non-zero while stepEnvelopes is running; blocks both sub-calls.
+_envBusy:	.ds.w	1
+* seqCountdown: ticks left until the next sequencer step; the sequencer
+* reloads it (beatTicks / ticksToNext).
+_seqCoun:	.ds.w	1
+* psgActive: non-zero while a PSG note's envelope is running, so the
 * envelopes keep being stepped when no song is playing.
-_psg_ntA:	.ds.b	1
-* g_msmsa: non-zero while a song is playing (set by the sequencer's
+_psgActi:	.ds.b	1
+* songActive: non-zero while a song is playing (set by the sequencer's
 * start, cleared when it ends or is stopped).
-_g_msmsa:	.ds.b	1
+_songAct:	.ds.b	1

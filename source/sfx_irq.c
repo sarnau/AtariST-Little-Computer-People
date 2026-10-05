@@ -25,25 +25,25 @@ startSfx()
         long            ssp;
 
         /* MIDI has exclusive PSG access. */
-        if (mi_play != NO)
+        if (songPlaying != NO)
                 return;
 
         /* Only preempt for a strictly higher priority (lower number);
            the priority table is re-read for the store. */
-        if (g_sfplf != NO) {
-                if (sf_pri[g_sfcur] > g_sfcup)
+        if (sfxPlaying != NO) {
+                if (sfxPriority[sfxReqId] > sfxCurPrio)
                         return;
                 stopSfx();
         }
-        g_sfcup = sf_pri[g_sfcur];
-        g_sfplf = YES;
+        sfxCurPrio = sfxPriority[sfxReqId];
+        sfxPlaying = YES;
 
         /* SFX layout: +0..1 size, +2..N Dosound stream,
            trailing 4 bytes = duration hi/lo words. */
-        size      = *(short *) mi_ntLp[g_sfcur];
-        effectPtr = mi_ntLp[g_sfcur] + 2;
+        size      = *(short *) sfxData[sfxReqId];
+        effectPtr = sfxData[sfxReqId] + 2;
 
-        dosound_ptr = g_sfDoB;
+        dosound_ptr = sfxBuffer;
         for (i = 0; i < size; i++) {
                 *dosound_ptr = *effectPtr;
                 effectPtr++;
@@ -58,12 +58,12 @@ startSfx()
         *dosound_ptr = 0;
 
         effectPtr -= 4;
-        g_sfddh = *(short *) effectPtr;
+        sfxDurHi = *(short *) effectPtr;
         effectPtr += 2;
-        g_sfddl = *(short *) effectPtr;
-        g_sfpli = g_sfcur;
+        sfxDurLo = *(short *) effectPtr;
+        sfxCurId = sfxReqId;
 
-        Dosound(g_sfDoB);
+        Dosound(sfxBuffer);
 
         /* Convert Dosound envelope time (200 Hz) to 8 Hz game ticks;
            the 200 Hz counter is read inline under Super. */
@@ -71,15 +71,15 @@ startSfx()
         ssp = Super(0L);
         hz = *hz_ptr;
         Super(ssp);
-        g_sfHz2 = hz & 0xffffL;
+        sfxStartHz = hz & 0xffffL;
 
-        g_sfret = g_sfddh;
-        g_sfret = (g_sfret << 16) & 0xffff0000L;
-        raw_lo = (long) g_sfddl & 0xffffL;
-        g_sfret |= raw_lo;
-        g_sfret = g_sfret / 25L;
+        sfxTicksLeft = sfxDurHi;
+        sfxTicksLeft = (sfxTicksLeft << 16) & 0xffff0000L;
+        raw_lo = (long) sfxDurLo & 0xffffL;
+        sfxTicksLeft |= raw_lo;
+        sfxTicksLeft = sfxTicksLeft / 25L;
 
         /* -1 = use the auto-computed duration. */
-        if (g_sfdur != -1)
-                g_sfret = g_sfdur;
+        if (sfxReqDur != -1)
+                sfxTicksLeft = sfxReqDur;
 }

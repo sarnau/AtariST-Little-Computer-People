@@ -3,15 +3,15 @@
  * hideMouse and showMouse sit together, in this order, in the original.
  */
 
-/* Idempotent AES mouse hide: moff_f guards against a repeated M_OFF. */
+/* Idempotent AES mouse hide: mouseHidden guards against a repeated M_OFF. */
 
 
 void
 hideMouse()
 {
-        if (moff_f == NO) {
+        if (mouseHidden == NO) {
                 graf_mouse(M_OFF, (void *) 0);
-                moff_f = YES;
+                mouseHidden = YES;
         }
 }
 
@@ -20,8 +20,8 @@ hideMouse()
 void
 showMouse()
 {
-        if (moff_f != NO) {
+        if (mouseHidden != NO) {
                 graf_mouse(M_ON, (void *) 0);
-                moff_f = NO;
+                mouseHidden = NO;
         }
 }

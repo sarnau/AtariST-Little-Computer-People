@@ -31,12 +31,12 @@
 
 /* Load the dog's frame into the two dog hardware sprite slots.  Both
    slots are cleared first; a negative frame id (or the dog not yet
-   released, dg_init) leaves the dog hidden.  Otherwise both slots get
+   released, dogHidden) leaves the dog hidden.  Otherwise both slots get
    the frame's size, the dog's position (the frame's top is 17 lines
-   above dog_y) and the mask, but only one slot gets the image: the
+   above dogY) and the mask, but only one slot gets the image: the
    FRONT slot when layer_p is 1, the BACK slot otherwise, so the dog is
    drawn in front of or behind the resident.  With flipH2 set the
-   frame is first mirrored into g_dfimb/g_dfmab (15 lines, 2 words)
+   frame is first mirrored into dogMirImage/dogMirMask (15 lines, 2 words)
    and those buffers are used instead. */
 void
 setDogSprite(g_seid, layer_p, flipH2)
@@ -44,54 +44,54 @@ short   g_seid;
 short   layer_p;
 BOOL16  flipH2;
 {
-        g_seaim[HW_SLOT_DOG_BACK] = NULL;
-        g_seaim[HW_SLOT_DOG_FRONT] = NULL;
+        drawnImage[HW_SLOT_DOG_BACK] = NULL;
+        drawnImage[HW_SLOT_DOG_FRONT] = NULL;
 
-        if (g_seid < 0 || dg_init != NO)
+        if (g_seid < 0 || dogHidden != NO)
                 return;
 
         if (flipH2 != NO) {
-                flipSprite(g_sedim[g_seid],
-                                       (unsigned short *) g_dfimb,
+                flipSprite(spriteBitmap[g_seid],
+                                       (unsigned short *) dogMirImage,
                                        15, 2);
-                flipSprite(g_sedms[g_seid],
-                                       (unsigned short *) g_dfmab,
+                flipSprite(spriteMask[g_seid],
+                                       (unsigned short *) dogMirMask,
                                        15, 2);
         }
 
-        g_seach[HW_SLOT_DOG_BACK] = g_sedeh[SPRITE_DOG_LAY_DOWN];
-        g_seach[HW_SLOT_DOG_FRONT] = g_sedeh[SPRITE_DOG_LAY_DOWN];
-        g_seacw[HW_SLOT_DOG_BACK]  = g_sedew[SPRITE_DOG_LAY_DOWN];
-        g_seacw[HW_SLOT_DOG_FRONT]  = g_sedew[SPRITE_DOG_LAY_DOWN];
-        g_sepex[HW_SLOT_DOG_BACK] = dog_x;
-        g_sepex[HW_SLOT_DOG_FRONT] = dog_x;
-        g_sepey[HW_SLOT_DOG_BACK] = dog_y - 17;
-        g_sepey[HW_SLOT_DOG_FRONT] = dog_y - 17;
+        drawnHeight[HW_SLOT_DOG_BACK] = spriteHeight[SPRITE_DOG_LAY_DOWN];
+        drawnHeight[HW_SLOT_DOG_FRONT] = spriteHeight[SPRITE_DOG_LAY_DOWN];
+        drawnWidth[HW_SLOT_DOG_BACK]  = spriteWidth[SPRITE_DOG_LAY_DOWN];
+        drawnWidth[HW_SLOT_DOG_FRONT]  = spriteWidth[SPRITE_DOG_LAY_DOWN];
+        pendX[HW_SLOT_DOG_BACK] = dogX;
+        pendX[HW_SLOT_DOG_FRONT] = dogX;
+        pendY[HW_SLOT_DOG_BACK] = dogY - 17;
+        pendY[HW_SLOT_DOG_FRONT] = dogY - 17;
 
         if (flipH2 == NO) {
-                g_seams[HW_SLOT_DOG_BACK] = g_sedms[g_seid];
-                g_seams[HW_SLOT_DOG_FRONT] = g_sedms[g_seid];
+                drawnMask[HW_SLOT_DOG_BACK] = spriteMask[g_seid];
+                drawnMask[HW_SLOT_DOG_FRONT] = spriteMask[g_seid];
         } else {
-                g_seams[HW_SLOT_DOG_BACK] = g_dfmab;
-                g_seams[HW_SLOT_DOG_FRONT] = g_dfmab;
+                drawnMask[HW_SLOT_DOG_BACK] = dogMirMask;
+                drawnMask[HW_SLOT_DOG_FRONT] = dogMirMask;
         }
         if (flipH2 == NO) {
                 if (layer_p == 1)
-                        g_seaim[HW_SLOT_DOG_FRONT] = g_sedim[g_seid];
+                        drawnImage[HW_SLOT_DOG_FRONT] = spriteBitmap[g_seid];
                 else
-                        g_seaim[HW_SLOT_DOG_BACK] = g_sedim[g_seid];
+                        drawnImage[HW_SLOT_DOG_BACK] = spriteBitmap[g_seid];
         } else {
                 if (layer_p == 1)
-                        g_seaim[HW_SLOT_DOG_FRONT] = g_dfimb;
+                        drawnImage[HW_SLOT_DOG_FRONT] = dogMirImage;
                 else
-                        g_seaim[HW_SLOT_DOG_BACK] = g_dfimb;
+                        drawnImage[HW_SLOT_DOG_BACK] = dogMirImage;
         }
 }
 
 /* Mirror a 4-plane sprite image horizontally.  For each of pixH lines,
    the line's wdWidth 16-pixel groups (four plane words each) are
    copied in reverse group order, and every word is bit-reversed one
-   byte at a time through rev_tab with the two bytes swapped.  Writes
+   byte at a time through mirrorTable with the two bytes swapped.  Writes
    pixH * wdWidth * 4 words to dest. */
 void
 flipSprite(source, dest, pixH, wdWidth)
@@ -114,8 +114,8 @@ short                   wdWidth;
                              planeIndex++) {
                                 v = *img_ptr;
                                 img_ptr++;
-                                hi = rev_tab[v & 0xff] << 8;
-                                *dest = rev_tab[(v >> 8) & 0xff] | hi;
+                                hi = mirrorTable[v & 0xff] << 8;
+                                *dest = mirrorTable[(v >> 8) & 0xff] | hi;
                                 dest++;
                         }
                 }

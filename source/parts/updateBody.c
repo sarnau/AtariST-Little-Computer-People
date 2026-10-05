@@ -2,49 +2,49 @@
  * parts/updateBody.c -- included by stx_u3.c; never compiled on its own.
  * Must follow gameTick.
  */
-/* Select the body pose for lcp_st -> slot 3.  When carrying an
-   object during walk states (< 25), uses arms-up frames from cy_frT.
-   X = lcp_x - 4 (right) or lcp_x - 14 (left); Y = lcp_y + body_yof[st] - 21. */
+/* Select the body pose for animState -> slot 3.  When carrying an
+   object during walk states (< 25), uses arms-up frames from carryFrames.
+   X = resX - 4 (right) or resX - 14 (left); Y = resY + bodyYOffset[st] - 21. */
 
 void
 updateBody()
 {
         short   frame;
 
-        while (g_sepef[HW_SLOT_LCP_BODY] == YES)
+        while (pendReady[HW_SLOT_LCP_BODY] == YES)
                 ;
 
-        frame = body_frT[lcp_st];
+        frame = bodyIndex[animState];
         /* The bound is spelled inclusively on the previous state,
            not `< 25`: the two compile differently. */
-        if (g_lcyof != NO && lcp_st <= STATE_STR_BTM_F3)
-                frame = cy_frT[lcp_st];
+        if (isCarrying != NO && animState <= STATE_STR_BTM_F3)
+                frame = carryFrames[animState];
 
-        /* Row strides are 168 (body_ptr) and 84 (body_shp).  body_ptr
-           and body_shp are real arrays and the index is not cast to
+        /* Row strides are 168 (bodyFrames) and 84 (bodyShapes).  bodyFrames
+           and bodyShapes are real arrays and the index is not cast to
            long, so the multiply stays 16-bit (no long-multiply call). */
-        expandFrame((short *) body_ptr[frame],
-                (short *) body_shp[frame],
-                (short *) g_lsimg,
-                (short *) g_lsmas,
-                2, 21, lcp_face, 1);
+        expandFrame((short *) bodyFrames[frame],
+                (short *) bodyShapes[frame],
+                (short *) bodyImage,
+                (short *) bodyMask,
+                2, 21, resFacing, 1);
 
-        if (lcp_face == FACING_RIGHT)
-                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 4;
+        if (resFacing == FACING_RIGHT)
+                drawnX[HW_SLOT_LCP_BODY] = resX - 4;
         else
-                g_seacx[HW_SLOT_LCP_BODY] = lcp_x - 14;
+                drawnX[HW_SLOT_LCP_BODY] = resX - 14;
 
-        g_seacy[HW_SLOT_LCP_BODY] = lcp_y + body_yof[lcp_st] - 21;
-        if (dbg_hide != NO)
-                g_seacy[HW_SLOT_LCP_BODY] = 300;
+        drawnY[HW_SLOT_LCP_BODY] = resY + bodyYOffset[animState] - 21;
+        if (debugHideLcp != NO)
+                drawnY[HW_SLOT_LCP_BODY] = 300;
 
-        g_sepeh[HW_SLOT_LCP_BODY] = 21;
-        g_sepew[HW_SLOT_LCP_BODY]  = 32;
-        g_sepim[HW_SLOT_LCP_BODY]  = g_lsimg;
-        g_sepms[HW_SLOT_LCP_BODY]   = g_lsmas;
+        pendHeight[HW_SLOT_LCP_BODY] = 21;
+        pendWidth[HW_SLOT_LCP_BODY]  = 32;
+        pendImage[HW_SLOT_LCP_BODY]  = bodyImage;
+        pendMask[HW_SLOT_LCP_BODY]   = bodyMask;
 
-        if (g_lssh != NO)
-                g_sepim[HW_SLOT_LCP_BODY] = NULL;
+        if (lcpHidden != NO)
+                pendImage[HW_SLOT_LCP_BODY] = NULL;
 
-        g_sepef[HW_SLOT_LCP_BODY] = YES;
+        pendReady[HW_SLOT_LCP_BODY] = YES;
 }

@@ -14,18 +14,18 @@
 #include "globals.h"
 #include "sprglobs.h"
 #include "sprites.h"
-/* g_sedim/g_sedms are filled by defineSprite and used by activateSprite/carryBehind/
+/* spriteBitmap/spriteMask are filled by defineSprite and used by activateSprite/carryBehind/
    carryInFront as well as the dog path. */
 
 /* Place the dog at its startup spot (bottom floor near the food bowl)
    and clear the dog sprite slots with sprite id 0.  The dog becomes
    visible on the next renderFrame tick once moveDog picks a target and
-   calls setDogSprite again with a walk-cycle sprite id from g_dwanf. */
+   calls setDogSprite again with a walk-cycle sprite id from dogWalkSprites. */
 void
 placeDog()
 {
-        dog_x = 100;
-        dog_y = 195;
+        dogX = 100;
+        dogY = 195;
         setDogSprite(0, 1, NO);
 }
 
@@ -34,6 +34,6 @@ placeDog()
 /* setDogSprite (with flipSprite) lives in alerts.c, which shares its object:
    it pushes the dog frame into hardware slots 0 (behind) or 7
    (in-front) depending on layerPosition, mirroring horizontally via
-   flipSprite if needed.  dg_init suppresses the push while the dog
+   flipSprite if needed.  dogHidden suppresses the push while the dog
    hasn't been placed in the world yet. */
 

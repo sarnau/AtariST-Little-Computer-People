@@ -10,12 +10,12 @@ vdiInit()
 {
         short   i;
 
-        vdihnd = vdi_hnd;
+        vdiHandle = physHandle;
         for (i = 0; i < 10; i++)
                 work_in[i] = 1;
         work_in[10] = 2;
-        v_opnvwk(work_in, &vdihnd, wk_out);
-        scr_scal = 1;
+        v_opnvwk(work_in, &vdiHandle, wk_out);
+        screenScale = 1;
         if (wk_out[0] > 600)
                 while (1)
                         form_alert(ALERT_NO_DEFAULT,

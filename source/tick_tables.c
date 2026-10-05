@@ -9,6 +9,6 @@
 #include "types.h"
 #include "enums.h"
 #include "tick_tables.h"
-BOOL16  g_alsts;   /* alarm sound has started */
-short   g_phrc;    /* phone ring countdown */
-/* g_srsdc (screen scroll-down count) lives in globals.c. */
+BOOL16  alarmSounding;   /* alarm sound has started */
+short   ringCountdown;    /* phone ring countdown */
+/* stripScroll (screen scroll-down count) lives in globals.c. */

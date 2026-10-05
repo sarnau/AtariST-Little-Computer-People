@@ -14,7 +14,7 @@
 
 
 /* Advance the game by counter + 1 animation ticks.  In carrying mode
-   (g_lcyof) the carried sprite is first repositioned relative to the
+   (isCarrying) the carried sprite is first repositioned relative to the
    resident; then each tick waits for the compositor, steps the house
    animations and the simulation, and polls the keyboard. */
 void
@@ -28,56 +28,56 @@ short   counter;
 
         /* Deliberate original shapes, all of which must stay: the
            carrying-mode arm comes FIRST with the test inverted;
-           g_seslm[g_lcieo] is recomputed at every use instead of going
-           through a local; the inner tests re-check g_lcyof redundantly
+           spriteSlot[carriedSprite] is recomputed at every use instead of going
+           through a local; the inner tests re-check isCarrying redundantly
            (both arms of the first pair assign the same thing); the clamp
-           indexes g_sepex with g_lcieo rather than the slot and lives
+           indexes pendX with carriedSprite rather than the slot and lives
            INSIDE the facing-left arm; and the per-object Y offset is
            written out as a switch. */
-        if (g_lcyof != NO) {
-                if (lcp_face == FACING_RIGHT) {
-                        if (g_lcyof == NO)
-                                g_sepex[g_seslm[g_lcieo]] = lcp_x + 10;
+        if (isCarrying != NO) {
+                if (resFacing == FACING_RIGHT) {
+                        if (isCarrying == NO)
+                                pendX[spriteSlot[carriedSprite]] = resX + 10;
                         else
-                                g_sepex[g_seslm[g_lcieo]] = lcp_x + 10;
+                                pendX[spriteSlot[carriedSprite]] = resX + 10;
                 } else {
-                        if (g_lcyof == NO)
-                                g_sepex[g_seslm[g_lcieo]] =
-                                        lcp_x - g_seacw[g_seslm[g_lcieo]] + 8;
+                        if (isCarrying == NO)
+                                pendX[spriteSlot[carriedSprite]] =
+                                        resX - drawnWidth[spriteSlot[carriedSprite]] + 8;
                         else
-                                g_sepex[g_seslm[g_lcieo]] =
-                                        lcp_x - g_seacw[g_seslm[g_lcieo]] + 16;
-                        if (g_sepex[g_lcieo] < 0)
-                                g_sepex[g_lcieo] = 0;
+                                pendX[spriteSlot[carriedSprite]] =
+                                        resX - drawnWidth[spriteSlot[carriedSprite]] + 16;
+                        if (pendX[carriedSprite] < 0)
+                                pendX[carriedSprite] = 0;
                 }
 
-                switch (g_lcieo) {
+                switch (carriedSprite) {
                 case SPRITE_SUITCASE:
-                        g_sepey[g_seslm[SPRITE_SUITCASE]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_SUITCASE]] = resY - 20;
                         break;
                 case SPRITE_GLASS:
-                        g_sepey[g_seslm[SPRITE_GLASS]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_GLASS]] = resY - 20;
                         break;
                 case SPRITE_GAME_BOX:
-                        g_sepey[g_seslm[SPRITE_GAME_BOX]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_GAME_BOX]] = resY - 20;
                         break;
                 case SPRITE_BOOK:
-                        g_sepey[g_seslm[SPRITE_BOOK]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_BOOK]] = resY - 20;
                         break;
                 case SPRITE_FOOD_PACKAGE:
-                        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_FOOD_PACKAGE]] = resY - 20;
                         break;
                 case SPRITE_FIREWOOD:
-                        g_sepey[g_seslm[SPRITE_FIREWOOD]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_FIREWOOD]] = resY - 20;
                         break;
                 case SPRITE_COOKING_POT:
-                        g_sepey[g_seslm[SPRITE_COOKING_POT]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_COOKING_POT]] = resY - 20;
                         break;
                 case SPRITE_VINYL_CARRY:
-                        g_sepey[g_seslm[SPRITE_VINYL_CARRY]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_VINYL_CARRY]] = resY - 20;
                         break;
                 case SPRITE_COOKED_MEAL:
-                        g_sepey[g_seslm[SPRITE_COOKED_MEAL]] = lcp_y - 20;
+                        pendY[spriteSlot[SPRITE_COOKED_MEAL]] = resY - 20;
                         break;
                 }
         }
@@ -85,128 +85,128 @@ short   counter;
         /* The tick loop is NOT an else arm: carrying mode falls
            straight into it. */
         {
-                count = ani_cnt;
+                count = frameCount;
                 for (index = 0; index < counter + 1; index++) {
-                        while (count == ani_cnt)
+                        while (count == frameCount)
                                 renderFrame();
-                        count = ani_cnt;
+                        count = frameCount;
 
-                        subAniC++;
+                        tickCount++;
 
                         /* Clock pendulum: 4-frame animation. */
-                        psi = (subAniC >> 2) & 3;
-                        drawObject(g_obcla[psi], 271, 92);
+                        psi = (tickCount >> 2) & 3;
+                        drawObject(clockFrames[psi], 271, 92);
                         simStep();
                         redrawHands();
 
                         /* Ctrl-P petting-hand animation cycle. */
-                        if (g_ptdoa != NO) {
+                        if (patActive != NO) {
                                 /* Tested as `> 10` with the finish arm
                                    first, as in the original. */
-                                if (g_ptanf > 10) {
-                                        g_selaf[g_ptlss] =
+                                if (patFrame > 10) {
+                                        spriteLayer[patLastSprite] =
                                                 SPRITE_HIDDEN;
                                         layoutSlots();
-                                        g_ptdoa = NO;
+                                        patActive = NO;
                                 } else {
-                                        if (g_ptanf != 0) {
-                                                g_selaf[g_ptdsi[g_ptanf - 1]] =
+                                        if (patFrame != 0) {
+                                                spriteLayer[patSprites[patFrame - 1]] =
                                                         SPRITE_HIDDEN;
                                         }
                                         /* The lookup is repeated at every
                                            use rather than cached in a
                                            local, as in the original. */
-                                        g_selaf[g_ptdsi[g_ptanf]] =
+                                        spriteLayer[patSprites[patFrame]] =
                                                 SPRITE_BEHIND_LCP;
-                                        activateSprite(g_ptdsi[g_ptanf]);
-                                        g_sepex[g_seslm[g_ptdsi[g_ptanf]]] =
+                                        activateSprite(patSprites[patFrame]);
+                                        pendX[spriteSlot[patSprites[patFrame]]] =
                                                 192;
-                                        g_sepey[g_seslm[g_ptdsi[g_ptanf]]] =
+                                        pendY[spriteSlot[patSprites[patFrame]]] =
                                                 165;
-                                        g_ptanf++;
+                                        patFrame++;
                                 }
                         }
 
                         /* Dog food bowl: current fill state + countdown. */
-                        drawObject(g_obdea[lcp_bwlS], DOG_BOWL_X, DOG_BOWL_Y);
-                        if (dg_bwlch < 0) {
-                                if (lcp_bwlS != BOWL_EMPTY)
-                                        lcp_bwlS--;
-                                if (lcp_bwlS < 0)
-                                        lcp_bwlS = BOWL_EMPTY;
+                        drawObject(bowlFrames[bowlLevel], DOG_BOWL_X, DOG_BOWL_Y);
+                        if (bowlChange < 0) {
+                                if (bowlLevel != BOWL_EMPTY)
+                                        bowlLevel--;
+                                if (bowlLevel < 0)
+                                        bowlLevel = BOWL_EMPTY;
                         }
-                        if (dg_bwlch > 0) {
-                                lcp_bwlS++;
-                                if (lcp_bwlS > BOWL_FULL)
-                                        lcp_bwlS = BOWL_FULL;
+                        if (bowlChange > 0) {
+                                bowlLevel++;
+                                if (bowlLevel > BOWL_FULL)
+                                        bowlLevel = BOWL_FULL;
                         }
 
                         /* Fireplace animation + auto-extinguish. */
-                        if (fire_act != NO) {
-                                drawObject(g_obfia[subAniC & 3], FIREPLACE_X, FIREPLACE_Y);
-                                if (--fire_dur == 0)
-                                        fire_ext = YES;
+                        if (fireBurning != NO) {
+                                drawObject(fireFrames[tickCount & 3], FIREPLACE_X, FIREPLACE_Y);
+                                if (--fireTimeLeft == 0)
+                                        fireDouse = YES;
                         }
-                        if (fire_ext != NO) {
-                                fire_ext = NO;
-                                fire_act = NO;
+                        if (fireDouse != NO) {
+                                fireDouse = NO;
+                                fireBurning = NO;
                                 drawObject(OBJ_FIRE_OFF, FIREPLACE_X, FIREPLACE_Y);
                         }
 
                         /* Alarm clock SFX + animation. */
-                        if (alarm_p != NO) {
-                                if (g_alsts == NO) {
+                        if (alarmRinging != NO) {
+                                if (alarmSounding == NO) {
                                         sfxSelect(SFX_ALARM_CLOCK, 100000L);
-                                        g_alsts = YES;
-                                } else if (g_sfplf == NO) {
+                                        alarmSounding = YES;
+                                } else if (sfxPlaying == NO) {
                                         sfxSelect(SFX_ALARM_CLOCK, 100000L);
                                 }
-                                drawObject(g_obala[subAniC & 1],
+                                drawObject(alarmFrames[tickCount & 1],
                                         53, 102);
                         }
-                        if (alarm_p == NO) {
-                                g_alsts = NO;
-                                if (g_sfplf != NO && g_sfpli == SFX_ALARM_CLOCK)
+                        if (alarmRinging == NO) {
+                                alarmSounding = NO;
+                                if (sfxPlaying != NO && sfxCurId == SFX_ALARM_CLOCK)
                                         stopSfx();
                         }
 
                         /* Phone ring. */
-                        if (ph_call != NO) {
-                                if (g_phrc == 0) {
+                        if (phoneRinging != NO) {
+                                if (ringCountdown == 0) {
                                         sfxSelect(SFX_PHONE_RING, 10000L);
-                                        g_phrc = 26;
+                                        ringCountdown = 26;
                                 }
-                                g_phrc--;
-                                if (g_phrc > 10) {
-                                        drawObject(g_obpha[subAniC & 3], PHONE_X, PHONE_Y);
+                                ringCountdown--;
+                                if (ringCountdown > 10) {
+                                        drawObject(phoneFrames[tickCount & 3], PHONE_X, PHONE_Y);
                                 } else {
-                                        if (g_sfplf != NO &&
-                                            g_sfpli == SFX_PHONE_RING)
+                                        if (sfxPlaying != NO &&
+                                            sfxCurId == SFX_PHONE_RING)
                                                 stopSfx();
                                         drawObject(OBJ_PHONE_2, PHONE_X, PHONE_Y);
                                 }
                         }
-                        if (ph_hu != NO) {
+                        if (phoneHangUp != NO) {
                                 drawObject(OBJ_PHONE_2, PHONE_X, PHONE_Y);
-                                ph_hu = NO;
-                                if (g_sfplf != NO && g_sfpli == SFX_PHONE_RING)
+                                phoneHangUp = NO;
+                                if (sfxPlaying != NO && sfxCurId == SFX_PHONE_RING)
                                         stopSfx();
-                                g_phrc = 0;
+                                ringCountdown = 0;
                         }
 
-                        if (lcp_recP != NO) animRecPlayer();
-                        if (lcp_tv != NO)          tvNoise();
+                        if (recordPlaying != NO) animRecPlayer();
+                        if (tvRunning != NO)          tvNoise();
 
                         updateBody();
                         stepHead();
                         updateHead();
 
-                        if (g_srsdc > 0) {
+                        if (stripScroll > 0) {
                                 scrollStrip();
-                                g_srsdc--;
+                                stripScroll--;
                         } else {
-                                if (no_keyin == NO &&
-                                    introSeq == NO) {
+                                if (keysBlocked == NO &&
+                                    movingIn == NO) {
                                         key = getKey();
                                         /* getKey returns -1 for "no key",
                                            not 0. */
@@ -219,15 +219,15 @@ short   counter;
                                                     key != KEY_CTRL_D_DOGFOOD &&
                                                     key != KEY_CTRL_A_ALARM &&
                                                     key != KEY_CTRL_P_PATTING) {
-                                                        if (tx_sctm == 0) {
+                                                        if (textTimer == 0) {
                                                                 fillPanel(27);
-                                                                g_cdibp = 0;
+                                                                typedCursor = 0;
                                                         }
-                                                        tx_sctm = 160;
+                                                        textTimer = 160;
                                                 }
                                                 handleKey(key);
                                         }
-                                } else if (g_inpmd != NO) {
+                                } else if (typingOff != NO) {
                                         if ((key = getKey()) != -1)
                                                 handleKey(key);
                                 }

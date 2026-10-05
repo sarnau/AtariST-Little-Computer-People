@@ -8,7 +8,7 @@
 /* Number of logical sprite-definition slots: one shared 60-entry
    table; slot IDs are
    SPRITE_* enum values in include/enums.h.  The sprite-slot map
-   `g_seslm[SPRITE_SLOTS]` picks which of the SPRITE_HW_SLOTS
+   `spriteSlot[SPRITE_SLOTS]` picks which of the SPRITE_HW_SLOTS
    hardware slots each logical sprite lands on. */
 #define SPRITE_SLOTS    60
 
@@ -16,8 +16,8 @@
    roles are named individually below. */
 #define SPRITE_HW_SLOTS         8
 
-/* Hardware-slot IDs (indices into g_sepim/g_sepms/g_seaim/g_seams/
-   g_seacx/g_seacy/etc.).  Z-order runs low-to-high back-to-front:
+/* Hardware-slot IDs (indices into pendImage/pendMask/drawnImage/drawnMask/
+   drawnX/drawnY/etc.).  Z-order runs low-to-high back-to-front:
    slot 0 draws first, slot 7 draws last on top of everything.
 
      0  DOG_BACK        dog when depth puts it behind the LCP
@@ -33,7 +33,7 @@
                         overflow falls back to slot 5)
      7  DOG_FRONT       dog when depth puts it in front of the LCP
 
-   `HW_SLOT_NONE` is a sentinel value stored in g_seslm[] meaning
+   `HW_SLOT_NONE` is a sentinel value stored in spriteSlot[] meaning
    "this logical sprite is not currently mapped to any hardware
    slot" (i.e. not drawn). */
 #define HW_SLOT_DOG_BACK        0
@@ -49,85 +49,85 @@
 /* Allocation size for the hardware-slot pending/active arrays below.
    Logical render slots are 0..7 (SPRITE_HW_SLOTS); HW_SLOT_NONE (9) is
    the "disabled" slot that layoutSlots parks HIDDEN sprites in.  gameTick's
-   carrying path writes g_sepex/g_sepey[g_seslm[g_lcieo]] every frame,
-   and carryBehind/carryInFront write g_seaim/g_seams/g_seach/g_seacw the same
+   carrying path writes pendX/pendY[spriteSlot[carriedSprite]] every frame,
+   and carryBehind/carryInFront write drawnImage/drawnMask/drawnHeight/drawnWidth the same
    way -- so any of these arrays can be indexed at HW_SLOT_NONE when a
    carried sprite is momentarily hidden.  The original's 8-entry
    arrays tolerate the [9] write because it overflows into the
-   ADJACENT array (g_sepey[9] == g_seacw[1], a harmless short) -- which
+   ADJACENT array (pendY[9] == drawnWidth[1], a harmless short) -- which
    is only true while the BSS layout is the original's.  So the arrays
    stay at 8 and the safety rests on that adjacency; widening them
    would change the layout.  Loops and bounds checks use
    SPRITE_HW_SLOTS (8). */
 #define SPRITE_HW_SLOTS_ALLOC   SPRITE_HW_SLOTS
 
-extern short lcp_st;
-extern short lcp_face;
-extern short g_lcyof;
-extern short g_lcieo;
-extern short g_lssh;
-extern short dbg_hide;
-extern short dog_x;
-extern short dog_y;
-extern short g_dtx;
-extern short g_dty;
-extern short g_dyx;
-extern short g_dyy;
-extern short g_dwanc;
-extern short g_dsid;
-extern short dg_stair;
-extern short dg_init;
-extern short g_sepef[];
-extern short* g_sepim[];
-extern short* g_sepms[];
-extern short g_sepex[];
-extern short g_sepey[];
-extern short g_sepeh[];
-extern short g_sepew[];
-extern short* g_seaim[];
-extern short* g_seams[];
-extern short g_seacx[];
-extern short g_seacy[];
-extern short g_seach[];
-extern short g_seacw[];
-extern short* g_sedim[];
-extern short* g_sedms[];
-extern short g_sedeh[];
-extern short g_sedew[];
-extern short g_selaf[];
-extern short g_seslm[];
-extern short body_frT[];
-extern short cy_frT[];
-extern short body_yof[];
-extern unsigned char body_ptr[][168];   /* LCP_BODY_FRAME_SIZE */
-extern unsigned char body_shp[][84];    /* LCP_BODY_SHAPE_SIZE */
-extern short g_lsimg[];
-extern short g_lsmas[];
-extern short g_dwanf[];
-extern short g_dfimb[];
-extern short g_dfmab[];
-extern short flr_by[];
-extern short flr_cy[];
-extern short stair_wp[];
-extern short subAniC;
-extern short g_hsbuf[];
-extern short g_hsmas[];
-extern short g_hsmif;
-extern unsigned char pex_ptr[][168];    /* LCP_BODY_FRAME_SIZE */
-extern unsigned char hd_shp[][84];      /* LCP_BODY_SHAPE_SIZE */
-extern short g_hadec;
-extern short mood_hfo[];
-extern short hd_xoff[];
-extern short hd_hgt[];
-extern short hd_dang[];
-extern short hd_mvd[];
-extern short hd_tilt[];
-extern short g_wyx;
-extern short g_wyy;
-extern short lcp_stR;
-extern BOOL16 fs_trg;
-extern short g_hastl;
-extern short stair_ty;
-extern short stair_by;
+extern short animState;
+extern short resFacing;
+extern short isCarrying;
+extern short carriedSprite;
+extern short lcpHidden;
+extern short debugHideLcp;
+extern short dogX;
+extern short dogY;
+extern short dogXTarget;
+extern short dogYTarget;
+extern short dogXWaypt;
+extern short dogYWaypt;
+extern short dogStepIdx;
+extern short dogSpriteId;
+extern short dogOnStairs;
+extern short dogHidden;
+extern short pendReady[];
+extern short* pendImage[];
+extern short* pendMask[];
+extern short pendX[];
+extern short pendY[];
+extern short pendHeight[];
+extern short pendWidth[];
+extern short* drawnImage[];
+extern short* drawnMask[];
+extern short drawnX[];
+extern short drawnY[];
+extern short drawnHeight[];
+extern short drawnWidth[];
+extern short* spriteBitmap[];
+extern short* spriteMask[];
+extern short spriteHeight[];
+extern short spriteWidth[];
+extern short spriteLayer[];
+extern short spriteSlot[];
+extern short bodyIndex[];
+extern short carryFrames[];
+extern short bodyYOffset[];
+extern unsigned char bodyFrames[][168];   /* LCP_BODY_FRAME_SIZE */
+extern unsigned char bodyShapes[][84];    /* LCP_BODY_SHAPE_SIZE */
+extern short bodyImage[];
+extern short bodyMask[];
+extern short dogWalkSprites[];
+extern short dogMirImage[];
+extern short dogMirMask[];
+extern short floorBottomY[];
+extern short floorWalkY[];
+extern short stairWaypts[];
+extern short tickCount;
+extern short headImage[];
+extern short headMask[];
+extern short headMirror;
+extern unsigned char pexFrames[][168];    /* LCP_BODY_FRAME_SIZE */
+extern unsigned char headShapes[][84];      /* LCP_BODY_SHAPE_SIZE */
+extern short headDelay;
+extern short moodHeadBase[];
+extern short headXOffset[];
+extern short headYOffset[];
+extern short headRestDir[];
+extern short headTurnStep[];
+extern short headTiltFrame[];
+extern short xWaypoint;
+extern short yWaypoint;
+extern short onStairs;
+extern BOOL16 footstepDue;
+extern short headLastWalk;
+extern short xLanding;
+extern short yLanding;
 
 #endif /* SPRGLOBS_H */

@@ -20,11 +20,11 @@
 #include "../include/types.h"
 
 extern void     decodeScn();
-extern short    scn_dic[];      /* the 30-byte nibble dictionary */
+extern short    scnDict[];      /* the 30-byte nibble dictionary */
 
 /* The file handling is inlined in main() and titleScreen(), not in
    decodeScn: the caller reads the 2-byte size, then the 30-byte
-   dictionary into scn_dic, then the body, and hands decodeScn the BODY
+   dictionary into scnDict, then the body, and hands decodeScn the BODY
    buffer.  The old spelling here passed the FILE NAME as the source
    and decoded the name itself -- which is why the first words came
    back as 0x7573, the "us" of "house.scn". */
@@ -43,7 +43,7 @@ long *  sizep;
         if (f == NULL) { perror(path); return NULL; }
         if (fread(hdr, 1, 2, f) != 2) { fclose(f); return NULL; }
         total = ((long) hdr[0] << 8) | hdr[1];   /* ST big-endian */
-        if (fread(scn_dic, 1, 30, f) != 30) { fclose(f); return NULL; }
+        if (fread(scnDict, 1, 30, f) != 30) { fclose(f); return NULL; }
         body = total - 32;
         buf = (char *) malloc((size_t) body);
         if (buf == NULL) { fclose(f); return NULL; }

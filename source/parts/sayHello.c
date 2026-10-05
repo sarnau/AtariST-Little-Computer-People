@@ -14,15 +14,15 @@ sayHello()
         short   prev_pick;
         short   wait;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
-        g_hamod         = HEAD_ANIM_DISABLED;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
+        headMode         = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame            = g_hsfra;
-        g_hatas = HEAD_ANIM_DISABLED;
-        g_hacur      = HEAD_ANIM_DISABLED;
+        saved_frame            = headFrame;
+        headTarget = HEAD_ANIM_DISABLED;
+        headPose      = HEAD_ANIM_DISABLED;
 
         wave_count = rndRng(20, 40);
         /* pick is cleared before prev_pick on purpose (statement order
@@ -40,29 +40,29 @@ sayHello()
                    different code. */
                 switch (pick) {
                 case 0:
-                        g_hsfra = 5;
+                        headFrame = 5;
                         sfxTvClick();
                         break;
                 case 1:
-                        g_hsfra = 6;
+                        headFrame = 6;
                         if (rndRng(0, 1) != 0)
                                 sfxSpeech();
                         else
                                 sfxGreeting();
                         break;
                 case 2:
-                        g_hsfra = 4;
+                        headFrame = 4;
                         sfxHeadNod();
                         break;
                 }
                 /* The assignment is nested in the call on purpose, so
                    the value is reused from the register. */
                 gameTick(wait = rndRng(1, 2));
-                g_sfret = (long) wait;
+                sfxTicksLeft = (long) wait;
         }
 
-        g_hatas = 8;
-        g_hacur      = 8;
-        g_hsfra      = saved_frame;
+        headTarget = 8;
+        headPose      = 8;
+        headFrame      = saved_frame;
         gameTick(0);
 }

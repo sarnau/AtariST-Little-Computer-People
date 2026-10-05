@@ -13,7 +13,7 @@
 
 
 
-char *          wp_prm[9] = {
+char *          wpzPrompts[9] = {
         "OK, what's the first word?",
         "Good luck! What's the first word?",
         "Alright. Type in the first word.",
@@ -27,7 +27,7 @@ char *          wp_prm[9] = {
 
 /* Word Puzzles: the six right-answer messages; wpzSolve shows one at
    random through wpzMessage. */
-char *          wp_succ[6] = {
+char *          wpzRightMsgs[6] = {
         "You got it!!",
         "Good going. That's right!",
         "Congratulations. That's it!",
@@ -37,7 +37,7 @@ char *          wp_succ[6] = {
 };
 
 /* Word Puzzles: the six wrong-answer messages, picked the same way. */
-char *          wp_fail[6] = {
+char *          wpzWrongMsgs[6] = {
         "Too bad. You missed it.",
         "Better luck next time.",
         "Good try, but that's the wrong answer.",

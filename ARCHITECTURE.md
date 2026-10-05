@@ -101,9 +101,9 @@ Three action tables provide different activity mixes:
 
 | Table | Bias | Example Actions |
 |---|---|---|
-| `g_atact` | Energetic | Computer, dance, exercise, write letter |
-| `g_atmod` | Balanced | Read newspaper, play game, brush teeth |
-| `g_atrel` | Low-key | Sit on couch, yawn, wander, sleep |
+| `activeActions` | Energetic | Computer, dance, exercise, write letter |
+| `moderateActions` | Balanced | Read newspaper, play game, brush teeth |
+| `relaxedActions` | Low-key | Sit on couch, yawn, wander, sleep |
 
 The `activity_schedule_table[3][8]` selects which table to use based on time-of-day and the character's `activity_level`. Weekend override: Sunday forces relaxed activities, Saturday forces moderate.
 
@@ -135,7 +135,7 @@ The player types natural-language phrases that are parsed against a 161-word voc
 | Ctrl+A | Alarm clock | Wakes the character, rings alarm sound |
 | Ctrl+B | Book delivery | Doorbell + book (SPRITE_BOOK) at front door |
 | Ctrl+C | Phone call | Random phone rings, character answers |
-| Ctrl+D | Dog food | Dog food delivery via `g_dvdog` flag |
+| Ctrl+D | Dog food | Dog food delivery via `isDogDelivery` flag |
 | Ctrl+F | Food delivery | Food package (SPRITE_FOOD_PACKAGE) to kitchen cabinet |
 | Ctrl+R | Record delivery | New vinyl record (SPRITE_VINYL_CARRY) delivery |
 | Ctrl+W | Water delivery | Refills water supply |
@@ -182,7 +182,7 @@ The character navigates between positions using `lcp_pathfind_one_step`, which h
 
 The game runs at ~8 Hz with a double-buffered rendering pipeline in `renderFrame`:
 
-1. **Background copy**: `blkcopy32` copies the static house scene from the offscreen buffer (32-byte aligned block copy, with three modes depending on `tx_sctm` for partial updates)
+1. **Background copy**: `blkcopy32` copies the static house scene from the offscreen buffer (32-byte aligned block copy, with three modes depending on `textTimer` for partial updates)
 2. **Dog animation**: `dog_move_and_animate` advances the dog's position, handles stair navigation, and triggers eating behavior when near a full food bowl
 3. **Sprite compositing**: Iterates over all 8 hardware sprite slots; for each with a non-NULL image pointer, calls `drawSlot` to composite using masked blitting
 4. **Page flip**: `XBIOS Vsync + Setscreen` swaps the display to the newly composited buffer
@@ -268,7 +268,7 @@ Sprites 13–15 (SPRITE_DOOR_ANIM_1–3) are door overlay sprites at three stage
 
 The character is assembled from separate body and head sprite sheets:
 - **Body** (`body.lcp`): 98 sprite frames indexed by a 93-entry state-to-frame table (`body_frame_table[93]`); the `PLAYER_STATE` enum spans ~109 states, several of which share frames (idle right/idle left etc.)
-- **Head** (`pex.lcp`): Expression frames selected by `g_hsfra` and `happiness` level, with random head movements controlled by `HEAD_ANIM_MODE`
+- **Head** (`pex.lcp`): Expression frames selected by `headFrame` and `happiness` level, with random head movements controlled by `HEAD_ANIM_MODE`
 
 Both are 2-word-wide source sprites expanded to 4-word-wide compositing buffers by `lcp_flip_sprite_horizontal`, with bit-reversal via `revert_table[256]` for horizontal mirroring.
 
@@ -278,7 +278,7 @@ The dog uses a separate rendering path via `setDogSprite`:
 - Uses hardware slots 0 and 7 (behind and in front of LCP based on Y-depth comparison)
 - Walk animation: 8-frame cycle from `dog_walk_anim_frames[8]` (SPRITE_DOG_WALK_RIGHT_1–8)
 - Eating animation: 3-frame cycle from `dog_sprite_eating_anim_tab[3]` (SPRITE_DOG_EATING_1–3)
-- Horizontal flip: bit-reversal into `g_dfimb` / `g_dfmab` (32×15 pixel scratch buffers)
+- Horizontal flip: bit-reversal into `dogMirImage` / `dogMirMask` (32×15 pixel scratch buffers)
 
 ### Color Palette
 
@@ -298,9 +298,9 @@ The house background is stored as `HOUSE.SCN`, a compressed 320×200 4-bitplane 
 
 A custom MIDI-like sequencer (`midi_seq_*` functions, 24 total) plays `.sng` song files with dual output:
 
-**External MIDI** (`g_moen`): Standard MIDI messages via the Atari ST ACIA at 0xFFFC04, supporting program changes, channel remapping, and octave transposition.
+**External MIDI** (`midiOutOn`): Standard MIDI messages via the Atari ST ACIA at 0xFFFC04, supporting program changes, channel remapping, and octave transposition.
 
-**Internal PSG** (`psg_out`): YM2149 sound chip with 3 channels, software ADSR envelope processing via the `PSG_ENVELOPE` struct (14 bytes per channel, 3 channels = `psg_envelope[3]`).
+**Internal PSG** (`psgOutOn`): YM2149 sound chip with 3 channels, software ADSR envelope processing via the `PSG_ENVELOPE` struct (14 bytes per channel, 3 channels = `psgEnvelope[3]`).
 
 ### PSG_ENVELOPE Struct (14 bytes)
 

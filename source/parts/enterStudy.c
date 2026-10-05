@@ -17,19 +17,19 @@ short   value;
         short   result;
 
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        g_hamod         = HEAD_ANIM_DISABLED;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        headMode         = HEAD_ANIM_DISABLED;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        if (studyDrO == NO) {
-                lcp_face = FACING_LEFT;
-                lcp_st = STATE_BEND_AND_REACH;
+        if (studyDoorOpen == NO) {
+                resFacing = FACING_LEFT;
+                animState = STATE_BEND_AND_REACH;
                 gameTick(2);
                 drawObject(OBJ_DOOR_STUDY_CLOSED, STUDY_DOOR_X, STUDY_DOOR_Y);
                 gameTick(2);
@@ -38,36 +38,36 @@ short   value;
                 gameTick(2);
                 drawObject(OBJ_DOOR_STUDY_OPEN_2, STUDY_DOOR_X, STUDY_DOOR_Y);
                 gameTick(2);
-                studyDrO = YES;
+                studyDoorOpen = YES;
         }
 
         /* Walk into the study, ducking behind the wide-open door. */
-        lcp_face = FACING_RIGHT;
-        g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
+        resFacing = FACING_RIGHT;
+        spriteLayer[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_DOOR_STUDY_WIDE_OPEN);
-        g_sepex[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_X;
-        g_sepey[g_seslm[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_Y;
+        pendX[spriteSlot[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_X;
+        pendY[spriteSlot[SPRITE_DOOR_STUDY_WIDE_OPEN]] = STUDY_DOOR_Y;
 
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         /* Written as -= on purpose: `x = x - n` compiles differently. */
-        g_wty -= 3;
-        g_wtx -= 10;
-        g_actif = YES;
+        walkYTarget -= 3;
+        walkXTarget -= 10;
+        noPreempt = YES;
         walkToTarget();
-        g_actif = NO;
+        noPreempt = NO;
 
         /* Swap wide-open sprite for ajar and hide the resident. */
-        g_selaf[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_DOOR_STUDY_WIDE_OPEN] = SPRITE_HIDDEN;
         layoutSlots();
-        g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_DOOR_STUDY_AJAR] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_DOOR_STUDY_AJAR);
-        g_sepex[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_X;
-        g_sepey[g_seslm[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_Y;
+        pendX[spriteSlot[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_X;
+        pendY[spriteSlot[SPRITE_DOOR_STUDY_AJAR]] = STUDY_DOOR_Y;
         drawObject(OBJ_DOOR_STUDY_OPEN_1, STUDY_DOOR_X, STUDY_DOOR_Y);
         hideResident();
         gameTick(1);
-        g_selaf[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_DOOR_STUDY_AJAR] = SPRITE_HIDDEN;
         layoutSlots();
 
         /* Continue into the study; value != 0 -> save HYBER.  The

@@ -22,6 +22,6 @@ short   y2;
         rect[2] = x2;
         rect[3] = y2;
         panelBegin();
-        v_bar(vdihnd, rect);
+        v_bar(vdiHandle, rect);
         panelEnd();
 }

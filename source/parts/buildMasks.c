@@ -11,9 +11,9 @@ buildMasks()
         short   index;
 
         for (index = 0; index < 98; index++)
-                maskBody((short *) body_ptr[index],
-                        (short *) body_shp[index], 21);
+                maskBody((short *) bodyFrames[index],
+                        (short *) bodyShapes[index], 21);
         for (index = 0; index < 66; index++)
-                maskHead((short *) pex_ptr[index],
-                        (short *) hd_shp[index], 21);
+                maskHead((short *) pexFrames[index],
+                        (short *) headShapes[index], 21);
 }

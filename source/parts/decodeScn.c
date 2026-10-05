@@ -1,6 +1,6 @@
 /*
  * parts/decodeScn.c -- the .SCN nibble decoder.  Each nibble indexes the
- * 15-entry scn_dic dictionary; nibble 0xf escapes to a literal 16-bit
+ * 15-entry scnDict dictionary; nibble 0xf escapes to a literal 16-bit
  * value in the next four nibbles.  The file handling around it is
  * written out in main.  Included by stx_u1.c; never compiled on its own.
  */
@@ -26,7 +26,7 @@ short   count;
                 flag = (flag != 0) ? 0 : 1;
 
                 if (val != 0xf) {
-                        *out = scn_dic[val];
+                        *out = scnDict[val];
                         out++;
                 } else {
                         val = 0;

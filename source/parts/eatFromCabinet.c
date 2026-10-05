@@ -14,134 +14,134 @@ eatFromCabinet()
         short   eat_cycles;
         short   saved_head_frame;
 
-        pst_arr[0] = STATE_EAT_BITE;
-        pst_arr[1] = STATE_EAT_CHEW;
-        g_actif = YES;
+        scratchArr[0] = STATE_EAT_BITE;
+        scratchArr[1] = STATE_EAT_CHEW;
+        noPreempt = YES;
 
         posToXY(POS_BTM_KITCHEN_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
         openKitchenCab(DOOR_OPEN);
 
-        food_count = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        food_count = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         if (food_count == 0) {
                 gameTick(2);
                 return;
         }
 
-        lcp_st = STATE_REACH_INTO_CABINET;
+        animState = STATE_REACH_INTO_CABINET;
         gameTick(3);
         food_count--;
-        lcp.door_states_and_flags =
+        resident.door_states_and_flags =
                 (food_count << DSF_FOOD_SHIFT) |
-                (lcp.door_states_and_flags & ~DSF_FOOD_MASK);
+                (resident.door_states_and_flags & ~DSF_FOOD_MASK);
         drawFoodCab();
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(2);
 
-        if (lcp.initiative_threshold < rndRng(0, 100))
+        if (resident.initiative_threshold < rndRng(0, 100))
                 openKitchenCab(DOOR_CLOSE);
 
         carryBehind(SPRITE_FOOD_PACKAGE);
         posToXY(POS_BTM_KITCHEN_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TABLE_SETTING);
-        g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
-        g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
+        pendX[spriteSlot[SPRITE_TABLE_SETTING]] = 103;
+        pendY[spriteSlot[SPRITE_TABLE_SETTING]] = 180;
 
         posToXY(POS_BTM_TABLE_RIGHT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
         posToXY(POS_BTM_TABLE_LEFT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_hamod       = HEAD_ANIM_DISABLED;
-        lcp_st            = STATE_STAND_SIDE_VIEW;
-        lcp_face = FACING_RIGHT;
+        headMode       = HEAD_ANIM_DISABLED;
+        animState            = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
         carryInFront(SPRITE_FOOD_PACKAGE);
-        g_hatas = 8;
+        headTarget = 8;
         waitHeadTurn();
 
-        lcp_st        = pst_arr[0];
-        lcp_y += 8;
-        lcp_x += 6;
-        saved_head_frame = g_hsfra;
+        animState        = scratchArr[0];
+        resY += 8;
+        resX += 6;
+        saved_head_frame = headFrame;
         eat_cycles       = rndRng(10, 20);
-        g_hatas = HEAD_ANIM_DISABLED;
-        g_hacur      = HEAD_ANIM_DISABLED;
+        headTarget = HEAD_ANIM_DISABLED;
+        headPose      = HEAD_ANIM_DISABLED;
         gameTick(0);
-        g_lcyof = NO;
-        g_sepex[g_seslm[SPRITE_FOOD_PACKAGE]] += 3;
-        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] -= 4;
+        isCarrying = NO;
+        pendX[spriteSlot[SPRITE_FOOD_PACKAGE]] += 3;
+        pendY[spriteSlot[SPRITE_FOOD_PACKAGE]] -= 4;
         gameTick(0);
 
         while (eat_cycles-- > 0) {
-                lcp_st = pst_arr[1];
+                animState = scratchArr[1];
                 gameTick(2);
-                g_hsfra = 0;
+                headFrame = 0;
                 gameTick(rndRng(1, 2));
-                g_hsfra = saved_head_frame;
-                lcp_st = pst_arr[0];
+                headFrame = saved_head_frame;
+                animState = scratchArr[0];
                 gameTick(0);
 
                 inner = rndRng(4, 8);
                 while (inner-- > 0) {
-                        if (g_trel[0] != ACTION_NONE)
+                        if (eventQueue[0] != ACTION_NONE)
                                 break;
-                        g_hsfra = saved_head_frame;
+                        headFrame = saved_head_frame;
                         gameTick(rndRng(1, 2));
-                        g_hsfra = 1;
+                        headFrame = 1;
                         gameTick(0);
-                        g_hsfra = 2;
+                        headFrame = 2;
                         gameTick(0);
                 }
-                g_hsfra = saved_head_frame;
+                headFrame = saved_head_frame;
         }
 
-        g_lcyof = YES;
-        g_hatas   = 8;
-        g_hacur        = 8;
+        isCarrying = YES;
+        headTarget   = 8;
+        headPose        = 8;
         carryBehind(SPRITE_FOOD_PACKAGE);
-        lcp_y -= 8;
-        lcp_x -= 6;
-        lcp_st = STATE_STAND_SIDE_VIEW;
+        resY -= 8;
+        resX -= 6;
+        animState = STATE_STAND_SIDE_VIEW;
         waitHeadTurn();
         gameTick(0);
 
         posToXY(POS_BTM_TABLE_RIGHT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
-        g_selaf[SPRITE_FOOD_PACKAGE]  = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_FOOD_PACKAGE]  = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
+        isCarrying = NO;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
         gameTick(4);
 
-        lcp.hunger_level   = NEED_SATISFIED;
-        lcp.bathroom_timer = lcp.bathroom_timer_max;
+        resident.hunger_level   = NEED_SATISFIED;
+        resident.bathroom_timer = resident.bathroom_timer_max;
         startRecovery();
-        g_actif = NO;
+        noPreempt = NO;
 }

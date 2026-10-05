@@ -33,16 +33,16 @@ OFF_PROGMAP = 0x1BD     # 15 bytes
 OFF_PTRS = 0x1CC        # 5 longwords (lyric pointers / editor scratch)
 OFF_TITLE = 0x1E0       # 32 bytes
 OFF_TRAILER = 0x200     # 8 bytes
-OFF_STREAM = 0x208      # mi_dbase
+OFF_STREAM = 0x208      # songEvents
 N_VOICES = 15
 
 # ------------------------------------------------- tables lifted from ROM
-# mi_ndt -- note duration table, indexed by bits 0..4 of a note event's
+# durTable -- note duration table, indexed by bits 0..4 of a note event's
 # byte 1.  Unit = 1/24 quarter note.
 NDT = [0, 2, 2, 3, 4, 5, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 64, 72, 96, 128,
        144, 0]
 
-# g_msmk -- key-signature chord masks, indexed by the operand of header
+# keyScaleMask -- key-signature chord masks, indexed by the operand of header
 # command 0x80.  Bit n clear => degree DEGREE[n] is displaced by one semitone
 # (up for index <= 8, down for index > 8).
 MSMK = [0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
@@ -54,7 +54,7 @@ KEY_NAMES = ['C', 'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#',
 
 NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-# Nominal musical value of each mi_ndt entry (24 = quarter note).
+# Nominal musical value of each durTable entry (24 = quarter note).
 DUR_NAMES = {
     2: '1/64', 3: '1/32', 4: '1/16T', 5: '1/32.', 6: '1/16', 8: '1/8T',
     9: '1/16.', 12: '1/8', 16: '1/4T', 18: '1/8.', 24: '1/4', 32: '1/2T',
@@ -199,7 +199,7 @@ class SNG:
 
     # ------------------------------------------------------------ header
     def _parse_header(self):
-        """parseSongHeader: walk header commands from mi_dbase to the first 0x00."""
+        """parseSongHeader: walk header commands from songEvents to the first 0x00."""
         d = self.data
         p = self.stream_start
         if p < len(d) and d[p] == 0:

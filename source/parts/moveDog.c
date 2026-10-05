@@ -21,146 +21,146 @@ moveDog()
         short   depth_layer;
         BOOL16  h_flip;
 
-        g_dwanc++;
-        if (g_dwanc > 7)
-                g_dwanc = 0;
+        dogStepIdx++;
+        if (dogStepIdx > 7)
+                dogStepIdx = 0;
 
-        if (g_dtx == 0 && g_dty == 0)
+        if (dogXTarget == 0 && dogYTarget == 0)
                 return;
 
-        if ((short) (dog_y + 5) <= lcp_y)
+        if ((short) (dogY + 5) <= resY)
                 depth_layer = -1;
         else
                 depth_layer = 1;
-        if (lcp_st == STATE_READ_PAPER_HOLD ||
-            lcp_st == STATE_READ_PAPER_TURN_PAGE)
+        if (animState == STATE_READ_PAPER_HOLD ||
+            animState == STATE_READ_PAPER_TURN_PAGE)
                 depth_layer = 1;
 
-        if (g_dyx == 0 && g_dyy == 0)
+        if (dogXWaypt == 0 && dogYWaypt == 0)
                 dogNextWaypt();
 
         /* Exit stair-mode when reaching a floor boundary. */
-        if (dg_stair != NO) {
+        if (dogOnStairs != NO) {
                 /* The assignment is embedded on purpose, so the index
                    reuses floorOfY's result without a reload. */
-                if (dog_y <= flr_by[(floor_num = floorOfY(g_dyy)) - 1]) {
+                if (dogY <= floorBottomY[(floor_num = floorOfY(dogYWaypt)) - 1]) {
                         if (floor_num == FLOOR_TOP)
-                                dg_stair = NO;
-                        else if (stair_wp[(floor_num - 1) * 2 + 1] <= dog_y)
-                                dg_stair = NO;
+                                dogOnStairs = NO;
+                        else if (stairWaypts[(floor_num - 1) * 2 + 1] <= dogY)
+                                dogOnStairs = NO;
                 }
         }
 
-        if (dog_x == g_dyx && dog_y == g_dyy) {
-                if (dog_x == g_dtx && dog_y == g_dty) {
-                        g_dtx = 0;
-                        g_dty = 0;
-                        g_dyx = 0;
-                        g_dyy = 0;
-                        g_dsid = SPRITE_DOG_LAY_DOWN;
-                        setDogSprite(g_dsid, depth_layer, NO);
+        if (dogX == dogXWaypt && dogY == dogYWaypt) {
+                if (dogX == dogXTarget && dogY == dogYTarget) {
+                        dogXTarget = 0;
+                        dogYTarget = 0;
+                        dogXWaypt = 0;
+                        dogYWaypt = 0;
+                        dogSpriteId = SPRITE_DOG_LAY_DOWN;
+                        setDogSprite(dogSpriteId, depth_layer, NO);
                         return;
                 } else
                         dogNextWaypt();
         }
 
-        g_dsid = g_dwanf[g_dwanc];
+        dogSpriteId = dogWalkSprites[dogStepIdx];
 
-        if (dg_stair == NO) {
-                if (dog_x < g_dyx) {
+        if (dogOnStairs == NO) {
+                if (dogX < dogXWaypt) {
                         h_flip = NO;
-                        dog_x++;
-                } else if (dog_x > g_dyx) {
+                        dogX++;
+                } else if (dogX > dogXWaypt) {
                         h_flip = YES;
-                        dog_x--;
+                        dogX--;
                 }
                 /* An if/else with the store duplicated in both arms,
                    not a ternary, as in the original. */
-                if (dog_x >= g_dyx)
-                        x_distance = dog_x - g_dyx;
+                if (dogX >= dogXWaypt)
+                        x_distance = dogX - dogXWaypt;
                 else
-                        x_distance = g_dyx - dog_x;
+                        x_distance = dogXWaypt - dogX;
                 if (x_distance < 8) {
-                        if (dog_y < g_dyy)
-                                dog_y++;
-                        else if (dog_y > g_dyy)
-                                dog_y--;
+                        if (dogY < dogYWaypt)
+                                dogY++;
+                        else if (dogY > dogYWaypt)
+                                dogY--;
                 } else {
-                        if (dog_y < flr_cy[floorOfY(dog_y) - 1])
-                                dog_y++;
-                        if (flr_cy[floorOfY(dog_y) - 1] < dog_y)
-                                dog_y--;
+                        if (dogY < floorWalkY[floorOfY(dogY) - 1])
+                                dogY++;
+                        if (floorWalkY[floorOfY(dogY) - 1] < dogY)
+                                dogY--;
                 }
         }
 
-        /* The stair patches step dog_x and dog_y in place, and every
+        /* The stair patches step dogX and dogY in place, and every
            anchor is written as a relative step rather than an absolute
            coordinate. */
-        if (dg_stair != NO) {
-                if (dog_y > g_dyy) {
+        if (dogOnStairs != NO) {
+                if (dogY > dogYWaypt) {
                         /* Going up */
-                        if (dog_y == 0xa1) {
+                        if (dogY == 0xa1) {
                                 h_flip = YES;
-                                dog_x -= 17;
-                                dog_y -= 2;
-                        } else if (dog_y == 100) {
+                                dogX -= 17;
+                                dogY -= 2;
+                        } else if (dogY == 100) {
                                 h_flip = NO;
-                                dog_x += 3;
-                                dog_y -= 2;
-                        } else if (dog_y > 161 ||
-                                   (dog_y > 100 && dog_y < 140)) {
+                                dogX += 3;
+                                dogY -= 2;
+                        } else if (dogY > 161 ||
+                                   (dogY > 100 && dogY < 140)) {
                                 h_flip = NO;
-                                dog_y -= 2;
-                        } else if (dog_y < 100) {
+                                dogY -= 2;
+                        } else if (dogY < 100) {
                                 h_flip = NO;
-                                dog_y--;
-                                if (g_dsid != SPRITE_DOG_WLK_R9) {
-                                        dog_x++;
-                                        if (dog_x != g_dyx)
-                                                dog_x++;
+                                dogY--;
+                                if (dogSpriteId != SPRITE_DOG_WLK_R9) {
+                                        dogX++;
+                                        if (dogX != dogXWaypt)
+                                                dogX++;
                                 }
-                        } else if (dog_y < 0xa1) {
+                        } else if (dogY < 0xa1) {
                                 h_flip = YES;
-                                dog_y--;
-                                if (g_dsid != SPRITE_DOG_WLK_R9) {
-                                        dog_x--;
-                                        if (dog_x != g_dyx)
-                                                dog_x--;
+                                dogY--;
+                                if (dogSpriteId != SPRITE_DOG_WLK_R9) {
+                                        dogX--;
+                                        if (dogX != dogXWaypt)
+                                                dogX--;
                                 }
                         }
-                } else if (dog_y < g_dyy) {
+                } else if (dogY < dogYWaypt) {
                         /* Going down */
-                        if (dog_y == 0xa1) {
+                        if (dogY == 0xa1) {
                                 h_flip = NO;
-                                dog_y += 4;
-                                dog_x++;
-                        } else if (dog_y == 100) {
+                                dogY += 4;
+                                dogX++;
+                        } else if (dogY == 100) {
                                 h_flip = NO;
-                                dog_y += 2;
-                                dog_x += 3;
-                        } else if (dog_y > 161 ||
-                                   (dog_y > 100 && dog_y < 132)) {
+                                dogY += 2;
+                                dogX += 3;
+                        } else if (dogY > 161 ||
+                                   (dogY > 100 && dogY < 132)) {
                                 h_flip = NO;
-                                dog_y++;
-                        } else if (dog_y < 100) {
+                                dogY++;
+                        } else if (dogY < 100) {
                                 h_flip = YES;
-                                dog_y++;
-                                if (g_dsid != SPRITE_DOG_WLK_R9) {
-                                        dog_x--;
-                                        if (dog_x != g_dyx)
-                                                dog_x--;
+                                dogY++;
+                                if (dogSpriteId != SPRITE_DOG_WLK_R9) {
+                                        dogX--;
+                                        if (dogX != dogXWaypt)
+                                                dogX--;
                                 }
-                        } else if (dog_y < 0xa1) {
+                        } else if (dogY < 0xa1) {
                                 h_flip = NO;
-                                dog_y++;
-                                if (g_dsid != SPRITE_DOG_WLK_R9) {
-                                        dog_x++;
-                                        if (dog_x != g_dyx)
-                                                dog_x++;
+                                dogY++;
+                                if (dogSpriteId != SPRITE_DOG_WLK_R9) {
+                                        dogX++;
+                                        if (dogX != dogXWaypt)
+                                                dogX++;
                                 }
                         }
                 }
         }
 
-        setDogSprite(g_dsid, depth_layer, h_flip);
+        setDogSprite(dogSpriteId, depth_layer, h_flip);
 }

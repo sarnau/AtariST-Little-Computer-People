@@ -15,56 +15,56 @@ cookMeal()
         short   counter;
 
         posToXY(POS_BTM_KITCHEN_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        lcp_st = STATE_BEND_DOWN;    gameTick(1);
-        lcp_st = STATE_REACH_FORWARD;gameTick(2);
-        lcp_st = STATE_STAND_FACING_SCREEN; gameTick(0);
+        animState = STATE_BEND_DOWN;    gameTick(1);
+        animState = STATE_REACH_FORWARD;gameTick(2);
+        animState = STATE_STAND_FACING_SCREEN; gameTick(0);
 
         carryBehind(SPRITE_COOKING_POT);
         posToXY(POS_BTM_STOVE,
-                              &g_wtx, &g_wty);
-        g_actif = YES;
+                              &walkXTarget, &walkYTarget);
+        noPreempt = YES;
         walkToTarget();
 
-        g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         layoutSlots();
         carryBehind(SPRITE_COOKING_POT);
-        g_lcyof = NO;
-        g_sepex[g_seslm[SPRITE_COOKING_POT]] = 11;
-        g_sepey[g_seslm[SPRITE_COOKING_POT]] = 172;
+        isCarrying = NO;
+        pendX[spriteSlot[SPRITE_COOKING_POT]] = 11;
+        pendY[spriteSlot[SPRITE_COOKING_POT]] = 172;
 
-        lcp_face = FACING_LEFT;
-        lcp_st            = STATE_BEND_AND_REACH;
+        resFacing = FACING_LEFT;
+        animState            = STATE_BEND_AND_REACH;
 
         /* 30..50 tick cooking animation, rotating stove frames. */
         counter = rndRng(30, 50);
         while (counter-- != 0) {
-                drawObject(g_obisa[rndRng(0, 2)], STOVE_X, STOVE_Y);
+                drawObject(stoveFrames[rndRng(0, 2)], STOVE_X, STOVE_Y);
                 gameTick(1);
         }
         drawObject(OBJ_STOVE_OFF, STOVE_X, STOVE_Y);
 
-        g_selaf[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_COOKING_POT] = SPRITE_HIDDEN;
         layoutSlots();
         carryBehind(SPRITE_COOKED_MEAL);
 
         /* Back to cabinet, then chain into eatFromCabinet to eat. */
         posToXY(POS_BTM_KITCHEN_CABINET,
-                              &g_wtx, &g_wty);
-        g_actif = YES;
+                              &walkXTarget, &walkYTarget);
+        noPreempt = YES;
         walkToTarget();
-        g_selaf[SPRITE_COOKED_MEAL] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_COOKED_MEAL] = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
+        isCarrying = NO;
         gameTick(0);
         eatFromCabinet();
-        g_actif = NO;
+        noPreempt = NO;
 }

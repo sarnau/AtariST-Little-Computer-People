@@ -21,7 +21,7 @@
 # `verify` regenerates its own expectation list first, with
 # tools/gen_ghidra_verify.py.  It used to read a hand-written file in
 # $HOME that nothing kept in step with the port, so a rename made this
-# report a false mismatch (dg_petok -> pat_ok did exactly that) with
+# report a false mismatch (dg_petok -> patAllowed did exactly that) with
 # Ghidra being the correct side.  Nothing to edit by hand any more.
 set -euo pipefail
 

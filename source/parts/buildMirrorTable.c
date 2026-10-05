@@ -15,12 +15,12 @@ buildMirrorTable()
         register short  acc;
         short *         p;
 
-        p = rev_tab;
+        p = mirrorTable;
         for (val = 0; val < 256; val++) {
                 acc = 0;
                 for (bit = 0; bit < 8; bit++) {
-                        if (val & rv_msk[bit])
-                                acc |= rv_val[bit];
+                        if (val & mirrorSrcBit[bit])
+                                acc |= mirrorDstBit[bit];
                 }
                 *p = acc;
                 p++;

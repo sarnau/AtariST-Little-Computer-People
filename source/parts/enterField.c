@@ -7,7 +7,7 @@
    `tmpl` is both the prompt drawn into the field and the character
    restored by backspace, so every third column (the separator in
    MM/DD/YY and HH:MM) is skipped over rather than typed into.  The
-   digits land in in_str as values, not characters. */
+   digits land in inputLine as values, not characters. */
 
 void
 enterField(x, y, tmpl, len, color)
@@ -39,7 +39,7 @@ short   color;
                         continue;
                 eraseChar((i << 3) + x, y, 15);
                 printChar(ch, (i << 3) + x, y, color);
-                *(i + in_str) = ch - '0';
+                *(i + inputLine) = ch - '0';
                 i++;
                 if (i % 3 == 2)
                         i++;

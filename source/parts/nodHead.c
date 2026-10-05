@@ -3,36 +3,36 @@
  */
 
 /* nodHead: nod the head.  The resident turns side-on, his head is
-   settled at position 8, then head animation is suspended (g_hacur =
-   g_hatas = -1) so three head frames can be forced through g_hsfra in
+   settled at position 8, then head animation is suspended (headPose =
+   headTarget = -1) so three head frames can be forced through headFrame in
    turn.  The saved frame and head position 8 are restored afterwards. */
 void
 nodHead()
 {
         short   saved_frame;
 
-        pst_arr[0]  = STATE_WALK_FRAME_3_STEP;
-        pst_arr[1]  = STATE_WALK_FRAME_4;
-        pst_arr[2]  = STATE_WALK_FRAME_5;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
-        g_hamod         = HEAD_ANIM_DISABLED;
+        scratchArr[0]  = STATE_WALK_FRAME_3_STEP;
+        scratchArr[1]  = STATE_WALK_FRAME_4;
+        scratchArr[2]  = STATE_WALK_FRAME_5;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
+        headMode         = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
-        saved_frame            = g_hsfra;
-        g_hatas = HEAD_ANIM_DISABLED;
-        g_hacur      = HEAD_ANIM_DISABLED;
+        saved_frame            = headFrame;
+        headTarget = HEAD_ANIM_DISABLED;
+        headPose      = HEAD_ANIM_DISABLED;
 
-        g_hsfra = pst_arr[0];
+        headFrame = scratchArr[0];
         gameTick(1);
-        g_hsfra = pst_arr[1];
+        headFrame = scratchArr[1];
         gameTick(1);
-        g_hsfra = pst_arr[2];
+        headFrame = scratchArr[2];
         gameTick(2);
 
-        g_hatas = 8;
-        g_hacur      = 8;
-        g_hsfra      = saved_frame;
+        headTarget = 8;
+        headPose      = 8;
+        headFrame      = saved_frame;
         gameTick(0);
 }

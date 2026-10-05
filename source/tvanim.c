@@ -46,7 +46,7 @@ tvBounce()
         limit  = Random() & 0xff;
         limit |= 0x40;
         for (frame = 0; frame < limit; frame++) {
-                vsl_color(vdihnd, (int) ((Random() & 0xf) | 1));
+                vsl_color(vdiHandle, (int) ((Random() & 0xf) | 1));
 
                 pts[0] = xpos + dx;
                 pts[1] = ypos + dy;
@@ -56,7 +56,7 @@ tvBounce()
                 ypos   = pts[1];
 
                 beginDraw();
-                v_pline(vdihnd, 2, pts);
+                v_pline(vdiHandle, 2, pts);
                 endDraw();
                 gameTick(0);
 

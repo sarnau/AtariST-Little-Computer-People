@@ -12,8 +12,8 @@
  *   slot 5-6 general objects / pet-hand animation
  *   slot 7   dog (in-front-of-LCP layer)
  *
- * All positioning is anchored to the resident's feet (lcp_x, lcp_y);
- * per-frame Y offsets come from body_yof[].
+ * All positioning is anchored to the resident's feet (resX, resY);
+ * per-frame Y offsets come from bodyYOffset[].
  *
  * Most of the functions live in parts/ and are included by the unity
  * units at their places in the binary.
@@ -57,90 +57,90 @@ layoutSlots()
         short   index;
         short   i;
 
-        if (g_selaf[SPRITE_LCP_BODY_ID] == SPRITE_HIDDEN)
-                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
-        if (g_selaf[SPRITE_LCP_HEAD_ID] == SPRITE_HIDDEN)
-                g_seaim[g_seslm[SPRITE_LCP_BODY_ID]] = NULL;
+        if (spriteLayer[SPRITE_LCP_BODY_ID] == SPRITE_HIDDEN)
+                drawnImage[spriteSlot[SPRITE_LCP_BODY_ID]] = NULL;
+        if (spriteLayer[SPRITE_LCP_HEAD_ID] == SPRITE_HIDDEN)
+                drawnImage[spriteSlot[SPRITE_LCP_BODY_ID]] = NULL;
 
         for (spriteID = HW_SLOT_LCP_BODY; spriteID < SPRITE_SLOTS;
              spriteID++) {
-                if (g_selaf[spriteID] == SPRITE_HIDDEN) {
-                        g_seslm[spriteID] = HW_SLOT_NONE;
+                if (spriteLayer[spriteID] == SPRITE_HIDDEN) {
+                        spriteSlot[spriteID] = HW_SLOT_NONE;
                         continue;
                 }
 
-                if (g_selaf[spriteID] == SPRITE_IN_FRONT) {
-                        i = g_seslm[spriteID];
-                        g_seslm[spriteID] = HW_SLOT_FRONT_PRIMARY;
+                if (spriteLayer[spriteID] == SPRITE_IN_FRONT) {
+                        i = spriteSlot[spriteID];
+                        spriteSlot[spriteID] = HW_SLOT_FRONT_PRIMARY;
 
                         for (index = 3; index < spriteID; index++) {
-                                if (g_seslm[index] == HW_SLOT_FRONT_PRIMARY) {
-                                        g_seslm[spriteID] = HW_SLOT_FRONT_OVERFLOW;
+                                if (spriteSlot[index] == HW_SLOT_FRONT_PRIMARY) {
+                                        spriteSlot[spriteID] = HW_SLOT_FRONT_OVERFLOW;
                                         break;
                                 }
                         }
 
                         for (index = spriteID + 1; index < SPRITE_SLOTS;
                              index++) {
-                                if (g_seslm[index] ==
-                                    g_seslm[spriteID]) {
-                                        g_seslm[index] = HW_SLOT_FRONT_OVERFLOW;
-                                        g_sepex[HW_SLOT_FRONT_OVERFLOW] = g_sepex[HW_SLOT_FRONT_PRIMARY];
-                                        g_sepey[HW_SLOT_FRONT_OVERFLOW] = g_sepey[HW_SLOT_FRONT_PRIMARY];
-                                        g_seaim[HW_SLOT_FRONT_OVERFLOW] = g_seaim[HW_SLOT_FRONT_PRIMARY];
-                                        g_seams[HW_SLOT_FRONT_OVERFLOW] = g_seams[HW_SLOT_FRONT_PRIMARY];
-                                        g_seach[HW_SLOT_FRONT_OVERFLOW] = g_seach[HW_SLOT_FRONT_PRIMARY];
-                                        g_seacw[HW_SLOT_FRONT_OVERFLOW] = g_seacw[HW_SLOT_FRONT_PRIMARY];
+                                if (spriteSlot[index] ==
+                                    spriteSlot[spriteID]) {
+                                        spriteSlot[index] = HW_SLOT_FRONT_OVERFLOW;
+                                        pendX[HW_SLOT_FRONT_OVERFLOW] = pendX[HW_SLOT_FRONT_PRIMARY];
+                                        pendY[HW_SLOT_FRONT_OVERFLOW] = pendY[HW_SLOT_FRONT_PRIMARY];
+                                        drawnImage[HW_SLOT_FRONT_OVERFLOW] = drawnImage[HW_SLOT_FRONT_PRIMARY];
+                                        drawnMask[HW_SLOT_FRONT_OVERFLOW] = drawnMask[HW_SLOT_FRONT_PRIMARY];
+                                        drawnHeight[HW_SLOT_FRONT_OVERFLOW] = drawnHeight[HW_SLOT_FRONT_PRIMARY];
+                                        drawnWidth[HW_SLOT_FRONT_OVERFLOW] = drawnWidth[HW_SLOT_FRONT_PRIMARY];
                                 }
                         }
 
                         if (i < SPRITE_HW_SLOTS) {
-                                g_sepex[g_seslm[spriteID]]  = g_sepex[i];
-                                g_sepey[g_seslm[spriteID]]  = g_sepey[i];
-                                g_seaim[g_seslm[spriteID]]  = g_seaim[i];
-                                g_seams[g_seslm[spriteID]]  = g_seams[i];
-                                g_seach[g_seslm[spriteID]]  = g_seach[i];
-                                g_seacw[g_seslm[spriteID]]  = g_seacw[i];
-                                if (g_seslm[spriteID] != i)
-                                        g_seaim[i] = NULL;
+                                pendX[spriteSlot[spriteID]]  = pendX[i];
+                                pendY[spriteSlot[spriteID]]  = pendY[i];
+                                drawnImage[spriteSlot[spriteID]]  = drawnImage[i];
+                                drawnMask[spriteSlot[spriteID]]  = drawnMask[i];
+                                drawnHeight[spriteSlot[spriteID]]  = drawnHeight[i];
+                                drawnWidth[spriteSlot[spriteID]]  = drawnWidth[i];
+                                if (spriteSlot[spriteID] != i)
+                                        drawnImage[i] = NULL;
                         }
                         continue;
                 }
 
-                if (g_selaf[spriteID] == SPRITE_BEHIND_LCP) {
-                        i = g_seslm[spriteID];
-                        g_seslm[spriteID] = HW_SLOT_BEHIND_PRIMARY;
+                if (spriteLayer[spriteID] == SPRITE_BEHIND_LCP) {
+                        i = spriteSlot[spriteID];
+                        spriteSlot[spriteID] = HW_SLOT_BEHIND_PRIMARY;
 
                         for (index = 3; index < spriteID; index++) {
-                                if (g_seslm[index] == HW_SLOT_BEHIND_PRIMARY) {
-                                        g_seslm[spriteID] = HW_SLOT_BEHIND_OVERFLOW;
+                                if (spriteSlot[index] == HW_SLOT_BEHIND_PRIMARY) {
+                                        spriteSlot[spriteID] = HW_SLOT_BEHIND_OVERFLOW;
                                         break;
                                 }
                         }
 
                         for (index = spriteID + 1; index < SPRITE_SLOTS;
                              index++) {
-                                if (g_seslm[index] ==
-                                    g_seslm[spriteID]) {
-                                        g_seslm[index] = HW_SLOT_BEHIND_OVERFLOW;
-                                        g_sepex[HW_SLOT_BEHIND_OVERFLOW] = g_sepex[HW_SLOT_BEHIND_PRIMARY];
-                                        g_sepey[HW_SLOT_BEHIND_OVERFLOW] = g_sepey[HW_SLOT_BEHIND_PRIMARY];
-                                        g_seaim[HW_SLOT_BEHIND_OVERFLOW] = g_seaim[HW_SLOT_BEHIND_PRIMARY];
-                                        g_seams[HW_SLOT_BEHIND_OVERFLOW] = g_seams[HW_SLOT_BEHIND_PRIMARY];
-                                        g_seach[HW_SLOT_BEHIND_OVERFLOW] = g_seach[HW_SLOT_BEHIND_PRIMARY];
-                                        g_seacw[HW_SLOT_BEHIND_OVERFLOW] = g_seacw[HW_SLOT_BEHIND_PRIMARY];
+                                if (spriteSlot[index] ==
+                                    spriteSlot[spriteID]) {
+                                        spriteSlot[index] = HW_SLOT_BEHIND_OVERFLOW;
+                                        pendX[HW_SLOT_BEHIND_OVERFLOW] = pendX[HW_SLOT_BEHIND_PRIMARY];
+                                        pendY[HW_SLOT_BEHIND_OVERFLOW] = pendY[HW_SLOT_BEHIND_PRIMARY];
+                                        drawnImage[HW_SLOT_BEHIND_OVERFLOW] = drawnImage[HW_SLOT_BEHIND_PRIMARY];
+                                        drawnMask[HW_SLOT_BEHIND_OVERFLOW] = drawnMask[HW_SLOT_BEHIND_PRIMARY];
+                                        drawnHeight[HW_SLOT_BEHIND_OVERFLOW] = drawnHeight[HW_SLOT_BEHIND_PRIMARY];
+                                        drawnWidth[HW_SLOT_BEHIND_OVERFLOW] = drawnWidth[HW_SLOT_BEHIND_PRIMARY];
                                 }
                         }
 
                         if (i < SPRITE_HW_SLOTS) {
-                                g_sepex[g_seslm[spriteID]]  = g_sepex[i];
-                                g_sepey[g_seslm[spriteID]]  = g_sepey[i];
-                                g_seaim[g_seslm[spriteID]]  = g_seaim[i];
-                                g_seams[g_seslm[spriteID]]  = g_seams[i];
-                                g_seach[g_seslm[spriteID]]  = g_seach[i];
-                                g_seacw[g_seslm[spriteID]]  = g_seacw[i];
-                                if (g_seslm[spriteID] != i)
-                                        g_seaim[i] = NULL;
+                                pendX[spriteSlot[spriteID]]  = pendX[i];
+                                pendY[spriteSlot[spriteID]]  = pendY[i];
+                                drawnImage[spriteSlot[spriteID]]  = drawnImage[i];
+                                drawnMask[spriteSlot[spriteID]]  = drawnMask[i];
+                                drawnHeight[spriteSlot[spriteID]]  = drawnHeight[i];
+                                drawnWidth[spriteSlot[spriteID]]  = drawnWidth[i];
+                                if (spriteSlot[spriteID] != i)
+                                        drawnImage[i] = NULL;
                         }
                 }
         }
@@ -150,17 +150,17 @@ layoutSlots()
         for (spriteID = HW_SLOT_BEHIND_OVERFLOW; spriteID < HW_SLOT_DOG_FRONT;
              spriteID++) {
                 for (index = 0; index < SPRITE_SLOTS; index++)
-                        if (g_seslm[index] == spriteID)
+                        if (spriteSlot[index] == spriteID)
                                 break;
                 if (index == SPRITE_SLOTS)
-                        g_seaim[spriteID] = NULL;
+                        drawnImage[spriteID] = NULL;
         }
 }
 
 /* updateHead -> parts/updateHead.c, included by stx_u3.c after gameTick. */
 
 /* initSlots: populate 8 per-slot MFDB pairs, wire compositor MFDB
-   (g_srmfd) at scrbufA-aligned, call deadHook.  Zeroes last_hz so
+   (frameMfdb) at altScreen-aligned, call deadHook.  Zeroes last_hz so
    the first renderFrame frame-gate sees 0->N delta and proceeds. */
 
 
@@ -171,19 +171,19 @@ initSlots()
 
         last_hz = 0;
         for (i = 0; i < SPRITE_HW_SLOTS; i++) {
-                initMfdb(0L, &g_semfi[i],
-                                 (void *) g_seaim[i],
-                                 g_seacw[i], g_seach[i]);
-                initMfdb(0L, &g_semfm[i],
-                                 (void *) g_seams[i],
-                                 g_seacw[i], g_seach[i]);
+                initMfdb(0L, &slotImgMfdb[i],
+                                 (void *) drawnImage[i],
+                                 drawnWidth[i], drawnHeight[i]);
+                initMfdb(0L, &slotMaskMfdb[i],
+                                 (void *) drawnMask[i],
+                                 drawnWidth[i], drawnHeight[i]);
         }
         /* No temporary on purpose: the buffer base is aligned to 512
            bytes right in the argument, and both extents are 16-bit
            products. */
-        initMfdb(0L, &g_srmfd,
-                (void *) (((long) scrbufA + 0x1FFL) & ~511L),
-                scr_scal * 320, scr_scal * 200);
+        initMfdb(0L, &frameMfdb,
+                (void *) (((long) altScreen + 0x1FFL) & ~511L),
+                screenScale * 320, screenScale * 200);
         deadHook();
 }
 

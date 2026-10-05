@@ -10,7 +10,7 @@ the region is hand assembly rather than compiled C.  The same run found
 the MIDI sequencer descending from Music Studio's player -- buildNoteMap
 73.8% identical, sendMidiEvent 44.2%, the lineage the shared .SNG format had
 only implied -- and ZERO in startSfx, which is what closed Music Studio
-as a source of evidence about g_sfDoB.
+as a source of evidence about sfxBuffer.
 
 That comparison was worth keeping, hence this.
 

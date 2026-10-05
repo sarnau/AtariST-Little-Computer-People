@@ -5,36 +5,36 @@
 
 /* openFrontDoor: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the front door
    while the resident stands at it.  Opening reaches out, draws the
-   door ajar then wide with the door-open sound and sets lcp_frdO;
+   door ajar then wide with the door-open sound and sets frontDoorOpen;
    closing draws it ajar then shut with the door-close sound and
-   clears lcp_frdO.  A request matching the current state returns
+   clears frontDoorOpen.  A request matching the current state returns
    immediately. */
 void
 openFrontDoor(door_st)
 short   door_st;
 {
         if (door_st == 0) {
-                if (lcp_frdO != NO)
+                if (frontDoorOpen != NO)
                         return;
-                lcp_face = FACING_RIGHT;
-                lcp_st = STATE_BEND_AND_REACH;
+                resFacing = FACING_RIGHT;
+                animState = STATE_BEND_AND_REACH;
                 gameTick(2);
                 drawObject(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);
                 sfxSelect(SFX_DOOR_OPEN, 6L);
                 gameTick(2);
                 drawObject(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
                 gameTick(2);
-                lcp_frdO = YES;
+                frontDoorOpen = YES;
         } else if (door_st != 0) {      /* redundant re-test, kept on purpose */
-                if (lcp_frdO == NO)
+                if (frontDoorOpen == NO)
                         return;
                 drawObject(OBJ_DOOR_FRONT_OPEN_1, FRONT_DOOR_X, FRONT_DOOR_Y);
                 gameTick(2);
                 drawObject(OBJ_DOOR_FRONT_CLOSED, FRONT_DOOR_X, FRONT_DOOR_Y);
                 sfxSelect(SFX_DOOR_CLOSE, 6L);
                 gameTick(2);
-                lcp_frdO = NO;
+                frontDoorOpen = NO;
         }
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 }

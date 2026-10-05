@@ -3,7 +3,7 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
-extern short g_trel[];
+extern short eventQueue[];
 
 extern void queueEvent();
 extern short nextEvent();

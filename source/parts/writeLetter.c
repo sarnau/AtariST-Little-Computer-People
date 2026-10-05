@@ -5,12 +5,12 @@
 /* ACTION_WRITE_LETTER: the resident types a letter to the player.
    He stops a playing record (stopRecord), fetches paper from the filing
    cabinet, goes through the study door and sits at the typewriter.
-   Keyboard input is blocked (no_keyin), the paper is painted into the
+   Keyboard input is blocked (keysBlocked), the paper is painted into the
    top panel (fillPanel), and the LETTER.TXT templates are loaded into a
    Malloc'd buffer.  The letter is the date, "Dear <owner>,", 2..4
    paragraphs from the four sections in shuffled order -- the line
    variants chosen by sickness or happiness -- a random sign-off from
-   g_ltg and his name.  After a 60-tick pause everything is freed, the
+   letterSignoffs and his name.  After a 60-tick pause everything is freed, the
    typing sprites hidden and he walks back out through the door. */
 void
 writeLetter()
@@ -30,91 +30,91 @@ writeLetter()
         short   full_year;
         short   section_order[4];
 
-        if (lcp_recP != NO)
+        if (recordPlaying != NO)
                 stopRecord();
 
         posToXY(POS_TOP_FILING_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget())
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
         rummageCabinet();
-        if (rndRng(0, 100) > lcp.initiative_threshold)
+        if (rndRng(0, 100) > resident.initiative_threshold)
                 closeFilingCab();
 
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget())
                 return;
 
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
-        g_wtx -= 10;
-        g_wty += 3;
+                              &walkXTarget, &walkYTarget);
+        walkXTarget -= 10;
+        walkYTarget += 3;
         if (walkToTarget())
                 return;
 
-        g_actif = YES;
+        noPreempt = YES;
 
-        g_selaf[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TYPEWRITER] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPEWRITER);
-        g_sepex[g_seslm[SPRITE_TYPEWRITER]] = 201;
-        g_sepey[g_seslm[SPRITE_TYPEWRITER]] =  51;
-        g_selaf[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
+        pendX[spriteSlot[SPRITE_TYPEWRITER]] = 201;
+        pendY[spriteSlot[SPRITE_TYPEWRITER]] =  51;
+        spriteLayer[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPING_2);
-        g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
-        g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
+        pendX[spriteSlot[SPRITE_TYPING_2]] = 211;
+        pendY[spriteSlot[SPRITE_TYPING_2]] =  44;
 
         posToXY(POS_TOP_DESK_CHAIR,
-                              &g_wtx, &g_wty);
-        g_wty -= 4;
-        g_wtx -= 14;
+                              &walkXTarget, &walkYTarget);
+        walkYTarget -= 4;
+        walkXTarget -= 14;
         walkToTarget();
 
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        lcp_face   = FACING_RIGHT;
-        g_hatas = 8;
+        animState              = STATE_STAND_SIDE_VIEW;
+        resFacing   = FACING_RIGHT;
+        headTarget = 8;
         waitHeadTurn();
 
-        lcp_x += 5;
-        lcp_y += 6;
-        lcp_st = STATE_WRITE_AT_DESK;
+        resX += 5;
+        resY += 6;
+        animState = STATE_WRITE_AT_DESK;
         gameTick(1);
 
-        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_2] = SPRITE_HIDDEN;
         layoutSlots();
-        g_selaf[SPRITE_TYPING_1] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TYPING_1] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPING_1);
-        g_sepex[g_seslm[SPRITE_TYPING_1]] = 211;
-        g_sepey[g_seslm[SPRITE_TYPING_1]] =  44;
+        pendX[spriteSlot[SPRITE_TYPING_1]] = 211;
+        pendY[spriteSlot[SPRITE_TYPING_1]] =  44;
 
-        g_hamod         = HEAD_ANIM_READING;
-        no_keyin = YES;
+        headMode         = HEAD_ANIM_READING;
+        keysBlocked = YES;
         fillPanel(0x1b);
 
-        g_lttx = (char *) Malloc(0x2900L);
-        if (g_lttx == (char *) 0)
+        letterText = (char *) Malloc(0x2900L);
+        if (letterText == (char *) 0)
                 outOfMemory();
         loadLetterText();
 
-        tx_sctm = 9999;
+        textTimer = 9999;
         gameTick(2);
 
         full_year = t_year + 1900;
-        sprintf(in_str, "%s %d, %4d",
-                mo_names[t_mon],
+        sprintf(inputLine, "%s %d, %4d",
+                monthNames[t_mon],
                 t_day + 1, full_year);
-        g_cdibp = 0;
-        typeString(in_str, -12);
+        typedCursor = 0;
+        typeString(inputLine, -12);
         typeChar('\r');
 
-        sprintf(in_str, "Dear %s,", lcp.owner_name);
-        typeString(in_str, 0);
+        sprintf(inputLine, "Dear %s,", resident.owner_name);
+        typeString(inputLine, 0);
         typeChar('\r');
 
         /* Shuffle the 4 section indices via 16 random swaps. */
@@ -135,21 +135,21 @@ writeLetter()
                 template_index = section_id * 0x60;
                 if (section_id == 3)
                         template_index += rndRng(0, 5) * 0xc;
-                else if (lcp.sickness_level > SICKNESS_HEALTHY)
+                else if (resident.sickness_level > SICKNESS_HEALTHY)
                         template_index += rndRng(0, 1) * 0x30 + 0x24;
                 else
                         template_index += rndRng(0, 1) * 0x30 +
-                                          lcp.happiness * 0xc;
+                                          resident.happiness * 0xc;
 
                 /* Opening line -- indent 5 spaces on the first
                    paragraph only; the whole call is duplicated. */
                 if (i == 0)
                         cursor_y = typeString(
-                                g_ltlp[rndRng(0, 3) + template_index],
+                                letterLines[rndRng(0, 3) + template_index],
                                 -5);
                 else
                         cursor_y = typeString(
-                                g_ltlp[rndRng(0, 3) + template_index],
+                                letterLines[rndRng(0, 3) + template_index],
                                 2);
 
                 /* Middle line */
@@ -158,7 +158,7 @@ writeLetter()
                 else
                         line_spacing = 1;
                 cursor_y = typeString(
-                        g_ltlp[rndRng(0, 3) + template_index + 4],
+                        letterLines[rndRng(0, 3) + template_index + 4],
                         line_spacing);
 
                 /* Ending line */
@@ -167,56 +167,56 @@ writeLetter()
                 else
                         line_spacing = 1;
                 typeString(
-                        g_ltlp[rndRng(0, 3) + template_index + 8],
+                        letterLines[rndRng(0, 3) + template_index + 8],
                         line_spacing);
         }
 
         /* Sign-off. */
         typeChar('\r');
-        typeString(g_ltg[rndRng(0, 3)], -8);
+        typeString(letterSignoffs[rndRng(0, 3)], -8);
         typeChar('\r');
 
-        sprintf(in_str, "%s", lcp.character_name);
-        typeString(in_str, -10);
+        sprintf(inputLine, "%s", resident.character_name);
+        typeString(inputLine, -10);
         gameTick(60);
 
         /* Cleanup: free buffer, hide typing sprites, walk out. */
-        tx_sctm        = 0;
-        g_cdibp = 0;
-        no_keyin   = NO;
-        Mfree(g_lttx);
+        textTimer        = 0;
+        typedCursor = 0;
+        keysBlocked   = NO;
+        Mfree(letterText);
 
-        g_selaf[SPRITE_TYPING_1] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_2] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_3] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_4] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_1] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_2] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_3] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_4] = SPRITE_HIDDEN;
         layoutSlots();
-        g_selaf[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TYPING_2] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TYPING_2);
-        g_sepex[g_seslm[SPRITE_TYPING_2]] = 211;
-        g_sepey[g_seslm[SPRITE_TYPING_2]] =  44;
+        pendX[spriteSlot[SPRITE_TYPING_2]] = 211;
+        pendY[spriteSlot[SPRITE_TYPING_2]] =  44;
         gameTick(4);
 
-        lcp_st      = STATE_STAND_SIDE_VIEW;
-        g_hamod = HEAD_ANIM_DISABLED;
-        lcp_y -= 6;
+        animState      = STATE_STAND_SIDE_VIEW;
+        headMode = HEAD_ANIM_DISABLED;
+        resY -= 6;
         gameTick(0);
-        g_actif = YES;
+        noPreempt = YES;
 
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
-        g_wtx -= 10;
-        g_wty += 3;
+                              &walkXTarget, &walkYTarget);
+        walkXTarget -= 10;
+        walkYTarget += 3;
         walkToTarget();
         posToXY(POS_TOP_STUDY_DOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_selaf[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_1]   = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_2]   = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_3]   = SPRITE_HIDDEN;
-        g_selaf[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPEWRITER] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_1]   = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_2]   = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_3]   = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TYPING_4]   = SPRITE_HIDDEN;
         layoutSlots();
-        g_actif = NO;
+        noPreempt = NO;
 }

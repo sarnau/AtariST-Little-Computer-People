@@ -4,12 +4,12 @@
  * short branch.
  */
 
-/* Tick until the head animation reaches its target (g_hacur ==
-   g_hatas). */
+/* Tick until the head animation reaches its target (headPose ==
+   headTarget). */
 
 void
 waitHeadTurn()
 {
-        while (g_hacur != g_hatas)
+        while (headPose != headTarget)
                 gameTick(0);
 }

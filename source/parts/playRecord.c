@@ -2,7 +2,7 @@
  * parts/playRecord.c -- included by stx_u2.c; never compiled on its own.
  */
 /* playRecord: pick a random .sng file and start it playing.
-   Uses lcp_food as a modulo index (the 1985 code reused the field). */
+   Uses foodSupply as a modulo index (the 1985 code reused the field). */
 
 void
 playRecord()
@@ -13,19 +13,19 @@ playRecord()
         short   index;
         char *  filename;
 
-        if (lcp_recP != NO)
+        if (recordPlaying != NO)
                 return;
 
         posToXY(POS_TOP_DANCE_FLOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
         gameTick(2);
         recordStoop();
-        lcp_recP = YES;
+        recordPlaying = YES;
 
-        tmp = rndRng(0, lcp_food - 1);
+        tmp = rndRng(0, foodSupply - 1);
         index = tmp + 1;
         Fsfirst("*.sng", F_NORMAL);
         while (--index != 0)

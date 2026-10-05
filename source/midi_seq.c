@@ -21,7 +21,7 @@
  * to us; the layout below is offsets *inside the stripped body*, i.e.
  * inside the buffer playSongFile allocates.
  *
- * Stripped-body layout (relative to mi_dbase = start + 0x1FE):
+ * Stripped-body layout (relative to songEvents = start + 0x1FE):
  *
  *   body + 0x000..0x1A3    Music Studio config header:
  *                            +0x00..0x05  section tag "Blocks"
@@ -32,7 +32,7 @@
  *   body + 0x1A4..0x1FD    90-byte channel + program-change map
  *                          (15 logical channels x 2 bytes each; parsed
  *                          by unpackChanMap at p - 90)
- *   body + 0x1FE           MIDI event stream (this is mi_dbase)
+ *   body + 0x1FE           MIDI event stream (this is songEvents)
  *
  * The order of the functions and parts/ includes in this file is the
  * original object's function order; keep it.
@@ -52,8 +52,8 @@
 
 /* startSong: song-lifecycle entry point.
    If a song is playing: signal SEQ_PHASE_SONG_ENDING and return
-   without starting the new one; caller spins until mi_play is false.
-   Idle: position mi_dbase at buffer+0x1FE (event stream), parse header,
+   without starting the new one; caller spins until songPlaying is false.
+   Idle: position songEvents at buffer+0x1FE (event stream), parse header,
    reset programs, skip 0x00/0xFF padding, store playback bounds, kick. */
 
 void
@@ -62,71 +62,71 @@ unsigned char * song;
 long            maxPos;
 {
 
-        if (mi_play != NO) {
-                g_mspha = SEQ_PHASE_SONG_ENDING;
+        if (songPlaying != NO) {
+                seqPhase = SEQ_PHASE_SONG_ENDING;
                 return;
         }
 
-        parseSongHeader(mi_dbase = song + 0x1fe);
+        parseSongHeader(songEvents = song + 0x1fe);
         resetPrograms();
-        initSongState(skipTextField(mi_dbase), maxPos);
+        initSongState(skipTextField(songEvents), maxPos);
         armSequencer();
-        mi_play = YES;
+        songPlaying = YES;
 }
 
 /* initSongState: stash read cursor + end-of-song marker; init per-song
-   driver state; publish ticks-per-beat via mi_tpb.
-   Envelope base = mi_dbase - 0x168 (360 bytes, ADSR block). */
+   driver state; publish ticks-per-beat via beatTicks.
+   Envelope base = songEvents - 0x168 (360 bytes, ADSR block). */
 
 void
 initSongState(curPos, maxPos)
 unsigned char * curPos;
 long            maxPos;
 {
-        mi_sqpos     = curPos;
-        /* mi_seqE is the end-of-sequence pointer, and -1 is how "no
-           limit" is spelled -- every caller passes g_momap, which
+        songPos     = curPos;
+        /* songEndPtr is the end-of-sequence pointer, and -1 is how "no
+           limit" is spelled -- every caller passes songMaxPos, which
            is 0. */
         if (maxPos == 0)
-                mi_seqE = (unsigned char *) -1L;
+                songEndPtr = (unsigned char *) -1L;
         else
-                mi_seqE = (unsigned char *) maxPos;
+                songEndPtr = (unsigned char *) maxPos;
 
-        mi_env = (long) (mi_dbase - 0x168);
-        mi_vel           = mi_dvel;
-        psg_cvol      = psg_dvol;
-        mi_evi    = 0;
-        mi_evcn   = 9;
-        mi_tpb          = g_mtspb;
+        songAdsr = (long) (songEvents - 0x168);
+        noteVel           = defVelocity;
+        noteVolume      = defPsgVol;
+        queueLen    = 0;
+        loopTop   = 9;
+        beatTicks          = ticksPerBeat;
 }
 
 /* armSequencer: init timer counters + arm sequencer.
    All 4 tick counters seeded 100 (~500 ms grace before first event).
-   mi_dwrm=0 selects XBIOS Midiws path (not direct ACIA). */
+   seqBusy=0 selects XBIOS Midiws path (not direct ACIA). */
 
 void
 armSequencer()
 {
         /* Chained assignments on purpose: separate statements
            compile differently. */
-        mi_dwrm = g_mtcou = 0;
-        mi_lpTk = mi_nxTk = mi_nlp0 = g_mtpre = g_mtdiv = 100;
-        g_mspha = g_msmsa = YES;
+        seqBusy = timerTicks = 0;
+        lastExpTick = nextEvTick = ticksToNext = seqCountdown = envDivider = 100;
+        seqPhase = songActive = YES;
 }
 
 
-/* pushLoop: push loop marker {return_addr, count-1} on mi_lstk (cap 49). */
+/* pushLoop: push loop marker {return_addr, count-1} on loopStack (cap 49). */
 
 void
 pushLoop(a, b)
 void *  a;
 short   b;
 {
-        if (mi_evcn < 49) {
-                mi_lstk[mi_evcn] = (long) a;
-                mi_evcn++;
-                mi_lstk[mi_evcn] = (long)(short)(b - 1);
-                mi_evcn++;
+        if (loopTop < 49) {
+                loopStack[loopTop] = (long) a;
+                loopTop++;
+                loopStack[loopTop] = (long)(short)(b - 1);
+                loopTop++;
         }
 }
 
@@ -139,21 +139,21 @@ popLoop()
         unsigned char * ret;
         long            cnt;
 
-        if (mi_evcn == 9)
+        if (loopTop == 9)
                 return (unsigned char *) 0;
-        ret = (unsigned char *) mi_lstk[mi_evcn - 2];
-        cnt = mi_lstk[mi_evcn - 1];
-        mi_lstk[mi_evcn - 1]--;
+        ret = (unsigned char *) loopStack[loopTop - 2];
+        cnt = loopStack[loopTop - 1];
+        loopStack[loopTop - 1]--;
         if (cnt == 0) {
-                mi_evcn -= 2;
+                loopTop -= 2;
                 return (unsigned char *) 0;
         } else
                 return ret;
 }
 
-/* parseEvents: walk compact event stream at mi_sqpos.
+/* parseEvents: walk compact event stream at songPos.
    Byte forms:
-     0x00        tick separator; returns 1, mi_nlp0 loaded
+     0x00        tick separator; returns 1, ticksToNext loaded
      0x01..0x7F  note event, 3 bytes:
                    byte0: [0..3]=logical ch, [4]=note-on (inverted),
                           [5]=sustain, [6]=note-off
@@ -168,91 +168,91 @@ popLoop()
 short
 parseEvents()
 {
-        /* No locals at all: mi_sqpos is walked with ++ in place and
+        /* No locals at all: songPos is walked with ++ in place and
            the command bytes are dispatched through a switch, as in the
            original. */
 
-        /* Prologue: skip leading 0x00, refresh mi_nlp0, end-check. */
-        if (*mi_sqpos != 0)
+        /* Prologue: skip leading 0x00, refresh ticksToNext, end-check. */
+        if (*songPos != 0)
                 return 0;
-        mi_sqpos++;
-        if (mi_sqpos >= mi_seqE)
+        songPos++;
+        if (songPos >= songEndPtr)
                 return 0;
-        mi_evTf = 0;
+        noteDecoded = 0;
         peekNoteDur();
-        if (mi_sqpos >= mi_seqE)
+        if (songPos >= songEndPtr)
                 return 0;
 
-        while (*mi_sqpos != 0) {
-                if ((*mi_sqpos & 0x80) == 0) {
+        while (*songPos != 0) {
+                if ((*songPos & 0x80) == 0) {
                         /* Note event: unpack bytes 0..2, advance one
                            byte at a time, queue via queueNote.  byte1
                            bit 5 = accent (max vel + max PSG vol). */
-                        mi_evTf = 1;
-                        mi_nnOn = 16 - (*mi_sqpos & 0x10);
-                        mi_lasT = *mi_sqpos & 0x40;
-                        mi_nnOf = *mi_sqpos & 0x20;
-                        mi_ccha = *mi_sqpos & 0x0f;
-                        mi_sqpos++;
+                        noteDecoded = 1;
+                        noteToQueue = 16 - (*songPos & 0x10);
+                        mi_lasT = *songPos & 0x40;
+                        noteIsOff = *songPos & 0x20;
+                        noteChan = *songPos & 0x0f;
+                        songPos++;
 
-                        if ((mi_nlpA = *mi_sqpos & 0x20) != 0) {
-                                mi_vel = 0x7f;
-                                psg_cvol = 0xf;
+                        if ((noteAccent = *songPos & 0x20) != 0) {
+                                noteVel = 0x7f;
+                                noteVolume = 0xf;
                         } else {
-                                mi_vel = mi_dvel;
-                                psg_cvol = psg_dvol;
+                                noteVel = defVelocity;
+                                noteVolume = defPsgVol;
                         }
-                        mi_nmof = *mi_sqpos & 0xc0;
-                        /* mi_ndur, not mi_nlp0: this duration goes to
+                        noteMode = *songPos & 0xc0;
+                        /* noteDur, not ticksToNext: this duration goes to
                            a second cell that only queueNote reads.
                            peekNoteDur computes the same expression into
-                           mi_nlp0, which the tick counters use. */
-                        mi_ndur = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
-                        mi_sqpos++;
+                           ticksToNext, which the tick counters use. */
+                        noteDur = (durTable[*songPos & 0x1f] - 1) * ticksPerBeat;
+                        songPos++;
 
-                        if ((mi_nmof & 0xc0) != 0) {
-                                mi_cnot = *mi_sqpos & 0x7f;
-                                mi_sqpos++;
-                                if (mi_nmof & 0x80) {
-                                        if (mi_nmof & 0x40)
-                                                mi_cnot--;
+                        if ((noteMode & 0xc0) != 0) {
+                                noteNum = *songPos & 0x7f;
+                                songPos++;
+                                if (noteMode & 0x80) {
+                                        if (noteMode & 0x40)
+                                                noteNum--;
                                         else
-                                                mi_cnot++;
+                                                noteNum++;
                                 }
                         } else {
-                                mi_cnot = g_mstr[*mi_sqpos & 0x7f];
-                                mi_sqpos++;
+                                noteNum = noteMap[*songPos & 0x7f];
+                                songPos++;
                         }
 
-                        if (mi_nnOn != 0)
+                        if (noteToQueue != 0)
                                 queueNote();
                 } else {
-                        switch (*mi_sqpos++ & 0xff) {
+                        switch (*songPos++ & 0xff) {
                         case SEQ_BAR:
-                                /* Bar marker: refresh mi_nlp0 for the
+                                /* Bar marker: refresh ticksToNext for the
                                    next event only if none was decoded
                                    this pass. */
-                                if (mi_evTf == 0) {
+                                if (noteDecoded == 0) {
                                         peekNoteDur();
-                                        if (mi_sqpos >= mi_seqE)
+                                        if (songPos >= songEndPtr)
                                                 return 0;
                                 }
                                 break;
                         case SEQ_LOOP_START:
                                 /* Loop start: byte = count, push the
                                    return address. */
-                                pushLoop(mi_sqpos + 1, *mi_sqpos);
-                                mi_sqpos++;
+                                pushLoop(songPos + 1, *songPos);
+                                songPos++;
                                 peekNoteDur();
-                                if (mi_sqpos >= mi_seqE)
+                                if (songPos >= songEndPtr)
                                         return 0;
                                 break;
                         case SEQ_LOOP_END:
                                 /* Loop end: pop, jump back if nonzero. */
-                                if ((mi_dptr = popLoop()) != 0)
-                                        mi_sqpos = mi_dptr;
+                                if ((loopTarget = popLoop()) != 0)
+                                        songPos = loopTarget;
                                 peekNoteDur();
-                                if (mi_sqpos >= mi_seqE)
+                                if (songPos >= songEndPtr)
                                         return 0;
                                 break;
                         case SEQ_END:
@@ -264,21 +264,21 @@ parseEvents()
         return 1;
 }
 
-/* peekNoteDur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
-   High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0. */
+/* peekNoteDur: skip 0x00 pad at songPos; peek next event's dur-index nibble.
+   High-bit-clear (note) -> ticksToNext = tick-count; else ticksToNext = 0. */
 
 void
 peekNoteDur()
 {
-        for (; *mi_sqpos == 0; mi_sqpos++) ;
-        if ((*mi_sqpos & 0x80) == 0)
-                mi_nlp0 = (short)(mi_ndt[(short)(char) mi_sqpos[1] & 0x1f]
-                                                          - 1) * g_mtspb;
+        for (; *songPos == 0; songPos++) ;
+        if ((*songPos & 0x80) == 0)
+                ticksToNext = (short)(durTable[(short)(char) songPos[1] & 0x1f]
+                                                          - 1) * ticksPerBeat;
         else
-                mi_nlp0 = 0;
+                ticksToNext = 0;
 }
 
-/* queueNote: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
+/* queueNote: queue Note-On in noteQueue as {duration, note|sustain, phys_ch}
    and dispatch Note-On via sendMidiEvent.  Queue entry fires paired Note-Off
    later via expireNotes + sendNoteOff. */
 
@@ -288,103 +288,103 @@ queueNote()
 {
         short   ch;
 
-        if (mi_evi < 58) {
-                mi_evq[mi_evi] = mi_ndur;
-                mi_evi++;
-                if (mi_nnOn != 0) {
-                        mi_evq[mi_evi] = (mi_lasT << 1) | mi_cnot;
-                        mi_evi++;
+        if (queueLen < 58) {
+                noteQueue[queueLen] = noteDur;
+                queueLen++;
+                if (noteToQueue != 0) {
+                        noteQueue[queueLen] = (mi_lasT << 1) | noteNum;
+                        queueLen++;
                 } else {
-                        mi_evq[mi_evi] = 0;
-                        mi_evi++;
+                        noteQueue[queueLen] = 0;
+                        queueLen++;
                 }
-                mi_evq[mi_evi] = mi_chmap[mi_ccha];
-                mi_evi++;
+                noteQueue[queueLen] = chanMap[noteChan];
+                queueLen++;
         } else
                 return;
 
-        if (mi_cnot > g_mnhi)
+        if (noteNum > noteHigh)
                 return;
-        if (mi_cnot < g_mnlo)
+        if (noteNum < noteLow)
                 return;
 
-        if (mi_slop != NO)
-                sendProgChange(mi_ccha);
+        if (useSongChan != NO)
+                sendProgChange(noteChan);
         else
-                mi_ccha = mi_varR;
+                noteChan = fixedChan;
 
-        if (mi_nnOf != 0)
-                mi_noSt[mi_cnot] = 0;
+        if (noteIsOff != 0)
+                noteOwner[noteNum] = 0;
         if (mi_lasT != 0)
-                mi_noSt[mi_cnot] = mi_ccha;
-        if (mi_nnOf != 0)
+                noteOwner[noteNum] = noteChan;
+        if (noteIsOff != 0)
                 return;
 
-        ch = mi_chmap[mi_ccha];
-        g_meve[0] = (ch & 0xf) | 0x90;
-        g_meve[1] = mi_cnot;
-        g_meve[2] = mi_vel;
-        sendMidiEvent(g_meve, (short) 3, ch);
+        ch = chanMap[noteChan];
+        midiMsg[0] = (ch & 0xf) | 0x90;
+        midiMsg[1] = noteNum;
+        midiMsg[2] = noteVel;
+        sendMidiEvent(midiMsg, (short) 3, ch);
 }
 
 /* sendNoteOff: send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
-   Fires only if note in [g_mnlo, g_mnhi] and non-zero. */
+   Fires only if note in [noteLow, noteHigh] and non-zero. */
 
 void
 sendNoteOff(nptr)
 short * nptr;
 {
-        /* Called with &mi_evq[i] and walks the pointer forward.  The
+        /* Called with &noteQueue[i] and walks the pointer forward.  The
            range test is a bitwise OR of two comparisons and each
            rejection returns a value from a void function; both are
            part of the original code. */
         if ((nptr[1] & 0x80) != 0)
                 return;
         nptr++;
-        g_meve[1] = nptr[0];
-        if ((char) g_meve[1] > g_mnhi | (char) g_meve[1] < g_mnlo)
+        midiMsg[1] = nptr[0];
+        if ((char) midiMsg[1] > noteHigh | (char) midiMsg[1] < noteLow)
                 return 1;
-        if (g_meve[1] == 0)
+        if (midiMsg[1] == 0)
                 return 1;
         nptr++;
-        g_meve[0] = (nptr[0] & 0xf) + 0x90;
-        g_meve[2] = 0;
-        sendMidiEvent(g_meve, (short) 3, (short) nptr[0]);
+        midiMsg[0] = (nptr[0] & 0xf) + 0x90;
+        midiMsg[2] = 0;
+        sendMidiEvent(midiMsg, (short) 3, (short) nptr[0]);
 }
 
 /* sendProgChange: dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
-   Current-program keyed by physical channel (mi_chmap & 0xf), so
+   Current-program keyed by physical channel (chanMap & 0xf), so
    shared physical channels only get one PC per song load. */
 
 void
 sendProgChange(index)
 char    index;
 {
-        if (g_mcpro[mi_chmap[index] & 0xf] == mi_pgmap[index])
+        if (sentProgram[chanMap[index] & 0xf] == progMap[index])
                 return;
-        if (g_moen == NO)
+        if (midiOutOn == NO)
                 return;
 
-        g_meve[0] = (mi_chmap[index] & 0xf) | 0xc0;
-        g_meve[1] = mi_pgmap[index];
-        g_mcpro[mi_chmap[index] & 0xf] = mi_pgmap[index];
-        sendMidiEvent(g_meve, (short) 2, (short) 0);
+        midiMsg[0] = (chanMap[index] & 0xf) | 0xc0;
+        midiMsg[1] = progMap[index];
+        sentProgram[chanMap[index] & 0xf] = progMap[index];
+        sendMidiEvent(midiMsg, (short) 2, (short) 0);
 }
 
 /* sendMidiEvent: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
    MIDI OUT: octave-transpose note by (env_val - hi_nibble(midi_ch))
-     * -12 semitones, write via aciaWrite (mi_dwrm=1) or Midiws; restore
+     * -12 semitones, write via aciaWrite (seqBusy=1) or Midiws; restore
      note before PSG path.
    PSG path (Note-On 0x9n only):
      vel=0 -> Note-Off: find channel by note, ENV_RELEASE.
      vel>0 -> Note-On: alloc silent channel, else voice-steal by
-       highest phase; guard [g_mnhi, g_mnlo]; copy 8 ADSR bytes from
-       mi_env + (g_mccha-1)*8; compute (2 - hi_nib(attack_dur))*12
+       highest phase; guard [noteHigh, noteLow]; copy 8 ADSR bytes from
+       songAdsr + (g_mccha-1)*8; compute (2 - hi_nib(attack_dur))*12
        octave offset; write PSG tone/mixer/noise; if freq<0x17 use
-       ENV_FADEOUT instead of ENV_ATTACK; set psg_ntAc.
+       ENV_FADEOUT instead of ENV_ATTACK; set psgActive.
    Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
 short
@@ -412,12 +412,12 @@ char            midi_ch;
         saved_size = midiEvS;
 
         /* ---- MIDI OUT path ---- */
-        if (g_moen != NO) {
+        if (midiOutOn != NO) {
                 chosen = saved_ptr[1];
                 if (midi_ch != 0)
                         midiEvP[1] = (midiEvP[1] & 0xff) -
                                 (((3 - ((midi_ch >> 4) & 0xf)) * 12) & 0xff);
-                if (mi_dwrm == 1) {
+                if (seqBusy == 1) {
                         while (midiEvS) {
                                 aciaWrite(*midiEvP);
                                 midiEvP++;
@@ -430,7 +430,7 @@ char            midi_ch;
         }
 
         /* ---- PSG path ---- */
-        if (psg_out != NO) {
+        if (psgOutOn != NO) {
 
                 midiEvP  = saved_ptr;
                 midiEvS  = saved_size;
@@ -442,7 +442,7 @@ char            midi_ch;
 
                 /* ---- Note-On: pick a channel ---- */
                 chosen = 0;
-                while (psg_chNt[chosen++])
+                while (psgChanNote[chosen++])
                         ;
                 chosen--;
                 if (chosen == 3) {
@@ -451,8 +451,8 @@ char            midi_ch;
                         best = chosen = 0;
                         while (chosen != 2) {
                                 chosen++;
-                                if (psg_envelope[chosen].phase >
-                                    psg_envelope[chosen - 1].phase)
+                                if (psgEnvelope[chosen].phase >
+                                    psgEnvelope[chosen - 1].phase)
                                         best = chosen;
                         }
                         chosen = best;
@@ -460,32 +460,32 @@ char            midi_ch;
 
                 /* Range guard: the whole note-on body is inside it.
                    The low limit is tested first, as in the original. */
-                if (*midiEvP >= g_mnlo && *midiEvP <= g_mnhi) {
+                if (*midiEvP >= noteLow && *midiEvP <= noteHigh) {
 
                 /* Copy 8 bytes of ADSR params from the .SNG envelope
                    block; the source address lands in a local first. */
-                env_ptr = (mi_ccha - 1) * 8 + mi_env;
+                env_ptr = (noteChan - 1) * 8 + songAdsr;
                 envelope_phase = ENV_ATTACK;
                 copyEnvelope(env_ptr,
-                        (unsigned char *) &psg_envelope[chosen] + 1,
+                        (unsigned char *) &psgEnvelope[chosen] + 1,
                         8L);
 
                 /* Split the packed nibbles: attack_start_vol keeps its low
                    4 bits (start volume), high 4 bits stash the mixer flags;
                    attack_duration keeps its low 4 bits, high 4 bits encode
                    the octave shift (2 - N) * 12 semitones. */
-                attack_hi = (psg_envelope[chosen].attack_start_vol >> 4) & 0xf;
-                psg_envelope[chosen].attack_start_vol &= 0xf;
-                oct_shift = (2 - ((psg_envelope[chosen].attack_duration >> 4) & 0xf)) * 12;
-                psg_envelope[chosen].attack_duration &= 0xf;
+                attack_hi = (psgEnvelope[chosen].attack_start_vol >> 4) & 0xf;
+                psgEnvelope[chosen].attack_start_vol &= 0xf;
+                oct_shift = (2 - ((psgEnvelope[chosen].attack_duration >> 4) & 0xf)) * 12;
+                psgEnvelope[chosen].attack_duration &= 0xf;
                 mixer_bits = attack_hi << chosen;
                 noise_mask = ~(9 << chosen);
 
                 /* The three scratch shorts are reused from here on:
                    attack_hi carries the period, noise_mask its high
                    nibble and mixer_bits the register number. */
-                attack_hi = psg_freq[*midiEvP + oct_shift] / 60;
-                if (mi_dwrm == 1) {
+                attack_hi = psgPeriod[*midiEvP + oct_shift] / 60;
+                if (seqBusy == 1) {
                         psgWrite(attack_hi, PSG_NOISE_PERIOD);
                         psgMixer(mixer_bits, noise_mask | 0xc0);
                 } else {
@@ -501,10 +501,10 @@ char            midi_ch;
                 mixer_bits = chosen << 1;
 
                 if (*midiEvP + oct_shift > 22) {
-                        attack_hi  = psg_freq[*midiEvP + oct_shift];
+                        attack_hi  = psgPeriod[*midiEvP + oct_shift];
                         noise_mask = (attack_hi >> 8) & 0xf;
                         attack_hi = attack_hi & 0xff;
-                        if (mi_dwrm == 1) {
+                        if (seqBusy == 1) {
                                 psgWrite(attack_hi, mixer_bits);
                                 psgWrite(noise_mask, mixer_bits + 1);
                         } else {
@@ -515,12 +515,12 @@ char            midi_ch;
                         envelope_phase = ENV_FADEOUT;
                 }
 
-                psg_chNt[chosen] = *midiEvP;
+                psgChanNote[chosen] = *midiEvP;
                 if (envelope_phase == ENV_FADEOUT)
-                        psg_envelope[chosen].current_volume = 0;
-                psg_envelope[chosen].max_volume  = psg_cvol;
-                psg_ntAc = psg_envelope[chosen].phase_timer = 1;
-                psg_envelope[chosen].phase = envelope_phase;
+                        psgEnvelope[chosen].current_volume = 0;
+                psgEnvelope[chosen].max_volume  = noteVolume;
+                psgActive = psgEnvelope[chosen].phase_timer = 1;
+                psgEnvelope[chosen].phase = envelope_phase;
 
                 }       /* range guard */
 
@@ -528,14 +528,14 @@ char            midi_ch;
 
                 /* ---- Note-Off (velocity == 0) ---- */
                 chosen = 0;
-                while (psg_chNt[chosen++] != *midiEvP && chosen < 4)
+                while (psgChanNote[chosen++] != *midiEvP && chosen < 4)
                         ;
                 if (chosen == 4)
                         return 0;
                 chosen--;
-                psg_chNt[chosen] = 0;
-                psg_envelope[chosen].phase       = ENV_RELEASE;
-                psg_envelope[chosen].phase_timer = 0;
+                psgChanNote[chosen] = 0;
+                psgEnvelope[chosen].phase       = ENV_RELEASE;
+                psgEnvelope[chosen].phase_timer = 0;
 
                 }
                 return 1;
@@ -553,10 +553,10 @@ short   val;
 {
         short   i;
 
-        for (i = 0; i < mi_evi; i += 3) {
-                mi_evq[i] -= val;
-                if (mi_evq[i] <= 0) {
-                        sendNoteOff(&mi_evq[i]);
+        for (i = 0; i < queueLen; i += 3) {
+                noteQueue[i] -= val;
+                if (noteQueue[i] <= 0) {
+                        sendNoteOff(&noteQueue[i]);
                         if (removeQueued(i) != 0)
                                 i -= 3;
                 }
@@ -572,7 +572,7 @@ short   val;
 /* seqAdvance: sequencer state-machine advance from timerAIsr.
    WAIT_NOTE_EXPIRE (0): expire queued notes, reload prescaler, -> PARSE.
    PARSE_NEXT_EVENT (1): parseEvents() walks next batch; 0=end-of-song ->
-     SONG_ENDING, else mi_nlp0 = ticks until next event.
+     SONG_ENDING, else ticksToNext = ticks until next event.
    SONG_ENDING (2): expire remaining; when queue empty, kill PSG + flags. */
 
 void
@@ -580,44 +580,44 @@ seqAdvance()
 {
         short   res;
 
-        if (g_mspha == SEQ_PHASE_WAIT_NOTE_EXPIRE) {
-                res = g_mtcou - mi_lpTk;
+        if (seqPhase == SEQ_PHASE_WAIT_NOTE_EXPIRE) {
+                res = timerTicks - lastExpTick;
                 expireNotes(res);
-                mi_lpTk    = g_mtcou;
-                g_mtpre    = mi_tpb;
-                g_mspha    = SEQ_PHASE_PARSE_NEXT_EVENT;
-                mi_nxTk   += mi_tpb;
+                lastExpTick    = timerTicks;
+                seqCountdown    = beatTicks;
+                seqPhase    = SEQ_PHASE_PARSE_NEXT_EVENT;
+                nextEvTick   += beatTicks;
                 return;                 /* explicit return kept on purpose */
-        } else if (g_mspha == SEQ_PHASE_PARSE_NEXT_EVENT) {
-                g_mspha    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
-                mi_nlp0    = -1;
+        } else if (seqPhase == SEQ_PHASE_PARSE_NEXT_EVENT) {
+                seqPhase    = SEQ_PHASE_WAIT_NOTE_EXPIRE;
+                ticksToNext    = -1;
                 /* The parse sits in a loop that returns from both arms;
                    that shape is part of the original code. */
-                while (mi_nlp0 < 0) {
+                while (ticksToNext < 0) {
                         if (parseEvents() != 0) {
-                                mi_nxTk += mi_nlp0;
-                                mi_nlp0 = mi_nxTk - g_mtcou;
-                                if (mi_nlp0 > 0)
-                                        g_mtpre = mi_nlp0;
+                                nextEvTick += ticksToNext;
+                                ticksToNext = nextEvTick - timerTicks;
+                                if (ticksToNext > 0)
+                                        seqCountdown = ticksToNext;
                                 return;
                         } else {
-                                g_mspha = SEQ_PHASE_SONG_ENDING;
-                                g_mtpre = mi_tpb;
-                                mi_nxTk += g_mtpre;
+                                seqPhase = SEQ_PHASE_SONG_ENDING;
+                                seqCountdown = beatTicks;
+                                nextEvTick += seqCountdown;
                                 return;
                         }
                 }
         } else {
-                res = g_mtcou - mi_lpTk;
+                res = timerTicks - lastExpTick;
                 expireNotes(res);
-                mi_lpTk    = g_mtcou;
-                g_mtpre    = mi_tpb;
-                mi_nxTk   += mi_tpb;
-                if (mi_evi == 0) {
-                        psg_envelope[0].phase =
-                        psg_envelope[1].phase =
-                        psg_envelope[2].phase = ENV_IDLE;
-                        mi_play = psg_ntAc = g_msmsa = NO;
+                lastExpTick    = timerTicks;
+                seqCountdown    = beatTicks;
+                nextEvTick   += beatTicks;
+                if (queueLen == 0) {
+                        psgEnvelope[0].phase =
+                        psgEnvelope[1].phase =
+                        psgEnvelope[2].phase = ENV_IDLE;
+                        songPlaying = psgActive = songActive = NO;
                         psgWrite(0, PSG_VOL_A);
                         psgWrite(0, PSG_VOL_B);
                         psgWrite(0, PSG_VOL_C);
@@ -626,8 +626,8 @@ seqAdvance()
 }
 
 /* stopSequencer: stop sequencer.
-   Drain pending events, send Note-Off for every mi_noSt[] flag,
-   clear g_msmsa.  Nothing calls it, but the original contains it. */
+   Drain pending events, send Note-Off for every noteOwner[] flag,
+   clear songActive.  Nothing calls it, but the original contains it. */
 
 
 void
@@ -637,45 +637,45 @@ stopSequencer()
         short   hadPend;
         short   ch;
 
-        if (mi_evi > 0)
+        if (queueLen > 0)
                 hadPend = 1;
         else
                 hadPend = 0;
 
-        while (mi_evi > 0) {
-                mi_nlp0 = g_mtcou - mi_nxTk;
-                if (mi_nlp0 > 0) {
-                        expireNotes(mi_nlp0);
-                        mi_nxTk += mi_nlp0;
+        while (queueLen > 0) {
+                ticksToNext = timerTicks - nextEvTick;
+                if (ticksToNext > 0) {
+                        expireNotes(ticksToNext);
+                        nextEvTick += ticksToNext;
                 }
         }
 
         if (hadPend != NO) {
-                g_meve[2] = 0;
+                midiMsg[2] = 0;
                 for (note = 0; note < 0x80; note++) {
-                        if ((ch = mi_noSt[note]) != 0) {
-                                ch = mi_chmap[ch];
-                                g_meve[0] = (ch & 0x0f) | 0x90;
-                                g_meve[1] = note;
-                                sendMidiEvent(g_meve, 3, ch);
+                        if ((ch = noteOwner[note]) != 0) {
+                                ch = chanMap[ch];
+                                midiMsg[0] = (ch & 0x0f) | 0x90;
+                                midiMsg[1] = note;
+                                sendMidiEvent(midiMsg, 3, ch);
                         }
                 }
         }
 
-        g_msmsa = NO;
+        songActive = NO;
 }
 
 /* hookTimerA sits between stopSequencer and unhookTimerA. */
 #include "parts/hookTimerA.c"
 
 /* unhookTimerA: tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
-   saved ISR from mi_svtv.  Nothing calls it, but the original contains
+   saved ISR from oldTimerAVec.  Nothing calls it, but the original contains
    it. */
 
 void
 unhookTimerA()
 {
-        Xbtimer(XB_TIMER_A, MFP_STOP, 0x1c, mi_svtv);
+        Xbtimer(XB_TIMER_A, MFP_STOP, 0x1c, oldTimerAVec);
 }
 
 
@@ -683,7 +683,7 @@ unhookTimerA()
 #include "parts/resetPrograms.c"
 #include "parts/parseSongHeader.c"
 
-/* unpackChanMap: unpack 30-byte channel/program map (90 bytes before mi_dbase).
+/* unpackChanMap: unpack 30-byte channel/program map (90 bytes before songEvents).
    Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
    Values are 1-based on disk (0 = no-op sentinel); decrement on load.
    Logical channel 0 reserved for game SFX. */
@@ -697,18 +697,18 @@ unsigned char * p;
         /* The offset arithmetic is written inside the dereference on
            purpose: `p[i - 1]` compiles differently. */
         for (i = 1; i < 16; i++) {
-                mi_chmap[i] = *(p + i - 1)  - 1;
-                mi_pgmap[i] = *(p + i + 14) - 1;
+                chanMap[i] = *(p + i - 1)  - 1;
+                progMap[i] = *(p + i + 14) - 1;
         }
 }
 
 
-/* Rebuild g_mstr, the note translation table timerAIsr reads every note
+/* Rebuild noteMap, the note translation table timerAIsr reads every note
    through, from the key setting in a song's header (parseSongHeader passes the
-   byte it also stores in g_mkey).  Starts from identity, marks five
+   byte it also stores in songKey).  Starts from identity, marks five
    entries of the lowest octave 0xFF, and returns there for value 1.
    Otherwise, in every octave, each scale degree whose bit is CLEAR in
-   g_msmk[value] (bit 0 = B ... bit 6 = C) is moved one semitone: up
+   keyScaleMask[value] (bit 0 = B ... bit 6 = C) is moved one semitone: up
    for values up to 8, down above 8 -- i.e. sharps or flats. */
 void
 buildNoteMap(value)
@@ -719,12 +719,12 @@ short   value;
         char            chord_mask;
 
         for (i = 0; i < 0x84; i++)
-                g_mstr[i] = i;
-        g_mstr[1]  = -1;
-        g_mstr[3]  = -1;
-        g_mstr[6]  = -1;
-        g_mstr[8]  = -1;
-        g_mstr[10] = -1;
+                noteMap[i] = i;
+        noteMap[1]  = -1;
+        noteMap[3]  = -1;
+        noteMap[6]  = -1;
+        noteMap[8]  = -1;
+        noteMap[10] = -1;
 
         if (value == 1)
                 return 1;
@@ -735,27 +735,27 @@ short   value;
                 note_shift = 1;
 
         for (i = 0; i < 0x84; i += 12) {
-                chord_mask = g_msmk[value];
+                chord_mask = keyScaleMask[value];
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 11] += note_shift;
+                        noteMap[i + 11] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 9] += note_shift;
+                        noteMap[i + 9] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 7] += note_shift;
+                        noteMap[i + 7] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 5] += note_shift;
+                        noteMap[i + 5] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 4] += note_shift;
+                        noteMap[i + 4] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i + 2] += note_shift;
+                        noteMap[i + 2] += note_shift;
                 chord_mask >>= 1;
                 if ((chord_mask & 1) == 0)
-                        g_mstr[i] += note_shift;
+                        noteMap[i] += note_shift;
         }
 }
 
@@ -777,145 +777,145 @@ stepEnvelopes()
         char    i;
 
         for (i = 0; i < 3; i++) {
-                if (!psg_envelope[i].phase)
+                if (!psgEnvelope[i].phase)
                         continue;
 
-                switch (psg_envelope[i].phase) {
+                switch (psgEnvelope[i].phase) {
                 case ENV_ATTACK:
-                        psg_envelope[(short) i].current_volume =
-                                                 psg_envelope[(short) i].attack_start_vol;
-                        psg_envelope[(short) i].phase = ENV_DECAY;
-                        if (!psg_envelope[i].attack_duration) {
-                                psg_envelope[(short) i].current_volume =
-                                                                 psg_envelope[(short) i].attack_target_vol;
-                                psg_envelope[(short) i].phase_timer = 0;
+                        psgEnvelope[(short) i].current_volume =
+                                                 psgEnvelope[(short) i].attack_start_vol;
+                        psgEnvelope[(short) i].phase = ENV_DECAY;
+                        if (!psgEnvelope[i].attack_duration) {
+                                psgEnvelope[(short) i].current_volume =
+                                                                 psgEnvelope[(short) i].attack_target_vol;
+                                psgEnvelope[(short) i].phase_timer = 0;
                                 goto do_decay;
                         }
-                        psg_envelope[(short) i].phase_timer =
-                                                 (short) psg_envelope[(short) i].attack_duration;
-                        if (psg_envelope[i].attack_start_vol >
-                            psg_envelope[i].attack_target_vol) {
-                                psg_rdel[(short) i] =
-                                                          (short) psg_envelope[(short) i].attack_start_vol -
-                                                          (short) psg_envelope[(short) i].attack_target_vol;
-                                psg_envelope[(short) i].ramp_direction = -1;
+                        psgEnvelope[(short) i].phase_timer =
+                                                 (short) psgEnvelope[(short) i].attack_duration;
+                        if (psgEnvelope[i].attack_start_vol >
+                            psgEnvelope[i].attack_target_vol) {
+                                rampDelta[(short) i] =
+                                                          (short) psgEnvelope[(short) i].attack_start_vol -
+                                                          (short) psgEnvelope[(short) i].attack_target_vol;
+                                psgEnvelope[(short) i].ramp_direction = -1;
                         } else {
-                                psg_envelope[(short) i].ramp_direction = 1;
-                                psg_rdel[(short) i] =
-                                                          (short) psg_envelope[(short) i].attack_target_vol -
-                                                          (short) psg_envelope[(short) i].attack_start_vol;
+                                psgEnvelope[(short) i].ramp_direction = 1;
+                                rampDelta[(short) i] =
+                                                          (short) psgEnvelope[(short) i].attack_target_vol -
+                                                          (short) psgEnvelope[(short) i].attack_start_vol;
                         }
-                        psg_rdel[(short) i] = psg_rdel[(short) i] *
-                                             mi_evrt[psg_envelope[(short) i].phase_timer];
-                        psg_envelope[(short) i].phase_timer =
-                                             mi_evtt[psg_envelope[(short) i].phase_timer];
-                        psg_racc[(short) i] = 0;
+                        rampDelta[(short) i] = rampDelta[(short) i] *
+                                             envRateTab[psgEnvelope[(short) i].phase_timer];
+                        psgEnvelope[(short) i].phase_timer =
+                                             envTimeTab[psgEnvelope[(short) i].phase_timer];
+                        rampAccum[(short) i] = 0;
                         break;
 
                 case ENV_DECAY:
 do_decay:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_racc[i] += psg_rdel[i];
-                                while (psg_racc[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_racc[i] -= 0x168;
+                        if (psgEnvelope[i].phase_timer-- > 0) {
+                                rampAccum[i] += rampDelta[i];
+                                while (rampAccum[i] > 0x168) {
+                                        psgEnvelope[i].current_volume +=
+                                                psgEnvelope[i].ramp_direction;
+                                        rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (!psg_envelope[i].decay_duration) {
-                                        psg_envelope[(short) i].current_volume =
-                                                                          psg_envelope[(short) i].decay_target_vol;
-                                        psg_envelope[(short) i].phase_timer = 0;
+                                if (!psgEnvelope[i].decay_duration) {
+                                        psgEnvelope[(short) i].current_volume =
+                                                                          psgEnvelope[(short) i].decay_target_vol;
+                                        psgEnvelope[(short) i].phase_timer = 0;
                                         goto do_sustain;
                                 }
-                                psg_envelope[(short) i].phase = ENV_SUSTAIN;
-                                psg_envelope[(short) i].phase_timer =
-                                                                 (short) psg_envelope[(short) i].decay_duration;
-                                if (psg_envelope[i].attack_target_vol >
-                                    psg_envelope[i].decay_target_vol) {
-                                        psg_rdel[(short) i] =
-                                                                  (short) psg_envelope[(short) i].attack_target_vol -
-                                                                  (short) psg_envelope[(short) i].decay_target_vol;
-                                        psg_envelope[(short) i].ramp_direction = -1;
+                                psgEnvelope[(short) i].phase = ENV_SUSTAIN;
+                                psgEnvelope[(short) i].phase_timer =
+                                                                 (short) psgEnvelope[(short) i].decay_duration;
+                                if (psgEnvelope[i].attack_target_vol >
+                                    psgEnvelope[i].decay_target_vol) {
+                                        rampDelta[(short) i] =
+                                                                  (short) psgEnvelope[(short) i].attack_target_vol -
+                                                                  (short) psgEnvelope[(short) i].decay_target_vol;
+                                        psgEnvelope[(short) i].ramp_direction = -1;
                                 } else {
-                                        psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rdel[(short) i] =
-                                                                  (short) psg_envelope[(short) i].decay_target_vol -
-                                                                  (short) psg_envelope[(short) i].attack_target_vol;
+                                        psgEnvelope[(short) i].ramp_direction = 1;
+                                        rampDelta[(short) i] =
+                                                                  (short) psgEnvelope[(short) i].decay_target_vol -
+                                                                  (short) psgEnvelope[(short) i].attack_target_vol;
                                 }
-                                psg_rdel[(short) i] = psg_rdel[(short) i] *
-                                                                          mi_evrt[psg_envelope[(short) i].phase_timer];
-                                psg_envelope[(short) i].phase_timer =
-                                                                          mi_evtt[psg_envelope[(short) i].phase_timer];
-                                psg_racc[(short) i] = 0;
+                                rampDelta[(short) i] = rampDelta[(short) i] *
+                                                                          envRateTab[psgEnvelope[(short) i].phase_timer];
+                                psgEnvelope[(short) i].phase_timer =
+                                                                          envTimeTab[psgEnvelope[(short) i].phase_timer];
+                                rampAccum[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_SUSTAIN:
 do_sustain:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_racc[i] += psg_rdel[i];
-                                while (psg_racc[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_racc[i] -= 0x168;
+                        if (psgEnvelope[i].phase_timer-- > 0) {
+                                rampAccum[i] += rampDelta[i];
+                                while (rampAccum[i] > 0x168) {
+                                        psgEnvelope[i].current_volume +=
+                                                psgEnvelope[i].ramp_direction;
+                                        rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (!psg_envelope[i].sustain_duration) {
-                                        psg_envelope[(short) i].current_volume =
-                                                                          psg_envelope[(short) i].sustain_target_vol;
-                                        psg_envelope[(short) i].phase_timer = 0;
+                                if (!psgEnvelope[i].sustain_duration) {
+                                        psgEnvelope[(short) i].current_volume =
+                                                                          psgEnvelope[(short) i].sustain_target_vol;
+                                        psgEnvelope[(short) i].phase_timer = 0;
                                         goto do_release;
                                 }
-                                psg_envelope[(short) i].phase = ENV_RELEASE;
-                                psg_envelope[(short) i].phase_timer =
-                                                                 mi_evst[(short) psg_envelope[(short) i].sustain_duration];
-                                if (psg_envelope[i].decay_target_vol >
-                                    psg_envelope[i].sustain_target_vol) {
-                                        psg_rdel[(short) i] =
-                                                                  (short) psg_envelope[(short) i].decay_target_vol -
-                                                                  (short) psg_envelope[(short) i].sustain_target_vol;
-                                        psg_envelope[(short) i].ramp_direction = -1;
+                                psgEnvelope[(short) i].phase = ENV_RELEASE;
+                                psgEnvelope[(short) i].phase_timer =
+                                                                 envSusTab[(short) psgEnvelope[(short) i].sustain_duration];
+                                if (psgEnvelope[i].decay_target_vol >
+                                    psgEnvelope[i].sustain_target_vol) {
+                                        rampDelta[(short) i] =
+                                                                  (short) psgEnvelope[(short) i].decay_target_vol -
+                                                                  (short) psgEnvelope[(short) i].sustain_target_vol;
+                                        psgEnvelope[(short) i].ramp_direction = -1;
                                 } else {
-                                        psg_envelope[(short) i].ramp_direction = 1;
-                                        psg_rdel[(short) i] =
-                                                                  (short) psg_envelope[(short) i].sustain_target_vol -
-                                                                  (short) psg_envelope[(short) i].decay_target_vol;
+                                        psgEnvelope[(short) i].ramp_direction = 1;
+                                        rampDelta[(short) i] =
+                                                                  (short) psgEnvelope[(short) i].sustain_target_vol -
+                                                                  (short) psgEnvelope[(short) i].decay_target_vol;
                                 }
-                                psg_rdel[(short) i] = psg_rdel[(short) i] *
-                                                                          mi_evrl[(short) psg_envelope[(short) i].sustain_duration];
-                                psg_racc[(short) i] = 0;
+                                rampDelta[(short) i] = rampDelta[(short) i] *
+                                                                          envRelTab[(short) psgEnvelope[(short) i].sustain_duration];
+                                rampAccum[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_RELEASE:
 do_release:
-                        if (psg_envelope[i].phase_timer-- > 0) {
-                                psg_racc[i] += psg_rdel[i];
-                                while (psg_racc[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_racc[i] -= 0x168;
+                        if (psgEnvelope[i].phase_timer-- > 0) {
+                                rampAccum[i] += rampDelta[i];
+                                while (rampAccum[i] > 0x168) {
+                                        psgEnvelope[i].current_volume +=
+                                                psgEnvelope[i].ramp_direction;
+                                        rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (psg_envelope[i].release_duration) {
-                                        psg_envelope[(short) i].phase = ENV_FADEOUT;
-                                        psg_envelope[(short) i].phase_timer =
-                                                         (short) psg_envelope[(short) i].release_duration;
-                                        psg_rdel[(short) i] =
-                                                  (short) psg_envelope[(short) i].current_volume;
-                                        psg_envelope[(short) i].ramp_direction = -1;
-                                        psg_rdel[(short) i] = psg_rdel[(short) i] *
-                                                  mi_evrt[psg_envelope[(short) i].phase_timer];
-                                        psg_envelope[(short) i].phase_timer =
-                                                  mi_evtt[psg_envelope[(short) i].phase_timer];
-                                        psg_racc[(short) i] = 0;
+                                if (psgEnvelope[i].release_duration) {
+                                        psgEnvelope[(short) i].phase = ENV_FADEOUT;
+                                        psgEnvelope[(short) i].phase_timer =
+                                                         (short) psgEnvelope[(short) i].release_duration;
+                                        rampDelta[(short) i] =
+                                                  (short) psgEnvelope[(short) i].current_volume;
+                                        psgEnvelope[(short) i].ramp_direction = -1;
+                                        rampDelta[(short) i] = rampDelta[(short) i] *
+                                                  envRateTab[psgEnvelope[(short) i].phase_timer];
+                                        psgEnvelope[(short) i].phase_timer =
+                                                  envTimeTab[psgEnvelope[(short) i].phase_timer];
+                                        rampAccum[(short) i] = 0;
                                         break;
                                 } else {
-                                        psg_envelope[(short) i].phase_timer = 0;
+                                        psgEnvelope[(short) i].phase_timer = 0;
                                         goto do_fadeout;
                                 }
                         }
@@ -923,17 +923,17 @@ do_release:
 
                 case ENV_FADEOUT:
 do_fadeout:
-                        if (psg_envelope[i].phase_timer-- > 0 &&
-                            psg_envelope[i].current_volume) {
-                                psg_racc[i] += psg_rdel[i];
-                                while (psg_racc[i] > 0x168) {
-                                        psg_envelope[i].current_volume +=
-                                                psg_envelope[i].ramp_direction;
-                                        psg_racc[i] -= 0x168;
+                        if (psgEnvelope[i].phase_timer-- > 0 &&
+                            psgEnvelope[i].current_volume) {
+                                rampAccum[i] += rampDelta[i];
+                                while (rampAccum[i] > 0x168) {
+                                        psgEnvelope[i].current_volume +=
+                                                psgEnvelope[i].ramp_direction;
+                                        rampAccum[i] -= 0x168;
                                 }
                         } else {
-                                psg_envelope[i].current_volume =
-                                        psg_envelope[i].phase = ENV_IDLE;
+                                psgEnvelope[i].current_volume =
+                                        psgEnvelope[i].phase = ENV_IDLE;
                         }
                         break;
                 }
@@ -941,10 +941,10 @@ do_fadeout:
                 /* The clamped volume goes through a global, not a
                    local, and the pick is a ternary (one store); both
                    are part of the original code. */
-                psg_ovol = psg_envelope[i].current_volume >
-                           psg_envelope[i].max_volume
-                         ? psg_envelope[i].max_volume
-                         : psg_envelope[i].current_volume;
-                psgWrite(psg_ovol, psg_rot[i] - PSG_WRITE);
+                envOutVol = psgEnvelope[i].current_volume >
+                           psgEnvelope[i].max_volume
+                         ? psgEnvelope[i].max_volume
+                         : psgEnvelope[i].current_volume;
+                psgWrite(envOutVol, ampRegs[i] - PSG_WRITE);
         }
 }

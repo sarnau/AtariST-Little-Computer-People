@@ -13,40 +13,40 @@ rejoinTable()
         short   save_x;
         short   save_y;
 
-        g_actif = YES;
-        posToXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
-        g_wtx += 6;
-        g_wty += 2;
+        noPreempt = YES;
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
+        walkXTarget += 6;
+        walkYTarget += 2;
         walkToTarget();
 
-        save_x = g_sepex[g_seslm[SPRITE_GAME_BOX]];
-        save_y = g_sepey[g_seslm[SPRITE_GAME_BOX]];
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
+        save_x = pendX[spriteSlot[SPRITE_GAME_BOX]];
+        save_y = pendY[spriteSlot[SPRITE_GAME_BOX]];
+        spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_GAME_BOX] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_GAME_BOX);
-        g_sepex[g_seslm[SPRITE_GAME_BOX]] = save_x;
-        g_sepey[g_seslm[SPRITE_GAME_BOX]] = save_y;
+        pendX[spriteSlot[SPRITE_GAME_BOX]] = save_x;
+        pendY[spriteSlot[SPRITE_GAME_BOX]] = save_y;
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TABLE_SETTING);
-        g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
-        g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
+        pendX[spriteSlot[SPRITE_TABLE_SETTING]] = 103;
+        pendY[spriteSlot[SPRITE_TABLE_SETTING]] = 180;
 
-        posToXY(POS_BTM_TABLE_RIGHT, &g_wtx, &g_wty);
+        posToXY(POS_BTM_TABLE_RIGHT, &walkXTarget, &walkYTarget);
         walkToTarget();
-        posToXY(POS_BTM_TABLE_LEFT, &g_wtx, &g_wty);
+        posToXY(POS_BTM_TABLE_LEFT, &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        lcp_st   = STATE_STAND_SIDE_VIEW;
-        lcp_face = FACING_RIGHT;
-        g_hatas  = 8;
+        animState   = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
+        headTarget  = 8;
         waitHeadTurn();
 
-        lcp_st = STATE_EAT_BITE;
-        lcp_y += 8;
-        lcp_x += 6;
+        animState = STATE_EAT_BITE;
+        resY += 8;
+        resX += 6;
         gameTick(0);
-        g_inpmd = NO;
-        g_actif  = NO;
+        typingOff = NO;
+        noPreempt  = NO;
 }

@@ -21,7 +21,7 @@
 # (--auto and the MCP's run_program disagree by 0x104), and a wrong
 # base does not fail -- it reads plausible-looking garbage, which has
 # already cost this project one wrong conclusion.  So probe_start
-# hunts for bm32or's 1,2,4,8,16 longs in a window around where they
+# hunts for bitSet32's 1,2,4,8,16 longs in a window around where they
 # ought to be and derives the base from where they actually are.  If
 # it cannot find them it aborts rather than guess.
 
@@ -40,8 +40,8 @@ probe_die() { echo "SETUP: $*" >&2; probe_stop 2>/dev/null; exit 2; }
 
 # --- symbol table -----------------------------------------------------
 # lcp_sym.68k carries 8-char TRUNCATED linkage names with a leading
-# underscore, so ask for what the linker actually emitted (_lcp_wat,
-# not _lcp_watr).
+# underscore, so ask for what the linker actually emitted (_waterLe,
+# not _waterLe).
 _probe_load_syms() {
     _PROBE_SYMS=$(python3 - "$CSRC/build/alcyon/lcp_sym.68k" <<'PY'
 import struct, sys
@@ -189,12 +189,12 @@ probe_start() {
     probe_gameplay_ready
 }
 
-# Locate bm32or's 1,2,4,8,16 longs and derive the base from where they
+# Locate bitSet32's 1,2,4,8,16 longs and derive the base from where they
 # really are.  Never assume: a wrong base reads garbage silently.
 _probe_find_base() {
     local link want lo dump
-    link=$(_probe_link_off _bm32or)
-    [ "$link" = "?" ] && probe_die "_bm32or missing from lcp_sym.68k"
+    link=$(_probe_link_off _bitSet3)
+    [ "$link" = "?" ] && probe_die "_bitSet3 missing from lcp_sym.68k"
     want="00 00 00 01 00 00 00 02 00 00 00 04 00 00 00 08"
     for lo in 0x12492 0x12596; do        # known launch-path bases first
         _PROBE_BASE=$lo
@@ -206,35 +206,35 @@ _probe_find_base() {
     dump=$(_probe_debug "m \$$(printf '%x' $start) 2048")
     local hit
     hit=$(echo "$dump" | grep -E '^[0-9A-F]{8}: 00 00 00 01 00 00 00 02' | head -1)
-    [ -z "$hit" ] && probe_die "cannot locate bm32or; load base undetermined"
+    [ -z "$hit" ] && probe_die "cannot locate bitSet32; load base undetermined"
     _PROBE_BASE=$(( 0x${hit%%:*} - link ))
     return 0
 }
 
 # The cutscene must be over before typed input is dispatched at all --
-# tick.c gates the keyboard on `introSeq == NO`.
+# tick.c gates the keyboard on `movingIn == NO`.
 #
 # How long that takes depends entirely on whether a save was loaded.
-# With a HYBER present loadSavedGame sets g_lcldd and main SKIPS moveInScene, so
-# introSeq is clear almost at once.  Without one the full move-in
+# With a HYBER present loadSavedGame sets loadedSave and main SKIPS moveInScene, so
+# movingIn is clear almost at once.  Without one the full move-in
 # cutscene runs -- doorbell, kitchen, sink, dresser, bathroom, suitcase
 # -- and that is ~60 s of wall time even fast-forwarded.  Wait for the
 # slow case; the fast one returns on the first poll.
 probe_gameplay_ready() {
     local a v
-    a=$(probe_addr _introSe)
+    a=$(probe_addr _movingI)
     for _ in $(seq 1 ${READY_TIMEOUT:-180}); do
         v=$(probe_word "$a")
         [ "$v" = "0" ] && return 0
         sleep 1
     done
-    probe_die "introSeq never cleared after ${READY_TIMEOUT:-180}s -- gameplay not reached"
+    probe_die "movingIn never cleared after ${READY_TIMEOUT:-180}s -- gameplay not reached"
 }
 
 probe_base() { printf '%x' "$_PROBE_BASE"; }
 
 # --- breakpoints ------------------------------------------------------
-# Some of what these scripts check is TRANSIENT: alarm_p is set by the
+# Some of what these scripts check is TRANSIENT: alarmRinging is set by the
 # key handler and cleared again by the game a frame or two later, so a
 # direct read races and usually loses.  A value-change breakpoint
 # cannot be sampled past -- it fires on both the set and the clear.
@@ -250,14 +250,14 @@ probe_bp_clear()   { _probe_send "hatari-debug b -all"; sleep 0.2; }
 probe_hits() { probe_since "$1" | grep -c 'condition(s) matched' || true; }
 
 # Write bytes.  Used to satisfy a guard the AI would otherwise have to
-# reach on its own -- Ctrl-P is gated on pat_ok, which only callDog
+# reach on its own -- Ctrl-P is gated on patAllowed, which only callDog
 # sets and no typed command reaches.
 probe_poke() { local a=$1; shift; _probe_send "hatari-debug w \$$a $*"; sleep 0.1; }
 
 # Fast-forward compresses wall time but NOT emulated time, so with it on
 # a few hundred emulated frames pass between two commands here.  That is
 # fine for booting and fatal for measuring anything short-lived -- the
-# text buffer times out (tx_sctm is 160 ticks) and the action queue
+# text buffer times out (textTimer is 160 ticks) and the action queue
 # drains.  Turn it off around a measurement.
 probe_fast() { _probe_send "hatari-option --fast-forward $1"; sleep 0.3; }
 

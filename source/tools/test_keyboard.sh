@@ -13,8 +13,8 @@
 #
 # Verified by STATE, not by animation:
 #
-#   Ctrl-W  water      lcp_watr increments (clamped at 10)
-#   Ctrl-A  alarm      alarm_p changes -- SET then CLEARED, so this is
+#   Ctrl-W  water      waterLevel increments (clamped at 10)
+#   Ctrl-A  alarm      alarmRinging changes -- SET then CLEARED, so this is
 #                      caught with a value-change breakpoint; a direct
 #                      read races the game and usually loses
 #   Ctrl-B  book       queueEvent() entered
@@ -22,19 +22,19 @@
 #   Ctrl-D  dog food   queueEvent() entered
 #   Ctrl-F  food       queueEvent() entered
 #   Ctrl-R  record     queueEvent() entered
-#   Ctrl-P  pat LCP    g_ptdoa changes.  This pats the RESIDENT on the
+#   Ctrl-P  pat LCP    patActive changes.  This pats the RESIDENT on the
 #                      head, not the dog: the handler sets
 #                      lcp.happiness = MOOD_HAPPY, and the animation
 #                      cycles SPRITE_PET_HAND_1..6 -- the player's hand
 #                      -- at a fixed (192,165), which is where the
 #                      phone sits (tick.c draws it at 190,168).  It is
-#                      gated on pat_ok, set only by callDog, which
+#                      gated on patAllowed, set only by callDog, which
 #                      walks the resident to position 43 (x=220, the
 #                      armchair by the phone) and crouches.  No typed
 #                      command reaches callDog, so the guard is forced
 #                      from the debugger.
-#   Ctrl-M  Return     g_aliss grows (a command is submitted)
-#   8       erase      g_cdibp decrements.  Reached from BOTH Backspace
+#   Ctrl-M  Return     queueCount grows (a command is submitted)
+#   8       erase      typedCursor decrements.  Reached from BOTH Backspace
 #                      and the cursor-LEFT arrow: getKey maps scancode
 #                      0x4b to 8 and Backspace is ASCII 8 already.
 #
@@ -54,20 +54,20 @@ bad()  { fail=$((fail+1)); printf 'FAIL (%s)\n' "$2";    results+=$'\n'"  FAIL  
 
 probe_start
 
-A_WATR=$(probe_addr _lcp_wat)
-A_ALRM=$(probe_addr _alarm_p)
+A_WATR=$(probe_addr _waterLe)
+A_ALRM=$(probe_addr _alarmRi)
 A_PUTEV=$(probe_addr _queueEv)
-A_PTDOA=$(probe_addr _g_ptdoa)
-A_PETOK=$(probe_addr _pat_ok)
-A_ALISS=$(probe_addr _g_aliss)
-A_CDIBP=$(probe_addr _g_cdibp)
+A_PTDOA=$(probe_addr _patActi)
+A_PETOK=$(probe_addr _patAllo)
+A_ALISS=$(probe_addr _queueCo)
+A_CDIBP=$(probe_addr _typedCu)
 
 echo "load base \$$(probe_base)"
 echo ""
 
 # ---- Ctrl-W: durable counter, but it CLAMPS ---------------------------
 # handleKey returns immediately when the tank is already full:
-#   if (lcp_watr == 10) return;
+#   if (waterLevel == 10) return;
 # and earlier runs of this very script leave it at 10, so asserting an
 # increase without emptying it first fails on the second run of the day.
 # Empty it, then three presses must add three.
@@ -76,17 +76,17 @@ probe_poke "$A_WATR" 0 0
 before=$(probe_word "$A_WATR")
 probe_ctrl W; probe_ctrl W; probe_ctrl W; sleep 0.5
 after=$(probe_word "$A_WATR")
-if [ "$after" -eq $((before + 3)) ]; then ok "Ctrl-W  lcp_watr $before -> $after"
-else bad "Ctrl-W" "lcp_watr $before -> $after, expected $((before + 3))"; fi
+if [ "$after" -eq $((before + 3)) ]; then ok "Ctrl-W  waterLevel $before -> $after"
+else bad "Ctrl-W" "waterLevel $before -> $after, expected $((before + 3))"; fi
 
 # ---- Ctrl-F is CONDITIONAL, so make its condition true ---------------
 # handleKey returns without queuing when the food cupboard reads full:
-#   if (((lcp.door_states_and_flags >> 9) & 7) == 4) { food_dlv = YES; return; }
+#   if (((lcp.door_states_and_flags >> 9) & 7) == 4) { pantryFull = YES; return; }
 # Whether that holds depends on the save that happens to be on the
 # drive, so this asserted nothing stable until the field was forced.
 # Clear bits 9..11 and the delivery path is the one under test.
 printf '%-22s ' "Ctrl-F  food"
-A_DSF=$(printf '%x' $(( 0x$(probe_addr _lcp) + 0x58 )))
+A_DSF=$(printf '%x' $(( 0x$(probe_addr _residen) + 0x58 )))
 dsf=$(probe_word "$A_DSF")
 newdsf=$(( dsf & ~0x0E00 ))
 probe_poke "$A_DSF" $(( (newdsf >> 8) & 0xff )) $(( newdsf & 0xff ))
@@ -114,18 +114,18 @@ printf '%-22s ' "Ctrl-A  alarm"
 probe_bp_changed "$A_ALRM"
 M=$(probe_mark); probe_ctrl A; sleep 0.6
 n=$(probe_hits "$M")
-if [ "$n" -ge 1 ]; then ok "Ctrl-A  alarm_p changed ($n)"
-else bad "Ctrl-A" "alarm_p never changed"; fi
+if [ "$n" -ge 1 ]; then ok "Ctrl-A  alarmRinging changed ($n)"
+else bad "Ctrl-A" "alarmRinging never changed"; fi
 probe_bp_clear
 
 # ---- Ctrl-P: force the guard the AI would have to satisfy ------------
 printf '%-22s ' "Ctrl-P  pat LCP"
-probe_poke "$A_PETOK" 0 1                  # pat_ok = YES
+probe_poke "$A_PETOK" 0 1                  # patAllowed = YES
 probe_bp_changed "$A_PTDOA"
 M=$(probe_mark); probe_ctrl P; sleep 0.6
 n=$(probe_hits "$M")
-if [ "$n" -ge 1 ]; then ok "Ctrl-P  g_ptdoa changed ($n)"
-else bad "Ctrl-P" "g_ptdoa never changed (pat_ok guard?)"; fi
+if [ "$n" -ge 1 ]; then ok "Ctrl-P  patActive changed ($n)"
+else bad "Ctrl-P" "patActive never changed (patAllowed guard?)"; fi
 probe_bp_clear
 
 # ---- Ctrl-M: Return submits the command buffer -----------------------
@@ -133,8 +133,8 @@ printf '%-22s ' "Ctrl-M  submit"
 before=$(probe_word "$A_ALISS")
 probe_cmd "DRINK WATER"; sleep 0.4
 after=$(probe_word "$A_ALISS")
-if [ "$after" -gt "$before" ]; then ok "Ctrl-M  g_aliss $before -> $after"
-else bad "Ctrl-M" "g_aliss stayed $before -- nothing submitted"; fi
+if [ "$after" -gt "$before" ]; then ok "Ctrl-M  queueCount $before -> $after"
+else bad "Ctrl-M" "queueCount stayed $before -- nothing submitted"; fi
 
 # ---- key 8: from Backspace AND from the cursor-left arrow ------------
 for pair in "$SC_BACKSPACE Backspace" "$SC_LEFT cursor-left"; do
@@ -145,9 +145,9 @@ for pair in "$SC_BACKSPACE Backspace" "$SC_LEFT cursor-left"; do
     probe_key "$1"; sleep 0.3
     after=$(probe_word "$A_CDIBP")
     if [ "$before" -gt 0 ] && [ "$after" -eq $((before - 1)) ]; then
-        ok "$2  g_cdibp $before -> $after"
+        ok "$2  typedCursor $before -> $after"
     else
-        bad "$2" "g_cdibp $before -> $after (expected one less)"
+        bad "$2" "typedCursor $before -> $after (expected one less)"
     fi
     probe_key "$SC_RETURN"; sleep 0.2      # clear the buffer
 done

@@ -15,14 +15,14 @@
 void
 fallSick()
 {
-        lcp.sickness_level      = SICKNESS_MILD;
-        lcp.sickness_countdown  = SICK_DELAY_WORSENING;
-        lcp.sickness_direction  = DIR_WORSENING;
-        lcp.happiness_direction = DIR_WORSENING;
-        if (lcp.happiness < MOOD_SAD)
+        resident.sickness_level      = SICKNESS_MILD;
+        resident.sickness_countdown  = SICK_DELAY_WORSENING;
+        resident.sickness_direction  = DIR_WORSENING;
+        resident.happiness_direction = DIR_WORSENING;
+        if (resident.happiness < MOOD_SAD)
                 /* One mood step sadder (HAPPY -> CONTENT -> SAD).  Written
                    `+= 1` on purpose: `x = x + 1` compiles differently. */
-                lcp.happiness += 1;
+                resident.happiness += 1;
         setSkinColor();
 }
 
@@ -34,10 +34,10 @@ fallSick()
 void
 startRecovery()
 {
-        if (lcp.hunger_level == NEED_SATISFIED &&
-            lcp.thirst_level == NEED_SATISFIED) {
-                lcp.sickness_direction = DIR_IMPROVING;
-                lcp.sickness_countdown = SICK_DELAY_IMPROVING;
+        if (resident.hunger_level == NEED_SATISFIED &&
+            resident.thirst_level == NEED_SATISFIED) {
+                resident.sickness_direction = DIR_IMPROVING;
+                resident.sickness_countdown = SICK_DELAY_IMPROVING;
         }
 }
 
@@ -46,9 +46,9 @@ startRecovery()
 void
 setSkinColor()
 {
-        if (lcp.sickness_level == SICKNESS_HEALTHY)
-                main_pal[6] = ST_PEACH;
+        if (resident.sickness_level == SICKNESS_HEALTHY)
+                mainPalette[6] = ST_PEACH;
         else
-                main_pal[6] = ST_SICK_GREEN;
-        Setpalette(main_pal);
+                mainPalette[6] = ST_SICK_GREEN;
+        Setpalette(mainPalette);
 }

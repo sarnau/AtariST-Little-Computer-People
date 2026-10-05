@@ -2,7 +2,7 @@
  * Included by stx_u1.c; never compiled on its own.
  */
 /* copyScreen: vro_cpyfm the physbase screen into pdesMFDB.
-   Source MFDB_A.fd_addr=NULL is VDI "device screen" -- reads visible
+   Source screenMfdb.fd_addr=NULL is VDI "device screen" -- reads visible
    video RAM.  Mode ALL_WHITE (=0) irrelevant on ST with fd_addr=NULL. */
 
 void
@@ -22,5 +22,5 @@ MFDB *  pdesMFDB;
         points[5] = 0;
         points[6] = (unsigned short) pdesMFDB->fd_w - 1;
         points[7] = (unsigned short) pdesMFDB->fd_h - 1;
-        vro_cpyfm(handle, ALL_WHITE, points, MFDB_A, pdesMFDB);
+        vro_cpyfm(handle, ALL_WHITE, points, screenMfdb, pdesMFDB);
 }

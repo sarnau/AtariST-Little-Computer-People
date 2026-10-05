@@ -11,7 +11,7 @@ short   year;
         /* No local: the test is inverted so the table lookup is the
            then-arm, and every arm returns directly. */
         if (month != 1)
-                return days_pmo[month];
+                return daysPerMonth[month];
         else if ((t_year % 4) == 0)
                 return 29;
         else

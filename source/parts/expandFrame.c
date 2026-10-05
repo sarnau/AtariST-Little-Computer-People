@@ -56,13 +56,13 @@ short   flipV;
                            `& 0xff` masks, and m2 doubles as the shift
                            temporary for m1. */
                         w  = srcImg[((width - 1) - x) << 1];
-                        m2 = rev_tab[w & 0xff];
+                        m2 = mirrorTable[w & 0xff];
                         m2 <<= 8;
-                        m1 = m2 | rev_tab[(w >> 8) & 0xff];
+                        m1 = m2 | mirrorTable[(w >> 8) & 0xff];
                         w  = *(srcImg + (((width - 1) - x) << 1) + 1);
-                        m2 = rev_tab[w & 0xff];
+                        m2 = mirrorTable[w & 0xff];
                         m2 <<= 8;
-                        m2 |= rev_tab[(w >> 8) & 0xff];
+                        m2 |= mirrorTable[(w >> 8) & 0xff];
 
                         if (flipV != 0) {
                                 *destImg++ = m1;
@@ -76,8 +76,8 @@ short   flipV;
                         *destImg++ = 0;
 
                         w = srcMask[(width - 1) - x];
-                        mmask = rev_tab[w & 0xff] << 8;
-                        mmask |= rev_tab[(w >> 8) & 0xff];
+                        mmask = mirrorTable[w & 0xff] << 8;
+                        mmask |= mirrorTable[(w >> 8) & 0xff];
                         *destMask++ = mmask;
                         *destMask++ = mmask;
                         *destMask++ = mmask;

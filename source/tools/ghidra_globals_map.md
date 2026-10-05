@@ -10,8 +10,8 @@ cross-referencing decompiler output against port source.
 **Currently mapped: all but THIRTEEN port globals** (measured
 2026-09-06).  The previous note here said "~366/397, remaining ~93"
 and was badly wrong: it compared lcp_sym.68k's 8-char TRUNCATED
-linkage names against this file's full names, so `lcp_watr`,
-`introSeq` and dozens more counted as unmapped when they
+linkage names against this file's full names, so `waterLevel`,
+`movingIn` and dozens more counted as unmapped when they
 are not.  Expand the truncations first -- and exclude DRI libc and the
 AES library's own `gl_apid`, which are not port globals.
 
@@ -46,7 +46,7 @@ hand-maintained in `$HOME` any more:
     earlier sync had pushed truncated (`body_sh`, `body_pt`, `evnt_ti`,
     `form_al`) and five addresses Ghidra had no label at; the
     hand-written list it replaced had noticed none of them.  All fixed
-    except scrbufA, whose base is inferred -- **ok=693, mismatched=0**.
+    except altScreen, whose base is inferred -- **ok=693, mismatched=0**.
 
 The older `apply_ghidra_renames.sh` is DEAD and this file used to
 point at it.  It POSTs to a Ghidra HTTP server on :8089 and needs
@@ -91,7 +91,7 @@ Derived from decompiling: `timerAIsr`, `seqAdvance`, `stepEnvelopes`, `psgWrite`
 
 | Ghidra                            | Port         |
 |-----------------------------------|--------------|
-| `animation_tick_counter`          | `ani_cnt`    |
+| `animation_tick_counter`          | `frameCount`    |
 | `game_seconds_counter`            | `t_sec`      |
 | `time_minutes`                    | `t_min`      |
 | `time_hours`                      | `t_hour`     |
@@ -104,382 +104,382 @@ Derived from decompiling: `timerAIsr`, `seqAdvance`, `stepEnvelopes`, `psgWrite`
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
 | `lcp` (PLAYER struct)              | `lcp`        |
-| `lcp_state`                        | `lcp_st`     |
-| `lcp_facing_direction`             | `lcp_face`   |
-| `lcp_filing_cabinet_open`          | `lcp_flcO`   |
-| `lcp_water_level`                  | `lcp_watr`   |
-| `last_action`                      | `lastAct`    |
-| `trigger_action`                   | `g_trac`     |
-| `intro_sequence_active`            | `introSeq`   |
-| `phone_answered_flag`              | `ph_ans`     |
-| `phone_call_active_flag`           | `ph_call`    |
-| `ctrl_a_alarm_pressed_flag`        | `alarm_p`    |
-| `lunch_meal_triggered_today`       | `lunT_trg`   |
-| `dinner_meal_triggered_today`      | `dinT_trg`   |
-| `morning_wakeup_triggered_today`   | `wkT_trg`    |
-| `bedtime_triggered_today`          | `bedT_trg`   |
-| `_action_queue[]`                  | `g_aqueu[]`  |
-| `_action_priority_queue[]`         | `g_apriq[]`  |
-| `_action_list_size`                | `g_aliss`    |
+| `lcp_state`                        | `animState`     |
+| `lcp_facing_direction`             | `resFacing`   |
+| `lcp_filing_cabinet_open`          | `filingCabOpen`   |
+| `lcp_water_level`                  | `waterLevel`   |
+| `last_action`                      | `lastAction`    |
+| `trigger_action`                   | `nextAction`     |
+| `intro_sequence_active`            | `movingIn`   |
+| `phone_answered_flag`              | `phoneAnswered`     |
+| `phone_call_active_flag`           | `phoneRinging`    |
+| `ctrl_a_alarm_pressed_flag`        | `alarmRinging`    |
+| `lunch_meal_triggered_today`       | `lunchDone`   |
+| `dinner_meal_triggered_today`      | `dinnerDone`   |
+| `morning_wakeup_triggered_today`   | `wakeupDone`    |
+| `bedtime_triggered_today`          | `bedtimeDone`   |
+| `_action_queue[]`                  | `queueActions[]`  |
+| `_action_priority_queue[]`         | `queuePriority[]`  |
+| `_action_list_size`                | `queueCount`    |
 
 ### Action tables (tick_tables)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `action_table_active[]`            | `g_atact[]`  |
-| `action_table_moderate[]`          | `g_atmod[]`  |
-| `action_table_relaxed[]`           | `g_atrel[]`  |
-| `activity_schedule_table[]`        | `sch_tab[]`  |
-| `triggered_event_list[]`           | `g_trel[]`   |
+| `action_table_active[]`            | `activeActions[]`  |
+| `action_table_moderate[]`          | `moderateActions[]`  |
+| `action_table_relaxed[]`           | `relaxedActions[]`  |
+| `activity_schedule_table[]`        | `scheduleTiers[]`  |
+| `triggered_event_list[]`           | `eventQueue[]`   |
 
 **Four of these rows were wrong until 2026-09-06**, and the section
 even flagged the first three as unverified ("assignment ... is by
 role").  Verified now, and the port side was on the wrong symbols:
 
-  * The action tables are `g_atact` / `g_atmod` / `g_atrel`, each
+  * The action tables are `activeActions` / `moderateActions` / `relaxedActions`, each
     `[16]` and indexed `rndRng(0, 15)` in airandom.c to pick an action
     for the resident's activity level.  They used to be paired with
-    `g_obala` / `g_obcla` / `g_obpha`, which are OBJECT ANIMATION
+    `alarmFrames` / `clockFrames` / `phoneFrames`, which are OBJECT ANIMATION
     frame lists fed to `drawObject` -- and which this file ALSO pairs,
     correctly, with `object_alarm_animation` / `object_clock_animation`
-    / `object_phone_animation` further down.  `g_obala` appeared twice
-    with contradictory meanings.  Confirmed by address: g_obala is
+    / `object_phone_animation` further down.  `alarmFrames` appeared twice
+    with contradictory meanings.  Confirmed by address: alarmFrames is
     Ghidra 0x2b92a and dat_u3a.c's own comment reads
     "alarm_animation @ 0x2B92A".
-  * `triggered_event_list` is **g_trel**, not `pst_arr`.  g_trel is
+  * `triggered_event_list` is **eventQueue**, not `scratchArr`.  eventQueue is
     Ghidra 0x2b6da -- exactly the address globals.c cites for that
-    name, in a comment that sits above pst_arr's declaration by
-    mistake.  g_trel is the event FIFO queueEvent appends to and everything
-    tests as `g_trel[0] != ACTION_NONE`; pst_arr is a 10-short scratch
+    name, in a comment that sits above scratchArr's declaration by
+    mistake.  eventQueue is the event FIFO queueEvent appends to and everything
+    tests as `eventQueue[0] != ACTION_NONE`; scratchArr is a 10-short scratch
     buffer the action handlers cache player STATES in (useComputer fills
     it with STATE_HANDS_DOWN and friends), and it has no descriptive
     Ghidra name.
 
 The Ghidra spellings of `action_table_*` are kept because the ROLE is
 now proven, but note they were role-inferred by the original analysis
-and the address-keyed sync found a stale port label (`g_obala`) rather
-than a descriptive one sitting at g_atact's address -- so treat the
+and the address-keyed sync found a stale port label (`alarmFrames`) rather
+than a descriptive one sitting at activeActions's address -- so treat the
 left column here as a description, not as a string to search Ghidra
-for.  `g_obfia[]` and `g_obdea[]` remain unsampled.
+for.  `fireFrames[]` and `bowlFrames[]` remain unsampled.
 
 ### MIDI sequencer
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `midi_is_playing`                  | `mi_play`    |
-| `midi_tick_counter`                | `g_mtcou`    |
-| `midi_tick_prescaler`              | `g_mtpre`    |
-| `midi_ticks_per_beat`              | `g_mtspb`    |
-| `midi_tick_divider`                | `g_mtdiv`    |
-| `midi_direct_write_mode`           | `mi_dwrm`    |
-| `midi_reentrant_lock`              | `mi_rlock`   |
-| `midi_sequencer_active`            | `g_msmsa`    |
-| `midi_seq_phase`                   | `g_mspha`    |
-| `midi_event_duration`              | `mi_nlp0`    |
-| `midi_next_event_tick`             | `mi_nxTk`    |
-| `midi_last_processed_tick`         | `mi_lpTk`    |
-| `midi_note_event_index`            | `mi_evi`     |
-| `midi_note_length_params[]`        | `mi_ntLp[]`  |
-| `aes_int_out[]`                    | `mi_tpb[]` |
+| `midi_is_playing`                  | `songPlaying`    |
+| `midi_tick_counter`                | `timerTicks`    |
+| `midi_tick_prescaler`              | `seqCountdown`    |
+| `midi_ticks_per_beat`              | `ticksPerBeat`    |
+| `midi_tick_divider`                | `envDivider`    |
+| `midi_direct_write_mode`           | `seqBusy`    |
+| `midi_reentrant_lock`              | `envBusy`   |
+| `midi_sequencer_active`            | `songActive`    |
+| `midi_seq_phase`                   | `seqPhase`    |
+| `midi_event_duration`              | `ticksToNext`    |
+| `midi_next_event_tick`             | `nextEvTick`    |
+| `midi_last_processed_tick`         | `lastExpTick`    |
+| `midi_note_event_index`            | `queueLen`     |
+| `midi_note_length_params[]`        | `sfxData[]`  |
+| `aes_int_out[]`                    | `beatTicks[]` |
 
 ### PSG / envelope
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `psg_notes_active`                 | `psg_ntAc`   |
-| `psg_envelope[]`                   | `psg_envelope[]` |
-| `psg_channel_ramp_accum[]`         | `psg_racc[]` |
-| `psg_channel_ramp_delta[]`         | `psg_rdel[]` |
-| `psg_register_offset_table[]`      | `psg_rot[]`  |
-| `psg_output_volume` (working reg)  | `psg_cvol`   |
+| `psg_notes_active`                 | `psgActive`   |
+| `psg_envelope[]`                   | `psgEnvelope[]` |
+| `psg_channel_ramp_accum[]`         | `rampAccum[]` |
+| `psg_channel_ramp_delta[]`         | `rampDelta[]` |
+| `psg_register_offset_table[]`      | `ampRegs[]`  |
+| `psg_output_volume` (working reg)  | `noteVolume`   |
 
 ### Sound effects (`startSfx`)
 
 | Ghidra                              | Port         |
 |-------------------------------------|--------------|
-| `soundeffect_active_flag`           | `g_sfacf`    |
-| `soundeffect_playing_flag`          | `g_sfplf`    |
-| `soundeffect_current`               | `g_sfcur`    |
-| `soundeffect_current_priority`      | `g_sfcup`    |
-| `soundeffect_playing_id`            | `g_sfpli`    |
-| `soundeffect_default_duration_hi`   | `g_sfddh`    |
-| `soundeffect_default_duration_lo`   | `g_sfddl`    |
-| `soundeffect_Hz200`                 | `g_sfHz2`    |
-| `soundeffect_remaining_ticks`       | `g_sfret`    |
-| `soundeffect_duration`              | `g_sfdur`    |
-| `soundeffect_DoSound_Buffer[]`      | `g_sfDoB[]`  |
-| `_soundeffect_priority_table[]`     | `sf_pri[]`   |
+| `soundeffect_active_flag`           | `sfxPending`    |
+| `soundeffect_playing_flag`          | `sfxPlaying`    |
+| `soundeffect_current`               | `sfxReqId`    |
+| `soundeffect_current_priority`      | `sfxCurPrio`    |
+| `soundeffect_playing_id`            | `sfxCurId`    |
+| `soundeffect_default_duration_hi`   | `sfxDurHi`    |
+| `soundeffect_default_duration_lo`   | `sfxDurLo`    |
+| `soundeffect_Hz200`                 | `sfxStartHz`    |
+| `soundeffect_remaining_ticks`       | `sfxTicksLeft`    |
+| `soundeffect_duration`              | `sfxReqDur`    |
+| `soundeffect_DoSound_Buffer[]`      | `sfxBuffer[]`  |
+| `_soundeffect_priority_table[]`     | `sfxPriority[]`   |
 
 ### Sprite render
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `sprite_mfdb_image[]`              | `g_semfi[]`  |
-| `sprite_mfdb_mask[]`               | `g_semfm[]`  |
-| `sprite_active_image[]`            | `g_seaim[]`  |
-| `sprite_active_mask[]`             | `g_seams[]`  |
-| `sprite_active_width[]`            | `g_seacw[]`  |
-| `sprite_active_height[]`           | `g_seach[]`  |
+| `sprite_mfdb_image[]`              | `slotImgMfdb[]`  |
+| `sprite_mfdb_mask[]`               | `slotMaskMfdb[]`  |
+| `sprite_active_image[]`            | `drawnImage[]`  |
+| `sprite_active_mask[]`             | `drawnMask[]`  |
+| `sprite_active_width[]`            | `drawnWidth[]`  |
+| `sprite_active_height[]`           | `drawnHeight[]`  |
 
 ### Letter / clock
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `letter_txt_content`               | `g_lttx`     |
-| `letter_line_ptr[]`                | `g_ltlp[]`   |
-| `clock_minute_position[]`          | `g_cmmip[]`  |
-| `clock_hour_position[]`            | `g_chhop[]`  |
+| `letter_txt_content`               | `letterText`     |
+| `letter_line_ptr[]`                | `letterLines[]`   |
+| `clock_minute_position[]`          | `minuteHandXY[]`  |
+| `clock_hour_position[]`            | `hourHandXY[]`  |
 
 ### VDI plumbing
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `vdihandle`                        | `vdihnd`     |
-| `screen_mfdb` (compositing target) | `g_srmfd`    |
-| `MFDB_screen_ptr` (source screen)  | `mf_scrp`    |
-| `screen_scale_factor`              | `scr_scal`   |
+| `vdihandle`                        | `vdiHandle`     |
+| `screen_mfdb` (compositing target) | `frameMfdb`    |
+| `MFDB_screen_ptr` (source screen)  | `houseMfdb`    |
+| `screen_scale_factor`              | `screenScale`   |
 
 ### Dog AI
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `dog_pettable_flag` (Ghidra WRONG)  | `pat_ok`     |
-| `dog_idle_countdown`               | `dg_idlcd`   |
-| `dog_food_bowl_change`             | `dg_bwlch`   |
-| `dog_near_food_bowl`               | `dg_nrbwl`   |
-| `dog_on_stairs_flag`               | `dg_stair`   |
-| `dog_visible`                      | `dg_vis`     |
-| `dog_initialized`                  | `dg_init`    |
-| `dog_last_target_index`            | `dg_ltgtI`   |
-| `dog_initial_target_index`         | `g_dgitx`    |
-| `dog_initial_y_offset`             | `g_dgiyo`    |
-| `dog_destination_position_table`   | `g_ddipt`    |
-| `dog_dest_x_offset_table`          | `g_ddxot`    |
-| `dog_dest_y_offset_table`          | `g_ddyot`    |
-| `dog_eating_active`                | `g_deact`    |
-| `dog_eating_countdown`             | `g_decou`    |
-| `dog_flip_image_buffer`            | `g_dfimb`    |
-| `dog_flip_mask_buffer`             | `g_dfmab`    |
-| `dog_sprite_eating_anim_tab`       | `g_dseat`    |
-| `dog_sprite_id`                    | `g_dsid`     |
-| `dog_target_x`                     | `g_dtx`      |
-| `dog_target_y`                     | `g_dty`      |
-| `dog_walk_anim_cycle`              | `g_dwanc`    |
-| `dog_walk_anim_frames`             | `g_dwanf`    |
-| `delivery_is_for_dog`              | `g_dvdog`    |
+| `dog_pettable_flag` (Ghidra WRONG)  | `patAllowed`     |
+| `dog_idle_countdown`               | `dogIdleCount`   |
+| `dog_food_bowl_change`             | `bowlChange`   |
+| `dog_near_food_bowl`               | `dogMayEat`   |
+| `dog_on_stairs_flag`               | `dogOnStairs`   |
+| `dog_visible`                      | `dogNoTopFlr`     |
+| `dog_initialized`                  | `dogHidden`    |
+| `dog_last_target_index`            | `dogLastPick`   |
+| `dog_initial_target_index`         | `dogStartPos`    |
+| `dog_initial_y_offset`             | `dogYStartNudge`    |
+| `dog_destination_position_table`   | `dogRoamSpots`    |
+| `dog_dest_x_offset_table`          | `dogXNudge`    |
+| `dog_dest_y_offset_table`          | `dogYNudge`    |
+| `dog_eating_active`                | `dogEating`    |
+| `dog_eating_countdown`             | `dogEatCount`    |
+| `dog_flip_image_buffer`            | `dogMirImage`    |
+| `dog_flip_mask_buffer`             | `dogMirMask`    |
+| `dog_sprite_eating_anim_tab`       | `dogEatFrames`    |
+| `dog_sprite_id`                    | `dogSpriteId`     |
+| `dog_target_x`                     | `dogXTarget`      |
+| `dog_target_y`                     | `dogYTarget`      |
+| `dog_walk_anim_cycle`              | `dogStepIdx`    |
+| `dog_walk_anim_frames`             | `dogWalkSprites`    |
+| `delivery_is_for_dog`              | `isDogDelivery`    |
 
 ### Head / body / stair
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `head_sprite_buffer`               | `g_hsbuf`    |
-| `sprite_buffer`                    | `sp_mbuf`    |
-| `head_sprite_frame`                | `g_hsfra`    |
-| `head_sprite_mask`                 | `g_hsmas`    |
-| `head_sprite_mirror_flag`          | `g_hsmif`    |
-| `head_anim_current`                | `g_hacur`    |
-| `head_anim_target_state`           | `g_hatas`    |
-| `head_anim_mode`                   | `g_hamod`    |
-| `head_anim_delay_countdown`        | `g_hadec`    |
-| `head_anim_state_last`             | `g_hastl`    |
-| `head_height_per_state`            | `hd_hgt`     |
-| `head_x_offset_per_state`          | `hd_xoff`    |
-| `head_default_angle_per_state`     | `hd_dang`    |
-| `head_movement_delta_table`        | `hd_mvd`     |
-| `head_tilt_frame_offset`           | `hd_tilt`    |
-| `head_shape_data`                  | `hd_shp`     |
-| `body_shape_data`                  | `body_shp`   |
-| `body_sprite_frame_table`          | `body_frT`   |
-| `body_y_offset_per_state`          | `body_yof`   |
-| `happiness_head_frame_offset`      | `mood_hfo`   |
-| `staircase_waypoint_coords`        | `stair_wp`   |
-| `stair_top_y_threshold`            | `stair_ty`   |
-| `stair_bottom_y_threshold`         | `stair_by`   |
+| `head_sprite_buffer`               | `headImage`    |
+| `sprite_buffer`                    | `genMaskBuf`    |
+| `head_sprite_frame`                | `headFrame`    |
+| `head_sprite_mask`                 | `headMask`    |
+| `head_sprite_mirror_flag`          | `headMirror`    |
+| `head_anim_current`                | `headPose`    |
+| `head_anim_target_state`           | `headTarget`    |
+| `head_anim_mode`                   | `headMode`    |
+| `head_anim_delay_countdown`        | `headDelay`    |
+| `head_anim_state_last`             | `headLastWalk`    |
+| `head_height_per_state`            | `headYOffset`     |
+| `head_x_offset_per_state`          | `headXOffset`    |
+| `head_default_angle_per_state`     | `headRestDir`    |
+| `head_movement_delta_table`        | `headTurnStep`     |
+| `head_tilt_frame_offset`           | `headTiltFrame`    |
+| `head_shape_data`                  | `headShapes`     |
+| `body_shape_data`                  | `bodyShapes`   |
+| `body_sprite_frame_table`          | `bodyIndex`   |
+| `body_y_offset_per_state`          | `bodyYOffset`   |
+| `happiness_head_frame_offset`      | `moodHeadBase`   |
+| `staircase_waypoint_coords`        | `stairWaypts`   |
+| `stair_top_y_threshold`            | `xLanding`   |
+| `stair_bottom_y_threshold`         | `yLanding`   |
 
 ### Anagram game
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `anagram_all_clues_used`           | `g_agacu`    |
-| `anagram_clue_count`               | `g_agclc`    |
-| `anagram_guess_prompt_strings`     | `g_aggpr`    |
-| `anagram_guess_number`             | `g_aggun`    |
-| `anagram_input_buffer`             | `g_aginb`    |
-| `anagram_original_word`            | `g_agorw`    |
-| `anagram_scrambled_word`           | `g_agscw`    |
-| `anagram_words_buffer`             | `g_agwb`     |
-| `anagram_wrong_guess_messages`     | `g_agwgm`    |
-| `anagram_word_length`              | `g_agwol`    |
-| `anagram_clue_used_this_round`     | `ag_clue`    |
+| `anagram_all_clues_used`           | `anaExtraGuess`    |
+| `anagram_clue_count`               | `anaNumClues`    |
+| `anagram_guess_prompt_strings`     | `anaPrompts`    |
+| `anagram_guess_number`             | `anaGuessNum`    |
+| `anagram_input_buffer`             | `anaInput`    |
+| `anagram_original_word`            | `anaAnswer`    |
+| `anagram_scrambled_word`           | `anaScrambled`    |
+| `anagram_words_buffer`             | `anaDict`     |
+| `anagram_wrong_guess_messages`     | `anaWrongMsgs`    |
+| `anagram_word_length`              | `anaWordLen`    |
+| `anagram_clue_used_this_round`     | `anaClueUsed`    |
 
 ### Word puzzle
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `word_puzzle_blank_count`          | `wp_blk`     |
-| `word_puzzle_failure_messages`     | `wp_fail`    |
-| `word_puzzle_prompt_messages`      | `wp_prm`     |
-| `word_puzzle_success_messages`     | `wp_succ`    |
-| `word_puzzle_current_index`        | `g_wpci`     |
-| `word_puzzle_data_buffer`          | `g_wpdb`     |
+| `word_puzzle_blank_count`          | `wpzBlanks`     |
+| `word_puzzle_failure_messages`     | `wpzWrongMsgs`    |
+| `word_puzzle_prompt_messages`      | `wpzPrompts`     |
+| `word_puzzle_success_messages`     | `wpzRightMsgs`    |
+| `word_puzzle_current_index`        | `wpzIndex`     |
+| `word_puzzle_data_buffer`          | `wpzText`     |
 
 ### Poker / War
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `poker_bet_amount`                 | `pk_bet`     |
-| `poker_computer_bluff_flag`        | `pk_bluff`   |
-| `poker_computer_card_count`        | `pk_ccc`     |
-| `poker_computer_hand`              | `pk_ch`      |
-| `poker_computer_hand_rank`         | `pk_chrk`    |
-| `poker_war_computer_score`         | `pk_cscore`  |
-| `poker_computer_war_cards`         | `pk_cwc`     |
-| `poker_discard_count`              | `pk_disc`    |
-| `poker_discard_pile`               | `pk_dpile`   |
-| `poker_deck_position`              | `pk_dpos`    |
-| `poker_card_display_slot`          | `pk_dslot`   |
-| `poker_hand_rank_flags`            | `pk_hrf`     |
-| `poker_hand_suit_flags`            | `pk_hsf`     |
-| `poker_computer_passed`            | `pk_pass`    |
-| `poker_player_card_count`          | `pk_pcc`     |
-| `poker_player_hand`                | `pk_ph`      |
-| `poker_game_phase`                 | `pk_phase`   |
-| `poker_player_hand_rank_flags`     | `pk_phrf`    |
-| `poker_player_hand_suit_flags`     | `pk_phsf`    |
-| `poker_player_hand_value`          | `pk_phv`     |
-| `poker_player_split_card_count`    | `pk_pscc`    |
-| `poker_war_player_score`           | `pk_pscore`  |
-| `poker_player_split_hand`          | `pk_psh`     |
-| `poker_player_war_cards`           | `pk_pwc`     |
-| `poker_quit_flag`                  | `pk_quit`    |
-| `poker_raise_message`              | `pk_rm`      |
-| `poker_war_round`                  | `pk_round`   |
-| `poker_card_selected`              | `pk_sel`     |
-| `poker_take_cards_message`         | `pk_tcm`     |
-| `poker_computer_hand_cards`        | `g_pchc`     |
-| `poker_computer_bet`               | `g_pcbet`    |
-| `poker_computer_draw_pile`         | `g_pcdrp`    |
-| `poker_computer_money`             | `g_pcmon`    |
-| `poker_player_bet`                 | `g_ppbet`    |
-| `poker_player_draw_pile`           | `g_ppdrp`    |
-| `poker_player_money`               | `g_ppmon`    |
+| `poker_bet_amount`                 | `pkrBet`     |
+| `poker_computer_bluff_flag`        | `pkrBluffing`   |
+| `poker_computer_card_count`        | `bjHitsDealer`     |
+| `poker_computer_hand`              | `compHand`      |
+| `poker_computer_hand_rank`         | `compRank`    |
+| `poker_war_computer_score`         | `bjDealerScore`  |
+| `poker_computer_war_cards`         | `compWarCards`     |
+| `poker_discard_count`              | `pkrNumDisc`    |
+| `poker_discard_pile`               | `pkrDiscPile`   |
+| `poker_deck_position`              | `pkrRaiseAmt`    |
+| `poker_card_display_slot`          | `pkrWinner`   |
+| `poker_hand_rank_flags`            | `compScoring`     |
+| `poker_hand_suit_flags`            | `compSorted`     |
+| `poker_computer_passed`            | `pkrPassed`    |
+| `poker_player_card_count`          | `bjHitsMain`     |
+| `poker_player_hand`                | `plyrHand`      |
+| `poker_game_phase`                 | `bjDidSplit`   |
+| `poker_player_hand_rank_flags`     | `plyrScoring`    |
+| `poker_player_hand_suit_flags`     | `plyrSorted`    |
+| `poker_player_hand_value`          | `pkrLastBet`     |
+| `poker_player_split_card_count`    | `bjHitsSplit`    |
+| `poker_war_player_score`           | `bjPlyrScore`  |
+| `poker_player_split_hand`          | `bjSplitHand`     |
+| `poker_player_war_cards`           | `plyrWarCards`     |
+| `poker_quit_flag`                  | `cardQuit`    |
+| `poker_raise_message`              | `pkrMsgRaise`      |
+| `poker_war_round`                  | `pkrRound`   |
+| `poker_card_selected`              | `pkrSelected`     |
+| `poker_take_cards_message`         | `pkrMsgTake`     |
+| `poker_computer_hand_cards`        | `warDepth`     |
+| `poker_computer_bet`               | `bjBetMain`    |
+| `poker_computer_draw_pile`         | `compPile`    |
+| `poker_computer_money`             | `compChips`    |
+| `poker_player_bet`                 | `bjBetSplit`    |
+| `poker_player_draw_pile`           | `plyrPile`    |
+| `poker_player_money`               | `plyrChips`    |
 
 ### Cards
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `cards_data`                       | `crd_dat`    |
-| `cards_MFDB_blocks`                | `crd_mfdb`   |
-| `cards_x_pos_a`                    | `crd_xa`     |
-| `cards_x_pos_b`                    | `crd_xb`     |
-| `cards_y_pos_a`                    | `crd_ya`     |
-| `cards_y_pos_b`                    | `crd_yb`     |
+| `cards_data`                       | `cardImages`    |
+| `cards_MFDB_blocks`                | `cardMfdb`   |
+| `cards_x_pos_a`                    | `cardXComp`     |
+| `cards_x_pos_b`                    | `cardXPlyr`     |
+| `cards_y_pos_a`                    | `cardYComp`     |
+| `cards_y_pos_b`                    | `cardYPlyr`     |
 
 ### Letter (extended)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `letter_line_count`                | `g_ltlic`    |
-| `letter_paragraph_count`           | `g_ltpac`    |
-| `letter_char_width_table`          | `g_ltcwt`    |
-| `letter_greeting_table`            | `g_ltg`      |
+| `letter_line_count`                | `needlePos`    |
+| `letter_paragraph_count`           | `vuLeds`    |
+| `letter_char_width_table`          | `typingSprites`    |
+| `letter_greeting_table`            | `letterSignoffs`      |
 
 ### Save / load
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `save_physbase`                    | `sv_phb`     |
-| `save_logbase`                     | `sv_lgb`     |
-| `saved_body_sprite_ptr`            | `sv_bodyP`   |
-| `saved_head_sprite_ptr`            | `sv_headP`   |
-| `saved_vqt_attr`                   | `sv_vqta`    |
-| `lcp_loaded`                       | `g_lcldd`    |
+| `save_physbase`                    | `tosPhysbase`     |
+| `save_logbase`                     | `panelLogbase`     |
+| `saved_body_sprite_ptr`            | `savedBodyImg`   |
+| `saved_head_sprite_ptr`            | `savedHeadImg`   |
+| `saved_vqt_attr`                   | `savedTextAttr`    |
+| `lcp_loaded`                       | `loadedSave`    |
 
 ### Fire event
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `fire_active_flag`                 | `fire_act`   |
-| `fire_duration_countdown`          | `fire_dur`   |
-| `fire_extinguish_flag`             | `fire_ext`   |
+| `fire_active_flag`                 | `fireBurning`   |
+| `fire_duration_countdown`          | `fireTimeLeft`   |
+| `fire_extinguish_flag`             | `fireDouse`   |
 
 ### TV patterns
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `tv_pattern_0_x_coords`            | `g_tp0xc`    |
-| `tv_pattern_0_y_coords`            | `g_tp0yc`    |
-| `tv_pattern_1_x_coords`            | `g_tp1xc`    |
-| `tv_pattern_1_y_coords`            | `g_tp1yc`    |
-| `tv_pattern_2_x_coords`            | `g_tp2xc`    |
-| `tv_pattern_2_y_coords`            | `g_tp2yc`    |
-| `tv_pattern_3_x_coords`            | `g_tp3xc`    |
-| `tv_pattern_3_y_coords`            | `g_tp3yc`    |
-| `tv_pattern_color_indices`         | `g_tpcoi`    |
+| `tv_pattern_0_x_coords`            | `tvBar0X`    |
+| `tv_pattern_0_y_coords`            | `tvBar0Y`    |
+| `tv_pattern_1_x_coords`            | `tvBar1X`    |
+| `tv_pattern_1_y_coords`            | `tvBar1Y`    |
+| `tv_pattern_2_x_coords`            | `tvBar2X`    |
+| `tv_pattern_2_y_coords`            | `tvBar2Y`    |
+| `tv_pattern_3_x_coords`            | `tvBar3X`    |
+| `tv_pattern_3_y_coords`            | `tvBar3Y`    |
+| `tv_pattern_color_indices`         | `tvBarColor`    |
 
 ### Sprite engine (extended)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `sprite_active_x`                  | `g_seacx`    |
-| `sprite_active_y`                  | `g_seacy`    |
-| `sprite_pending_flag`              | `g_sepef`    |
-| `sprite_pending_width`             | `g_sepew`    |
-| `sprite_pending_x`                 | `g_sepex`    |
-| `sprite_pending_y`                 | `g_sepey`    |
-| `sprite_pending_image`             | `g_sepim`    |
-| `sprite_pending_mask`              | `g_sepms`    |
-| `sprite_pending_height`            | `g_sepeh`    |
-| `sprite_slot_map`                  | `g_seslm`    |
-| `sprite_layer_flags`               | `g_selaf`    |
+| `sprite_active_x`                  | `drawnX`    |
+| `sprite_active_y`                  | `drawnY`    |
+| `sprite_pending_flag`              | `pendReady`    |
+| `sprite_pending_width`             | `pendWidth`    |
+| `sprite_pending_x`                 | `pendX`    |
+| `sprite_pending_y`                 | `pendY`    |
+| `sprite_pending_image`             | `pendImage`    |
+| `sprite_pending_mask`              | `pendMask`    |
+| `sprite_pending_height`            | `pendHeight`    |
+| `sprite_slot_map`                  | `spriteSlot`    |
+| `sprite_layer_flags`               | `spriteLayer`    |
 
 ### Object tables
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `object_tab_mfdb`                  | `g_obtmt`    |
-| `object_tab_width`                 | `g_obtaw`    |
-| `object_tab_height`                | `g_obtah`    |
-| `objects_file`                     | `obj_file`   |
-| `action_interruptible_flag`        | `g_actif`    |
+| `object_tab_mfdb`                  | `objMfdbs`    |
+| `object_tab_width`                 | `objWidths`    |
+| `object_tab_height`                | `objHeights`    |
+| `objects_file`                     | `objFileBuf`   |
+| `action_interruptible_flag`        | `noPreempt`    |
 
 ### Clock / phone / misc
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `clock_minute`                     | `g_cmmin`    |
-| `clock_hour`                       | `g_chhou`    |
-| `phone_ring_countdown`             | `g_phrc`     |
-| `phone_hangup_flag`                | `ph_hu`      |
-| `record_browsing_active`           | `g_rbact`    |
-| `food_delivery_available`          | `food_dlv`   |
+| `clock_minute`                     | `clockMinute`    |
+| `clock_hour`                       | `clockHour`    |
+| `phone_ring_countdown`             | `ringCountdown`     |
+| `phone_hangup_flag`                | `phoneHangUp`      |
+| `record_browsing_active`           | `organPlaying`    |
+| `food_delivery_available`          | `pantryFull`   |
 
 ### Init / palette / parser / debug
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `copyprot_check_return`            | `cprot_r`    |
-| `game_speed_counter`               | `g_spdc`     |
-| `midi_noteon_state`                | `mi_noSt`    |
+| `copyprot_check_return`            | `copyProtResult`    |
+| `game_speed_counter`               | `walkSpeed`     |
+| `midi_noteon_state`                | `noteOwner`    |
 
 ### (subsystem line placeholder — do not remove)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `main_colorpalette`                | `main_pal`   |
-| `skin_color_palette`               | `skin_pal`   |
-| `month_name_table`                 | `mo_names`   |
-| `pex_lcp_ptr`                      | `pex_ptr`    |
-| `pex_lcp_file`                     | `pex_ptr`    |
-| `sng_song_file_count`              | `sng_cnt`    |
-| `org_song_file_count`              | `org_cnt`    |
-| `input_string`                     | `in_str`     |
-| `command_input_buffer`             | `g_cdinb`    |
-| `command_input_ptr`                | `cmd_inp`    |
-| `debug_hide_lcp_offscreen`         | `dbg_hide`   |
-| `text_scroll_timer`                | `tx_sctm`    |
+| `main_colorpalette`                | `mainPalette`   |
+| `skin_color_palette`               | `skinColors`   |
+| `month_name_table`                 | `monthNames`   |
+| `pex_lcp_ptr`                      | `pexFrames`    |
+| `pex_lcp_file`                     | `pexFrames`    |
+| `sng_song_file_count`              | `songCount`    |
+| `org_song_file_count`              | `organCount`    |
+| `input_string`                     | `inputLine`     |
+| `command_input_buffer`             | `typedLine`    |
+| `command_input_ptr`                | `parsedLine`    |
+| `debug_hide_lcp_offscreen`         | `debugHideLcp`   |
+| `text_scroll_timer`                | `textTimer`    |
 | `last_hz200`                       | `lasthz`    |
-| `last_vbclock`                     | `last_vbc`   |
+| `last_vbclock`                     | `lastFrameVbl`   |
 
 ## Ghidra names seen but role not yet mapped to a port global
 
@@ -491,12 +491,12 @@ port globals (they are direct memory-mapped I/O in `psg_io.c`).
 
 Every port global not in the tables above; still to be paired by
 sampling more decompilations.  Priority modules to sample next:
-`source/dog.c` (dog AI, `g_dtx`/`g_dwanc`/`g_dsid`), `source/save.c`
-(`sv_bodyP`, `sv_headP`, `sv_phb`, `sv_lgb`), `source/games.c`
+`source/dog.c` (dog AI, `dogXTarget`/`dogStepIdx`/`dogSpriteId`), `source/save.c`
+(`savedBodyImg`, `savedHeadImg`, `tosPhysbase`, `panelLogbase`), `source/games.c`
 (poker `pk_*` block, anagram `ag_*` block), `source/parser.c`
-(`comp_tok`, `in_str`, `cmd_inp`), `source/letload.c`
-(`g_ltcwt`, `g_ltscb`), `source/render.c` (compositor `tx_sctm`,
-`scr_scal`, `MFDB_A`, `scrbufA`/`scrbufB`).
+(`nibbleBytes`, `inputLine`, `parsedLine`), `source/letload.c`
+(`typingSprites`, `letterWord`), `source/render.c` (compositor `textTimer`,
+`screenScale`, `screenMfdb`, `altScreen`/`houseBuf`).
 
 ### Batch 3 additions
 
@@ -508,120 +508,120 @@ Derived from decompiling `renderFrame`, `updateBody`, `updateHead`, `drawSlot`,
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `SCREEN_BUFFER_A`                  | `scrbufA`    |
-| `SCREEN_BUFFER_B`                  | `scrbufB`    |
-| `screen_ptr`                       | `g_srptr`    |
-| `screen_logbase`                   | `g_srlgb`    |
-| `screen_scroll_down_count`         | `g_srsdc`    |
-| `dest_screenbase_ptr`              | `g_dscp`     |
-| `current_screen_mfdb`              | `cur_mf`     |
-| `MFDB_dest_screenbase_cards`       | `mf_scb_c`   |
+| `SCREEN_BUFFER_A`                  | `altScreen`    |
+| `SCREEN_BUFFER_B`                  | `houseBuf`    |
+| `screen_ptr`                       | `housePtr`    |
+| `screen_logbase`                   | `drawLogbase`    |
+| `screen_scroll_down_count`         | `stripScroll`    |
+| `dest_screenbase_ptr`              | `stripBuf`     |
+| `current_screen_mfdb`              | `flipMfdb`     |
+| `MFDB_dest_screenbase_cards`       | `cardTableMfdb`   |
 
 ### LCP sprite render (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `body_lcp_file`                    | `body_ptr`   |
-| `lcp_sprite_img`                   | `g_lsimg`    |
-| `lcp_sprite_mask`                  | `g_lsmas`    |
-| `lcp_carrying_object_flag`         | `g_lcyof`    |
-| `lcp_sprites_hidden`               | `g_lssh`     |
-| `lcp_dog_bowl_status`              | `lcp_bwlS`   |
-| `carry_body_frame_table`           | `cy_frT`     |
+| `body_lcp_file`                    | `bodyFrames`   |
+| `lcp_sprite_img`                   | `bodyImage`    |
+| `lcp_sprite_mask`                  | `bodyMask`    |
+| `lcp_carrying_object_flag`         | `isCarrying`    |
+| `lcp_sprites_hidden`               | `lcpHidden`     |
+| `lcp_dog_bowl_status`              | `bowlLevel`   |
+| `carry_body_frame_table`           | `carryFrames`     |
 
 ### Dog waypoint / floor (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `dog_waypoint_x`                   | `g_dyx`      |
-| `dog_waypoint_y`                   | `g_dyy`      |
-| `floor_bottom_y_coords`            | `flr_by`     |
-| `floor_center_y_coords`            | `flr_cy`     |
+| `dog_waypoint_x`                   | `dogXWaypt`      |
+| `dog_waypoint_y`                   | `dogYWaypt`      |
+| `floor_bottom_y_coords`            | `floorBottomY`     |
+| `floor_center_y_coords`            | `floorWalkY`     |
 
 ### MIDI sequencer (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `midi_channel_count`               | `g_mkey`     |
-| `midi_current_channel`             | `mi_ccha`    |
-| `midi_current_program`             | `g_mcpro`    |
-| `midi_current_note`                | `mi_cnot`    |
-| `midi_data_ptr`                    | `mi_dptr`    |
-| `midi_data_base_ptr`               | `mi_dbase`   |
-| `midi_default_velocity`            | `mi_dvel`    |
-| `midi_velocity`                    | `mi_vel`     |
-| `midi_tempo`                       | `mi_temp`    |
-| `midi_note_duration_table`         | `mi_ndt`     |
-| `midi_var_r`                       | `mi_varR`    |
-| `midi_saved_timer_vector`          | `mi_svtv`    |
-| `midi_song_buffer`                 | `mi_sbuf`    |
-| `midi_song_loop_flag`              | `mi_slop`    |
-| `midi_seq_position`                | `mi_sqpos`   |
-| `midi_note_event_queue`            | `mi_evq`     |
-| `midi_note_event_count`            | `mi_evcn`    |
-| `midi_note_on_flag`                | `mi_nnOn`    |
-| `midi_note_off_flag`               | `mi_nnOf`    |
-| `midi_note_mode_flags`             | `mi_nmof`    |
-| `midi_note_hi_limit`               | `g_mnhi`    |
-| `midi_note_lo_limit`               | `g_mnlo`    |
-| `midi_output_enabled`              | `g_moen`     |
-| `midi_program_map`                 | `mi_pgmap`   |
-| `midi_channel_map`                 | `mi_chmap`   |
-| `midi_scale_mask_table`            | `g_msmk`     |
-| `midi_scale_transpose_table`       | `g_mstr`     |
-| `midi_event_type_flag`             | `mi_evTf`    |
-| `midi_loop_stack`                  | `mi_lstk`    |
-| `midi_event`                       | `g_meve`     |
+| `midi_channel_count`               | `songKey`     |
+| `midi_current_channel`             | `noteChan`    |
+| `midi_current_program`             | `sentProgram`    |
+| `midi_current_note`                | `noteNum`    |
+| `midi_data_ptr`                    | `loopTarget`    |
+| `midi_data_base_ptr`               | `songEvents`   |
+| `midi_default_velocity`            | `defVelocity`    |
+| `midi_velocity`                    | `noteVel`     |
+| `midi_tempo`                       | `songTempo`    |
+| `midi_note_duration_table`         | `durTable`     |
+| `midi_var_r`                       | `fixedChan`    |
+| `midi_saved_timer_vector`          | `oldTimerAVec`    |
+| `midi_song_buffer`                 | `songBuf`    |
+| `midi_song_loop_flag`              | `useSongChan`    |
+| `midi_seq_position`                | `songPos`   |
+| `midi_note_event_queue`            | `noteQueue`     |
+| `midi_note_event_count`            | `loopTop`    |
+| `midi_note_on_flag`                | `noteToQueue`    |
+| `midi_note_off_flag`               | `noteIsOff`    |
+| `midi_note_mode_flags`             | `noteMode`    |
+| `midi_note_hi_limit`               | `noteHigh`    |
+| `midi_note_lo_limit`               | `noteLow`    |
+| `midi_output_enabled`              | `midiOutOn`     |
+| `midi_program_map`                 | `progMap`   |
+| `midi_channel_map`                 | `chanMap`   |
+| `midi_scale_mask_table`            | `keyScaleMask`     |
+| `midi_scale_transpose_table`       | `noteMap`     |
+| `midi_event_type_flag`             | `noteDecoded`    |
+| `midi_loop_stack`                  | `loopStack`    |
+| `midi_event`                       | `midiMsg`     |
 
 ### PSG (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `psg_channel_notes`                | `psg_chNt`   |
-| `psg_default_volume`               | `psg_dvol`   |
-| `psg_output_enabled`               | `psg_out`    |
+| `psg_channel_notes`                | `psgChanNote`   |
+| `psg_default_volume`               | `defPsgVol`   |
+| `psg_output_enabled`               | `psgOutOn`    |
 
 ### Sound effects (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `soundeffect_dosound_status`       | `g_sfdos`    |
-| `soundeffect_dosound_control`      | `g_sfdoc`    |
+| `soundeffect_dosound_status`       | `sfxDosStat`    |
+| `soundeffect_dosound_control`      | `sfxDosCtl`    |
 
 ### Poker (extra)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `poker_bet_message`                | `pk_bm`      |
+| `poker_bet_message`                | `pkrMsgBet`      |
 
 ## Batch 3 conflicts / ambiguities noted
 
-- `MFDB_screen_ptr` (Ghidra) appears to be the port's `mf_scrp`, based
+- `MFDB_screen_ptr` (Ghidra) appears to be the port's `houseMfdb`, based
   on `copyBlocks32` argument order in `renderFrame` vs `renderf.c`. Existing
-  row `screen_mfdb -> mf_scrp` looks reversed: my read is
-  `screen_mfdb -> g_srmfd` and `MFDB_screen_ptr -> mf_scrp`.
+  row `screen_mfdb -> houseMfdb` looks reversed: my read is
+  `screen_mfdb -> frameMfdb` and `MFDB_screen_ptr -> houseMfdb`.
   Left existing row alone per task instructions.
 - `soundeffect_active_flag` (0x54010) is referenced by `renderFrame` for
-  the post-render play flag reset; port uses `g_sfacf` there.
-  Existing row maps `soundeffect_playing_flag -> g_sfacf`, which
+  the post-render play flag reset; port uses `sfxPending` there.
+  Existing row maps `soundeffect_playing_flag -> sfxPending`, which
   looks like the wrong pairing (`playing_flag` is at 0x5a2ca and
-  probably matches port `g_sfplf`). Not touched.
-- Poker `pk_bs1 / pk_bs2 / pk_c1bj / pk_c2bj / pk_wcs / pk_wpr /
-  pk_wrf / pk_dsc / pk_phrk / g_ppppa` still unresolved -- Ghidra
+  probably matches port `sfxPlaying`). Not touched.
+- Poker `bjBustMain / bjBustSplit / bjNatMain / bjNatSplit / bjDblSplit / bjMatchBet /
+  bjDblMain / warDeck / plyrRank / potChips` still unresolved -- Ghidra
   has no matching-shaped long names in symbol dump; needs a
   decompile of the poker/blackjack game function (function names
   are not preserved in Ghidra either -- no `poker_main`/
   `poker_blackjack_main`/`wp_intr` symbols were found).
-- Word puzzle: `wp_*` shorts (`wp_blk/prm/succ/fail`) are already
+- Word puzzle: `wp_*` shorts (`wpzBlanks/prm/succ/fail`) are already
   mapped; `word_puzzle_player_answers` and
   `word_puzzle_current_index / _data_buffer / _blank_count` are
   mapped; no additional port shorts remain.
 - Ghidra `midi_ticks_per_beat`, `midi_seq_max_position`,
   `midi_envelope_data_base`, `midi_duration_scale`,
   `midi_noteon_state`, `midi_dma_start_lo`, `midi_channel_volume`
-  seen but port shorts (`g_mtpre`, `mi_evi`, `mi_env`, `mi_evrl`,
-  `mi_evrt`, `mi_evst`, `mi_evtt`, `mi_evcn`, `mi_lasT`, `mi_nOS`,
-  `mi_nlp0`, `mi_nlpA`, `mi_seqE`) not confidently pairable from
+  seen but port shorts (`seqCountdown`, `queueLen`, `songAdsr`, `envRelTab`,
+  `envRateTab`, `envSusTab`, `envTimeTab`, `loopTop`, `mi_lasT`, `mi_nOS`,
+  `ticksToNext`, `noteAccent`, `songEndPtr`) not confidently pairable from
   name alone -- needs decompile of `seqAdvance` / `timerAIsr` internals.
 - Ghidra `poker_computer_hand_value_lo/hi`, `poker_card_deck_index`,
   `poker_pot_amount`, `poker_display_x_offset`, `poker_round_count`,
@@ -638,78 +638,78 @@ against the Ghidra symbol dump.
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `midi_seq_max_position`            | `mi_seqE`    |
-| `midi_envelope_data_base`          | `mi_env`     |
-| `midi_envelope_rate_table`         | `mi_evrt`    |
-| `midi_envelope_time_table`         | `mi_evtt`    |
-| `midi_envelope_sustain_table`      | `mi_evst`    |
-| `midi_envelope_release_table`      | `mi_evrl`    |
+| `midi_seq_max_position`            | `songEndPtr`    |
+| `midi_envelope_data_base`          | `songAdsr`     |
+| `midi_envelope_rate_table`         | `envRateTab`    |
+| `midi_envelope_time_table`         | `envTimeTab`    |
+| `midi_envelope_sustain_table`      | `envSusTab`    |
+| `midi_envelope_release_table`      | `envRelTab`    |
 
 #### Poker / minigame
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `poker_pot_amount`                 | `g_ppppa`    |
-| `poker_draw_discard_flags`         | `pk_dsc`     |
-| `disable_key_input_flag`           | `no_keyin`   |
-| `minigame_timeout_flag`            | `mg_tofl`    |
+| `poker_pot_amount`                 | `potChips`    |
+| `poker_draw_discard_flags`         | `warDeck`     |
+| `disable_key_input_flag`           | `keysBlocked`   |
+| `minigame_timeout_flag`            | `mgTimedOut`    |
 
 ## Batch 4 conflicts / ambiguities noted
 
 - Ghidra's `g_mnevi` / `g_mnevc` are used in `seqAdvance`, `parseEvents`,
-  `expireNotes`, `pushLoop` where the port uses `mi_evi` / `mi_evcn`,
+  `expireNotes`, `pushLoop` where the port uses `queueLen` / `loopTop`,
   yet the port also has separately-named globals `g_mnevi` /
   `g_mnevc` (used only in `stopSequencer`). The existing map rows
   `midi_note_event_index -> g_mnevi` and
   `midi_note_event_count -> g_mnevc` may therefore be pointing at
   the wrong port short: the addresses referenced by the sequencer
-  hot path in Ghidra correspond to port `mi_evi` / `mi_evcn`.
+  hot path in Ghidra correspond to port `queueLen` / `loopTop`.
   Not touched -- needs an address-based audit before deciding
   which port short is the "real" counterpart.
 - Similarly, `midi_event_duration` (Ghidra `g_medu`) is written
   from `aes_intO[7]` and used as "ticks until next event" in
-  `seqAdvance`; the port assigns `mi_nlp0 = -1` and
-  `mi_nlp0 = (short)mi_nxTk - (short)g_mtcou` in the same place,
+  `seqAdvance`; the port assigns `ticksToNext = -1` and
+  `ticksToNext = (short)nextEvTick - (short)timerTicks` in the same place,
   while the port's `g_medu` is only referenced by `stopSequencer`.
-  So `midi_event_duration -> mi_nlp0` looks like the correct
+  So `midi_event_duration -> ticksToNext` looks like the correct
   pairing, but a duplicate row was not added.
 - `midi_tick_prescaler` (Ghidra) is set from `aes_intO[7]` in
-  `seqAdvance`; the port assigns to `g_mtpre` there. Existing map
-  row is `midi_tick_prescaler -> g_mtspb`, but `g_mtspb` is used
+  `seqAdvance`; the port assigns to `seqCountdown` there. Existing map
+  row is `midi_tick_prescaler -> ticksPerBeat`, but `ticksPerBeat` is used
   in `parseEvents` where Ghidra uses `midi_ticks_per_beat`. So the
-  correct pairs appear to be `midi_tick_prescaler -> g_mtpre`
-  and `midi_ticks_per_beat -> g_mtspb`. Not touched.
+  correct pairs appear to be `midi_tick_prescaler -> seqCountdown`
+  and `midi_ticks_per_beat -> ticksPerBeat`. Not touched.
 - `poker_blackjack_flag` (Ghidra 0x3d114) is a single BOOL; port
-  has two (`pk_c1bj`, `pk_c2bj`) for the two blackjack hands.
+  has two (`bjNatMain`, `bjNatSplit`) for the two blackjack hands.
   Cannot pair without decompiling the blackjack routine (not
   found by name in this pass).
 - `poker_computer_hand_value_lo`/`_hi`, `poker_card_deck_index`,
   `poker_display_x_offset`, `poker_round_count`, `poker_card_back_mfdb`
   still not paired to port shorts.
-- Sprite descriptor arrays (`g_sedim`, `g_sedms`, `g_sedeh`,
-  `g_sedew`) live at Ghidra addresses that only have raw
+- Sprite descriptor arrays (`spriteBitmap`, `spriteMask`, `spriteHeight`,
+  `spriteWidth`) live at Ghidra addresses that only have raw
   `PTR_ARRAY_xxxxxx` / `SHORT_ARRAY_xxxxxx` symbols -- no
   meaningful long name to pair against.
 
 ### Port shorts still unpaired (candidates for future decompile passes)
 
-- Music Studio / MIDI: `g_ewb`, `g_molof`, `g_msmap`, `mi_nOS`,
-  `mi_nlp0`, `mi_nlpA`, `mi_lasT`, `mi_evi`, `mi_evcn`,
-  `mood_pri`, `moff_f`.  (Batch 4 paired `mi_seqE`, `mi_env`,
-  `mi_evrl`, `mi_evrt`, `mi_evst`, `mi_evtt`, `mg_tofl`.)
+- Music Studio / MIDI: `phraseBits`, `g_molof`, `g_msmap`, `mi_nOS`,
+  `ticksToNext`, `noteAccent`, `mi_lasT`, `queueLen`, `loopTop`,
+  `moodPriority`, `mouseHidden`.  (Batch 4 paired `songEndPtr`, `songAdsr`,
+  `envRelTab`, `envRateTab`, `envSusTab`, `envTimeTab`, `mgTimedOut`.)
 - Screen/render extras: `bshdbuf`, `hshdbuf`, `hs_size`, `g_dsb`
-  (may be dead; comment says former alias of `g_srptr - 254`),
-  `g_spdc`, `g_sedeh`, `g_sedew`, `g_sedim`, `g_sedms`, `g_setmt`,
-  `g_setah`, `g_setaw`, `g_srmfd` (see conflict note above).
-- Letter/clock: `g_ltscb`, `g_clcop`, `g_clcos`, `g_cdibp`,
-  `g_cdinb`, `g_ptanf`, `g_ptdoa`, `g_ptdsi`, `g_ptlss`.
-- Poker war: `pk_wcs`, `pk_wpr`, `pk_wrf`, `pk_bs1`, `pk_bs2`,
-  `pk_c1bj`, `pk_c2bj`, `pk_phrk`.  (Batch 4 paired `pk_dsc`,
-  `g_ppppa`.)
-- Misc: `env_val`, `in_evrt`, `rec_ledt`, `studyDrO`,
-  `subAniC`, `cprot_r`, `dsb_stor`, `usr_buf`, `fs_trg`, `bm_lo`,
-  `g_aprio`, `g_alsts`, `g_obisa`, `g_obtmt`, `g_lcieo`,
-  `lcp_stR`, `lcp_recP`, `lcp_tv`.
+  (may be dead; comment says former alias of `housePtr - 254`),
+  `walkSpeed`, `spriteHeight`, `spriteWidth`, `spriteBitmap`, `spriteMask`, `g_setmt`,
+  `g_setah`, `g_setaw`, `frameMfdb` (see conflict note above).
+- Letter/clock: `letterWord`, `shirtPrimary`, `shirtSecondary`, `typedCursor`,
+  `typedLine`, `patFrame`, `patActive`, `patSprites`, `patLastSprite`.
+- Poker war: `bjDblSplit`, `bjMatchBet`, `bjDblMain`, `bjBustMain`, `bjBustSplit`,
+  `bjNatMain`, `bjNatSplit`, `plyrRank`.  (Batch 4 paired `warDeck`,
+  `potChips`.)
+- Misc: `env_val`, `inEvent`, `vuLedMasks`, `studyDoorOpen`,
+  `tickCount`, `copyProtResult`, `stripStore`, `cmdWord`, `footstepDue`, `bitMask8`,
+  `cmdPriority`, `alarmSounding`, `stoveFrames`, `objMfdbs`, `carriedSprite`,
+  `onStairs`, `recordPlaying`, `tvRunning`.
 
 ### Batch 5 additions
 
@@ -722,92 +722,92 @@ port shorts, cross-checked by usage patterns in the port
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `lcp_record_playing`               | `lcp_recP`   |
-| `lcp_tv_on`                        | `lcp_tv`     |
-| `lcp_study_door_open`              | `studyDrO`   |
-| `lcp_cabinet_open`                 | `lcp_cabO`   |
-| `lcp_toilet_door_open`             | `lcp_toiO`   |
-| `lcp_food_count`                   | `lcp_food`   |
-| `lcp_closet_door_open`             | `lcp_clsO`   |
-| `lcp_dresser_open`                 | `lcp_drsO`   |
-| `lcp_front_door_open`              | `lcp_frdO`   |
-| `lcp_on_stairs_flag`               | `lcp_stR`    |
-| `lcp_carried_object`               | `g_lcieo`    |
+| `lcp_record_playing`               | `recordPlaying`   |
+| `lcp_tv_on`                        | `tvRunning`     |
+| `lcp_study_door_open`              | `studyDoorOpen`   |
+| `lcp_cabinet_open`                 | `kitchenCabOpen`   |
+| `lcp_toilet_door_open`             | `toiletDoorOpen`   |
+| `lcp_food_count`                   | `foodSupply`   |
+| `lcp_closet_door_open`             | `bedClosetOpen`   |
+| `lcp_dresser_open`                 | `dresserOpen`   |
+| `lcp_front_door_open`              | `frontDoorOpen`   |
+| `lcp_on_stairs_flag`               | `onStairs`    |
+| `lcp_carried_object`               | `carriedSprite`    |
 
 #### Petting / input / parser
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `game_input_mode_flag`             | `g_inpmd`    |
-| `compression_tokens`               | `comp_tok`   |
-| `clothing_color_primary`           | `g_clcop`    |
-| `clothing_color_secondary`         | `g_clcos`    |
-| `petting_dog_active`               | `g_ptdoa`    |
-| `petting_anim_frame`               | `g_ptanf`    |
-| `petting_last_sprite_slot`         | `g_ptlss`    |
-| `command_input_buffer_pos`         | `g_cdibp`    |
-| `user_input_buffer`                | `usr_buf`    |
+| `game_input_mode_flag`             | `typingOff`    |
+| `compression_tokens`               | `nibbleBytes`   |
+| `clothing_color_primary`           | `shirtPrimary`    |
+| `clothing_color_secondary`         | `shirtSecondary`    |
+| `petting_dog_active`               | `patActive`    |
+| `petting_anim_frame`               | `patFrame`    |
+| `petting_last_sprite_slot`         | `patLastSprite`    |
+| `command_input_buffer_pos`         | `typedCursor`    |
+| `user_input_buffer`                | `cmdWord`    |
 
 #### Scene / VDI
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `scene_common_data`                | *(deleted -- LCP_ORG-only; the 30 bytes are `scn_dic`)* |
-| `vdi_color_table`                  | `vdi_colt`   |
-| `vdi_handle`                       | `vdi_hnd`    |
+| `scene_common_data`                | *(deleted -- LCP_ORG-only; the 30 bytes are `scnDict`)* |
+| `vdi_color_table`                  | `colorPens`   |
+| `vdi_handle`                       | `physHandle`    |
 
 #### Object animation tables (extras)
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `object_fire_animation`            | `g_obfia`    |
-| `object_dog_eating_animation`      | `g_obdea`    |
+| `object_fire_animation`            | `fireFrames`    |
+| `object_dog_eating_animation`      | `bowlFrames`    |
 
 #### Misc
 
 | Ghidra                             | Port         |
 |------------------------------------|--------------|
-| `sub_animation_frame_counter`      | `subAniC`    |
-| `alarm_sound_started`              | `g_alsts`    |
-| `action_priority`                  | `g_aprio`    |
-| `mouse_off_flag`                   | `moff_f`     |
+| `sub_animation_frame_counter`      | `tickCount`    |
+| `alarm_sound_started`              | `alarmSounding`    |
+| `action_priority`                  | `cmdPriority`    |
+| `mouse_off_flag`                   | `mouseHidden`     |
 
 ## Batch 5 conflicts / ambiguities noted
 
-- Existing row `command_input_buffer -> cmd_inp` is suspect:
+- Existing row `command_input_buffer -> parsedLine` is suspect:
   Ghidra `command_input_buffer` at 0x4d28a is the 64-byte char array,
-  which the port declares as `char g_cdinb[64]`. The port's `cmd_inp`
-  is a `char *` (declared `char * cmd_inp`) and most likely
+  which the port declares as `char typedLine[64]`. The port's `parsedLine`
+  is a `char *` (declared `char * parsedLine`) and most likely
   corresponds to Ghidra `command_input_ptr` at 0x2c6fc. Not touched
-  per task rules -- a new `command_input_ptr -> cmd_inp` row would
-  create two Ghidra symbols renaming to `cmd_inp`, which the rename
+  per task rules -- a new `command_input_ptr -> parsedLine` row would
+  create two Ghidra symbols renaming to `parsedLine`, which the rename
   script rejects.
 - Ghidra `poker_blackjack_flag` (single BOOL @ 0x3d114) still cannot
-  disambiguate port's `pk_c1bj` / `pk_c2bj` (two flags). Also
-  unresolved: `pk_wcs`, `pk_wpr`, `pk_wrf`, `pk_bs1`, `pk_bs2`,
-  `pk_phrk` -- Ghidra symbol dump has no matching shapes.
+  disambiguate port's `bjNatMain` / `bjNatSplit` (two flags). Also
+  unresolved: `bjDblSplit`, `bjMatchBet`, `bjDblMain`, `bjBustMain`, `bjBustSplit`,
+  `plyrRank` -- Ghidra symbol dump has no matching shapes.
 - Ghidra `poker_computer_hand_value_lo/_hi`, `poker_card_deck_index`,
   `poker_display_x_offset`, `poker_round_count`, `poker_card_back_mfdb`
   still not paired to port shorts.
-- Music-Studio-only MIDI shorts (`g_ewb`, `g_molof`, `g_msmap`,
-  `g_momap`, `g_mccha`, `mi_nOS`, `mi_nlp0`, `mi_nlpA`, `mi_lasT`,
-  `mi_evi`, `mi_evcn`) still unresolved -- Ghidra dump has no
+- Music-Studio-only MIDI shorts (`phraseBits`, `g_molof`, `g_msmap`,
+  `songMaxPos`, `g_mccha`, `mi_nOS`, `ticksToNext`, `noteAccent`, `mi_lasT`,
+  `queueLen`, `loopTop`) still unresolved -- Ghidra dump has no
   matching long-name shapes visible without decompiling the
   Music-Studio front-end (function names not preserved).
-- Sprite descriptor arrays `g_sedeh`, `g_sedew`, `g_sedim`, `g_sedms`,
+- Sprite descriptor arrays `spriteHeight`, `spriteWidth`, `spriteBitmap`, `spriteMask`,
   `g_setmt`, `g_setah`, `g_setaw` -- Ghidra addresses only carry
   raw `PTR_ARRAY_xxxxxx` / `SHORT_ARRAY_xxxxxx` labels, no long
   name to pair against.
-- `dsb_stor`, `g_dsb`, `bshdbuf`, `hshdbuf`, `bm_lo`, `env_val`,
-  `in_evrt`, `rec_ledt`, `fs_trg`, `g_hzhi`, `g_hzlo`, `spr_file`,
-  `g_ltscb`, `g_ptdsi`, `g_obisa`, `g_obtmt`, `mood_pri`,
-  `cprot_r` -- either port-only helpers or no matching-shape
+- `stripStore`, `g_dsb`, `bshdbuf`, `hshdbuf`, `bitMask8`, `env_val`,
+  `inEvent`, `vuLedMasks`, `footstepDue`, `g_hzhi`, `g_hzlo`, `sprFileBuf`,
+  `letterWord`, `patSprites`, `stoveFrames`, `objMfdbs`, `moodPriority`,
+  `copyProtResult` -- either port-only helpers or no matching-shape
   Ghidra long name in the dump.
 
 Identity-name port shorts (already Ghidra-named the same; skipped
 by the rename TSV generator but noted here for coverage):
 `contrl`, `intin`, `intout`, `ptsin`, `ptsout`, `workin`,
-`work_out`, `lcp_x`, `lcp_y`, `dog_x`, `dog_y`, `_vbclock`.
+`work_out`, `resX`, `resY`, `dogX`, `dogY`, `_vbclock`.
 
 ## OOB-audit log (2026-07-20)
 
@@ -819,24 +819,24 @@ the port's declared end.  Covered `globals.c`, `sprglobs.c`,
 Real OOBs found and fixed in prior commits (all shape: port array
 declared smaller than ROM slot):
 
-- `pst_arr[4]` → `[10]` — action handlers wrote `pst_arr[4]`
-- `usr_buf[32]` → `[42]` — `nextWord` copies up to 38 chars
-- `g_pcdrp[26]` → `[52]` — `popCard` shift loop writes 50 bytes past end
-- `g_ppdrp[26]` → `[52]` — same shift loop
+- `scratchArr[4]` → `[10]` — action handlers wrote `scratchArr[4]`
+- `cmdWord[32]` → `[42]` — `nextWord` copies up to 38 chars
+- `compPile[26]` → `[52]` — `popCard` shift loop writes 50 bytes past end
+- `plyrPile[26]` → `[52]` — same shift loop
 
 Verified in this pass (safe, ROM has trailing pad or `sizeof`-cap):
 
-- `sp_mbuf[14000]` — exact ROM match (`sprite_buffer` slot 0x36B0)
+- `genMaskBuf[14000]` — exact ROM match (`sprite_buffer` slot 0x36B0)
 - `body_buf` bumped 20000 → 20160 to match ROM `body_lcp_file` slot
   exactly.  On-disk `BODY.LCP` is 16468 B so there was no truncation
   risk, but sizes now match Ghidra.
 - `pex_buf` shrunk 12000 → 11088 to match ROM `pex_lcp_file` slot
   (0x4d2da → 0x4fe2a).
-- `g_lsimg[168]`, `g_lsmas[168]`, `g_hsbuf[168]`, `g_hsmas[168]` —
+- `bodyImage[168]`, `bodyMask[168]`, `headImage[168]`, `headMask[168]` —
   `expandFrame` inner loop writes exactly 168 shorts; ROM 512/516 B pad
-- `pex_name[8]` — template filename; only 8 B ever touched
-- `comp_tok[15]` — `letload.c` reads exactly 15 B
-- `bm32or[32]`, `bm32and[32]`, `rev_tab[256]` — all mask/index-bounded
+- `pexName[8]` — template filename; only 8 B ever touched
+- `nibbleBytes[15]` — `letload.c` reads exactly 15 B
+- `bitSet32[32]`, `bitClear32[32]`, `mirrorTable[256]` — all mask/index-bounded
 
 Signature exhausted across all inspected modules; 0 remaining
 CONFIRMED bugs in this class.
@@ -866,15 +866,15 @@ WRONG)` below -- the port name is the correct one and Ghidra has
 already been renamed to it, so this table is the only place the bad
 name survives:
 
-  * `midi_channel_volume` -> **mi_pgtab** is the default PROGRAM map,
-    not a volume table.  sendProgChange builds `g_meve[0] = (chan) | 0xc0`,
+  * `midi_channel_volume` -> **defProgMap** is the default PROGRAM map,
+    not a volume table.  sendProgChange builds `midiMsg[0] = (chan) | 0xc0`,
     and 0xC0 is the MIDI Program Change status byte, so the following
-    `g_meve[1] = mi_pgmap[index]` is a program NUMBER.  unpackChanMap
+    `midiMsg[1] = progMap[index]` is a program NUMBER.  unpackChanMap
     confirms the shape: it loads two parallel 15-entry tables out of
     the song header, the channel map from bytes 0..14 and the program
     map from 15..29.  Volume never enters it.
-  * `midi_dma_start_lo` -> **pk_pscore** is the poker/blackjack
-    PLAYER SCORE, compared against pk_cscore all through games.c's
+  * `midi_dma_start_lo` -> **bjPlyrScore** is the poker/blackjack
+    PLAYER SCORE, compared against bjDealerScore all through games.c's
     hand comparison.  Nothing MIDI touches it.
 
 Both are the same failure: a 1985 analyst naming an unlabelled cell
@@ -883,7 +883,7 @@ this table as a lead, and check the use sites before adopting one.
 
 | Ghidra long name                   | port short   |
 | ---------------------------------- | ------------ |
-| `PLAYER_STATE_ARRAY`                  | `pst_arr`      |
+| `PLAYER_STATE_ARRAY`                  | `scratchArr`      |
 | `aes_addr_in`                         | `addr_in`      |
 | `aes_addr_out`                        | `addr_ou`      |
 | `aes_control`                         | `control`      |
@@ -891,58 +891,58 @@ this table as a lead, and check the use sites before adopting one.
 | `aes_intO`                            | `int_out`      |
 | `aes_int_in`                          | `int_in`       |
 | `aes_params_ptr`                      | `ad_c`         |
-| `bitmask_1_2_4_8_10_20_40_80`         | `rv_val`       |
-| `bitmask_1_2_4_8_10_20_40_80_0`       | `bm_lo`        |
-| `bitmask_32bit_and`                   | `bm32and`      |
-| `bitmask_32bit_or`                    | `bm32or`       |
-| `bitmask_80_40_20_10_8_4_2_1`         | `rv_msk`       |
+| `bitmask_1_2_4_8_10_20_40_80`         | `mirrorDstBit`       |
+| `bitmask_1_2_4_8_10_20_40_80_0`       | `bitMask8`        |
+| `bitmask_32bit_and`                   | `bitClear32`      |
+| `bitmask_32bit_or`                    | `bitSet32`       |
+| `bitmask_80_40_20_10_8_4_2_1`         | `mirrorSrcBit`       |
 | `body_ptr`                            | `body_pt`      |
 | `body_shp`                            | `body_sh`      |
-| `card_deck`                           | `bj_key`       |
+| `card_deck`                           | `bjKey`       |
 | `ctrl_cnts`                           | `ctrl_cn`      |
-| `days_in_month`                       | `days_pmo`     |
-| `dest_scr_buffer`                     | `dsb_stor`     |
-| `entered_word_bytes`                  | `g_ewb`        |
-| `enteredword_to_action`               | `g_ew2a`       |
-| `enteredword_to_bit`                  | `g_ew2b`       |
-| `footstep_trigger_flag`               | `fs_trg`       |
-| `gSongMaxPosition_0`                  | `g_momap`      |
-| `happiniess_to_priority`              | `mood_pri`     |
-| `house_scene_size`                    | `scn_siz`      |
-| `in_execute_event_routine_flag`       | `in_evrt`      |
-| `mi_ntLp[25]`                         | `mi_ndur`      |
-| `mi_ntLp[25]+2`                       | `mi_nlpA`      |
-| `midi_channel_volume` (Ghidra WRONG)  | `mi_pgtab`     |
-| `midi_dma_start_lo` (Ghidra WRONG)    | `pk_pscore`    |
-| `object_alarm_animation`              | `g_obala`      |
-| `object_clock_animation`              | `g_obcla`      |
-| `object_phone_animation`              | `g_obpha`      |
+| `days_in_month`                       | `daysPerMonth`     |
+| `dest_scr_buffer`                     | `stripStore`     |
+| `entered_word_bytes`                  | `phraseBits`        |
+| `enteredword_to_action`               | `phraseTable`       |
+| `enteredword_to_bit`                  | `wordBit`       |
+| `footstep_trigger_flag`               | `footstepDue`       |
+| `gSongMaxPosition_0`                  | `songMaxPos`      |
+| `happiniess_to_priority`              | `moodPriority`     |
+| `house_scene_size`                    | `scnSize`      |
+| `in_execute_event_routine_flag`       | `inEvent`      |
+| `mi_ntLp[25]`                         | `noteDur`      |
+| `mi_ntLp[25]+2`                       | `noteAccent`      |
+| `midi_channel_volume` (Ghidra WRONG)  | `defProgMap`     |
+| `midi_dma_start_lo` (Ghidra WRONG)    | `bjPlyrScore`    |
+| `object_alarm_animation`              | `alarmFrames`      |
+| `object_clock_animation`              | `clockFrames`      |
+| `object_phone_animation`              | `phoneFrames`      |
 | `pblock`                              | `vdipb`        |
-| `pex_ptr`                             | `pex_name`     |
-| `poker_card_back_mfdb`                | `pk_phrk`      |
-| `poker_card_deck_index`               | `pk_c2bj`      |
-| `poker_computer_hand_value_hi`        | `pk_bs2`       |
-| `poker_computer_hand_value_lo`        | `pk_bs1`       |
-| `poker_display_x_offset`              | `pk_cscore`    |
-| `poker_round_count`                   | `pk_round`     |
-| `psg_current_volume`                  | `psg_cvol`     |
-| `psg_freq_table`                      | `psg_freq`     |
-| `revert_table`                        | `rev_tab`      |
-| `room_position_x_table`               | `g_rpxs`       |
-| `scene_data_ptr`                      | `scn_buf`      |
-| `scn_cmn`                             | `scn_dic`      |
-| `screen_buffer_2`                     | `scrbufB`      |
-| `soundfile_header`                    | `mi_sig`       |
-| `sprite_file_index_table`             | `sp_fidx`      |
-| `sprites_files`                       | `spr_file`     |
-| `valid_word_table`                    | `vwd_tab`      |
-| `walk_target_x`                       | `g_wtx`        |
-| `walk_target_y`                       | `g_wty`        |
-| `walk_waypoint_x`                     | `g_wyx`        |
-| `walk_waypoint_y`                     | `g_wkadj`      |
-| `walk_waypoint_y`                     | `g_wyy`        |
-| `word_puzzle_player_answers`          | `wp_ans`       |
-| `word_﻿entered_to_position`           | `ew2pos`       |
+| `pex_ptr`                             | `pexName`     |
+| `poker_card_back_mfdb`                | `plyrRank`      |
+| `poker_card_deck_index`               | `bjNatSplit`      |
+| `poker_computer_hand_value_hi`        | `bjBustSplit`       |
+| `poker_computer_hand_value_lo`        | `bjBustMain`       |
+| `poker_display_x_offset`              | `bjDealerScore`    |
+| `poker_round_count`                   | `pkrRound`     |
+| `psg_current_volume`                  | `noteVolume`     |
+| `psg_freq_table`                      | `psgPeriod`     |
+| `revert_table`                        | `mirrorTable`      |
+| `room_position_x_table`               | `posXHalf`       |
+| `scene_data_ptr`                      | `scnBuffer`      |
+| `scn_cmn`                             | `scnDict`      |
+| `screen_buffer_2`                     | `houseBuf`      |
+| `soundfile_header`                    | `studioSig`       |
+| `sprite_file_index_table`             | `spriteFileId`      |
+| `sprites_files`                       | `sprFileBuf`     |
+| `valid_word_table`                    | `vocabulary`      |
+| `walk_target_x`                       | `walkXTarget`        |
+| `walk_target_y`                       | `walkYTarget`        |
+| `walk_waypoint_x`                     | `xWaypoint`        |
+| `walk_waypoint_y`                     | `walkAdjust`      |
+| `walk_waypoint_y`                     | `yWaypoint`        |
+| `word_puzzle_player_answers`          | `wpzAnswers`       |
+| `word_﻿entered_to_position`           | `wordByte`       |
 | `work_out`                            | `wk_out`       |
 | `workin`                              | `work_in`      |
 
@@ -951,7 +951,7 @@ this table as a lead, and check the use sites before adopting one.
 Coverage was measured properly on 2026-09-06 and the old "~93
 remaining" note was badly wrong -- it had been comparing lcp_sym.68k's
 8-char TRUNCATED linkage names against this file's full names, so
-`lcp_watr`, `introSeq` and dozens like them counted as
+`waterLevel`, `movingIn` and dozens like them counted as
 unmapped when they are not.  Expanding the truncations first (and
 dropping DRI libc and the AES library's own `gl_apid`) leaves
 **thirteen** port globals with no descriptive counterpart:
@@ -962,7 +962,7 @@ dropping DRI libc and the AES library's own `gl_apid`) leaves
 | `g_atmod[16]` | action table, moderate activity                    |
 | `g_atrel[16]` | action table, relaxed activity                     |
 | `g_trel[10]`  | the triggered-event FIFO -- see above              |
-| `g_rphs[48]`  | Y offset from the floor baseline per HOUSE_POS; the companion to `g_rpxs`, and posToXY's `floor_y - g_rphs[i]` |
+| `g_rphs[48]`  | Y offset from the floor baseline per HOUSE_POS; the companion to `posXHalf`, and posToXY's `floor_y - posYOffset[i]` |
 | `gr_hwchar`   | graf_handle's character cell width                 |
 | `gr_hhchar`   | ...cell height                                     |
 | `gr_hwbox`    | ...box width                                       |
@@ -970,7 +970,7 @@ dropping DRI libc and the AES library's own `gl_apid`) leaves
 | `psg_epp[3]`  | pointers to the three PSG_ENVELOPE structs         |
 | `psg_ovol`    | stepEnvelopes's clamped output volume                   |
 | `psg_vrg[8]`  | PSG volume-register list `{8,0,9,0,10,0,-1,0}` -- registers 8/9/10 are the three channel volumes, -1 ends it |
-| `g_unus3`     | `= -1`, referenced by NOTHING.  Same class as `mi_sig` and `parseNumber`: a 1985 declaration that still costs its bytes |
+| `g_unus3`     | `= -1`, referenced by NOTHING.  Same class as `studioSig` and `parseNumber`: a 1985 declaration that still costs its bytes |
 
 These are not gaps to be filled by guessing.  Ghidra either shows a
 placeholder (`PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx`) at these addresses or

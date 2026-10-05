@@ -12,17 +12,17 @@
  */
 
 
-BOOL16  pat_ok                 = NO;
+BOOL16  patAllowed                 = NO;
 
 
-BOOL16  g_ptdoa              = NO;   /* YES while a Ctrl-P pat (hand animation) is running; gameTick clears it when the cycle ends */
+BOOL16  patActive              = NO;   /* YES while a Ctrl-P pat (hand animation) is running; gameTick clears it when the cycle ends */
 
 
 
 /* Event queue: up to ten ACTION_* events filled by queueEvent and drained
    from the front by nextEvent; ACTION_NONE marks an empty slot, so
-   g_trel[0] != ACTION_NONE means an event is waiting. */
-short   g_trel[10] = {
+   eventQueue[0] != ACTION_NONE means an event is waiting. */
+short   eventQueue[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE,
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE
 };
@@ -31,7 +31,7 @@ short   g_trel[10] = {
 /* Sprite layer flags: entries 0,1 = SPRITE_IN_FRONT (1),
    rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
    0 and 7 in the hardware layout, per layoutSlots). */
-short   g_selaf[SPRITE_SLOTS] = { 1, 1 };
+short   spriteLayer[SPRITE_SLOTS] = { 1, 1 };
 
 
 /* Which hardware slot each logical
@@ -39,7 +39,7 @@ short   g_selaf[SPRITE_SLOTS] = { 1, 1 };
    to their dedicated slots; the rest default to HW_SLOT_NONE (=9,
    the compositor's off-screen sentinel) and get assigned dynamically
    by sprite_update_slots when the sprite is queued. */
-short   g_seslm[SPRITE_SLOTS] = {
+short   spriteSlot[SPRITE_SLOTS] = {
         /* 0..9   */ HW_SLOT_LCP_BODY, HW_SLOT_LCP_HEAD,
                      HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
                      HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
@@ -62,9 +62,9 @@ short   g_seslm[SPRITE_SLOTS] = {
 
 
 
-/* bm32or[i] = 1<<i, bm32and[i] = ~(1<<i).  The original ships both
+/* bitSet32[i] = 1<<i, bitClear32[i] = ~(1<<i).  The original ships both
    tables as initialized data rather than building them at run time. */
-long    bm32or[32] = {
+long    bitSet32[32] = {
         0x00000001L,
         0x00000002L,
         0x00000004L,
@@ -101,8 +101,8 @@ long    bm32or[32] = {
 
 
 
-/* bm32and[i] = ~(1<<i), used by maskHead to clear one bit of a mask. */
-long    bm32and[32] = {
+/* bitClear32[i] = ~(1<<i), used by maskHead to clear one bit of a mask. */
+long    bitClear32[32] = {
         0xfffffffeL,
         0xfffffffdL,
         0xfffffffbL,
@@ -140,7 +140,7 @@ long    bm32and[32] = {
 
 /* NINE HOUSE_POS entries the dog picks (via rndRng) as its next
    wander target -- the picker's index is rndRng(base, 8), so 0..8. */
-short   g_ddipt[9] = {
+short   dogRoamSpots[9] = {
         POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
         POS_TOP_FIREPLACE_RIGHT,   POS_MID_BEDROOM_WALK,
         POS_MID_COMPUTER_DESK,     POS_BTM_STAIR_LANDING,
@@ -152,26 +152,26 @@ short   g_ddipt[9] = {
 /* Used by the cutscene
    at startup to seed the dog's first wander target -- the dog walks
    in from the bottom-screen edge. */
-short   g_dgitx        = POS_BTM_SCREEN_EDGE;
+short   dogStartPos        = POS_BTM_SCREEN_EDGE;
 
 
-short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };   /* Y nudge added to the dog's target, per g_ddipt entry (see g_ddxot) */
+short   dogYNudge[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };   /* Y nudge added to the dog's target, per dogRoamSpots entry (see dogXNudge) */
 
 
 /* Y micro-nudge applied
    to the initial dog target position. */
-short   g_dgiyo            = 3;
+short   dogYStartNudge            = 3;
 
 
 /* Per-destination pixel nudges applied after posToXY returns the
-   anchor for the destination.  g_ddyot is nine like g_ddipt, but
-   g_ddxot takes ELEVEN entries' worth of storage in the original.
+   anchor for the destination.  dogYNudge is nine like dogRoamSpots, but
+   dogXNudge takes ELEVEN entries' worth of storage in the original.
    Only 0..8 are ever indexed; the two extra zeros keep the layout. */
-short   g_ddxot[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
+short   dogXNudge[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
 
 
-/* Dog eating frames, chosen by the eating countdown g_decou % 3. */
-short   g_dseat[3]   = {
+/* Dog eating frames, chosen by the eating countdown dogEatCount % 3. */
+short   dogEatFrames[3]   = {
         SPRITE_DOG_EATING_1, SPRITE_DOG_EATING_2, SPRITE_DOG_EATING_3
 };
 
@@ -180,20 +180,20 @@ short   g_dseat[3]   = {
 /* Animation frame tables consumed by gameTick.  Every
    value is an object_tab_mfdb index; gameTick indexes these by a
    small counter to pick which sprite/frame to draw. */
-short   g_obcla[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
+short   clockFrames[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
                            OBJ_CLOCK_1, OBJ_CLOCK_3 };
 
 
-short   g_obala[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };   /* ringing alarm clock, two frames */
+short   alarmFrames[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };   /* ringing alarm clock, two frames */
 
 
 /* Ringing phone frames. */
-short   g_obpha[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
+short   phoneFrames[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };
 
 
-/* Fireplace flame frames while fire_act. */
-short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
+/* Fireplace flame frames while fireBurning. */
+short   fireFrames[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };
 
 
@@ -201,7 +201,7 @@ short   g_obfia[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
 /* Petting-dog sprite frames -- sprite ids the petting animation
    cycles through: ping-pong over frames 1..6 back down to 2.  TEN
    entries, with no trailing SPRITE_PET_HAND_1 and no 0 terminator. */
-short   g_ptdsi[10]    = {
+short   patSprites[10]    = {
         SPRITE_PET_HAND_1, SPRITE_PET_HAND_2, SPRITE_PET_HAND_3,
         SPRITE_PET_HAND_4, SPRITE_PET_HAND_5, SPRITE_PET_HAND_6,
         SPRITE_PET_HAND_5, SPRITE_PET_HAND_4, SPRITE_PET_HAND_3,
@@ -210,12 +210,12 @@ short   g_ptdsi[10]    = {
 
 
 
-/* Frame-state globals for the petting animation (g_ptanf, the frame
-   counter, lives in globals.c).  g_ptlss is the last sprite drawn. */
-short   g_ptlss                         = SPRITE_PET_HAND_1;
+/* Frame-state globals for the petting animation (patFrame, the frame
+   counter, lives in globals.c).  patLastSprite is the last sprite drawn. */
+short   patLastSprite                         = SPRITE_PET_HAND_1;
 
 
-/* Dog bowl object per lcp_bwlS (BOWL_EMPTY, BOWL_HALF, BOWL_FULL). */
-short   g_obdea[3]     = { OBJ_DOG_FOOD_BOWL_3,
+/* Dog bowl object per bowlLevel (BOWL_EMPTY, BOWL_HALF, BOWL_FULL). */
+short   bowlFrames[3]     = { OBJ_DOG_FOOD_BOWL_3,
                            OBJ_DOG_FOOD_BOWL_2,
                            OBJ_DOG_FOOD_BOWL_1 };

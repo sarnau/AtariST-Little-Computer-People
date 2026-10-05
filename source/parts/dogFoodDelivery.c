@@ -3,12 +3,12 @@
  */
 
 /* Dog-food delivery (ACTION_EVENT_DOG_FOOD, queued by Ctrl-D): the
-   food delivery with g_dvdog set, which makes foodDelivery take the
+   food delivery with isDogDelivery set, which makes foodDelivery take the
    feed-the-dog branch. */
 void
 dogFoodDelivery()
 {
-        g_dvdog = YES;
+        isDogDelivery = YES;
         foodDelivery();
-        g_dvdog = NO;
+        isDogDelivery = NO;
 }

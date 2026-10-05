@@ -6,12 +6,12 @@
 void
 redrawHands()
 {
-        if (g_cmmin == t_min)
+        if (clockMinute == t_min)
                 return;
-        drawHands(g_cmmin, g_chhou, COLOR_white);
-        g_cmmin = t_min;
-        g_chhou   = t_hour;
+        drawHands(clockMinute, clockHour, COLOR_white);
+        clockMinute = t_min;
+        clockHour   = t_hour;
         /* The cached copies, not t_min/t_hour: the original reads the
            two globals back for this call. */
-        drawHands(g_cmmin, g_chhou, COLOR_grey);
+        drawHands(clockMinute, clockHour, COLOR_grey);
 }

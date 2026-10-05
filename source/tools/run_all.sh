@@ -87,7 +87,7 @@ echo "$out" | grep -q 'BYTE-IDENTICAL' \
     && ok "prg_diff" \
     || bad "prg_diff" "$(echo "$out" | tail -3 | tr '\n' ' ')"
 
-# reloc_audit: every category must be 0 except E, which is scrbufA's
+# reloc_audit: every category must be 0 except E, which is altScreen's
 # inferred base and is documented as undecidable.
 # Take the first number after the LAST ": " -- category D ends
 # "0 of 283", so a plain ': 0$' test reports a false failure.
@@ -96,7 +96,7 @@ nonzero() { awk -F': ' '{split($NF,a," "); if (a[1]+0 != 0) print}'; }
 bad_rows=$(echo "$out" | grep -E '^[ABCDF]\.' | nonzero || true)
 mm=$(echo "$out" | grep -E '^segment' | nonzero || true)
 if [ -z "$bad_rows" ] && [ -z "$mm" ]; then
-    ok "reloc_audit  (E=$(echo "$out" | sed -n 's/^E\..*: //p') expected: scrbufA)"
+    ok "reloc_audit  (E=$(echo "$out" | sed -n 's/^E\..*: //p') expected: altScreen)"
 else
     bad "reloc_audit" "$(echo "$bad_rows$mm" | tr '\n' ' ')"
 fi

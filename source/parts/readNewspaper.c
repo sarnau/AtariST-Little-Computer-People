@@ -17,41 +17,41 @@ readNewspaper()
         short           t;
         short           i;
 
-        pst_arr[0] = STATE_READ_PAPER_HOLD;
-        pst_arr[1] = STATE_READ_PAPER_TURN_PAGE;
+        scratchArr[0] = STATE_READ_PAPER_HOLD;
+        scratchArr[1] = STATE_READ_PAPER_TURN_PAGE;
         tvOn();
         posToXY(POS_TOP_ARMCHAIR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        g_hamod         = HEAD_ANIM_READING;
-        lcp_face   = FACING_LEFT;
-        lcp_st              = STATE_SIT_IN_ARMCHAIR;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+        headMode         = HEAD_ANIM_READING;
+        resFacing   = FACING_LEFT;
+        animState              = STATE_SIT_IN_ARMCHAIR;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
         waitHeadTurn();
         /* The limit is set before the coordinate steps, and
-           `lcp_x += 0` is a no-op the original wrote.  Both kept on
+           `resX += 0` is a no-op the original wrote.  Both kept on
            purpose. */
         t = 200;
-        lcp_x += 0;
-        lcp_y += 8;
+        resX += 0;
+        resY += 8;
         i = 0;
 
         while (i < t) {
-                if (g_trel[0] != ACTION_NONE)
+                if (eventQueue[0] != ACTION_NONE)
                         break;
-                lcp_face = FACING_LEFT;
-                lcp_st            = pst_arr[0];
+                resFacing = FACING_LEFT;
+                animState            = scratchArr[0];
                 if ((Random() & 0xf) == 5)
-                        lcp_st = pst_arr[1];
+                        animState = scratchArr[1];
                 gameTick(1);
                 i++;
         }
 
-        lcp_y -= 8;
-        lcp_face = FACING_LEFT;
-        lcp_st = STATE_SIT_IN_ARMCHAIR;
+        resY -= 8;
+        resFacing = FACING_LEFT;
+        animState = STATE_SIT_IN_ARMCHAIR;
         gameTick(2);
         tvOff();
 }

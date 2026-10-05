@@ -9,9 +9,9 @@
 
 /* Convert a house position (HOUSE_POS, 0..47) to screen coordinates.
    Out-of-range indexes are treated as POS_BTM_SCREEN_EDGE.  X is
-   g_rpxs (stored at half resolution) doubled; Y is the floor's
+   posXHalf (stored at half resolution) doubled; Y is the floor's
    baseline -- 77 for positions 0..15 (top floor), 140 for 16..31,
-   202 for 32..47 (ground floor) -- minus the position's g_rphs
+   202 for 32..47 (ground floor) -- minus the position's posYOffset
    offset.  Results go to *g_txx and *g_txy. */
 void
 posToXY(index, g_txx, g_txy)
@@ -24,7 +24,7 @@ short   *g_txy;
         if (index > 47)
                 index = POS_BTM_SCREEN_EDGE;
 
-        *g_txx = g_rpxs[index] << 1;
+        *g_txx = posXHalf[index] << 1;
 
         if (index < 16)
                 floor_y_pos = 77;
@@ -33,7 +33,7 @@ short   *g_txy;
         else
                 floor_y_pos = 202;
 
-        *g_txy = floor_y_pos - g_rphs[index];
+        *g_txy = floor_y_pos - posYOffset[index];
 }
 
 /* floorOfY -> parts/floorOfY.c. */

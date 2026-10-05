@@ -7,11 +7,11 @@
 #include "sprglobs.h"
 #include "sprload.h"
 
-/* sp_mbuf: 14 KB shared mask buffer.  defineSprite writes a generated
+/* genMaskBuf: 14 KB shared mask buffer.  defineSprite writes a generated
    transparency mask here parallel to the sprite's image bytes in
-   spr_file.  g_sedms[id] then references a slice
+   sprFileBuf.  spriteMask[id] then references a slice
    here. */
-unsigned char   sp_mbuf[14000];
+unsigned char   genMaskBuf[14000];
 
 /* makeMask -> parts/makeMask.c. */
 

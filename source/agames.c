@@ -17,7 +17,7 @@
 
 /* useComputer lives in parts/useComputer.c, in the object right before tvClearAnim. */
 
-/* The menu waits on the tx_sctm timeout (300, reloaded with 250 once it
+/* The menu waits on the textTimer timeout (300, reloaded with 250 once it
    runs low); while idle the resident yawns (dozeOff(1)) between polls. */
 
 
@@ -30,42 +30,42 @@ playGame()
         short   spare3, spare4, spare5, spare6;
         short   selected_game;
 
-        dg_vis        = YES;
-        dg_idlcd = 1;
+        dogNoTopFlr        = YES;
+        dogIdleCount = 1;
 
         posToXY(POS_TOP_FILING_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        if (lcp_flcO == NO) {
-                lcp_st = STATE_BEND_DOWN;
+        if (filingCabOpen == NO) {
+                animState = STATE_BEND_DOWN;
                 gameTick(1);
-                lcp_st = STATE_REACH_FORWARD;
+                animState = STATE_REACH_FORWARD;
                 drawObject(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
-                lcp_st = STATE_PICK_UP_FROM_FLOOR;
+                animState = STATE_PICK_UP_FROM_FLOOR;
                 drawObject(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
-                lcp_flcO = YES;
-                lcp_st = STATE_BEND_DOWN;
+                filingCabOpen = YES;
+                animState = STATE_BEND_DOWN;
                 gameTick(1);
-                lcp_st = STATE_STAND_FACING_SCREEN;
+                animState = STATE_STAND_FACING_SCREEN;
                 gameTick(1);
         }
 
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
+        animState              = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
         waitHeadTurn();
         gameTick(5);
         fillPanel(0x1b);
-        tx_sctm      = 300;
-        no_keyin = YES;
+        textTimer      = 300;
+        keysBlocked = YES;
         printString("What game do you want to play?", 5,  8, COLOR_black);
         printString("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
         printString("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
@@ -77,19 +77,19 @@ playGame()
         keycode = getKey();
         gameTick(0);
 
-        if (tx_sctm < 0x32 && game_running == NO) {
+        if (textTimer < 0x32 && game_running == NO) {
                 /* Menu timed out -- yawn and idle. */
-                tx_sctm      = 250;
+                textTimer      = 250;
                 selected_game    = 8;
-                g_wtx    = lcp_x;
-                g_wty    = flr_cy[floorOfY(lcp_y) - 1];
-                g_actif = YES;
+                walkXTarget    = resX;
+                walkYTarget    = floorWalkY[floorOfY(resY) - 1];
+                noPreempt = YES;
                 walkToTarget();
-                g_actif = NO;
+                noPreempt = NO;
 
-                lcp_face   = FACING_RIGHT;
-                lcp_st              = STATE_STAND_SIDE_VIEW;
-                g_hatas = 8;
+                resFacing   = FACING_RIGHT;
+                animState              = STATE_STAND_SIDE_VIEW;
+                headTarget = 8;
                 waitHeadTurn();
 
                 while (selected_game-- != 0) {
@@ -100,73 +100,73 @@ playGame()
                                 break;
                 }
 
-                lcp_st = STATE_STAND_SIDE_VIEW;
+                animState = STATE_STAND_SIDE_VIEW;
                 gameTick(0);
                 posToXY(POS_TOP_FILING_CABINET,
-                                      &g_wtx, &g_wty);
-                g_actif = YES;
+                                      &walkXTarget, &walkYTarget);
+                noPreempt = YES;
                 walkToTarget();
-                g_actif = NO;
+                noPreempt = NO;
 
-                lcp_st              = STATE_STAND_SIDE_VIEW;
-                g_hatas = 8;
+                animState              = STATE_STAND_SIDE_VIEW;
+                headTarget = 8;
                 waitHeadTurn();
                 game_running = YES;
         }
 
-        else if (tx_sctm == 0 && game_running != NO) {
+        else if (textTimer == 0 && game_running != NO) {
                 idleShrug();
-                no_keyin = NO;
-                dg_vis = NO;
+                keysBlocked = NO;
+                dogNoTopFlr = NO;
                 return;
         }
 
         }
 
-        tx_sctm      = 0;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        textTimer      = 0;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
         rummageCabinet();
-        lcp_st = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         carryBehind(SPRITE_GAME_BOX);
         gameTick(0);
 
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
-        g_wty += 6;
-        g_wtx += 2;
-        g_actif = YES;
+                              &walkXTarget, &walkYTarget);
+        walkYTarget += 6;
+        walkXTarget += 2;
+        noPreempt = YES;
         walkToTarget();
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
         activateSprite(SPRITE_TABLE_SETTING);
-        g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
-        g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
+        pendX[spriteSlot[SPRITE_TABLE_SETTING]] = 103;
+        pendY[spriteSlot[SPRITE_TABLE_SETTING]] = 180;
 
         posToXY(POS_BTM_TABLE_RIGHT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
         posToXY(POS_BTM_TABLE_LEFT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        lcp_st            = STATE_STAND_SIDE_VIEW;
-        lcp_face = FACING_RIGHT;
+        animState            = STATE_STAND_SIDE_VIEW;
+        resFacing = FACING_RIGHT;
         carryInFront(SPRITE_GAME_BOX);
-        g_hatas = 8;
+        headTarget = 8;
         waitHeadTurn();
 
-        lcp_st = STATE_EAT_BITE;
-        lcp_y += 8;
-        lcp_x += 6;
+        animState = STATE_EAT_BITE;
+        resY += 8;
+        resX += 6;
         gameTick(0);
-        g_lcyof = NO;
+        isCarrying = NO;
 
-        g_sepex[g_seslm[SPRITE_GAME_BOX]] += 3;
-        g_sepey[g_seslm[SPRITE_GAME_BOX]] -= 4;
+        pendX[spriteSlot[SPRITE_GAME_BOX]] += 3;
+        pendY[spriteSlot[SPRITE_GAME_BOX]] -= 4;
         gameTick(0);
 
         if (keycode == '1')
@@ -180,36 +180,36 @@ playGame()
         else if (keycode == '5')
                 playWordPuzzle();
 
-        g_lcyof = YES;
+        isCarrying = YES;
         carryBehind(SPRITE_GAME_BOX);
-        lcp_y -= 8;
-        lcp_x -= 6;
-        lcp_st = STATE_STAND_SIDE_VIEW;
+        resY -= 8;
+        resX -= 6;
+        animState = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 
         posToXY(POS_BTM_TABLE_RIGHT,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
         posToXY(POS_BTM_KITCHEN_SINK,
-                              &g_wtx, &g_wty);
-        g_wty += 5;
+                              &walkXTarget, &walkYTarget);
+        walkYTarget += 5;
         walkToTarget();
 
-        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
         layoutSlots();
 
         posToXY(POS_TOP_FILING_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
+        isCarrying = NO;
         waitHeadTurn();
         closeFilingCab();
-        dg_vis = NO;
-        g_actif = NO;
+        dogNoTopFlr = NO;
+        noPreempt = NO;
 }

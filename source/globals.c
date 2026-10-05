@@ -21,10 +21,10 @@
 #include "sprload.h"
 #include "psgfreq.h"
 
-short           bj_key;         /* playBlackjack's key variable (a global, not a local) */
-char            psg_ovol;       /* stepEnvelopes's clamped output volume */
-unsigned short  g_wkadj;        /* read once, in walkStep's dead store */
-unsigned short  ani_cnt;    /* unsigned: the & 7 test zero-extends */
+short           bjKey;         /* playBlackjack's key variable (a global, not a local) */
+char            envOutVol;       /* stepEnvelopes's clamped output volume */
+unsigned short  walkAdjust;        /* read once, in walkStep's dead store */
+unsigned short  frameCount;    /* unsigned: the & 7 test zero-extends */
 short   t_sec;         /* game seconds 0..59; simStep steps it every 8th frame */
 
 /* The game clock and calendar, set from the guestbook by titleScreen and
@@ -35,109 +35,109 @@ short   t_day;       /* day of the month, 0-based */
 short   t_mon;         /* month 0..11 */
 short   t_year;        /* year - 1900 */
 
-PLAYER  lcp;            /* the resident's record, saved to and loaded from "hyber" */
-BOOL16  introSeq;       /* YES while the move-in cutscene runs; holds off keys, phone and events */
+PLAYER  resident;            /* the resident's record, saved to and loaded from "hyber" */
+BOOL16  movingIn;       /* YES while the move-in cutscene runs; holds off keys, phone and events */
 
-BOOL16  in_evrt;        /* YES while runEvent runs a deferred event, so walkToTarget is not interrupted */
+BOOL16  inEvent;        /* YES while runEvent runs a deferred event, so walkToTarget is not interrupted */
 
-short   lastAct;        /* the action runAction last ran; the random picker avoids repeating it */
+short   lastAction;        /* the action runAction last ran; the random picker avoids repeating it */
 
 /* Left at 0 in BSS; the move-in cutscene sets them before gameLoop
    runs. */
-short   lcp_x;        /* resident's screen position in pixels */
-short   lcp_y;
-BOOL16  g_lcldd;      /* loadSavedGame's result: 1 = a saved resident was read, 0 = new game */
-long    cprot_r;      /* long: tested as a 32-bit value */
-short   g_spdc;       /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
+short   resX;        /* resident's screen position in pixels */
+short   resY;
+BOOL16  loadedSave;      /* loadSavedGame's result: 1 = a saved resident was read, 0 = new game */
+long    copyProtResult;      /* long: tested as a 32-bit value */
+short   walkSpeed;       /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
 
-BOOL16  alarm_p;        /* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm clears it */
-short   lcp_watr;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
+BOOL16  alarmRinging;        /* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm clears it */
+short   waterLevel;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
 
 /* Typed-command queue: submitCommand appends the action matchCommand found and
    its priority, chooseAction consumes from the front. */
-short   g_aliss;        /* number of queued commands, 0..10 */
-short   g_aqueu[10];    /* queued action ids */
-short   g_apriq[10];    /* their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed */
-short   g_hsfra;        /* head sprite frame; stepHead derives it, actions override it to nod or talk */
-long    g_sfret;        /* game ticks until the current sound effect is stopped (renderFrame); 0 = none */
-BOOL16  g_actif;        /* YES while the resident is busy in an activity, so walkToTarget walks uninterrupted */
+short   queueCount;        /* number of queued commands, 0..10 */
+short   queueActions[10];    /* queued action ids */
+short   queuePriority[10];    /* their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed */
+short   headFrame;        /* head sprite frame; stepHead derives it, actions override it to nod or talk */
+long    sfxTicksLeft;        /* game ticks until the current sound effect is stopped (renderFrame); 0 = none */
+BOOL16  noPreempt;        /* YES while the resident is busy in an activity, so walkToTarget walks uninterrupted */
 /* Walk target in screen pixels for walkToTarget / walkStep; both 0 = arrived. */
-short   g_wtx;
-short   g_wty;
+short   walkXTarget;
+short   walkYTarget;
 /* A 10-short scratch buffer used by action handlers (bathroom, food,
    house, leisure, idle, simple) to cache a small set of state values
    indexed by variable expressions like `i & 3`.  The bathroom/food/house
-   paths write pst_arr[4], so it must hold more than four. */
-short   pst_arr[10];
+   paths write scratchArr[4], so it must hold more than four. */
+short   scratchArr[10];
 
 /* Open (YES) / closed (NO) state of the house's doors and cupboards,
-   unpacked from lcp.door_states_and_flags by loadSavedGame and packed back
+   unpacked from resident.door_states_and_flags by loadSavedGame and packed back
    by studyVisit; main draws each one accordingly at boot. */
-short   lcp_frdO;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
-short   studyDrO;       /* DSF_STUDY_DOOR */
-short   lcp_clsO;       /* DSF_CLOSET_DOOR */
-short   lcp_cabO;       /* DSF_KITCHEN_CABINET */
-short   lcp_drsO;       /* DSF_DRESSER */
-short   lcp_toiO;       /* DSF_TOILET_DOOR */
-short   lcp_flcO;       /* DSF_FILING_CABINET */
-short   lcp_bwlS;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
-short   lcp_food;       /* working copy of lcp.food_supply */
+short   frontDoorOpen;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
+short   studyDoorOpen;       /* DSF_STUDY_DOOR */
+short   bedClosetOpen;       /* DSF_CLOSET_DOOR */
+short   kitchenCabOpen;       /* DSF_KITCHEN_CABINET */
+short   dresserOpen;       /* DSF_DRESSER */
+short   toiletDoorOpen;       /* DSF_TOILET_DOOR */
+short   filingCabOpen;       /* DSF_FILING_CABINET */
+short   bowlLevel;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
+short   foodSupply;       /* working copy of resident.food_supply */
 
 
 /* A byte flag, not BOOL16: every use tests it as a byte. */
-char    mi_play;
-short   dg_bwlch;       /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
-short   g_sfplf;        /* YES while a sound effect is playing */
-short   g_sfpli;        /* id of the effect playing, tested to stop or chain it */
-char *  mi_sbuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
+char    songPlaying;
+short   bowlChange;       /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
+short   sfxPlaying;        /* YES while a sound effect is playing */
+short   sfxCurId;        /* id of the effect playing, tested to stop or chain it */
+char *  songBuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
 /* Song file counts (.SNG / .ORG), set at boot by countSongs(). */
-short   sng_cnt;
-short   org_cnt;
-short   fire_dur;       /* frames until the lit fire burns out (lightFire sets 2500..5000) */
-BOOL16  fire_ext;       /* request for tick.c to put the fire out and redraw the grate */
-short   tx_sctm;        /* text-strip timer: > 0 frames until the typed line expires,
+short   songCount;
+short   organCount;
+short   fireTimeLeft;       /* frames until the lit fire burns out (lightFire sets 2500..5000) */
+BOOL16  fireDouse;       /* request for tick.c to put the fire out and redraw the grate */
+short   textTimer;        /* text-strip timer: > 0 frames until the typed line expires,
                            < 0 a minigame owns the strip, 0 idle; picks renderFrame's copy */
-short   g_srsdc;        /* frames left of the text strip's scroll-up after Return */
-short   g_cdibp;        /* cursor position in g_cdinb, 0..38 */
+short   stripScroll;        /* frames left of the text strip's scroll-up after Return */
+short   typedCursor;        /* cursor position in typedLine, 0..38 */
 
-/* Letter subsystem storage.  g_ltlp[] is populated at runtime from
+/* Letter subsystem storage.  letterLines[] is populated at runtime from
    LETTER.TXT (see loadLetterText).  360 slots: that is loadLetterText's literal
    `for (linecount = 0; linecount < 360; ...)`, it is the 4 sections x
    96 pointers (section 3 uses 72) shape writeLetter indexes, and
    LETTER.TXT decodes to 361 line segments. */
-char *  g_lttx;
-char *  g_ltlp[360];
+char *  letterText;
+char *  letterLines[360];
 
 /* FORTY bytes, not 64: that is the room the original leaves for it. */
-char    g_ltscb[40];
-char    in_str[80];             /* a screen line */
-/* comp_tok[15]: the 15 most common byte values in the
+char    letterWord[40];
+char    inputLine[80];             /* a screen line */
+/* nibbleBytes[15]: the 15 most common byte values in the
    compressed stream.  Populated at load-time by unpackFile
    from the 15-byte header immediately following the size word. */
-/* scn_dic[15]: the 15-entry word dictionary at the head of a .SCN
+/* scnDict[15]: the 15-entry word dictionary at the head of a .SCN
    file, and the size/buffer main uses while decoding one.  All three
    are globals because the .SCN file handling is written out in main
    and only the nibble decoder is a function. */
-short           scn_dic[15];
-unsigned char   comp_tok[15];
-short           scn_siz;
-char *          scn_buf;
+short           scnDict[15];
+unsigned char   nibbleBytes[15];
+short           scnSize;
+char *          scnBuffer;
 
 /* The resident's body and head sprite images, saved by hideResident while
    it blanks them and put back by showResident. */
-short * sv_bodyP;
-short * sv_headP;
+short * savedBodyImg;
+short * savedHeadImg;
 
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
-short   vdihnd;     /* virtual workstation handle from v_opnvwk, passed to every VDI call */
-short   vdi_hnd;    /* physical from graf_handle */
+short   vdiHandle;     /* virtual workstation handle from v_opnvwk, passed to every VDI call */
+short   physHandle;    /* physical from graf_handle */
 /* graf_handle writes its four cell/box metrics into these globals,
    not into locals of initAes. */
-short   gr_hwchar;
-short   gr_hhchar;
-short   gr_hwbox;
-short   gr_hhbox;
+short   charWidth;
+short   charHeight;
+short   boxWidth;
+short   boxHeight;
 
 /* The VDI parameter block: points at the game-local arrays used by
    vdiown.c's bindings and vdi_go. */
@@ -155,80 +155,80 @@ short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
 
-void *  g_dscp;     /* 512-aligned start of dsb_stor (fillPanel); the text strip is drawn there */
-char    g_mspha;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by seqAdvance */
-unsigned char * mi_dbase;   /* the loaded song's event stream, just past its header */
+void *  stripBuf;     /* 512-aligned start of stripStore (fillPanel); the text strip is drawn there */
+char    seqPhase;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by seqAdvance */
+unsigned char * songEvents;   /* the loaded song's event stream, just past its header */
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * mi_sqpos;       /* read position in the event stream, walked by parseEvents */
-long            mi_env;         /* address of the song's ADSR block, 8 bytes per channel */
-char            psg_cvol;     /* a byte: PSG volume for the note being parsed */
-/* initSongState sets mi_evcn to 9, the loop stack's empty mark. */
-short           mi_evi;         /* number of shorts in use in mi_evq */
-short           mi_evcn;        /* loop-stack index into mi_lstk */
+unsigned char * songPos;       /* read position in the event stream, walked by parseEvents */
+long            songAdsr;         /* address of the song's ADSR block, 8 bytes per channel */
+char            noteVolume;     /* a byte: PSG volume for the note being parsed */
+/* initSongState sets loopTop to 9, the loop stack's empty mark. */
+short           queueLen;         /* number of shorts in use in noteQueue */
+short           loopTop;        /* loop-stack index into loopStack */
 
 /* Ticks per beat, published to the Timer-A handler.  ONE short: every
    access goes to a single cell, and the next cell is two bytes later.
    It sits exactly 14 bytes past AESBIND's int_out, which makes
    "int_out[7]" tempting -- but int_out is only 14 bytes, so declaring
    it that way collides with the next global. */
-short           mi_tpb;
-long            g_mtcou;        /* master Timer-A tick counter, counted up by timerAIsr */
-short           g_mtdiv;        /* divider: timerAIsr runs stepEnvelopes each time it wraps */
-/* armSequencer resets mi_nlp0 at song start. */
-short           mi_nlp0;
+short           beatTicks;
+long            timerTicks;        /* master Timer-A tick counter, counted up by timerAIsr */
+short           envDivider;        /* divider: timerAIsr runs stepEnvelopes each time it wraps */
+/* armSequencer resets ticksToNext at song start. */
+short           ticksToNext;
 
 /* The duration parseEvents computes for the event it is about to queue.
    A SECOND cell: parseEvents writes it and only queueNote reads it, while
-   peekNoteDur's identical expression goes to mi_nlp0, which drives the
+   peekNoteDur's identical expression goes to ticksToNext, which drives the
    tick counters. */
-short           mi_ndur;
-long            mi_nxTk;       /* long tick counters: g_mtcou value of the next event */
-long            mi_lpTk;       /* g_mtcou when queued notes were last expired */
-unsigned char   g_meve[4];     /* MIDI message being built for sendMidiEvent */
+short           noteDur;
+long            nextEvTick;       /* long tick counters: timerTicks value of the next event */
+long            lastExpTick;       /* timerTicks when queued notes were last expired */
+unsigned char   midiMsg[4];     /* MIDI message being built for sendMidiEvent */
 
 /* The remaining sequencer/PSG working state below belongs to the
    Timer-A music engine. */
 
 /* Timer-A interrupt state.
-   mi_rlock (defined in mq_tick.s) -- reentrancy guard so the tick
+   envBusy (defined in mq_tick.s) -- reentrancy guard so the tick
                         handler doesn't recurse into the sequencer if a
                         game-code path triggers another timer event
                         before the first handler completes.
-   mi_svtv  -- previous Timer-A vector, saved so it can be restored. */
-void            (*mi_svtv)();
+   oldTimerAVec  -- previous Timer-A vector, saved so it can be restored. */
+void            (*oldTimerAVec)();
 
 /* ---- MIDI sequencer parse state -----------------------------------
    The sequencer walks a 3-byte-per-event compact stream inside
-   mi_sqpos..mi_seqE.  Per-event scratch (event-type flag, note-on
+   songPos..songEndPtr.  Per-event scratch (event-type flag, note-on
    trigger, current note/channel, note-length params) is unpacked
    into a set of byte / short globals below, then handed to
    queue-note-event / send-note-off / send-program-change to reach
    the sendMidiEvent dispatcher.
 
-   mi_ndt (in the initialized data below) is the duration lookup
+   durTable (in the initialized data below) is the duration lookup
    indexed by bits 0..4 of each note event's first byte. */
 
-unsigned char * mi_seqE;        /* end of the stream; -1 = no limit */
-unsigned char * mi_dptr;        /* loop-back address popped by popLoop */
-char            mi_evTf;        /* set once a note was decoded in this pass */
-char            mi_nnOn;        /* non-zero: queue the note (bit 4 of byte 0 clear) */
-char            mi_nnOf;        /* non-zero: the event is a note-off (bit 5 of byte 0) */
-char            mi_ccha;        /* logical channel, low nibble of byte 0 */
-char            mi_cnot;        /* note to play: g_mstr-mapped, or literal (+-1) */
-char            mi_nmof;        /* note-mode bits of byte 1: absolute, or one up/down */
-char            mi_nlpA;        /* accent bit: full velocity and full PSG volume */
+unsigned char * songEndPtr;        /* end of the stream; -1 = no limit */
+unsigned char * loopTarget;        /* loop-back address popped by popLoop */
+char            noteDecoded;        /* set once a note was decoded in this pass */
+char            noteToQueue;        /* non-zero: queue the note (bit 4 of byte 0 clear) */
+char            noteIsOff;        /* non-zero: the event is a note-off (bit 5 of byte 0) */
+char            noteChan;        /* logical channel, low nibble of byte 0 */
+char            noteNum;        /* note to play: noteMap-mapped, or literal (+-1) */
+char            noteMode;        /* note-mode bits of byte 1: absolute, or one up/down */
+char            noteAccent;        /* accent bit: full velocity and full PSG volume */
 
 /* Event queue -- 3 shorts per active note: {duration, note|flags,
    physical MIDI channel byte}.  Max 60 slots -> 20 concurrent
    notes. */
-short           mi_evq[60];
+short           noteQueue[60];
 
 /* Loop stack -- {return_addr, remaining_count} pairs.  initSongState starts
    the index at 9 (which also means "empty") and pushLoop only pushes
    while it is below 49, so entries 9..48 hold at most 20 nested loops;
    0..8 and 49 are never touched. */
-long            mi_lstk[50];
+long            loopStack[50];
 
 /* ---- PSG envelope processor state -----------------------------------
    Bresenham-style integer ramp accumulator + delta, per channel.
@@ -239,36 +239,36 @@ long            mi_lstk[50];
 
    All 4 envelope tables (rate/time/sustain/release) are 16 shorts
    each, addressed by the low nibble of the ADSR bytes.
-   psg_rot is the {0x88, 0x89, 0x8a} amp-register-with-write-bit
+   ampRegs is the {0x88, 0x89, 0x8a} amp-register-with-write-bit
    for the 3 PSG channels; the assembly subtracts 0x80 back off
    before the actual psgWrite call. */
-short           psg_rdel[3];      /* ramp_delta   */
-short           psg_racc[3];      /* ramp_accum   */
+short           rampDelta[3];      /* ramp_delta   */
+short           rampAccum[3];      /* ramp_accum   */
 
-/* mi_noSt: 128-entry table tracking
+/* noteOwner: 128-entry table tracking
    which MIDI notes are currently sounding and on which logical channel.
-   Value 0 = note not sounding.  Non-zero = the mi_chmap[] index (low
+   Value 0 = note not sounding.  Non-zero = the chanMap[] index (low
    nibble used) that owns the note, so stopSequencer can emit a matching
    note-off through the correct MIDI channel on shutdown. */
-unsigned char   mi_noSt[128];
-unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
-PSG_ENVELOPE    psg_envelope[3];
+unsigned char   noteOwner[128];
+unsigned char   psgChanNote[3];           /* current MIDI note per PSG channel A/B/C */
+PSG_ENVELOPE    psgEnvelope[3];
 
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-char            g_sfcup;        /* sf_pri priority of the playing effect, for preemption */
-short           g_sfddh;        /* effect duration from its last 4 bytes, high word (200 Hz) */
-short           g_sfddl;        /* ... and low word */
-long            g_sfHz2;        /* 200 Hz clock when the effect started; written, never read */
+char            sfxCurPrio;        /* sfxPriority priority of the playing effect, for preemption */
+short           sfxDurHi;        /* effect duration from its last 4 bytes, high word (200 Hz) */
+short           sfxDurLo;        /* ... and low word */
+long            sfxStartHz;        /* 200 Hz clock when the effect started; written, never read */
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from SOUNDS.LCP.
    25 slots: SOUNDS.LCP holds 23 blocks before the size-0 sentinel that
    ends loadSounds's `index < 500` loop, and the original leaves room for 25
    pointers.  The 500 is a loop limit, not the size. */
-unsigned char * mi_ntLp[25];
+unsigned char * sfxData[25];
 /* Working buffer for the currently-playing Dosound sequence, copied
-   from mi_ntLp[g_sfcur] each time a new effect starts.  FIFTY-SIX
+   from sfxData[sfxReqId] each time a new effect starts.  FIFTY-SIX
    bytes: that is the room the original leaves before the next cell it
    uses.  startSfx copies `size` bytes here straight from SOUNDS.LCP, and
    the file has longer effects -- blocks 8 (SFX_HEAD_NOD) and 17
@@ -277,24 +277,24 @@ unsigned char * mi_ntLp[25];
    papered over with a bigger one.
 
    That 56 is an INFERENCE: a declared array size never reaches the
-   compiled code.  g_sfDoB..g_srlgb is exactly 400 bytes, so the
-   original may instead have had ONE 400-byte struct with g_sfdos/
-   g_sfdoc as fields at +56/+58, and no overrun at all.  A 400-byte
+   compiled code.  sfxBuffer..drawLogbase is exactly 400 bytes, so the
+   original may instead have had ONE 400-byte struct with sfxDosStat/
+   sfxDosCtl as fields at +56/+58, and no overrun at all.  A 400-byte
    array plus two separate shorts is ruled out -- .comm packs densely,
-   so g_sfdos would land at +400.  The two readings behave identically;
+   so sfxDosStat would land at +400.  The two readings behave identically;
    see CLAUDE.md.
 
    Where the overrun LANDS depends on the BSS layout:
 
-     * Shipped build.  g_sfDoB is followed by g_sfdos (+56) and g_sfdoc
+     * Shipped build.  sfxBuffer is followed by sfxDosStat (+56) and sfxDosCtl
        (+58) -- both WRITE-ONLY, set by stopSfx() and read nowhere -- and
        then 342 bytes that no symbol claims.  The overrun dies in that
        hole, which is why 1985 shipped it.
 
      * Gated test build.  The linker's own .comm packing applies, and it
-       puts g_obtah -- the 56-entry object HEIGHT table -- at exactly
+       puts objHeights -- the 56-entry object HEIGHT table -- at exactly
        +56.  The first head-nod or toilet refill overwrites it; the next
-       drawObject() passes g_obtah[i] - 1 to vro_cpyfm as a raster
+       drawObject() passes objHeights[i] - 1 to vro_cpyfm as a raster
        coordinate, and TOS bus errors inside the VDI.
 
    So the buffer is padded to 400 IN TEST BUILDS ONLY, reproducing the
@@ -313,15 +313,15 @@ unsigned char * mi_ntLp[25];
 #endif
 
 #ifdef LCP_SFDOB_PAD
-char            g_sfDoB[400];   /* Dosound buffer, padded (test builds) */
+char            sfxBuffer[400];   /* Dosound buffer, padded (test builds) */
 #else
-char            g_sfDoB[56];    /* Dosound buffer handed to Dosound by startSfx */
+char            sfxBuffer[56];    /* Dosound buffer handed to Dosound by startSfx */
 #endif
 
-void *  g_srlgb;    /* logical screen saved by beginDraw, restored by endDraw */
-void *  sv_lgb;     /* logical screen saved by panelBegin, restored by panelEnd */
-void *  g_srptr;    /* 512-aligned start of scrbufB: the house picture VDI draws into */
-/* dsb_stor: offscreen buffer where the letter-typing status strip
+void *  drawLogbase;    /* logical screen saved by beginDraw, restored by endDraw */
+void *  panelLogbase;     /* logical screen saved by panelBegin, restored by panelEnd */
+void *  housePtr;    /* 512-aligned start of houseBuf: the house picture VDI draws into */
+/* stripStore: offscreen buffer where the letter-typing status strip
    composites, kept separate from the main house buffer.
    fillPanel(27) writes rows 0..26 here so that the striped-white letter
    background is ready for the typewriter animation; renderFrame
@@ -331,30 +331,30 @@ void *  g_srptr;    /* 512-aligned start of scrbufB: the house picture VDI draws
    mgSetup's fillPanel(0x4d), 77 rows of 160 bytes = 12320, and the
    align-up `(base + 512) & ~511` moves the start by at most 512 --
    so 12832 bytes, 6416 shorts.
-   fillPanel points g_dscp at the ALIGNED start at run time. */
-short   dsb_stor[6416];
+   fillPanel points stripBuf at the ALIGNED start at run time. */
+short   stripStore[6416];
 
-/* scr_scal -- always 1 (REZ_ST_MEDIUM).
+/* screenScale -- always 1 (REZ_ST_MEDIUM).
    Multiplier for the 320x200 low-res screen dimensions in initMfdb,
    kept even though the value is a constant. */
-short   scr_scal;
+short   screenScale;
 
 /* vdiInit opens the workstation through these GLOBAL work arrays,
    not through locals. */
 short   work_in[11];
 short   wk_out[57];
 
-/* MFDB_A -- source MFDB for VDI raster copies.  fd_addr = NULL is the
+/* screenMfdb -- source MFDB for VDI raster copies.  fd_addr = NULL is the
    VDI convention for "device screen", so vro_cpyfm(...) copies from
    the visible physbase into a memory buffer instead of another
    off-screen bitmap.
 
-   A SHORT ARRAY, not an MFDB: initHouseBuf clears MFDB_A[0] and MFDB_A[1]
+   A SHORT ARRAY, not an MFDB: initHouseBuf clears screenMfdb[0] and screenMfdb[1]
    -- the two halves of fd_addr -- and copyScreen passes the array itself,
    both at the same address. */
-short   MFDB_A[10];
+short   screenMfdb[10];
 
-/* scrbufA / scrbufB -- BSS scratch for the two double-buffer
+/* altScreen / houseBuf -- BSS scratch for the two double-buffer
    compositing screens.
 
    Every screen-pointer site (initHouseBuf, fillPanel, initMfdb, renderFrame's
@@ -362,9 +362,9 @@ short   MFDB_A[10];
         aligned = (base + 0x200) & ~0x1FF
    (the sprite path writes it as base + 0x1FF, masked the same way).
 
-   Each holds ONE aligned screen: scrbufA the sprite compositor (also
+   Each holds ONE aligned screen: altScreen the sprite compositor (also
    renderFrame's alternate page-flip target -- there is no second screen
-   at +0x8000, see parts/renderFrame.c), scrbufB the decompressed
+   at +0x8000, see parts/renderFrame.c), houseBuf the decompressed
    house.scn background.
 
    Sized as screen + alignment slack, not as a round power of two.
@@ -372,206 +372,206 @@ short   MFDB_A[10];
    make 32000 + 255 enough -- but this program masks to 512, so the
    base can move up by as much as 512 and the buffer needs
    32000 + 512 = 32512. */
-unsigned char   scrbufA[32512];
-unsigned char   scrbufB[32512];
+unsigned char   altScreen[32512];
+unsigned char   houseBuf[32512];
 
 /* Sound-effect request from sfxSelect, started by renderFrame via startSfx. */
-BOOL16  g_sfacf;        /* YES: a request is pending */
-short   g_sfcur;        /* requested effect id (index into mi_ntLp / sf_pri) */
-short   g_sfdur;        /* requested duration in game ticks; -1 = the effect's own */
-short   g_sfdos;        /* set by stopSfx, read nowhere */
-short   g_sfdoc;        /* set by stopSfx, read nowhere */
+BOOL16  sfxPending;        /* YES: a request is pending */
+short   sfxReqId;        /* requested effect id (index into sfxData / sfxPriority) */
+short   sfxReqDur;        /* requested duration in game ticks; -1 = the effect's own */
+short   sfxDosStat;        /* set by stopSfx, read nowhere */
+short   sfxDosCtl;        /* set by stopSfx, read nowhere */
 
 /* Raw file buffers, filled at startup by loadObjects / loadSprites.  OBJECTS
    and SPRITES are each read into 14000 bytes. */
-unsigned char   obj_file[14000];
-unsigned char   spr_file[14000];
+unsigned char   objFileBuf[14000];
+unsigned char   sprFileBuf[14000];
 
 /* Per-record MFDB tables + dimensions.  56 entries: main's OBJECTS
    walk is a fixed `for (i = 0; i < 56; i++)`. */
-MFDB    g_obtmt[56];
+MFDB    objMfdbs[56];
 
-short   g_obtaw[56];        /* each object's width in pixels, for drawObject */
-short   g_obtah[56];        /* each object's height in pixels */
+short   objWidths[56];        /* each object's width in pixels, for drawObject */
+short   objHeights[56];        /* each object's height in pixels */
 
-BOOL16  g_inpmd;        /* YES while leaveGameTable has the resident away from a minigame:
+BOOL16  typingOff;        /* YES while leaveGameTable has the resident away from a minigame:
                            only the Ctrl hot keys work, typing is ignored */
-char    g_cdinb[64];    /* the command line being typed, NUL-terminated, up to 38 chars */
-BOOL16  food_dlv;       /* set when Ctrl-F is refused because the cabinet is full; handleKey only */
-short   g_ptanf;        /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
+char    typedLine[64];    /* the command line being typed, NUL-terminated, up to 38 chars */
+BOOL16  pantryFull;       /* set when Ctrl-F is refused because the cabinet is full; handleKey only */
+short   patFrame;        /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
 
 union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
-long    last_vbc;       /* VBL count at renderFrame's last frame, to pace it */
-/* sv_phb: TOS's original Physbase, captured once at boot by
+long    lastFrameVbl;       /* VBL count at renderFrame's last frame, to pace it */
+/* tosPhysbase: TOS's original Physbase, captured once at boot by
    initAes via Physbase().  Deliberately uninitialised: an explicit
    initialiser would move it from BSS into .data. */
-void *  sv_phb;
+void *  tosPhysbase;
 
-/* g_srmfd / mf_scrp: the compositing target and the current
+/* frameMfdb / houseMfdb: the compositing target and the current
    physical screen descriptor.  Populated by the graphics init routine. */
-MFDB    g_srmfd;
-MFDB    mf_scrp;
-MFDB *  cur_mf;     /* renderFrame's page-flip MFDB */
+MFDB    frameMfdb;
+MFDB    houseMfdb;
+MFDB *  flipMfdb;     /* renderFrame's page-flip MFDB */
 
 /* Dog wander and eating state, run by renderFrame. */
-BOOL16  dg_vis;         /* YES during a minigame: wander targets limited to entries 3..8 */
-short   dg_idlcd;       /* frames to idle before picking the next target, 20..200 */
-BOOL16  dg_nrbwl;       /* set when the stair-landing target is picked; lets the dog eat at its bowl */
-BOOL16  g_deact;        /* YES while the dog is eating */
-short   g_decou;        /* frames of eating left; the bowl drops a step at 60, 30, 4 and 0 */
-short   dg_ltgtI;       /* last wander target picked, never picked twice in a row */
+BOOL16  dogNoTopFlr;         /* YES during a minigame: wander targets limited to entries 3..8 */
+short   dogIdleCount;       /* frames to idle before picking the next target, 20..200 */
+BOOL16  dogMayEat;       /* set when the stair-landing target is picked; lets the dog eat at its bowl */
+BOOL16  dogEating;        /* YES while the dog is eating */
+short   dogEatCount;        /* frames of eating left; the bowl drops a step at 60, 30, 4 and 0 */
+short   dogLastPick;       /* last wander target picked, never picked twice in a row */
 
-char *  cmd_inp;        /* the line submitCommand hands to matchCommand (always g_cdinb) */
-short   g_aprio;        /* priority matchCommand gives the typed command: mood, chance, unknown words */
+char *  parsedLine;        /* the line submitCommand hands to matchCommand (always typedLine) */
+short   cmdPriority;        /* priority matchCommand gives the typed command: mood, chance, unknown words */
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
-MFDB    g_semfi[SPRITE_HW_SLOTS];
-MFDB    g_semfm[SPRITE_HW_SLOTS];
+MFDB    slotImgMfdb[SPRITE_HW_SLOTS];
+MFDB    slotMaskMfdb[SPRITE_HW_SLOTS];
 
 /* ---- NLP parser state ------------------------------------------------
-   g_ewb accumulates the bit masks of the recognised words; matchCommand
+   phraseBits accumulates the bit masks of the recognised words; matchCommand
    then matches it against the rule table. */
 
-char            g_ewb[10];
-/* 42 bytes: nextWord() walks input from g_cdinb (bounded < 38 chars)
-   and writes one byte per alphabetic char to usr_buf. */
-char            usr_buf[42];
+char            phraseBits[10];
+/* 42 bytes: nextWord() walks input from typedLine (bounded < 38 chars)
+   and writes one byte per alphabetic char to cmdWord. */
+char            cmdWord[42];
 
 /* ---- Mini-game storage ----------------------------------------------- */
-char *          g_agwb;         /* Malloc'd "words" dictionary for Anagrams, 11-byte rows */
-char *          g_wpdb;         /* Malloc'd Word Puzzles text */
-short *         crd_dat;        /* Malloc'd card images for War, Poker and Blackjack */
+char *          anaDict;         /* Malloc'd "words" dictionary for Anagrams, 11-byte rows */
+char *          wpzText;         /* Malloc'd Word Puzzles text */
+short *         cardImages;        /* Malloc'd card images for War, Poker and Blackjack */
 
-short           g_wpci;         /* current Word Puzzle, 0..32, wrapping on F1/F2 */
-short           g_agclc;        /* Anagrams clues taken for this word; written, never read */
-short           g_aggun;        /* Anagrams guess number, 1..9 */
-short           ag_clue;        /* 1 once F1 has given a clue for this guess */
-short           g_agwol;        /* length of the Anagrams word */
-char            g_aginb[12];    /* the Anagrams guess being typed, 10 chars + NUL */
+short           wpzIndex;         /* current Word Puzzle, 0..32, wrapping on F1/F2 */
+short           anaNumClues;        /* Anagrams clues taken for this word; written, never read */
+short           anaGuessNum;        /* Anagrams guess number, 1..9 */
+short           anaClueUsed;        /* 1 once F1 has given a clue for this guess */
+short           anaWordLen;        /* length of the Anagrams word */
+char            anaInput[12];    /* the Anagrams guess being typed, 10 chars + NUL */
 /* TEN bytes, the room the original leaves for it: the scrambled word
    buffer holds a 9-letter word and its NUL. */
-char            g_agscw[10];
+char            anaScrambled[10];
 
 /* Mini-game shared state.
-   mg_tofl: set YES by mgWaitKey when the 7200-frame (~15 min) idle
+   mgTimedOut: set YES by mgWaitKey when the 7200-frame (~15 min) idle
             timeout fires; games check it to distinguish "user pressed
             F10" from "we auto-quit due to inactivity".
-   sv_vqta: 10-short buffer holding the pre-mini-game VDI text
+   savedTextAttr: 10-short buffer holding the pre-mini-game VDI text
             attributes so textNormal can restore them after temporarily
             switching to 20-pixel height for the title/answer render. */
-BOOL16          mg_tofl;
-short           sv_vqta[10];
+BOOL16          mgTimedOut;
+short           savedTextAttr[10];
 
-short           pk_round;       /* 0 at Poker start, 1 after pkrShowdown; read nowhere */
-BOOL16          pk_quit;        /* YES ends the card game (F10, timeout, or a side out of chips) */
-short           g_pcbet;        /* Blackjack: chips bet on the player's first hand */
-short           g_ppbet;        /* Blackjack: chips bet on the split hand */
-short           g_pcmon;        /* the resident's chips (Poker/Blackjack, 400) or cards (War, 26) */
-short           g_ppmon;        /* the player's chips or cards, likewise */
-short           g_ppppa;        /* chips in the pot */
-/* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
+short           pkrRound;       /* 0 at Poker start, 1 after pkrShowdown; read nowhere */
+BOOL16          cardQuit;        /* YES ends the card game (F10, timeout, or a side out of chips) */
+short           bjBetMain;        /* Blackjack: chips bet on the player's first hand */
+short           bjBetSplit;        /* Blackjack: chips bet on the split hand */
+short           compChips;        /* the resident's chips (Poker/Blackjack, 400) or cards (War, 26) */
+short           plyrChips;        /* the player's chips or cards, likewise */
+short           potChips;        /* chips in the pot */
+/* anagram_original_word: pointer into anaDict dictionary (11-byte rows)
    set by anaPickWord when a word is picked. */
-char *          g_agorw;
-short           pk_phase;       /* Blackjack: 1 once the player has split */
-short           pk_dsc[52];     /* War: the shuffled deck dealt into the two draw piles */
+char *          anaAnswer;
+short           bjDidSplit;       /* Blackjack: 1 once the player has split */
+short           warDeck[52];     /* War: the shuffled deck dealt into the two draw piles */
 /* Computer's and player's draw piles, 52 shorts each: popCard's
    unconditional
      for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
    shifts the whole pile. */
-short           g_pcdrp[52];
-short           g_ppdrp[52];
+short           compPile[52];
+short           plyrPile[52];
 
 /* War/Blackjack per-round face-down "war" cards.  Sized 52 so the
    deepest possible recursion (all cards ending up here) still fits.
-   CARD_NONE sentinel terminates.  g_pchc counts the number of prior
+   CARD_NONE sentinel terminates.  warDepth counts the number of prior
    war rounds this hand (indexes further into the arrays). */
-short           pk_pwc[52];             /* player's war cards */
-short           pk_cwc[52];             /* computer's war cards */
-short           g_pchc;
+short           plyrWarCards[52];             /* player's war cards */
+short           compWarCards[52];             /* computer's war cards */
+short           warDepth;
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
    at the start of each round in pkrAnte / pkrDealHands / pkrShowdown.
-   pk_ch / pk_ph also serve as the War hands. */
-short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
-short           pk_ph[5];           /* player_hand */
-short           pk_hrf[5];          /* hand_rank_flags   -- which cards
+   compHand / plyrHand also serve as the War hands. */
+short           compHand[5];           /* computer_hand -- CARD_TYPE 0..51 */
+short           plyrHand[5];           /* player_hand */
+short           compScoring[5];          /* hand_rank_flags   -- which cards
                                        form computer's pair/trip/etc */
-short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
+short           compSorted[5];          /* hand_suit_flags   -- sorted copy
                                        of computer hand (used as kicker
                                        scratch by pkrShowdown) */
-short           pk_phrf[5];         /* player_hand_rank_flags */
-short           pk_phsf[5];         /* player_hand_suit_flags */
-short           pk_chrk;     /* computer_hand_rank
+short           plyrScoring[5];         /* player_hand_rank_flags */
+short           plyrSorted[5];         /* player_hand_suit_flags */
+short           compRank;     /* computer_hand_rank
                                        0=high,1=pair,2=two-pair,3=trips,
                                        4=straight,5=flush,6=full,7=four,
                                        8=straight-flush,9=royal */
-short           pk_phrk;     /* player_hand_rank */
-short           pk_dslot;     /* winner (0=comp, 1=player) */
-short           pk_sel[5];          /* card_selected -- 1 = discard */
-short           pk_disc;     /* discard_count */
-short           pk_dpile[13];       /* discard_pile of already-seen cards:
+short           plyrRank;     /* player_hand_rank */
+short           pkrWinner;     /* winner (0=comp, 1=player) */
+short           pkrSelected[5];          /* card_selected -- 1 = discard */
+short           pkrNumDisc;     /* discard_count */
+short           pkrDiscPile[13];       /* discard_pile of already-seen cards:
                                        at most 5 + 5 discards plus the
-                                       explicit pk_dpile[10] write */
-short           pk_dpos;     /* deck_position -- reused as
+                                       explicit pkrDiscPile[10] write */
+short           pkrRaiseAmt;     /* deck_position -- reused as
                                        raise amount / draw counter */
-short           pk_phv;     /* player_hand_value -- saved bet */
-short           pk_bet;     /* current bet accumulator (shared) */
-BOOL16          pk_bluff;    /* computer intends to bluff */
-BOOL16          pk_pass;    /* computer passed on the bet loop */
+short           pkrLastBet;     /* player_hand_value -- saved bet */
+short           pkrBet;     /* current bet accumulator (shared) */
+BOOL16          pkrBluffing;    /* computer intends to bluff */
+BOOL16          pkrPassed;    /* computer passed on the bet loop */
 
 /* Blackjack per-hand state.
-   pk_psh[]  -- 3rd hand slot used when the player elects to split
+   bjSplitHand[]  -- 3rd hand slot used when the player elects to split
                 two matching down-cards (post-deal, both aces or
                 two of the same rank).  CARD_NONE-terminated.
-   pk_pcc / pk_ccc / pk_pscc -- remaining-hits counters (start at
+   bjHitsMain / bjHitsDealer / bjHitsSplit -- remaining-hits counters (start at
                 CARD_BJ_MAX = 3 for standard "up to 5 cards" rule;
                 each hit decrements by CARD_BJ_STEP = 1; stop at
                 CARD_BJ_STOP = 0).
-   pk_wpr    -- saved bet during split-hand bookkeeping.
-   pk_wrf / pk_wcs  -- split-hand round-active flags.
-   pk_c1bj / pk_c2bj -- first / second hand natural-blackjack
+   bjMatchBet    -- saved bet during split-hand bookkeeping.
+   bjDblMain / bjDblSplit  -- split-hand round-active flags.
+   bjNatMain / bjNatSplit -- first / second hand natural-blackjack
                 achieved this round (used to skip the hit loop).
-   pk_bs1 / pk_bs2  -- first / second hand busted flag.
-   pk_cscore / pk_pscore -- computer-picked / player-picked score
+   bjBustMain / bjBustSplit  -- first / second hand busted flag.
+   bjDealerScore / bjPlyrScore -- computer-picked / player-picked score
                 once the double-value-with-ace picker resolves.
 */
-short           pk_psh[5];      /* player_split_hand */
-short           pk_pcc; /* player_card_count       */
-short           pk_ccc; /* computer_card_count     */
-short           pk_pscc; /* player_split_card_count */
-short           pk_wpr; /* saved bet across split  */
-BOOL16          pk_wrf;
-BOOL16          pk_wcs;
-BOOL16          pk_c1bj;
-BOOL16          pk_c2bj;
-BOOL16          pk_bs1;
-BOOL16          pk_bs2;
-short           pk_cscore;
-short           pk_pscore;
+short           bjSplitHand[5];      /* player_split_hand */
+short           bjHitsMain; /* player_card_count       */
+short           bjHitsDealer; /* computer_card_count     */
+short           bjHitsSplit; /* player_split_card_count */
+short           bjMatchBet; /* saved bet across split  */
+BOOL16          bjDblMain;
+BOOL16          bjDblSplit;
+BOOL16          bjNatMain;
+BOOL16          bjNatSplit;
+BOOL16          bjBustMain;
+BOOL16          bjBustSplit;
+short           bjDealerScore;
+short           bjPlyrScore;
 
 /* Word Puzzle state.
-   wp_ans[i][12]  -- player's typed answer for blank i.  Max 10
+   wpzAnswers[i][12]  -- player's typed answer for blank i.  Max 10
                      chars + terminator + 1 slack byte.
-   wp_blk         -- count of blanks in the current puzzle (== rows
-                     of wp_ans[] actually in use).
+   wpzBlanks         -- count of blanks in the current puzzle (== rows
+                     of wpzAnswers[] actually in use).
    The 3 flavor-text pointer arrays hold string literals shown to
    the player during solve_phase:
-      wp_prm    9 entries (0..4 random first-word, 5..8 for word
+      wpzPrompts    9 entries (0..4 random first-word, 5..8 for word
                 slots 2..5)
-      wp_succ   6 entries, random on solve
-      wp_fail   6 entries, random on wrong answer
+      wpzRightMsgs   6 entries, random on solve
+      wpzWrongMsgs   6 entries, random on wrong answer
    Five blanks, not ten: the decoded WORDPZ.TXT has at most five '@'
    markers on a line. */
-char            wp_ans[5][12];
-short           wp_blk;
+char            wpzAnswers[5][12];
+short           wpzBlanks;
 
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
-   overlay.  All share crd_dat as their bitmap backing. */
-MFDB            crd_mfdb[54];
-MFDB            mf_scb_c;       /* the 320x77 card-table area the cards are copied into */
+   overlay.  All share cardImages as their bitmap backing. */
+MFDB            cardMfdb[54];
+MFDB            cardTableMfdb;       /* the 320x77 card-table area the cards are copied into */
 
-BOOL16  g_dvdog;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
-BOOL16  ph_hu;          /* request for gameTick to hang the phone up and stop its ring */
+BOOL16  isDogDelivery;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
+BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and stop its ring */
 
 
 /* (gameTick animation tables + frame-state globals live
@@ -595,19 +595,19 @@ BOOL16  ph_hu;          /* request for gameTick to hang the phone up and stop it
 /* PSG register offsets.  Amp registers 8/9/10 with
    the PSG "write" bit (0x80) pre-set.  stepEnvelopes subtracts 0x80
    before calling psgWrite to recover the raw register number. */
-unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
+unsigned char   ampRegs[3]  = { 0x88, 0x89, 0x8a };
 
 /* Three pointers at psg_env[0..2], one per PSG channel.  NOTHING in
    the program references this table, but the original carries it in
-   DATA immediately behind psg_rot, and Alcyon emits an unreferenced
+   DATA immediately behind ampRegs, and Alcyon emits an unreferenced
    initialized global just the same.  Do not delete. */
-PSG_ENVELOPE *  psg_epp[3] = { &psg_envelope[0], &psg_envelope[1],
-                               &psg_envelope[2] };
+PSG_ENVELOPE *  envPtrs[3] = { &psgEnvelope[0], &psgEnvelope[1],
+                               &psgEnvelope[2] };
 
 
 /* Envelope rate table.  32-byte table indexed by phase_timer
    (already loaded from an ADSR duration byte). */
-short           mi_evrt[16] = {
+short           envRateTab[16] = {
              0,  360,  180,  120,   85,   72,   60,   45,
             30,   20,   15,   12,   10,    8,    6,    4
 };
@@ -615,7 +615,7 @@ short           mi_evrt[16] = {
 
 /* Envelope time table.  Reload value for phase_timer
    when transitioning between ADSR phases. */
-short           mi_evtt[16] = {
+short           envTimeTab[16] = {
              0,    1,    2,    3,    4,    5,    6,    8,
             12,   18,   24,   30,   36,   45,   60,   90
 };
@@ -623,7 +623,7 @@ short           mi_evtt[16] = {
 
 /* Envelope sustain table.  Reload for phase_timer
    during the sustain->release transition. */
-short           mi_evst[16] = {
+short           envSusTab[16] = {
              0,    1,    2,    4,    8,   18,   24,   40,
             45,   60,   72,   90,  120,  180,  360, 30000
 };
@@ -631,31 +631,31 @@ short           mi_evst[16] = {
 
 /* Envelope release table.  Applied to ramp_delta
    during the sustain->release transition. */
-short           mi_evrl[16] = {
+short           envRelTab[16] = {
              0,  360,  180,   90,   45,   20,   15,    9,
              8,    6,    5,    4,    3,    2,    1,    0
 };
 
 
-BOOL16          g_moen     = YES;   /* send notes to MIDI OUT */
+BOOL16          midiOutOn     = YES;   /* send notes to MIDI OUT */
 
 
-BOOL16          psg_out              = YES;     /* play notes on the YM2149 PSG */
+BOOL16          psgOutOn              = YES;     /* play notes on the YM2149 PSG */
 
 /* MIDI channel count; parseSongHeader's channel-count case writes p[2]
    here. */
-short           g_mkey                  = 1;
+short           songKey                  = 1;
 
-short           mi_temp              = 120;     /* song tempo in beats per minute, from the song header */
+short           songTempo              = 120;     /* song tempo in beats per minute, from the song header */
 
-/* Ticks per beat at the default tempo mi_temp = 120. */
-short           g_mtspb     = 20;
+/* Ticks per beat at the default tempo songTempo = 120. */
+short           ticksPerBeat     = 20;
 
 
 /* 22 entries, not 32: that is the room the original leaves.  parseEvents
-   indexes it with a 5-bit field (`mi_ndt[*mi_sqpos & 0x1f]`), so 22..31
+   indexes it with a 5-bit field (`durTable[*songPos & 0x1f]`), so 22..31
    would read past the end -- the .SNG data never produces them. */
-short           mi_ndt[22] = {
+short           durTable[22] = {
            0,    2,    2,    3,    4,    5,    6,    8,
            9,   12,   16,   18,   24,   32,   36,   48,
           64,   72,   96,  128,  144,    0
@@ -665,7 +665,7 @@ short           mi_ndt[22] = {
 /* 128 entries, the values the original ships: YM2149 tone periods,
    period = 2000000 / (16 * f) for MIDI note n.  Entries below index 23
    are 0 -- flagged too-low by sendMidiEvent. */
-short           psg_freq[128] = {
+short           psgPeriod[128] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0fc0,
@@ -686,23 +686,23 @@ short           psg_freq[128] = {
 
 /* MIDI/PSG defaults.  These are BYTES, not shorts: the code accesses
    them with byte moves and compares.
-     mi_vel   = 127 -- max MIDI velocity
-     mi_dvel  = 127
-     psg_dvol = 15  -- max PSG volume */
-char            mi_vel           = 127; /* a byte: velocity of the note being parsed */
+     noteVel   = 127 -- max MIDI velocity
+     defVelocity  = 127
+     defPsgVol = 15  -- max PSG volume */
+char            noteVel           = 127; /* a byte: velocity of the note being parsed */
 
 /* These two are char (byte compares/stores; Alcyon word-aligns them,
    hence the 2-byte spacing). */
-char            mi_dvel   = 127;   /* velocity of an unaccented note, from the song header */
+char            defVelocity   = 127;   /* velocity of an unaccented note, from the song header */
 
-char            psg_dvol      = 15;    /* PSG volume of an unaccented note, from the header velocity */
+char            defPsgVol      = 15;    /* PSG volume of an unaccented note, from the header velocity */
 
 /* The note range the sequencer will play, HIGH first in the data:
    0x60 is the top of the range and 0x24 the bottom, and sendMidiEvent
    rejects a note above the first and below the second. */
-char            g_mnhi      = 0x60;    /* highest note played */
+char            noteHigh      = 0x60;    /* highest note played */
 
-char           g_mnlo       = 0x24;    /* lowest note played */
+char           noteLow       = 0x24;    /* lowest note played */
 
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
@@ -715,17 +715,17 @@ char           g_mnlo       = 0x24;    /* lowest note played */
 
 /* Program last sent on each MIDI channel; -1 = none, so the first
    sendProgChange always sends one. */
-char            g_mcpro[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+char            sentProgram[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 /* Logical song channel -> physical MIDI channel (low nibble); unpackChanMap
    fills it from the song header. */
-unsigned char   mi_chmap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+unsigned char   chanMap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* The static content is 0..99 then 110..127, with the last 14
    entries zero -- the row 100..109 is simply missing from the 1985
-   table.  Harmless: buildNoteMap rewrites all 132 entries (`g_mstr[i] = i`
+   table.  Harmless: buildNoteMap rewrites all 132 entries (`noteMap[i] = i`
    for i < 0x84) before anything reads them. */
-unsigned char   g_mstr[132] = {
+unsigned char   noteMap[132] = {
           0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,
          12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,
          24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,
@@ -738,38 +738,38 @@ unsigned char   g_mstr[132] = {
         118, 119, 120, 121, 122, 123, 124, 125, 126, 127
 };
 
-/* g_msmsa is a BYTE and lives in the text segment behind timerAIsr --
+/* songActive is a BYTE and lives in the text segment behind timerAIsr --
    see source/mq_tick.s. */
-/* g_msmk: 16-byte chord-mask lookup. */
-unsigned char   g_msmk[16] = {
+/* keyScaleMask: 16-byte chord-mask lookup. */
+unsigned char   keyScaleMask[16] = {
         0xFF, 0xFF, 0x77, 0x37, 0x33, 0x13, 0x11, 0x01,
         0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
 };
 
 
 /* The default program map, sixteen bytes of INITIALIZED data right
-   behind g_msmk; mi_pgmap points here.  Named mi_pgtab rather than
+   behind keyScaleMask; progMap points here.  Named defProgMap rather than
    mi_pgmapb because Alcyon truncates a linkage name to eight
    characters and _mi_pgmapb would collide with _mi_pgmap. */
-unsigned char   mi_pgtab[16] = {
+unsigned char   defProgMap[16] = {
         0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11
 };
 
 
-/* mi_slop and mi_varR are char: playSongFile writes them as bytes.
-   mi_slop is written by playSongFile and read by parseEvents. */
-char            mi_slop         = 1;
+/* useSongChan and fixedChan are char: playSongFile writes them as bytes.
+   useSongChan is written by playSongFile and read by parseEvents. */
+char            useSongChan         = 1;
 
-char    mi_varR                      = YES;    /* channel every note uses when mi_slop is NO */
+char    fixedChan                      = YES;    /* channel every note uses when useSongChan is NO */
 
-char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer: MIDI program per logical channel */
+char *          progMap = (char *) defProgMap;   /* a byte pointer: MIDI program per logical channel */
 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon
    emits a switch jump table into the .data of the object that holds
    the function, and the original has parseSongHeader's and sendMidiEvent's tables
-   sitting between mi_pgmap and main_pal.  Data from separate objects
+   sitting between progMap and mainPalette.  Data from separate objects
    cannot interleave, so the globals and the MIDI code are ONE object,
    and the split point is exactly here.
 

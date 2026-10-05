@@ -13,8 +13,8 @@ moveInScene()
 {
         short   unused;         /* never referenced, but must stay */
 
-        dg_init  = 1;
-        introSeq = 1;
+        dogHidden  = 1;
+        movingIn = 1;
         hideResident();
         gameTick(240);
         playDoorbell();
@@ -28,65 +28,65 @@ moveInScene()
         gameTick(2);
         drawObject(OBJ_DOOR_FRONT_OPEN_2, FRONT_DOOR_X, FRONT_DOOR_Y);
         gameTick(2);
-        lcp_frdO = 1;
+        frontDoorOpen = 1;
 
         /* The dog is waiting on the step. */
-        g_selaf[SPRITE_DOG_SIT] = 1;
+        spriteLayer[SPRITE_DOG_SIT] = 1;
         activateSprite(SPRITE_DOG_SIT);
-        g_sepex[g_seslm[SPRITE_DOG_SIT]] = 294;
-        g_sepey[g_seslm[SPRITE_DOG_SIT]] = 151;
+        pendX[spriteSlot[SPRITE_DOG_SIT]] = 294;
+        pendY[spriteSlot[SPRITE_DOG_SIT]] = 151;
 
-        lcp_x = 300;
-        lcp_y = 190;
+        resX = 300;
+        resY = 190;
         showResident();
-        posToXY(POS_BTM_SCREEN_EDGE, &g_wtx, &g_wty);
-        g_wtx -= 50;
+        posToXY(POS_BTM_SCREEN_EDGE, &walkXTarget, &walkYTarget);
+        walkXTarget -= 50;
         walkToTarget();
-        lcp_st  = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
+        animState  = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
         waitHeadTurn();
-        g_selaf[SPRITE_DOG_SIT] = 0;
+        spriteLayer[SPRITE_DOG_SIT] = 0;
         layoutSlots();
         gameTick(16);
 
         /* The protection result gates the game: a failed check parks
            the resident asleep for ever. */
-        if (cprot_r == 0)
+        if (copyProtResult == 0)
                 while (1)
                         dozeOff(SLEEP_RANDOM);
 
-        posToXY(POS_BTM_KITCHEN_CABINET, &g_wtx, &g_wty);
+        posToXY(POS_BTM_KITCHEN_CABINET, &walkXTarget, &walkYTarget);
         walkToTarget();
-        lcp_face = FACING_RIGHT;
-        lcp_st   = STATE_STAND_FACING_SCREEN;
-        g_hatas  = 12;
+        resFacing = FACING_RIGHT;
+        animState   = STATE_STAND_FACING_SCREEN;
+        headTarget  = 12;
         waitHeadTurn();
         openKitchenCab(DOOR_OPEN);
         gameTick(16);
         openKitchenCab(DOOR_CLOSE);
 
-        posToXY(POS_BTM_KITCHEN_SINK, &g_wtx, &g_wty);
+        posToXY(POS_BTM_KITCHEN_SINK, &walkXTarget, &walkYTarget);
         walkToTarget();
         gameTick(8);
         goToFridge();
         tvOn();
-        lcp_st  = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
+        animState  = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
         waitHeadTurn();
         nodOk();
         enterStudy(0);
         wakeFromAlarm();
 
-        posToXY(POS_MID_DRESSER, &g_wtx, &g_wty);
+        posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         walkToTarget();
-        lcp_face = FACING_RIGHT;
-        lcp_st   = STATE_STAND_FACING_SCREEN;
-        g_hatas  = 12;
+        resFacing = FACING_RIGHT;
+        animState   = STATE_STAND_FACING_SCREEN;
+        headTarget  = 12;
         waitHeadTurn();
         changeClothes(0);
         useToilet();
 
-        posToXY(POS_MID_BATHROOM_SINK, &g_wtx, &g_wty);
+        posToXY(POS_MID_BATHROOM_SINK, &walkXTarget, &walkYTarget);
         walkToTarget();
         goToFridge();
         useComputer();
@@ -95,48 +95,48 @@ moveInScene()
         tvOff();
         checkFrontDoor(100);
         walkToFrontDoor();
-        lcp_face = FACING_RIGHT;
-        lcp_st   = STATE_STAND_FACING_SCREEN;
-        g_hatas  = 12;
+        resFacing = FACING_RIGHT;
+        animState   = STATE_STAND_FACING_SCREEN;
+        headTarget  = 12;
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
         /* Bend down and pick the suitcase up off the step. */
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_REACH_FORWARD;
+        animState = STATE_REACH_FORWARD;
         gameTick(2);
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
         carryBehind(SPRITE_SUITCASE);
 
-        posToXY(POS_MID_DRESSER, &g_wtx, &g_wty);
+        posToXY(POS_MID_DRESSER, &walkXTarget, &walkYTarget);
         walkToTarget();
-        lcp_face = FACING_RIGHT;
-        lcp_st   = STATE_STAND_FACING_SCREEN;
-        g_hatas  = 12;
-        g_selaf[SPRITE_SUITCASE] = 0;
+        resFacing = FACING_RIGHT;
+        animState   = STATE_STAND_FACING_SCREEN;
+        headTarget  = 12;
+        spriteLayer[SPRITE_SUITCASE] = 0;
         layoutSlots();
-        g_lcyof = 0;
+        isCarrying = 0;
         waitHeadTurn();
         openDresser(DOOR_OPEN);
 
         /* Let the dog in and seed its first wander target. */
-        posToXY(POS_BTM_FRONT_DOOR, &dog_x, &dog_y);
-        dog_y = 190;
-        dog_x = 273;
-        posToXY(dg_ltgtI = g_dgitx, &g_dtx, &g_dty);
-        g_dty += g_dgiyo;
-        g_dyx = g_dtx;
-        g_dyy = g_dty;
-        dg_stair = 0;
-        dg_idlcd = 20;
-        dg_init  = 0;
+        posToXY(POS_BTM_FRONT_DOOR, &dogX, &dogY);
+        dogY = 190;
+        dogX = 273;
+        posToXY(dogLastPick = dogStartPos, &dogXTarget, &dogYTarget);
+        dogYTarget += dogYStartNudge;
+        dogXWaypt = dogXTarget;
+        dogYWaypt = dogYTarget;
+        dogOnStairs = 0;
+        dogIdleCount = 20;
+        dogHidden  = 0;
         setDogSprite(SPRITE_DOG_LAY_DOWN, -1, 1);
 
         changeClothes(0);
         enterStudy(1);
-        introSeq = 0;
+        movingIn = 0;
 }

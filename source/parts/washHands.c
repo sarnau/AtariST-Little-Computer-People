@@ -18,18 +18,18 @@ washHands()
         short           last_pick;
         short           val;
 
-        pst_arr[0] = STATE_WASH_HANDS_CENTER;
-        pst_arr[1] = STATE_WASH_HANDS_LEFT;
-        pst_arr[2] = STATE_WASH_HANDS_RIGHT;
+        scratchArr[0] = STATE_WASH_HANDS_CENTER;
+        scratchArr[1] = STATE_WASH_HANDS_LEFT;
+        scratchArr[2] = STATE_WASH_HANDS_RIGHT;
 
         posToXY(POS_MID_BATHROOM_SINK,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
         rnd = (unsigned short)(Random() & 0x7f) | 4;
@@ -40,28 +40,28 @@ washHands()
            purpose. */
         counter = 0;
         while (counter < rnd) {
-                if (g_trel[0] != ACTION_NONE)
+                if (eventQueue[0] != ACTION_NONE)
                         break;
                 val = Random() & 3;
                 while (val == last_pick)
                         val = Random() & 3;
                 last_pick = val;
                 if (val != 3) {
-                        lcp_st = pst_arr[val];
-                        lcp_face = FACING_RIGHT;
+                        animState = scratchArr[val];
+                        resFacing = FACING_RIGHT;
                 } else {
-                        lcp_st = pst_arr[1];
-                        lcp_face = FACING_LEFT;
+                        animState = scratchArr[1];
+                        resFacing = FACING_LEFT;
                 }
                 gameTick(1);
                 counter++;
         }
 
-        if (g_sfplf != NO &&
-            g_sfpli == SFX_WATER_RUNNING)
+        if (sfxPlaying != NO &&
+            sfxCurId == SFX_WATER_RUNNING)
                 stopSfx();
 
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 }

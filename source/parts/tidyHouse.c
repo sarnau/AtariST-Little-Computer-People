@@ -7,7 +7,7 @@
    resident walks to the top-floor filing cabinet, turns to the screen
    and rummages in it with rummageCabinet, which opens it if it is shut.  He
    closes it again (closeFilingCab) when a 0..100 roll beats his
-   initiative_threshold, and always during the cutscene (introSeq).
+   initiative_threshold, and always during the cutscene (movingIn).
    Interrupted on the way, he simply gives up. */
 void
 tidyHouse()
@@ -15,19 +15,19 @@ tidyHouse()
         /* The walk call is tested inline, with no local for it. */
 
         posToXY(POS_TOP_FILING_CABINET,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
         rummageCabinet();
 
         /* Both call results are used in place; adding a local here
            would change the compiled code. */
-        if (lcp.initiative_threshold < rndRng(0, 100) ||
-            introSeq != NO)
+        if (resident.initiative_threshold < rndRng(0, 100) ||
+            movingIn != NO)
                 closeFilingCab();
 }

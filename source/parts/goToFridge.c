@@ -13,7 +13,7 @@ goToFridge()
            original. */
 
         posToXY(POS_BTM_FRIDGE,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() == 0)
                 putInFridge();
 }

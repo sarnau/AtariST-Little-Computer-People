@@ -32,14 +32,14 @@ short           height;
                 img |= (long) *src++ & 0xffffL;
                 img |= (long) *src++ & 0xffffL;
                 for (bit = 31; bit > 0; bit--) {
-                        if ((img & bm32or[bit - 1]) != 0L)
+                        if ((img & bitSet32[bit - 1]) != 0L)
                                 break;
-                        mask &= bm32and[bit];
+                        mask &= bitClear32[bit];
                 }
                 for (bit = 0; bit < 31; bit++) {
-                        if ((img & bm32or[bit + 1]) != 0L)
+                        if ((img & bitSet32[bit + 1]) != 0L)
                                 break;
-                        mask &= bm32and[bit];
+                        mask &= bitClear32[bit];
                 }
                 *dest = (mask >> 16) & 0xffffL;
                 dest++;

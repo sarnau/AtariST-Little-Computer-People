@@ -20,16 +20,16 @@ titleScreen()
         short   unused2;        /* never referenced */
         short   unused3;        /* never referenced */
 
-        g_dscp  = sv_phb;
+        stripBuf  = tosPhysbase;
         fhandle = openFile("title.scn", RMODE_RD);
-        readFile(fhandle, 2L, &scn_siz);
-        scn_buf = (char *) Malloc((long) (scn_siz - 32));
-        if (scn_buf == (char *) 0)
+        readFile(fhandle, 2L, &scnSize);
+        scnBuffer = (char *) Malloc((long) (scnSize - 32));
+        if (scnBuffer == (char *) 0)
                 outOfMemory();
-        readFile(fhandle, 30L, scn_dic);
-        readFile(fhandle, (long) (scn_siz - 32), scn_buf);
-        decodeScn(scn_buf, g_dscp, 16000);
-        Mfree(scn_buf);
+        readFile(fhandle, 30L, scnDict);
+        readFile(fhandle, (long) (scnSize - 32), scnBuffer);
+        decodeScn(scnBuffer, stripBuf, 16000);
+        Mfree(scnBuffer);
 
 #ifdef SKIP_TITLE
         /* Test builds only.  The guestbook is interactive -- it waits
@@ -47,13 +47,13 @@ titleScreen()
 
            NOT part of the shipped configuration: the default build
            must stay byte-identical to the original. */
-        lcp.owner_name[0] = 'P';
-        lcp.owner_name[1] = 'L';
-        lcp.owner_name[2] = 'A';
-        lcp.owner_name[3] = 'Y';
-        lcp.owner_name[4] = 'E';
-        lcp.owner_name[5] = 'R';
-        lcp.owner_name[6] = 0;
+        resident.owner_name[0] = 'P';
+        resident.owner_name[1] = 'L';
+        resident.owner_name[2] = 'A';
+        resident.owner_name[3] = 'Y';
+        resident.owner_name[4] = 'E';
+        resident.owner_name[5] = 'R';
+        resident.owner_name[6] = 0;
         t_mon   = 8;           /* September; titleScreen stores month - 1 */
         t_day = 3;           /* the 4th;   likewise day - 1         */
         t_year  = 26;
@@ -78,23 +78,23 @@ titleScreen()
                 ch = toUpper(ch);
                 if (ch < ' ')
                         continue;
-                lcp.owner_name[n] = ch;
+                resident.owner_name[n] = ch;
                 eraseChar((n << 3) + 128, 110, 15);
                 printChar(ch, (n << 3) + 128, 110, colour);
                 n++;
                 if (n == 18)
                         break;
         }
-        lcp.owner_name[n] = 0;
+        resident.owner_name[n] = 0;
         for (j = n; j < 18; j++)
                 eraseChar((j << 3) + 128, 110, 15);
 
         printString("ENTER DATE:", 80, 122, colour);
 date_entry:
         enterField(176, 122, "MM/DD/YY", 8, colour);
-        t_mon   = in_str[0] * 10 + in_str[1] - 1;
-        t_day = in_str[3] * 10 + in_str[4] - 1;
-        t_year  = in_str[6] * 10 + in_str[7];
+        t_mon   = inputLine[0] * 10 + inputLine[1] - 1;
+        t_day = inputLine[3] * 10 + inputLine[4] - 1;
+        t_year  = inputLine[6] * 10 + inputLine[7];
         if (t_mon < 0)
                 goto date_entry;
         if (t_mon >= 12)
@@ -107,8 +107,8 @@ date_entry:
         printString("ENTER TIME:", 80, 134, colour);
 time_entry:
         enterField(176, 134, "HH:MM", 5, colour);
-        t_hour = in_str[0] * 10 + in_str[1];
-        t_min  = in_str[3] * 10 + in_str[4];
+        t_hour = inputLine[0] * 10 + inputLine[1];
+        t_min  = inputLine[3] * 10 + inputLine[4];
         if (t_hour == 0)
                 goto time_entry;
         if (t_hour > 12)

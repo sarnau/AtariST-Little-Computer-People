@@ -22,7 +22,7 @@
 
 /* pickClothes: pick random/configured CLOTHING_COLOR_ID (0..15),
    load prim/sec colours to palette slots 1,2. Overshoot falls back
-   to lcp.clothing_color. */
+   to resident.clothing_color. */
 
 void
 pickClothes()
@@ -31,11 +31,11 @@ pickClothes()
 
         index = rndRng(0, 0x1f);
         if (index > 0xf)
-                index = lcp.clothing_color;
+                index = resident.clothing_color;
 
-        main_pal[1] = g_clcop[index];
-        main_pal[2] = g_clcos[index];
-        Setpalette(main_pal);
+        mainPalette[1] = shirtPrimary[index];
+        mainPalette[2] = shirtSecondary[index];
+        Setpalette(mainPalette);
 }
 
 /* pickSkin: same as pickClothes but 8-entry skin table. */
@@ -47,11 +47,11 @@ pickSkin()
 
         index = rndRng(0, 0xf);
         if (index > 7)
-                index = lcp.skin_color;
+                index = resident.skin_color;
 
-        main_pal[1] = skin_pal[index];
-        main_pal[2] = skin_pal[index];
-        Setpalette(main_pal);
+        mainPalette[1] = skinColors[index];
+        mainPalette[2] = skinColors[index];
+        Setpalette(mainPalette);
 }
 
 /* setSkinColor: refresh sickness tint at palette slot 6.

@@ -47,9 +47,9 @@ EVTT = [0, 1, 2, 3, 4, 5, 6, 8, 12, 18, 24, 30, 36, 45, 60, 90]
 EVST = [0, 1, 2, 4, 8, 18, 24, 40, 45, 60, 72, 90, 120, 180, 360, 30000]
 EVRL = [0, 360, 180, 90, 45, 20, 15, 9, 8, 6, 5, 4, 3, 2, 1, 0]
 
-NOTE_LO, NOTE_HI = 0x24, 0x60   # g_mnlo, g_mnhi
+NOTE_LO, NOTE_HI = 0x24, 0x60   # noteLow, noteHigh
 
-# psg_freq[0] is the address literal sendMidiEvent loads before indexing the table.
+# psgPeriod[0] is the address literal sendMidiEvent loads before indexing the table.
 # Both binaries link at base 0, so the literal is (text_size + data_offset).
 PSG_FREQ_ABS = {
     'AUDIO.PRG':   0x18890,     # Music Studio   -> data+0x35a
@@ -64,7 +64,7 @@ YM_VOL = np.array([0.0000, 0.0137, 0.0205, 0.0291, 0.0423, 0.0618, 0.0847,
 
 
 def find_prg(explicit=None):
-    """Locate a program binary to read psg_freq from.  The script is used from
+    """Locate a program binary to read psgPeriod from.  The script is used from
     both the Music Studio disk directory and the LCP repo, so try both."""
     if explicit:
         return explicit
@@ -107,33 +107,33 @@ class Envelope:
 class Engine:
     """Faithful re-implementation of the PSG playback path."""
 
-    def __init__(self, sng, psg_freq):
+    def __init__(self, sng, psgPeriod):
         self.s = sng
-        self.freq = psg_freq
+        self.freq = psgPeriod
         d = sng.data
         self.d = d
 
         # ---- initSongState / armSequencer
-        self.pos = sng.header_end          # mi_sqpos (skipTextField's result)
-        self.end = len(d)                  # mi_seqE
-        self.spb = sng.spb                 # g_mtspb
-        self.tpb = sng.spb                 # mi_tpb
-        self.vel = sng.velocity            # mi_vel  (= mi_dvel at song start)
+        self.pos = sng.header_end          # songPos (skipTextField's result)
+        self.end = len(d)                  # songEndPtr
+        self.spb = sng.spb                 # ticksPerBeat
+        self.tpb = sng.spb                 # beatTicks
+        self.vel = sng.velocity            # noteVel  (= defVelocity at song start)
         self.dvel = sng.velocity
-        self.cvol = sng.psg_volume         # psg_cvol
+        self.cvol = sng.psg_volume         # noteVolume
         self.dvol = sng.psg_volume
-        self.evq = []                      # mi_evq, triples
-        self.lstk = []                     # mi_lstk
-        self.tick = 0                      # g_mtcou
+        self.evq = []                      # noteQueue, triples
+        self.lstk = []                     # loopStack
+        self.tick = 0                      # timerTicks
         self.lpTk = self.nxTk = self.nlp0 = 100
         self.mtpre = self.mtdiv = 100
-        self.phase = 1                     # g_mspha = SEQ_PHASE_PARSE
-        self.active = True                 # g_msmsa
-        self.playing = True                # mi_play
-        self.ntAc = False                  # psg_ntAc
-        self.scale = sng.scale             # g_mstr
+        self.phase = 1                     # seqPhase = SEQ_PHASE_PARSE
+        self.active = True                 # songActive
+        self.playing = True                # songPlaying
+        self.ntAc = False                  # psgActive
+        self.scale = sng.scale             # noteMap
         self.chmap = [0] + list(sng.chanmap)
-        self.noSt = [0] * 128              # mi_noSt
+        self.noSt = [0] * 128              # noteOwner
 
         # per-event scratch (mi_* globals unpacked by parseEvents)
         self.ccha = self.cnot = 0
@@ -141,7 +141,7 @@ class Engine:
         self.ndur = 0
 
         # ---- PSG state
-        self.chNt = [0, 0, 0, 0]           # psg_chNt (4th slot always 0)
+        self.chNt = [0, 0, 0, 0]           # psgChanNote (4th slot always 0)
         self.env = [Envelope() for _ in range(3)]
         self.rdel = [0, 0, 0]
         self.racc = [0, 0, 0]
@@ -654,7 +654,7 @@ def main():
     ap.add_argument('--seconds', type=float, default=600.0,
                     help='safety cap on rendered length')
     ap.add_argument('--prg', default=None,
-                    help='AUDIO.PRG to read psg_freq from')
+                    help='AUDIO.PRG to read psgPeriod from')
     ap.add_argument('--gain', type=float, default=None,
                     help='output gain; default normalises this file alone')
     ap.add_argument('--quiet', action='store_true')

@@ -33,13 +33,13 @@ short           height;
                 flag = 0;
                 for (bit = 30; bit > 0; bit--) {
                         if (flag) {
-                                img |= bm32or[bit];
-                                if ((mask & bm32or[bit]) == 0L)
+                                img |= bitSet32[bit];
+                                if ((mask & bitSet32[bit]) == 0L)
                                         flag = 0;
-                        } else if ((mask & bm32or[bit]) != 0L) {
-                                img |= bm32or[bit + 1];
-                                img |= bm32or[bit];
-                                img |= bm32or[bit - 1];
+                        } else if ((mask & bitSet32[bit]) != 0L) {
+                                img |= bitSet32[bit + 1];
+                                img |= bitSet32[bit];
+                                img |= bitSet32[bit - 1];
                                 flag = 1;
                         }
                 }

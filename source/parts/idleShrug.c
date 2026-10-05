@@ -13,15 +13,15 @@ idleShrug()
            code. */
         short   unused;
 
-        pst_arr[0]  = STATE_IDLE_SHRUG_START;
-        pst_arr[1]  = STATE_IDLE_SHRUG_HOLD;
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
+        scratchArr[0]  = STATE_IDLE_SHRUG_START;
+        scratchArr[1]  = STATE_IDLE_SHRUG_HOLD;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
         waitHeadTurn();
 
-        lcp_st = pst_arr[0]; gameTick(2);
-        lcp_st = pst_arr[1]; gameTick(5);
-        lcp_st = pst_arr[0]; gameTick(2);
-        lcp_st = STATE_STAND_SIDE_VIEW; gameTick(0);
+        animState = scratchArr[0]; gameTick(2);
+        animState = scratchArr[1]; gameTick(5);
+        animState = scratchArr[0]; gameTick(2);
+        animState = STATE_STAND_SIDE_VIEW; gameTick(0);
 }

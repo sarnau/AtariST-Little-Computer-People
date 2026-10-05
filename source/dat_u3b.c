@@ -14,7 +14,7 @@
 
 
 /* 15-entry delta table. */
-short   hd_mvd[15]   = {
+short   headTurnStep[15]   = {
          1,  1,  1, 99, -1, -1, -1,  0,
          1,  1,  1, 99, -1, -1, -1
 };
@@ -22,23 +22,23 @@ short   hd_mvd[15]   = {
 
 
 /* Per-tilt frame-index offset. */
-short   hd_tilt[3]       = { 7, 12, 17 };
+short   headTiltFrame[3]       = { 7, 12, 17 };
 
 
 /* Head-animation delay countdown. */
-short   g_hadec                         = 1;
+short   headDelay                         = 1;
 
 
 
-/* Per-happiness-level head frame base index (into pex_ptr). */
-short   mood_hfo[3]  = { 44, 0, 22 };
+/* Per-happiness-level head frame base index (into pexFrames). */
+short   moodHeadBase[3]  = { 44, 0, 22 };
 
 
 
-/* WORD_ID -> byte index into g_ewb.  ONE HUNDRED AND SIXTY-ONE
+/* WORD_ID -> byte index into phraseBits.  ONE HUNDRED AND SIXTY-ONE
    bytes: the table closes with a -1 and Alcyon pads the odd length
    to 162. */
-char  ew2pos[161] = {
+char  wordByte[161] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
@@ -60,9 +60,9 @@ char  ew2pos[161] = {
 
 
 
-/* g_ew2b: 160-byte WORD_ID -> bit number within that byte.  It has
+/* wordBit: 160-byte WORD_ID -> bit number within that byte.  It has
    no head sentinel. */
-char  g_ew2b[160] = {
+char  wordBit[160] = {
       3,   0,   1,   2,   2,   4,   4,   5,   5,   5,
       5,   5,   6,   6,   6,   6,   6,   6,   7,   0,
       0,   0,   0,   0,   0,   1,   1,   1,   1,   2,
@@ -84,7 +84,7 @@ char  g_ew2b[160] = {
 
 
 /* ---- Vocabulary (160 words) ---- */
-char * vwd_tab[161] = {
+char * vocabulary[161] = {
     "PLEASE", "DO", "YOU", "LIKE", 
     "ENJOY", "WILL", "WOULD", "PLAY", 
     "PERFORM", "USE", "TRY", "PLAYING", 
@@ -138,14 +138,14 @@ char * vwd_tab[161] = {
    gives the same initialized data.  Ten mask
    bytes, the action id at +10, the priority offset at +11.
 
-   A row fires when every bit of its mask is set in g_ewb, i.e. when
+   A row fires when every bit of its mask is set in phraseBits, i.e. when
    the command contains one word from EACH group named in its comment;
    other words do not matter, and the first matching row wins.  Word w
-   sets bit g_ew2b[w] of byte ew2pos[w].  The word groups below are
-   derived from those two tables and vwd_tab -- vwd_tab's later
+   sets bit wordBit[w] of byte wordByte[w].  The word groups below are
+   derived from those two tables and vocabulary -- vocabulary's later
    duplicates (START, LIKE, IS) and PLEASE (index 0, which matchCommand
    treats as unrecognised) never set a bit. */
-WORD_TO_ACTION g_ew2a[34] = {
+WORD_TO_ACTION phraseTable[34] = {
     /* 0: (no word) + EXCUSE/PARDON/HELLO/ATTENTION/HEY -- never fires:
        no word sets byte 9 bit 0x01 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, ACTION_HELLO, 15,
@@ -160,7 +160,7 @@ WORD_TO_ACTION g_ew2a[34] = {
     /* 5: CLEAN/TIDY/PICK + UP + SHOULD/OUGHT */
     0x00, 0x60, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, ACTION_CLEAN_UP, 8,
     /* 6: SLOPPY/MESSY/UNTIDY + (no word) + HOUSE/HOME -- never fires:
-       only vwd_tab's shadowed second IS sets byte 4 bit 0x08 */
+       only vocabulary's shadowed second IS sets byte 4 bit 0x08 */
     0x00, 0x80, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00, ACTION_CLEAN_UP, 2,
     /* 7: PLAY/PERFORM/USE/TRY/PLAYING + PIANO/ORGAN */
     0x20, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, ACTION_PLAY_ORGAN, 4,
@@ -225,11 +225,11 @@ WORD_TO_ACTION g_ew2a[34] = {
 
 
 /* Bit masks for bit numbers 0..7.  Eight entries, not nine. */
-char            bm_lo[8] = {
+char            bitMask8[8] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 };
 
 
 /* Mood -> base priority for parsed commands: HAPPY (0) gives
    priority 3 (accepts more), SAD (2) gives 0 (rejects most). */
-short           mood_pri[3]        = { 3, 1, 0 };
+short           moodPriority[3]        = { 3, 1, 0 };

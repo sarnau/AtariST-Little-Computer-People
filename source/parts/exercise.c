@@ -17,22 +17,22 @@ exercise()
         short           duration;
         short           i;
 
-        pst_arr[0] = STATE_EX_ARMS_CTR;
-        pst_arr[1] = STATE_EX_ARMS_UP;
-        pst_arr[2] = STATE_EX_ARMS_CTR;
-        pst_arr[3] = STATE_EX_ARMS_WIDE;
+        scratchArr[0] = STATE_EX_ARMS_CTR;
+        scratchArr[1] = STATE_EX_ARMS_UP;
+        scratchArr[2] = STATE_EX_ARMS_CTR;
+        scratchArr[3] = STATE_EX_ARMS_WIDE;
 
         posToXY(POS_MID_COUCH,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         /* `-=` and the inline test of the walk call are part of the
            original code. */
-        g_wty -= 5;
+        walkYTarget -= 5;
         if (walkToTarget() != 0)
                 return;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_SIDE_VIEW;
-        g_hatas = 8;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_SIDE_VIEW;
+        headTarget = 8;
         waitHeadTurn();
 
         /* The mask is folded into the assignment (computed once) and
@@ -41,15 +41,15 @@ exercise()
         duration = (unsigned short)(Random() & 0x7f) | 8;
         i = 0;
         while (i < duration) {
-                if (g_trel[0] != ACTION_NONE)
+                if (eventQueue[0] != ACTION_NONE)
                         break;
-                lcp_st = pst_arr[i & 3];
-                if (lcp_st == STATE_EX_ARMS_CTR)
+                animState = scratchArr[i & 3];
+                if (animState == STATE_EX_ARMS_CTR)
                         gameTick(0);
                 else
                         gameTick(result);
                 i++;
         }
-        lcp_st = STATE_STAND_SIDE_VIEW;
+        animState = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 }

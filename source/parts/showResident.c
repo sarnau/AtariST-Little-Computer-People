@@ -7,7 +7,7 @@
 void
 showResident()
 {
-        g_seaim[HW_SLOT_LCP_BODY] = sv_bodyP;
-        g_seaim[HW_SLOT_LCP_HEAD] = sv_headP;
-        g_lssh     = NO;
+        drawnImage[HW_SLOT_LCP_BODY] = savedBodyImg;
+        drawnImage[HW_SLOT_LCP_HEAD] = savedHeadImg;
+        lcpHidden     = NO;
 }

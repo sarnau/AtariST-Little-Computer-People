@@ -18,7 +18,7 @@ tvClearAnim()
         pts[2] = 308; pts[3] = 106;
 
         beginDraw();
-        v_bar(vdihnd, pts);
+        v_bar(vdiHandle, pts);
         endDraw();
         gameTick(1);
 

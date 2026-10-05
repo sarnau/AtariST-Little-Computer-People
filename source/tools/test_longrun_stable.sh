@@ -3,7 +3,7 @@
 # surface after minutes of gameplay.
 #
 # The 2026-07-19 getKey `!= 0` bug (fix in commit f1a5349) fired
-# tx_sctm=160 on every game tick and locked the split-copy compositor
+# textTimer=160 on every game tick and locked the split-copy compositor
 # forever.  The visible corruption -- red horizontal stripes over the
 # upper 2/3 of the screen -- appeared around VBL 11 500 (~3 real
 # minutes of gameplay).  Every existing smoke test in tools/ ran for
@@ -60,7 +60,7 @@ set -uo pipefail
 CSRC=$(cd "$(dirname "$0")/.." && pwd)
 TOOLS="$CSRC/tools"
 
-# 30000, not the 15000 this ran at until 2026-09-06.  The g_sfDoB
+# 30000, not the 15000 this ran at until 2026-09-06.  The sfxBuffer
 # overrun crash (see globals.c) landed at VBL 16983 -- 1983 VBLs past
 # the old ceiling, so this test walked right up to it and stopped.  A
 # regression check that ends before the bug does is worth nothing;

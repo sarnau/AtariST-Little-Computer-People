@@ -20,7 +20,7 @@
 /* renderFrame -> renderf.c */
 
 /* redrawHands: erase prev hands in white, draw new pair in grey.
-   Skips when t_min hasn't advanced past cached g_cmmin. */
+   Skips when t_min hasn't advanced past cached clockMinute. */
 
 
 /* drawObject: blit background object at (x,y) through the game's own
@@ -33,17 +33,17 @@ short   g_oiidx;
 short   x;
 short   y;
 {
-        blitRect(vdihnd, 3,
+        blitRect(vdiHandle, 3,
                 /* Addresses the MFDB array itself (20 bytes per entry),
                    not through a pointer variable. */
-                g_oiidx * 20 + (long) g_obtmt,
-                (long) &mf_scrp,
+                g_oiidx * 20 + (long) objMfdbs,
+                (long) &houseMfdb,
                 0, 0,
-                g_obtaw[g_oiidx] - 1,
-                g_obtah[g_oiidx] - 1,
+                objWidths[g_oiidx] - 1,
+                objHeights[g_oiidx] - 1,
                 x, y,
-                g_obtaw[g_oiidx] + x - 1,
-                g_obtah[g_oiidx] + y - 1);
+                objWidths[g_oiidx] + x - 1,
+                objHeights[g_oiidx] + y - 1);
 }
 
 /* fillPanel: clear top text strip (rows 0..maxY-1).
@@ -73,10 +73,10 @@ drawFoodCab()
 {
         short           cabinet_content;    /* signed on purpose: the compares must be signed */
 
-        if (lcp_cabO == NO)
+        if (kitchenCabOpen == NO)
                 return;
 
-        cabinet_content = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        cabinet_content = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         drawObject(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
 
         if (cabinet_content >= 1) drawObject(OBJ_CABINET_ITEM, 50, 159);
@@ -88,7 +88,7 @@ drawFoodCab()
 /* -- Water tank level bar (VDI polylines) -- */
 
 /* updateWaterTank: repaint/animate water tank indicator at x=146..159, y=165..174.
-     val == 0 : full redraw at current lcp_watr
+     val == 0 : full redraw at current waterLevel
      val <  0 : drain `-val` steps, one game-tick each
      val >  0 : fill `val` steps
    Each level = one 14px horizontal polyline; colour 0x0D filled, 0x0C empty.

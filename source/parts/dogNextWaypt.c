@@ -2,7 +2,7 @@
  * Included by stx_u1.c; never compiled on its own.
  */
 /* dogNextWaypt: dog waypoint math.  Same shape as nextWaypoint but uses
-   dog_x/y and applies -3 X on middle-floor landing + -8 X on stair
+   dogX/y and applies -3 X on middle-floor landing + -8 X on stair
    crest. */
 
 void
@@ -15,37 +15,37 @@ dogNextWaypt()
            sides of the first comparison changes the compiled code. */
         short   si;
 
-        if (floorOfY(dog_y) != floorOfY(g_dty)) {
-                g_dyx = stair_wp[si = (floorOfY(dog_y) - 1) * 2];
-                g_dyy = stair_wp[si + 1];
+        if (floorOfY(dogY) != floorOfY(dogYTarget)) {
+                dogXWaypt = stairWaypts[si = (floorOfY(dogY) - 1) * 2];
+                dogYWaypt = stairWaypts[si + 1];
 
-                if (floorOfY(dog_y) == FLOOR_MIDDLE) {
-                        if (floorOfY(dog_y) > floorOfY(g_dty)) {
-                                g_dyx = stair_ty - 3;
-                                g_dyy = stair_by;
+                if (floorOfY(dogY) == FLOOR_MIDDLE) {
+                        if (floorOfY(dogY) > floorOfY(dogYTarget)) {
+                                dogXWaypt = xLanding - 3;
+                                dogYWaypt = yLanding;
                         }
                 }
 
-                dg_stair = NO;
-                if (dog_x == g_dyx && dog_y == g_dyy) {
-                        if (floorOfY(dog_y) == FLOOR_TOP)
-                                dog_x -= 8;
-                        dg_stair = YES;
-                        if (dog_y > g_dty) {
-                                g_dyx = stair_wp[si + 2];
-                                g_dyy = stair_wp[si + 3];
+                dogOnStairs = NO;
+                if (dogX == dogXWaypt && dogY == dogYWaypt) {
+                        if (floorOfY(dogY) == FLOOR_TOP)
+                                dogX -= 8;
+                        dogOnStairs = YES;
+                        if (dogY > dogYTarget) {
+                                dogXWaypt = stairWaypts[si + 2];
+                                dogYWaypt = stairWaypts[si + 3];
                         } else {
-                                g_dyy = stair_wp[si - 1];
-                                g_dyx = stair_wp[si - 2];
+                                dogYWaypt = stairWaypts[si - 1];
+                                dogXWaypt = stairWaypts[si - 2];
                         }
-                        if (floorOfY(dog_y) == FLOOR_BOTTOM) {
-                                g_dyx = stair_ty;
-                                g_dyy = stair_by;
+                        if (floorOfY(dogY) == FLOOR_BOTTOM) {
+                                dogXWaypt = xLanding;
+                                dogYWaypt = yLanding;
                         }
                 }
         } else {
-                dg_stair = NO;
-                g_dyx = g_dtx;
-                g_dyy = g_dty;
+                dogOnStairs = NO;
+                dogXWaypt = dogXTarget;
+                dogYWaypt = dogYTarget;
         }
 }

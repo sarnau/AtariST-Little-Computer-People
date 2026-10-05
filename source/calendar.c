@@ -9,8 +9,8 @@
 void
 resetDailyFlags()
 {
-        lunT_trg      = NO;
-        dinT_trg     = NO;
-        wkT_trg  = NO;
-        bedT_trg         = NO;
+        lunchDone      = NO;
+        dinnerDone     = NO;
+        wakeupDone  = NO;
+        bedtimeDone         = NO;
 }

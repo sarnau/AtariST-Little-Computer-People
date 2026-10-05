@@ -16,30 +16,30 @@ char *  filename;
         unsigned char   temp[10];
         _DTA *   dta_ptr;
 
-        mi_slop = YES;
-        mi_varR          = YES;
+        useSongChan = YES;
+        fixedChan          = YES;
 
-        if (mi_play != NO) {
-                startSong(mi_sbuf, g_momap);
-                while (mi_play != NO)
+        if (songPlaying != NO) {
+                startSong(songBuf, songMaxPos);
+                while (songPlaying != NO)
                         ;
         }
-        if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
-                mi_sbuf = (char *) 0;
+        if (songBuf != (char *) 0) {
+                Mfree(songBuf);
+                songBuf = (char *) 0;
         }
 
         Fsfirst(filename, F_NORMAL);
         dta_ptr = (_DTA *) Fgetdta();
-        mi_sbuf = (char *) Malloc(dta_ptr->d_length);
-        if (mi_sbuf == (char *) 0)
+        songBuf = (char *) Malloc(dta_ptr->d_length);
+        if (songBuf == (char *) 0)
                 outOfMemory();
 
         fhnd = openFile(filename, RMODE_RD);
         if (fhnd >= 0) {
                 readFile(fhnd, 10L, temp);
-                readFile(fhnd, 20000L, mi_sbuf);
+                readFile(fhnd, 20000L, songBuf);
                 Fclose(fhnd);
         }
-        startSong(mi_sbuf, g_momap);
+        startSong(songBuf, songMaxPos);
 }

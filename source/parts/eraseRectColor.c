@@ -21,9 +21,9 @@ short   color;
         rect[1] = y1;
         rect[2] = x2;
         rect[3] = y2;
-        vswr_mode(vdihnd, MD_REPLACE);
-        vsf_interior(vdihnd, FIS_PATTERN);
-        vsf_style(vdihnd, FILL_SOLID);
-        vsf_color(vdihnd, vdi_colt[color]);
-        v_bar(vdihnd, rect);
+        vswr_mode(vdiHandle, MD_REPLACE);
+        vsf_interior(vdiHandle, FIS_PATTERN);
+        vsf_style(vdiHandle, FILL_SOLID);
+        vsf_color(vdiHandle, colorPens[color]);
+        v_bar(vdiHandle, rect);
 }

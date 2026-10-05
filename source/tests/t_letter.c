@@ -4,7 +4,7 @@
  * Copies DATA/LETTER.TXT into the CWD as "letter.txt", calls
  * loadLetterText() which internally allocates the 10496-byte
  * buffer, decompresses the nibble-encoded file, and populates
- * g_ltlp[360].  Then prints a handful of decoded lines so you
+ * letterLines[360].  Then prints a handful of decoded lines so you
  * can eyeball the output matches the actual 1985 letter fragments.
  *
  * Build: make letter_test
@@ -17,9 +17,9 @@
 
 #include "../include/types.h"
 
-extern char *   g_ltlp[];
-extern char *   g_lttx;
-extern unsigned char comp_tok[];
+extern char *   letterLines[];
+extern char *   letterText;
+extern unsigned char nibbleBytes[];
 extern void     loadLetterText();
 
 int
@@ -49,32 +49,32 @@ char ** argv;
         fclose(f);
         printf("copied %zu bytes to CWD/letter.txt\n", nread);
 
-        /* writeLetter allocates g_lttx via
+        /* writeLetter allocates letterText via
            _gemdos(GEMDOS_Malloc); we do that here manually. */
-        g_lttx = (char *) malloc(10496);
-        if (g_lttx == NULL) { perror("malloc"); return 2; }
+        letterText = (char *) malloc(10496);
+        if (letterText == NULL) { perror("malloc"); return 2; }
 
         /* Decompress + index via the real ports. */
         loadLetterText();
 
         printf("comp_tok (15 most common bytes):");
         for (i = 0; i < 15; i = i + 1)
-                printf(" %02x", comp_tok[i]);
+                printf(" %02x", nibbleBytes[i]);
         printf("\n");
 
         printf("First 10 g_ltlp[] entries:\n");
         for (i = 0; i < 10; i = i + 1) {
-                if (g_ltlp[i] == NULL) {
+                if (letterLines[i] == NULL) {
                         printf("  [%3d] (null)\n", i);
                         continue;
                 }
-                printf("  [%3d] %.60s\n", i, g_ltlp[i]);
+                printf("  [%3d] %.60s\n", i, letterLines[i]);
         }
         printf("Line 45 (mid-body sample):\n  %.100s\n",
-               g_ltlp[45]);
-        printf("Line 359 (last):\n  %.100s\n", g_ltlp[359]);
+               letterLines[45]);
+        printf("Line 359 (last):\n  %.100s\n", letterLines[359]);
         printf("PASS: 360 letter template lines decoded and indexed\n");
 
-        free(g_lttx);
+        free(letterText);
         return 0;
 }

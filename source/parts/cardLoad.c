@@ -14,7 +14,7 @@
  * overlay used to indicate the currently-selected card in the poker
  * hand draw UI.
  *
- * Layout inside crd_dat (unit = 16-bit word; each card = 96 words):
+ * Layout inside cardImages (unit = 16-bit word; each card = 96 words):
  *
  *   +---------------+---------------+---------------+---------------+
  *   |  suit 0       |  suit 1       |  suit 2       |  suit 3       |  suit trailer  back  highlight
@@ -26,7 +26,7 @@
  * 11*0x60, King at 0*0x60), because the game's card indexing is
  * high-first.  A trailer slot at 0x480 words into each suit holds a
  * per-suit "suit-only" card back (probably used during blind deals).
- * The single global back at crd_dat + 0x1380 is the standard
+ * The single global back at cardImages + 0x1380 is the standard
  * face-down card.
  */
 
@@ -38,10 +38,10 @@
 #include "globals.h"
 
 
-/* Loads the CARDS file into crd_dat in the layout described above,
+/* Loads the CARDS file into cardImages in the layout described above,
    builds the selection-highlight card at slot 53 itself, and points the
-   54 card MFDBs and the card-table MFDB mf_scb_c (the 320x77 area at
-   g_dscp) at their bitmaps.  Called by the card games before play. */
+   54 card MFDBs and the card-table MFDB cardTableMfdb (the 320x77 area at
+   stripBuf) at their bitmaps.  Called by the card games before play. */
 void
 cardLoad()
 {
@@ -53,7 +53,7 @@ cardLoad()
         char *  buf;
 
         fhnd = openFile("cards", RMODE_RD);
-        buf  = (char *) crd_dat;
+        buf  = (char *) cardImages;
 
         /* 4 suits x (12 face cards reverse-ranked + 1 per-suit back).
            The offsets are BYTE offsets added to a char*, with the
@@ -68,26 +68,26 @@ cardLoad()
         }
 
         /* Standard face-down back at slot 52. */
-        readFile(fhnd, 0xc0L, (char *) crd_dat + 9984);
+        readFile(fhnd, 0xc0L, (char *) cardImages + 9984);
         Fclose(fhnd);
 
         /* Synthesize the highlight overlay at slot 53: planes 0 and 1
            blank, planes 2 and 3 solid. */
         for (rank = 0x13e0; rank < 0x1440; ) {
-                crd_dat[rank] = 0;
+                cardImages[rank] = 0;
                 rank++;
-                crd_dat[rank] = 0;
+                cardImages[rank] = 0;
                 rank++;
-                crd_dat[rank] = -1;
+                cardImages[rank] = -1;
                 rank++;
-                crd_dat[rank] = -1;
+                cardImages[rank] = -1;
                 rank++;
         }
 
         /* Wire the 54 MFDB descriptors. */
         for (rank = 0; rank < 54; rank++)
-                initMfdb(0L, &crd_mfdb[rank],
-                        (long) (rank * 192) + (char *) crd_dat, 16, 24);
+                initMfdb(0L, &cardMfdb[rank],
+                        (long) (rank * 192) + (char *) cardImages, 16, 24);
 
-        initMfdb(0L, &mf_scb_c, g_dscp, 320, 77);
+        initMfdb(0L, &cardTableMfdb, stripBuf, 320, 77);
 }

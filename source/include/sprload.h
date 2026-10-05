@@ -3,8 +3,8 @@
 #ifndef SPRLOAD_H
 #define SPRLOAD_H
 
-extern short sp_fidx[];
-extern unsigned char sp_mbuf[];
+extern short spriteFileId[];
+extern unsigned char genMaskBuf[];
 
 
 extern void makeMask();

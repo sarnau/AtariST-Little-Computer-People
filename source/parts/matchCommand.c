@@ -1,6 +1,6 @@
 /*
  * parts/matchCommand.c -- included by stx_u3.c; never compiled on its own.
- * Matches a typed command against the g_ew2a action table.
+ * Matches a typed command against the phraseTable action table.
  */
 short
 matchCommand(str)
@@ -14,29 +14,29 @@ char *  str;
 
         /* Clear the accumulated position/bit mask. */
         for (i = 0; i < 10; i++)
-                g_ewb[i] = 0;
+                phraseBits[i] = 0;
 
         /* Seed the priority from happiness + a small random nudge. */
-        g_aprio = rndRng(0, 3) + mood_pri[lcp.happiness];
+        cmdPriority = rndRng(0, 3) + moodPriority[resident.happiness];
 
         /* Tokenize and mask-accumulate, breaking out of a `while (1)`
            as the original does. */
         while (1) {
-                if ((str = nextWord(str, usr_buf)) == (char *) 0)
+                if ((str = nextWord(str, cmdWord)) == (char *) 0)
                         break;
                 /* The "unrecognised" sentinel tested here is 0, even
                    though lookupWord returns -1 when it runs off the table.
                    So the word at index 0 (PLEASE) never contributes its
                    bit and takes the +4 penalty instead.  1985 behaviour,
                    kept on purpose. */
-                if ((entered_word = lookupWord(usr_buf)) == 0) {
+                if ((entered_word = lookupWord(cmdWord)) == 0) {
                         /* Unrecognised word -- +4 priority penalty. */
-                        g_aprio += 4;
+                        cmdPriority += 4;
                 } else if (entered_word > 0) {
                         /* Both index tables are char[], and there
                            are no temporaries. */
-                        g_ewb[ew2pos[entered_word]] |=
-                                bm_lo[g_ew2b[entered_word]];
+                        phraseBits[wordByte[entered_word]] |=
+                                bitMask8[wordBit[entered_word]];
                 }
         }
 
@@ -47,14 +47,14 @@ char *  str;
            explicit goto, not a break plus an `i >= 10` re-test. */
         row = 0;
         while (1) {
-                if (g_ew2a[row].table[0] == EW2A_END)
+                if (phraseTable[row].table[0] == EW2A_END)
                         break;
                 for (i = 0; i < 10; i++)
-                        if ((g_ew2a[row].table[i] & g_ewb[i]) !=
-                            g_ew2a[row].table[i])
+                        if ((phraseTable[row].table[i] & phraseBits[i]) !=
+                            phraseTable[row].table[i])
                                 goto next;
-                g_aprio += g_ew2a[row].priority_offset;
-                return g_ew2a[row].action;
+                cmdPriority += phraseTable[row].priority_offset;
+                return phraseTable[row].action;
 next:
                 row++;
         }

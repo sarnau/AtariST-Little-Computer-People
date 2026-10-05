@@ -11,25 +11,25 @@ stopRecord()
 {
         /* No local: the walk result is tested in place. */
 
-        if (lcp_recP == NO)
+        if (recordPlaying == NO)
                 return;
 
         posToXY(POS_TOP_DANCE_FLOOR,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         if (walkToTarget() != 0)
                 return;
 
         gameTick(2);
 
-        if (mi_play != NO) {
-                startSong(mi_sbuf, g_momap);
-                while (mi_play != NO)
+        if (songPlaying != NO) {
+                startSong(songBuf, songMaxPos);
+                while (songPlaying != NO)
                         ;
         }
         recordStoop();
-        lcp_recP = NO;
-        if (mi_sbuf != (char *) 0) {
-                Mfree(mi_sbuf);
-                mi_sbuf = (char *) 0;
+        recordPlaying = NO;
+        if (songBuf != (char *) 0) {
+                Mfree(songBuf);
+                songBuf = (char *) 0;
         }
 }

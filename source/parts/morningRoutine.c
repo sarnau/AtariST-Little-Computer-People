@@ -8,16 +8,16 @@ morningRoutine()
 {
         /* No local: the tick count is passed straight through. */
 
-        g_actif = YES;
-        alarm_p = YES;
+        noPreempt = YES;
+        alarmRinging = YES;
         gameTick(rndRng(40, 100));
-        if (lcp.is_sleeping == YES)
+        if (resident.is_sleeping == YES)
                 getInOutOfBed();
 
-        g_actif = YES; wakeFromAlarm();
-        g_actif = YES; takeShower();
-        g_actif = YES; brushTeeth();
-        g_actif = YES; changeClothes(0);
-        g_actif = YES; cookMeal();
-        g_actif = NO;
+        noPreempt = YES; wakeFromAlarm();
+        noPreempt = YES; takeShower();
+        noPreempt = YES; brushTeeth();
+        noPreempt = YES; changeClothes(0);
+        noPreempt = YES; cookMeal();
+        noPreempt = NO;
 }

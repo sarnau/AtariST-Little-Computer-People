@@ -5,8 +5,8 @@
 /* The resident turns to face the screen, waits for its head to swing
    round (waitHeadTurn), bends down for a moment and straightens up again --
    a "stand and look" gesture.  playRecord and stopRecord use this copy; tvOn
-   and tvOff use the otherwise identical tvStoop.  Changes lcp_face,
-   lcp_st and the head target g_hatas. */
+   and tvOff use the otherwise identical tvStoop.  Changes resFacing,
+   animState and the head target headTarget. */
 void
 recordStoop()
 {
@@ -18,13 +18,13 @@ recordStoop()
         short   unused2;
         short   unused3;
 
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(4);
-        lcp_face = FACING_RIGHT;
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        resFacing = FACING_RIGHT;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 }

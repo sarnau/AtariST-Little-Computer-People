@@ -14,11 +14,11 @@ short   color;
         short   pts[4];
 
         beginDraw();
-        vsl_color(vdihnd, vdi_colt[color]);
+        vsl_color(vdiHandle, colorPens[color]);
         pts[0] = x;
         pts[1] = y;
         pts[2] = x;
         pts[3] = y;
-        v_pline(vdihnd, 2, pts);
+        v_pline(vdiHandle, 2, pts);
         endDraw();
 }

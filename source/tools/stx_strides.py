@@ -17,7 +17,7 @@ That is worth having twice over:
 
 Usage:
     python3 source/tools/stx_strides.py          # every array
-    python3 source/tools/stx_strides.py _pex_ptr # one symbol, w/ sites
+    python3 source/tools/stx_strides.py _pexFram # one symbol, w/ sites
 """
 import bisect, collections, os, struct, sys
 

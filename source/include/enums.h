@@ -8,7 +8,7 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-/* ---- Need levels: lcp.thirst_level / lcp.hunger_level ----------------
+/* ---- Need levels: resident.thirst_level / resident.hunger_level ----------------
    A need timer that runs out at NEED_SEVERE makes the resident sick
    instead of raising the level further. */
 #define NEED_SATISFIED          0
@@ -16,7 +16,7 @@
 #define NEED_MODERATE           2
 #define NEED_SEVERE             3
 
-/* ---- Sickness: lcp.sickness_level, and the direction it moves in --------
+/* ---- Sickness: resident.sickness_level, and the direction it moves in --------
    (sickness_direction / happiness_direction add one of DIR_* per step). */
 #define SICKNESS_HEALTHY        0
 #define SICKNESS_MILD           1
@@ -57,7 +57,7 @@
 #define SPRITE_BEHIND_LCP       (-1)
 #define SPRITE_IN_FRONT         1
 
-/* ---- Resident animation states (lcp_st) -----------------------------
+/* ---- Resident animation states (animState) -----------------------------
      0..7     Walk cycle (frames 3 and 7 trigger footstep)
      8        STATE_STAND_IDLE (== stand at rest)
      9..12    Stair climb (frame 12 = FRAME_3_STEP)
@@ -158,7 +158,7 @@
 
 /* ---- Colours ---------------------------------------------------------
    Values 0..15 are colour indices, NOT VDI palette slots.  The
-   drawing calls pass a colour index through vdi_colt[] to get the
+   drawing calls pass a colour index through colorPens[] to get the
    underlying VDI palette slot -- that table is a permutation, so
    using the wrong colour index here produces the wrong on-screen hue. */
 #define COLOR_black                              0
@@ -178,8 +178,8 @@
 #define COLOR_white                             14
 #define COLOR_dk_brown                          15
 
-/* ---- Head animation modes (g_hamod, g_hatas) ------------------------
-   Bit fields inside g_hamod:
+/* ---- Head animation modes (headMode, headTarget) ------------------------
+   Bit fields inside headMode:
      bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
                  the enum encodes it as value 3 for the "amplitude enabled"
                  marker; stepHead masks with HEAD_MODE_H_AMPLITUDE = 0x07)
@@ -251,9 +251,9 @@
 /* ---- Sprite ids (study doors and carried objects) --------------------- */
 /* Logical sprite-def IDs 0 and 1 are the LCP body and head sprites --
    pinned to hardware slots HW_SLOT_LCP_BODY / HW_SLOT_LCP_HEAD in
-   g_seslm[] at boot.  Distinct from the sprite-layer values
+   spriteSlot[] at boot.  Distinct from the sprite-layer values
    SPRITE_HIDDEN=0 / SPRITE_IN_FRONT=1 above (different domain: layer
-   flags for g_selaf[] vs sprite-def indices for g_sedim[]/g_seslm[]). */
+   flags for spriteLayer[] vs sprite-def indices for spriteBitmap[]/spriteSlot[]). */
 #define SPRITE_LCP_BODY_ID              0x00
 #define SPRITE_LCP_HEAD_ID              0x01
 #define SPRITE_GLASS                    0x03
@@ -276,7 +276,7 @@
 #define SPRITE_DOOR_STUDY_AJAR          0x19
 #define SPRITE_DOOR_STUDY_WIDE_OPEN     0x1a
 /* Head-pat / petting-dog hand animation frames.
-   Consumed by g_ptdsi[11] in tick_tables.c. */
+   Consumed by patSprites[11] in tick_tables.c. */
 #define SPRITE_PET_HAND_1               0x1b
 #define SPRITE_PET_HAND_2               0x1c
 #define SPRITE_PET_HAND_3               0x1d
@@ -456,10 +456,10 @@
 #define SEQ_PHASE_SONG_ENDING                   2
 
 /* ---- Song header command bytes -------------------------------------- */
-#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> g_mkey, buildNoteMap */
+#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> songKey, buildNoteMap */
 #define MIDI_HDR_SET_TEMPO                      0x81
 #define MIDI_HDR_SET_VOLUME                     0x83
-#define MIDI_HDR_SET_VELOCITY                   0x84    /* default velocity -> mi_dvel, psg_dvol */
+#define MIDI_HDR_SET_VELOCITY                   0x84    /* default velocity -> defVelocity, defPsgVol */
 #define MIDI_HDR_PROGRAM_CHANGE                 0xC0
 #define MIDI_HDR_END                            0xFF
 
@@ -490,7 +490,7 @@
 #define ENV_FADEOUT                             5
 
 /* Card game constants -- CARD_TYPE values 0..51 are the 52 face cards
-   (index into crd_mfdb).  CARD_BACK selects the shared face-down back
+   (index into cardMfdb).  CARD_BACK selects the shared face-down back
    MFDB.  CARD_NONE is the sentinel used by war/blackjack to mark
    empty slots in the war-cards arrays and to signal end-of-hand from
    popCard when the source pile is empty.
@@ -506,7 +506,7 @@
    K, Q, J, 10 .. 2, A, and cardLoad reads the first twelve into slots
    11..0 and the ace into slot 12.  The bitmaps in DATA/CARDS show it
    (file card 0 is the king of hearts, 11 the two, 12 the ace).  These
-   names follow crd_mfdb, not the file. */
+   names follow cardMfdb, not the file. */
 #define CARDS_PER_SUIT                  13
 #define CARD_RANK_2                      0
 #define CARD_RANK_3                      1
@@ -591,7 +591,7 @@
 #define CARD_BJ_STOP                    0
 
 /* Poker hand ranks -- what pkrEvalHand stores through *hand_rank and what
-   pk_chrk / pk_phrk hold.  Higher beats lower.  (pkrEvalHand's hc/bp
+   compRank / plyrRank hold.  Higher beats lower.  (pkrEvalHand's hc/bp
    counters use 1/3/7 as SCORES that are summed; those are not ranks.) */
 #define HAND_HIGH_CARD                  0
 #define HAND_ONE_PAIR                   1
@@ -614,13 +614,13 @@
 #define PK_IN_ARG_C                     3
 #define PK_IN_DIGIT_1                   4
 #define PK_IN_DIGIT_5                   8
-#define PK_IN_TIMEOUT                   (-1)    /* mg_tofl set */
+#define PK_IN_TIMEOUT                   (-1)    /* mgTimedOut set */
 #define PK_IN_UNUSED                    255
 
 /* ---- VDI fill styles ------------------------------------------------
    As used when drawing to the back buffer:
-     vsf_interior(vdihnd, 2)   -- interior = PATTERN
-     vsf_style(vdihnd, 8)   -- pattern index 8 (renders solid at slot 0) */
+     vsf_interior(vdiHandle, 2)   -- interior = PATTERN
+     vsf_style(vdiHandle, 8)   -- pattern index 8 (renders solid at slot 0) */
 #define FILL_SOLID                      8
 #ifndef FIS_PATTERN
 #define FIS_PATTERN                     2       /* vsf_interior: pattern fill */
@@ -648,7 +648,7 @@
 #define MFP_STOP                        0       /* Xbtimer control: stopped */
 #define MFP_DIV64                       5       /* Xbtimer control: /64 delay */
 
-/* ---- Door / furniture state bitfield in lcp.door_states_and_flags ---- */
+/* ---- Door / furniture state bitfield in resident.door_states_and_flags ---- */
 #define DSF_FRONT_DOOR                  0x001
 #define DSF_STUDY_DOOR                  0x002
 #define DSF_CLOSET_DOOR                 0x004
@@ -665,9 +665,9 @@
 #define DSF_FOOD_FIELD                  7       /* DSF_FOOD_MASK >> DSF_FOOD_SHIFT */
 #define FOOD_PACKS_MAX                  4
 
-/* ---- Other lcp status values ------------------------------------------ */
+/* ---- Other resident status values ------------------------------------------ */
 #define WATER_START                     7       /* new resident's tank */
-#define WATER_MAX                       10      /* lcp_watr, a full tank */
+#define WATER_MAX                       10      /* waterLevel, a full tank */
 /* bathroom_timer once the need has fired: effectively off until eating
    (eatFromCabinet) reloads it from bathroom_timer_max. */
 #define BATHROOM_TIMER_OFF              9999
@@ -719,16 +719,16 @@
 #define KEY_CTRL_W_WATER                0x17
 
 /* ---- Activity tiers -- pickIdleAction's table_pick --------------------------
-   sch_tab maps (time of day, lcp.activity_level) to the first three;
-   each picks one of the action tables g_atact / g_atmod / g_atrel.
+   scheduleTiers maps (time of day, resident.activity_level) to the first three;
+   each picks one of the action tables activeActions / moderateActions / relaxedActions.
    Sunday turns ACTIVE into RELAXED and Saturday into MODERATE.  SLEEP
    (18+ hours awake, or sick) has no table: bed or nothing. */
-#define TIER_ACTIVE                     0       /* g_atact */
-#define TIER_MODERATE                   1       /* g_atmod */
-#define TIER_RELAXED                    2       /* g_atrel */
+#define TIER_ACTIVE                     0       /* activeActions */
+#define TIER_MODERATE                   1       /* moderateActions */
+#define TIER_RELAXED                    2       /* relaxedActions */
 #define TIER_SLEEP                      3
 
-/* g_ew2a's end-of-table marker, in a row's first mask byte.  Alcyon
+/* phraseTable's end-of-table marker, in a row's first mask byte.  Alcyon
    narrows it to a signed char, so matchCommand's compare against the char
    field matches. */
 #define EW2A_END                        0xff
@@ -736,7 +736,7 @@
 /* ---- Action ids (runAction, the action queue, the AI tables) -------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions,
    not appended at the end.  ACTION_NONE (-1)
-   is the empty sentinel used by g_trac and the event FIFO. */
+   is the empty sentinel used by nextAction and the event FIFO. */
 #define ACTION_NONE                     (-1)
 #define ACTION_SIT_AND_EXERCISE          0
 #define ACTION_READ_NEWSPAPER            1
@@ -784,13 +784,13 @@
 #define ACTION_WAKE_UP_MORNING          43
 #define ACTION_GO_TO_BED_NIGHT          44
 
-/* ---- Vocabulary word ids: index into vwd_tab (161 entries) ------------
+/* ---- Vocabulary word ids: index into vocabulary (161 entries) ------------
    The `2` suffixes on WORD_START2 / WORD_LIKE2 / WORD_IS2 tell apart
    the dictionary's duplicated entries; WORD_WHATS is spelt without the
    apostrophe so the name is a legal C identifier (the dictionary entry
    is literally "WHAT'S").
 
-   The values are 1-based (vwd_tab[0] is "PLEASE", WORD_PLEASE is 1),
+   The values are 1-based (vocabulary[0] is "PLEASE", WORD_PLEASE is 1),
    and WORD_NONE is -1. */
 #define WORD_NONE                       (-1)
 #define WORD_PLEASE                      1

@@ -5,14 +5,14 @@
 
 #include "types.h"
 
-extern short g_obcla[];
-extern short g_obala[];
-extern short g_obpha[];
-extern short g_obfia[];
-extern short g_obdea[];
-extern short g_ptdsi[];
-extern short g_ptlss;
-extern BOOL16 g_alsts;
-extern short g_phrc;
+extern short clockFrames[];
+extern short alarmFrames[];
+extern short phoneFrames[];
+extern short fireFrames[];
+extern short bowlFrames[];
+extern short patSprites[];
+extern short patLastSprite;
+extern BOOL16 alarmSounding;
+extern short ringCountdown;
 
 #endif /* TICK_TABLES_H */

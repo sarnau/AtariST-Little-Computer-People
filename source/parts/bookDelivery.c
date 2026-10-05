@@ -7,48 +7,48 @@
    parcel, and closes the door again when a 0..100 roll beats his
    initiative_threshold.  He then carries the book (SPRITE_BOOK) up to
    the bathroom entrance on the middle floor, the carried sprite is
-   dropped (g_lcyof cleared) and he reaches in to put it away. */
+   dropped (isCarrying cleared) and he reaches in to put it away. */
 void
 bookDelivery()
 {
-        g_actif = YES;
+        noPreempt = YES;
         walkToFrontDoor();
         /* The pick-up sequence is written out in each handler rather
            than shared through a helper, as in the original. */
-        lcp_face   = FACING_RIGHT;
-        lcp_st              = STATE_STAND_FACING_SCREEN;
-        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        resFacing   = FACING_RIGHT;
+        animState              = STATE_STAND_FACING_SCREEN;
+        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_REACH_FORWARD;
+        animState = STATE_REACH_FORWARD;
         gameTick(2);
-        lcp_st = STATE_BEND_DOWN;
+        animState = STATE_BEND_DOWN;
         gameTick(1);
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        if (lcp.initiative_threshold < rndRng(0, 100))
+        if (resident.initiative_threshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_BOOK);
         posToXY(POS_MID_BATHROOM_ENTRANCE,
-                              &g_wtx, &g_wty);
+                              &walkXTarget, &walkYTarget);
         walkToTarget();
 
-        g_selaf[SPRITE_BOOK] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_BOOK] = SPRITE_HIDDEN;
         layoutSlots();
-        g_lcyof = NO;
-        lcp_face     = FACING_RIGHT;
-        lcp_st                = STATE_STAND_FACING_SCREEN;
-        g_hatas   = HEAD_ANIM_HORIZONTAL_RANGE;
+        isCarrying = NO;
+        resFacing     = FACING_RIGHT;
+        animState                = STATE_STAND_FACING_SCREEN;
+        headTarget   = HEAD_ANIM_HORIZONTAL_RANGE;
         waitHeadTurn();
 
-        lcp_st = STATE_REACH_INTO_CABINET;
+        animState = STATE_REACH_INTO_CABINET;
         gameTick(3);
-        lcp_st = STATE_STAND_FACING_SCREEN;
+        animState = STATE_STAND_FACING_SCREEN;
         gameTick(2);
-        g_actif = NO;
+        noPreempt = NO;
 }
