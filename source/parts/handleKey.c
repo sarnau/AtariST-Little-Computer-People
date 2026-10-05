@@ -44,7 +44,7 @@ short   keycode;
                         resident.happiness               = MOOD_HAPPY;
                         resident.happiness_direction     = DIR_WORSENING;
                         resident.happiness_duration_active =
-                                resident.happiness_initial_countdown;
+                                resident.mood_duration[MOOD_HAPPY];
                 }
                 return;
 

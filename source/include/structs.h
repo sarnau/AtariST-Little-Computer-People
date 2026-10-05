@@ -51,9 +51,9 @@ typedef struct {
 
         /* Happiness                                        0x28 */
         short   happiness;
-        short   happiness_initial_countdown;
-        short   happiness_duration_happy;
-        short   happiness_duration_content;
+        short   mood_duration[3];   /* length of a spell in each mood,
+                                       indexed by MOOD_*; the active one is
+                                       reloaded from here on every change */
         short   happiness_duration_active;
         short   happiness_direction;
 

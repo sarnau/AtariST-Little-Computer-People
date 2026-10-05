@@ -107,8 +107,7 @@ simStep()
                                 resident.happiness_direction = DIR_IMPROVING;
                         }
                         resident.happiness_duration_active =
-                                (&resident.happiness_initial_countdown)
-                                        [resident.happiness];
+                                resident.mood_duration[resident.happiness];
                 }
         }
 

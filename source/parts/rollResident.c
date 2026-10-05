@@ -40,10 +40,10 @@ rollResident()
         resident.personality_type          = rndRng(0, 3);
         resident.activity_level            = rndRng(0, 7);
         resident.happiness                 = MOOD_CONTENT;
-        resident.happiness_initial_countdown = rndRng(6, 24);
-        resident.happiness_duration_happy    = rndRng(6, 24);
-        resident.happiness_duration_content  = rndRng(6, 12);
-        resident.happiness_duration_active   = resident.happiness_duration_happy;
+        resident.mood_duration[MOOD_HAPPY]   = rndRng(6, 24);
+        resident.mood_duration[MOOD_CONTENT] = rndRng(6, 24);
+        resident.mood_duration[MOOD_SAD]     = rndRng(6, 12);
+        resident.happiness_duration_active   = resident.mood_duration[MOOD_CONTENT];
         resident.happiness_direction       = DIR_IMPROVING;
         resident.sickness_level            = SICKNESS_HEALTHY;
         resident.sickness_countdown        = 0;
