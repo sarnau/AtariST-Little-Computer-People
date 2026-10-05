@@ -40,6 +40,8 @@ short   event;
                 foodDelivery();
                 break;
         case ACTION_EVENT_PHONE_CALL:
+                /* answerPhone takes no parameter; the 0 is pushed and
+                   ignored, but the push is part of the original code. */
                 answerPhone(0);
                 break;
         case ACTION_NOD_OK:
