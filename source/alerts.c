@@ -36,10 +36,10 @@
    frame is first mirrored into dogMirImage/dogMirMask (15 lines, 2 words)
    and those buffers are used instead. */
 void
-setDogSprite(spriteId, layer, flipH2)
+setDogSprite(spriteId, layer, mirror)
 short   spriteId;
 short   layer;
-BOOL16  flipH2;
+BOOL16  mirror;
 {
         drawnImage[HW_SLOT_DOG_BACK] = NULL;
         drawnImage[HW_SLOT_DOG_FRONT] = NULL;
@@ -47,7 +47,7 @@ BOOL16  flipH2;
         if (spriteId < 0 || dogHidden != NO)
                 return;
 
-        if (flipH2 != NO) {
+        if (mirror != NO) {
                 flipSprite(spriteBitmap[spriteId],
                                        (unsigned short *) dogMirImage,
                                        15, 2);
@@ -65,14 +65,14 @@ BOOL16  flipH2;
         pendY[HW_SLOT_DOG_BACK] = dogY - 17;
         pendY[HW_SLOT_DOG_FRONT] = dogY - 17;
 
-        if (flipH2 == NO) {
+        if (mirror == NO) {
                 drawnMask[HW_SLOT_DOG_BACK] = spriteMask[spriteId];
                 drawnMask[HW_SLOT_DOG_FRONT] = spriteMask[spriteId];
         } else {
                 drawnMask[HW_SLOT_DOG_BACK] = dogMirMask;
                 drawnMask[HW_SLOT_DOG_FRONT] = dogMirMask;
         }
-        if (flipH2 == NO) {
+        if (mirror == NO) {
                 if (layer == 1)
                         drawnImage[HW_SLOT_DOG_FRONT] = spriteBitmap[spriteId];
                 else

@@ -1,4 +1,4 @@
-# Port names -> the original Ghidra analysis names
+# Port names -> the Ghidra analysis names
 
 The top-level analysis documents (ARCHITECTURE.md, PEOPLE.md, DOG.md,
 GAMES.md, SOUND.md, IMAGEFORMAT.md) use the descriptive names of the

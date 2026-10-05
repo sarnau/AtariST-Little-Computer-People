@@ -37,6 +37,7 @@ The reverse engineering analysis is organized into the following documents:
 | [GAMES.md](GAMES.md) | Five mini-games: Anagram, War, Poker, Blackjack, Word Puzzle — rules, AI, card deck management |
 | [SOUND.md](SOUND.md) | MIDI sequencer engine, PSG envelope processor, 23 sound effects, Music Studio .SNG/.ORG file format, song catalog |
 | [IMAGEFORMAT.md](IMAGEFORMAT.md) | Pixel format, color palette, compressed screen images (.SCN), sprite/object files, playing cards, character body sprites (PE*.LCP) |
+| [NAMEMAP.md](NAMEMAP.md) | The port's function and variable names mapped to the Ghidra names these documents use |
 
 ## C Source Reconstruction
 
