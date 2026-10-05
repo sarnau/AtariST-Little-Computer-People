@@ -15,12 +15,12 @@ countSongs()
         organCount = 0;
         if (!Fsfirst("*.sng", F_NORMAL)) {
                 songCount = 1;
-                while (gemdos(GEMDOS_FSNEXT) == 0)
+                while (Fsnext() == 0)
                         songCount++;
         }
         if (!Fsfirst("*.org", F_NORMAL)) {
                 organCount = 1;
-                while (gemdos(GEMDOS_FSNEXT) == 0)
+                while (Fsnext() == 0)
                         organCount++;
         }
 }

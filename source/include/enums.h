@@ -722,7 +722,6 @@
 #endif
 #define F_NORMAL                        0       /* Fsfirst: no attribute bits,
                                                    plain files only */
-#define GEMDOS_FSNEXT                   0x4F    /* bare gemdos() call */
 #define ALERT_NO_DEFAULT                0       /* form_alert default button */
 #define VEC_TIMER_A                     0x4d    /* Setexc vector ($134 / 4) */
 #define SETEXC_QUERY                    (-1L)   /* Setexc: read, don't set */
