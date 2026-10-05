@@ -14,10 +14,10 @@ to the kitchen table, sits down (STATE_EAT_BITE with +8y/+6x offset), and launch
 selected game. On exit, the LCP picks up the box and returns it to the cabinet.
 
 All mini-games share a common framework:
-- `minigame_setup_screen()` fills the top 77 rows with background, freezes text scroll
-- `minigame_wait_for_key_with_events()` handles input while processing urgent game events
+- `mgSetup()` fills the top 77 rows with background, freezes text scroll
+- `mgWaitKey()` handles input while processing urgent game events
   (alarm, bathroom, thirst, doorbell) — the LCP leaves the table, handles the event, returns
-- Auto-quit after 7,200 frames (~15 min) of inactivity, sets `mg_tofl`
+- Auto-quit after 7,200 frames (~15 min) of inactivity, sets `mgTimedOut`
 - Card graphics loaded from `cards` data file (52 cards + card back, 53 MFDB blocks)
 
 Screen resolution: 320×200 pixels, 16 colors, Atari ST low resolution.
@@ -26,7 +26,7 @@ Screen resolution: 320×200 pixels, 16 colors, Atari ST low resolution.
 
 ## 1. Anagram Game
 
-**Entry point:** `anagram_main()` (0x181AE)
+**Entry point:** `playAnagrams()` (0x181AE)
 **Data file:** `words` — 150 words × 11 bytes each (compressed)
 
 ### Concept
@@ -39,34 +39,34 @@ request letter clues at the cost of one guess each.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `g_agwb` | char* | 10,000-byte buffer for decompressed dictionary |
-| `g_agorw` | char* | Pointer into dictionary for current word |
-| `g_agscw` | char[11] | Working copy with shuffled characters |
-| `g_agwol` | short | Length of current word (max 10) |
-| `g_aginb` | char[11] | Player's typed guess |
-| `g_aggun` | short | Current guess attempt (1–9) |
-| `g_agclc` | short | Total clues used (cumulative) |
-| `g_agacu` | short | Flag: 1 when all letters revealed |
-| `_anagram_clue_used_this_round` | short | Flag: prevents >1 clue per guess |
+| `anaDict` | char* | 10,000-byte buffer for decompressed dictionary |
+| `anaAnswer` | char* | Pointer into dictionary for current word |
+| `anaScrambled` | char[11] | Working copy with shuffled characters |
+| `anaWordLen` | short | Length of current word (max 10) |
+| `anaInput` | char[11] | Player's typed guess |
+| `anaGuessNum` | short | Current guess attempt (1–9) |
+| `anaNumClues` | short | Total clues used (cumulative) |
+| `anaExtraGuess` | short | Flag: 1 when all letters revealed |
+| `anaClueUsed` | short | Flag: prevents >1 clue per guess |
 
 ### Dictionary Format
 
 Each word is stored as a fixed 11-byte record. Words are terminated by either a period
-(`.`) or a space character. The file is loaded compressed via `file_read_compressed()`
+(`.`) or a space character. The file is loaded compressed via `unpackFile()`
 and decompressed into a 10,000-byte heap buffer. Words are accessed by index:
-`anagram_words_buffer + (index * 11)`.
+`anaDict + (index * 11)`.
 
-### Scrambling Algorithm (`anagram_select_and_scramble_word`)
+### Scrambling Algorithm (`anaPickWord`)
 
 1. Pick random index 0–149
-2. Copy word characters into `g_agscw` (stop at `.` or space)
+2. Copy word characters into `anaScrambled` (stop at `.` or space)
 3. Store null terminator; also null-terminate the original (replacing delimiter)
 4. Scramble loop:
    - Generate random swap count (10–20)
    - For each swap: pick two random positions, exchange characters
-5. Compare scrambled with original via `anagram_strings_equal()`
+5. Compare scrambled with original via `anaStrMatch()`
 6. If still identical → repeat scrambling (ensures puzzle is solvable)
-7. Display in large green text via `anagram_display_word_large()`
+7. Display in large green text via `anaShowWord()`
 
 ### Clue Algorithm (F1 key)
 
@@ -124,22 +124,22 @@ This progressively reveals the word from left to right, one letter per clue.
 
 | Function | Address | Purpose |
 |---|---|---|
-| `anagram_select_and_scramble_word` | 0x18084 | Pick and scramble random word |
-| `anagram_strings_equal` | 0x17538 | Case-sensitive string compare (1=match, 0=different) |
-| `anagram_display_word_large` | 0x17E34 | Display word in 20px tall letters at (162,37) |
-| `anagram_clear_word_display_area` | 0x17E9C | Clear right panel (162,10)-(319,49) |
-| `anagram_show_intro_text` | 0x17EE4 | Print 5-line intro in left panel |
-| `anagram_show_guess_prompt` | 0x17F2E | Show "Guess #N?" from lookup table |
-| `anagram_clear_guess_prompt_area` | 0x17F4A | Clear prompt area (166,50)-(319,65) |
-| `anagram_clear_status_bar` | 0x17F82 | Clear status bar (5,62)-(319,75) |
+| `anaPickWord` | 0x18084 | Pick and scramble random word |
+| `anaStrMatch` | 0x17538 | Case-sensitive string compare (1=match, 0=different) |
+| `anaShowWord` | 0x18004 | Display word in 20px tall letters at (162,37) |
+| `anaClrWord` | 0x17E9C | Clear right panel (162,10)-(319,49) |
+| `anaIntroText` | 0x17F84 | Print 5-line intro in left panel |
+| `anaDrawPrompt` | 0x18052 | Show "Guess #N?" from lookup table |
+| `anaClrGuess` | 0x17F10 | Clear prompt area (166,50)-(319,65) |
+| `anaClrBottom` | 0x17F4A | Clear status bar (5,62)-(319,75) |
 
 ---
 
 ## 2. Card Games (War, Poker, Blackjack)
 
 The three card games share a common infrastructure: card graphics (`cards` data file),
-display routines, input handler, and money/pot tracking. Despite function names using
-the `poker_` prefix throughout, each game is distinct.
+display routines, input handler, and money/pot tracking.  The analysis this
+document began as named all of them `poker_*`; each game is distinct.
 
 ### Shared Infrastructure
 
@@ -149,41 +149,41 @@ the `poker_` prefix throughout, each game is distinct.
 - `CARD_NONE` (0xFF) = empty slot; `CARD_BACK` = face-down display
 
 **Card graphics:** 53 MFDB blocks loaded from `cards` data file (52 face cards + 1 back).
-Two display rows: top row for computer (y positions from `cards_y_pos_a[]`), bottom row
-for player (from `cards_y_pos_b[]`). Up to 5 cards per row.
+Two display rows: top row for computer (y positions from `cardYComp[]`), bottom row
+for player (from `cardYPlyr[]`). Up to 5 cards per row.
 
 **Shared globals:**
 
 | Variable | Purpose |
 |---|---|
-| `g_ppmon` | Player's chip count (poker/blackjack) or card count (war) |
-| `g_pcmon` | Computer's chip count or card count |
-| `g_ppppa` | Current pot (chips in play) |
-| `g_ppbet` / `g_pcbet` | Current bet amounts |
-| `pk_quit` | Set to YES when game should end |
-| `crd_dat` | Heap-allocated buffer for card MFDB image data |
+| `plyrChips` | Player's chip count (poker/blackjack) or card count (war) |
+| `compChips` | Computer's chip count or card count |
+| `potChips` | Current pot (chips in play) |
+| `bjBetSplit` / `bjBetMain` | Current bet amounts |
+| `cardQuit` | Set to YES when game should end |
+| `cardImages` | Heap-allocated buffer for card MFDB image data |
 
 **Shared functions:**
 
 | Function | Address | Purpose |
 |---|---|---|
-| `poker_load_card_graphics` | 0x1AB04 | Load `cards` file, build 53 MFDB blocks |
-| `poker_draw_card_sprite` | 0x1AA64 | Draw one card at (row, position) |
-| `poker_input_handler` | 0x1AC92 | Wait for F-key input, map to action codes |
-| `poker_print_message` | 0x1B0AA | Print message in status area |
-| `poker_display_computer_money` | 0x1AD26 | Show computer's chip/card count |
-| `poker_display_player_money` | 0x1ADE6 | Show player's chip/card count |
-| `poker_display_pot` | 0x1AEA6 | Show current pot amount |
-| `poker_display_bet_with_highlight` | 0x1D78E | Show bet amount with emphasis |
-| `poker_award_pot` | 0x1A664 | Transfer pot to winner with animation |
-| `poker_add_to_pot` | 0x1A840 | Move chips from player to pot |
-| `play_erase_rect` | 0x186E0 | Clear a screen rectangle |
+| `cardLoad` | 0x1AB04 | Load `cards` file, build 53 MFDB blocks |
+| `cardDraw` | 0x1AA64 | Draw one card at (row, position) |
+| `cardKeyInput` | 0x1AC92 | Wait for F-key input, map to action codes |
+| `cardMessage` | 0x1B0AA | Print message in status area |
+| `dispCompChips` | 0x1AD26 | Show computer's chip/card count |
+| `dispPlyrChips` | 0x1ADE6 | Show player's chip/card count |
+| `dispPot` | 0x1AEA6 | Show current pot amount |
+| `bjShowBet` | 0x1D78E | Show bet amount with emphasis |
+| `potToWinner` | 0x1A664 | Transfer pot to winner with animation |
+| `pkrAddChips` | 0x1A840 | Move chips from player to pot |
+| `panelErase` | 0x186E0 | Clear a screen rectangle |
 
 ---
 
 ### 2a. War
 
-**Entry point:** `poker_war_main()` (0x1B15C)
+**Entry point:** `playWar()` (0x1B15C)
 **Starting cards:** 26 each (full 52-card deck split evenly)
 
 #### Concept
@@ -196,14 +196,14 @@ card deciding the outcome. The game ends when one player runs out of cards.
 
 | Variable | Purpose |
 |---|---|
-| `g_ppdrp` (0x3F712) | Player's card pile (up to 52 cards) |
-| `g_pcdrp` (0x47E24) | Computer's card pile |
-| `pk_pwc` (0x3C9DC) | Player's face-down war cards |
-| `pk_cwc` (0x3CC78) | Computer's face-down war cards |
-| `g_ppmon` | Number of cards remaining (starts at 26) |
-| `g_pcmon` | Number of cards remaining (starts at 26) |
+| `plyrPile` (0x3F712) | Player's card pile (up to 52 cards) |
+| `compPile` (0x47E24) | Computer's card pile |
+| `plyrWarCards` (0x3C9DC) | Player's face-down war cards |
+| `compWarCards` (0x3CC78) | Computer's face-down war cards |
+| `plyrChips` | Number of cards remaining (starts at 26) |
+| `compChips` | Number of cards remaining (starts at 26) |
 
-Note: `g_ppmon` and `g_pcmon` represent **card counts** in War
+Note: `plyrChips` and `compChips` represent **card counts** in War
 (not money), since the shared globals are reused across all three card games.
 
 #### Deck Initialization
@@ -227,7 +227,7 @@ Note: `g_ppmon` and `g_pcmon` represent **card counts** in War
         - LCP peeks around (action_peek_around animation)
       * Computer wins → pot to computer, both cards added to computer's pile
         - Computer says random boast: "That was easy!", "Beat you by a mile.", etc.
-      * Tie → WAR sub-game (poker_blackjack_war_round)
+      * Tie → WAR sub-game (warRound)
    e. Check for game end:
       * Computer out of cards → "I'm out of cards! You're too good!"
       * Player out of cards → "No cards, huh? Better luck next time."
@@ -240,20 +240,20 @@ When both players flip the same rank, a war round triggers:
 1. Both sides place 3 cards face-down, then 1 card face-up
 2. Higher face-up card wins all 8 cards (plus any pot)
 3. If face-up cards tie again → another war round (recursive)
-4. Cards are drawn via `poker_remove_top_card()` and won cards returned
-   via `poker_append_card_to_pile()`
+4. Cards are drawn via `popCard()` and won cards returned
+   via `pushCard()`
 
 #### Screen Layout
 
 ```
 +------+------+------+------+------+---------+-------------------+
 | Computer's card (face-up)        | $nnn    | Status messages    |
-|  row 0: cards_y_pos_a[]          | (cards) |                    |
+|  row 0: cardYComp[]          | (cards) |                    |
 +------+------+------+------+------+---------+-------------------+
 |                                  | Pot:nnn |                    |
 +------+------+------+------+------+---------+-------------------+
 | Player's card (face-down→up)     | $nnn    | F1  Show           |
-|  row 1: cards_y_pos_b[]          | (cards) | F10 Quit           |
+|  row 1: cardYPlyr[]          | (cards) | F10 Quit           |
 +------+------+------+------+------+---------+-------------------+
 |  "Show me your card, Ace."                                      |
 +------------------------------------------------------------------+
@@ -263,7 +263,7 @@ When both players flip the same rank, a war round triggers:
 
 ### 2b. Five-Card Draw Poker
 
-**Entry point:** `poker_main()` (0x18D10)
+**Entry point:** `playPoker()` (0x18D10)
 **Starting chips:** 400 each
 
 #### Concept
@@ -276,19 +276,19 @@ The computer has hand evaluation, bluff logic, and draw strategy.
 
 | Variable | Purpose |
 |---|---|
-| `poker_player_hand[5]` (0x3CCF0) | Player's 5-card hand |
-| `poker_computer_hand[5]` (0x3CD06) | Computer's 5-card hand |
-| `poker_hand_rank_flags[5]` | Per-card flags: 1=part of scoring combo (computer) |
-| `poker_player_hand_rank_flags[5]` | Same for player |
-| `poker_hand_suit_flags[5]` | Sorted hand by rank (computer) |
-| `poker_player_hand_suit_flags[5]` | Same for player |
-| `pk_chrk` | Computer's hand rank (0–8) |
-| `poker_card_selected[5]` | Cards selected for discard (1=selected) |
-| `poker_discard_pile[]` | Discarded cards (prevents re-dealing) |
-| `pk_disc` | Number of discarded cards |
-| `pk_bluff` | YES if computer is bluffing this round |
+| `plyrHand[5]` (0x3CCF0) | Player's 5-card hand |
+| `compHand[5]` (0x3D11E) | Computer's 5-card hand |
+| `compScoring[5]` | Per-card flags: 1=part of scoring combo (computer) |
+| `plyrScoring[5]` | Same for player |
+| `compSorted[5]` | Sorted hand by rank (computer) |
+| `plyrSorted[5]` | Same for player |
+| `compRank` | Computer's hand rank (0–8) |
+| `pkrSelected[5]` | Cards selected for discard (1=selected) |
+| `pkrDiscPile[]` | Discarded cards (prevents re-dealing) |
+| `pkrNumDisc` | Number of discarded cards |
+| `pkrBluffing` | YES if computer is bluffing this round |
 
-#### Hand Ranks (`poker_evaluate_hand`, 0x18804)
+#### Hand Ranks (`pkrEvalHand`, 0x18804)
 
 | Rank | Name | Description |
 |---|---|---|
@@ -307,15 +307,15 @@ straight (sequential ranks, with A-2-3-4-5 wrap), and counts rank groups for pai
 
 #### Computer AI
 
-**Bluff decision** (`poker_computer_decide_bluff`): 1/15 chance of bluffing when hand rank < 2.
+**Bluff decision** (`pkrDecideBluff`): 1/15 chance of bluffing when hand rank < 2.
 
-**Opening check** (`poker_computer_check_opening`): Passes if no pair and not bluffing.
+**Opening check** (`pkrOpenRank`): Passes if no pair and not bluffing.
 Otherwise finds highest card; opens only with ace or better.
 
-**Bet decision** (`poker_computer_decide_bet`): Returns 99 (call) if weak hand and not
+**Bet decision** (`pkrCallOrRaise`): Returns 99 (call) if weak hand and not
 bluffing. Otherwise calculates raise = money/10 (capped at 1–20). Returns 114 (raise).
 
-**Draw strategy** (`poker_computer_draw_cards`):
+**Draw strategy** (`pkrCompDraw`):
 - Four of a kind: keep all, draw 0
 - Full house: keep all, draw 0
 - Flush/straight: keep all, draw 0
@@ -331,27 +331,27 @@ bluffing. Otherwise calculates raise = money/10 (capped at 1–20). Returns 114 
 1. Allocate card graphics memory, setup screen
 2. Both players start with 400 chips
 3. ROUND LOOP:
-   a. ANTE PHASE (poker_ante_phase):
+   a. ANTE PHASE (pkrAnte):
       - Prompt F1=Ante, F10=Quit
       - Each player puts 1 chip in pot
-   b. DEAL (poker_deal_initial_hands):
+   b. DEAL (pkrDealHands):
       - Deal 5 random unique cards to each player
       - Computer cards face-down, player cards face-up
-   c. INITIAL BET (poker_player_bet_input):
+   c. INITIAL BET (pkrPlyrBet):
       - Player: F1=Bet (+1 chip), F3=Enter (confirm), F5=Pass/Clear
       - Max bet: 20 chips per round
       - Computer responds: call, raise, or fold
    d. DRAW PHASE:
       - Player selects cards to discard (click positions 1-5, F1=Draw, F3=Stay)
       - Selected cards shown as empty; new cards dealt from unused deck
-      - Computer draws via AI strategy (poker_computer_draw_cards)
+      - Computer draws via AI strategy (pkrCompDraw)
       - Computer announces: "I'll take N cards" or "I'll stay!"
    e. FINAL BET:
       - Another betting round (same as initial)
-   f. SHOWDOWN (poker_showdown, 0x19A3A):
-      - Evaluate both hands via poker_evaluate_hand
+   f. SHOWDOWN (pkrShowdown, 0x19A3A):
+      - Evaluate both hands via pkrEvalHand
       - Compare ranks; tie-break by kicker cards
-      - Winner takes pot via poker_settle_bet
+      - Winner takes pot via bjSettle
       - Display hand rank names and result messages
    g. Check for game end (either player at 0 chips)
 ```
@@ -376,7 +376,7 @@ bluffing. Otherwise calculates raise = money/10 (capped at 1–20). Returns 114 
 
 ### 2c. Blackjack (21)
 
-**Entry point:** `poker_blackjack_main()` (0x1BC72, 623 lines)
+**Entry point:** `playBlackjack()` (0x1BC72, 623 lines)
 **Starting chips:** 400 each
 
 #### Concept
@@ -385,15 +385,15 @@ Standard blackjack rules: get as close to 21 as possible without going over.
 Aces can count as 1 or 11. Face cards (10/J/Q/K) count as 10.
 Supports pair splitting. Ties trigger a War sub-game.
 
-#### Card Values (`poker_calculate_hand_score`, 0x1D1B4)
+#### Card Values (`bjScore`, 0x1D1B4)
 
 | Card Rank | Value |
 |---|---|
 | 2–7 | Face value (rank + 2) |
 | 8, 9, 10, J, Q | 10 |
-| Ace (rank 12) | 1 or 11 (ace_mode parameter) |
+| Ace (rank 12) | 1 or 11 (aceMode parameter) |
 
-The `ace_mode` parameter controls ace handling:
+The `aceMode` parameter controls ace handling:
 - 0 = all aces count as 1
 - 1 = first ace counts as 11, subsequent aces count as 1
 
@@ -401,17 +401,18 @@ The `ace_mode` parameter controls ace handling:
 
 | Variable | Purpose |
 |---|---|
-| `poker_player_hand[5]` | Player's main hand (up to 5 hit cards) |
-| `poker_player_split_hand[5]` (0x3F6D2) | Player's split hand (after pair split) |
-| `poker_computer_hand[5]` | Computer/dealer's hand |
-| `pk_pcc` (0x501A6) | Cards dealt to player hand |
-| `pk_pscc` (0x50240) | Cards dealt to split hand |
-| `pk_ccc` (0x480D2) | Cards dealt to computer hand |
-| `_poker_war_round` | Flag: non-zero during war resolution |
-| `_poker_war_computer_score` | Computer's war status |
-| `poker_blackjack_flag` (0x3D114) | Split game active flag |
+| `plyrHand[5]` | the player's main hand |
+| `bjSplitHand[5]` | the player's split hand, after splitting a pair |
+| `compHand[5]` | the dealer's (the resident's) hand |
+| `bjHitsMain`, `bjHitsSplit`, `bjHitsDealer` | cards dealt to each hand |
+| `bjBetMain`, `bjBetSplit` | chips bet on each of the player's hands |
+| `bjDidSplit` | YES once the player has split |
+| `bjNatMain`, `bjNatSplit` | a hand is a natural blackjack |
+| `bjBustMain`, `bjBustSplit` | a hand has bust |
+| `bjDblMain`, `bjDblSplit` | a hand has doubled down |
+| `bjDealerScore`, `bjPlyrScore` | final scores |
 
-#### Natural Blackjack Detection (`poker_check_natural_blackjack`, 0x1D608)
+#### Natural Blackjack Detection (`bjIsNatural`, 0x1D608)
 
 Checks if the initial 2-card deal contains an ace (rank 12) paired with a face card
 (rank 8–11, i.e., 10/J/Q/K). Returns 1 if natural blackjack, 0 otherwise.
@@ -427,15 +428,15 @@ Checks if the initial 2-card deal contains an ace (rank 12) paired with a face c
       - Max 20 chips per bet
       - Computer matches bet automatically
    b. DEAL:
-      - Deal 2 cards to each (poker_deal_card_to_hand)
+      - Deal 2 cards to each (bjDealCard)
       - Check for natural blackjack on both hands
       - Natural blackjack → immediate win (1.5x payout)
    c. SPLIT OPTION (if player's 2 cards have same rank):
       - Prompt "Do you wish to split?" F1=Split, F3=No split
-      - If split: move second card to poker_player_split_hand
+      - If split: move second card to bjSplitHand
       - Play first hand fully, then second hand
       - Each hand gets its own bet (matched from player's chips)
-   d. HIT/STAND ROUNDS (poker_blackjack_round, 0x1D294):
+   d. HIT/STAND ROUNDS (bjPlayHand, 0x1D294):
       - For each hand (main, then split if applicable):
         * Display hand face-up
         * F1=Hit (deal another card), F3=Stand
@@ -446,8 +447,8 @@ Checks if the initial 2-card deal contains an ace (rank 12) paired with a face c
       - Same bust/stand logic
    f. COMPARE SCORES:
       - Higher score wins (without busting)
-      - Tie → WAR sub-game (poker_blackjack_war_round)
-      - Winner awarded pot via poker_settle_bet
+      - Tie → WAR sub-game (warRound)
+      - Winner awarded pot via bjSettle
    g. Check for game end
 ```
 
@@ -455,7 +456,7 @@ Checks if the initial 2-card deal contains an ace (rank 12) paired with a face c
 
 When the player's initial two cards have the same rank (e.g., two Kings):
 
-1. Second card moved to `pk_psh`
+1. Second card moved to `bjSplitHand`
 2. First hand played fully (hit/stand)
 3. Then second hand played with its own bet
 4. Each hand checked independently for blackjack and bust
@@ -481,7 +482,7 @@ When the player's initial two cards have the same rank (e.g., two Kings):
 
 ## 3. Word Puzzle Game
 
-**Entry point:** `word_puzzle_main()` (0x176F8)
+**Entry point:** `playWordPuzzle()` (0x176F8)
 **Data file:** `wordpz.txt` — 33 fill-in-the-blank puzzles (compressed)
 
 ### Concept
@@ -494,14 +495,14 @@ are filled, the answers are compared against the solution.
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `g_wpdb` | char* | 2,000-byte buffer for decompressed puzzle data |
-| `g_wpci` | short | Current puzzle number (0–32) |
-| `wp_blk` | short | Number of `@` blanks in current puzzle |
-| `word_puzzle_player_answers[][12]` | char[][] | Player's typed answers (up to 10 chars each) |
-| `letter_line_ptr[66]` | char*[] | Parsed line pointers (2 lines per puzzle) |
-| `word_puzzle_prompt_messages[9]` | char*[] | Prompts: "OK, what's the first word?", etc. |
-| `word_puzzle_success_messages[6]` | char*[] | Success messages |
-| `word_puzzle_failure_messages[6]` | char*[] | Failure messages (currently named `poker_miss_message`) |
+| `wpzText` | char* | 2,000-byte buffer for decompressed puzzle data |
+| `wpzIndex` | short | Current puzzle number (0–32) |
+| `wpzBlanks` | short | Number of `@` blanks in current puzzle |
+| `wpzAnswers[][12]` | char[][] | Player's typed answers (up to 10 chars each) |
+| `letterLines[66]` | char*[] | Parsed line pointers (2 lines per puzzle) |
+| `wpzPrompts[9]` | char*[] | Prompts: "OK, what's the first word?", etc. |
+| `wpzRightMsgs[6]` | char*[] | Success messages |
+| `wpzWrongMsgs[6]` | char*[] | Failure messages |
 
 ### Puzzle File Format (`wordpz.txt`)
 
@@ -515,17 +516,17 @@ The file contains 33 puzzles stored as 66 lines (2 lines per puzzle):
 
 Lines are delimited by control characters (ASCII < 32). The file is compressed and
 decompressed into a 2,000-byte buffer. After loading, all 66 line start pointers are
-stored in `g_ltlp[]`.
+stored in `letterLines[]`.
 
-### Template Rendering (`word_puzzle_render_template_with_answers`, 0x17CAC)
+### Template Rendering (`wpzRender`, 0x17CAC)
 
 The renderer walks the template string character by character:
 
 1. **Space**: adds spacing (collapsed if at start of line)
 2. **Literal text**: accumulates word characters, measures word length for word-wrap,
-   prints each character individually in blue via `print_char()`
+   prints each character individually in blue via `printChar()`
 3. **`@` marker**: reads placeholder character, substitutes with player's answer from
-   `word_puzzle_player_answers[answer_index][]`, prints in blue
+   `wpzAnswers[answer_index][]`, prints in blue
 4. **After answer**: checks the character 2 positions after `@` for trailing punctuation
    (period, comma, etc.) and renders it inline
 5. **Word wrap**: if next word would exceed column 38 (x position > 0x26), wraps to
@@ -543,7 +544,7 @@ the solution line from `wordpz.txt`:
 5. Any word wrong → random failure message from 6 options
 
 Comparison is **case-sensitive**: player input is converted to uppercase via
-`lcp_toupper()`, so solution words in the file must also be uppercase.
+`toUpper()`, so solution words in the file must also be uppercase.
 
 ### Game Flow
 
@@ -552,15 +553,15 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 2. Start at puzzle #1
 3. BROWSE LOOP:
    a. Display puzzle number: "**WORD PUZZLE # NN **"
-   b. Parse template line, count @ blanks (word_puzzle_blank_count)
+   b. Parse template line, count @ blanks (wpzBlanks)
    c. Render template with current answers (initially placeholder chars)
    d. Wait for input:
       * F1 → next puzzle (wraps 33→1)
       * F2 → previous puzzle (wraps 1→33)
       * F5 → enter SOLVE mode
       * F10 → quit
-4. SOLVE MODE (word_puzzle_solve_phase):
-   a. For each blank (0 to word_puzzle_blank_count-1):
+4. SOLVE MODE (wpzSolve):
+   a. For each blank (0 to wpzBlanks-1):
       - Display prompt:
         * First blank: random from 5 options ("OK, what's the first word?")
         * Subsequent: "Next word?", "And the next?", etc.
@@ -569,7 +570,7 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
         * Cursor-left = backspace
         * Enter = confirm answer
         * F10 = cancel and return to browse mode
-      - Store answer in word_puzzle_player_answers[i][]
+      - Store answer in wpzAnswers[i][]
    b. Compare all answers against solution line
    c. Display result:
       * All correct: render template with answers, random success message
@@ -601,10 +602,10 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 
 | Function | Address | Purpose |
 |---|---|---|
-| `word_puzzle_solve_phase` | 0x1799E | Interactive answer entry and comparison |
-| `word_puzzle_render_template_with_answers` | 0x17CAC | Render template with filled answers |
-| `word_puzzle_show_status_message` | 0x17C80 | Display message in bottom prompt area |
-| `lcp_toupper` | 0x17510 | Convert ASCII character to uppercase |
+| `wpzSolve` | 0x1799E | Interactive answer entry and comparison |
+| `wpzRender` | 0x17CAC | Render template with filled answers |
+| `wpzMessage` | 0x17C78 | Display message in bottom prompt area |
+| `toUpper` | 0x272E8 | Convert ASCII character to uppercase |
 
 ---
 
@@ -613,79 +614,79 @@ Comparison is **case-sensitive**: player input is converted to uppercase via
 ### Anagram (9 functions)
 | Address | Function |
 |---|---|
-| 0x181AE | `ag_main` |
-| 0x18084 | `anagram_select_and_scramble_word` |
-| 0x17538 | `anagram_strings_equal` |
-| 0x17E34 | `anagram_display_word_large` |
-| 0x17E9C | `anagram_clear_word_display_area` |
-| 0x17EE4 | `anagram_show_intro_text` |
-| 0x17F2E | `anagram_show_guess_prompt` |
-| 0x17F4A | `anagram_clear_guess_prompt_area` |
-| 0x17F82 | `anagram_clear_status_bar` |
+| 0x181AE | `playAnagrams` |
+| 0x18084 | `anaPickWord` |
+| 0x17538 | `anaStrMatch` |
+| 0x18004 | `anaShowWord` |
+| 0x17E9C | `anaClrWord` |
+| 0x17F84 | `anaIntroText` |
+| 0x18052 | `anaDrawPrompt` |
+| 0x17F10 | `anaClrGuess` |
+| 0x17F4A | `anaClrBottom` |
 
 ### Card Games — Shared (11 functions)
 | Address | Function |
 |---|---|
-| 0x1AB04 | `poker_load_card_graphics` |
-| 0x1AA64 | `poker_draw_card_sprite` |
-| 0x1AC92 | `poker_input_handler` |
-| 0x1B0AA | `poker_print_message` |
-| 0x1AD26 | `poker_display_computer_money` |
-| 0x1ADE6 | `poker_display_player_money` |
-| 0x1AEA6 | `poker_display_pot` |
-| 0x1D78E | `poker_display_bet_with_highlight` |
-| 0x1A664 | `poker_award_pot` |
-| 0x1A840 | `poker_add_to_pot` |
-| 0x186E0 | `play_erase_rect` |
+| 0x1AB04 | `cardLoad` |
+| 0x1AA64 | `cardDraw` |
+| 0x1AC92 | `cardKeyInput` |
+| 0x1B0AA | `cardMessage` |
+| 0x1AD26 | `dispCompChips` |
+| 0x1ADE6 | `dispPlyrChips` |
+| 0x1AEA6 | `dispPot` |
+| 0x1D78E | `bjShowBet` |
+| 0x1A664 | `potToWinner` |
+| 0x1A840 | `pkrAddChips` |
+| 0x186E0 | `panelErase` |
 
 ### War (4 functions)
 | Address | Function |
 |---|---|
-| 0x1B15C | `poker_war_main` |
-| 0x1B784 | `poker_blackjack_war_round` |
-| 0x1B0E0 | `poker_remove_top_card` |
-| 0x1B138 | `poker_append_card_to_pile` |
+| 0x1B15C | `playWar` |
+| 0x1B784 | `warRound` |
+| 0x1B0E0 | `popCard` |
+| 0x1B138 | `pushCard` |
 
 ### Poker (10 functions)
 | Address | Function |
 |---|---|
-| 0x18D10 | `poker_main` |
-| 0x18804 | `poker_evaluate_hand` |
-| 0x1A8C2 | `poker_deal_initial_hands` |
-| 0x1AF66 | `poker_ante_phase` |
-| 0x1A6B8 | `poker_player_bet_input` |
-| 0x187A0 | `poker_computer_decide_bet` |
-| 0x1A1BC | `poker_computer_check_opening` |
-| 0x1A27A | `poker_computer_draw_cards` |
-| 0x18438 | `poker_computer_decide_bluff` |
-| 0x19A3A | `poker_showdown` |
+| 0x18D10 | `playPoker` |
+| 0x18804 | `pkrEvalHand` |
+| 0x1A8C2 | `pkrDealHands` |
+| 0x1AF66 | `pkrAnte` |
+| 0x1A6B8 | `pkrPlyrBet` |
+| 0x187A0 | `pkrCallOrRaise` |
+| 0x1A1BC | `pkrOpenRank` |
+| 0x1A27A | `pkrCompDraw` |
+| 0x1A24A | `pkrDecideBluff` |
+| 0x19A3A | `pkrShowdown` |
 
 ### Blackjack (5 functions)
 | Address | Function |
 |---|---|
-| 0x1BC72 | `poker_blackjack_main` |
-| 0x1D294 | `poker_blackjack_round` |
-| 0x1D608 | `poker_check_natural_blackjack` |
-| 0x1D67C | `poker_deal_card_to_hand` |
-| 0x1D1B4 | `poker_calculate_hand_score` |
+| 0x1BC72 | `playBlackjack` |
+| 0x1D294 | `bjPlayHand` |
+| 0x1D608 | `bjIsNatural` |
+| 0x1D67C | `bjDealCard` |
+| 0x1D1B4 | `bjScore` |
 
 ### Settling (1 function)
 | Address | Function |
 |---|---|
-| 0x1D864 | `poker_settle_bet` |
+| 0x1D864 | `bjSettle` |
 
 ### Word Puzzle (5 functions)
 | Address | Function |
 |---|---|
-| 0x176F8 | `wp_main` |
-| 0x1799E | `word_puzzle_solve_phase` |
-| 0x17CAC | `word_puzzle_render_template_with_answers` |
-| 0x17C80 | `word_puzzle_show_status_message` |
-| 0x17510 | `lcp_toupper` |
+| 0x176F8 | `playWordPuzzle` |
+| 0x1799E | `wpzSolve` |
+| 0x17CAC | `wpzRender` |
+| 0x17C78 | `wpzMessage` |
+| 0x272E8 | `toUpper` |
 
 ### Game Selection
 | Address | Function |
 |---|---|
-| 0x21860 | `a_plaag` |
-| 0x1759C | `minigame_setup_screen` |
-| 0x173E8 | `minigame_wait_for_key_with_events` |
+| 0x21860 | `playGame` |
+| 0x1759C | `mgSetup` |
+| 0x173E8 | `mgWaitKey` |

@@ -10,7 +10,7 @@ Everything in `DATA/*.SNG` and `DATA/*.ORG`, decoded from the format documented 
 | [`sng_report.txt`](sng_report.txt) | full structure dump of all 16 files |
 | [`music-studio/`](music-studio/) | the same exports for the 21 demo songs on Activision's *Music Studio* disk, whose engine this is |
 | [`SNG_FORMAT.md`](../docs/SNG_FORMAT.md) | the file format, derived from the playback code |
-| [`LCP_ENGINE_COMPARISON.md`](../docs/LCP_ENGINE_COMPARISON.md) | why `LCP_STX.PRG` and Activision's *Music Studio* share this engine |
+| [`MUSIC_PLAYER_COMPARISON.md`](../docs/MUSIC_PLAYER_COMPARISON.md) | why `LCP_STX.PRG` and Activision's *Music Studio* share this engine |
 
 Tools are in [`../source/tools/`](../source/tools/): `sngdump.py` (decoder + MIDI export),
 `psgrender.py` (YM2149 engine simulation + audio), `render_psg_all.py` (batch driver),

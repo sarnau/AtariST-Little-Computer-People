@@ -40,7 +40,7 @@ group is 8 bytes, so bytes per scanline = `ceil(width / 16) × 8`.
 
 ### Color Palette
 
-The game uses a fixed 16-color palette stored in `main_colorpalette[]`
+The game uses a fixed 16-color palette stored in `mainPalette[]`
 and loaded via XBIOS `Setpalette`. Atari ST color registers encode RGB
 as 3 octal digits in a 16-bit word: bits 8–10 = Red, bits 4–6 = Green,
 bits 0–2 = Blue, each 0–7.
@@ -66,8 +66,8 @@ bits 0–2 = Blue, each 0–7.
 
 Color index 0 (black) doubles as the transparent color for sprite
 overlays. Color index 6 is dynamically swapped between peach (0x0754,
-`ST_PEACH`) and sick green (`ST_SICK_GREEN`) by `lcp_update_palette_colors()`
-based on the LCP's `sickness_level`.
+`ST_PEACH`) and sick green (`ST_SICK_GREEN`) by `setSkinColor()`
+based on the LCP's `sicknessLevel`.
 
 ---
 
@@ -123,7 +123,7 @@ regions (solid color areas).
 Used for: overlay sprites rendered on top of the house background with
 transparency. Sprites are composited using a mask-based technique
 (AND-mask then XOR-image) via the VDI `vro_cpyfm` function in
-`sprite_draw()`.
+`drawSlot()`.
 
 #### File Structure
 
@@ -146,8 +146,8 @@ any pixel with color index 0 (black) is treated as transparent.
 #### Sprite Index Table
 
 Sprites are not stored in sequential ID order. The game uses
-`spritedata_index_table[]` to map file position to logical sprite ID.
-File entry N corresponds to sprite ID `spritedata_index_table[N]`:
+`spriteFileId[]` to map file position to logical sprite ID.
+File entry N corresponds to sprite ID `spriteFileId[N]`:
 
 ```
 File entry:  0  1  2  3  4  5  6  7  8  9 10 11 12 ...
@@ -174,16 +174,16 @@ Sprite ID:  09 2D 2E 2F 30 31 03 04 32 07 06 33 34 35 36 08 37
 #### Sprite Rendering Pipeline
 
 The game maintains 8 hardware sprite slots. For each active slot,
-`sprite_draw()` composites the sprite onto the screen backbuffer:
+`drawSlot()` composites the sprite onto the screen backbuffer:
 
 1. **NOTS_AND_D**: AND the inverted mask with the destination
    (punches a transparent hole in the background)
 2. **S_XOR_D**: XOR the sprite image into the cleared area
    (paints the sprite pixels)
 
-The dog sprite supports horizontal flipping via `sprite_flip_horizontal()`,
+The dog sprite supports horizontal flipping via `flipSprite()`,
 which reverses word order per scanline and uses a 256-entry
-`revert_table[]` for bit-level pixel reversal within each word.
+`mirrorTable[]` for bit-level pixel reversal within each word.
 
 ---
 
@@ -193,7 +193,7 @@ Used for: static background elements drawn directly into the screen
 buffer — doors, furniture states, food items, fire animation frames,
 phone, alarm clock, etc. Unlike sprites, objects have no transparency
 and are blitted using VDI `S_ONLY` mode (direct overwrite) via
-`object_draw()`.
+`drawObject()`.
 
 #### File Structure
 
@@ -209,10 +209,10 @@ Offset  Size   Content
 
 Total file size: 13,504 bytes (56 entries, fully consumed).
 
-Objects are loaded into `obj_file` by `load_objects()` (reads
+Objects are loaded into `objFileBuf` by `loadObjects()` (reads
 "objects" file, up to 14,000 bytes). Individual objects are accessed
-by `object_draw()` via the `object_tab_mfdb[]`, `object_tab_width[]`,
-and `object_tab_height[]` lookup tables.
+by `drawObject()` via the `objMfdbs[]`, `objWidths[]`,
+and `objHeights[]` lookup tables.
 
 #### Object Catalog by Dimension
 
@@ -312,18 +312,18 @@ to produce the finished character sprite.
 ### Double-Buffered Compositing
 
 The game uses double-buffered rendering at approximately 8 Hz,
-managed by `screen_render_8hz()`:
+managed by `renderFrame()`:
 
 1. **Background copy**: The decompressed house background is copied
-   from an offscreen buffer to the compositing buffer via `blkcopy32()`
+   from an offscreen buffer to the compositing buffer via `copyBlocks32()`
    (32-byte aligned block copy, 1000 longwords = 32,000 bytes).
 
 2. **Object rendering**: Static background objects (doors, furniture,
    food) are drawn directly into the compositing buffer using
-   `object_draw()` with VDI `S_ONLY` mode (no transparency).
+   `drawObject()` with VDI `S_ONLY` mode (no transparency).
 
 3. **Sprite compositing**: Up to 8 overlay sprites are composited
-   using the mask-based AND/XOR technique in `sprite_draw()`.
+   using the mask-based AND/XOR technique in `drawSlot()`.
    The LCP character and dog occupy sprite slots; remaining slots
    handle speech bubbles and other overlays.
 
@@ -334,8 +334,8 @@ managed by `screen_render_8hz()`:
 ### Sprite Slot Allocation
 
 The game maintains 8 sprite rendering slots (indices 0–7). Slot
-assignment is managed by `sprite_update_slots()` using
-`sprite_layer_flags[]` to determine draw order:
+assignment is managed by `layoutSlots()` using
+`spriteLayer[]` to determine draw order:
 
 - Slot 0: Dog sprite (behind player)
 - Slot 7: Dog sprite (in front of player, based on Y-depth)

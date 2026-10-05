@@ -1,11 +1,11 @@
 # The Music Studio `.SNG` / `.ORG` / `.SND` file format
 
 Activision *The Music Studio* (Atari ST, `AUDIO.PRG`, 1985-11-20) and the sequencer it
-shares with *Little Computer People* (see [LCP_ENGINE_COMPARISON.md](LCP_ENGINE_COMPARISON.md)).
+shares with *Little Computer People* (see [MUSIC_PLAYER_COMPARISON.md](MUSIC_PLAYER_COMPARISON.md)).
 
-Everything here comes from the playback code itself — `mq_parh`, `mq_pacm`, `mq_skip`,
-`mq_setp`, `mq_pars`, `mq_rdur`, `mq_qnne`, `mq_snof`, `mq_sepc`, `mq_bust`, `mq_dise`,
-`psg_cpE`, `psg_upE`, `mq_tick` — which is byte-identical or near-identical in both
+Everything here comes from the playback code itself — `parseSongHeader`, `unpackChanMap`, `skipTextField`,
+`initSongState`, `parseEvents`, `peekNoteDur`, `queueNote`, `sendNoteOff`, `sendProgChange`, `buildNoteMap`, `sendMidiEvent`,
+`copyEnvelope`, `stepEnvelopes`, `timerAIsr` — which is byte-identical or near-identical in both
 programs. Decoder: [`../source/tools/sngdump.py`](../source/tools/sngdump.py).
 
 All offsets are **absolute file offsets**. Multi-byte values are big-endian.
@@ -26,7 +26,7 @@ All offsets are **absolute file offsets**. Multi-byte values are big-endian.
 | `0x1CC` | 20 | five longwords — lyric pointers / editor scratch (§8) |
 | `0x1E0` | 32 | song title, NUL-padded |
 | `0x200` | 8 | four 16-bit editor fields, `FFFF 0000 0000 0000` in almost every file (§9) |
-| `0x208` | … | event stream — this is `mi_dbase` |
+| `0x208` | … | event stream — this is `songEvents` |
 | after the `FF` end marker | … | optional lyric text (§8) |
 
 A `.SND` instrument set stops after the program map: `STANDARD.SND` on this disk is
@@ -34,16 +34,16 @@ exactly `0x1CC` = 460 bytes.
 
 ### How the player finds all this
 
-`sgPlay` strips the 10-byte signature into a buffer, then `mq_inis` sets
-`mi_dbase = buffer + 0x1FE`, which is file offset `0x208`. Everything else is addressed
+`playSongFile` strips the 10-byte signature into a buffer, then `startSong` sets
+`songEvents = buffer + 0x1FE`, which is file offset `0x208`. Everything else is addressed
 backwards from there, which is why the layout looks arbitrary until you write it as
-offsets from `mi_dbase`:
+offsets from `songEvents`:
 
 | code | expression | file offset |
 |---|---|---|
-| `mq_setp` | `mi_env = mi_dbase - 0x168` | `0x0A0` — envelope block |
-| `mq_parh` | `mq_pacm(p - 90)` | `0x1AE` — channel/program map |
-| `mq_dise` | `mi_env + (voice - 1) * 8` | envelope record for voice 1..15 |
+| `initSongState` | `songAdsr = songEvents - 0x168` | `0x0A0` — envelope block |
+| `parseSongHeader` | `unpackChanMap(p - 90)` | `0x1AE` — channel/program map |
+| `sendMidiEvent` | `songAdsr + (voice - 1) * 8` | envelope record for voice 1..15 |
 
 Two independent name tables exist because the editor keeps a "current instrument set"
 and the set the song was written with; they differ in `STANDARD.SND` and in songs that
@@ -61,12 +61,12 @@ for game sound effects). Voice *v* uses:
 - envelope record `v-1` at `0x0A0 + (v-1)*8`
 - `chanmap[v-1]` and `progmap[v-1]`
 
-`mq_pacm` subtracts one from every byte as it loads them, so a stored `0x01` means 0:
+`unpackChanMap` subtracts one from every byte as it loads them, so a stored `0x01` means 0:
 
 ```c
 for (i = 1; i < 16; i++) {
-    mi_chmap[i] = file[0x1AE + i - 1] - 1;
-    mi_pgmap[i] = file[0x1BD + i - 1] - 1;
+    chanMap[i] = file[0x1AE + i - 1] - 1;
+    progMap[i] = file[0x1BD + i - 1] - 1;
 }
 ```
 
@@ -75,14 +75,14 @@ for (i = 1; i < 16; i++) {
 | bits | meaning |
 |---|---|
 | 0..3 | MIDI OUT channel (0..15) |
-| 4..7 | octave group; `mq_dise` transposes MIDI OUT by `-(3 - hi_nibble) * 12` semitones |
+| 4..7 | octave group; `sendMidiEvent` transposes MIDI OUT by `-(3 - hi_nibble) * 12` semitones |
 
 A voice that is never played usually stores `0x01` → `0x00`.
 
 ### Program map byte (after the −1)
 
-MIDI program number sent as `0xCn`/program by `mq_sepc` on the voice's first note, and
-by `mq_resp` once per physical channel at song start. It only affects MIDI OUT; the PSG
+MIDI program number sent as `0xCn`/program by `sendProgChange` on the voice's first note, and
+by `resetPrograms` once per physical channel at song start. It only affects MIDI OUT; the PSG
 uses the envelope record instead.
 
 Example — `WALTZ.SNG`:
@@ -98,21 +98,21 @@ Example — `WALTZ.SNG`:
 
 ## 3. Envelope records (`0x0A0`, 15 × 8 bytes)
 
-`psg_cpE` copies these eight bytes straight into the runtime `PSG_ENVELOPE` struct at
-offsets 1..8, then `mq_dise` splits two of them into nibble pairs:
+`copyEnvelope` copies these eight bytes straight into the runtime `PSG_ENVELOPE` struct at
+offsets 1..8, then `sendMidiEvent` splits two of them into nibble pairs:
 
 | byte | field | notes |
 |---|---|---|
-| 0 | `attack_start_vol` | low nibble = start volume 0..15; **high nibble = PSG mixer** |
-| 1 | `attack_duration` | low nibble = attack time index; **high nibble = octave**, shift = `(2 - hi) * 12` semitones |
-| 2 | `attack_target_vol` | peak volume 0..15 |
-| 3 | `decay_duration` | time index |
-| 4 | `decay_target_vol` | |
-| 5 | `sustain_duration` | time index (into a different table, see below) |
-| 6 | `sustain_target_vol` | |
-| 7 | `release_duration` | time index |
+| 0 | `attackStartVol` | low nibble = start volume 0..15; **high nibble = PSG mixer** |
+| 1 | `attackDuration` | low nibble = attack time index; **high nibble = octave**, shift = `(2 - hi) * 12` semitones |
+| 2 | `attackTargetVol` | peak volume 0..15 |
+| 3 | `decayDuration` | time index |
+| 4 | `decayTargetVol` | |
+| 5 | `sustainDuration` | time index (into a different table, see below) |
+| 6 | `sustainTargetVol` | |
+| 7 | `releaseDuration` | time index |
 
-**Mixer nibble.** `mq_dise` clears the tone- and noise-disable bits for the allocated PSG
+**Mixer nibble.** `sendMidiEvent` clears the tone- and noise-disable bits for the allocated PSG
 channel, then ORs this nibble in (`bits: 0 = disable tone, 3 = disable noise`):
 
 | nibble | result |
@@ -128,9 +128,9 @@ channel, then ORs this nibble in (`bits: 0 = disable tone, 3 = disable noise`):
 stored high nibble of 2 means "as written", 1 means one octave up, 3 one octave down.
 This is independent of the MIDI OUT transposition in the channel map.
 
-### The ADSR engine (`psg_upE`, 240 Hz)
+### The ADSR engine (`stepEnvelopes`, 240 Hz)
 
-Each phase ramps `current_volume` toward the next target with a Bresenham accumulator:
+Each phase ramps `currentVolume` toward the next target with a Bresenham accumulator:
 
 ```
 delta  = |from - to| * rate_table[duration]
@@ -138,35 +138,35 @@ timer  = time_table[duration]
 each tick:  accum += delta;  while (accum > 360) { vol += dir; accum -= 360; }
 ```
 
-with these ROM tables (`mi_evrt`, `mi_evtt`, `mi_evst`, `mi_evrl`, index 0..15):
+with these ROM tables (`envRateTab`, `envTimeTab`, `envSusTab`, `envRelTab`, index 0..15):
 
 | idx | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| rate `mi_evrt` | 0 | 360 | 180 | 120 | 85 | 72 | 60 | 45 | 30 | 20 | 15 | 12 | 10 | 8 | 6 | 4 |
-| time `mi_evtt` | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 12 | 18 | 24 | 30 | 36 | 45 | 60 | 90 |
-| sustain time `mi_evst` | 0 | 1 | 2 | 4 | 8 | 18 | 24 | 40 | 45 | 60 | 72 | 90 | 120 | 180 | 360 | 30000 |
-| sustain rate `mi_evrl` | 0 | 360 | 180 | 90 | 45 | 20 | 15 | 9 | 8 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+| rate `envRateTab` | 0 | 360 | 180 | 120 | 85 | 72 | 60 | 45 | 30 | 20 | 15 | 12 | 10 | 8 | 6 | 4 |
+| time `envTimeTab` | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 12 | 18 | 24 | 30 | 36 | 45 | 60 | 90 |
+| sustain time `envSusTab` | 0 | 1 | 2 | 4 | 8 | 18 | 24 | 40 | 45 | 60 | 72 | 90 | 120 | 180 | 360 | 30000 |
+| sustain rate `envRelTab` | 0 | 360 | 180 | 90 | 45 | 20 | 15 | 9 | 8 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 
 Phases run attack → decay → sustain → release → fadeout; a duration of 0 makes the phase
 snap straight to its target and fall through. The final volume is clamped to
-`max_volume`, which the note's velocity sets. Only three notes can sound at once — the
-YM2149 has three channels — and `mq_dise` steals the voice furthest along its envelope.
+`maxVolume`, which the note's velocity sets. Only three notes can sound at once — the
+YM2149 has three channels — and `sendMidiEvent` steals the voice furthest along its envelope.
 
 ---
 
 ## 4. Event stream
 
 The stream starts at `0x208` with a `0x00`, then header commands, then a `0x00` that both
-terminates the header and serves as the first group separator (`mq_skip` scans to it and
-hands the pointer to `mq_setp`).
+terminates the header and serves as the first group separator (`skipTextField` scans to it and
+hands the pointer to `initSongState`).
 
-### 4.1 Header commands (`mq_parh`)
+### 4.1 Header commands (`parseSongHeader`)
 
 Walked from `0x208` until the first `0x00`.
 
 | byte | size | operand | meaning |
 |---|---|---|---|
-| `0x80` | 3 | byte 2 | **key signature** 0..15 → `mq_bust` builds the note remap table (§5) |
+| `0x80` | 3 | byte 2 | **key signature** 0..15 → `buildNoteMap` builds the note remap table (§5) |
 | `0x81` | 2 | byte 1 | **tempo** in quarter notes per minute; `ticks_per_unit = 2400 / tempo` |
 | `0x83` | 2 | byte 1 | master volume — parsed and discarded by the player |
 | `0x84` | 3 | byte 2 | **default velocity** 0..127; also sets the PSG volume cap (below) |
@@ -194,7 +194,7 @@ After the header the stream is a sequence of **groups**, each introduced by one 
 
 Every event inside one group happens at the same moment — that is how chords and
 multi-voice writing are expressed. The time to the *next* group is taken from the
-**duration index of the group's first note event** (`mq_rdur` peeks at it before parsing).
+**duration index of the group's first note event** (`peekNoteDur` peeks at it before parsing).
 
 ### 4.3 Note event (3 bytes, first byte `0x00`..`0x7F`)
 
@@ -213,19 +213,19 @@ byte 0:  . T O N c c c c      byte 1:  m m A d d d d d      byte 2:  . n n n n n
 | `mm` | 1.6–7 | accidental (below) |
 | `nnnnnnn` | 2.0–6 | note number |
 
-**Accidentals.** `mq_pars` decides what byte 2 means from `mm`:
+**Accidentals.** `parseEvents` decides what byte 2 means from `mm`:
 
 | `mm` | meaning | note played |
 |---|---|---|
-| `00` | follow the key signature | `scale_table[n]` (§5) |
+| `00` | follow the key signature | `noteMap[n]` (§5) |
 | `01` | natural | `n` |
 | `10` | sharp | `n + 1` |
 | `11` | flat | `n - 1` |
 
 **Ties.** A held note is written as a run: first event `T=1, O=0` (sounds, no automatic
 Note-Off), any number of `T=1, O=1` middles, and a final `T=0, O=1` which schedules the
-Note-Off after its own duration. `mq_qnne` writes bit 7 of the queued note word from `T`,
-and `mq_snof` refuses to emit a Note-Off when that bit is set.
+Note-Off after its own duration. `queueNote` writes bit 7 of the queued note word from `T`,
+and `sendNoteOff` refuses to emit a Note-Off when that bit is set.
 
 ### 4.4 Commands (first byte ≥ `0x80`)
 
@@ -239,15 +239,15 @@ and `mq_snof` refuses to emit a Note-Off when that bit is set.
 
 ---
 
-## 5. Key signatures (`mq_bust`)
+## 5. Key signatures (`buildNoteMap`)
 
 Header command `0x80` supplies an index into a 16-byte chord-mask table:
 
 ```
-g_msmk[16] = FF FF 77 37 33 13 11 01  00 FE EE EC CC C8 88 00
+keyScaleMask[16] = FF FF 77 37 33 13 11 01  00 FE EE EC CC C8 88 00
 ```
 
-`mq_bust` builds a 132-entry remap: identity, then within every octave it displaces the
+`buildNoteMap` builds a 132-entry remap: identity, then within every octave it displaces the
 seven natural degrees whose mask bit is **clear** — up one semitone for index ≤ 8, down
 one for index > 8. Mask bit *n* selects degree `[B, A, G, F, E, D, C][n]`.
 
@@ -271,7 +271,7 @@ naturals, sharps and flats.
 
 ## 6. Timing
 
-`mq_inti` installs the sequencer on **MFP Timer A** with `Xbtimer(0, 5, 0x28, mq_tick)` —
+`hookTimerA` installs the sequencer on **MFP Timer A** with `Xbtimer(0, 5, 0x28, timerAIsr)` —
 prescaler ÷64, counter 40:
 
 ```
@@ -279,10 +279,10 @@ prescaler ÷64, counter 40:
 ```
 
 This routine is byte-identical in `AUDIO.PRG` (`text+0xea12`) and `LCP_STX.PRG`
-(`text+0x1112`). `mq_tick` runs the ADSR processor every 4th interrupt (240 Hz) and the
+(`text+0x1112`). `timerAIsr` runs the ADSR processor every 4th interrupt (240 Hz) and the
 sequencer whenever its prescaler expires.
 
-The duration index selects a value from `mi_ndt`:
+The duration index selects a value from `durTable`:
 
 | idx | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -300,7 +300,7 @@ quarter note = 24 * (2400 / tempo) ticks = 57600 / tempo ticks
 
 — the tempo byte is literally BPM.
 
-The engine splits each step across two sequencer states (`mq_advs`): the parse pass
+The engine splits each step across two sequencer states (`seqAdvance`): the parse pass
 advances `(units - 1) * spb` ticks and the wait pass adds the remaining `spb`, so the
 total is exactly `units * spb`. The Note-Off, however, is scheduled at
 `(units - 1) * spb`, giving every note a one-unit-of-`spb` articulation gap.
@@ -312,9 +312,9 @@ has 51 bars over 209.2 quarters ≈ 4/4. Song lengths land on whole quarter-note
 
 ---
 
-## 7. Output paths (`mq_dise`)
+## 7. Output paths (`sendMidiEvent`)
 
-One dispatcher feeds both outputs; either can be disabled (`g_moen`, `psg_out`).
+One dispatcher feeds both outputs; either can be disabled (`midiOutOn`, `psgOutOn`).
 
 **MIDI OUT.** The note is transposed by `-(3 - hi_nibble(chanmap)) * 12`, then the 2- or
 3-byte message goes out via XBIOS `Midiws` (or byte-by-byte through the ACIA in direct
@@ -323,8 +323,8 @@ mode). Channel and program come from the maps in §2.
 **PSG.** Untransposed note plus the envelope's octave shift indexes a 128-entry period
 table; the period is written to the channel's fine/coarse registers, the mixer nibble to
 register 7, and `period/60` to the noise register 6. The eight envelope bytes are copied
-into the channel's ADSR state and the attack begins. Notes outside 36..96 (`g_mnlo`,
-`g_mnhi`) are dropped; a frequency index of 22 or below starts in the fadeout phase
+into the channel's ADSR state and the attack begins. Notes outside 36..96 (`noteLow`,
+`noteHigh`) are dropped; a frequency index of 22 or below starts in the fadeout phase
 instead of attack.
 
 ---
@@ -332,7 +332,7 @@ instead of attack.
 ## 8. Lyrics
 
 Bytes after the terminating `0xFF` are a lyric block. The player never reads them —
-`mq_pars` stops at `0xFF` — but Music Studio displays them beneath the staff.
+`parseEvents` stops at `0xFF` — but Music Studio displays them beneath the staff.
 On this disk only `STARSPAN.SNG` has one: 667 bytes at `0x838`, plain text with syllables
 hyphenated and runs of spaces used for horizontal alignment:
 
@@ -383,15 +383,15 @@ equals one 960 Hz sequencer tick and the timing is exact rather than rounded. Tr
 carries the tempo, the title and (where present) the lyric block; each voice that
 actually plays gets its own named track (`02 Accordian`, `13 Bass`, …), because several
 Music Studio voices routinely share one MIDI channel and would otherwise be merged.
-Channel, program, velocity and transposition all follow the MIDI OUT path of `mq_dise`.
+Channel, program, velocity and transposition all follow the MIDI OUT path of `sendMidiEvent`.
 
 Little Computer People's own songs are converted in [`midi/`](../music/midi/); see
 [`README.md`](../music/README.md).  (This file was written against the Music Studio disk,
 so "this disk" below means that disk -- the format is the same one LCP reads.)
 
 [`../source/tools/psgrender.py`](../source/tools/psgrender.py) is the other export: a tick-accurate
-re-implementation of the engine's **YM2149** path (`mq_tick`, `mq_advs`, `mq_qnne`,
-`mq_expN`, `mq_dise`, `psg_upE`), producing a register-write log and an audio rendering
+re-implementation of the engine's **YM2149** path (`timerAIsr`, `seqAdvance`, `queueNote`,
+`expireNotes`, `sendMidiEvent`, `stepEnvelopes`), producing a register-write log and an audio rendering
 of it. The two paths transpose differently and the PSG has three voices rather than
 sixteen, so they are not the same performance — see [`README.md`](../music/README.md).
 

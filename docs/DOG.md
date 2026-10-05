@@ -1,509 +1,170 @@
-# Little Computer People — Dog AI & Movement System
+# Little Computer People — The Dog
 
-The dog is an autonomous companion character that wanders the three-floor house
-independently of the LCP (Little Computer Person). It has its own pathfinding,
-stair navigation, eating behavior, and sprite animation system.
+The dog shares the house with the resident but lives a much simpler life: it
+wanders from spot to spot, lies down, and eats when its bowl has food in it.
+It never reacts to the resident or the player; the only way to affect it is
+through the food bowl.
 
-## Overview
+Everything here was read from the C port in `source/`, which compiles to a
+binary byte-identical to the 1985 release.  Names are the port's (see
+[NAMEMAP.md](NAMEMAP.md) for the older Ghidra names).  For the house, the
+time base and the resident see [PEOPLE.md](PEOPLE.md); how the dog is drawn
+-- its frames, and when it appears in front of or behind the resident -- is in
+[RENDERING.md](RENDERING.md).
 
-The dog's entire AI runs inside `screen_render_8hz()` — the main 8 Hz rendering
-loop. Each frame, the dog's position is updated, its target is checked, and its
-sprite is drawn into one of two hardware sprite slots depending on depth relative
-to the LCP character. The dog is never directly controlled by the player; it
-wanders autonomously and reacts to environmental conditions (food bowl, petting).
+## Where the dog lives in the code
 
-## House Geometry
+The dog has no activities and no decision ladder.  Its whole life runs inside
+the compositor, `renderFrame` ([`parts/renderFrame.c`](../source/parts/renderFrame.c)),
+once per frame (8 frames a second):
 
-### Floor Layout
+1. `moveDog` ([`parts/moveDog.c`](../source/parts/moveDog.c)) moves it one step
+   towards its current target, if it has one.
+2. If it is standing at its bowl and allowed to eat, it starts eating.
+3. While it has no target, its idle countdown runs down; at zero it picks a
+   new target.
+4. While it is eating, the eating animation runs and the bowl empties.
 
-The house has three floors separated by fixed Y-coordinate thresholds:
+Because this runs from the frame loop, the dog keeps moving while the resident
+is busy, asleep, or playing a game with the player.
 
-| Floor | Number | Y Range | `get_floor_number_from_y()` |
+## A day in the dog's life
+
+### Arrival
+
+For a new resident the dog is hidden (`dogHidden`) throughout the move-in
+cutscene.  At its end it is let in at the living-room fireplace (273, 190),
+lying down, with its first target in front of the front door and a 20-frame
+wait.  When a saved game is loaded instead, `placeDog`
+([`dog.c`](../source/dog.c)) puts it in the kitchen at (100, 195) and it sets
+off at once.  The dog is not part of the save file.
+
+### Wandering
+
+When it has nothing to do (no target, not eating) the dog waits out
+`dogIdleCount`, then picks one of nine spots in `dogRoamSpots`
+([`dat_anim.c`](../source/dat_anim.c)) at random -- never the same one twice
+running -- adds a small per-spot nudge, and sets off.  The next wait is drawn
+at the same time: 20..200 frames, 2.5 to 25 seconds after it arrives.
+
+| # | Spot | Where | Nudge |
 |---|---|---|---|
-| Top | 3 | Y < 78 | Bedroom, study |
-| Middle | 2 | 78 ≤ Y < 141 | Living room, bathroom |
-| Bottom | 1 | Y ≥ 141 | Kitchen, entry hall |
+| 0 | `POS_TOP_LIVING_ROOM` | top floor, in front of the TV | y +3 |
+| 1 | `POS_TOP_GAME_CHAIR_RIGHT` | top floor, beside the blue armchair | y +9 |
+| 2 | `POS_TOP_FIREPLACE_RIGHT` | top floor, in front of the writing desk | y +2 |
+| 3 | `POS_MID_BEDROOM_WALK` | bedroom, by the alarm clock | y +10 |
+| 4 | `POS_MID_COMPUTER_DESK` | the computer corner | x +10, y +6 |
+| 5 | `POS_BTM_STAIR_LANDING` | kitchen, by the left wall next to the bowl | -- |
+| 6 | `POS_BTM_DOG_BOWL` | the dog bowl | -- |
+| 7 | `POS_BTM_WATER_TAP` | the water cooler | y +11 |
+| 8 | `POS_BTM_SCREEN_EDGE` | in front of the front door | y +3 |
 
-Each floor has a center Y coordinate stored in `floor_center_y_coords[]` and
-a bottom edge in `floor_bottom_y_coords[]`. Characters gravitate toward the
-center line when walking horizontally across a floor.
+While the resident plays a game with the player, the card table covers the
+top 77 screen lines -- the whole top floor -- so `playGame` sets
+`dogNoTopFlr` and the dog only picks spots 3..8.
 
-### Staircase
-
-A single staircase column connects all three floors. Navigation between floors
-requires routing through waypoint coordinates stored in `staircase_waypoint_coords[]`,
-a table of (x,y) pairs marking the top and bottom of each stair segment.
-
-The staircase has specific Y breakpoints that trigger direction changes:
-
-| Y Value | Meaning |
-|---|---|
-| 161 | Bottom of lower stair (floor 1 → floor 2 transition) |
-| 100 | Top of lower stair / bottom of upper stair (floor 2 landing) |
-| 98 | Top of upper stair (floor 2 → floor 3 transition) |
-
-Additional globals `stair_ty` and `stair_by` define
-the stair entry/exit coordinates for the middle floor.
-
-## State Variables
-
-### Position & Navigation
-
-| Variable | Type | Purpose |
-|---|---|---|
-| `dog_x` | short | Current X pixel position |
-| `dog_y` | short | Current Y pixel position |
-| `g_dtx` | short | Final destination X (0 = idle) |
-| `g_dty` | short | Final destination Y (0 = idle) |
-| `g_dyx` | short | Current intermediate waypoint X |
-| `g_dyy` | short | Current intermediate waypoint Y |
-| `dg_stair` | BOOL16 | YES when navigating stairs |
-
-### Animation
-
-| Variable | Type | Purpose |
-|---|---|---|
-| `g_dwanc` | short | Walk frame counter (0–7) |
-| `g_dsid` | sprite_id | Current sprite to display |
-| `dog_walk_anim_frames[8]` | sprite_id[] | Walk cycle: SPRITE_DOG_WALK_RIGHT_1–8 |
-| `dog_sprite_eating_anim_tab[3]` | sprite_id[] | Eat cycle: SPRITE_DOG_EATING_1–3 |
-
-### Wandering AI
-
-| Variable | Type | Purpose |
-|---|---|---|
-| `dg_idlcd` | short | Ticks until next wander (20–200) |
-| `dg_ltgtI` | short | Last destination index (avoid repeats) |
-| `dg_vis` | BOOL16 | NO restricts to top-floor destinations |
-| `dog_destination_position_table[9]` | HOUSE_POS[] | Wander destination lookup |
-| `dog_dest_x_offset_table[9]` | short[] | Per-destination X offset |
-| `dog_dest_y_offset_table[9]` | short[] | Per-destination Y offset |
+When it arrives, the dog lies down (`SPRITE_DOG_LAY_DOWN`) until its wait is
+over.
 
 ### Eating
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `dg_nrbwl` | BOOL16 | YES when dog is near bowl area |
-| `g_deact` | BOOL16 | YES during eating animation |
-| `g_decou` | short | Frames remaining in eat cycle (82–100) |
-| `dg_bwlch` | short | -1 = drain bowl one level, 0 = no change |
-| `lcp_bwlS` | DOG_BOWL_STATUS | BOWL_EMPTY / BOWL_HALF / BOWL_FULL |
+Picking spot 5, beside the bowl, gives the dog permission to eat
+(`dogMayEat`).  Once it is standing still there -- x below 20 and y above
+160, on the kitchen floor -- and the bowl is not empty, it eats for 82..100 frames
+(10 to 12 seconds), cycling the three eating frames.  The bowl goes down one
+level at frames 60, 30 and 4 of the countdown and once more when it finishes,
+so a single meal always empties even a full bowl.  The permission is used up
+by the meal; arriving at the bowl itself (spot 6) does not grant it.
 
-### Petting
+The bowl has three states, `BOWL_EMPTY`, `BOWL_HALF` and `BOWL_FULL`
+(`bowlLevel`).  `gameTick` ([`tick.c`](../source/tick.c)) draws it beside the
+stove every tick and applies the changes the dog's meals and the resident's
+feeding request through `bowlChange`.  The bowl level is saved with the rest
+of the house state.
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `dg_petok` | BOOL16 | YES when LCP is crouching to pet |
-| `g_ptdoa` | BOOL16 | YES during petting animation |
-| `g_ptanf` | short | Current frame of 11-frame petting sequence |
-| `g_ptlss` | short | Sprite slot to hide after petting ends |
+## How the dog is fed
 
-### System
+Only the resident fills the bowl, always to full (`feedDog`,
+[`parts/feedDog.c`](../source/parts/feedDog.c)):
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `dg_init` | BOOL16 | YES suppresses rendering during intro |
-| `g_dfimb` | void* | Pre-allocated buffer for horizontally flipped sprite |
-| `g_dfmab` | void* | Pre-allocated buffer for flipped mask |
+- **On his own** (`ACTION_FEED_DOG`): one of the sixteen entries of his
+  "active" idle table.  He takes dog food from the fridge, fills the bowl --
+  empty or not -- and puts the package back.  The fridge never runs out.
+- **Dog food delivery** (Ctrl-D): he fetches the package from the front door;
+  if the bowl is empty he fills it, otherwise he puts the package in the
+  fridge (`dogFoodDelivery` -> `foodDelivery`).
 
-## Dog Sprites
+Typing FEED THE DOG (or FILL THE BOWL, OPEN A CAN) does nothing: the parser
+accepts the request, but it names the delivery event rather than
+`ACTION_FEED_DOG`, and `runAction` ignores it (see [PEOPLE.md](PEOPLE.md),
+"Typed requests").
 
-| ID | Enum Name | Usage |
-|---|---|---|
-| 33 | `SPRITE_DOG_LAY_DOWN` | Idle / resting pose |
-| 34 | `SPRITE_DOG_WALK_RIGHT_1` | Walk cycle frame 1 |
-| 35 | `SPRITE_DOG_WALK_RIGHT_2` | Walk cycle frame 2 |
-| 36 | `SPRITE_DOG_WALK_RIGHT_3` | Walk cycle frame 3 |
-| 37 | `SPRITE_DOG_WALK_RIGHT_4` | Walk cycle frame 4 |
-| 38 | `SPRITE_DOG_WALK_RIGHT_5` | Walk cycle frame 5 |
-| 39 | `SPRITE_DOG_WALK_RIGHT_6` | Walk cycle frame 6 |
-| 40 | `SPRITE_DOG_WALK_RIGHT_7` | Walk cycle frame 7 |
-| 41 | `SPRITE_DOG_WALK_RIGHT_8` | Walk cycle frame 8 |
-| 42 | `SPRITE_DOG_EATING_1` | Eating animation frame 1 |
-| 43 | `SPRITE_DOG_EATING_2` | Eating animation frame 2 |
-| 44 | `SPRITE_DOG_EATING_3` | Eating animation frame 3 |
+So in practice: the dog eats only every few minutes, when its random walk
+happens to take it to spot 5, and the bowl is refilled when the resident feels
+like it or the player orders dog food.
 
-The walk cycle uses 8 frames indexed by `g_dwanc` (0–7) via
-`dog_walk_anim_frames[]`. The eating animation cycles through 3 frames
-via `dog_sprite_eating_anim_tab[countdown % 3]`.
+## What the dog does not do
 
-Horizontal flipping is performed by `sprite_flip_horizontal()` into dedicated
-buffers (`g_dfimb`, `g_dfmab`) when the dog faces left.
+The names of three of the resident's activities -- `callDog`, `petDog` and
+`sitWithDog`, with `ACTION_CALL_DOG`, `ACTION_PET_DOG` and
+`ACTION_SIT_ON_COUCH_WITH_DOG` -- suggest the resident calls, pets or sits
+with the dog.  None of them touches the dog: they take the resident to the red
+armchair by the phone, where he crouches or reads and the **player** can pat
+**him** with Ctrl-P.  Nothing in the game ever sets the dog's target from
+outside the wander picker, so the dog never comes when called, never follows
+the resident and never reacts to Ctrl-P.
 
-## Sprite Rendering
+Likewise `SPRITE_DOG_SIT`, shown at the front door while the resident steps
+outside, is the open front door, not a dog.
 
-The dog uses **two hardware sprite slots simultaneously**:
+## Moving
 
-| Slot | Layer | When Used |
-|---|---|---|
-| 0 | Behind LCP (`SPRITE_BEHIND_LCP`) | Dog Y > LCP Y + 5 (dog is "further back") |
-| 7 | In front of LCP (`SPRITE_IN_FRONT`) | Dog Y ≤ LCP Y + 5 (dog is "closer") |
+### Routing
 
-Only one slot receives the actual image pointer; the other stays NULL. Both slots
-receive the same position, size, and mask data. This dual-slot technique creates
-depth sorting — the dog seamlessly transitions between appearing behind or in front
-of the LCP character as they move past each other vertically.
+`dogNextWaypt` ([`parts/dogNextWaypt.c`](../source/parts/dogNextWaypt.c)) works
+like the resident's `nextWaypoint`: on the same floor the target itself is the
+waypoint; otherwise the dog walks to the foot or head of the staircase on its
+floor (`stairWaypts`) and then climbs or descends one flight at a time.  Two
+small differences: entering the stairs from the top floor shifts it 8 pixels
+left, and going down from the middle floor it aims 3 pixels further left at
+the landing.
 
-The `spritedata_update_dog(sprite_id, depth_layer, flip_horizontal)` function
-handles all sprite setup:
+### Walking
 
-1. Clear both slot images (0 and 7)
-2. If sprite_id is valid and dog is initialized:
-   - If flipping: copy sprite data through `sprite_flip_horizontal()` into buffers
-   - Set width/height from sprite definition arrays for both slots
-   - Set X = `dog_x`, Y = `dog_y - 17` (sprite anchor offset) for both slots
-   - Set mask pointers for both slots
-   - Set image pointer for **only** the active depth slot (0 or 7)
+`moveDog` moves the dog **one pixel per frame** -- 8 pixels a second, the
+resident's healthy speed:
 
-Exception: when `dog_initialized = YES`, all rendering is skipped (used during
-the intro sequence before the dog appears).
+- **On a floor:** x steps towards the waypoint; y keeps to the floor's walking
+  line (`floorWalkY`) and only turns towards the waypoint's y within 8 pixels
+  of it horizontally.
+- **On the stairs:** fixed patterns by y.  On a flight it moves one pixel up
+  or down per frame and two sideways (none on the last walk frame, which
+  makes the climb uneven); at y = 161 and y = 100 it jumps from one flight
+  onto the next.
+- It leaves stair mode once it has reached the floor of its waypoint.
 
-## Movement Algorithm
+## State
 
-### Entry Point
-
-`dog_move_and_animate()` is called once per frame from `screen_render_8hz()`.
-It executes only when the dog has an active target (`dog_target_x != 0` or
-`dog_target_y != 0`).
-
-### Step 1: Animation Cycle
-
-```
-dog_walk_anim_cycle = (dog_walk_anim_cycle + 1) % 8
-dog_sprite_id = dog_walk_anim_frames[dog_walk_anim_cycle]
-```
-
-The 8-frame walk animation runs continuously while the dog is moving,
-regardless of direction or terrain.
-
-### Step 2: Depth Layer Calculation
-
-```
-if dog_y + 5 > lcp_y:
-    depth_layer = -1    (behind LCP → slot 0)
-else:
-    depth_layer = 1     (in front of LCP → slot 7)
-
-if LCP is reading newspaper:
-    depth_layer = 1     (always in front during reading)
-```
-
-The +5 offset creates a small hysteresis band to prevent flickering when
-the dog and LCP are at nearly the same Y coordinate.
-
-### Step 3: Waypoint Routing
-
-If no waypoint is set, `dog_calc_walk_path()` computes the next waypoint:
-
-```
-target_floor = get_floor_number_from_y(dog_target_y)
-current_floor = get_floor_number_from_y(dog_y)
-
-if current_floor == target_floor:
-    # Same floor: walk directly to target
-    dog_on_stairs_flag = NO
-    waypoint = target
-
-else:
-    # Different floor: route through staircase
-    stair_entry = staircase_waypoint_coords[(current_floor - 1) * 2]
-
-    if dog is already at stair entry:
-        dog_on_stairs_flag = YES
-        if going up:
-            waypoint = staircase_waypoint_coords[(current_floor - 1) * 2 + 2]
-        else:
-            waypoint = staircase_waypoint_coords[(current_floor - 1) * 2 - 2]
-    else:
-        # Walk to stair entry first
-        waypoint = stair_entry
-```
-
-Special cases:
-- **Floor 2 going down**: uses `stair_ty` / `stair_by`
-- **Floor 3 entry**: offsets `dog_x` by -8 to align with stair column
-- **Floor 1 stair entry**: overrides waypoint to threshold coordinates
-
-### Step 4a: Flat Walking (stairs flag = NO)
-
-Horizontal movement — 1 pixel per tick:
-
-```
-if dog_x < waypoint_x:
-    dog_x += 1; flip = NO (facing right)
-else if dog_x > waypoint_x:
-    dog_x -= 1; flip = YES (facing left)
-```
-
-Vertical movement depends on horizontal distance to waypoint:
-
-```
-x_distance = abs(dog_x - waypoint_x)
-
-if x_distance < 8:
-    # Close to waypoint: move directly toward target Y
-    if dog_y < waypoint_y: dog_y += 1
-    else if dog_y > waypoint_y: dog_y -= 1
-else:
-    # Far from waypoint: gravitate to floor center line
-    floor = get_floor_number_from_y(dog_y)
-    center = floor_center_y_coords[floor - 1]
-    if dog_y < center: dog_y += 1
-    else if dog_y > center: dog_y -= 1
-```
-
-This two-phase approach means the dog first walks horizontally at the floor's
-center line, then adjusts vertically only when close to the destination. This
-produces natural-looking movement — the dog doesn't walk diagonally across
-the entire room.
-
-### Step 4b: Stair Navigation (stairs flag = YES)
-
-Stair movement uses hardcoded Y breakpoints for the staircase geometry.
-The dog moves at 1–2 pixels per tick in a diagonal pattern.
-
-**Going up** (waypoint Y < current Y):
-
-| Y Position | Action |
+| Variable | Meaning |
 |---|---|
-| Y = 161 | Landing transition: flip left, Y = 159, X -= 17 |
-| Y = 100 | Landing transition: flip right, Y = 98, X += 3 |
-| Y < 100 | Upper stair: flip right, Y -= 1, X += 1 or +2 |
-| 101 ≤ Y ≤ 161 | Lower stair: flip left, Y -= 1, X -= 1 or -2 |
-| Other | Fast vertical: Y -= 2 (landing area) |
+| `dogX`, `dogY` | position |
+| `dogXTarget`, `dogYTarget` | current target; both 0 = idle |
+| `dogXWaypt`, `dogYWaypt` | current waypoint |
+| `dogOnStairs` | on a staircase |
+| `dogStepIdx` | walk frame, 0..7 |
+| `dogIdleCount` | frames to wait before the next target |
+| `dogLastPick` | last spot picked |
+| `dogNoTopFlr` | keep off the top floor (during games) |
+| `dogMayEat`, `dogEating`, `dogEatCount` | the eating permission, the meal, its countdown |
+| `bowlLevel`, `bowlChange` | the bowl, and the step to apply to it this tick |
+| `dogHidden` | not yet in the house (move-in) |
 
-**Going down** (waypoint Y > current Y):
+## Source reference
 
-| Y Position | Action |
+| Topic | Source |
 |---|---|
-| Y = 161 | Landing transition: flip right, Y = 165, X += 1 |
-| Y = 100 | Landing transition: flip right, Y = 102, X += 3 |
-| Y < 100 | Upper stair (down): flip left, Y += 1, X -= 1 or -2 |
-| 101 ≤ Y ≤ 161 | Lower stair (down): flip right, Y += 1, X += 1 or +2 |
-| Other | Fast vertical: Y += 1 (landing area) |
-
-The "1 or 2" horizontal movement alternates based on the current sprite frame:
-when `dog_sprite_id == SPRITE_DOG_WALK_RIGHT_9`, the dog moves 1 pixel; otherwise
-2 pixels. This creates the diagonal zigzag pattern that mimics climbing stairs.
-
-### Step 5: Stair Exit Detection
-
-After each movement step, the function checks if the dog has cleared the staircase:
-
-```
-floor = get_floor_number_from_y(waypoint_y)
-if dog_y <= floor_bottom_y_coords[floor - 1]:
-    if floor == 3:
-        dog_on_stairs_flag = NO   # reached top floor
-    else if dog_y >= staircase_waypoint_coords[...]:
-        dog_on_stairs_flag = NO   # cleared stair segment
-```
-
-### Step 6: Arrival
-
-```
-if dog reached waypoint:
-    if waypoint == target:
-        # Final destination reached
-        clear target and waypoint
-        dog_sprite_id = SPRITE_DOG_LAY_DOWN
-    else:
-        # Intermediate waypoint (stair entry/exit)
-        dog_calc_walk_path()   # compute next segment
-```
-
-## Wandering AI
-
-The wandering logic runs in `screen_render_8hz()` when the dog is idle
-(target = 0,0) and not eating.
-
-### Idle Timer
-
-```
-if dog is idle and not eating:
-    dog_idle_countdown -= 1
-
-if dog_idle_countdown reaches 0:
-    pick new random destination
-    dog_idle_countdown = randomRange(20, 200)   # 2.5 to 25 seconds
-```
-
-### Destination Selection
-
-```
-if dog_visible == NO:
-    range = 0 to 2    (top floor destinations only)
-else:
-    range = 3 to 8    (all destinations)
-
-repeat:
-    index = randomRange(range_min, 8)
-until index != dog_last_target_index    # avoid repeating
-
-position = dog_destination_position_table[index]
-house_get_position_xy(position, &dog_target_x, &dog_target_y)
-dog_target_x += dog_dest_x_offset_table[index]
-dog_target_y += dog_dest_y_offset_table[index]
-
-if position == POS_BTM_STAIR_LANDING:
-    dog_near_food_bowl = YES
-
-dog_last_target_index = index
-```
-
-The destination table contains 9 `HOUSE_POS` entries pointing to various
-locations throughout the house. The per-destination X/Y offset tables allow
-fine-tuning the exact stopping position (e.g., slightly in front of the couch
-rather than exactly at the room's anchor point).
-
-When `dog_visible = NO` (set during certain actions), the dog is restricted to
-indices 0–2, which correspond to top-floor positions only, keeping the dog
-out of the way during cutscenes or events.
-
-## Eating Behavior
-
-### Trigger Conditions
-
-All of these must be true simultaneously:
-
-1. Dog is idle: `dog_target_x == 0 && dog_target_y == 0`
-2. Food bowl is not empty: `lcp_dog_bowl_status != BOWL_EMPTY`
-3. Dog is flagged near bowl: `dog_near_food_bowl == YES`
-4. Dog is not already eating: `dog_eating_active == NO`
-5. Dog position is near food bowl: `dog_x < 20` and `dog_y > 160`
-
-The food bowl is located in the bottom-left corner of the house (near x=8, y=190).
-The `dg_nrbwl` flag is set when the wandering AI selects
-`POS_BTM_STAIR_LANDING` as the destination, which routes the dog near the bowl area.
-
-### Eating Sequence
-
-```
-dog_eating_active = YES
-dog_eating_countdown = randomRange(82, 100)   # ~10-12 seconds
-
-each tick:
-    dog_eating_countdown -= 1
-
-    if countdown == 0:
-        dog_eating_active = NO
-        dog_near_food_bowl = NO
-        dog_food_bowl_change = -1    # final bowl drain
-
-    else if countdown == 60, 30, or 4:
-        dog_food_bowl_change = -1    # drain bowl one level
-
-    else:
-        dog_food_bowl_change = 0     # no change this tick
-
-    dog_sprite_id = dog_sprite_eating_anim_tab[countdown % 3]
-    spritedata_update_dog(dog_sprite_id, 1, NO)
-```
-
-The eating animation cycles through 3 sprites (SPRITE_DOG_EATING_1/2/3) using
-modulo indexing. The food bowl drains at three specific moments during eating
-(countdown = 60, 30, 4), plus one final drain when eating ends. This means a
-full bowl (BOWL_FULL) can be emptied to BOWL_EMPTY in one eating session if
-the dog eats long enough.
-
-### Food Bowl Display
-
-The bowl visual is updated in `game_tick_and_animate()`:
-
-```
-object_draw(_object_dog_eating_animation[lcp_dog_bowl_status], 8, 190)
-```
-
-The bowl has 3 visual states mapped to `DOG_BOWL_STATUS`:
-- `BOWL_EMPTY` (0): empty bowl sprite
-- `BOWL_HALF` (1): half-full bowl sprite
-- `BOWL_FULL` (2): full bowl sprite
-
-Bowl changes are clamped to the valid range (0–2) and applied per-tick in
-`game_tick_and_animate()` based on `dg_bwlch`.
-
-### Feeding the Dog
-
-The player feeds the dog via `action_feed_dog()` (triggered by Ctrl+D delivery):
-
-1. LCP walks to fridge (`POS_BTM_FRIDGE`)
-2. Opens fridge door (SFX_DOOR_OPEN)
-3. Carries food bowl (STATE_CARRY_WALK) to feeding area
-4. Sets `lcp_dog_bowl_status = BOWL_FULL`
-5. Sets `dog_food_bowl_change = 1` (triggers bowl fill animation)
-6. Returns bowl to fridge
-
-## Petting Interaction
-
-### Trigger
-
-The player presses Ctrl+P, which queues `ACTION_PET_DOG`.
-
-### Sequence
-
-1. **Call dog** (`action_call_dog()`):
-   - LCP walks to `POS_BTM_DOG_FOOD`
-   - Faces right, crouches (STATE_CROUCH_DOWN)
-   - Sets `dog_pettable_flag = YES`
-
-2. **Wait for dog** (`action_pet_dog()`):
-   - Waits 100–200 frames (12–25 seconds) for the dog to wander near
-   - During intro sequence: reduced to 10 frames
-   - Exits early if a game event triggers
-
-3. **Petting animation** (in `game_tick_and_animate()`):
-   - When `petting_dog_active = YES`: plays 11-frame animation sequence
-   - Uses `object_id_ARRAY_0002b93e[]` — a table of sprite IDs for the petting overlay
-   - Each frame rendered at fixed position (192, 165) in SPRITE_BEHIND_LCP layer
-   - Previous frame hidden, current frame shown
-   - After 11 frames: hide last sprite, clear `g_ptdoa`
-
-Note: the petting system does not explicitly move the dog to the LCP. Instead,
-`dg_petok` is set and the normal wandering AI is expected to eventually
-bring the dog near the LCP's position. The petting animation is a separate
-overlay sprite sequence, not the dog sprite itself.
-
-## Comparison: Dog vs LCP Pathfinding
-
-Both the dog and LCP use the same fundamental algorithm — waypoint-based
-pathfinding through the staircase coordinate table. The key differences:
-
-| Feature | LCP | Dog |
-|---|---|---|
-| Pathfinding function | `lcp_calc_floor_waypoint` | `dog_calc_walk_path` |
-| Movement function | `lcp_pathfind_one_step` | `dog_move_and_animate` |
-| Walking speed (flat) | 2 pixels/tick | 1 pixel/tick |
-| Walking speed (stairs) | Variable | 1–2 pixels/tick |
-| Stair coordinate table | `staircase_waypoint_coords[]` | Same table |
-| Floor detection | `get_floor_number_from_y()` | Same function |
-| Sprite slots | 3 (body), 4 (carried object), 5–6 (head) | 0 and 7 |
-| Walk animation | 8 LCP body states | 8 dog sprites (34–41) |
-| Autonomous | No (action-driven) | Yes (idle timer) |
-| Depth sorting | Always rendered | Dual-slot 0/7 behind/front toggle |
-| Horizontal flip | Via LCP sprite system | `sprite_flip_horizontal()` to buffer |
-| Sprite anchor Y offset | -21 | -17 |
-
-The LCP's movement is **action-driven** — it walks to specific positions as part
-of scripted action sequences (`lcp_walk_to_destination()`). The dog's movement
-is **autonomous** — it wanders randomly with idle timers, gravitating toward the
-food bowl when hungry.
-
-Both characters share the same floor geometry (`get_floor_number_from_y()`),
-staircase waypoints (`staircase_waypoint_coords[]`), and floor center lines
-(`floor_center_y_coords[]`). The pathfinding functions are structurally
-identical — `dog_calc_walk_path` is a simplified mirror of `lcp_calc_floor_waypoint`.
-
-## Function Reference
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x1412C | `dog_move_and_animate` | Main per-tick movement and animation |
-| 0x14586 | `dog_calc_walk_path` | Calculate next waypoint for multi-floor routing |
-| 0x248FE | `sp_spud` | Update dog sprite slots 0 and 7 |
-| 0x15224 | `get_floor_number_from_y` | Convert Y coordinate to floor number (shared) |
-| 0x150BC | `lcp_calc_floor_waypoint` | LCP equivalent of dog_calc_walk_path (shared stair table) |
-| 0x25138 | `sc_ren8` | Contains wandering AI, eating trigger, food bowl update |
-| 0x256A6 | `game_tick_and_animate` | Contains petting animation, food bowl display |
-| 0x20C9E | `a_petd` | Player-initiated petting action |
-| 0x20C50 | `a_calld` | LCP crouches and calls dog over |
-| 0x20AF8 | `a_feedd` | Fill food bowl via fridge |
+| Wander picker, eating | [`parts/renderFrame.c`](../source/parts/renderFrame.c) |
+| Movement | [`parts/moveDog.c`](../source/parts/moveDog.c), [`parts/dogNextWaypt.c`](../source/parts/dogNextWaypt.c), [`parts/floorOfY.c`](../source/parts/floorOfY.c) |
+| Start position | [`dog.c`](../source/dog.c), [`parts/moveInScene.c`](../source/parts/moveInScene.c) |
+| Tables | [`dat_anim.c`](../source/dat_anim.c) (`dogRoamSpots`, nudges, `dogEatFrames`), [`dat_world.c`](../source/dat_world.c) (`dogWalkSprites`, `stairWaypts`, `floorWalkY`) |
+| The bowl | [`tick.c`](../source/tick.c), [`parts/feedDog.c`](../source/parts/feedDog.c), [`parts/foodDelivery.c`](../source/parts/foodDelivery.c) |

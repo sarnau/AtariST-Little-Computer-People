@@ -2,7 +2,7 @@
 
 Little Computer People's sequencer is object-for-object the same engine that ships in
 Activision's *The Music Studio* (Atari ST, `AUDIO.PRG`, 1985-11-20); see
-[`../LCP_ENGINE_COMPARISON.md`](../../docs/LCP_ENGINE_COMPARISON.md). Eleven of that disk's
+[`docs/MUSIC_PLAYER_COMPARISON.md`](../../docs/MUSIC_PLAYER_COMPARISON.md). Eleven of that disk's
 twenty-one demo songs are byte-identical to files in this repo's `DATA/`.
 
 These are all twenty-one of them, decoded and exported exactly like LCP's own songs in

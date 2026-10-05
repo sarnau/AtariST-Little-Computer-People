@@ -1,666 +1,523 @@
-# Little Computer People — LCP Character Movement & Action System
+# Little Computer People — The Resident
 
-The LCP (Little Computer Person) is the main character — a small person who lives
-in a three-floor house. Unlike the dog which moves autonomously, the LCP's movement
-is entirely **action-driven**: every walk is initiated by the AI decision engine
-selecting an action, which scripts the LCP to walk to specific positions, perform
-animations, and interact with objects.
+The resident (the "Little Computer Person", `resident` in the source) lives in
+the three-floor house on his own schedule.  This document explains what he
+is, how his day runs, how he decides what to do next, every way the player
+can interact with him, and how he moves around the house.
 
-## Overview
+Everything here was read from the C port in `source/`, which compiles to a
+binary byte-identical to the 1985 release; file references are to that
+source.  How he is drawn is in [RENDERING.md](RENDERING.md), the sounds and
+music in [SOUND.md](SOUND.md).  Names are the port's (see [NAMEMAP.md](NAMEMAP.md) for the Ghidra
+names the older analysis documents use).
 
-The LCP has a multi-layered rendering system:
-- **Body sprite** (slot 3): selected from `body.lcp` based on `lcp_st`
-- **Head sprite** (slot 4): selected from `pex.lcp` based on `g_hsfra` + happiness
-- **Carried object sprite** (slot dependent): when carrying items
-- **Door overlay sprites** (slots 5–6): walk-behind-door illusion
+## Time
 
-Movement is driven by setting `g_wtx`/`g_wty` and calling
-`lcp_walk_to_destination()`, which loops `lcp_pathfind_one_step()` until arrival
-or interruption by a game event.
+The game runs at **8 frames per second**: `renderFrame`
+([`parts/renderFrame.c`](../source/parts/renderFrame.c)) returns early until
+25 ticks of TOS's 200 Hz clock (125 ms) have passed.  Code waits in whole
+frames: `gameTick(n)` ([`tick.c`](../source/tick.c)) lasts n + 1 frames, and
+this document calls one frame a **tick**.
 
-## Coordinate System
+Each tick, `gameTick` also runs `simStep` ([`sim.c`](../source/sim.c)), which
+advances the clock one second every 8 ticks.  **The house clock therefore runs
+in real time**: a game minute is a real minute, a game day a real day.  The
+calendar starts from the date and time typed on the title screen.
 
-### House Floors
+## Who the resident is
 
-| Floor | Number | Y Range | `get_floor_number_from_y()` |
+A new resident is rolled by `rollResident`
+([`parts/rollResident.c`](../source/parts/rollResident.c)); a returning one is
+read back from the 128-byte save file `HYBER` into the `PLAYER` struct
+([`include/structs.h`](../source/include/structs.h)).
+
+| Field | Rolled as | Effect |
+|---|---|---|
+| `characterName` | one of 266 names in `NAMES` | signs his letters |
+| `characterSpriteId` | 2..6 | which head file, `PE2.LCP`..`PE6.LCP` |
+| `clothingColor` | 0..15 | his usual clothes (palette slots 1 and 2) |
+| `skinColor` | 0..7 | his usual skin tone |
+| `bedtimeHour` | 22, 23 or 0 | the nightly routine starts at this hour |
+| `wakeHour` | bedtime + 6, so 4, 5 or 6 | the morning routine starts at this hour |
+| `lunchHour`, `dinnerHour` | 11..13, 17..19 | scheduled meals |
+| `activityLevel` | 0..7 | picks his idle-activity rhythm (see below) |
+| `initiativeThreshold` | 20..80 | how often he leaves doors open (see below) |
+| `personalityType` | 0..3 | saved, but nothing in the game reads it |
+| `moodDuration[3]` | happy 6..24, content 6..24, sad 6..12 hours | length of each mood spell |
+| `thirstTimerMax` | 45..75 minutes | thirst rises one level per period |
+| `hungerTimerMax` | 75..120 minutes | hunger rises one level per period |
+| `bathroomTimerMax` | 20..40 minutes | time from a meal to needing the toilet |
+
+He starts content, healthy, with a water tank at 7 of 10, a full food cabinet
+(4 packs) and a collection of 4 records.
+
+**Initiative.**  Whenever he has opened something -- the front door, the
+kitchen cabinet, the toilet door, the closet, the filing cabinet -- he closes
+it again only if a 0..100 roll beats `initiativeThreshold`.  A resident with a
+low threshold usually tidies up behind himself; one with a high threshold
+leaves things open, which gives `cleanUp` (`ACTION_CLEAN_UP`) work to do.
+
+## Body and mind
+
+`simStep` updates his needs once per game minute and his mood once per game
+hour.
+
+### Thirst and hunger
+
+Each has a level, `NEED_SATISFIED` (0) to `NEED_SEVERE` (3), and a timer that
+counts minutes down from its maximum.  When the timer runs out it restarts and
+the level rises by one; when it runs out while the level is already severe,
+he **falls sick** (`fallSick`, [`health.c`](../source/health.c)).
+
+- **Drinking** (`drinkWater`) sets thirst to satisfied and restarts the
+  thirst timer.  It draws 3 units from the water tank -- but thirst is reset
+  even when the tank is empty and he only goes through the motions.
+- **Eating** (`eatFromCabinet`, also the end of `cookMeal`) takes one pack
+  from the kitchen cabinet and sets hunger to satisfied.  With the cabinet
+  empty he opens it, finds nothing and stays hungry.  Note that eating does
+  not restart the hunger timer.
+
+### Bathroom
+
+Eating restarts the bathroom timer; when it runs out, `bathroomNeed` is set
+and he goes to the toilet at the next decision (`useToilet`), which clears it.
+So he needs the toilet 20..40 minutes after each meal.
+
+### Sickness
+
+`sicknessLevel` runs `SICKNESS_HEALTHY` (0) to `SICKNESS_CRITICAL` (4) and
+moves one step every 60 minutes while worsening, every 5 while improving.
+
+- `fallSick` sets him to `SICKNESS_MILD`, worsening, and makes him one mood
+  step sadder.  It does this every time a need runs out at severe -- even
+  when he is already sicker, which knocks the level back down to mild.
+- Recovery (`startRecovery`) starts only when hunger **and** thirst are both
+  satisfied, after a meal or a drink.  Back at healthy, his skin turns normal.
+- The intended clamp at `SICKNESS_CRITICAL` has a typo (`==` for `=`), so a
+  resident left untreated keeps getting worse past level 4.
+
+While sick: his skin (palette slot 6) turns green, he walks at half speed,
+and he will only drink when the tank has water and only eat when the cabinet
+has food.  From `SICKNESS_MODERATE` on he is forced sad and spends all his
+free time asleep (see the idle picker).  Nothing in the game kills him.
+
+### Mood
+
+`happiness` is `MOOD_HAPPY` (0), `MOOD_CONTENT` (1) or `MOOD_SAD` (2).  Every
+game hour the current spell counts down; when it ends the mood moves one step
+in `happinessDirection` and turns around at either end, so it cycles
+happy -> content -> sad -> content -> happy, each spell lasting its
+`moodDuration`.  The cycle pauses while he is sick and sad.
+
+Being patted (Ctrl-P) makes him happy at once and starts a fresh happy spell;
+falling sick makes him sadder.
+
+Mood changes **how** he does things, not **what** he does: it selects his
+facial expressions (each head file holds a content, a sad and a happy set),
+the paragraphs of his letters, and how readily he accepts typed requests
+(see below).  The choice of activity never looks at it.
+
+## How he decides
+
+After the start-up, the game is a loop of `gameTick(0)` and `chooseAction`
+([`parts/gameLoop.c`](../source/parts/gameLoop.c)).  Most activities take many
+ticks, so `chooseAction` runs once per finished activity.
+
+### The decision ladder
+
+`chooseAction` ([`parts/chooseAction.c`](../source/parts/chooseAction.c))
+takes the first rung that applies:
+
+1. **An outside event is waiting** (`eventQueue`): run it through `runEvent`
+   ([`ai.c`](../source/ai.c)) -- a delivery, a phone call.
+2. **The alarm is ringing**: `wakeFromAlarm` -- walk to the alarm clock and
+   switch it off.
+3. **He needs the toilet**: `useToilet`.
+4. **Thirsty** (any level above satisfied): drink.  A healthy resident only
+   does so one time in three (a roll over 66 out of 100); a sick one always,
+   provided the tank has water.
+5. **Hungry**: eat from the cabinet, with the same one-in-three chance when
+   healthy -- and never twice in a row -- and always when sick, provided
+   there is food.
+6. **Lunch hour**, 7. **dinner hour**: `cookMeal`, once a day each.
+8. **Wake-up hour**: `morningRoutine`, once a day.
+9. **Bedtime hour**: `nightRoutine`, once a day.
+10. **A typed request is waiting**: see "Typed requests".
+11. **Otherwise** an idle activity from `pickIdleAction`.
+
+The once-a-day flags are cleared at midnight (`resetDailyFlags`).  An
+activity is started through `runAction` ([`actions.c`](../source/actions.c)),
+which first gets him out of bed if he is asleep -- any activity wakes him.
+
+### Idle activities
+
+`pickIdleAction` ([`airandom.c`](../source/airandom.c)) counts the hours since
+his wake-up hour:
+
+- **18 hours or more, or moderately sick:** the sleep tier.  If he is awake
+  he goes to bed (`ACTION_GET_IN_OUT_OF_BED`); if he is asleep, nothing
+  happens and he sleeps on.
+- **Otherwise** the hours are grouped in two-hour slots that repeat every six
+  hours, and `scheduleTiers[slot][activityLevel]`
+  ([`dat_aitables.c`](../source/dat_aitables.c)) gives a tier:
+
+  | activity level | hours 0-1, 6-7, 12-13 | 2-3, 8-9, 14-15 | 4-5, 10-11, 16-17 |
+  |---|---|---|---|
+  | 0 | active | relaxed | moderate |
+  | 1 | active | moderate | relaxed |
+  | 2 | relaxed | active | moderate |
+  | 3 | relaxed | moderate | active |
+  | 4 | moderate | relaxed | active |
+  | 5 | moderate | active | relaxed |
+  | 6 | active | relaxed | moderate |
+  | 7 | moderate | active | relaxed |
+
+  At weekends he takes it easier: on Sunday an active slot becomes relaxed,
+  on Saturday moderate.
+
+Each tier is a table of 16 activities; one is drawn at random, re-drawn if it
+is the same as the last activity.  Duplicates make some more likely:
+
+| Tier | Activities (count out of 16) |
+|---|---|
+| active (`activeActions`) | computer 3, clean up 2, tidy house 2, read in the armchair 2, study 1, write a letter 1, feed the dog 1, wave hello 1, exercise 1, check the front door 1, *nothing* 1 |
+| moderate (`moderateActions`) | wave hello 2, dance 2, TV on/off 2, *nothing* 2, check the front door 1, play a record 1, play the organ 1, read the newspaper 1, pace 1, play a game 1, study 1, exercise 1 |
+| relaxed (`relaxedActions`) | read the newspaper 2, wait to be patted 2, read in the armchair 2, TV on/off 2, light the fire 1, play a record 1, study 1, *nothing* 1, wave hello 1, doze off 1, check the front door 1, stop the record 1 |
+
+*Nothing*: each table contains `ACTION_EVENT_PHONE_CALL`, an event id that
+`runAction` has no case for.  Drawing it does nothing; the picker simply runs
+again a tick later (and cannot draw it twice in a row).
+
+### Interruptions
+
+Only **outside events** interrupt him.  `walkToTarget`
+([`walk.c`](../source/walk.c)) abandons a walk when an event is queued --
+unless he is carrying something, on the stairs, inside an event already, in
+the move-in, or in an activity that has set `noPreempt` -- and the activity
+then gives up.  Many activities with a duration (exercising, reading,
+typing on the computer, washing, dancing, reading in the armchair, waiting
+to be patted, dozing) also end early when an event arrives.  Typed requests,
+needs and the schedule never interrupt; they wait for the next decision.
+
+## A typical day
+
+With bedtime 23:00 (so wake-up 05:00), lunch at 12:00 and dinner at 18:00:
+
+- **05:00, morning routine** (`morningRoutine`): the alarm rings for 5..12
+  seconds, he gets out of bed and switches it off, showers, brushes his teeth,
+  dresses -- half the time in his usual clothes, otherwise in random colours
+  -- and cooks breakfast at the stove, eating it at the kitchen table.  None
+  of these walks can be interrupted.
+- **During the day:** idle activities in the rhythm of his activity level,
+  broken up by drinks, snacks, toilet visits, deliveries and phone calls.
+  Between 08:00 and 21:59 the phone rings on its own with a 2% chance per
+  game minute (about once an hour).
+- **12:00 and 18:00:** he cooks and eats a meal (`cookMeal`).
+- **23:00, night routine** (`nightRoutine`): shower; undress (his clothes take
+  on a skin tone); a snack from the cabinet; brush teeth; into bed.
+- **23:00-05:00:** 18 hours after waking, the idle picker only ever sends
+  him to bed, and while he is asleep it does nothing.  Needs, events and
+  requests still wake him; afterwards he goes back to bed.
+
+When he is moderately sick or worse, the sleep tier applies all day: he
+stays in bed except to drink, eat, use the toilet, answer the door, follow
+his daily schedule or carry out a request.
+
+## Interacting with him
+
+The player never controls the resident directly.  Everything goes through the
+keyboard, read every tick by `gameTick` and dispatched by `handleKey`
+([`parts/handleKey.c`](../source/parts/handleKey.c)).  While he writes a letter
+or plays a game the keyboard belongs to that activity (`keysBlocked`); during
+the move-in it is ignored.
+
+### Control keys
+
+| Key | What happens |
+|---|---|
+| **Ctrl-A** | The alarm clock rings (`alarmRinging`).  He walks to it and switches it off at his next decision (rung 2). |
+| **Ctrl-B** | Doorbell; a **book** arrives.  He fetches it from the front door and puts it on the bookshelf by the computer (`bookDelivery`). |
+| **Ctrl-C** | The **phone** rings (ignored while he is on the phone).  He goes to the armchair beside it, picks up the receiver and chats for 40..50 rounds (`answerPhone`). |
+| **Ctrl-D** | Doorbell; **dog food** arrives.  If the dog's bowl is empty he fills it, otherwise he stores the package in the fridge (`dogFoodDelivery`). |
+| **Ctrl-F** | Doorbell; **food** arrives and he restocks the kitchen cabinet to 4 packs (`foodDelivery`).  Refused, silently, while the cabinet is full. |
+| **Ctrl-P** | **Pat him.**  Only while he crouches or sits at the armchair by the phone (`patAllowed`): a hand reaches in and pats him, and he becomes happy. |
+| **Ctrl-R** | Doorbell; a **record** arrives.  He takes it to the record player; his collection grows by one (`recordDelivery`).  Ignored while he has walked away from a game. |
+| **Ctrl-W** | One unit of **water** is added to the tank (up to 10), with the tap sound. |
+| Return | Submits the typed line (see below). |
+| Backspace, cursor-left | Erase the last typed character. |
+| F1..F10 | Used by the minigames ([GAMES.md](GAMES.md)). |
+
+The deliveries and the phone go into the event queue (10 entries), so they
+come first at his next decision and can cut short what he is doing.  When he
+is asleep, an event gets him out of bed first.
+
+The armchair by the phone is where he can be patted: `callDog` walks him there
+and crouches (it is also the first step of answering the phone), and he stays
+pattable while crouching there (`ACTION_PET_DOG`, `petDog`) or sitting there
+reading (`ACTION_SIT_ON_COUCH_WITH_DOG`, `sitWithDog`).  Despite these names
+the dog takes no part -- see "Misleading names" below.
+
+### Typed requests
+
+Printable keys build a line of up to 38 characters at the top of the screen.
+It disappears 20 seconds after the last key, and the next key then starts a
+new line.  Return hands it to
+`matchCommand` ([`parts/matchCommand.c`](../source/parts/matchCommand.c)):
+
+1. Every word is looked up in the 161-word `vocabulary`
+   ([`dat_parser.c`](../source/dat_parser.c)).  A known word sets one bit in a
+   10-byte mask; words the game does not know are ignored.
+2. The 33 rows of `phraseTable` are tried in order.  A row matches when the
+   mask contains all the bits it needs -- one word from each of its groups,
+   in any order, among any other words.  The first match wins.
+3. The request gets a **priority**: 0..3 at random, plus 3 if he is happy,
+   1 if content, 0 if sad, plus the row's own bonus.
+
+The request then waits in a 10-entry queue (`queueActions`) and is looked at
+when his decision ladder reaches rung 10:
+
+- **priority 8 or more:** he does it.  Before playing a game or the organ he
+  nods in agreement.
+- **4 to 7:** not yet.  He does an idle activity instead, and the priority
+  rises by one -- so it is done after 1 to 4 more activities.
+- **below 4:** refused and dropped.
+
+A happy resident is therefore much more obliging than a sad one.
+
+| Example | Needs one word from each group | Activity | Bonus |
 |---|---|---|---|
-| Top | 3 | Y < 78 | Bedroom, study |
-| Middle | 2 | 78 ≤ Y < 141 | Living room, bathroom |
-| Bottom | 1 | Y ≥ 141 | Kitchen, entry hall |
+| LIGHT THE FIRE | {LIGHT, START, MAKE, BURN, IGNITE, BUILD} {FIRE, FIREPLACE, LOG} | light the fire | 4 |
+| YOU LOOK COLD | {YOU} {SEEM, LOOK, APPEAR} {CHILLY, COLD} | light the fire | 2 |
+| USE THE FIREPLACE | {PLAY, PERFORM, USE, TRY, PLAYING} {FIRE, FIREPLACE, LOG} | light the fire | 4 |
+| PUT ON A RECORD | {HEAR, LISTEN, PUT, SPIN} {STEREO, TURNTABLE, MUSIC, RECORD, PLATTER} | play a record | 4 |
+| YOU SHOULD CLEAN UP | {CLEAN, TIDY, PICK} {UP} {SHOULD, OUGHT} | clean up | 8 |
+| PLAY THE PIANO | {PLAY, PERFORM, USE, TRY, PLAYING} {PIANO, ORGAN} | play the organ | 4 |
+| PLAY A SONG | {PLAY, ...} {SONG, TUNE, SONATA, FUGUE, SERENADE, JAZZ, BOOGIE} | play the organ | 4 |
+| TICKLE THE IVORIES | {TICKLE} {IVORIES} | play the organ | 4 |
+| WRITE A LETTER | {TYPE, TELL, WRITE, CONFIDE} {PROBLEM, PROBLEMS, TROUBLES, MATTER, LETTER, NOTE} | write a letter | 8 |
+| WHAT IS THE MATTER | {LOOKS, IS, SEEMS, APPEARS} {PROBLEM, ..., NOTE} | write a letter | 6 |
+| BRUSH YOUR TEETH | {BRUSH, FLOSS} {TEETH, HYGIENE} | brush teeth | 2 |
+| MESSY TEETH | {SLOPPY, MESSY, UNTIDY} {TEETH, HYGIENE} | brush teeth | 2 |
+| DRINK SOME WATER | {DRINK, IMBIBE} {WATER, LIQUID, LIQUIDS, FLUID, FLUIDS} | drink | 2 |
+| YOU SEEM TO NEED A GLASS | {SEEM, LOOK, APPEAR} {GLASS, COOLER} | drink | 4 |
+| FEED THE DOG | {FEED} {DOG, PET, MUTT, POOCH} | *nothing* | 8 |
+| FILL THE BOWL | {FILL} {BOWL, DISH, CAN} | *nothing* | 8 |
+| OPEN A CAN | {OPEN} {BOWL, DISH, CAN} | *nothing* | 8 |
+| DANCE | {DANCE, MOON, SHOW} | dance | 2 |
+| I'M TIRED OF THE MUSIC | {TIRED, BORED, APATHETIC} {STEREO, ..., PLATTER} | stop the record | 8 |
+| I HATE THIS MUSIC | {HATE, AWFUL} {STEREO, ..., PLATTER} | stop the record | 8 |
+| PLAY CARDS | {PLAY, ...} {GAME, CARDS, POKER, WAR, CARD, ANAGRAMS, BLACKJACK} | play a game | 8 |
+| DUST ADDITION | {ALLERGY, ALLERGIC, FEVER, DUST, POLLEN, HANKY} {ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION} | nod | 6 |
+| USE THE COMPUTER | {COMPUTER, ATARI} | use the computer | 6 |
+| WHAT IS IN THE UPSTAIRS CLOSET | {WHAT, WHAT'S} {IN, INSIDE, STORED, KEEP} {UPSTAIRS} {CLOSET} | go into the study | 6 |
+| WHAT IS IN THE BEDROOM CLOSET | ... {BEDROOM} {CLOSET} | change clothes | 6 |
+| WHAT IS IN THE KITCHEN CABINET | ... {KITCHEN} {CABINET} | eat | 6 |
+| WHAT IS IN THE FILING CABINET | ... {FILING} {CABINET} | play a game | 6 |
+| WHAT IS IN THE FREEZER | ... {FREEZER} | eat | 6 |
+| WHAT IS IN THE FRIDGE | ... {REFRIDGERATOR, FRIDGE} | eat | 6 |
+| WHAT IS IN THE DRESSER | ... {DRESSER} | change clothes | 6 |
+| WHAT IS IN THE NIGHTSTAND | ... {NIGHTSTAND} | change clothes | 6 |
 
-Each floor has a center Y coordinate in `floor_center_y_coords[]` and a bottom
-edge in `floor_bottom_y_coords[]`. Characters gravitate toward the center line
-when walking horizontally.
+Quirks, all in the 1985 data and code:
 
-### Position System
+- **Please helps.**  `matchCommand` treats the word with index 0 as
+  "unknown" -- and that word is PLEASE, which instead of setting a bit adds 4
+  to the priority.  Every PLEASE in the line adds 4.
+- **FEED THE DOG does nothing.**  Its three rows ask for
+  `ACTION_EVENT_DOG_FOOD`, an event id; the request is accepted, waits its
+  turn and is then ignored by `runAction`.
+- **Two rows can never match.**  Row 0 (`ACTION_HELLO`) needs a bit no word
+  supplies, and row 6 (MESSY ... HOUSE, clean up) needs one only the duplicate
+  spelling of IS would supply -- the earlier IS always wins the lookup.  START,
+  LIKE and IS are listed twice; only their first entries are ever used.
+- **Refused requests leak queue slots.**  Dropping a low-priority request
+  shifts the queue but does not lower `queueCount`.  Each refusal leaves the
+  queue looking one entry longer, stale entries behind the real ones are then
+  examined as if they were requests, and after ten refusals in one session the
+  queue counts as full and new requests are ignored until the game restarts.
 
-The house has 48 named positions defined in the `HOUSE_POS` enum (e.g.,
-`POS_TOP_FILING_CABINET`, `POS_MID_TOILET_DOOR`, `POS_BTM_FRIDGE`). Each position
-has an X coordinate in `room_position_x_table[]` (stored as half-pixels, doubled
-on lookup) and a height offset in `room_position_height_table[]`.
+### Saving
 
-`house_get_position_xy(position, &x, &y)` converts a HOUSE_POS to screen coordinates:
-```
-x = room_position_x_table[position] * 2
-y = floor_y - room_position_height_table[position + 1]
-```
+There is no save command.  Whenever he goes into the study
+(`ACTION_OPEN_UPSTAIRS_CLOSET`: an idle activity in all three tiers, or the
+UPSTAIRS CLOSET request) he writes `HYBER` while he is inside
+(`enterStudy(1)` -> `studyVisit`).  A new resident is saved at the end of the
+move-in.  When the game starts with a `HYBER` present, he simply comes out of
+the study.
 
-Where `floor_y` is 77 (top), 140 (middle), or 202 (bottom) depending on the
-position index range (0–15 = top, 16–31 = middle, 32–47 = bottom).
+### The move-in
 
-## State Variables
+A new resident arrives in a cutscene (`moveInScene`,
+[`parts/moveInScene.c`](../source/parts/moveInScene.c)): after an empty
+house and two doorbells he walks in through the front door, tours the house
+-- kitchen cabinet, sink, fridge, TV, study, alarm clock, dresser, closet,
+toilet, bathroom sink, computer, filing cabinet -- fetches his suitcase from
+the front step and unpacks it in the dresser.  Then the dog is let in, he
+changes, and he goes into the study, which saves the game.  Events, typing
+and the random phone are all off until it ends (`movingIn`).
 
-### Position & Navigation
+## What he does: the activities
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `lcp_x` | short | Current X pixel position |
-| `lcp_y` | short | Current Y pixel position |
-| `g_wtx` | short | Final destination X (0 = no target) |
-| `g_wty` | short | Final destination Y (0 = no target) |
-| `g_wyx` | short | Current intermediate waypoint X |
-| `g_wyy` | short | Current intermediate waypoint Y |
-| `lcp_stR` | BOOL16 | YES when navigating stairs |
-| `lcp_face` | FACING_DIR | FACING_RIGHT (0) or FACING_LEFT (1) |
+`runAction` dispatches on the action id (`ACTION_*`,
+[`include/enums.h`](../source/include/enums.h)).  "Idle" means he picks it
+himself from the tier tables; "request" that a typed line can ask for it.
 
-### Character State
+| Id | Action | Routine | What he does | Comes from |
+|---|---|---|---|---|
+| 0 | `SIT_AND_EXERCISE` | `exercise` | arm exercises on the bedroom rug, 8..127 steps | idle |
+| 1 | `READ_NEWSPAPER` | `readNewspaper` | switches the TV on, reads the paper in the blue armchair upstairs, switches it off | idle |
+| 2 | `PLAY_COMPUTER` | `useComputer` | types at the computer; now and then its screen shows an animation | idle, request |
+| 3 | `WASH_HANDS` | `washHands` | washes his hands at the bathroom sink | never |
+| 4 | `GET_IN_OUT_OF_BED` | `getInOutOfBed` | goes to bed, or gets up | idle (sleep tier), routines |
+| 5 | `LISTEN_SONG` | `playRecord` | puts a random record from his collection on the record player | idle, request |
+| 6 | `STOP_RECORD` | `stopRecord` | stops the record | idle, request |
+| 7 | `WRITE_LETTER` | `writeLetter` | types a letter to the player at the typewriter upstairs (see below) | idle, request |
+| 8 | `DANCE` | `danceToMusic` | dances by the record player while music plays, starting a record if none is on | idle, request |
+| 9 | `YAWN_AND_STRETCH` | `yawnAndStretch` | yawns and stretches | never |
+| 10 | `PACE_NERVOUSLY` | `paceNervously` | paces on the spot | idle |
+| 11 | `WANDER_IDLY` | `idleShrug` | shrugs on the spot | -- (games, move-in) |
+| 12 | `SLEEP` | `dozeOff` | walks to the middle of the floor and dozes off, snoring, for 7..15 rounds | idle |
+| 13 | `DRINK` | `drinkWater` | takes a glass from the kitchen to the water cooler and drinks | need, request |
+| 14 | `NOD_HEAD` | `nodHead` | nods | request |
+| 15 | `PEEK_AROUND` | `peekAround` | glances aside | -- (War) |
+| 16 | `PLAY_A_GAME` | `playGame` | offers the five-game menu ([GAMES.md](GAMES.md)) | idle, request |
+| 17 | `BRUSH_TEETH` | `brushTeeth` | brushes his teeth at the bathroom sink | routines, request |
+| 18 | `KITCHEN_CABINET` | `eatFromCabinet` | eats a pack from the cabinet at the kitchen table | need, request |
+| 19 | `SIT_ON_COUCH_WITH_DOG` | `sitWithDog` | reads a book in the armchair by the phone, 30..50 rounds; pattable | idle |
+| 20 | `LIGHT_FIREPLACE` | `lightFire` | fetches wood from outside the front door and lights the fire, which burns for 2500..5000 ticks | idle, request |
+| 21 | `USE_TOILET` | `useToilet` | uses the toilet | need |
+| 22 | `TAKE_SHOWER` | `takeShower` | showers | routines |
+| 23 | `FEED_DOG` | `feedDog(0)` | takes dog food from the fridge, fills the bowl, puts the package back | idle |
+| 24 | `HELLO` | `sayHello` | waves and talks to the player | idle |
+| 25 | `EAT_MEAL` | `cookMeal` | cooks a meal on the stove and eats it | schedule |
+| 26 | `PLAY_ORGAN` | `playOrgan` | plays a random `.ORG` piece on the organ upstairs | idle, request |
+| 27 | `OPEN_UPSTAIRS_CLOSET` | `enterStudy(1)` | goes into the study and saves the game | idle, request |
+| 28-32 | `EVENT_*` | -- | outside events, run through `runEvent`; `runAction` ignores them | events |
+| 33 | `GET_SNACK_FROM_FRIDGE` | `goToFridge` | puts something into the fridge | -- (dog food, move-in) |
+| 34 | `OPEN_BEDROOM_CLOSET` | `changeClothes(0)` | changes his clothes in the bedroom closet | request, routines |
+| 35 | `NOD_OK` | `nodOk` | nods in agreement | -- (requests, move-in) |
+| 36 | `CLEAN_UP` | `cleanUp` | closes every door and cabinet left open | idle, request |
+| 37 | `TIDY_HOUSE` | `tidyHouse` | rummages in the filing cabinet | idle |
+| 38 | `CHECK_FRONT_DOOR` | `checkFrontDoor(40)` | steps out of the front door for a while | idle |
+| 39 | `TOGGLE_TV` | `toggleTv` | switches the TV on or off | idle |
+| 40 | `CALL_DOG` | `callDog` | crouches by the armchair; pattable | -- (phone, reading, waiting to be patted) |
+| 41 | `WAKE_FROM_ALARM` | `wakeFromAlarm` | switches the alarm clock off | alarm |
+| 42 | `PET_DOG` | `petDog` | crouches by the armchair and waits 100..200 ticks to be patted | idle |
+| 43 | `WAKE_UP_MORNING` | `morningRoutine` | the morning routine | schedule |
+| 44 | `GO_TO_BED_NIGHT` | `nightRoutine` | the night routine | schedule |
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `lcp_st` | PLAYER_STATE | Current body pose / animation state |
-| `g_lcyof` | BOOL16 | YES when carrying an object |
-| `g_lcieo` | sprite_id | Which object is being carried |
-| `g_lssh` | BOOL16 | YES to hide all LCP sprites |
+"--": nothing chooses the action itself, but its routine runs as a step of
+the activities named.  "never": the routine is reachable only through its
+action id, and nothing ever asks for it.
 
-### Head Animation
+**Letters.**  `writeLetter` loads `LETTER.TXT` and types the date, "Dear
+<owner>,", two to four paragraphs from its four sections in shuffled order --
+the wording picked by his mood, or a sick variant when he is ill -- a random
+sign-off and his name, one character at a time at the typewriter.
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `g_hsfra` | short | Current head direction (5-bit encoded) |
-| `g_hacur` | short | Current head animation position |
-| `head_anim_target` | short | Target head animation position |
-| `g_hamod` | HEAD_ANIM_MODE | Bit flags controlling allowed head movement |
-| `g_hadec` | short | Frames until next random head movement |
-| `last_walk_sound_id` | short | Last head target set during walking (avoids redundant sets) |
+**Events** (`runEvent`): `bookDelivery`, `recordDelivery`, `foodDelivery`
+(dropped if the cabinet is full), `answerPhone`, `dogFoodDelivery`.
 
-### Sound
+## Misleading names
 
-| Variable | Type | Purpose |
-|---|---|---|
-| `footstep_trigger_flag` | BOOL16 | YES when a footstep should play this frame |
+Several identifiers come from the first Ghidra analysis and describe what the
+analyst guessed, not what the game does.  They are kept because changing them
+is a separate decision; what they really are:
 
-## Player States (PLAYER_STATE Enum)
-
-The LCP body sprite is selected via `body_sprite_frame_table[lcp_state]`,
-which maps each state to a frame offset in `body.lcp`. Key state groups:
-
-### Walking States (0–7)
-
-| State | Name | Description |
-|---|---|---|
-| 0 | `STATE_WALK_FRAME_0` | Walk cycle frame 0 |
-| 1 | `STATE_WALK_FRAME_1` | Walk cycle frame 1 |
-| 2 | `STATE_WALK_FRAME_2` | Walk cycle frame 2 |
-| 3 | `STATE_WALK_FRAME_3_STEP` | Walk cycle frame 3 (footstep trigger) |
-| 4 | `STATE_WALK_FRAME_4` | Walk cycle frame 4 |
-| 5 | `STATE_WALK_FRAME_5` | Walk cycle frame 5 |
-| 6 | `STATE_WALK_FRAME_6` | Walk cycle frame 6 |
-| 7 | `STATE_WALK_FRAME_7_STEP` | Walk cycle frame 7 (footstep trigger) |
-
-The walk cycle increments state by 1 each tick (`lcp_state + 1`), wrapping
-from 7 back to 0. Footstep sounds trigger on frames 3 and 7 (two steps per cycle).
-
-### Stair Climbing States (9–12)
-
-| State | Name | Description |
-|---|---|---|
-| 9 | `STATE_STAIR_CLIMB_FRAME_0` | Stair climb frame 0 |
-| 10 | `STATE_STAIR_CLIMB_FRAME_1` | Stair climb frame 1 |
-| 11 | `STATE_STAIR_CLIMB_FRAME_2` | Stair climb frame 2 |
-| 12 | `STATE_STAIR_CLIMB_FRAME_3_STEP` | Stair climb frame 3 (footstep) |
-
-4-frame cycle, wrapping 12 → 9. The LCP moves diagonally: 1–2 pixels horizontal
-+ 1 pixel vertical per tick. Footstep triggers on frame 3.
-
-### Stair Top Landing States (13–16)
-
-| State | Name | Description |
-|---|---|---|
-| 13 | `STATE_STAIR_TOP_FRAME_0` | Top landing frame 0 |
-| 14 | `STATE_STAIR_TOP_FRAME_1` | Top landing frame 1 |
-| 15 | `STATE_STAIR_TOP_FRAME_2` | Top landing frame 2 |
-| 16 | `STATE_STAIR_TOP_FRAME_3_STEP` | Top landing frame 3 (footstep) |
-
-Used for the flat sections between stair flights. The LCP moves vertically
-(Y -= 2) on specific frames and flips facing direction when the cycle wraps.
-
-### Stair Descending States (17–20)
-
-| State | Name | Description |
-|---|---|---|
-| 17 | `STATE_STAIR_DESCEND_FRAME_0` | Stair descend frame 0 |
-| 18 | `STATE_STAIR_DESCEND_FRAME_1` | Stair descend frame 1 (footstep) |
-| 19 | `STATE_STAIR_DESCEND_FRAME_2` | Stair descend frame 2 |
-| 20 | `STATE_STAIR_DESCEND_FRAME_3_STEP` | Stair descend frame 3 |
-
-4-frame cycle for going down. Diagonal movement mirrors climbing but in reverse.
-
-### Stair Bottom Landing States (21–24)
-
-| State | Name | Description |
-|---|---|---|
-| 21 | `STATE_STAIR_BTM_FRAME_0` | Bottom landing frame 0 |
-| 22 | `STATE_STAIR_BTM_FRAME_1` | Bottom landing frame 1 (Y += 2) |
-| 23 | `STATE_STAIR_BTM_FRAME_2` | Bottom landing frame 2 (Y += 2) |
-| 24 | `STATE_STAIR_BTM_FRAME_3` | Bottom landing frame 3 (footstep) |
-
-### Idle & Action States (25+)
-
-States 25 and above are used for non-walking poses: standing, sitting, eating,
-typing, reading, exercising, sleeping, and all object interactions. These are
-set directly by action functions, not by the pathfinding system. Examples:
-
-| State | Name |
+| Name | Really |
 |---|---|
-| `STATE_STAND_IDLE` | Standing still after walk |
-| `STATE_STAND_SIDE_VIEW` | Standing, side profile |
-| `STATE_STAND_FACING_SCREEN` | Standing, facing player |
-| `STATE_WRITE_AT_DESK` | Seated at desk writing |
-| `STATE_TYPE_AT_DESK_LEFT_HAND` | Typing animation (left hand) |
-| `STATE_EAT_BITE` | Eating food |
-| `STATE_DRINK_GLASS` | Drinking water |
-| `STATE_EXERCISE_ARMS_UP` | Exercise animation |
-| `STATE_CROUCH_DOWN` | Crouching to pet dog |
-| `STATE_SLEEP_IN_BED` | Sleeping |
+| `ACTION_SIT_ON_COUCH_WITH_DOG`, `sitWithDog`, `STATE_SIT_COUCH_PETTING_DOG` | reading a book in the armchair by the phone; the dog is not involved |
+| `ACTION_CALL_DOG`, `callDog` | go to the armchair by the phone and crouch, so he can be patted |
+| `ACTION_PET_DOG`, `petDog` | wait there to be patted by the player |
+| `POS_BTM_COUCH` | the red armchair by the phone |
+| `foodSupply` (`resident.foodSupply`) | the number of records he owns |
+| `POS_TOP_FIREPLACE_*`, `POS_TOP_DESK_CHAIR` | spots at the writing desk upstairs; the fireplace is downstairs (`POS_BTM_FIREPLACE_LOGS`) |
+| `POS_MID_BATHROOM_ENTRANCE` | the bookshelf in the computer corner |
+| `POS_MID_COUCH` | the bedroom rug |
+| `POS_BTM_STAIR_LANDING` | by the left wall, next to the dog bowl |
 
-## High-Level Walk Interface
+## Moving around
 
-### `lcp_walk_to_destination()` (0x14CEA)
+### The house
 
-The primary walk function called by all action routines:
+| Floor | `floorOfY` | Y range | Contents, left to right |
+|---|---|---|---|
+| Top | `FLOOR_TOP` (3) | y <= 77 | TV, record player, blue armchair, organ, study door, writing desk with typewriter, filing cabinet |
+| Middle | `FLOOR_MIDDLE` (2) | 78..140 | bedroom (bed, alarm clock, closet, dresser), stairs up, bathroom (sink, toilet door, bathtub with shower), computer corner (bookshelf, clock, calendar, computer) |
+| Bottom | `FLOOR_BOTTOM` (1) | y > 140 | kitchen (dog bowl, stove, fridge, food cabinet, sink, table, water cooler), stairs up, living room (phone, red armchair, fireplace, front door) |
 
-```
-set walk_target_x, walk_target_y
-result = lcp_walk_to_destination()
-// result: 0 = arrived, -1 = interrupted
-```
+Walking happens at a floor's walking line, `floorWalkY` = 198, 135 and 71.
+Staircases connect the bottom floor to the middle (foot at (170,185)) and the
+middle floor to the top (arriving at (182,72)); `stairWaypts`, `xLanding` and
+`yLanding` ([`dat_world.c`](../source/dat_world.c)) hold their ends.
 
-Implementation:
-1. Set `head_anim_mode = HEAD_ANIM_WALKING` (head bobs naturally)
-2. Clear `last_walk_sound_id` (reset footstep tracking)
-3. Loop:
-   - Call `lcp_pathfind_one_step()` — advance one pixel
-   - Check interruption conditions:
-     * Event triggered AND not in execute_event AND not carrying object
-       AND not in intro AND not on stairs AND action is interruptible
-     * If interrupted: clear target, return -1
-   - If target reached (both 0): return 0
+The house has 48 named spots, 16 per floor.  `posToXY`
+([`movement.c`](../source/movement.c)) turns one into screen coordinates: x is
+`posXHalf[i] * 2`, y the floor's base line (77, 140, 202) minus
+`posYOffset[i]`.  The spots actually used:
 
-The interruption check allows urgent events (doorbell, bathroom need, alarm)
-to break the LCP out of a walk when the current action is marked interruptible
-(`action_interruptible_flag = YES`). Non-interruptible actions (petting dog,
-mini-games, stair traversal) cannot be interrupted.
-
-### Typical Action Pattern
-
-Every action function follows this pattern:
-
-```c
-void action_example(void) {
-    // 1. Walk to position
-    house_get_position_xy(POS_TARGET, &walk_target_x, &walk_target_y);
-    result = lcp_walk_to_destination();
-    if (result != 0) return;  // interrupted
-
-    // 2. Face correct direction
-    lcp_facing_direction = FACING_RIGHT;  // or FACING_LEFT
-    lcp_state = STATE_STAND_FACING_SCREEN;
-
-    // 3. Animate head
-    head_anim_target = 12;
-    lcp_wait_head_reach_target();
-
-    // 4. Perform action (state changes, sound effects, object draws)
-    lcp_state = STATE_ACTION_POSE;
-    game_tick_and_animate(duration);
-
-    // 5. Return to idle
-    lcp_state = STATE_STAND_SIDE_VIEW;
-}
-```
-
-## Movement Algorithm: `lcp_pathfind_one_step()` (0x1470A)
-
-This 351-line function advances the LCP by one pixel per call. It is called
-once per frame from `lcp_walk_to_destination()`.
-
-### Phase 1: Waypoint Check
-
-```
-if no waypoint set:
-    lcp_calc_floor_waypoint()    // compute next waypoint
-
-if on stairs and reached floor boundary:
-    lcp_on_stairs_flag = NO      // exit stair mode
-
-if at waypoint:
-    if waypoint == target:
-        clear target, set STATE_STAND_IDLE
-        return
-    else:
-        lcp_calc_floor_waypoint()   // compute next segment
-```
-
-### Phase 2: Flat Walking (stairs flag = NO)
-
-**Carried objects:** if carrying something, call `spritedata_select_carried_object_left()`
-to update the held item sprite.
-
-**Horizontal movement** — 1 pixel per tick:
-
-```
-if lcp_x < waypoint_x:
-    lcp_facing_direction = FACING_RIGHT
-    lcp_x += 1
-    head_anim_target = 10 (look right)
-else if lcp_x > waypoint_x:
-    lcp_facing_direction = FACING_LEFT
-    lcp_x -= 1
-    head_anim_target = 14 (look left)
-
-lcp_state = (lcp_state + 1) % 8    // cycle walk frames 0-7
-```
-
-**Vertical movement** — same two-phase approach as the dog:
-
-```
-x_distance = abs(lcp_x - waypoint_x)
-
-if x_distance < 8:
-    // Close: move directly toward target Y
-    if lcp_y < waypoint_y: lcp_y += 1
-    else if lcp_y > waypoint_y: lcp_y -= 1
-else:
-    // Far: gravitate toward floor center line
-    floor = get_floor_number_from_y(lcp_y)
-    center = floor_center_y_coords[floor - 1]
-    if lcp_y < center: lcp_y += 1
-    else if lcp_y > center: lcp_y -= 1
-```
-
-**Footstep trigger:** set `footstep_trigger_flag = YES` on walk frames 3 and 7.
-
-### Phase 3: Stair Navigation (stairs flag = YES)
-
-The staircase has four distinct movement phases, each using different
-PLAYER_STATE ranges and movement patterns.
-
-#### Going Up (waypoint Y < current Y)
-
-**Y = 161 — Bottom landing entry (floor 1 → stair):**
-```
-state = STATE_STAIR_CLIMB_FRAME_0
-facing = FACING_LEFT
-lcp_x -= 6, lcp_y -= 2
-head_anim_target = 14 (look left)
-```
-
-**Y = 100 — Middle landing entry (floor 2 → upper stair):**
-```
-state = STATE_STAIR_CLIMB_FRAME_0
-facing = FACING_RIGHT
-lcp_x += 3, lcp_y -= 2
-head_anim_target = 10 (look right)
-```
-
-**Y < 100 — Upper stair flight (climbing to floor 3):**
-```
-facing = FACING_RIGHT
-lcp_y -= 1
-if state != STATE_STAIR_CLIMB_FRAME_3_STEP:
-    lcp_x += 2 (or +1 if at waypoint X)
-else:
-    lcp_x += 1
-state = (state + 1), wrap at 12 → 9
-footstep on STATE_STAIR_CLIMB_FRAME_3_STEP
-```
-
-**101 ≤ Y ≤ 161 — Lower stair flight (climbing to floor 2):**
-```
-facing = FACING_LEFT
-lcp_y -= 1
-if state != STATE_STAIR_CLIMB_FRAME_3_STEP:
-    lcp_x -= 2 (or -1 if at waypoint X)
-else:
-    lcp_x -= 1
-state = (state + 1), wrap at 12 → 9
-footstep on STATE_STAIR_CLIMB_FRAME_3_STEP
-```
-
-**Y 139–161 or Y = 162 — Top landing platform:**
-```
-state cycles through STATE_STAIR_TOP_FRAME_0..3 (states 13-16)
-lcp_y -= 2 on frames 0 and 3
-facing flips on cycle wrap
-carried objects moved to SPRITE_BEHIND_LCP layer
-footstep on STATE_STAIR_TOP_FRAME_3_STEP
-```
-
-#### Going Down (waypoint Y > current Y)
-
-**Y = 161 — Bottom landing exit (stair → floor 1):**
-```
-state = STATE_STAIR_BTM_FRAME_0
-facing = FACING_RIGHT
-lcp_y = 165, lcp_x += 6
-```
-
-**Y = 100 — Middle landing exit (stair → floor 2):**
-```
-state = STATE_STAIR_BTM_FRAME_0
-facing = FACING_RIGHT
-lcp_y = 102, lcp_x -= 2
-```
-
-**Y < 100 — Upper stair descent:**
-```
-facing = FACING_LEFT
-lcp_y += 1
-lcp_x -= 2 (or -1 if at waypoint X)
-state cycles through STATE_STAIR_DESCEND_FRAME_0..3 (states 17-20)
-footstep on STATE_STAIR_DESCEND_FRAME_1
-```
-
-**101 ≤ Y ≤ 161 — Lower stair descent:**
-```
-facing = FACING_RIGHT
-lcp_y += 1
-lcp_x += 2 (or +1 if at waypoint X)
-state cycles through STATE_STAIR_DESCEND_FRAME_0..3
-footstep on STATE_STAIR_DESCEND_FRAME_1
-```
-
-**Landing platform (bottom):**
-```
-state cycles through STATE_STAIR_BTM_FRAME_0..3 (states 21-24)
-lcp_y += 2 on frames 1 and 2
-facing flips on cycle wrap
-lcp_x += 2 on first entry
-footstep on STATE_STAIR_BTM_FRAME_3
-```
-
-### Phase 4: Sickness Speed Penalty
-
-After movement, the footstep sound is played. If the LCP is sick
-(`lcp.sickness_level != SICKNESS_HEALTHY`), an extra `game_tick_and_animate(0)`
-call is inserted **before** the footstep sound, effectively doubling the
-time per step and halving walking speed.
-
-```
-if sick:
-    game_tick_and_animate(0)     // extra frame delay
-    lcp_play_footstep_sound()
-game_tick_and_animate(0)         // normal frame
-if healthy:
-    lcp_play_footstep_sound()
-```
-
-## Waypoint Routing: `lcp_calc_floor_waypoint()` (0x150BC)
-
-Computes the next intermediate waypoint for multi-floor navigation:
-
-```
-target_floor = get_floor_number_from_y(walk_target_y)
-current_floor = get_floor_number_from_y(lcp_y)
-
-if same floor:
-    lcp_on_stairs_flag = NO
-    waypoint = target (direct walk)
-
-if different floor:
-    // Route to staircase entry for current floor
-    stair_index = (current_floor - 1) * 2
-    waypoint = staircase_waypoint_coords[stair_index, stair_index+1]
-
-    // Special case: floor 2 going down
-    if current_floor == 2 and target_floor < current_floor:
-        waypoint = (stair_top_y_threshold, stair_bottom_y_threshold)
-
-    if already at stair entry:
-        lcp_on_stairs_flag = YES
-        if going up:
-            waypoint = staircase_waypoint_coords[stair_index+2, stair_index+3]
-        else:
-            waypoint = staircase_waypoint_coords[stair_index-2, stair_index-1]
-
-        // Special case: floor 1 stair entry
-        if current_floor == 1:
-            waypoint = (stair_top_y_threshold, stair_bottom_y_threshold)
-```
-
-The staircase coordinate table stores 6 (x,y) pairs: entry and exit points
-for each of the three floor-to-floor stair segments. Navigation between
-non-adjacent floors (e.g., floor 1 to floor 3) requires multiple
-waypoint segments — the function is called repeatedly as each segment completes.
-
-## Footstep Sound System
-
-`lcp_play_footstep_sound()` plays different sounds based on floor surface:
-
-| Floor | X Range | Sound Effect |
+| Spot | Where | Used for |
 |---|---|---|
-| 1 (bottom) | X < 166 | `SFX_FOOTSTEP_CARPET` |
-| 1 (bottom) | X ≥ 166 | `SFX_FOOTSTEP_WOOD` |
-| 2 (middle) | 146 < X < 234 | `SFX_FOOTSTEP_CARPET` |
-| 2 (middle) | other | (silent) |
-| 3 (top) | X > 136 | `SFX_FOOTSTEP_WOOD` |
-| 3 (top) | X ≤ 136 | (silent) |
-| Stairs | any | `SFX_FOOTSTEP_STAIRS` |
+| `POS_TOP_LIVING_ROOM` (0) | in front of the TV | switching the TV on and off |
+| `POS_TOP_DANCE_FLOOR` (1) | in front of the record player | records, dancing |
+| `POS_TOP_ARMCHAIR` (2) | the blue armchair | reading the newspaper |
+| `POS_TOP_ORGAN` (6) | the organ | playing the organ |
+| `POS_TOP_STUDY_DOOR` (7) | the study door | the study, saving |
+| `POS_TOP_DESK_CHAIR` (10) | the writing desk | letters |
+| `POS_TOP_FILING_CABINET` (12) | the filing cabinet | games, paper, tidying |
+| `POS_MID_COUCH` (17) | the bedroom rug | exercising |
+| `POS_MID_BED` (18) | the bed | sleeping |
+| `POS_MID_BEDROOM_WALK` (19) | by the alarm clock | the alarm |
+| `POS_MID_BEDROOM_CLOSET` (20), `POS_MID_DRESSER` (21) | closet, dresser | changing |
+| `POS_MID_BATHROOM_SINK` (22) | the bathroom sink | washing, teeth |
+| `POS_MID_TOILET_DOOR` (23) | the toilet door | the toilet |
+| `POS_MID_SHOWER_DOOR` (25), `POS_MID_SHOWER_INSIDE` (24) | the bathtub with shower | showering |
+| `POS_MID_BATHROOM_ENTRANCE` (27) | the bookshelf | putting books away |
+| `POS_MID_COMPUTER_DESK` (29) | the computer | the computer |
+| `POS_BTM_DOG_BOWL` (33) | the dog bowl | feeding the dog |
+| `POS_BTM_STOVE` (34), `POS_BTM_FRIDGE` (35) | stove, fridge | cooking, the fridge |
+| `POS_BTM_KITCHEN_SINK` (36), `POS_BTM_KITCHEN_CABINET` (37) | sink, food cabinet | the glass, food |
+| `POS_BTM_TABLE_LEFT` (38), `POS_BTM_TABLE_RIGHT` (39) | the kitchen table | meals, games |
+| `POS_BTM_WATER_TAP` (41) | the water cooler | drinking |
+| `POS_BTM_COUCH` (43) | the red armchair by the phone | the phone, reading, being patted |
+| `POS_BTM_FIREPLACE_LOGS` (45) | the fireplace | lighting the fire |
+| `POS_BTM_FRONT_DOOR` (46) | the front door | deliveries, firewood, going out |
 
-This creates the impression of different floor surfaces: carpet in living areas,
-wood in hallways and the study, and a distinct stair sound. Some positions are
-deliberately silent (e.g., the bathroom area on floor 2).
+The dog uses a few more (see [DOG.md](DOG.md)); 3, 4, 8, 9, 13..16, 26, 28,
+30, 31, 40, 42 and 44 are used by nothing.
 
-## Head Animation System
+### Walking
 
-The head is a separate sprite (slot 4) that animates independently of the body.
-It creates the impression of the LCP looking around, reacting to events, and
-showing emotion.
+An activity sets `walkXTarget`/`walkYTarget` (usually with `posToXY`) and calls
+`walkToTarget` ([`walk.c`](../source/walk.c)), which repeats `walkStep`
+([`parts/walkStep.c`](../source/parts/walkStep.c)) until he arrives (returning
+0) or an event interrupts the walk (returning -1, see "Interruptions").
 
-### Head Direction Encoding
+- `nextWaypoint` ([`parts/nextWaypoint.c`](../source/parts/nextWaypoint.c))
+  routes him: on the same floor straight to the target, otherwise to the foot
+  or head of the staircase first, one flight at a time.
+- On a floor he moves one pixel per tick horizontally and keeps to the floor's
+  walking line, only turning towards the target's y when he is within 8
+  pixels of it horizontally.  The walk cycle runs through states 0..7.
+- On the stairs he moves diagonally through the climb (9..12), top-landing
+  (13..16), descent (17..20) and bottom-landing (21..24) states.
+- His footsteps sound different on carpet, wooden floor and stairs
+  (`playFootstep`, see [SOUND.md](SOUND.md)).
+- While he is sick every step takes an extra tick: half speed.
 
-The head direction is encoded in 5 bits:
+## Source reference
 
-```
-head_sprite_frame = (vertical << 3) | horizontal
-```
-
-- **Bits 0–2** (horizontal): 0=far left, 4=center, 7=far right
-- **Bits 3–4** (vertical): 0=looking up, 1=center, 2=looking down
-
-### Random Head Movement (`sp_lcha`, 0x26368)
-
-Called every frame. Uses a countdown timer (`g_hadec`) that
-triggers a random head position change every 2–9 frames:
-
-1. Random coin flip (bit 4 of XBIOS Random):
-   - **Vertical change**: pick random vertical position within allowed range
-   - **Horizontal change**: pick random horizontal position within amplitude
-2. Set `head_anim_target` with new direction
-3. The smooth transition between current and target happens in `sprite_lcp_head_update()`
-
-### Head Animation Modes (`HEAD_ANIM_MODE`)
-
-Bit flags control the allowed range of head movement:
-
-| Flag | Meaning |
+| Topic | Source |
 |---|---|
-| `HEAD_ANIM_WALKING` | Natural walking head bob |
-| `HEAD_ANIM_VERTICAL_RANGE` | Allowed vertical range mask |
-| `HEAD_ANIM_HORIZONTAL_AMPLITUDE` | Allowed horizontal swing |
-| `HEAD_ANIM_HORIZONTAL_RANGE` | Horizontal direction bias |
-| `HEAD_ANIM_VERTICAL_OVERRIDE` | Force specific vertical position |
-| `HEAD_ANIM_DISABLED` | Head movement frozen |
-
-Different activities set different modes:
-- Walking: natural bob with wide horizontal range
-- Reading: fixed downward gaze, narrow horizontal
-- Typing: slight downward, medium horizontal
-- Sleeping: fully disabled (head hidden)
-
-### Happiness Effect on Head Sprites
-
-The head sprite selection includes a happiness offset:
-
-```
-headIndex = happiness_head_frame_offset[lcp.happiness] + (head_sprite_frame & 0x7F)
-```
-
-Different happiness levels select different rows in `pex.lcp`, providing
-happy, neutral, and sad facial expressions for each head direction.
-
-## Body Sprite System
-
-### `sprite_update_body()` (0x26244)
-
-Called every frame to render the body:
-
-1. Look up body frame: `body_sprite_frame_table[lcp_state]`
-   - If carrying object and state < 25: use `carry_body_frame_table[lcp_state]` instead
-2. Call `sprite_lcp_flip()` to expand and optionally mirror the sprite
-3. Position: X = `lcp_x - 4` (right) or `lcp_x - 14` (left), Y = `lcp_y + body_y_offset - 21`
-4. Set sprite slot 3 with 32×21 pixel dimensions
-
-### `sprite_lcp_head_update()` (0x2664C)
-
-Called every frame to render the head:
-
-1. Compute head frame from `g_hsfra` + happiness offset
-2. Call `sprite_lcp_flip()` with `g_hsmif` for horizontal flip
-3. Position relative to body using per-state offset tables:
-   - X offset: `head_x_offset_per_state[lcp_state]`
-   - Y offset: `body_y_offset_per_state[lcp_state] - head_height_per_state[lcp_state]`
-4. Special: carrying objects on stairs (states 13–16) lowers head by 1 pixel
-5. Set sprite slot 4
-
-### Horizontal Flipping
-
-`sprite_lcp_flip()` handles the mirroring of body and head sprites based on
-`lcp_face` (`FACING_DIR` enum). The source sprite data in `body.lcp` / `pex.lcp` is
-stored as right-facing (`FACING_RIGHT`); left-facing (`FACING_LEFT`) is generated at runtime by
-flipping the pixel data horizontally and swapping the left/right halves.
-
-### Sprite Data Sizes
-
-Each source sprite frame is **168 bytes** (21 rows × 4 bytes/row × 2 bit-
-planes; a 16×21-pixel 2-plane image).  `sprite_lcp_flip()` expands each
-frame in place to a 336-byte destination (168 shorts, 32-pixel-wide 4-plane
-MFDB layout) that the compositor then blits.
-
-| Constant (in `source/include/sprites.h`) | Value | Meaning |
-|---|---|---|
-| `LCP_BODY_FRAME_SIZE` | `21 * 4 * 2` = 168 bytes | Source frame stride in BODY.LCP / PE*.LCP |
-| `LCP_BODY_SHAPE_SIZE` | `21 * 4` = 84 bytes | Dilated silhouette stride in `body_shp` / `hd_shp` |
-| `LCP_BODY_DEST_WORDS` | `21 * 4 * 2` = 168 shorts | Expanded destination in `g_lsimg` / `g_lsmas` / `g_hsbuf` / `g_hsmas` |
-
-BODY.LCP holds 98 frames = 16,464 bytes of image data; each PE*.LCP holds 66
-frames = 11,088 bytes.  Ghidra's ROM-allocated buffers are slightly larger
-(120 and 66 slots, per the padded reservation the 1985 build set aside).
-
-### Carried Object Rendering
-
-When `lcp_carrying_object_flag = YES`:
-
-- **Facing right**: `spritedata_select_carried_object_right(lcp_carried_object)`
-  - Object positioned at `lcp_x + 10`
-- **Facing left**: `spritedata_select_carried_object_left(lcp_carried_object)`
-  - Object positioned at `lcp_x - sprite_width + 8`
-
-The carried object sprite is drawn in a dedicated slot and follows the LCP's
-position. On stairs, the object transitions between `SPRITE_IN_FRONT` and
-`SPRITE_BEHIND_LCP` layers depending on the stair section.
-
-## Interaction with the Action System
-
-The AI decision engine selects actions based on time of day, needs, and
-personality. Each action follows a scripted sequence of walks and poses.
-
-### Action Dispatch
-
-```
-main loop:
-    action = check_time_based_actions()   // AI selects action
-    execute_action(action)                 // dispatch to handler
-```
-
-### Example: `action_write_letter()`
-
-```
-1. Walk to filing cabinet (POS_TOP_FILING_CABINET)
-2. Face screen, look down (head_anim_target = 12)
-3. Maybe open filing cabinet (random chance based on initiative)
-4. Walk to study door, walk to desk
-5. Sit down (STATE_WRITE_AT_DESK)
-6. Type date header, greeting, body paragraphs
-7. Each character: STATE_TYPE_AT_DESK_LEFT_HAND/RIGHT_HAND + SFX_TYPEWRITER_KEY
-8. Stand up, walk away
-```
-
-### Walk Interruption
-
-During interruptible actions, urgent events can break the walk:
-
-| Condition | Effect |
-|---|---|
-| Doorbell rings | LCP stops, handles delivery, resumes |
-| Bathroom need | LCP stops, uses bathroom, resumes |
-| Alarm goes off | LCP stops, handles alarm |
-| Phone rings | LCP stops, answers phone |
-
-Non-interruptible states: on stairs, carrying objects, during intro,
-inside event handlers, mini-games.
-
-## Function Reference
-
-### Core Movement
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x14CEA | `lcp_walk_to_destination` | High-level walk loop (target → arrival) |
-| 0x1470A | `lcp_pathfind_one_step` | Advance one pixel per frame (351 lines) |
-| 0x150BC | `lcp_calc_floor_waypoint` | Compute next waypoint for multi-floor routing |
-| 0x15224 | `get_floor_number_from_y` | Convert Y coordinate to floor number |
-| 0x14FEC | `lcp_play_footstep_sound` | Surface-dependent footstep SFX |
-| 0x1635E | `house_get_position_xy` | Convert HOUSE_POS to screen coordinates |
-
-### Sprite Rendering
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x26244 | `sp_updb` | Build and position body sprite (slot 3) |
-| 0x2664C | `sp_lchu` | Build and position head sprite (slot 4) |
-| 0x26368 | `sp_lcha` | Random head movement state machine |
-| 0x267B0 | `sprite_lcp_build_all` | Build all LCP sprite components |
-
-### Head Animation
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x26368 | `sp_lcha` | Head direction randomizer |
-| 0x2664C | `sp_lchu` | Head sprite rendering |
-| 0x26530 | `lcp_wait_head_reach_target` | Block until head reaches target angle |
-
-### Carried Objects
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x24A26 | `sp_ssco` | Set carried object for left-facing |
-| 0x24A94 | `sp_ss02` | Set carried object for right-facing |
-
-### Walk Helpers
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x1DF06 | `a_watat` | Walk to position and face screen |
-| 0x1DEBC | `hide_lcp_sprites` | Hide all LCP sprites |
-| 0x1DEDC | `show_lcp_sprites` | Show all LCP sprites |
+| Main loop | [`parts/gameLoop.c`](../source/parts/gameLoop.c) |
+| Decision ladder | [`parts/chooseAction.c`](../source/parts/chooseAction.c) |
+| Action and event dispatch | [`actions.c`](../source/actions.c), [`ai.c`](../source/ai.c) |
+| Idle picker and its tables | [`airandom.c`](../source/airandom.c), [`dat_aitables.c`](../source/dat_aitables.c) |
+| Clock, needs, mood | [`sim.c`](../source/sim.c), [`health.c`](../source/health.c) |
+| A new resident | [`parts/rollResident.c`](../source/parts/rollResident.c) |
+| Keyboard | [`tick.c`](../source/tick.c), [`parts/handleKey.c`](../source/parts/handleKey.c), [`parts/getKey.c`](../source/parts/getKey.c) |
+| Event queue | [`parts/queueEvent.c`](../source/parts/queueEvent.c), [`parts/nextEvent.c`](../source/parts/nextEvent.c) |
+| Typed requests | [`parts/submitCommand.c`](../source/parts/submitCommand.c), [`parts/matchCommand.c`](../source/parts/matchCommand.c), [`parts/lookupWord.c`](../source/parts/lookupWord.c), [`dat_parser.c`](../source/dat_parser.c) |
+| Activities | one file each in [`parts/`](../source/parts/), named after the routine |
+| Walking | [`walk.c`](../source/walk.c), [`parts/walkStep.c`](../source/parts/walkStep.c), [`parts/nextWaypoint.c`](../source/parts/nextWaypoint.c), [`movement.c`](../source/movement.c) |
+| Save file | [`parts/studyVisit.c`](../source/parts/studyVisit.c), [`parts/loadSavedGame.c`](../source/parts/loadSavedGame.c), [`parts/saveFile.c`](../source/parts/saveFile.c) |

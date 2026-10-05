@@ -1,520 +1,221 @@
-# Little Computer People — Sound & Music System
+# Little Computer People — Sound
 
-The game produces sound through three independent subsystems that share the
-Atari ST's Yamaha YM2149 PSG (Programmable Sound Generator) chip:
+How the game makes sound: the music player, which plays the resident's
+records and organ pieces, and the sound effects.  What triggers them is in
+[PEOPLE.md](PEOPLE.md); the song file format in [SNG_FORMAT.md](SNG_FORMAT.md);
+how the player relates to Activision's *The Music Studio* in
+[MUSIC_PLAYER_COMPARISON.md](MUSIC_PLAYER_COMPARISON.md).
 
-1. **MIDI Sequencer** — plays `.sng` and `.org` music files with 3-channel PSG synthesis and optional external MIDI output
-2. **PSG Envelope Processor** — software ADSR envelopes for the 3 PSG tone channels during music playback
-3. **Sound Effect Engine** — plays ambient DoSound sequences from `sounds.lcp` with priority-based preemption
+Names are those of the C port in `source/`.  Ghidra addresses (base 0x10000)
+are given in the function reference.
 
-All three systems are interrupt-driven and run independently of the main game loop.
+## The sound chip
 
-## Hardware: Yamaha YM2149 PSG
-
-The Atari ST's sound chip provides 3 square-wave tone channels (A, B, C), 1 noise
-generator, and a hardware envelope generator. Each channel has a 12-bit period
-register (fine + coarse) and a 4-bit volume register (0–15). The game accesses
-registers via XBIOS `Giaccess` calls (registers 0–13) and uses the XBIOS `Dosound`
-interrupt-driven command interpreter for sound effects.
+The ST's Yamaha YM2149 has three square-wave tone channels (A, B, C), a noise
+generator and a hardware envelope generator, which the game does not use.
 
 | Register | Function |
 |---|---|
-| 0–1 | Channel A period (fine/coarse) |
-| 2–3 | Channel B period (fine/coarse) |
-| 4–5 | Channel C period (fine/coarse) |
-| 6 | Noise period |
-| 7 | Mixer control (tone/noise enable per channel) |
-| 8 | Channel A amplitude (0–15, or bit 4 = use hardware envelope) |
-| 9 | Channel B amplitude |
-| 10 | Channel C amplitude |
-| 11–12 | Hardware envelope period |
-| 13 | Hardware envelope shape |
+| 0–5 | tone period of channels A, B, C (fine, coarse) |
+| 6 | noise period |
+| 7 | mixer: tone and noise enables per channel |
+| 8–10 | volume of channels A, B, C |
+| 11–13 | hardware envelope (unused) |
 
-The game does **not** use the hardware envelope generator. Instead, it implements
-software ADSR envelopes in `psg_process_envelopes()`, giving much finer control
-over volume shaping.
+Music and sound effects share it, and **music wins**: while a song plays,
+`startSfx` starts no effect at all.  The player can also drive an external
+MIDI instrument through the ST's MIDI port.
 
-## Data Files
+## The music player
 
-| File | Format | Purpose |
+The music player descends from the one in Activision's *The Music Studio*,
+whose files the game plays unchanged.  It lives in
+[`midi_seq.c`](../source/midi_seq.c), with its interrupt in `mq_tick.s` and
+its hardware pokes in `psg_asm.s`.
+
+### Who plays music
+
+- **Records** (`playRecord`): one of the first n `.SNG` files on the disk,
+  n being the size of his record collection (4 at the start, plus one per
+  record delivery).  With more records than files, the extra picks all play
+  the last file found.  `danceToMusic` starts a record if none is playing;
+  `stopRecord` stops it.
+- **Organ** (`playOrgan`): a random `.ORG` file.  While it plays, the
+  resident moves his hands whenever a channel's volume rises.
+
+Both go through `playSongFile`, which stops a song that is still playing,
+frees the old song buffer, allocates one the size of the new file, skips the
+10-byte Music Studio signature, reads up to 20 000 bytes and calls
+`startSong`.
+
+### Starting a song
+
+`startSong` points `songEvents` 0x1FE bytes into the buffer, where the event
+stream starts, and then:
+
+1. `parseSongHeader` reads the header commands, after `unpackChanMap` has
+   read the 30-byte channel map 90 bytes before the stream (MIDI channel and
+   program for logical channels 1..15);
+2. `resetPrograms` sends a program change for every channel in use;
+3. `initSongState` sets the read position, the end of the song, the default
+   velocity and volume, and empties the note queue and the loop stack;
+4. `armSequencer` seeds the timer counters (100 ticks of grace before the
+   first event) and `songPlaying` is set.
+
+Header commands (`MIDI_HDR_*`):
+
+| Command | Effect |
+|---|---|
+| `0x80 xx kk` | key: `buildNoteMap(kk)` rebuilds the note translation table (sharps or flats per scale degree) |
+| `0x81 tt` | tempo: `ticksPerBeat = 2400 / tt` |
+| `0x83 xx` | volume: skipped |
+| `0x84 xx vv` | default velocity `vv`, and from it the default PSG volume, 5..15 |
+| `0xC0 xx xx` | program change: skipped here (`resetPrograms` handles programs) |
+| `0xFF` | end of the header |
+| others below 0x20 (masked with 0x9F) | 3-byte note events, skipped |
+
+### The clock
+
+The MFP's Timer A, installed by `hookTimerA`, interrupts 960 times a second
+(2.4576 MHz / 64 / 40).  The handler, `timerAIsr` in `mq_tick.s`:
+
+- counts `timerTicks`;
+- every fourth tick (`envDivider`) steps the PSG envelopes, `stepEnvelopes`
+  -- 240 Hz -- while a song plays or a PSG note is still sounding;
+- while a song plays, counts `seqCountdown` down and steps the sequencer,
+  `seqAdvance`, when it reaches zero.
+
+Both run at interrupt level 5 so that the keyboard and MIDI interrupts are
+still served, each guarded by a busy flag (`envBusy`, `seqBusy`) so a slow
+step is never re-entered.
+
+### The sequencer
+
+`seqAdvance` is a three-state machine (`seqPhase`, `SEQ_PHASE_*`):
+
+- **wait** (`WAIT_NOTE_EXPIRE`): age the queued notes by the time elapsed
+  (`expireNotes`), sending note-offs for those that have run out;
+- **parse** (`PARSE_NEXT_EVENT`): read the next batch of events
+  (`parseEvents`) and load the time to the next one;
+- **ending** (`SONG_ENDING`): keep expiring notes until the queue is empty,
+  then silence the PSG and clear `songPlaying`.
+
+The event stream (`parseEvents`):
+
+| Bytes | Event |
+|---|---|
+| `0x00` | end of a time step |
+| `0x01`..`0x7F` + 2 | a note: logical channel and note-on/sustain/note-off flags, a duration index (with accent and transpose bits), the MIDI note |
+| `0x82` | bar marker |
+| `0x85 n` | loop start, repeat n times (`pushLoop`) |
+| `0x86` | loop end (`popLoop`) |
+| `0xFF` | end of the song |
+
+A note is translated through `noteMap` (the key), queued in `noteQueue` with
+its duration (`queueNote`, up to 20 notes) and sent as a note-on by
+`sendMidiEvent`; when its time is up, `sendNoteOff` releases it.
+
+### Output: the PSG and MIDI
+
+`sendMidiEvent` sends every event to both outputs, each switchable
+(`midiOutOn`, `psgOutOn`):
+
+- **MIDI out:** the note is shifted by octaves according to the channel map
+  and sent through the ACIA -- directly with `aciaWrite` while running in
+  the interrupt (`seqBusy`), otherwise with XBIOS `Midiws`.  Program
+  changes are sent once per physical channel (`sendProgChange`).
+- **PSG:** a note-on takes a silent channel, or steals the one furthest
+  through its envelope; the instrument's 8-byte envelope is copied from the
+  song (`copyEnvelope`), the tone period comes from `psgPeriod`, and the
+  mixer and noise are set.  A note-off finds the channel playing that note
+  and starts its release.  `noteOwner` records which notes are sounding.
+
+### PSG envelopes
+
+The volume of each PSG channel is shaped in software by `stepEnvelopes`,
+240 times a second.  Each channel's `PSG_ENVELOPE`
+([`include/structs.h`](../source/include/structs.h)) runs through attack,
+decay, sustain, release and fade-out (`ENV_*`): every step adds a rate from
+`envRateTab` to an accumulator (`rampAccum`) and moves the volume one step
+each time it passes 360 -- integer interpolation without division.  The volume
+is capped at the note's maximum and written to registers 8..10 with
+`psgWrite`.
+
+## Sound effects
+
+### The effects
+
+`SOUNDS.LCP` holds 23 effects, XBIOS `Dosound` scripts loaded at start-up by
+`loadSounds` ([`sound.c`](../source/sound.c)) into `sfxData`.
+
+| Id | Effect (`SFX_*`) | Played by |
 |---|---|---|
-| `sounds.lcp` | DoSound sequences | 23 sound effects (footsteps, doors, bells, etc.) |
-| `*.sng` | Custom MIDI + PSG envelope | Background music songs |
-| `*.org` | Same format as .sng | Organ/piano music for record player and piano actions |
-
----
-
-## 1. MIDI Sequencer Engine
-
-### Overview
-
-A custom MIDI-like sequencer engine (`midi_seq_*` functions, 24 total) plays
-`.sng` song files. It supports dual output: external MIDI via the Atari ST's
-ACIA port, and internal PSG synthesis via direct YM2149 register writes. Both
-outputs can operate simultaneously or independently, controlled by
-`g_moen` and `psg_out` flags.
-
-### Timing Architecture
-
-The sequencer is driven by the **MFP Timer A** interrupt at 960 Hz
-(2.4576 MHz / 64 / 40):
-
-```
-midi_seq_tick_handler (960 Hz IRQ)
-  |-- midi_tick_counter++
-  |-- midi_tick_prescaler-- (tempo-scaled subdivider)
-  |-- midi_tick_divider-- (event timing)
-  +-- if prescaler expired and not re-entrant:
-        midi_seq_advance_sequencer()
-          |-- midi_seq_expire_notes() — release expired notes
-          |-- midi_seq_parse_events() — read next events from stream
-          +-- midi_seq_dispatch_event() — send note-on/off to PSG/MIDI
-```
-
-The `g_mtpre` controls the effective tempo. It counts down from
-`mi_temp` and triggers sequencer advancement when it reaches zero. The
-`g_mtdiv` provides finer event-level timing within each prescaler
-period.
-
-A re-entrancy lock (`mi_rlock`) prevents the sequencer from being
-interrupted by another timer tick while still processing the previous one.
-
-### Sequencer State Machine (MIDI_SEQ_PHASE enum)
-
-| Phase | Value | Meaning |
-|---|---|---|
-| `SEQ_PHASE_WAIT_NOTE_EXPIRE` | 0 | Waiting for current note duration to expire |
-| `SEQ_PHASE_PARSE_NEXT_EVENT` | 1 | Ready to parse next event from stream |
-| `SEQ_PHASE_SONG_ENDING` | 2 | Song stop requested, finishing current notes |
-
-### Event Parsing (`midi_seq_parse_events`)
-
-The event stream is a compact bytecode format (not standard MIDI):
-
-| Byte Value | Event Type | Size | Description |
-|---|---|---|---|
-| 0x00 | Padding | 1 | End-of-bar marker, advance to next position |
-| 0x01–0x7F | Note event | 3 | Packed note with duration, accent, transpose |
-| 0x82 | Bar marker | 1 | Sync/position marker |
-| 0x85 | Loop start | 5 | Push {return_addr, count} to loop stack |
-| 0x86 | Loop end | 1 | Pop stack, decrement count, jump if > 0 |
-| 0xFF | End of song | 1 | Stop sequencer or loop to beginning |
-
-### Note Event Encoding (3 bytes)
-
-```
-Byte 0: [bit 7: always 0] [bit 6: note-on trigger] [bits 0-5: note index]
-Byte 1: [bits 6-7: transpose mode] [bit 5: accent flag] [bits 0-4: duration index]
-Byte 2: [bit 7: always 0] [bits 0-6: MIDI note number 0-127]
-```
-
-| Field | Bits | Values |
-|---|---|---|
-| Note-on trigger | byte0 bit 6 | 1 = play note, 0 = rest/continuation |
-| Duration index | byte1 bits 0–4 | Index into `midi_note_duration_table[]` (0–25) |
-| Accent flag | byte1 bit 5 | 1 = force velocity 0x7F (maximum), 0 = use default |
-| Transpose mode | byte1 bits 6–7 | 0 = apply scale table, 1–3 = raw note |
-| MIDI note | byte2 bits 0–6 | Standard MIDI note number (0–127) |
-
-### Scale/Transpose System (`mq_bust`)
-
-The sequencer includes a scale quantization system that constrains notes to
-specific musical scales:
-
-1. Initialize 132-entry identity table (note N -> N)
-2. Mark 5 chromatic notes as 0xFF (skip): C#, D#, F#, G#, A# (indices 1,3,6,8,10)
-3. Apply a 7-bit chord mask from `midi_scale_mask_table[]` to enable/disable
-   specific scale degrees within each octave
-4. For scale values < 9: shift active notes up (+1 semitone)
-5. For scale values >= 9: shift active notes down (-1 semitone)
-
-This allows the sequencer to quantize melodies to pentatonic, blues, major, minor,
-and other scales by remapping notes through `midi_scale_transpose_table[]`.
-
-### Loop System
-
-The sequencer supports nested loops via a stack (`midi_loop_stack[]`):
-
-- **0x85 (Loop start)**: pushes the current position and a repeat count onto the stack
-- **0x86 (Loop end)**: pops the stack, decrements count; if > 0, jumps back to saved position
-- Used for repeating musical phrases within a song
-
-### Note Queue
-
-Notes are queued in `midi_note_event_queue[]` (capacity 58 entries, 3 shorts per entry)
-via `midi_seq_queue_note_event()`. Each entry stores the note duration, note value
-(combined with timing info), and mapped channel. Notes are expired by
-`midi_seq_expire_notes()` which sends note-off events when their duration completes.
-
-### Event Dispatch (`mq_dise`)
-
-The largest sound function (154 lines). Routes MIDI events to both outputs:
-
-**External MIDI** (`g_moen`):
-- Applies octave transposition based on channel mapping
-- Sends via `_xbios(XBIOS_Midiws)` or direct ACIA byte writes (`mowrit`)
-
-**Internal PSG** (`psg_out`):
-- Note-on (status 0x90): looks up frequency in `psg_frequency_table[]`, writes to PSG
-  period registers, triggers ADSR envelope
-- Note-off (status 0x90 with velocity 0): finds matching channel, triggers envelope release
-- Program change (status 0xC0): loads PSG envelope parameters from the song data
-- Allocates notes to the 3 available PSG channels, tracking active notes in
-  `psg_channel_notes[]`
-
-### Channel Mapping (`mq_pacm`)
-
-A 90-byte block preceding the song header defines how MIDI channels map to
-PSG channels and what program (instrument) each uses. Parsed into
-`midi_channel_map[]` and `midi_channel_program[]` arrays.
-
-### Song Playback Flow
-
-```
-song_play("filename.sng")
-  1. Stop any currently playing song
-  2. Free previous song buffer
-  3. Get file size via GEMDOS Fsfirst
-  4. Allocate buffer via GEMDOS Malloc
-  5. Open file, skip 10-byte header, read up to 20,000 bytes
-  6. Call midi_seq_init_song(buffer, max_position)
-       a. Set midi_data_base_ptr = buffer + 0x1FE
-       b. Parse header commands (midi_seq_parse_header)
-       c. Reset all MIDI programs (midi_seq_reset_programs)
-       d. Skip leading padding (midi_seq_skip_padding)
-       e. Set playback position
-       f. Start interrupt-driven sequencer (midi_seq_start_playback)
-       g. Set midi_is_playing = true
-```
-
-### Record Player / Piano Playback
-
-When the LCP plays the record player (`a_plawr`) or piano
-(`a_playp`), the game:
-
-1. Scans the data directory for `*.sng` or `*.org` files using GEMDOS Fsfirst/Fsnext
-2. Selects a random file from those found
-3. Calls `song_play()` to start playback
-4. Animates the LCP based on real-time PSG volume levels:
-   - Reads PSG registers 8, 9, 10 (channel A/B/C amplitude) via `XBIOS Giaccess`
-   - If any channel exceeds the previous frame's volume, switch to an active
-     dance/playing pose
-   - Otherwise switch to idle pose
-5. Loops until `mi_play` becomes false (song ends)
-
----
-
-## 2. PSG Envelope Processor
-
-### Overview
-
-Since the YM2149's hardware envelope generator can only control one channel at a
-time with limited shapes, the game implements full software ADSR envelopes for all
-3 PSG channels. The processor runs at 240 Hz (every 4th tick of the 960 Hz timer)
-via `psg_process_envelopes()`.
-
-### PSG_ENVELOPE Struct (14 bytes per channel)
-
-```c
-typedef struct {
-    byte  phase;              // Current envelope phase (ENV_PHASE enum)
-    byte  attack_start_vol;   // Initial volume at note-on
-    byte  attack_duration;    // Ticks to reach attack target
-    byte  attack_target_vol;  // Peak volume after attack
-    byte  decay_duration;     // Ticks from peak to sustain level
-    byte  decay_target_vol;   // Volume at end of decay
-    byte  sustain_duration;   // Ticks to hold sustain
-    byte  sustain_target_vol; // Volume during sustain
-    byte  release_duration;   // Ticks to fade to silence
-    byte  max_volume;         // Clamp ceiling for output
-    byte  phase_timer;        // Countdown within current phase
-    byte  current_volume;     // Current output volume (0-15)
-    byte  ramp_direction;     // +1 or -1 for volume interpolation
-} PSG_ENVELOPE;
-```
-
-Three instances: `psg_envelope[0]`, `psg_envelope[1]`, `psg_envelope[2]` for
-channels A, B, C respectively.
-
-### Envelope Phases (ENV_PHASE enum)
-
-| Phase | Value | Behavior |
-|---|---|---|
-| `ENV_IDLE` | 0 | Channel silent, no processing |
-| `ENV_ATTACK` | 1 | Set start volume, immediate transition to DECAY |
-| `ENV_DECAY` | 2 | Ramp from attack_target_vol toward decay_target_vol |
-| `ENV_SUSTAIN` | 3 | Ramp to sustain_target_vol, hold for sustain_duration |
-| `ENV_RELEASE` | 4 | Ramp down to silence |
-| `ENV_FADEOUT` | 5 | Final fadeout (post-release cleanup) |
-
-### Volume Interpolation
-
-The envelope processor uses **Bresenham-style integer interpolation** for smooth
-volume transitions between phase endpoints:
-
-```
-delta = abs(target_volume - current_volume)
-scale_factor = 360 / phase_duration
-psg_channel_ramp_accum[ch] += delta * scale_factor
-
-while accumulator >= 360:
-    accumulator -= 360
-    current_volume += ramp_direction  (+1 or -1)
-
-output = min(current_volume, max_volume)
-psg_write_register(8 + channel, output)
-```
-
-This avoids floating-point arithmetic while providing smooth 240 Hz volume ramping
-across the 0–15 PSG amplitude range.
-
-### Envelope Triggering
-
-Envelopes are triggered from `midi_seq_dispatch_event()`:
-- **Note-on**: loads envelope parameters from the song data's instrument definition
-  block, sets `phase = ENV_ATTACK`
-- **Note-off**: sets `phase = ENV_RELEASE` (begins fadeout)
-- **Program change**: updates the envelope parameter source for subsequent notes
-
----
-
-## 3. Sound Effect Engine
-
-### Overview
-
-A separate priority-based system plays ambient sound effects through the YM2149
-using the Atari ST's built-in XBIOS `Dosound` command interpreter. Sound effects
-and music are mutually exclusive — they share the PSG hardware.
-
-### Data Source: `sounds.lcp`
-
-The file is 1,156 bytes and contains 23 DoSound command sequences terminated
-by a 2-byte `0x0000` sentinel, loaded into `mi_ntLp[]` at
-startup. Each effect is a variable-length byte array in the Atari ST DoSound
-format: a sequence of register-write commands that the OS executes at 50 Hz.
-
-Each entry consists of a 2-byte big-endian size word followed by that many
-bytes of content. The content contains the DoSound command bytes (ending with
-an `0xFF` terminator), optional padding zeros, and a 4-byte duration suffix
-(two big-endian shorts). The game zeroes out the duration bytes after
-extracting them, since the DoSound interpreter would try to execute them
-as register writes.
-
-The 23 effects fall into three complexity tiers based on DoSound data size:
-
-- **Simple (34 bytes, 13 effects)**: All 14 YM2149 registers set once + `0xFF`.
-  Single-shot sounds that decay via hardware envelope. Used for footsteps,
-  doors, typewriter, phone, food crunch, applause.
-- **Looping (52 bytes, 5 effects)**: Base registers + 3 pitch-sweep stages
-  using DoSound's `0x80+reg` loop-target mechanism. Used for doorbell echo,
-  water tap, toilet flush, snoring.
-- **Complex (60–148 bytes, 5 effects)**: Multi-stage sequences with many
-  sweep steps. Water running (148 bytes, 15 pitch steps), alarm clock
-  (148 bytes, cycles through all 3 channels), fire crackle variant (60 bytes,
-  4 sweep stages).
-
-### Sound Effect IDs (SOUND_EFFECT_ID enum, 23 values)
-
-| ID | Name | Size | Usage |
-|---|---|---|---|
-| 0 | `SFX_FOOTSTEP_STAIRS` | 34 | Walking on stairs |
-| 1 | `SFX_FOOTSTEP_CARPET` | 34 | Walking on carpet |
-| 2 | `SFX_FOOTSTEP_WOOD` | 34 | Walking on wood floors |
-| 3 | `SFX_FOOTSTEP_3` | 34 | Footstep variant (not referenced in code) |
-| 4 | `SFX_FOOTSTEP_4` | 34 | Footstep variant (not referenced in code) |
-| 5 | `SFX_FOOTSTEP_5` | 34 | Footstep variant (not referenced in code) |
-| 6 | `SFX_TV_CLICK` | 52 | TV on/off click |
-| 7 | `SFX_SPEECH` | 52 | LCP speaking/mumbling |
-| 8 | `SFX_HEAD_NOD` | 148 | LCP head nod acknowledgment |
-| 9 | `SFX_GREETING` | 52 | LCP greeting/wave |
-| 10 | `SFX_CLICK` | 34 | Random UI click |
-| 11 | `SFX_TYPEWRITER_KEY` | 34 | Typewriter key press |
-| 12 | `SFX_DOORBELL` | 34 | Front doorbell ring |
-| 13 | `SFX_DOORBELL_ECHO` | 34 | Doorbell follow-up echo (chained from 12) |
-| 14 | `SFX_DOOR_OPEN` | 34 | Opening doors, cabinets, fridge, closets |
-| 15 | `SFX_DOOR_CLOSE` | 34 | Closing doors, cabinets, closets |
-| 16 | `SFX_TOILET_FLUSH` | 52 | Toilet flushing |
-| 17 | `SFX_TOILET_REFILL` | 148 | Toilet tank refilling (chained from 16) |
-| 18 | `SFX_WATER_RUNNING` | 34 | Water running (drinking, washing hands) |
-| 19 | `SFX_WATER_TAP` | 60 | Water tap on |
-| 20 | `SFX_ALARM_CLOCK` | 34 | Alarm clock ringing |
-| 21 | `SFX_PHONE_RING` | 34 | Phone ringing |
-| 22 | `SFX_SNORING` | 34 | Snoring (sleeping) |
-
-IDs 3–5 (`SFX_FOOTSTEP_3/4/5`) have valid DoSound data in SOUNDS.LCP but
-are never referenced by any `soundeffect_select()` call in the game code.
-They may be unused variants or reserved for future use.
-
-The three active footstep effects (IDs 0–2) are identical except for the
-noise period register (R06): stairs=17, carpet=1, wood=7. The same `\_`
-decay envelope shape creates distinct surface textures through noise
-frequency alone.
-
-### Priority System
-
-Each sound effect has a priority value stored in `sf_pri[]`.
-When a new effect is requested via `soundeffect_select()`:
-
-- If no effect is currently playing: play immediately
-- If a higher-priority effect is playing: ignore the new request
-- If a lower-or-equal priority effect is playing: preempt with the new one
-
-This prevents footstep sounds from interrupting doorbells, and prevents
-multiple concurrent effects from producing cacophony.
-
-### Playback Flow
-
-```
-soundeffect_select(SFX_ID, duration)
-  1. Check priority against current playing effect
-  2. Store effect ID and duration in globals
-  3. Set soundeffect_active_flag = YES
-
-soundeffect_irq_play() — called from screen_render_8hz at 8 Hz
-  1. If music is playing: skip (SFX and music share PSG)
-  2. If another SFX playing with higher priority: skip
-  3. Silence current SFX via soundeffects_off()
-  4. Copy DoSound command data from midi_note_length_params[SFX_ID]
-     into soundeffect_DoSound_Buffer
-  5. Call _xbios(XBIOS_Dosound, buffer) to start OS-driven playback
-  6. Calculate duration in 200 Hz ticks from the 4-byte suffix
-  7. If explicit duration provided: override with caller's value
-
-screen_render_8hz() — handles SFX expiration
-  if soundeffect_remaining_ticks > 0:
-      soundeffect_remaining_ticks -= 1
-      if expired:
-          soundeffects_off()
-          if was SFX_DOORBELL:  play SFX_DOORBELL_ECHO
-          if was SFX_TOILET_FLUSH:  play SFX_TOILET_REFILL
-```
-
-### Chained Sound Effects
-
-Some effects automatically trigger follow-up effects when they expire:
-- `SFX_DOORBELL` -> `SFX_DOORBELL_ECHO` (the ring echoes)
-- `SFX_TOILET_FLUSH` -> `SFX_TOILET_REFILL` (tank refills after flush)
-
-This chaining is handled in `screen_render_8hz()` when the duration timer expires.
-
-### Mutual Exclusion with Music
-
-Sound effects and music cannot play simultaneously because they share the
-YM2149 PSG hardware. `soundeffect_irq_play()` checks `mi_play` first
-and returns immediately if music is active. During record player and piano
-actions, no ambient SFX are heard.
-
----
-
-## File Formats
-
-### .SNG / .ORG Song File Format ("The Music Studio" by Activision)
-
-Both file types share the same internal format, created by **The Music Studio**
-(Activision, 1986) for the Atari ST. The original music was composed by
-**Ed Bogas** (Activision staff composer). The `.sng` extension is used for
-background music songs, while `.org` is used for organ/piano pieces that the
-LCP plays on the record player or piano.
-
-The file signature is `0xCD "Mstudio" 0xCD`, format version `0x02`.
-
-```
-Offset  Size  Content
-------  ----  --------------------------------------------------
-0x000     1   Sentinel: 0xCD
-0x001     7   ASCII signature: "Mstudio"
-0x008     1   Sentinel: 0xCD
-0x009     1   Format version: 0x02
-
-0x00A   150   Instrument names block 1 (15 x 10 bytes, null-padded ASCII)
-              Active instrument set used for PSG synthesis.
-              Names like: Blocks, Harmonica, Guitar, Flute, Clarinet,
-              Baritone, Hihat, Snare, B.Fiddle, Sax, Piano, Bass, Vibes, Bells
-
-0x0A0   120   Instrument envelope parameters (15 x 8 bytes)
-              Per-instrument PSG envelope shape definitions.
-              Byte 0: mixer/config flags (high nibble: tone/noise enable bits)
-              Bytes 1-7: ADSR-like parameters loaded into PSG_ENVELOPE
-              when a program change selects this instrument.
-
-0x118   150   Instrument names block 2 (15 x 10 bytes)
-              Alternate instrument bank. May be identical to block 1
-              (Ed Bogas originals) or contain a different set
-              (classical pieces use different instruments like Accordian,
-              Soprano, Congas, Trumphet).
-
-0x1AE    30   Channel/program map (15 x 2 bytes)
-              Parsed by midi_seq_parse_channel_map() at
-              midi_data_base_ptr - 90.
-              Each 2-byte entry configures instrument-to-channel routing.
-              Value 0x01 = default/identity mapping.
-
-0x1CC    20   Extended data (usually zeros)
-              Some files contain 4 x 4-byte section repeat markers.
-
-0x1E0    32   Song name (null-terminated ASCII, padded to 32 bytes)
-
-0x200     8   Pre-stream area
-              Usually: FF FF 00 00 00 00 00 00
-              (FF FF serves as skip-padding target for midi_seq_skip_padding)
-
-0x208     -   midi_data_base_ptr target (= buffer + 0x1FE in game engine)
-              Header configuration commands followed by note event stream.
-```
-
-The game's `song_play()` function skips the 10-byte file header, reads up to
-20,000 bytes into a heap buffer, then sets `midi_data_base_ptr = buffer + 0x1FE`
-(file offset 0x208). The channel map and envelope data are accessed at
-negative offsets: `midi_data_base_ptr - 90` for the channel map (file 0x1AE),
-and earlier offsets for envelope parameters.
-
-### Header Configuration Commands
-
-Parsed by `midi_seq_parse_header()` starting at `mi_dbase`.
-The parser uses the mask `(byte & 0x9F) < 0x20` to distinguish note events
-(3-byte groups, skipped) from configuration commands (dispatched via jump table).
-The header ends when a 0x00 byte is encountered after the initial skip.
-
-| Command | Size | Purpose |
-|---|---|---|
-| 0x80 NN | 2 | Set MIDI channel count |
-| 0x81 NN | 2 | Set tempo: `midi_ticks_per_beat = 2400 / NN` |
-| 0x83 NN | 2 | Set default volume/velocity |
-| 0x84 NN | 2 | Set scale (1=chromatic passthrough) |
-| 0x85 | 1+ | Loop start marker |
-| 0xC0 CC PP | 3 | Program change (channel, program) |
-| 0x00 | 1 | End of header (return) |
-| 0xFF | 1 | End marker (return) |
-| 0x01-0x7F | 3 | Note events in header (skipped) |
-
-Typical header: `CHANNELS=1, TEMPO=128, SCALE=1` (all songs use SCALE=1).
-Tempo values range from 78 (Bossa Nova, slowest) to 171 (Five Four, fastest).
-
-### Note Event Encoding (3 bytes)
-
-```
-Byte 0 (voice/instrument):
-  Bits 0-3: instrument index (0-14, into instrument block 1)
-  Bits 4-7: voice channel / modifier flags
-    0x0N = primary voice
-    0x1N = secondary voice
-    0x2N = third voice
-    0x4N = accent / note-on emphasis
-    0x8N = special modifier
-
-Byte 1 (duration + flags):
-  Bits 0-4: duration index (into midi_note_duration_table[], 0-25)
-  Bit 5:    accent flag (force max velocity 0x7F)
-  Bits 6-7: transpose mode (0=use scale table, 1-3=raw/bypass)
-
-Byte 2 (pitch):
-  Bits 0-6: MIDI note number (0-127)
-  Bit 7:    unused
-```
-
-Between note events: 0x00 = time advance/rest, 0x82 = bar marker, 0xFF = end of song.
-
-### sounds.lcp File Format
+| 0..2 | `FOOTSTEP_STAIRS`, `_CARPET`, `_WOOD` | the resident's steps (`playFootstep`) |
+| 3..5 | `FOOTSTEP_3`..`5` | nothing |
+| 6 | `TV_CLICK` | switching the TV on; one of his chatter sounds |
+| 7, 9 | `SPEECH`, `GREETING` | his chatter: on the phone, waving hello |
+| 8 | `HEAD_NOD` | his chatter on the phone and when waving |
+| 10 | `CLICK` | typing on the computer and the typewriter |
+| 11 | `TYPEWRITER_KEY` | the typewriter's carriage return |
+| 12, 13 | `DOORBELL`, `DOORBELL_ECHO` | deliveries; the echo follows the bell |
+| 14, 15 | `DOOR_OPEN`, `DOOR_CLOSE` | doors, cabinets, the closet, the fridge |
+| 16, 17 | `TOILET_FLUSH`, `TOILET_REFILL` | the toilet; the refill follows the flush |
+| 18 | `WATER_RUNNING` | washing at a sink |
+| 19 | `WATER_TAP` | Ctrl-W, adding water to the tank |
+| 20 | `ALARM_CLOCK` | the alarm, repeated while it rings |
+| 21 | `PHONE_RING` | the phone, repeated while it rings |
+| 22 | `SNORING` | dozing off |
+
+### Priority
+
+Each effect has a priority in `sfxPriority`; **lower is more important**:
+doorbell 0, phone 1, alarm 16, footsteps 30, most others 15.
+
+- `sfxSelect(id, duration)` stores a request (`sfxReqId`, `sfxReqDur`); a
+  pending request is replaced only by one at least as important.
+- `startSfx` ([`sfx_irq.c`](../source/sfx_irq.c)), run by the compositor
+  once per frame while a request is pending, starts it -- unless a song is
+  playing, or an effect is playing that is more important; an equal or more
+  important request cuts it off (`stopSfx`).
+
+### Playing one
+
+`startSfx` copies the effect into `sfxBuffer`, replaces its last four bytes
+-- the effect's duration -- with zeros, and hands it to XBIOS `Dosound`,
+which plays it from TOS's own 50 Hz interrupt.  The duration, in 200 Hz units,
+is divided by 25 into frames (`sfxTicksLeft`); a caller can give its own
+duration instead, and -1 keeps the effect's.
+
+The compositor counts `sfxTicksLeft` down every frame and silences the PSG
+when it reaches zero (`stopSfx`).  Two effects then chain: the doorbell is
+followed by its echo, the toilet flush by the refill.
+
+`sfxBuffer` is 56 bytes, and three effects are longer -- the head nod and
+the toilet refill at 148 bytes, the water tap at 60 -- so copying them runs
+past its end.  In the shipped game this lands in unused memory; see
+`docs/history.md` ("Is the 56 real?").
+
+### Footsteps
+
+`playFootstep` picks the sound by where he walks:
+
+| Where | Sound |
+|---|---|
+| stairs | `SFX_FOOTSTEP_STAIRS` |
+| ground floor, x < 166 (kitchen) | `SFX_FOOTSTEP_CARPET` |
+| ground floor, x >= 166 (living room) | `SFX_FOOTSTEP_WOOD` |
+| middle floor, 146 < x < 234 (bathroom) | `SFX_FOOTSTEP_CARPET` |
+| top floor, x > 136 | `SFX_FOOTSTEP_WOOD` |
+| elsewhere | silent |
+
+The three are the same effect except for the noise period (register 6):
+stairs 17, carpet 1, wood 7.
+
+## File formats
+
+The song files are documented in [SNG_FORMAT.md](SNG_FORMAT.md).
+
+### SOUNDS.LCP
 
 Contains 23 sound effect entries stored sequentially, terminated by a 2-byte
 `0x0000` sentinel. Total file size: 1,156 bytes. Each entry:
@@ -531,9 +232,9 @@ Within the S-byte content region:
 - **`0xFF`**: end-of-sequence terminator
 - **Padding**: zero bytes (0–1 byte, for alignment)
 - **Duration**: last 4 bytes — two big-endian shorts (hi, lo) combined as
-  `(hi << 16) | lo`, then divided by 25 to yield 200 Hz tick count
+  `(hi << 16) | lo`, a time in 200 Hz units; divided by 25 it gives frames
 
-The game copies the entire S-byte content into `g_sfDoB`,
+`startSfx` copies the entire S-byte content into `sfxBuffer`,
 extracts the 4-byte duration from the end, then zeroes those 4 bytes so the
 DoSound interpreter (XBIOS `Dosound`) won't try to execute them as commands.
 
@@ -547,112 +248,50 @@ interrupt handler. Special control codes create pitch sweeps:
 
 ---
 
-## Footstep Sound Mapping
 
-Footstep sounds play when the LCP walks, based on surface type:
-
-| Floor | X Range | Sound Effect |
-|---|---|---|
-| 1 (bottom) | X < 166 | `SFX_FOOTSTEP_CARPET` |
-| 1 (bottom) | X >= 166 | `SFX_FOOTSTEP_WOOD` |
-| 2 (middle) | 146 < X < 234 | `SFX_FOOTSTEP_CARPET` |
-| 2 (middle) | other | (silent) |
-| 3 (top) | X > 136 | `SFX_FOOTSTEP_WOOD` |
-| 3 (top) | X <= 136 | (silent) |
-| Stairs | any | `SFX_FOOTSTEP_STAIRS` |
-
-Footsteps trigger on walk animation frames 3 and 7 (two steps per 8-frame
-walk cycle), controlled by `footstep_trigger_flag`.
-
----
-
-## Function Reference
-
-### MIDI Sequencer (20 functions)
+## Function reference
 
 | Address | Function | Purpose |
 |---|---|---|
-| 0x10028 | `mq_inis` | Initialize and start song playback |
-| 0x10082 | `mq_stap` | Reset timing, enable sequencer |
-| 0x100B4 | `mq_setp` | Set playback position in event stream |
-| 0x1012A | `mq_skip` | Skip leading 0x00/0xFF padding bytes |
-| 0x1026A | `midi_seq_push_loop` | Push loop context onto stack |
-| 0x10338 | `midi_seq_parse_events` | Parse next event(s) from stream |
-| 0x105CA | `midi_seq_read_note_duration` | Read note duration from duration table |
-| 0x10628 | `midi_seq_queue_note_event` | Queue note into event queue |
-| 0x107B0 | `midi_seq_send_note_off` | Send note-off for a queued note |
-| 0x10918 | `mq_dise` | Route event to PSG/MIDI outputs (154 lines) |
-| 0x10E88 | `midi_seq_expire_notes` | Release notes whose duration expired |
-| 0x10EC2 | `midi_seq_advance_sequencer` | Main sequencer tick advance |
-| 0x1103C | `midi_seq_stop` | Stop sequencer, silence all notes |
-| 0x11184 | `mq_resp` | Reset all MIDI channel programs |
-| 0x111FA | `mq_parh` | Parse header configuration commands |
-| 0x1135C | `mq_pacm` | Parse 90-byte channel/program map |
-| 0x113B4 | `mq_bust` | Build scale/transpose lookup table |
-| 0x11494 | `mowrit` | Write single byte to MIDI ACIA |
-| 0x114BC | `psg_write_register` | Write value to YM2149 register |
-| 0x1219A | `midi_seq_tick_handler` | 960 Hz MFP Timer A interrupt handler |
+| 0x1016A | `startSong` | start a song in a buffer |
+| 0x101BC | `initSongState` | read position, end, defaults |
+| 0x10224 | `armSequencer` | seed the counters and start the sequencer |
+| 0x1012A | `skipTextField` | skip a text field in the song data |
+| 0x1026A, 0x102B6 | `pushLoop`, `popLoop` | the loop stack |
+| 0x10338 | `parseEvents` | read the next events |
+| 0x105CE | `peekNoteDur` | look ahead at the next note's duration |
+| 0x10628 | `queueNote` | queue a note and send its note-on |
+| 0x107B0 | `sendNoteOff` | release a queued note |
+| 0x1084A | `sendProgChange` | program change to MIDI |
+| 0x10918 | `sendMidiEvent` | one event to MIDI out and the PSG |
+| 0x10E02, 0x10E64 | `expireNotes`, `removeQueued` | age and drop queued notes |
+| 0x10EC2 | `seqAdvance` | the sequencer step |
+| 0x1103C | `stopSequencer` | stop the sequencer (never called) |
+| 0x11112, 0x11162 | `hookTimerA`, `unhookTimerA` | install and remove the Timer-A interrupt (the second is never called) |
+| 0x11184 | `resetPrograms` | program changes for all channels |
+| 0x111FA | `parseSongHeader` | the header commands |
+| 0x1135C | `unpackChanMap` | the channel and program map |
+| 0x113B4 | `buildNoteMap` | the note translation table for a key |
+| 0x11586 | `copyEnvelope` | copy an instrument envelope |
+| 0x115AE | `stepEnvelopes` | the PSG envelopes |
+| 0x1219A | `timerAIsr` | the Timer-A interrupt (`mq_tick.s`) |
+| 0x12272, 0x12284 | `psgWrite`, `psgMixer` | write a PSG register, update the mixer (`psg_asm.s`) |
+| 0x122A6 | `aciaWrite` | send a byte to MIDI out (`psg_asm.s`) |
+| 0x1D9EA | `playSongFile` | load a song file and start it |
+| 0x1DAFC | `startSfx` | start the requested effect |
+| 0x1DCC4 | `loadSounds` | load `SOUNDS.LCP` |
+| 0x1DD88 | `sfxSelect` | request an effect |
+| 0x1DDD8 | `stopSfx` | silence the PSG |
+| 0x14FEC | `playFootstep` | footsteps |
+| 0x1F904..0x1F952 | `sfxTvClick`, `sfxSpeech`, `sfxHeadNod`, `sfxGreeting` | chatter |
+| 0x24786, 0x2476C | `sfxClick`, `typeKeySound` | typing |
+| 0x25F9A | `playDoorbell` | the doorbell |
 
-### PSG Envelope (3 functions)
+## Song catalogue
 
-| Address | Function | Purpose |
-|---|---|---|
-| 0x115AE | `psg_process_envelopes` | Software ADSR envelope processor (240 Hz) |
-| 0x11A0E | `psg_set_note_frequency` | Set PSG channel period from note number |
-| 0x119C6 | `psg_set_mixer_and_volume` | Configure mixer and volume registers |
-
-### Sound Effects (5 functions)
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x1DA0A | `sf_sele` | Queue a sound effect by ID and duration |
-| 0x1DAFC | `sf_irqp` | Play queued effect via XBIOS Dosound |
-| 0x1DC3C | `sf_so` | Silence all PSG channels, clear SFX state |
-| 0x14FEC | `lcp_play_footstep_sound` | Surface-dependent footstep SFX selection |
-| 0x1D904 | `p_dobls` | Queue doorbell ring effect |
-
-### Song Playback (2 functions)
-
-| Address | Function | Purpose |
-|---|---|---|
-| 0x11D00 | `song_play` | Load .sng/.org file and start playback |
-| 0x11462 | `song_active` | Check if a song is currently playing |
-
-### Key Global Variables
-
-| Variable | Type | Purpose |
-|---|---|---|
-| `mi_play` | bool | True when sequencer is active |
-| `g_msmsa` | bool | True when timer interrupt drives sequencer |
-| `mi_dbase` | uint8_t* | Pointer to start of MIDI event stream |
-| `mi_sqpos` | uint8_t* | Current read position in event stream |
-| `g_mspha` | MIDI_SEQ_PHASE | Current sequencer state |
-| `mi_temp` | short | Ticks per beat (controls playback speed) |
-| `g_mtcou` | long | Raw 960 Hz Timer A tick counter |
-| `g_mtpre` | short | Tempo-scaled tick subdivider |
-| `g_moen` | BOOL16 | Enable external MIDI output |
-| `psg_out` | BOOL16 | Enable internal PSG synthesis |
-| `mi_slop` | bool | True = loop song, false = play once |
-| `mi_sbuf` | uint8_t* | Heap buffer for current song data |
-| `midi_note_event_queue[]` | short[] | Note queue (58 entries x 3 shorts) |
-| `midi_scale_transpose_table[]` | uint8_t[] | 132-entry scale quantization table |
-| `midi_channel_map[]` | short[] | MIDI channel to PSG channel mapping |
-| `psg_envelope[3]` | PSG_ENVELOPE | Software ADSR state per PSG channel |
-| `psg_channel_notes[3]` | byte | Currently sounding note per PSG channel |
-| `psg_frequency_table[]` | short[] | Note-to-PSG-period lookup table |
-| `g_sfcur` | SOUND_EFFECT_ID | Currently queued effect |
-| `g_sfpli` | SOUND_EFFECT_ID | Currently playing effect |
-| `g_sfplf` | BOOL16 | True when a DoSound effect is active |
-| `g_sfret` | long | Frames remaining for current effect |
-| `sf_pri[]` | short[] | Priority value per effect ID |
-
----
-
-## Song Catalog
-
-The game ships with 16 songs: 10 original compositions by **Ed Bogas** (`.sng`),
-and 6 classical/traditional arrangements (`.org`). The `.sng` files play as
-background music; the `.org` files play when the LCP uses the record player or piano.
+The disk holds 16 pieces, mostly by **Ed Bogas**: 11 `.SNG` files, the records
+the resident plays on his record player, and 5 `.ORG` files, the pieces he
+plays on the organ.
 
 | File | Tempo | Events | Voices | Range | Title |
 |---|---|---|---|---|---|
