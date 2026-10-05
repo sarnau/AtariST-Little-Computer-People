@@ -55,7 +55,7 @@ extern BOOL16 dresserOpen;
 extern BOOL16 toiletDoorOpen;
 extern BOOL16 filingCabOpen;
 extern short bowlLevel;
-extern short foodSupply;
+extern short recordCount;
 extern BOOL16 recordPlaying;
 extern BOOL16 tvRunning;
 extern short stoveFrames[];

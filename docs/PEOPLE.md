@@ -251,11 +251,11 @@ The deliveries and the phone go into the event queue (10 entries), so they
 come first at his next decision and can cut short what he is doing.  When he
 is asleep, an event gets him out of bed first.
 
-The armchair by the phone is where he can be patted: `callDog` walks him there
-and crouches (it is also the first step of answering the phone), and he stays
-pattable while crouching there (`ACTION_PET_DOG`, `petDog`) or sitting there
-reading (`ACTION_SIT_ON_COUCH_WITH_DOG`, `sitWithDog`).  Despite these names
-the dog takes no part -- see "Misleading names" below.
+The armchair by the phone is where he can be patted: `crouchForPat` walks him
+there and crouches (it is also the first step of answering the phone), and he
+stays pattable while crouching there (`ACTION_WAIT_FOR_PAT`, `waitForPat`) or
+sitting there reading (`ACTION_READ_IN_ARMCHAIR`, `readInArmchair`).  The dog
+plays no part in any of this (see [DOG.md](DOG.md)).
 
 ### Typed requests
 
@@ -383,7 +383,7 @@ himself from the tier tables; "request" that a typed line can ask for it.
 | 16 | `PLAY_A_GAME` | `playGame` | offers the five-game menu ([GAMES.md](GAMES.md)) | idle, request |
 | 17 | `BRUSH_TEETH` | `brushTeeth` | brushes his teeth at the bathroom sink | routines, request |
 | 18 | `KITCHEN_CABINET` | `eatFromCabinet` | eats a pack from the cabinet at the kitchen table | need, request |
-| 19 | `SIT_ON_COUCH_WITH_DOG` | `sitWithDog` | reads a book in the armchair by the phone, 30..50 rounds; pattable | idle |
+| 19 | `SIT_ON_COUCH_WITH_DOG` | `readInArmchair` | reads a book in the armchair by the phone, 30..50 rounds; pattable | idle |
 | 20 | `LIGHT_FIREPLACE` | `lightFire` | fetches wood from outside the front door and lights the fire, which burns for 2500..5000 ticks | idle, request |
 | 21 | `USE_TOILET` | `useToilet` | uses the toilet | need |
 | 22 | `TAKE_SHOWER` | `takeShower` | showers | routines |
@@ -400,9 +400,9 @@ himself from the tier tables; "request" that a typed line can ask for it.
 | 37 | `TIDY_HOUSE` | `tidyHouse` | rummages in the filing cabinet | idle |
 | 38 | `CHECK_FRONT_DOOR` | `checkFrontDoor(40)` | steps out of the front door for a while | idle |
 | 39 | `TOGGLE_TV` | `toggleTv` | switches the TV on or off | idle |
-| 40 | `CALL_DOG` | `callDog` | crouches by the armchair; pattable | -- (phone, reading, waiting to be patted) |
+| 40 | `CALL_DOG` | `crouchForPat` | crouches by the armchair; pattable | -- (phone, reading, waiting to be patted) |
 | 41 | `WAKE_FROM_ALARM` | `wakeFromAlarm` | switches the alarm clock off | alarm |
-| 42 | `PET_DOG` | `petDog` | crouches by the armchair and waits 100..200 ticks to be patted | idle |
+| 42 | `PET_DOG` | `waitForPat` | crouches by the armchair and waits 100..200 ticks to be patted | idle |
 | 43 | `WAKE_UP_MORNING` | `morningRoutine` | the morning routine | schedule |
 | 44 | `GO_TO_BED_NIGHT` | `nightRoutine` | the night routine | schedule |
 
@@ -418,23 +418,17 @@ sign-off and his name, one character at a time at the typewriter.
 **Events** (`runEvent`): `bookDelivery`, `recordDelivery`, `foodDelivery`
 (dropped if the cabinet is full), `answerPhone`, `dogFoodDelivery`.
 
-## Misleading names
+## Older names
 
-Several identifiers come from the first Ghidra analysis and describe what the
-analyst guessed, not what the game does.  They are kept because changing them
-is a separate decision; what they really are:
-
-| Name | Really |
-|---|---|
-| `ACTION_SIT_ON_COUCH_WITH_DOG`, `sitWithDog`, `STATE_SIT_COUCH_PETTING_DOG` | reading a book in the armchair by the phone; the dog is not involved |
-| `ACTION_CALL_DOG`, `callDog` | go to the armchair by the phone and crouch, so he can be patted |
-| `ACTION_PET_DOG`, `petDog` | wait there to be patted by the player |
-| `POS_BTM_COUCH` | the red armchair by the phone |
-| `foodSupply` (`resident.foodSupply`) | the number of records he owns |
-| `POS_TOP_FIREPLACE_*`, `POS_TOP_DESK_CHAIR` | spots at the writing desk upstairs; the fireplace is downstairs (`POS_BTM_FIREPLACE_LOGS`) |
-| `POS_MID_BATHROOM_ENTRANCE` | the bookshelf in the computer corner |
-| `POS_MID_COUCH` | the bedroom rug |
-| `POS_BTM_STAIR_LANDING` | by the left wall, next to the dog bowl |
+The first Ghidra analysis named several of these things after what it
+guessed: the armchair activities were "call the dog", "pet the dog" and "sit
+on the couch with the dog", the record collection was a food supply, and
+several desk positions were fireplace spots.  They were renamed on 2026-10-05
+(`callDog` -> `crouchForPat`, `petDog` -> `waitForPat`, `sitWithDog` ->
+`readInArmchair`, `foodSupply` -> `recordCount`, and the `ACTION_*`, `STATE_*`,
+`SPRITE_*` and `POS_*` names with them); older notes and the Ghidra analysis
+documents may still use the old ones.  `source/tools/renames.tsv` maps every
+old name to the current one.
 
 ## Moving around
 
@@ -465,21 +459,21 @@ The house has 48 named spots, 16 per floor.  `posToXY`
 | `POS_TOP_STUDY_DOOR` (7) | the study door | the study, saving |
 | `POS_TOP_DESK_CHAIR` (10) | the writing desk | letters |
 | `POS_TOP_FILING_CABINET` (12) | the filing cabinet | games, paper, tidying |
-| `POS_MID_COUCH` (17) | the bedroom rug | exercising |
+| `POS_MID_RUG` (17) | the bedroom rug | exercising |
 | `POS_MID_BED` (18) | the bed | sleeping |
 | `POS_MID_BEDROOM_WALK` (19) | by the alarm clock | the alarm |
 | `POS_MID_BEDROOM_CLOSET` (20), `POS_MID_DRESSER` (21) | closet, dresser | changing |
 | `POS_MID_BATHROOM_SINK` (22) | the bathroom sink | washing, teeth |
 | `POS_MID_TOILET_DOOR` (23) | the toilet door | the toilet |
 | `POS_MID_SHOWER_DOOR` (25), `POS_MID_SHOWER_INSIDE` (24) | the bathtub with shower | showering |
-| `POS_MID_BATHROOM_ENTRANCE` (27) | the bookshelf | putting books away |
+| `POS_MID_BOOKSHELF` (27) | the bookshelf | putting books away |
 | `POS_MID_COMPUTER_DESK` (29) | the computer | the computer |
 | `POS_BTM_DOG_BOWL` (33) | the dog bowl | feeding the dog |
 | `POS_BTM_STOVE` (34), `POS_BTM_FRIDGE` (35) | stove, fridge | cooking, the fridge |
 | `POS_BTM_KITCHEN_SINK` (36), `POS_BTM_KITCHEN_CABINET` (37) | sink, food cabinet | the glass, food |
 | `POS_BTM_TABLE_LEFT` (38), `POS_BTM_TABLE_RIGHT` (39) | the kitchen table | meals, games |
 | `POS_BTM_WATER_TAP` (41) | the water cooler | drinking |
-| `POS_BTM_COUCH` (43) | the red armchair by the phone | the phone, reading, being patted |
+| `POS_BTM_ARMCHAIR` (43) | the red armchair by the phone | the phone, reading, being patted |
 | `POS_BTM_FIREPLACE_LOGS` (45) | the fireplace | lighting the fire |
 | `POS_BTM_FRONT_DOOR` (46) | the front door | deliveries, firewood, going out |
 

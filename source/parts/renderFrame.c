@@ -102,7 +102,7 @@ renderFrame()
                 dogYTarget += dogYNudge[pick];
                 dogXTarget += dogXNudge[pick];
                 dogLastPick = pick;
-                if (dest == POS_BTM_STAIR_LANDING)
+                if (dest == POS_BTM_BOWL_SIDE)
                         dogMayEat = YES;
                 dogIdleCount = rndRng(20, 200);
         }

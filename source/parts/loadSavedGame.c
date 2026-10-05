@@ -28,7 +28,7 @@ loadSavedGame()
                 toiletDoorOpen = (resident.doorStatesAndFlags & DSF_TOILET_DOOR) >> 5;
                 filingCabOpen = (resident.doorStatesAndFlags & DSF_FILING_CABINET) >> 6;
                 bowlLevel = (resident.doorStatesAndFlags & DSF_DOG_BOWL_MASK) >> 7;
-                foodSupply = resident.foodSupply;
+                recordCount = resident.recordCount;
                 recordPlaying = resident.recordPlaying;
                 tvRunning = resident.tvOn;
 

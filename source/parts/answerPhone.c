@@ -1,4 +1,4 @@
-/* Answer the phone (ACTION_EVENT_PHONE_CALL).  callDog walks the
+/* Answer the phone (ACTION_EVENT_PHONE_CALL).  crouchForPat walks the
    resident to the armchair beside the phone; he picks up the receiver
    (phoneAnswered set, phoneRinging cleared, the ring stopped by tick's phoneHangUp
    handling) and talks for 40..50 rounds of one or two ticks, each a random head frame
@@ -14,7 +14,7 @@ answerPhone()
         short   subpick;
 
         noPreempt = YES;
-        callDog();
+        crouchForPat();
         noPreempt = NO;
 
         headMode = HEAD_ANIM_DISABLED;

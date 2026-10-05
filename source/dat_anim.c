@@ -10,7 +10,7 @@
  *
  */
 
-/* YES once callDog has the resident crouched by the phone, waiting to
+/* YES once crouchForPat has the resident crouched by the phone, waiting to
    be patted: only then does Ctrl-P pat him.  answerPhone clears it. */
 BOOL16  patAllowed = NO;
 
@@ -133,8 +133,8 @@ long    bitClear32[32] = {
    wander target -- the picker's index is rndRng(base, 8), so 0..8. */
 short   dogRoamSpots[9] = {
         POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
-        POS_TOP_FIREPLACE_RIGHT,   POS_MID_BEDROOM_WALK,
-        POS_MID_COMPUTER_DESK,     POS_BTM_STAIR_LANDING,
+        POS_TOP_DESK_FRONT,   POS_MID_BEDROOM_WALK,
+        POS_MID_COMPUTER_DESK,     POS_BTM_BOWL_SIDE,
         POS_BTM_DOG_BOWL,          POS_BTM_WATER_TAP,
         POS_BTM_SCREEN_EDGE
 };

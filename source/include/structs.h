@@ -74,7 +74,7 @@ typedef struct {
         short   reserved50;
 
         /* Items / state                                    0x52 */
-        short   foodSupply;
+        short   recordCount;
         BOOL16  recordPlaying;
         BOOL16  tvOn;
         short   doorStatesAndFlags;

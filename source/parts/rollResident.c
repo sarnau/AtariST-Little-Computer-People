@@ -61,7 +61,7 @@ rollResident()
         recordPlaying = resident.recordPlaying;
         resident.tvOn = NO;
         tvRunning = resident.tvOn;
-        resident.foodSupply = 4;
-        foodSupply = resident.foodSupply;
+        resident.recordCount = 4;
+        recordCount = resident.recordCount;
         resident.doorStatesAndFlags = FOOD_PACKS_MAX << DSF_FOOD_SHIFT;
 }

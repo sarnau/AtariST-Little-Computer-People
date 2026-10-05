@@ -126,7 +126,7 @@ v=$(probe_word "$(probe_addr _loadedS)")
 
 # The point of the test: the file's numbers must be IN the struct.
 for spec in "$OFF_WATER:$WANT_WATER:waterLevel" \
-            "$OFF_FOOD:$WANT_FOOD:foodSupply" \
+            "$OFF_FOOD:$WANT_FOOD:recordCount" \
             "$OFF_SPRITE:$WANT_SPRITE:characterSpriteId" \
             "$OFF_CLOTHING:$WANT_CLOTHING:clothingColor"; do
     IFS=: read -r off want name <<< "$spec"

@@ -727,7 +727,7 @@ port shorts, cross-checked by usage patterns in the port
 | `lcp_study_door_open`              | `studyDoorOpen`   |
 | `lcp_cabinet_open`                 | `kitchenCabOpen`   |
 | `lcp_toilet_door_open`             | `toiletDoorOpen`   |
-| `lcp_food_count`                   | `foodSupply`   |
+| `lcp_food_count`                   | `recordCount`   |
 | `lcp_closet_door_open`             | `bedClosetOpen`   |
 | `lcp_dresser_open`                 | `dresserOpen`   |
 | `lcp_front_door_open`              | `frontDoorOpen`   |

@@ -27,10 +27,10 @@ moveInScene()
         frontDoorOpen = YES;
 
         /* The dog is waiting on the step. */
-        spriteLayer[SPRITE_DOG_SIT] = 1;
-        activateSprite(SPRITE_DOG_SIT);
-        pendX[spriteSlot[SPRITE_DOG_SIT]] = 294;
-        pendY[spriteSlot[SPRITE_DOG_SIT]] = 151;
+        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = 1;
+        activateSprite(SPRITE_FRONT_DOOR_OPEN);
+        pendX[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 294;
+        pendY[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 151;
 
         resX = 300;
         resY = 190;
@@ -41,7 +41,7 @@ moveInScene()
         animState  = STATE_STAND_SIDE_VIEW;
         headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
-        spriteLayer[SPRITE_DOG_SIT] = 0;
+        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = 0;
         layoutSlots();
         gameTick(16);
 

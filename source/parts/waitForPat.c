@@ -1,17 +1,17 @@
-/* Wait to be patted by the player (the dog takes no part).  Unless
+/* Wait to be patted by the player.  Unless
    patAllowed is already set, the resident first goes to the armchair by
-   the phone and crouches (callDog).  He then
+   the phone and crouches (crouchForPat).  He then
    waits 100..200 ticks (10 during the intro), or until a new action is
    queued, for the player's Ctrl-P; afterwards patAllowed is cleared and he
    stands up. */
 void
-petDog()
+waitForPat()
 {
         short   ticks;
 
         noPreempt = YES;
         if (patAllowed == NO)
-                callDog();
+                crouchForPat();
         noPreempt = NO;
 
         ticks = rndRng(100, 200);

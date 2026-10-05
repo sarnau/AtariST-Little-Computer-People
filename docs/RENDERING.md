@@ -85,11 +85,11 @@ transparent.
 | 6, 7, 8, 12 | the toothbrush, the prop on the organ, the typewriter at the desk, the place setting on the kitchen table |
 | 13..15 | the toilet door, opening |
 | 16..18 | the bedroom closet: with him inside, ajar, wide open |
-| 19..21 | the front door; 21 (`SPRITE_DOG_SIT`) is it wide open |
+| 19..21 | the front door; 21 (`SPRITE_FRONT_DOOR_OPEN`) is it wide open |
 | 24..26 | the study door |
 | 27..32 | the player's hand patting him |
 | 33..44 | the dog: lying down, eight walking frames, three eating frames |
-| 45..47 | the open book he reads in the downstairs armchair (`SPRITE_READING_*`) |
+| 45..47 | the open book he reads in the downstairs armchair (`SPRITE_OPEN_BOOK_*`) |
 | 51..54 | his hands at the typewriter |
 
 ### Layers and slots

@@ -25,10 +25,10 @@ short   value;
         walkXTarget -= 10;
         walkToTarget();
 
-        spriteLayer[SPRITE_DOG_SIT] = SPRITE_IN_FRONT;
-        activateSprite(SPRITE_DOG_SIT);
-        pendX[spriteSlot[SPRITE_DOG_SIT]] = 294;
-        pendY[spriteSlot[SPRITE_DOG_SIT]] = 151;
+        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_FRONT_DOOR_OPEN);
+        pendX[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 294;
+        pendY[spriteSlot[SPRITE_FRONT_DOOR_OPEN]] = 151;
 
         posToXY(POS_BTM_FRONT_DOOR, &walkXTarget, &walkYTarget);
         walkToTarget();
@@ -39,7 +39,7 @@ short   value;
         posToXY(POS_BTM_FRONT_DOOR, &walkXTarget, &walkYTarget);
         walkXTarget -= 10;
         walkToTarget();
-        spriteLayer[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_FRONT_DOOR_OPEN] = SPRITE_HIDDEN;
         layoutSlots();
 
         if (resident.initiativeThreshold < rndRng(0, 100)) {

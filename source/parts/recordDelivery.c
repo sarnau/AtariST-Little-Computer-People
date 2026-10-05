@@ -45,6 +45,6 @@ recordDelivery()
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        foodSupply++;                 /* one more record in his collection */
+        recordCount++;                 /* one more record in his collection */
         noPreempt = NO;
 }

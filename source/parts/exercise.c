@@ -1,4 +1,4 @@
-/* Exercise.  The resident walks to the bedroom rug (POS_MID_COUCH)
+/* Exercise.  The resident walks to the bedroom rug (POS_MID_RUG)
    and, facing side-on, cycles through the four arm-exercise poses
    (centre, up, centre, wide) for 8..127 steps, three ticks on each
    outstretched pose and one on centre, stopping early when a new
@@ -18,7 +18,7 @@ exercise()
         scratchArr[2] = STATE_EX_ARMS_CTR;
         scratchArr[3] = STATE_EX_ARMS_WIDE;
 
-        posToXY(POS_MID_COUCH, &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_RUG, &walkXTarget, &walkYTarget);
         /* `-=` and the inline test of the walk call are part of the
            original code. */
         walkYTarget -= 5;

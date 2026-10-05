@@ -1,4 +1,4 @@
-/* Pick a random .sng file and start it playing.  foodSupply is the
+/* Pick a random .sng file and start it playing.  recordCount is the
    size of his record collection: the pick is among the first that many
    .SNG files on the disk. */
 
@@ -22,7 +22,7 @@ playRecord()
         recordStoop();
         recordPlaying = YES;
 
-        tmp = rndRng(0, foodSupply - 1);
+        tmp = rndRng(0, recordCount - 1);
         index = tmp + 1;
         Fsfirst("*.sng", F_NORMAL);
         while (--index != 0)

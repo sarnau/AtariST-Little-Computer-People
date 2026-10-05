@@ -30,7 +30,7 @@ bookDelivery()
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_BOOK);
-        posToXY(POS_MID_BATHROOM_ENTRANCE, &walkXTarget, &walkYTarget);
+        posToXY(POS_MID_BOOKSHELF, &walkXTarget, &walkYTarget);
         walkToTarget();
 
         spriteLayer[SPRITE_BOOK] = SPRITE_HIDDEN;

@@ -123,8 +123,8 @@
 #define STATE_UNDRESS_AT_BED                    49
 #define STATE_LIE_DOWN_GETTING_IN               50
 #define STATE_LIE_DOWN_IN_BED                   51
-#define STATE_SIT_COUCH_UPRIGHT                 52
-#define STATE_SIT_COUCH_PETTING_DOG             53
+#define STATE_SIT_ARMCHAIR                 52
+#define STATE_SIT_ARMCHAIR_READING             53
 /* 54..55 unused */
 #define STATE_PHONE_PICKUP                      56
 #define STATE_PHONE_TALKING                     57
@@ -270,16 +270,16 @@
 #define POS_TOP_GAME_CHAIR_RIGHT         5
 #define POS_TOP_ORGAN                   6
 #define POS_TOP_STUDY_DOOR               7
-#define POS_TOP_FIREPLACE_LEFT           8
-#define POS_TOP_FIREPLACE_CENTER         9
+#define POS_TOP_DESK_LEFT           8
+#define POS_TOP_DESK_RIGHT         9
 #define POS_TOP_DESK_CHAIR              10
-#define POS_TOP_FIREPLACE_RIGHT         11
+#define POS_TOP_DESK_FRONT         11
 #define POS_TOP_FILING_CABINET          12
-#define POS_TOP_FIREPLACE_HEARTH        13
+#define POS_TOP_ARMCHAIR_LEFT        13
 #define POS_TOP_GAME_WALK_IN            14
 #define POS_TOP_GAME_WALK_OUT           15
 #define POS_MID_STAIR_LANDING           16
-#define POS_MID_COUCH                   17
+#define POS_MID_RUG                   17
 #define POS_MID_BED                     18
 #define POS_MID_BEDROOM_WALK            19
 #define POS_MID_BEDROOM_CLOSET          20
@@ -289,12 +289,12 @@
 #define POS_MID_SHOWER_INSIDE           24
 #define POS_MID_SHOWER_DOOR             25
 #define POS_MID_TOILET                  26
-#define POS_MID_BATHROOM_ENTRANCE       27
+#define POS_MID_BOOKSHELF       27
 /* 28 unused */
 #define POS_MID_COMPUTER_DESK           29
 /* 30 unused: x 288, right of the computer desk; nothing walks there */
 /* 31 unused */
-#define POS_BTM_STAIR_LANDING           32
+#define POS_BTM_BOWL_SIDE           32
 #define POS_BTM_DOG_BOWL                33
 #define POS_BTM_STOVE                   34
 #define POS_BTM_FRIDGE                  35
@@ -305,7 +305,7 @@
 #define POS_BTM_FRONT_DOOR_INSIDE       40
 #define POS_BTM_WATER_TAP               41
 #define POS_BTM_DINING_AREA             42
-#define POS_BTM_COUCH                   43
+#define POS_BTM_ARMCHAIR                   43
 #define POS_BTM_DOG_FOOD_STORE          44
 #define POS_BTM_FIREPLACE_LOGS          45
 #define POS_BTM_FRONT_DOOR              46
@@ -332,7 +332,7 @@
 #define SPRITE_CLOSET_LCP_INSIDE        0x10
 #define SPRITE_CLOSET_WIDE_OPEN         0x12
 #define SPRITE_CLOSET_AJAR              0x11
-#define SPRITE_DOG_SIT                  0x15
+#define SPRITE_FRONT_DOOR_OPEN                  0x15
 #define SPRITE_FIREWOOD                 0x16
 #define SPRITE_COOKING_POT              0x17
 #define SPRITE_DOOR_STUDY_1             0x18
@@ -367,9 +367,9 @@
 #define SPRITE_DOG_EATING_1             0x2a
 #define SPRITE_DOG_EATING_2             0x2b
 #define SPRITE_DOG_EATING_3             0x2c
-#define SPRITE_READING_1                0x2d
-#define SPRITE_READING_2                0x2e
-#define SPRITE_READING_3                0x2f
+#define SPRITE_OPEN_BOOK_1                0x2d
+#define SPRITE_OPEN_BOOK_2                0x2e
+#define SPRITE_OPEN_BOOK_3                0x2f
 #define SPRITE_SUITCASE                 0x30   /* carried in moveInScene */
 #define SPRITE_BOOK                     0x31
 #define SPRITE_VINYL_CARRY              0x32
@@ -838,7 +838,7 @@
 #define ACTION_PLAY_A_GAME              16
 #define ACTION_BRUSH_TEETH              17
 #define ACTION_KITCHEN_CABINET          18
-#define ACTION_SIT_ON_COUCH_WITH_DOG    19
+#define ACTION_READ_IN_ARMCHAIR    19
 #define ACTION_LIGHT_FIREPLACE          20
 #define ACTION_USE_TOILET               21
 #define ACTION_TAKE_SHOWER              22
@@ -859,9 +859,9 @@
 #define ACTION_TIDY_HOUSE               37
 #define ACTION_CHECK_FRONT_DOOR         38
 #define ACTION_TOGGLE_TV                39
-#define ACTION_CALL_DOG                 40
+#define ACTION_CROUCH_FOR_PAT                 40
 #define ACTION_WAKE_FROM_ALARM          41
-#define ACTION_PET_DOG                  42
+#define ACTION_WAIT_FOR_PAT                  42
 #define ACTION_WAKE_UP_MORNING          43
 #define ACTION_GO_TO_BED_NIGHT          44
 

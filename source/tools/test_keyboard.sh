@@ -28,10 +28,10 @@
 #                      cycles SPRITE_PET_HAND_1..6 -- the player's hand
 #                      -- at a fixed (192,165), which is where the
 #                      phone sits (tick.c draws it at 190,168).  It is
-#                      gated on patAllowed, set only by callDog, which
+#                      gated on patAllowed, set only by crouchForPat, which
 #                      walks the resident to position 43 (x=220, the
 #                      armchair by the phone) and crouches.  No typed
-#                      command reaches callDog, so the guard is forced
+#                      command reaches crouchForPat, so the guard is forced
 #                      from the debugger.
 #   Ctrl-M  Return     queueCount grows (a command is submitted)
 #   8       erase      typedCursor decrements.  Reached from BOTH Backspace

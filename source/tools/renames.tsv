@@ -3,7 +3,7 @@
 # use the old names; this table maps them.  The linker keeps 8 characters,
 # so a symbol file shows "_" + the first 7 characters of the new name.
 a_brust	brushTeeth	ACTION_BRUSH_TEETH: brushes teeth at the bathroom sink
-a_calld	callDog	ACTION_CALL_DOG: walks to the couch by the phone and crouches, sets pat_ok
+a_calld	crouchForPat	ACTION_CROUCH_FOR_PAT: walks to the armchair by the phone and crouches, sets pat_ok
 a_chefd	checkFrontDoor	ACTION_CHECK_FRONT_DOOR: opens the front door and steps outside for `value` ticks
 a_cleau	cleanUp	ACTION_CLEAN_UP: walks round closing every door/drawer flagged open
 a_clocd	closeBedCloset	closes the bedroom closet (resident already at it), clears lcp_clsO
@@ -31,7 +31,7 @@ a_opecd	openDresser	opens or closes a dresser drawer, lcp_drsO
 a_opecf	putInFridge	opens the fridge, reaches in, shuts it (ends a_feedd and a_gesff)
 a_pacen	paceNervously	ACTION_PACE_NERVOUSLY: alternates the pacing poses on the spot
 a_peeka	peekAround	ACTION_PEEK_AROUND: quick glance by forcing head frame 2
-a_petd	petDog	ACTION_PET_DOG: crouches on the couch and waits for the player's Ctrl-P pat
+a_petd	waitForPat	ACTION_WAIT_FOR_PAT: crouches by the armchair and waits for the player's Ctrl-P pat
 a_plaag	playGame	ACTION_PLAY_A_GAME: the minigame menu, keys 1..5
 a_plawr	playOrgan	ACTION_PLAY_ORGAN: plays a random .ORG file at the organ
 a_playc	useComputer	ACTION_PLAY_COMPUTER: sits and types at the computer
@@ -39,7 +39,7 @@ a_playp	stopRecord	ACTION_STOP_RECORD: walks to the dance floor, drains and free
 a_readn	readNewspaper	ACTION_READ_NEWSPAPER: TV on, reads in the armchair, TV off
 a_sitae	exercise	ACTION_SIT_AND_EXERCISE: arm-exercise poses on the middle-floor couch
 a_sleep	dozeOff	ACTION_SLEEP: breathing/snoring rounds, random count or `value` rounds
-a_socwd	sitWithDog	ACTION_SIT_ON_COUCH_WITH_DOG: sits on the couch petting the dog
+a_socwd	readInArmchair	ACTION_READ_IN_ARMCHAIR: reads a book in the armchair by the phone
 a_takes	takeShower	ACTION_TAKE_SHOWER: showers 20..25 rounds in the stall
 a_tidyh	tidyHouse	ACTION_TIDY_HOUSE: rummages in the filing cabinet
 a_toggt	toggleTv	ACTION_TOGGLE_TV: tvOff if lcp_tv, else tvOn
@@ -351,7 +351,7 @@ lcp_drsO	dresserOpen	dresser open (DSF_DRESSER)
 lcp_face	resFacing	resident's facing direction (FACING_LEFT/RIGHT)
 lcp_flcO	filingCabOpen	filing cabinet open (DSF_FILING_CABINET)
 lcp_flwp	nextWaypoint	pick the resident's next waypoint (straight or via the stairs)
-lcp_food	foodSupply	working copy of lcp.food_supply
+lcp_food	recordCount	the number of records he owns; working copy of resident.recordCount
 lcp_frdO	frontDoorOpen	front door open (DSF_FRONT_DOOR)
 lcp_fstp	playFootstep	picks the footstep sound (carpet/wood/stairs)
 lcp_hwt	waitHeadTurn	ticks until the head reaches its target pose
@@ -670,3 +670,7 @@ wp_rtmp	wpzRender	Word Puzzles: render template with answers filled in
 wp_shwm	wpzMessage	Word Puzzles: green status message
 wp_solv	wpzSolve	Word Puzzles: solve phase
 wp_succ	wpzRightMsgs	Word Puzzles: right-answer messages
+callDog	crouchForPat	renamed: the dog takes no part (see docs/PEOPLE.md)
+petDog	waitForPat	renamed: the player pats the resident, not the dog
+sitWithDog	readInArmchair	renamed: he reads a book; the dog takes no part
+foodSupply	recordCount	renamed: it counts records (playRecord, recordDelivery)

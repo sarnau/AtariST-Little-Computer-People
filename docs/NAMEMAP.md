@@ -14,7 +14,7 @@ searching Ghidra for it will not find anything.
 | short   | long                                             |
 |---------|--------------------------------------------------|
 | brushTeeth | action_brush_teeth                               |
-| callDog | action_call_dog                                  |
+| crouchForPat | action_call_dog                                  |
 | checkFrontDoor | action_check_front_door                          |
 | cleanUp | action_clean_up                                  |
 | closeBedCloset | action_close_closet_door                         |
@@ -42,14 +42,14 @@ searching Ghidra for it will not find anything.
 | enterStudy | action_open_close_upstairs_closet                |
 | paceNervously | action_pace_nervously                            |
 | peekAround | action_peek_around                               |
-| petDog  | action_pet_dog                                   |
+| waitForPat  | action_pet_dog                                   |
 | playGame | action_play_a_game                               |
 | useComputer | action_play_computer                             |
 | stopRecord | action_play_piano                                |
 | playOrgan | action_play_with_record                          |
 | readNewspaper | action_read_newspaper                            |
 | exercise | action_sit_and_exercise                          |
-| sitWithDog | action_sit_on_couch_with_dog                     |
+| readInArmchair | action_sit_on_couch_with_dog                     |
 | dozeOff | action_sleep                                     |
 | takeShower | action_take_shower                               |
 | tidyHouse | action_tidy_house                                |

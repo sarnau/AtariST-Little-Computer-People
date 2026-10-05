@@ -250,7 +250,7 @@ probe_bp_clear()   { _probe_send "hatari-debug b -all"; sleep 0.2; }
 probe_hits() { probe_since "$1" | grep -c 'condition(s) matched' || true; }
 
 # Write bytes.  Used to satisfy a guard the AI would otherwise have to
-# reach on its own -- Ctrl-P is gated on patAllowed, which only callDog
+# reach on its own -- Ctrl-P is gated on patAllowed, which only crouchForPat
 # sets and no typed command reaches.
 probe_poke() { local a=$1; shift; _probe_send "hatari-debug w \$$a $*"; sleep 0.1; }
 

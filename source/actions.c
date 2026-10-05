@@ -45,7 +45,7 @@ runAction()
         case ACTION_PLAY_A_GAME:              playGame();               break;
         case ACTION_BRUSH_TEETH:              brushTeeth();               break;
         case ACTION_KITCHEN_CABINET:          eatFromCabinet();           break;
-        case ACTION_SIT_ON_COUCH_WITH_DOG:    sitWithDog();     break;
+        case ACTION_READ_IN_ARMCHAIR:    readInArmchair();     break;
         case ACTION_LIGHT_FIREPLACE:          lightFire();           break;
         case ACTION_USE_TOILET:               useToilet();                break;
         case ACTION_TAKE_SHOWER:              takeShower();               break;
@@ -61,9 +61,9 @@ runAction()
         case ACTION_TIDY_HOUSE:               tidyHouse();                break;
         case ACTION_CHECK_FRONT_DOOR:         checkFrontDoor(40);        break;
         case ACTION_TOGGLE_TV:                toggleTv();                 break;
-        case ACTION_CALL_DOG:                 callDog();                  break;
+        case ACTION_CROUCH_FOR_PAT:                 crouchForPat();                  break;
         case ACTION_WAKE_FROM_ALARM:          wakeFromAlarm();           break;
-        case ACTION_PET_DOG:                  petDog();                   break;
+        case ACTION_WAIT_FOR_PAT:                  waitForPat();                   break;
         case ACTION_WAKE_UP_MORNING:          morningRoutine();           break;
         case ACTION_GO_TO_BED_NIGHT:          nightRoutine();           break;
         }

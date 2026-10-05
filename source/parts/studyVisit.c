@@ -41,7 +41,7 @@ BOOL16  dosndPtr;
                         frontDoorOpen;
                 resident.recordPlaying = recordPlaying;
                 resident.tvOn          = tvRunning;
-                resident.foodSupply    = foodSupply;
+                resident.recordCount    = recordCount;
                 saveFile("hyber", 0x80, &resident);
         }
 

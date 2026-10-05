@@ -51,10 +51,10 @@ at the same time: 20..200 frames, 2.5 to 25 seconds after it arrives.
 |---|---|---|---|
 | 0 | `POS_TOP_LIVING_ROOM` | top floor, in front of the TV | y +3 |
 | 1 | `POS_TOP_GAME_CHAIR_RIGHT` | top floor, beside the blue armchair | y +9 |
-| 2 | `POS_TOP_FIREPLACE_RIGHT` | top floor, in front of the writing desk | y +2 |
+| 2 | `POS_TOP_DESK_FRONT` | top floor, in front of the writing desk | y +2 |
 | 3 | `POS_MID_BEDROOM_WALK` | bedroom, by the alarm clock | y +10 |
 | 4 | `POS_MID_COMPUTER_DESK` | the computer corner | x +10, y +6 |
-| 5 | `POS_BTM_STAIR_LANDING` | kitchen, by the left wall next to the bowl | -- |
+| 5 | `POS_BTM_BOWL_SIDE` | kitchen, by the left wall next to the bowl | -- |
 | 6 | `POS_BTM_DOG_BOWL` | the dog bowl | -- |
 | 7 | `POS_BTM_WATER_TAP` | the water cooler | y +11 |
 | 8 | `POS_BTM_SCREEN_EDGE` | in front of the front door | y +3 |
@@ -105,17 +105,13 @@ like it or the player orders dog food.
 
 ## What the dog does not do
 
-The names of three of the resident's activities -- `callDog`, `petDog` and
-`sitWithDog`, with `ACTION_CALL_DOG`, `ACTION_PET_DOG` and
-`ACTION_SIT_ON_COUCH_WITH_DOG` -- suggest the resident calls, pets or sits
-with the dog.  None of them touches the dog: they take the resident to the red
-armchair by the phone, where he crouches or reads and the **player** can pat
-**him** with Ctrl-P.  Nothing in the game ever sets the dog's target from
-outside the wander picker, so the dog never comes when called, never follows
-the resident and never reacts to Ctrl-P.
-
-Likewise `SPRITE_DOG_SIT`, shown at the front door while the resident steps
-outside, is the open front door, not a dog.
+The dog never reacts to the resident or the player.  Nothing in the game sets
+its target from outside the wander picker, so it never comes when called,
+never follows the resident and never reacts to Ctrl-P -- that key pats the
+**resident**, while he crouches or reads in the armchair by the phone
+(`crouchForPat`, `waitForPat`, `readInArmchair`, see [PEOPLE.md](PEOPLE.md)).
+Older notes call those activities `callDog`, `petDog` and `sitWithDog`, after
+what the first analysis guessed; none of them touches the dog.
 
 ## Moving
 

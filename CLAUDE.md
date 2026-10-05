@@ -163,12 +163,11 @@ holds an exclusive lock); `sync_ghidra_names.sh verify` is read-only.
 For one symbol with Ghidra open, the GhidraMCP plugin on :8089 takes
 `POST /rename_data {"address": ..., "newName": ...}`.  BSS addresses come
 from the spec, not lcp_sym.68k; expand truncated names before pushing.
-Ghidra was re-synced to the 2026-10-05 names on 2026-10-05, through the
-plugin with Ghidra open: every port symbol whose Ghidra name was an old
-port name now carries the new one (altScreen stays unlabelled).  Names
-Ghidra's own analysis gave were left alone.  For a cell with no defined
-data, `analyze_data_region` reports a `DAT_` name even when a label
-exists; `rename_or_label` answering "already exists" is the check.
+Ghidra is in sync with the port: `sync_ghidra_names.sh verify` reports all
+691 port symbols matching (2026-10-05).  With Ghidra open, the plugin's
+`analyze_data_region` reports a `DAT_` name for a cell with no defined data
+even when a label exists; `rename_or_label` answering "already exists" is
+the check.
 
 ## Open questions and decisions
 
