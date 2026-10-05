@@ -72,7 +72,7 @@ extern int      access();
    OSBIND.H shapes.  The trap #13 (`bios`) and trap #14 (`xbios`)
    wrappers are declared here so the port can call them directly
    for calls the Alcyon system osbind.h doesn't macro-wrap
-   (specifically Setexc + Xbtimer used by mq_intim). */
+   (specifically Setexc + Xbtimer used by hookTimerA). */
 extern long     gemdos();
 extern long     bios();
 extern long     xbios();

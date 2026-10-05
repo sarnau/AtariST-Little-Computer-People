@@ -1,7 +1,7 @@
 /*
  * scn_decode.c -- smoke test for the compressed screen image decoder.
  *
- * Decodes DATA/HOUSE.SCN through scn_dec and
+ * Decodes DATA/HOUSE.SCN through decodeScn and
  * verifies the first 8 output words match the Python reference
  * (decompressImageFile in readFiles.py):
  *   0000 0000 0000 ffff 0000 0000 0000 ffff
@@ -19,12 +19,12 @@
 
 #include "../include/types.h"
 
-extern void     scn_dec();
+extern void     decodeScn();
 extern short    scn_dic[];      /* the 30-byte nibble dictionary */
 
-/* The file handling is inlined in main() and st_titl(), not in
-   scn_dec: the caller reads the 2-byte size, then the 30-byte
-   dictionary into scn_dic, then the body, and hands scn_dec the BODY
+/* The file handling is inlined in main() and titleScreen(), not in
+   decodeScn: the caller reads the 2-byte size, then the 30-byte
+   dictionary into scn_dic, then the body, and hands decodeScn the BODY
    buffer.  The old spelling here passed the FILE NAME as the source
    and decoded the name itself -- which is why the first words came
    back as 0x7573, the "us" of "house.scn". */
@@ -94,7 +94,7 @@ main()
                 }
                 printf("body %ld bytes after the 2-byte size and the "
                        "30-byte dictionary\n", got);
-                scn_dec(body, (short *) buf, 16000);
+                decodeScn(body, (short *) buf, 16000);
         }
 
         printf("HOUSE.SCN first 8 words:\n ");

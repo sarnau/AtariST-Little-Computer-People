@@ -48,9 +48,9 @@
 
 /* Allocation size for the hardware-slot pending/active arrays below.
    Logical render slots are 0..7 (SPRITE_HW_SLOTS); HW_SLOT_NONE (9) is
-   the "disabled" slot that sp_upds parks HIDDEN sprites in.  gameTick's
+   the "disabled" slot that layoutSlots parks HIDDEN sprites in.  gameTick's
    carrying path writes g_sepex/g_sepey[g_seslm[g_lcieo]] every frame,
-   and sp_ssco/sp_ss02 write g_seaim/g_seams/g_seach/g_seacw the same
+   and carryBehind/carryInFront write g_seaim/g_seams/g_seach/g_seacw the same
    way -- so any of these arrays can be indexed at HW_SLOT_NONE when a
    carried sprite is momentarily hidden.  The original's 8-entry
    arrays tolerate the [9] write because it overflows into the

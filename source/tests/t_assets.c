@@ -1,14 +1,14 @@
 /*
  * t_assets.c -- smoke test for the four asset loaders.
  *
- * ldObj() and ldSpr() slurp OBJECTS and SPRITES into obj_file[] and
- * spr_file[]; al_loal() reads a {count:BE16, total:BE16, payload}
+ * loadObjects() and loadSprites() slurp OBJECTS and SPRITES into obj_file[] and
+ * spr_file[]; loadFrameFile() reads a {count:BE16, total:BE16, payload}
  * file into a caller buffer.  None of them returns a record count any
  * more -- the loaders in LCP_STX just move bytes, and main() walks the
  * result afterwards -- so what there is to verify is that the bytes
- * arrive intact through fOpen/fr_read/Fclose.
+ * arrive intact through openFile/readFile/Fclose.
  *
- * al_loal reads its two header words with raw two-byte fr_reads, so on
+ * loadFrameFile reads its two header words with raw two-byte fr_reads, so on
  * a little-endian host they come back byte-swapped and it would then
  * read the wrong length.  That is faithful ST code; the test writes a
  * host-endian copy of the header (payload untouched) so the loader's
@@ -24,9 +24,9 @@
 #include "../include/types.h"
 #include "../include/structs.h"
 
-extern void             ldObj();
-extern void             ldSpr();
-extern short            al_loal();
+extern void             loadObjects();
+extern void             loadSprites();
+extern short            loadFrameFile();
 extern unsigned char    obj_file[];
 extern unsigned char    spr_file[];
 
@@ -146,14 +146,14 @@ main()
         if (copy_to_cwd("../../../DATA/SPRITES", "sprites")) return 1;
 
         /* Both loaders ask for a flat 14000 bytes; the files are
-           smaller than that and fr_read simply returns what is there,
+           smaller than that and readFile simply returns what is there,
            so compare against each file's real length. */
         printf("OBJECTS -> obj_file[]\n");
-        ldObj();
+        loadObjects();
         check_bytes("ldObj", obj_file, "objects", 0L, file_size("objects"));
 
         printf("SPRITES -> spr_file[]\n");
-        ldSpr();
+        loadSprites();
         check_bytes("ldSpr", spr_file, "sprites", 0L, file_size("sprites"));
 
         {
@@ -171,7 +171,7 @@ main()
                         fails++;
                 }
                 memset(buf, 0xaa, sizeof buf);
-                al_loal("body.lcp", buf);
+                loadFrameFile("body.lcp", buf);
                 check_bytes("al_loal BODY.LCP", buf,
                             "../../../DATA/BODY.LCP", 4L, (long) total);
         }
@@ -191,7 +191,7 @@ main()
                         fails++;
                 }
                 memset(buf, 0xaa, sizeof buf);
-                al_loal("pe2.lcp", buf);
+                loadFrameFile("pe2.lcp", buf);
                 check_bytes("al_loal PE2.LCP", buf,
                             "../../../DATA/PE2.LCP", 4L, (long) total);
         }

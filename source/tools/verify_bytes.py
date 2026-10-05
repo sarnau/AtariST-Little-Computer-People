@@ -24,7 +24,7 @@ v*/vs* group diverging is a library-revision issue, not game source.
 Usage:
   python3 source/tools/verify_bytes.py            # summary + divergent list
   python3 source/tools/verify_bytes.py -v         # per-function lines
-  python3 source/tools/verify_bytes.py sp_updb …  # only these (port names)
+  python3 source/tools/verify_bytes.py updateBody …  # only these (port names)
 
 Prereq: build + link, then create the symbol link (same object list as
 alcyon_link.sh but without -s):

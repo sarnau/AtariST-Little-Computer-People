@@ -7,10 +7,10 @@
 #include "protos.h"
 
 
-/* sf_irqp builds the 32-bit duration from its two halves and keeps
+/* startSfx builds the 32-bit duration from its two halves and keeps
    its own Super block inline, rather than calling helpers. */
 void
-sf_irqp()
+startSfx()
 {
         /* Declaration order fixes the stack frame; `unused` is never
            read or written but must stay for the same reason. */
@@ -33,7 +33,7 @@ sf_irqp()
         if (g_sfplf != NO) {
                 if (sf_pri[g_sfcur] > g_sfcup)
                         return;
-                sf_so();
+                stopSfx();
         }
         g_sfcup = sf_pri[g_sfcur];
         g_sfplf = YES;

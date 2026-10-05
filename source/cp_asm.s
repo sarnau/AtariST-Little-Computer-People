@@ -1,6 +1,6 @@
 ******************************************************************************
 *
-* cp_asm.s -- the copy-protection check, cp_main.
+* cp_asm.s -- the copy-protection check, checkCopyProt.
 *
 * This is hand-written assembly in the original: one self-contained
 * object with no C in it and no external references at all.
@@ -22,7 +22,7 @@
 *
 * The return value is assembled by a chain of six mutually recursive
 * stubs (cpsum1..cpsum6) that each add a constant -- an obfuscation,
-* not a computation.  main stores the result in cprot_r and cs_mvIn
+* not a computation.  main stores the result in cprot_r and moveInScene
 * parks the resident asleep for ever if it is zero.
 *
 * The 96 encrypted bytes at cpenc are emitted verbatim: they are not
@@ -34,13 +34,13 @@
 *
 ******************************************************************************
 
-	.globl	_cp_main
+	.globl	_checkCo
 
 	.text
 
-* cp_main(): the entry point, called once by main.  Returns a long in
+* checkCopyProt(): the entry point, called once by main.  Returns a long in
 * d0: zero means the disk check failed, anything else that it passed.
-_cp_main:
+_checkCo:
 	move.l	a6,cpa6
 	lea	cptop,a6
 	movem.l	d1-d7/a0-a5,-(a6)

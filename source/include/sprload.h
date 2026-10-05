@@ -7,7 +7,7 @@ extern short sp_fidx[];
 extern unsigned char sp_mbuf[];
 
 
-extern void sp_genma();
-extern void sp_regs();
+extern void makeMask();
+extern void defineSprite();
 
 #endif /* SPRLOAD_H */

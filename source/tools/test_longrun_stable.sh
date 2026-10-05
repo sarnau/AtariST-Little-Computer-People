@@ -18,9 +18,9 @@
 #   1. Build with -DSKIP_TITLE=1 -DSKIP_COPYPROT=1.  SKIP_TITLE gets
 #      past the interactive guestbook (it waits on getKey for a name,
 #      a date and a time, so an unattended run stalls there for ever)
-#      and SKIP_COPYPROT past cp_main, which never succeeds under any
+#      and SKIP_COPYPROT past checkCopyProt, which never succeeds under any
 #      emulator here and otherwise parks the resident in
-#      `while (1) a_sleep(-1);` -- a motionless screen this test would
+#      `while (1) dozeOff(-1);` -- a motionless screen this test would
 #      score as a clean PASS.
 #      NOT -DSKIP_MIDI: without the Timer-A ISR the mq_* engine never
 #      completes a record, the resident retries the activity, and each
@@ -94,7 +94,7 @@ command -v ffmpeg >/dev/null \
 
 # ---- run Hatari with --auto + AVI record -------------------------
 cp -f "$PRG"                    "$GAME_DIR/LCP.PRG"
-rm -f "$GAME_DIR/LCP.SAV"       # fresh cs_mvIn path
+rm -f "$GAME_DIR/LCP.SAV"       # fresh moveInScene path
 pkill -x hatari 2>/dev/null; sleep 1
 pkill -9 -x hatari 2>/dev/null   # a confirm-quit dialog eats the TERM
 

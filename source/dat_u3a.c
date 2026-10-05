@@ -19,8 +19,8 @@ BOOL16  g_ptdoa              = NO;   /* YES while a Ctrl-P pat (hand animation) 
 
 
 
-/* Event queue: up to ten ACTION_* events filled by putEv and drained
-   from the front by getEv; ACTION_NONE marks an empty slot, so
+/* Event queue: up to ten ACTION_* events filled by queueEvent and drained
+   from the front by nextEvent; ACTION_NONE marks an empty slot, so
    g_trel[0] != ACTION_NONE means an event is waiting. */
 short   g_trel[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE,
@@ -30,7 +30,7 @@ short   g_trel[10] = {
 
 /* Sprite layer flags: entries 0,1 = SPRITE_IN_FRONT (1),
    rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
-   0 and 7 in the hardware layout, per sp_upds). */
+   0 and 7 in the hardware layout, per layoutSlots). */
 short   g_selaf[SPRITE_SLOTS] = { 1, 1 };
 
 
@@ -101,7 +101,7 @@ long    bm32or[32] = {
 
 
 
-/* bm32and[i] = ~(1<<i), used by sp_lbhd to clear one bit of a mask. */
+/* bm32and[i] = ~(1<<i), used by maskHead to clear one bit of a mask. */
 long    bm32and[32] = {
         0xfffffffeL,
         0xfffffffdL,
@@ -163,7 +163,7 @@ short   g_ddyot[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };   /* Y nudge added to
 short   g_dgiyo            = 3;
 
 
-/* Per-destination pixel nudges applied after hs_posXY returns the
+/* Per-destination pixel nudges applied after posToXY returns the
    anchor for the destination.  g_ddyot is nine like g_ddipt, but
    g_ddxot takes ELEVEN entries' worth of storage in the original.
    Only 0..8 are ever indexed; the two extra zeros keep the layout. */

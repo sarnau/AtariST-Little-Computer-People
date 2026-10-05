@@ -167,7 +167,7 @@ probe_start() {
 
     cp -f "$CSRC/build/alcyon/LCP.PRG" "$GAME_DIR/LCP.PRG" \
         || probe_die "cannot stage LCP.PRG into $GAME_DIR"
-    rm -f "$GAME_DIR/LCP.SAV"            # force the cs_mvIn path
+    rm -f "$GAME_DIR/LCP.SAV"            # force the moveInScene path
     pkill -x hatari 2>/dev/null; sleep 1
     pkill -9 -x hatari 2>/dev/null   # a confirm-quit dialog eats the TERM
 
@@ -215,7 +215,7 @@ _probe_find_base() {
 # tick.c gates the keyboard on `introSeq == NO`.
 #
 # How long that takes depends entirely on whether a save was loaded.
-# With a HYBER present lc_load sets g_lcldd and main SKIPS cs_mvIn, so
+# With a HYBER present loadSavedGame sets g_lcldd and main SKIPS moveInScene, so
 # introSeq is clear almost at once.  Without one the full move-in
 # cutscene runs -- doorbell, kitchen, sink, dresser, bathroom, suitcase
 # -- and that is ~60 s of wall time even fast-forwarded.  Wait for the
@@ -250,7 +250,7 @@ probe_bp_clear()   { _probe_send "hatari-debug b -all"; sleep 0.2; }
 probe_hits() { probe_since "$1" | grep -c 'condition(s) matched' || true; }
 
 # Write bytes.  Used to satisfy a guard the AI would otherwise have to
-# reach on its own -- Ctrl-P is gated on pat_ok, which only a_calld
+# reach on its own -- Ctrl-P is gated on pat_ok, which only callDog
 # sets and no typed command reaches.
 probe_poke() { local a=$1; shift; _probe_send "hatari-debug w \$$a $*"; sleep 0.1; }
 

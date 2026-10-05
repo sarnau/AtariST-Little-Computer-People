@@ -18,7 +18,7 @@ extern void     vswr_mode();
 extern void     v_pline();
 extern void     v_gtext();
 extern void     v_bar();
-extern void     vroCpyD();
+extern void     blitRect();
 
 extern short *  vdipb[];
 

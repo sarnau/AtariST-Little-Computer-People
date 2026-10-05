@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# test_keyboard.sh -- check every deal_kc dispatch path by injecting the
+# test_keyboard.sh -- check every handleKey dispatch path by injecting the
 # real keystroke and asserting on the global the handler writes.
 #
 # This replaces a version that DID NOT RUN: it built with -DTEST_KEY=n
-# to switch on an in-game harness that called deal_kc directly, and
+# to switch on an in-game harness that called handleKey directly, and
 # that harness was removed during the LCP_STX restructuring, so the
 # flag compiled to nothing and the script exercised no hook while still
 # reporting success.  Nothing is gated into the port now -- the keys go
@@ -17,21 +17,21 @@
 #   Ctrl-A  alarm      alarm_p changes -- SET then CLEARED, so this is
 #                      caught with a value-change breakpoint; a direct
 #                      read races the game and usually loses
-#   Ctrl-B  book       putEv() entered
-#   Ctrl-C  phone      putEv() entered
-#   Ctrl-D  dog food   putEv() entered
-#   Ctrl-F  food       putEv() entered
-#   Ctrl-R  record     putEv() entered
+#   Ctrl-B  book       queueEvent() entered
+#   Ctrl-C  phone      queueEvent() entered
+#   Ctrl-D  dog food   queueEvent() entered
+#   Ctrl-F  food       queueEvent() entered
+#   Ctrl-R  record     queueEvent() entered
 #   Ctrl-P  pat LCP    g_ptdoa changes.  This pats the RESIDENT on the
 #                      head, not the dog: the handler sets
 #                      lcp.happiness = MOOD_HAPPY, and the animation
 #                      cycles SPRITE_PET_HAND_1..6 -- the player's hand
 #                      -- at a fixed (192,165), which is where the
 #                      phone sits (tick.c draws it at 190,168).  It is
-#                      gated on pat_ok, set only by a_calld, which
+#                      gated on pat_ok, set only by callDog, which
 #                      walks the resident to position 43 (x=220, the
 #                      armchair by the phone) and crouches.  No typed
-#                      command reaches a_calld, so the guard is forced
+#                      command reaches callDog, so the guard is forced
 #                      from the debugger.
 #   Ctrl-M  Return     g_aliss grows (a command is submitted)
 #   8       erase      g_cdibp decrements.  Reached from BOTH Backspace
@@ -56,7 +56,7 @@ probe_start
 
 A_WATR=$(probe_addr _lcp_wat)
 A_ALRM=$(probe_addr _alarm_p)
-A_PUTEV=$(probe_addr _putEv)
+A_PUTEV=$(probe_addr _queueEv)
 A_PTDOA=$(probe_addr _g_ptdoa)
 A_PETOK=$(probe_addr _pat_ok)
 A_ALISS=$(probe_addr _g_aliss)
@@ -66,7 +66,7 @@ echo "load base \$$(probe_base)"
 echo ""
 
 # ---- Ctrl-W: durable counter, but it CLAMPS ---------------------------
-# deal_kc returns immediately when the tank is already full:
+# handleKey returns immediately when the tank is already full:
 #   if (lcp_watr == 10) return;
 # and earlier runs of this very script leave it at 10, so asserting an
 # increase without emptying it first fails on the second run of the day.
@@ -80,7 +80,7 @@ if [ "$after" -eq $((before + 3)) ]; then ok "Ctrl-W  lcp_watr $before -> $after
 else bad "Ctrl-W" "lcp_watr $before -> $after, expected $((before + 3))"; fi
 
 # ---- Ctrl-F is CONDITIONAL, so make its condition true ---------------
-# deal_kc returns without queuing when the food cupboard reads full:
+# handleKey returns without queuing when the food cupboard reads full:
 #   if (((lcp.door_states_and_flags >> 9) & 7) == 4) { food_dlv = YES; return; }
 # Whether that holds depends on the save that happens to be on the
 # drive, so this asserted nothing stable until the field was forced.
@@ -93,8 +93,8 @@ probe_poke "$A_DSF" $(( (newdsf >> 8) & 0xff )) $(( newdsf & 0xff ))
 probe_bp_clear; probe_bp_pc "$A_PUTEV"
 M=$(probe_mark); probe_ctrl F; sleep 0.6
 n=$(probe_hits "$M")
-if [ "$n" -ge 1 ]; then ok "Ctrl-F  putEv entered (food field forced < 4)"
-else bad "Ctrl-F" "putEv never entered even with the food field cleared"; fi
+if [ "$n" -ge 1 ]; then ok "Ctrl-F  queueEvent entered (food field forced < 4)"
+else bad "Ctrl-F" "queueEvent never entered even with the food field cleared"; fi
 probe_bp_clear
 
 # ---- the four unconditional event keys -------------------------------
@@ -104,8 +104,8 @@ for pair in "B book" "C phone" "D dogfood" "R record"; do
     probe_bp_clear; probe_bp_pc "$A_PUTEV"
     M=$(probe_mark); probe_ctrl "$1"; sleep 0.6
     n=$(probe_hits "$M")
-    if [ "$n" -ge 1 ]; then ok "Ctrl-$1  putEv entered"
-    else bad "Ctrl-$1" "putEv never entered"; fi
+    if [ "$n" -ge 1 ]; then ok "Ctrl-$1  queueEvent entered"
+    else bad "Ctrl-$1" "queueEvent never entered"; fi
 done
 probe_bp_clear
 

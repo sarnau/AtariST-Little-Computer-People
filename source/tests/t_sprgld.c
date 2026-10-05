@@ -3,12 +3,12 @@
  *
  * Iterates lcp_st = 0..29 (the animation range for which
  * body_sprite_frame_table has non-zero entries) x both facings, calling
- * sp_updb() for each, and packs all 60 outputs into a
+ * updateBody() for each, and packs all 60 outputs into a
  * single 4-column x 15-row atlas PGM (4*64 = 256 wide, 15*21 = 315 tall).
  *
  * REFERENCE RE-BLESSED 2026-09-05.  The checked-in atlas was produced
  * by the retired LCP_ORG-era revision.  The sprite path is now the
- * byte-identical LCP_STX code -- sp_updb was recovered byte for byte
+ * byte-identical LCP_STX code -- updateBody was recovered byte for byte
  * and body_ptr/body_shp became real arrays -- so the old master no
  * longer describes what the original computes.  The new one was
  * eyeballed (60 tiles, both facings populated) before being blessed.
@@ -42,14 +42,14 @@ extern short    g_lcyof;
 extern short    dbg_hide;
 extern short    g_sepef[];
 /* body_ptr and body_shp are real global ARRAYS in LCP_STX, not
-   pointers -- sp_updb indexes them with an immediate base and no
+   pointers -- updateBody indexes them with an immediate base and no
    ext.l, which is what pinned the shape (see CLAUDE.md).  So the
    frames are COPIED in here; there is nothing to re-point. */
 extern unsigned char    body_ptr[][168];
 extern unsigned char    body_shp[][84];
 extern short    g_lsimg[];
-extern void     sp_updb();
-extern void     initBRev();
+extern void     updateBody();
+extern void     initMirror();
 
 #define N_STATES        30
 #define ATLAS_COLS      4
@@ -129,11 +129,11 @@ char ** argv;
                          ? payload_bytes : 120L * 168L));
         memset(body_shp, 0, 98 * 84);   /* the whole array */
 
-        /* rev_tab is BSS in LCP_STX -- initBRev builds the
+        /* rev_tab is BSS in LCP_STX -- initMirror builds the
            bit-reversal LUT at boot (it used to be a shipped
            data table).  Without this the mirrored, right-facing
            frames come out blank. */
-        initBRev();
+        initMirror();
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
         lcp_y                    = 100;
@@ -153,12 +153,12 @@ char ** argv;
                         lcp_face = facing;
                         memset(g_lsimg, 0, LCP_BODY_DEST_WORDS * sizeof(short));
                         /* Clear the double-buffer flag every iteration:
-                           sp_updb sets it to YES on exit and
+                           updateBody sets it to YES on exit and
                            spin-waits for it to clear on entry; in-game
                            the render pipeline clears it, but in this
                            test we're the only thing running. */
                         g_sepef[3] = 0;
-                        sp_updb();
+                        updateBody();
 
                         row = tile_ix / ATLAS_COLS;
                         col = tile_ix % ATLAS_COLS;

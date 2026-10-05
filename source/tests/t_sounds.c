@@ -15,10 +15,10 @@
 
 #include "../include/types.h"
 
-extern void             sf_sl();
+extern void             loadSounds();
 extern unsigned char *  mi_ntLp[];
 
-/* sf_sl reads each block's size with a raw two-byte fr_read into a
+/* loadSounds reads each block's size with a raw two-byte readFile into a
    short, so on a little-endian host every size comes back byte-swapped
    -- 34 reads as 8704 -- and the file walk is lost after the first
    block.  That is faithful ST code, not a bug to fix in the port.
@@ -74,7 +74,7 @@ main()
                        "size-0 terminator\n", n);
         }
 
-        sf_sl();
+        loadSounds();
 
         printf("First 16 loaded SFX slots:\n");
         for (i = 0; i < 16; i = i + 1) {

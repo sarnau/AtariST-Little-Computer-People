@@ -2,10 +2,10 @@
  * stx_u4.c -- unity unit for the sound object that immediately
  * precedes stx_u2's.
  *
- * sf_irqp calls sf_so as a same-object call, so the two share an
- * object; lt_sets (in stx_u2's object) calls sf_sele as an external,
+ * startSfx calls stopSfx as a same-object call, so the two share an
+ * object; typeKeySound (in stx_u2's object) calls sfxSelect as an external,
  * so this is NOT that object.  Function order, which must not change:
- *     sgPlay < sf_irqp < sf_sl < sf_sele < sf_so
+ *     playSongFile < startSfx < loadSounds < sfxSelect < stopSfx
  */
 
 
@@ -21,7 +21,7 @@
 #include "dat_u4.c"
 
 
-#include "parts/sgPlay.c"    /* first of the object */
-#include "sfx_irq.c"         /* sf_irqp */
-#include "sound.c"           /* sf_sl, sf_sele, sf_so */
+#include "parts/playSongFile.c"    /* first of the object */
+#include "sfx_irq.c"         /* startSfx */
+#include "sound.c"           /* loadSounds, sfxSelect, stopSfx */
 

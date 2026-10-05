@@ -1,8 +1,8 @@
 /*
- * t_letter.c -- host-side smoke test for the LETTER.TXT decoder (fr_reac).
+ * t_letter.c -- host-side smoke test for the LETTER.TXT decoder (unpackFile).
  *
  * Copies DATA/LETTER.TXT into the CWD as "letter.txt", calls
- * fl_ltpl() which internally allocates the 10496-byte
+ * loadLetterText() which internally allocates the 10496-byte
  * buffer, decompresses the nibble-encoded file, and populates
  * g_ltlp[360].  Then prints a handful of decoded lines so you
  * can eyeball the output matches the actual 1985 letter fragments.
@@ -20,7 +20,7 @@
 extern char *   g_ltlp[];
 extern char *   g_lttx;
 extern unsigned char comp_tok[];
-extern void     fl_ltpl();
+extern void     loadLetterText();
 
 int
 main(argc, argv)
@@ -49,13 +49,13 @@ char ** argv;
         fclose(f);
         printf("copied %zu bytes to CWD/letter.txt\n", nread);
 
-        /* a_writl allocates g_lttx via
+        /* writeLetter allocates g_lttx via
            _gemdos(GEMDOS_Malloc); we do that here manually. */
         g_lttx = (char *) malloc(10496);
         if (g_lttx == NULL) { perror("malloc"); return 2; }
 
         /* Decompress + index via the real ports. */
-        fl_ltpl();
+        loadLetterText();
 
         printf("comp_tok (15 most common bytes):");
         for (i = 0; i < 15; i = i + 1)

@@ -64,7 +64,7 @@ DUR_NAMES = {
 
 TICK_HZ = 2457600.0 / (64 * 0x28)   # Timer A: /64 prescaler, data 0x28 -> 960 Hz
 
-# Mixer nibble (high nibble of the attack_start_vol byte).  mq_dise clears
+# Mixer nibble (high nibble of the attack_start_vol byte).  sendMidiEvent clears
 # both the tone- and noise-disable bits for the channel, then ORs this nibble
 # in: bit 0 disables tone, bit 3 disables noise.
 MIXER_FLAGS = {0x0: 'tone+noise', 0x1: 'noise', 0x8: 'tone', 0x9: 'silent'}
@@ -77,7 +77,7 @@ def note_name(n):
 
 
 def build_scale_table(key):
-    """mq_bust: 132-entry note remap for a key signature (0..15)."""
+    """buildNoteMap: 132-entry note remap for a key signature (0..15)."""
     tab = list(range(0x84))
     for i in (1, 3, 6, 8, 10):
         tab[i] = -1
@@ -100,7 +100,7 @@ def cstr(buf):
 
 # --------------------------------------------------------------- structures
 class Envelope:
-    """One 8-byte ADSR record, as psg_cpE copies it into PSG_ENVELOPE+1."""
+    """One 8-byte ADSR record, as copyEnvelope copies it into PSG_ENVELOPE+1."""
 
     FIELDS = ('attack_start_vol', 'attack_duration', 'attack_target_vol',
               'decay_duration', 'decay_target_vol', 'sustain_duration',
@@ -110,7 +110,7 @@ class Envelope:
         self.raw = bytes(raw)
         for name, val in zip(self.FIELDS, raw):
             setattr(self, name, val)
-        # mq_dise splits two of the bytes into nibble pairs before use.
+        # sendMidiEvent splits two of the bytes into nibble pairs before use.
         self.mixer = (self.attack_start_vol >> 4) & 0xF
         self.attack_start_vol &= 0xF
         self.octave = 2 - ((self.attack_duration >> 4) & 0xF)
@@ -178,7 +178,7 @@ class SNG:
             self.trailer = data[OFF_TRAILER:OFF_TRAILER + 8]
             self.stream_start = OFF_STREAM
 
-        # header-command defaults (mq_setp / globals)
+        # header-command defaults (initSongState / globals)
         self.key = 1
         self.tempo = 120
         self.volume = None
@@ -199,7 +199,7 @@ class SNG:
 
     # ------------------------------------------------------------ header
     def _parse_header(self):
-        """mq_parh: walk header commands from mi_dbase to the first 0x00."""
+        """parseSongHeader: walk header commands from mi_dbase to the first 0x00."""
         d = self.data
         p = self.stream_start
         if p < len(d) and d[p] == 0:
@@ -245,7 +245,7 @@ class SNG:
 
     # ------------------------------------------------------------ stream
     def _parse_stream(self):
-        """mq_pars + mq_rdur + mq_pshl/mq_popl, run to completion."""
+        """parseEvents + peekNoteDur + pushLoop/popLoop, run to completion."""
         d = self.data
         p = self.header_end
         unit = 0                                # timeline, in 1/24 quarter notes
@@ -332,7 +332,7 @@ class SNG:
             self.lyrics = tail.rstrip(b'\0').decode('latin1')
 
     def _peek_step(self, p):
-        """mq_rdur: skip padding, then take the advance from the duration
+        """peekNoteDur: skip padding, then take the advance from the duration
         index of the note event about to be parsed.  Returns (step, p)."""
         d = self.data
         while p < len(d) and d[p] == 0:
@@ -367,7 +367,7 @@ class SNG:
                      bytes=bytes((b0, b1, b2)))
 
     def _emit_note(self, ev, active, unit):
-        """mq_qnne: every event takes a queue slot, but bit 5 suppresses the
+        """queueNote: every event takes a queue slot, but bit 5 suppresses the
         Note-On and bit 6 suppresses the queued Note-Off.  A tied note is
         therefore  [tie] -> [tie|off]* -> [off]."""
         key = (ev.chan, ev.note)
@@ -390,7 +390,7 @@ class SNG:
 
     # ------------------------------------------------------------ helpers
     def midi_channel(self, voice):
-        """Physical MIDI channel for logical voice 1..15 (mq_dise MIDI path)."""
+        """Physical MIDI channel for logical voice 1..15 (sendMidiEvent MIDI path)."""
         return self.chanmap[voice - 1] & 0x0F if self.chanmap else 0
 
     def midi_transpose(self, voice):
@@ -517,7 +517,7 @@ class SNG:
         15 Music Studio voices survive being collapsed onto a handful of MIDI
         channels.  Division = 24*spb, so one MIDI tick is one 960 Hz sequencer
         tick and the timing is exact rather than rounded.  Channel, program and
-        transposition follow the MIDI OUT path of mq_dise."""
+        transposition follow the MIDI OUT path of sendMidiEvent."""
         div = 24 * self.spb
         tracks = [self._midi_tempo_track()]
         for v in sorted({n['chan'] for n in self.notes}):

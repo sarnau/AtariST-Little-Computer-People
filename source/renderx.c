@@ -1,5 +1,5 @@
 /*
- * renderx.c -- palette, TV, screen-scroll, and prCh.
+ * renderx.c -- palette, TV, screen-scroll, and printChar.
  */
 
 #include "types.h"
@@ -20,12 +20,12 @@
 #include "protos.h"
 #include "globals.h"
 
-/* pa_cloc: pick random/configured CLOTHING_COLOR_ID (0..15),
+/* pickClothes: pick random/configured CLOTHING_COLOR_ID (0..15),
    load prim/sec colours to palette slots 1,2. Overshoot falls back
    to lcp.clothing_color. */
 
 void
-pa_cloc()
+pickClothes()
 {
         short   index;
 
@@ -38,10 +38,10 @@ pa_cloc()
         Setpalette(main_pal);
 }
 
-/* pa_skic: same as pa_cloc but 8-entry skin table. */
+/* pickSkin: same as pickClothes but 8-entry skin table. */
 
 void
-pa_skic()
+pickSkin()
 {
         short   index;
 
@@ -54,27 +54,27 @@ pa_skic()
         Setpalette(main_pal);
 }
 
-/* lcp_upal: refresh sickness tint at palette slot 6.
+/* setSkinColor: refresh sickness tint at palette slot 6.
    ST_PEACH (0x743) healthy, ST_SICK_GREEN (0x363) sick.
-   Called from sim.c (recovery), health.c (onset), lc_load (HYBER restore). */
+   Called from sim.c (recovery), health.c (onset), loadSavedGame (HYBER restore). */
 
 
-/* td_line: draw 5-line rabbit-ear antenna on TV.
+/* drawTvPicture: draw 5-line rabbit-ear antenna on TV.
    Diagonal-up-right from (44..48, 51..49) to (44..48, 57..55).
    Colour: COLOR_white when off, random when on (static effect).
-   Lives in parts/td_line.c. */
+   Lives in parts/drawTvPicture.c. */
 
-/* td_nois lives in parts/td_nois.c. */
+/* tvNoise lives in parts/tvNoise.c. */
 
-/* sc_sctd lives in parts/sc_sctd.c. */
+/* scrollStrip lives in parts/scrollStrip.c. */
 
-/* prCh: render one char via VDI.
+/* printChar: render one char via VDI.
    Sets logbase to backbuffer, MD_TRANS overlay via v_gtext, restores state.
    Setscreen (void*)-1 for phys/rez means "leave unchanged".
-   Lives in parts/prCh.c. */
+   Lives in parts/printChar.c. */
 
-/* rp_anim lives in parts/rp_anim.c. */
+/* animRecPlayer lives in parts/animRecPlayer.c. */
 
-/* strPr: paint NUL-terminated string at (x,y) via prCh, 8px/char advance
+/* printString: paint NUL-terminated string at (x,y) via printChar, 8px/char advance
    (8x8 system font used by status strip / game menu).
-   Lives in parts/strPr.c. */
+   Lives in parts/printString.c. */

@@ -19,9 +19,9 @@
    ACTIVE/MODERATE/RELAXED tiers draw one of 16 entries from
    g_atact/g_atmod/g_atrel, re-rolling while it equals lastAct; the
    sleep tier returns GET_IN_OUT_OF_BED if he is awake, else
-   ACTION_NONE.  chk_actT stores the result in g_trac. */
+   ACTION_NONE.  chooseAction stores the result in g_trac. */
 short
-chk_timA()
+pickIdleAction()
 {
         /* Three locals, not four: `table_pick` doubles as the
            hours-since-wake temporary.  The retry is an explicit label
@@ -43,7 +43,7 @@ chk_timA()
                 table_pick = (table_pick / 2) % 3;
                 table_pick = sch_tab[table_pick][lcp.activity_level];
 
-                day = cWkday();
+                day = calcWeekday();
                 if (table_pick == TIER_ACTIVE && day == WEEKDAY_SUNDAY)
                         table_pick = TIER_RELAXED;
                 else if (table_pick == TIER_ACTIVE && day == WEEKDAY_SATURDAY)

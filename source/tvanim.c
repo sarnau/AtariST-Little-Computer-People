@@ -20,15 +20,15 @@
 #include "protos.h"
 #include "globals.h"
 
-/* tv_scrc lives in parts/tv_scrc.c, included by stx_u2.c right after
-   a_playc. */
+/* tvClearAnim lives in parts/tvClearAnim.c, included by stx_u2.c right after
+   useComputer. */
 
 /* A dot bouncing inside the TV rectangle in random colours: v_pline
    draws a two-point line whose ends coincide.  The order of the local
    declarations is part of the original code; keep it. */
 
 void
-tv_boul()
+tvBounce()
 {
         short   xpos;
         short   ypos;
@@ -55,9 +55,9 @@ tv_boul()
                 xpos   = pts[0];
                 ypos   = pts[1];
 
-                sc_sdtb();
+                beginDraw();
                 v_pline(vdihnd, 2, pts);
-                sc_sdtf();
+                endDraw();
                 gameTick(0);
 
                 if (pts[0] == 308) dx = -1;
@@ -67,4 +67,4 @@ tv_boul()
         }
 }
 
-/* tv_patl lives in parts/tv_patl.c, included by stx_u2.c. */
+/* tvPattern lives in parts/tvPattern.c, included by stx_u2.c. */

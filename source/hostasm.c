@@ -22,12 +22,12 @@
 #include "types.h"
 
 /* --- psg_asm.s: direct YM2149 register writes --------------------- */
-void psg_wr(reg, val)   short reg; short val;   { (void) reg; (void) val; }
-void psg_mix(mask)      short mask;             { (void) mask; }
-void mowrit(val)        short val;              { (void) val; }
+void psgWrite(reg, val)   short reg; short val;   { (void) reg; (void) val; }
+void psgMixer(mask)      short mask;             { (void) mask; }
+void aciaWrite(val)        short val;              { (void) val; }
 
 /* --- mq_tick.s: the Timer-A ISR and the five bytes behind it ------ */
-void  mq_tick()  { }
+void  timerAIsr()  { }
 BOOL16 mi_dwrm;
 BOOL16 mi_rlock;
 short  g_mtpre;
@@ -36,11 +36,11 @@ char   g_msmsa;
 
 /* --- cp_asm.s: the copy protection -------------------------------- */
 /* Non-zero, as a passing check returns -- the host has no FDC. */
-long cp_main()   { return 0xf000000aL; }
+long checkCopyProt()   { return 0xf000000aL; }
 
 /* --- blkcp_a.s: the unrolled longword block copy ------------------ */
 void
-blkcp32(src, dst, longs)
+copyBlocks32(src, dst, longs)
 char *  src;
 char *  dst;
 short   longs;
@@ -90,7 +90,7 @@ gsx1()
 
 /* --- XBIOS / AES entries with no host meaning --------------------- */
 /* Setexc and Xbtimer install the Timer-A ISR; appl_init, graf_handle
-   and graf_mouse are the four AES calls aes_init and the mouse
+   and graf_mouse are the four AES calls initAes and the mouse
    wrappers make.  savehost.c covers the GEMDOS file layer; these had
    no host definition anywhere. */
 long  Setexc(vec, addr)  short vec; long addr; { (void) vec; (void) addr; return 0L; }

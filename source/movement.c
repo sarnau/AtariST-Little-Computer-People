@@ -14,7 +14,7 @@
    202 for 32..47 (ground floor) -- minus the position's g_rphs
    offset.  Results go to *g_txx and *g_txy. */
 void
-hs_posXY(index, g_txx, g_txy)
+posToXY(index, g_txx, g_txy)
 short   index;
 short   *g_txx;
 short   *g_txy;
@@ -36,6 +36,6 @@ short   *g_txy;
         *g_txy = floor_y_pos - g_rphs[index];
 }
 
-/* getFlrY -> parts/getFlrY.c. */
+/* floorOfY -> parts/floorOfY.c. */
 
-/* cWkday -> parts/cWkday.c. */
+/* calcWeekday -> parts/calcWeekday.c. */

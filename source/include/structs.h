@@ -106,7 +106,7 @@ typedef struct {
    of 14).  The 8-byte
    on-disk ADSR parameter block from Activision Music Studio 2.0's
    .SNG / .ORG files maps onto offsets 1..8 (attack_start_vol
-   through release_duration), so psg_cpE can memcpy directly into
+   through release_duration), so copyEnvelope can memcpy directly into
    the runtime struct from an 8-byte source buffer without touching
    the phase / ramp_direction / phase_timer / current_volume /
    max_volume fields that live outside the on-disk window.
@@ -132,7 +132,7 @@ typedef struct {
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
-   12-byte layout (chk_encm walks the rows with a stride of 12):
+   12-byte layout (matchCommand walks the rows with a stride of 12):
    `table[10]` signed bitmask bytes, the ACTION_ID byte at +10, then
    the priority offset byte at +11.  A sentinel entry with
    `table[0] == 0xff` terminates the table. */

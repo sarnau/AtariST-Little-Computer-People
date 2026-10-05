@@ -37,18 +37,18 @@
 #define FACING_RIGHT            0
 #define FACING_LEFT             1
 
-/* ---- Floors -- what getFlrY() returns, counted from the ground ------- */
+/* ---- Floors -- what floorOfY() returns, counted from the ground ------- */
 #define FLOOR_BOTTOM            1       /* y > 140 */
 #define FLOOR_MIDDLE            2       /* y > 77  */
 #define FLOOR_TOP               3
 
-/* ---- Open/close argument of a_opcfd / a_opecc / a_opecd --------------
+/* ---- Open/close argument of openFrontDoor / openKitchenCab / openDresser --------------
    (front door, kitchen cabinet, dresser).  Each tests `== 0` for open
    and re-tests `!= 0` for close, so any non-zero value closes. */
 #define DOOR_OPEN               0
 #define DOOR_CLOSE              1
 
-/* a_sleep(SLEEP_RANDOM) walks to the floor's centre line and sleeps
+/* dozeOff(SLEEP_RANDOM) walks to the floor's centre line and sleeps
    rndRng(7, 15) rounds; any other argument is the round count. */
 #define SLEEP_RANDOM            (-1)
 
@@ -182,8 +182,8 @@
    Bit fields inside g_hamod:
      bits 0..2   HEAD_ANIM_HORIZONTAL_AMPLITUDE (mask 0x03 in binary, but
                  the enum encodes it as value 3 for the "amplitude enabled"
-                 marker; sp_lcha masks with HEAD_MODE_H_AMPLITUDE = 0x07)
-     bit 3       HEAD_ANIM_HORIZONTAL_RANGE (0x08) or 0xC (see sp_lcha)
+                 marker; stepHead masks with HEAD_MODE_H_AMPLITUDE = 0x07)
+     bit 3       HEAD_ANIM_HORIZONTAL_RANGE (0x08) or 0xC (see stepHead)
      bits 5..6   HEAD_ANIM_VERTICAL_RANGE (0x60)
      bit 7       HEAD_ANIM_VERTICAL_OVERRIDE (0x80)
    Composite values (HEAD_ANIM_READING = 0x41, WALKING = 0x42, etc.) mix
@@ -198,7 +198,7 @@
 #define HEAD_ANIM_VERTICAL_RANGE        0x60
 #define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
-/* ---- House positions: the index hs_posXY looks up --------------------- */
+/* ---- House positions: the index posToXY looks up --------------------- */
 #define POS_TOP_LIVING_ROOM              0
 #define POS_TOP_DANCE_FLOOR              1
 #define POS_TOP_ARMCHAIR                 2
@@ -303,7 +303,7 @@
 #define SPRITE_READING_1                0x2d
 #define SPRITE_READING_2                0x2e
 #define SPRITE_READING_3                0x2f
-#define SPRITE_SUITCASE                 0x30   /* carried in cs_mvIn */
+#define SPRITE_SUITCASE                 0x30   /* carried in moveInScene */
 #define SPRITE_BOOK                     0x31
 #define SPRITE_VINYL_CARRY              0x32
 #define SPRITE_TYPING_1                 0x33
@@ -312,9 +312,9 @@
 #define SPRITE_TYPING_4                 0x36
 #define SPRITE_COOKED_MEAL              0x37   /* carried stove -> cabinet after cooking */
 
-/* ---- Object frames: indices into the OBJECTS table for od_draw() ------
+/* ---- Object frames: indices into the OBJECTS table for drawObject() ------
    The fixed compile-time indices passed as the first argument to
-   od_draw().  cp68's 22-char macro-name limit forces the short OBJ_
+   drawObject().  cp68's 22-char macro-name limit forces the short OBJ_
    prefix. */
 #define OBJ_FILING_CABINET_CLOSED               0
 #define OBJ_FILING_CAB_OPEN_1                   1       /* filing_cabinet_open_1 */
@@ -376,7 +376,7 @@
 /* ---- Minigame key menu -----------------------------------------------
    The card games list their function-key choices in a panel on the
    right of the screen, one prompt per line (F1, F3, then F5 or F10),
-   and wipe the panel with plEr before showing the next set. */
+   and wipe the panel with panelErase before showing the next set. */
 #define KEYMENU_X                       225
 #define KEYMENU_LINE1                   18
 #define KEYMENU_LINE2                   26
@@ -386,7 +386,7 @@
 #define KEYMENU_BOTTOM                  60
 
 /* ---- Furniture screen positions -------------------------------------
-   Where od_draw paints each piece of furniture (the top-left corner of
+   Where drawObject paints each piece of furniture (the top-left corner of
    its object frame).  Every open/closed frame of one piece is drawn at
    the same spot, and the study door's sprites sit there too. */
 #define CLOSET_DOOR_X           75
@@ -445,7 +445,7 @@
 #define SFX_SNORING                     22
 
 /* ---- Palette values (12-bit RGB, Atari ST format) --------------------- */
-/* Skin tone used by lcp_upal: normal and sick. */
+/* Skin tone used by setSkinColor: normal and sick. */
 #define ST_PEACH                        0x754
 #define ST_SICK_GREEN                   0x453
 
@@ -456,14 +456,14 @@
 #define SEQ_PHASE_SONG_ENDING                   2
 
 /* ---- Song header command bytes -------------------------------------- */
-#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> g_mkey, mq_bust */
+#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> g_mkey, buildNoteMap */
 #define MIDI_HDR_SET_TEMPO                      0x81
 #define MIDI_HDR_SET_VOLUME                     0x83
 #define MIDI_HDR_SET_VELOCITY                   0x84    /* default velocity -> mi_dvel, psg_dvol */
 #define MIDI_HDR_PROGRAM_CHANGE                 0xC0
 #define MIDI_HDR_END                            0xFF
 
-/* ---- Song body control bytes (mq_pars's switch) -------------------- */
+/* ---- Song body control bytes (parseEvents's switch) -------------------- */
 #define SEQ_BAR                                 0x82
 #define SEQ_LOOP_START                          0x85    /* + repeat count */
 #define SEQ_LOOP_END                            0x86
@@ -471,7 +471,7 @@
 
 /* ---- YM2149 PSG registers ------------------------------------------
    Giaccess(data, reg | PSG_WRITE) writes, Giaccess(0, reg) reads.
-   Note psg_wr(data, reg) takes the REGISTER second, like Giaccess.
+   Note psgWrite(data, reg) takes the REGISTER second, like Giaccess.
    Tone period for channel n is registers 2n (fine) / 2n+1 (coarse). */
 #define XBIOS_GIACCESS                          28
 #define PSG_WRITE                               0x80
@@ -481,7 +481,7 @@
 #define PSG_VOL_B                               9
 #define PSG_VOL_C                               10
 
-/* ---- PSG envelope phases (psg_upEn's state machine) ----------------- */
+/* ---- PSG envelope phases (stepEnvelopes's state machine) ----------------- */
 #define ENV_IDLE                                0
 #define ENV_ATTACK                              1
 #define ENV_DECAY                               2
@@ -493,17 +493,17 @@
    (index into crd_mfdb).  CARD_BACK selects the shared face-down back
    MFDB.  CARD_NONE is the sentinel used by war/blackjack to mark
    empty slots in the war-cards arrays and to signal end-of-hand from
-   pk_rmch when the source pile is empty.
+   popCard when the source pile is empty.
 
    card / 13 is the suit (Hearts, Spades, Diamonds, Clubs) and
    card % 13 the rank, ASCENDING with the ace high: 0 is the two, 8 the
    ten, 9..11 J/Q/K, 12 the ace.  The game logic says so three ways --
-   blackjack scores a plain card `% 13 + 2` and 8..11 as ten, pk_evh
+   blackjack scores a plain card `% 13 + 2` and 8..11 as ten, pkrEvalHand
    takes rank 8 as the low card of a royal flush, and war's "Ace? I
    don't believe it!" is rank 12 -- and the images agree.
 
    The CARDS FILE uses a different order: each suit there runs
-   K, Q, J, 10 .. 2, A, and pk_ldCrd reads the first twelve into slots
+   K, Q, J, 10 .. 2, A, and cardLoad reads the first twelve into slots
    11..0 and the ace into slot 12.  The bitmaps in DATA/CARDS show it
    (file card 0 is the king of hearts, 11 the two, 12 the ace).  These
    names follow crd_mfdb, not the file. */
@@ -590,8 +590,8 @@
 #define CARD_BJ_STEP                    1
 #define CARD_BJ_STOP                    0
 
-/* Poker hand ranks -- what pk_evh stores through *hand_rank and what
-   pk_chrk / pk_phrk hold.  Higher beats lower.  (pk_evh's hc/bp
+/* Poker hand ranks -- what pkrEvalHand stores through *hand_rank and what
+   pk_chrk / pk_phrk hold.  Higher beats lower.  (pkrEvalHand's hc/bp
    counters use 1/3/7 as SCORES that are summed; those are not ranks.) */
 #define HAND_HIGH_CARD                  0
 #define HAND_ONE_PAIR                   1
@@ -604,11 +604,11 @@
 #define HAND_STRAIGHT_FLUSH             8
 #define HAND_ROYAL_FLUSH                9
 
-/* pk_inph(a, b, c) return values.  The first three name a POSITION in
+/* cardKeyInput(a, b, c) return values.  The first three name a POSITION in
    the argument list, not a key: the caller decides which F-key each
    one is.  Digits '1'..'5' come back as 4..8, so `r - PK_IN_DIGIT_1`
    is the card slot 0..4.  An unused argument slot is passed as 255
-   (never a key code); pk_main's discard loop passes 0 instead. */
+   (never a key code); playPoker's discard loop passes 0 instead. */
 #define PK_IN_ARG_A                     1
 #define PK_IN_ARG_B                     2
 #define PK_IN_ARG_C                     3
@@ -669,9 +669,9 @@
 #define WATER_START                     7       /* new resident's tank */
 #define WATER_MAX                       10      /* lcp_watr, a full tank */
 /* bathroom_timer once the need has fired: effectively off until eating
-   (a_kitcc) reloads it from bathroom_timer_max. */
+   (eatFromCabinet) reloads it from bathroom_timer_max. */
 #define BATHROOM_TIMER_OFF              9999
-/* sickness_countdown reloads, in gameSim1 steps: sickness worsens one
+/* sickness_countdown reloads, in simStep steps: sickness worsens one
    level every 60 and, once recovering, improves one every 5. */
 #define SICK_DELAY_WORSENING            60
 #define SICK_DELAY_IMPROVING            5
@@ -718,7 +718,7 @@
 #define KEY_CTRL_R_RECORD               0x12
 #define KEY_CTRL_W_WATER                0x17
 
-/* ---- Activity tiers -- chk_timA's table_pick --------------------------
+/* ---- Activity tiers -- pickIdleAction's table_pick --------------------------
    sch_tab maps (time of day, lcp.activity_level) to the first three;
    each picks one of the action tables g_atact / g_atmod / g_atrel.
    Sunday turns ACTIVE into RELAXED and Saturday into MODERATE.  SLEEP
@@ -729,11 +729,11 @@
 #define TIER_SLEEP                      3
 
 /* g_ew2a's end-of-table marker, in a row's first mask byte.  Alcyon
-   narrows it to a signed char, so chk_encm's compare against the char
+   narrows it to a signed char, so matchCommand's compare against the char
    field matches. */
 #define EW2A_END                        0xff
 
-/* ---- Action ids (doAct, the action queue, the AI tables) -------------
+/* ---- Action ids (runAction, the action queue, the AI tables) -------------
    The 5 EVENT actions (28..32) are INTERLEAVED with the regular actions,
    not appended at the end.  ACTION_NONE (-1)
    is the empty sentinel used by g_trac and the event FIFO. */
@@ -744,7 +744,7 @@
 #define ACTION_WASH_HANDS                3
 #define ACTION_GET_IN_OUT_OF_BED         4
 #define ACTION_LISTEN_SONG               5
-#define ACTION_STOP_RECORD               6       /* a_playp */
+#define ACTION_STOP_RECORD               6       /* stopRecord */
 #define ACTION_WRITE_LETTER              7
 #define ACTION_DANCE                     8
 #define ACTION_YAWN_AND_STRETCH          9
@@ -764,7 +764,7 @@
 #define ACTION_FEED_DOG                 23
 #define ACTION_HELLO                    24
 #define ACTION_EAT_MEAL                 25
-#define ACTION_PLAY_ORGAN               26       /* a_plawr */
+#define ACTION_PLAY_ORGAN               26       /* playOrgan */
 #define ACTION_OPEN_UPSTAIRS_CLOSET     27
 #define ACTION_EVENT_RECORD_DELIVERY    28
 #define ACTION_EVENT_FOOD_DELIVERY      29
@@ -773,7 +773,7 @@
 #define ACTION_EVENT_BOOK_DELIVERY      32
 #define ACTION_GET_SNACK_FROM_FRIDGE    33
 #define ACTION_OPEN_BEDROOM_CLOSET      34
-#define ACTION_NOD_OK                   35       /* a_nodok; nothing queues it */
+#define ACTION_NOD_OK                   35       /* nodOk; nothing queues it */
 #define ACTION_CLEAN_UP                 36
 #define ACTION_TIDY_HOUSE               37
 #define ACTION_CHECK_FRONT_DOOR         38

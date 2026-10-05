@@ -4,14 +4,14 @@
 # it produces the action its own tables say it should.
 #
 # This replaces a version that DID NOT RUN.  It built with
-# -DTEST_ACTIONS=n to switch on a harness in cs_mvIn that pushed one
+# -DTEST_ACTIONS=n to switch on a harness in moveInScene that pushed one
 # event into g_trel; that harness was removed during the LCP_STX
 # restructuring, so the flag compiled to nothing and the script
 # reported success while exercising no hook.  Its action-ID table had
 # also gone stale against enums.h -- it listed ACTION_HELLO as 18 where
 # the enum says 24 -- which is the other reason not to resurrect it.
 #
-# WHAT IS UNDER TEST is chk_encm, the runtime matcher, against the
+# WHAT IS UNDER TEST is matchCommand, the runtime matcher, against the
 # static tables it reads.  The expected command/action pairs are
 # DERIVED from vocab data at run time rather than hard-coded, so the
 # test cannot go stale the way the old ID list did: change the tables
@@ -22,12 +22,12 @@
 # How the parser works: each recognised word ORs bm_lo[g_ew2b[w]] into
 # g_ewb[ew2pos[w]]; each g_ew2a row is a 10-byte mask plus an action at
 # +10; a row fires when its mask is a SUBSET of the accumulated bits,
-# first match winning.  prsCmd appends the result to g_aqueu[g_aliss].
+# first match winning.  submitCommand appends the result to g_aqueu[g_aliss].
 #
 # Two rows can never fire and the script asserts that they do not:
 #   row 0  ACTION_HELLO -- needs byte 9 bit 0x01 and no word supplies it
 #   row 6  MESSY IS HOME -- needs the `IS` at vwd_tab index 84, a
-#          duplicate that chk_vwd can never return
+#          duplicate that lookupWord can never return
 #
 # Env: NO_REBUILD=1, KEEP_LOG=1, HATARI=, TOS_IMG=, GAME_DIR=.
 # Exit: 0 all as predicted, 1 at least one mismatch, 2 setup error.
@@ -61,7 +61,7 @@ bm_lo  = nums('bm_lo', 8);    words  = strs('vwd_tab')
 flat   = nums('g_ew2a', 34 * 12)
 rows   = [flat[i*12:(i+1)*12] for i in range(34)]
 
-# chk_vwd returns the FIRST spelling match, and chk_encm reads a return
+# lookupWord returns the FIRST spelling match, and matchCommand reads a return
 # of 0 as "unrecognised" -- so index 0 and every repeated spelling are
 # unreachable and must not be used to build a command.
 live = {}
@@ -126,7 +126,7 @@ probe_fast off
 
 pass=0; fail=0; results=""
 
-# The queue is only 10 deep and prsCmd silently DROPS anything past
+# The queue is only 10 deep and submitCommand silently DROPS anything past
 # that, so 33 commands cannot simply be poured in and read back -- and
 # waiting for the resident to work each one off would take the whole
 # game day.  Reset g_aliss to empty before every command instead: what

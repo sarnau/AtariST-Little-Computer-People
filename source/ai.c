@@ -1,7 +1,7 @@
 /*
  * ai.c -- AI decision engine and event dispatcher.
- * chk_actT: ~1 Hz priority ladder -> doAct(g_trac).
- * execEv: dispatch deferred events from FIFO.
+ * chooseAction: ~1 Hz priority ladder -> runAction(g_trac).
+ * runEvent: dispatch deferred events from FIFO.
  */
 
 #include "types.h"
@@ -11,48 +11,48 @@
 #include "events.h"
 #include "globals.h"
 
-/* execEv: dispatch a single deferred event to its handler.
+/* runEvent: dispatch a single deferred event to its handler.
    in_evrt guards recursion; sleeper is forced out of bed first.
    Food-delivery drops silently if the 3-bit food-count is already 4. */
 
 void
-execEv(event)
+runEvent(event)
 short   event;
 {
         in_evrt = YES;
 
         if (lcp.is_sleeping != NO)
-                a_gioob();
+                getInOutOfBed();
 
         /* The arms are in the original's source order (BOOK_DELIVERY
            first, DOG_FOOD last), which decides the code layout; keep it.
            The phone handler is passed 0. */
         switch (event) {
         case ACTION_EVENT_BOOK_DELIVERY:
-                er_bood();
+                bookDelivery();
                 break;
         case ACTION_EVENT_RECORD_DELIVERY:
-                er_recd();
+                recordDelivery();
                 break;
         case ACTION_EVENT_FOOD_DELIVERY:
                 if (((lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
                         break;
-                er_food();
+                foodDelivery();
                 break;
         case ACTION_EVENT_PHONE_CALL:
-                ev_ansPh(0);
+                answerPhone(0);
                 break;
         case ACTION_NOD_OK:
-                a_nodok();
+                nodOk();
                 break;
         case ACTION_EVENT_DOG_FOOD:
-                er_dogf();
+                dogFoodDelivery();
                 break;
         }
 
         in_evrt = NO;
 }
 
-/* chk_actT -> parts/chk_actT.c. */
+/* chooseAction -> parts/chooseAction.c. */
 
-/* prsCmd -> parts/prsCmd.c. */
+/* submitCommand -> parts/submitCommand.c. */

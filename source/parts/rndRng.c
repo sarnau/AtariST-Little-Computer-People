@@ -1,5 +1,5 @@
 /*
- * parts/rndRng.c -- included by games.c, right after mg_wkev; never
+ * parts/rndRng.c -- included by games.c, right after mgWaitKey; never
  * compiled on its own.
  */
 /* Returns a random number from low to high inclusive: the XBIOS

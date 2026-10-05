@@ -65,7 +65,7 @@ typedef struct {
 #define NOTS_AND_D      4
 #define S_XOR_D         6
 
-/* er_nomem writes to stderr on the host. */
+/* outOfMemory writes to stderr on the host. */
 #include <stdio.h>
 
 /* <vdibind.h> / <gembind.h>: K&R declarations for the bindings the port

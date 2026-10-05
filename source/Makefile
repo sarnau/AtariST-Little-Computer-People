@@ -56,7 +56,7 @@ ALCYONOBJS      := $(patsubst %.c,$(ALCYONOBJDIR)/%.o,$(SOURCES))
 # compiler: a call to an undeclared function is legal and returns int,
 # a declaration with no type IS int, and a function may fall off its
 # end leaving the last computed value in d0 -- which the port relies on
-# deliberately (pk_cace and chk_timA both do it, see CLAUDE.md) -- and
+# deliberately (pkrOpenRank and pickIdleAction both do it, see CLAUDE.md) -- and
 # Super()'s void * drops straight into a long.  Clang makes all four
 # hard errors by default.  Turning them back into what
 # they are on the target keeps this build a check on the code we ship
@@ -131,7 +131,7 @@ alcyon-link:
 #      Alcyon's 8-char external limit?
 # Any failure fails the target.
 # CI_VBLS: 15000 VBLs runs cleanly on the current tip -- the previous
-# v_gtext crash at VBL 2361 was resolved incidentally by the initBRev
+# v_gtext crash at VBL 2361 was resolved incidentally by the initMirror
 # fix (rev_tab was BSS-zero, sprite mirroring smeared garbage into
 # BSS regions that overlapped TOS's font table pointers).  Bump higher
 # if you want more coverage; a 30000-VBL run also runs clean.

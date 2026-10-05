@@ -180,13 +180,13 @@ The character navigates between positions using `lcp_pathfind_one_step`, which h
 
 ### Double-Buffered Sprite Rendering
 
-The game runs at ~8 Hz with a double-buffered rendering pipeline in `sc_ren8`:
+The game runs at ~8 Hz with a double-buffered rendering pipeline in `renderFrame`:
 
 1. **Background copy**: `blkcopy32` copies the static house scene from the offscreen buffer (32-byte aligned block copy, with three modes depending on `tx_sctm` for partial updates)
 2. **Dog animation**: `dog_move_and_animate` advances the dog's position, handles stair navigation, and triggers eating behavior when near a full food bowl
-3. **Sprite compositing**: Iterates over all 8 hardware sprite slots; for each with a non-NULL image pointer, calls `sp_draw` to composite using masked blitting
+3. **Sprite compositing**: Iterates over all 8 hardware sprite slots; for each with a non-NULL image pointer, calls `drawSlot` to composite using masked blitting
 4. **Page flip**: `XBIOS Vsync + Setscreen` swaps the display to the newly composited buffer
-5. **Sound effects**: Plays any queued sound effects via `sf_irqp`
+5. **Sound effects**: Plays any queued sound effects via `startSfx`
 
 ### Sprite Pipeline Architecture
 
@@ -207,13 +207,13 @@ The sprite system uses a three-level pipeline with a pending/active double buffe
 - `sprite_active_x[8]` / `sprite_active_y[8]` — current screen position
 - `sprite_active_width[8]` / `sprite_active_height[8]` — current dimensions
 
-Each frame in `sc_ren8`, slots with `sprite_pending_flag == YES` are committed from pending to active, then rendered via `sp_draw`.
+Each frame in `renderFrame`, slots with `sprite_pending_flag == YES` are committed from pending to active, then rendered via `drawSlot`.
 
-Note: `sp_sprs` bypasses the pending buffer and writes directly to the active arrays for immediate display.
+Note: `activateSprite` bypasses the pending buffer and writes directly to the active arrays for immediate display.
 
 ### Sprite Slot Assignment
 
-60 logical sprites are multiplexed onto 8 hardware rendering slots via `sp_upds`:
+60 logical sprites are multiplexed onto 8 hardware rendering slots via `layoutSlots`:
 - Slots 3–4: Reserved for LCP body (3) and head (4) sprites
 - Slots 1–2: Behind-LCP layer (`sprite_layer_flags[n] == SPRITE_BEHIND_LCP`)
 - Slots 5–6: In-front-of-LCP layer (`sprite_layer_flags[n] == SPRITE_IN_FRONT`)
@@ -274,7 +274,7 @@ Both are 2-word-wide source sprites expanded to 4-word-wide compositing buffers 
 
 ### Dog Sprite System
 
-The dog uses a separate rendering path via `sp_spud`:
+The dog uses a separate rendering path via `setDogSprite`:
 - Uses hardware slots 0 and 7 (behind and in front of LCP based on Y-depth comparison)
 - Walk animation: 8-frame cycle from `dog_walk_anim_frames[8]` (SPRITE_DOG_WALK_RIGHT_1–8)
 - Eating animation: 3-frame cycle from `dog_sprite_eating_anim_tab[3]` (SPRITE_DOG_EATING_1–3)
@@ -333,7 +333,7 @@ Interrupt-driven via MFP Timer A at 200 Hz (`midi_seq_tick_handler`). The sequen
 | Header (10 bytes) | File identifier (skipped) |
 | Channel map (30 bytes) | MIDI channel/program mappings |
 | PSG envelopes (360 bytes) | ADSR parameters for 3 PSG channels |
-| Header commands | Tempo, volume, scale table setup (parsed by `mq_parh` via `midi_header_cmd_values/handlers` jump table) |
+| Header commands | Tempo, volume, scale table setup (parsed by `parseSongHeader` via `midi_header_cmd_values/handlers` jump table) |
 | Event stream | Compact 3-byte note format + control events |
 
 ### Sound Effects

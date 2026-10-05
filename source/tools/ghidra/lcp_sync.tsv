@@ -100,7 +100,7 @@ A	0x5a248	addr_ou
 A	0x5a2cc	pst_arr
 # Truncation repairs, found by the generated verify on 2026-09-07: an
 # earlier sync pushed lcp_sym.68k's 8-character LINKAGE names, the same
-# way it once produced `lcp_pat` for `lcp_path`.
+# way it once produced `lcp_pat` for `walkStep`.
 A	0x3d23c	body_shp
 A	0x3f8b0	body_ptr
 F	0x278c0	evnt_timer
@@ -119,7 +119,7 @@ A	0x2b444	psg_vrg
 # the align-up constant, and that constant sits inside a relocated
 # longword, so `base+0x1FF` and `base-1+0x200` store the same value and
 # the binary cannot tell them apart (reloc_audit category E).  0x2c867
-# is what source/sprites.c and parts/sc_ren8.c declare today.  See the
+# is what source/sprites.c and parts/renderFrame.c declare today.  See the
 # note in CLAUDE.md: three independent indications point at 0x2c866
 # instead, and if the port ever moves, the generated verify list moves
 # with it and a sync corrects this label.

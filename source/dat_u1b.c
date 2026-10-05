@@ -10,13 +10,13 @@
  * Not compiled standalone -- included by stx_u1.
  *
  * SECOND of three parts.  stx_u1's data is NOT all-globals-then-code:
- * execEv's and doAct's switch jump tables sit between pex_name and
+ * runEvent's and runAction's switch jump tables sit between pex_name and
  * g_atact, and getKey's right after rv_val.  So these six globals are
  * declared between actions.c and parts/getKey.c in the unit, and
  * dat_u1c's three come after getKey.  Do not reorder.
  */
 
-/* AI action tables: 16 ACTION_IDs each, picked by chk_timA() at the
+/* AI action tables: 16 ACTION_IDs each, picked by pickIdleAction() at the
    active/moderate/relaxed tier. */
 
 short   g_atact[16] = {
@@ -38,7 +38,7 @@ short   g_atact[16] = {
         ACTION_TIDY_HOUSE
 };
 
-/* Moderate tier (chk_timA, TIER_MODERATE). */
+/* Moderate tier (pickIdleAction, TIER_MODERATE). */
 short   g_atmod[16] = {
         ACTION_HELLO,
         ACTION_DANCE,
@@ -58,7 +58,7 @@ short   g_atmod[16] = {
         ACTION_EVENT_PHONE_CALL
 };
 
-/* Relaxed tier (chk_timA, TIER_RELAXED). */
+/* Relaxed tier (pickIdleAction, TIER_RELAXED). */
 short   g_atrel[16] = {
         ACTION_READ_NEWSPAPER,
         ACTION_PET_DOG,
@@ -80,7 +80,7 @@ short   g_atrel[16] = {
 
 /* sch_tab[3][8]: (phase, activity_level) -> TIER_*, i.e. byte offset
    hours_bucket*16 + activity_level*2.  A real 2-D array, not a table
-   of row pointers -- chk_timA's code depends on that -- and it must
+   of row pointers -- pickIdleAction's code depends on that -- and it must
    sit directly after g_atrel in data. */
 short           sch_tab[3][8] = {
         { TIER_ACTIVE,    TIER_ACTIVE,    TIER_RELAXED,   TIER_RELAXED,
@@ -91,7 +91,7 @@ short           sch_tab[3][8] = {
           TIER_ACTIVE,    TIER_RELAXED,   TIER_MODERATE,  TIER_RELAXED }
 };
 
-/* Bit-reversal pairs for rv_bld: when bit rv_msk[i] is set in a
+/* Bit-reversal pairs for buildMirrorTable: when bit rv_msk[i] is set in a
    byte, bit rv_val[i] is set in its mirror image in rev_tab. */
 short           rv_msk[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 

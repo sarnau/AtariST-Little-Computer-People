@@ -7,13 +7,13 @@
 #include "sprglobs.h"
 #include "sprload.h"
 
-/* sp_mbuf: 14 KB shared mask buffer.  sp_regs writes a generated
+/* sp_mbuf: 14 KB shared mask buffer.  defineSprite writes a generated
    transparency mask here parallel to the sprite's image bytes in
    spr_file.  g_sedms[id] then references a slice
    here. */
 unsigned char   sp_mbuf[14000];
 
-/* sp_genma -> parts/sp_genma.c. */
+/* makeMask -> parts/makeMask.c. */
 
-/* sp_regs -> parts/sp_regs.c.  There is no driver loop function:
-   main inlines the loop and calls sp_regs per sprite. */
+/* defineSprite -> parts/defineSprite.c.  There is no driver loop function:
+   main inlines the loop and calls defineSprite per sprite. */

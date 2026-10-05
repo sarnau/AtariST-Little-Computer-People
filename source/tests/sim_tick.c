@@ -1,5 +1,5 @@
 /*
- * sim_tick.c -- host-side smoke test for gameSim1.
+ * sim_tick.c -- host-side smoke test for simStep.
  *
  * Drives the sim for 24 game-hours (86400 game-seconds) from a known
  * starting state and asserts that clock, hunger, thirst and bathroom
@@ -33,7 +33,7 @@ extern short    t_sec;
 extern BOOL16   ph_ans;
 extern BOOL16   ph_call;
 extern BOOL16   introSeq;
-extern void     gameSim1();
+extern void     simStep();
 
 static int      failures = 0;
 
@@ -89,7 +89,7 @@ char ** argv;
 
         /* Drive 24 game-hours (86400 game-seconds). */
         for (i = 0; i < 86400L; i++)
-                gameSim1();
+                simStep();
 
         /* Clock should have advanced exactly 24h -- back to 06:00:00. */
         CHECK(t_hour == 6,   "t_hour != 6 after 86400 seconds");
@@ -133,7 +133,7 @@ char ** argv;
         t_hour              = 7;
         introSeq   = YES;
         for (i = 0; i < 3600L; i++)
-                gameSim1();
+                simStep();
         CHECK(t_hour == 8,   "1-hour drive: t_hour != 8");
         CHECK(t_min == 0, "1-hour drive: t_min != 0");
 
@@ -150,14 +150,14 @@ char ** argv;
         t_hour = 10;
         introSeq = YES;
         for (i = 0; i < 30L; i++)
-                gameSim1();
+                simStep();
         CHECK(t_sec == 30, "30-sec drive: counter wrong");
         CHECK(t_min == 0, "30-sec drive: minutes wrong");
 
         /* Non-tick frame: counter & 7 != 0 -> function must early-return. */
         t_sec = 42;
         ani_cnt = 3;      /* 3 & 7 == 3 != 0 */
-        gameSim1();
+        simStep();
         CHECK(t_sec == 42, "non-tick frame incremented counter");
 
         (void) thirst_hits; (void) hunger_hits;

@@ -9,12 +9,12 @@
 #include "sprglobs.h"
 #include "sprites.h"
 
-/* lcp_wkD: pump lcp_path() until arrival.
+/* walkToTarget: pump walkStep() until arrival.
    Returns 0 on arrival, -1 on preemption when idle. */
 
 
 short
-lcp_wkD()
+walkToTarget()
 {
         short   result;
 
@@ -23,7 +23,7 @@ lcp_wkD()
         g_hastl = 0;
 
         while (g_wtx != 0 || g_wty != 0) {
-                lcp_path();
+                walkStep();
                 if (in_evrt != NO)
                         continue;
                 if (g_trel[0] == ACTION_NONE)
@@ -44,11 +44,11 @@ lcp_wkD()
         return result;
 }
 
-/* lcp_flwp -> parts/lcp_flwp.c. */
+/* nextWaypoint -> parts/nextWaypoint.c. */
 
-/* dg_wkPth -> parts/dg_wkPth.c. */
+/* dogNextWaypt -> parts/dogNextWaypt.c. */
 
-/* lcp_fstp -> parts/lcp_fstp.c. */
+/* playFootstep -> parts/playFootstep.c. */
 
 
-/* lcp_path -> parts/lcp_path.c. */
+/* walkStep -> parts/walkStep.c. */

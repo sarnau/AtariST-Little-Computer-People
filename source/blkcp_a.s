@@ -10,13 +10,13 @@
 *
 ******************************************************************************
 
-	.globl	_blkcp32
+	.globl	_copyBlo
 
 	.text
 
-* blkcp32(src, dst, count): copy count 32-byte blocks from src to dst.
+* copyBlocks32(src, dst, count): copy count 32-byte blocks from src to dst.
 * count must be at least 1 (0 would wrap the dbf counter).
-_blkcp32:
+_copyBlo:
 	link	a6,#-6
 	move.w	16(a6),d0
 	subq.w	#1,d0

@@ -143,7 +143,7 @@ char * vwd_tab[161] = {
    other words do not matter, and the first matching row wins.  Word w
    sets bit g_ew2b[w] of byte ew2pos[w].  The word groups below are
    derived from those two tables and vwd_tab -- vwd_tab's later
-   duplicates (START, LIKE, IS) and PLEASE (index 0, which chk_encm
+   duplicates (START, LIKE, IS) and PLEASE (index 0, which matchCommand
    treats as unrecognised) never set a bit. */
 WORD_TO_ACTION g_ew2a[34] = {
     /* 0: (no word) + EXCUSE/PARDON/HELLO/ATTENTION/HEY -- never fires:

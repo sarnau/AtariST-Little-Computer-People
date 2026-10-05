@@ -5,25 +5,25 @@
 #
 # The port boots two ways depending on whether HYBER is present:
 #
-#   no HYBER   lc_load returns 0, g_lcldd stays 0, and main runs
-#              cs_mvIn -- the move-in cutscene that seeds the resident
-#   HYBER OK   lc_load reads 128 bytes into `lcp`, unpacks the door
-#              bits and calls lcp_upal; g_lcldd is 1 and cs_mvIn is
+#   no HYBER   loadSavedGame returns 0, g_lcldd stays 0, and main runs
+#              moveInScene -- the move-in cutscene that seeds the resident
+#   HYBER OK   loadSavedGame reads 128 bytes into `lcp`, unpacks the door
+#              bits and calls setSkinColor; g_lcldd is 1 and moveInScene is
 #              skipped entirely
 #
 # The previous version of this script never ran at all: it looked for
 # HYBER in $GAME_DIR/data, which does not exist -- the game opens
 # "hyber" on the GEMDOS drive root -- so it exited "SETUP" every time.
 # It also built without -DSKIP_COPYPROT, which parks the resident in
-# cs_mvIn's `while (1) a_sleep(-1)` under any emulator here, and its
+# moveInScene's `while (1) dozeOff(-1)` under any emulator here, and its
 # only assertion was "did not crash" -- which a load path that silently
 # did nothing would pass.
 #
 # So this checks the values.  The synthesised save carries distinctive
 # numbers and the test reads them back out of `lcp` in memory.  Note
-# that main is `g_lcldd = lc_load(); st_titl();`, and with SKIP_TITLE
-# st_titl overwrites owner_name and the date, so the fields asserted
-# here are deliberately ones st_titl never touches.
+# that main is `g_lcldd = loadSavedGame(); titleScreen();`, and with SKIP_TITLE
+# titleScreen overwrites owner_name and the date, so the fields asserted
+# here are deliberately ones titleScreen never touches.
 #
 # Env: KEEP_LOG=1, HATARI=, TOS_IMG=, GAME_DIR= as in hatari_probe.sh.
 # Exit: 0 both paths correct, 1 an assertion failed, 2 setup error.

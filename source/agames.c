@@ -1,7 +1,7 @@
 /*
  * agames.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
- * a_playc: type at computer 0x80..0x1FF ticks, rare "clear screen".
- * a_plaag: filing cabinet -> game menu (1..5) -> game main -> cleanup.
+ * useComputer: type at computer 0x80..0x1FF ticks, rare "clear screen".
+ * playGame: filing cabinet -> game menu (1..5) -> game main -> cleanup.
  */
 
 #include "types.h"
@@ -15,14 +15,14 @@
 #include "sprites.h"
 
 
-/* a_playc lives in parts/a_playc.c, in the object right before tv_scrc. */
+/* useComputer lives in parts/useComputer.c, in the object right before tvClearAnim. */
 
 /* The menu waits on the tx_sctm timeout (300, reloaded with 250 once it
-   runs low); while idle the resident yawns (a_sleep(1)) between polls. */
+   runs low); while idle the resident yawns (dozeOff(1)) between polls. */
 
 
 void
-a_plaag()
+playGame()
 {
         short   spare0;
         short   keycode;
@@ -33,24 +33,24 @@ a_plaag()
         dg_vis        = YES;
         dg_idlcd = 1;
 
-        hs_posXY(POS_TOP_FILING_CABINET,
+        posToXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
-        if (lcp_wkD() != 0)
+        if (walkToTarget() != 0)
                 return;
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
+        waitHeadTurn();
 
         if (lcp_flcO == NO) {
                 lcp_st = STATE_BEND_DOWN;
                 gameTick(1);
                 lcp_st = STATE_REACH_FORWARD;
-                od_draw(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
+                drawObject(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
                 lcp_st = STATE_PICK_UP_FROM_FLOOR;
-                od_draw(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
+                drawObject(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
                 gameTick(2);
                 lcp_flcO = YES;
                 lcp_st = STATE_BEND_DOWN;
@@ -61,14 +61,14 @@ a_plaag()
 
         lcp_st              = STATE_STAND_SIDE_VIEW;
         g_hatas = 8;
-        lcp_hwt();
+        waitHeadTurn();
         gameTick(5);
-        fillTopR(0x1b);
+        fillPanel(0x1b);
         tx_sctm      = 300;
         no_keyin = YES;
-        strPr("What game do you want to play?", 5,  8, COLOR_black);
-        strPr("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
-        strPr("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
+        printString("What game do you want to play?", 5,  8, COLOR_black);
+        printString("1. Anagrams   2. War  3. Poker",  5, 16, COLOR_red);
+        printString("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
 
         keycode      = 0;
         game_running = NO;
@@ -82,18 +82,18 @@ a_plaag()
                 tx_sctm      = 250;
                 selected_game    = 8;
                 g_wtx    = lcp_x;
-                g_wty    = flr_cy[getFlrY(lcp_y) - 1];
+                g_wty    = flr_cy[floorOfY(lcp_y) - 1];
                 g_actif = YES;
-                lcp_wkD();
+                walkToTarget();
                 g_actif = NO;
 
                 lcp_face   = FACING_RIGHT;
                 lcp_st              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;
-                lcp_hwt();
+                waitHeadTurn();
 
                 while (selected_game-- != 0) {
-                        a_sleep(1);
+                        dozeOff(1);
                         gameTick(rndRng(0, 2));
                         keycode = getKey();
                         if (keycode >= '1' && keycode <= '5')
@@ -102,20 +102,20 @@ a_plaag()
 
                 lcp_st = STATE_STAND_SIDE_VIEW;
                 gameTick(0);
-                hs_posXY(POS_TOP_FILING_CABINET,
+                posToXY(POS_TOP_FILING_CABINET,
                                       &g_wtx, &g_wty);
                 g_actif = YES;
-                lcp_wkD();
+                walkToTarget();
                 g_actif = NO;
 
                 lcp_st              = STATE_STAND_SIDE_VIEW;
                 g_hatas = 8;
-                lcp_hwt();
+                waitHeadTurn();
                 game_running = YES;
         }
 
         else if (tx_sctm == 0 && game_running != NO) {
-                a_wandi();
+                idleShrug();
                 no_keyin = NO;
                 dg_vis = NO;
                 return;
@@ -127,37 +127,37 @@ a_plaag()
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
-        lcp_hwt();
+        waitHeadTurn();
 
-        a_watat();
+        rummageCabinet();
         lcp_st = STATE_STAND_SIDE_VIEW;
-        sp_ssco(SPRITE_GAME_BOX);
+        carryBehind(SPRITE_GAME_BOX);
         gameTick(0);
 
-        hs_posXY(POS_BTM_KITCHEN_SINK,
+        posToXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
         g_wty += 6;
         g_wtx += 2;
         g_actif = YES;
-        lcp_wkD();
+        walkToTarget();
 
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
-        sp_sprs(SPRITE_TABLE_SETTING);
+        activateSprite(SPRITE_TABLE_SETTING);
         g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
         g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
 
-        hs_posXY(POS_BTM_TABLE_RIGHT,
+        posToXY(POS_BTM_TABLE_RIGHT,
                               &g_wtx, &g_wty);
-        lcp_wkD();
-        hs_posXY(POS_BTM_TABLE_LEFT,
+        walkToTarget();
+        posToXY(POS_BTM_TABLE_LEFT,
                               &g_wtx, &g_wty);
-        lcp_wkD();
+        walkToTarget();
 
         lcp_st            = STATE_STAND_SIDE_VIEW;
         lcp_face = FACING_RIGHT;
-        sp_ss02(SPRITE_GAME_BOX);
+        carryInFront(SPRITE_GAME_BOX);
         g_hatas = 8;
-        lcp_hwt();
+        waitHeadTurn();
 
         lcp_st = STATE_EAT_BITE;
         lcp_y += 8;
@@ -170,46 +170,46 @@ a_plaag()
         gameTick(0);
 
         if (keycode == '1')
-                ag_main();
+                playAnagrams();
         else if (keycode == '2')
-                pk_wrMn();
+                playWar();
         else if (keycode == '3')
-                pk_main();
+                playPoker();
         else if (keycode == '4')
-                pk_bjMn();
+                playBlackjack();
         else if (keycode == '5')
-                wp_main();
+                playWordPuzzle();
 
         g_lcyof = YES;
-        sp_ssco(SPRITE_GAME_BOX);
+        carryBehind(SPRITE_GAME_BOX);
         lcp_y -= 8;
         lcp_x -= 6;
         lcp_st = STATE_STAND_SIDE_VIEW;
         gameTick(0);
 
-        hs_posXY(POS_BTM_TABLE_RIGHT,
+        posToXY(POS_BTM_TABLE_RIGHT,
                               &g_wtx, &g_wty);
-        lcp_wkD();
-        hs_posXY(POS_BTM_KITCHEN_SINK,
+        walkToTarget();
+        posToXY(POS_BTM_KITCHEN_SINK,
                               &g_wtx, &g_wty);
         g_wty += 5;
-        lcp_wkD();
+        walkToTarget();
 
         g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
-        sp_upds();
+        layoutSlots();
 
-        hs_posXY(POS_TOP_FILING_CABINET,
+        posToXY(POS_TOP_FILING_CABINET,
                               &g_wtx, &g_wty);
-        lcp_wkD();
+        walkToTarget();
 
         lcp_face   = FACING_RIGHT;
         lcp_st              = STATE_STAND_FACING_SCREEN;
         g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
         g_selaf[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
-        sp_upds();
+        layoutSlots();
         g_lcyof = NO;
-        lcp_hwt();
-        a_opcfc();
+        waitHeadTurn();
+        closeFilingCab();
         dg_vis = NO;
         g_actif = NO;
 }

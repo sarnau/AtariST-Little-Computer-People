@@ -16,11 +16,11 @@
 
 /* main_pal[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.
-   aes_init loads this via Setpalette(main_pal) at boot -- there is no
+   initAes loads this via Setpalette(main_pal) at boot -- there is no
    later runtime palette rewrite from this table; slot 0 is the
-   background (black), slot 14 white, etc.  pa_cloc overwrites slots
+   background (black), slot 14 white, etc.  pickClothes overwrites slots
    1 and 2 from the primary/secondary clothing tables; slot 6 is
-   overwritten by lcp_upal for the sickness skin. */
+   overwritten by setSkinColor for the sickness skin. */
 short   main_pal[16]           = {
         0x000, 0x442, 0x265, 0x754,
         0x310, 0x040, 0x754, 0x760,
@@ -41,7 +41,7 @@ short   main_pal[16]           = {
    vdi_colt[13] = 15 -> palette 13 = main_pal[13] = 0x007 blue.
    Launching via COMMAND.PRG leaves the workstation in a state that
    collapses vsl_color's colour arg into pen 15 (dark brown 0x410)
-   regardless of index -- see the sc_sdtb comment. */
+   regardless of index -- see the beginDraw comment. */
 short   vdi_colt[16]            = {
         0,  2,  3,  6,  4,  7,  5,  8,
         9, 10, 11, 14, 12, 15, 13,  1
@@ -55,9 +55,9 @@ short   no_keyin          = NO;   /* YES while an activity owns the keyboard (le
    (currently drawn on the visible frame).  Slot layout: 0/7 = dog
    (behind/in-front of LCP by Y depth), 3 = LCP body, 4 = LCP head,
    1..2 and 5..6 = door/object overlay slots. */
-/* Sized SPRITE_HW_SLOTS_ALLOC; see the note in sprglobs.h.  sp_upds
+/* Sized SPRITE_HW_SLOTS_ALLOC; see the note in sprglobs.h.  layoutSlots
    parks HIDDEN sprites in the disabled slot HW_SLOT_NONE (9), and
-   gameTick's carrying path / sp_ssco can then index these arrays at
+   gameTick's carrying path / carryBehind can then index these arrays at
    [9]; with 8 slots that write lands in the adjacent array, as in the
    original, so the declaration order matters. */
 /* Explicitly initialized, so it lands in DATA (all zeros) rather than
@@ -75,21 +75,21 @@ short   g_hamod                         = HEAD_ANIM_DISABLED;   /* head animatio
    for the layout. */
 short   g_unus3                         = -1;
 
-short   g_trac                  = ACTION_NONE;   /* action chk_actT chose for doAct to run; ACTION_NONE = none */
+short   g_trac                  = ACTION_NONE;   /* action chooseAction chose for runAction to run; ACTION_NONE = none */
 
 short   lcp_recP              = 0;   /* YES while a record is playing (animates the player); saved in lcp.record_playing */
 
-short   lcp_tv                       = 0;   /* YES while the TV is on (td_nois draws the picture); saved in lcp.tv_on */
+short   lcp_tv                       = 0;   /* YES while the TV is on (tvNoise draws the picture); saved in lcp.tv_on */
 
-BOOL16  ph_call  = NO;   /* phone is ringing: set by gameSim1 or Ctrl-C, cleared when answered */
+BOOL16  ph_call  = NO;   /* phone is ringing: set by simStep or Ctrl-C, cleared when answered */
 
 BOOL16  fire_act                = NO;   /* fireplace is burning: animated each tick until fire_dur runs out */
 
-BOOL16  ph_ans     = NO;   /* resident is on the phone (ev_ansPh); blocks new calls */
+BOOL16  ph_ans     = NO;   /* resident is on the phone (answerPhone); blocks new calls */
 
-/* Once-a-day flags for chk_actT's scheduled lunch, dinner, wake-up and
+/* Once-a-day flags for chooseAction's scheduled lunch, dinner, wake-up and
    bedtime actions: set when the action fires at its hour, cleared at
-   midnight by daily_rs. */
+   midnight by resetDailyFlags. */
 BOOL16  lunT_trg      = NO;
 
 BOOL16  dinT_trg     = NO;   /* dinner already triggered today */
@@ -175,7 +175,7 @@ short   hd_dang[93] = {
 
 /* g_rpxs[48]: X half-pixel coordinate per HOUSE_POS.
    Table value gets left-shifted by 1 at the call site to yield the
-   full-pixel X (see hs_posXY). */
+   full-pixel X (see posToXY). */
 short   g_rpxs[48] = {
         /* Floor 3 -- top       0..15 */
          22,  36,  49,  55,  60,  56,  73,  96,
@@ -222,14 +222,14 @@ short   body_yof[109] = {
 short   stair_wp[6]    = { 170, 185, 133, 124, 182, 72 };
 
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
-   The middle-floor branch of lcp_flwp uses these to
+   The middle-floor branch of nextWaypoint uses these to
    route through the between-floor landing instead of the raw
    stair_wp entries. */
 short   stair_ty           = 124;
 
 short   stair_by        = 137;   /* landing Y; stair_ty (above) is the landing X */
 
-short   flr_cy[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed getFlrY() - 1: bottom, middle, top */
+short   flr_cy[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed floorOfY() - 1: bottom, middle, top */
 
 /* On-stairs flag (short, YES/NO).  YES while
    the path stepper is inside a stair-traversal path; drives the
@@ -254,7 +254,7 @@ short   sp_fidx[50] = {
 };
 
 /* ---- Dog sprite pointers / buffers ------------------------------------- */
-/* g_dwanf: 8 sprite ids the walk cycle rotates through in dg_mvAni. */
+/* g_dwanf: 8 sprite ids the walk cycle rotates through in moveDog. */
 short   g_dwanf[8] = {
         SPRITE_DOG_WLK_R1, SPRITE_DOG_WLK_R2,
         SPRITE_DOG_WLK_R3, SPRITE_DOG_WLK_R4,

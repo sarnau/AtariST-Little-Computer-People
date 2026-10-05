@@ -9,23 +9,23 @@
 *
 ******************************************************************************
 
-	.globl	_psg_wr
-	.globl	_psg_mix
-	.globl	_mowrit
+	.globl	_psgWrit
+	.globl	_psgMixe
+	.globl	_aciaWri
 
 	.text
 
-* psg_wr(val, reg): select register `reg` (the SECOND argument, 7(sp)),
+* psgWrite(val, reg): select register `reg` (the SECOND argument, 7(sp)),
 * then write `val` (the first, 5(sp)) -- every caller passes data first.
 * No frame: 4(sp) is the first argument word, so its byte is 5(sp).
-_psg_wr:
+_psgWrit:
 	move.b	7(sp),$ffff8800
 	move.b	5(sp),$ffff8802
 	rts
 
-* psg_mix(or_mask, and_mask): read-modify-write PSG register 7.
+* psgMixer(or_mask, and_mask): read-modify-write PSG register 7.
 * d0 is saved, so the arguments move up by 4.
-_psg_mix:
+_psgMixe:
 	move.l	d0,-(sp)
 	move.b	#7,$ffff8800
 	move.b	$ffff8800,d0
@@ -35,8 +35,8 @@ _psg_mix:
 	move.l	(sp)+,d0
 	rts
 
-* mowrit(byte): spin until the MIDI ACIA can accept a byte, then send.
-_mowrit:
+* aciaWrite(byte): spin until the MIDI ACIA can accept a byte, then send.
+_aciaWri:
 	move.l	d0,-(sp)
 mow1:
 	move.b	$fffffc04,d0

@@ -30,7 +30,7 @@ extern void     vswr_mode();
 extern void     v_pline();
 extern void     v_gtext();
 extern void     v_bar();
-extern void     vroCpyD();
+extern void     blitRect();
 
 static int      fails;
 
@@ -112,13 +112,13 @@ main()
 
         src.fd_addr = (void *) 0x100000L;
         dst.fd_addr = (void *) 0x200000L;
-        vroCpyD(vdihnd, 3, &src, &dst,
+        blitRect(vdihnd, 3, &src, &dst,
                       0, 0, 15, 23,
                       100, 100, 115, 123);
         expect("vroCpyD contrl[0]", contrl[0], 109);
         expect("vroCpyD contrl[1]", contrl[1],   4);
         expect("vroCpyD intin[0]",  intin[0],    3);
-        /* vroCpyD only builds a pxy[8] on the stack and defers to the
+        /* blitRect only builds a pxy[8] on the stack and defers to the
            array-form vro_cpyfm, which likewise aims vdipb[2] at it. */
         expect("vroCpyD vdipb[2] restored",
                (short) (vdipb[2] == ptsin), 1);

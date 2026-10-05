@@ -26,16 +26,16 @@ TWO THINGS THE SYMBOL TABLE CANNOT GIVE, and how each is handled:
 
   * Names are TRUNCATED to 8 characters of linkage name, i.e. 7 source
     characters after the leading `_`.  Pushing those into Ghidra is how an
-    earlier sync produced `lcp_pat` for `lcp_path`.  They are expanded here
+    earlier sync produced `lcp_pat` for `walkStep`.  They are expanded here
     against the names the port declares at FILE SCOPE, and an expansion is
     accepted only when it is UNIQUE.  Two things have to be kept out of
     that name pool or the uniqueness test stops meaning anything:
       - comments and string literals, because English prose supplies
         "controlled" and "controller" for `_control` and comment text
-        supplies a third candidate for `_lcp_pat`.  Stripping them takes
+        supplies a third candidate for `_walkSte`.  Stripping them takes
         the ambiguous count from four to zero.
       - K&R parameter declarations, which sit at column 0 exactly like a
-        file-scope declaration.  `short index;` between sf_sl's header
+        file-scope declaration.  `short index;` between loadSounds's header
         and its brace is a LOCAL, and harvesting it made the libc symbol
         `_index` resolve to it -- the file then asserted a name the repo
         never owned, against an address where Ghidra rightly says
@@ -81,7 +81,7 @@ IDENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 # File-scope shapes in a .c.  A definition is an identifier at column 0
 # followed by '('; a declaration is a type at column 0 ending in one of
 # [ = ; or a comma.  K&R parameter declarations look exactly like the
-# latter and must NOT be harvested -- `short index;` between sf_sl's
+# latter and must NOT be harvested -- `short index;` between loadSounds's
 # header and its brace is a LOCAL, and taking it made the libc symbol
 # `_index` resolve to it and assert a name the repo never owned.
 FN_DEFN = re.compile(r'^([A-Za-z_]\w*)\s*\(')

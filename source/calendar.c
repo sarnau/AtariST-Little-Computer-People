@@ -4,10 +4,10 @@
 #include "calendar.h"
 #include "globals.h"
 
-/* daysInMo -> parts/daysInMo.c. */
+/* daysInMonth -> parts/daysInMonth.c. */
 
 void
-daily_rs()
+resetDailyFlags()
 {
         lunT_trg      = NO;
         dinT_trg     = NO;

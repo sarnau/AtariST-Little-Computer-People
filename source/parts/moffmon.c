@@ -1,13 +1,13 @@
 /*
  * parts/moffmon.c -- included by stx_u2.c; never compiled on its own.
- * moff and mon sit together, in this order, in the original.
+ * hideMouse and showMouse sit together, in this order, in the original.
  */
 
 /* Idempotent AES mouse hide: moff_f guards against a repeated M_OFF. */
 
 
 void
-moff()
+hideMouse()
 {
         if (moff_f == NO) {
                 graf_mouse(M_OFF, (void *) 0);
@@ -15,10 +15,10 @@ moff()
         }
 }
 
-/* The matching show: only undoes a hide moff actually did. */
+/* The matching show: only undoes a hide hideMouse actually did. */
 
 void
-mon()
+showMouse()
 {
         if (moff_f != NO) {
                 graf_mouse(M_ON, (void *) 0);

@@ -11,11 +11,11 @@
 
 /* One-line SFX wrappers.  K&R style (Alcyon 4.14). */
 
-/* The four SFX wrappers sit right after a_hello, in the order tvc,
-   spe, hnd, grt -- stx_u2.c includes them there.  p_dobls, lt_sets
-   and sfClick live in parts/ too. */
+/* The four SFX wrappers sit right after sayHello, in the order tvc,
+   spe, hnd, grt -- stx_u2.c includes them there.  playDoorbell, typeKeySound
+   and sfxClick live in parts/ too. */
 
-/* sf_sl: the SOUNDS.LCP block loader.  Each block is a 2-byte size
+/* loadSounds: the SOUNDS.LCP block loader.  Each block is a 2-byte size
    followed by its payload; a size of 0 ends the file.  Every block
    gets its own Malloc of size + 4, stored in mi_ntLp[index], with the
    size in its first word and the payload behind it.  The details --
@@ -23,32 +23,32 @@
    widening, block++ before the payload read -- are the original's
    shape and must stay. */
 void
-sf_sl()
+loadSounds()
 {
         short           fhandle;
         short           size;
         short *         block;
         short           index;
 
-        fhandle = fOpen("sounds.lcp", RMODE_RD);
+        fhandle = openFile("sounds.lcp", RMODE_RD);
         for (index = 0; index < 500; index++) {
-                fr_read(fhandle, 2L, &size);
+                readFile(fhandle, 2L, &size);
                 if (size == 0)
                         break;
                 mi_ntLp[index] = (unsigned char *) Malloc((long) size + 4);
                 block = (short *) mi_ntLp[index];
                 if (block == (short *) 0)
-                        er_nomem();
+                        outOfMemory();
                 *block = size;
                 block++;
-                fr_read(fhandle, (long) size, block);
+                readFile(fhandle, (long) size, block);
         }
         Fclose(fhandle);
 }
 
 /* Lower priority value wins. */
 void
-sf_sele(sound_id, duration)
+sfxSelect(sound_id, duration)
 short   sound_id;
 long    duration;
 {
@@ -63,7 +63,7 @@ long    duration;
 
 /* Silence the three PSG channels and mark no effect playing. */
 void
-sf_so()
+stopSfx()
 {
         Giaccess(0, PSG_WRITE | PSG_VOL_A);
         Giaccess(0, PSG_WRITE | PSG_VOL_B);
@@ -74,4 +74,4 @@ sf_so()
 }
 
 
-/* sgPlay lives in parts/sgPlay.c. */
+/* playSongFile lives in parts/playSongFile.c. */

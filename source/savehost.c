@@ -27,7 +27,7 @@ static FILE *   host_handles[MAX_HOST_HANDLES];   /* open FILE per GEMDOS handle
    host_handles.  With the table full the file is closed and -1
    returned, like a failed open. */
 static short
-al_hnd(fp)
+allocHandle(fp)
 FILE *  fp;
 {
         short   i;
@@ -52,7 +52,7 @@ short   mode;
 {
         FILE *  fp = fopen(path, mode ? "wb" : "rb");
         if (fp == NULL) return -1;
-        return al_hnd(fp);
+        return allocHandle(fp);
 }
 
 /* GEMDOS Fcreate: create/truncate path for writing; the attribute is
@@ -65,7 +65,7 @@ short   attr;
         FILE *  fp = fopen(path, "wb");
         (void) attr;
         if (fp == NULL) return -1;
-        return al_hnd(fp);
+        return allocHandle(fp);
 }
 
 /* GEMDOS Fread: read up to count bytes into buf.  Returns the number
@@ -129,7 +129,7 @@ short   handle;
 /* GEMDOS Malloc/Mfree, with one behaviour of the real thing that the
    host libc does not share: TOS looks the pointer up in its own block
    list and ignores anything it did not hand out.  The port relies on
-   that -- fr_reac frees the buffer pointer its nibble loop has already
+   that -- unpackFile frees the buffer pointer its nibble loop has already
    walked forward (the original keeps no saved copy), which is
    harmless on the ST and an abort() on macOS.  So Mfree frees only
    blocks Malloc actually returned. */

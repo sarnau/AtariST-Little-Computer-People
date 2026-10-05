@@ -8,7 +8,7 @@
 # because the copy protection never passes under an emulator here), and
 # leaving the wrong one in build/alcyon afterwards makes the next run
 # lie.  A gated binary passes prg_diff never; a shipped binary parks the
-# resident in cs_mvIn's wave loop and every runtime test fails 0/11 with
+# resident in moveInScene's wave loop and every runtime test fails 0/11 with
 # no hint why.  This script always restores the shipped build, including
 # on failure.
 #

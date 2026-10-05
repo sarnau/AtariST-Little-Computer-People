@@ -6,12 +6,12 @@ original playback engine.
 This is not the MIDI export.  It is a tick-accurate re-implementation of the
 sequencer's internal-synthesis path as it exists in AUDIO.PRG / LCP_STX.PRG:
 
-    mq_tick   960 Hz Timer-A ISR; runs psg_upE every 4th tick (240 Hz)
-    mq_advs   two-phase sequencer state machine
-    mq_pars   event-stream walker (note events, bars, loops)
-    mq_qnne   queue Note-On, dispatch
-    mq_expN   expire queued notes -> mq_snof -> Note-Off
-    mq_dise   PSG channel allocation, voice stealing, period + mixer writes
+    timerAIsr   960 Hz Timer-A ISR; runs psg_upE every 4th tick (240 Hz)
+    seqAdvance   two-phase sequencer state machine
+    parseEvents   event-stream walker (note events, bars, loops)
+    queueNote   queue Note-On, dispatch
+    expireNotes   expire queued notes -> sendNoteOff -> Note-Off
+    sendMidiEvent   PSG channel allocation, voice stealing, period + mixer writes
     psg_upE   software ADSR envelope processor
 
 The output is a YM2149 register-write log with 960 Hz tick timestamps, which is
@@ -49,7 +49,7 @@ EVRL = [0, 360, 180, 90, 45, 20, 15, 9, 8, 6, 5, 4, 3, 2, 1, 0]
 
 NOTE_LO, NOTE_HI = 0x24, 0x60   # g_mnlo, g_mnhi
 
-# psg_freq[0] is the address literal mq_dise loads before indexing the table.
+# psg_freq[0] is the address literal sendMidiEvent loads before indexing the table.
 # Both binaries link at base 0, so the literal is (text_size + data_offset).
 PSG_FREQ_ABS = {
     'AUDIO.PRG':   0x18890,     # Music Studio   -> data+0x35a
@@ -113,8 +113,8 @@ class Engine:
         d = sng.data
         self.d = d
 
-        # ---- mq_setp / mq_stap
-        self.pos = sng.header_end          # mi_sqpos (mq_skip's result)
+        # ---- initSongState / armSequencer
+        self.pos = sng.header_end          # mi_sqpos (skipTextField's result)
         self.end = len(d)                  # mi_seqE
         self.spb = sng.spb                 # g_mtspb
         self.tpb = sng.spb                 # mi_tpb
@@ -135,7 +135,7 @@ class Engine:
         self.chmap = [0] + list(sng.chanmap)
         self.noSt = [0] * 128              # mi_noSt
 
-        # per-event scratch (mi_* globals unpacked by mq_pars)
+        # per-event scratch (mi_* globals unpacked by parseEvents)
         self.ccha = self.cnot = 0
         self.nnOn = self.nnOf = self.lasT = 0
         self.ndur = 0
@@ -157,7 +157,7 @@ class Engine:
             self.regs[reg] = val
             self.writes.append((self.tick, reg, val))
 
-    # ------------------------------------------------------------ mq_dise
+    # ------------------------------------------------------------ sendMidiEvent
     def dise_note_on(self, note, voice):
         # allocate: first silent channel, else steal the one furthest along
         ch = 0
@@ -322,7 +322,7 @@ class Engine:
             e.volume += e.direction
             self.racc[i] -= 0x168
 
-    # ------------------------------------------------------------ mq_snof
+    # ------------------------------------------------------------ sendNoteOff
     def snof(self, k):
         if self.evq[k + 1] & 0x80:
             return
@@ -341,7 +341,7 @@ class Engine:
                 continue
             i += 3
 
-    # ------------------------------------------------------------ mq_qnne
+    # ------------------------------------------------------------ queueNote
     def qnne(self):
         if len(self.evq) < 58 * 3:
             self.evq.append(self.ndur)
@@ -359,7 +359,7 @@ class Engine:
             return
         self.dise_note_on(self.cnot, self.ccha)
 
-    # ------------------------------------------------------------ mq_rdur
+    # ------------------------------------------------------------ peekNoteDur
     def rdur(self):
         d, n = self.d, self.end
         while self.pos < n and d[self.pos] == 0:
@@ -369,7 +369,7 @@ class Engine:
         else:
             self.nlp0 = 0
 
-    # ------------------------------------------------------------ mq_pars
+    # ------------------------------------------------------------ parseEvents
     def pars(self):
         d, n = self.d, self.end
         if self.pos >= n or d[self.pos] != 0:
@@ -438,7 +438,7 @@ class Engine:
                     return 0
         return 1
 
-    # ------------------------------------------------------------ mq_advs
+    # ------------------------------------------------------------ seqAdvance
     def advs(self):
         if self.phase == 0:
             self.expN(self.tick - self.lpTk)
@@ -470,7 +470,7 @@ class Engine:
                 self.wr(9, 0)
                 self.wr(10, 0)
 
-    # ------------------------------------------------------------ mq_tick
+    # ------------------------------------------------------------ timerAIsr
     def run(self, max_ticks=960 * 60 * 30):
         while self.tick < max_ticks:
             self.tick += 1

@@ -3,7 +3,7 @@
  *
  * Loads DATA/BODY.LCP into memory, wires body_lcp_file and
  * body_shp into it, sets up a minimal PLAYER + world state,
- * and calls sp_updb().  Then:
+ * and calls updateBody().  Then:
  *   - asserts the compositor wrote non-zero pixels into g_lsimg
  *   - asserts g_seacx[3] / g_seacy[3] track lcp_x/y
  *   - dumps g_lsimg to sprite_slot3.pgm as a portable graymap
@@ -38,7 +38,7 @@ extern short    g_sepef[];
 extern short    g_seacx[];
 extern short    g_seacy[];
 /* body_ptr and body_shp are real global ARRAYS in LCP_STX, not
-   pointers -- sp_updb indexes them with an immediate base and no
+   pointers -- updateBody indexes them with an immediate base and no
    ext.l, which is what pinned the shape (see CLAUDE.md).  So the
    frames are COPIED in here; there is nothing to re-point. */
 extern unsigned char    body_ptr[][168];
@@ -46,8 +46,8 @@ extern unsigned char    body_shp[][84];
 extern short    g_lsimg[];
 extern short    g_lsmas[];
 extern short    body_yof[];
-extern void     sp_updb();
-extern void     initBRev();
+extern void     updateBody();
+extern void     initMirror();
 
 static int      failures = 0;
 
@@ -151,11 +151,11 @@ char ** argv;
                          ? payload_bytes : 120L * 168L));
         memset(body_shp, 0, 98 * 84);   /* the whole array */
 
-        /* rev_tab is BSS in LCP_STX -- initBRev builds the
+        /* rev_tab is BSS in LCP_STX -- initMirror builds the
            bit-reversal LUT at boot (it used to be a shipped
            data table).  Without this the mirrored, right-facing
            frames come out blank. */
-        initBRev();
+        initMirror();
         /* Minimal player + world state, posed in the first walk frame. */
         memset(&lcp, 0, sizeof(lcp));
         lcp_x                    = 100;
@@ -170,7 +170,7 @@ char ** argv;
         memset(g_lsmas, 0, LCP_BODY_DEST_WORDS * sizeof(short));
 
         /* Call the compositor. */
-        sp_updb();
+        updateBody();
 
         /* The output buffer should now contain the flipped/composited
            frame -- 21 rows × 4 words per row.  Some bit must be set. */

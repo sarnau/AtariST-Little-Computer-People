@@ -5,7 +5,7 @@
 
 extern short g_trel[];
 
-extern void putEv();
-extern short getEv();
+extern void queueEvent();
+extern short nextEvent();
 
 #endif /* EVENTS_H */

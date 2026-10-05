@@ -66,7 +66,7 @@ link address + 0x10000; for BSS take the address from
 `tools/stx_bss_layout.tsv` (lcp_sym.68k carries lo68's, not the
 reference's); and expand lcp_sym.68k's 8-char TRUNCATED linkage names
 against the `extern` declarations in `include/*.h` first, or Ghidra
-ends up with `lcp_pat` for `lcp_path`.
+ends up with `lcp_pat` for `walkStep`.
 
 Rename BY ADDRESS, not by name, wherever the port's own name has
 changed -- and always where two names were SWAPPED.  Going by name
@@ -83,9 +83,9 @@ pattern* in decompiled code, not by address.
 
 ## Confirmed mappings
 
-Derived from decompiling: `mq_tick`, `mq_advs`, `psg_upEn`, `psg_wr`,
-`fl_ltpl`, `a_watat`, `chk_actT`, `chk_timA`, `sf_irqp`, `gameSim1`,
-`cl_drwH`, `sp_draw`, `ag_intr`.
+Derived from decompiling: `timerAIsr`, `seqAdvance`, `stepEnvelopes`, `psgWrite`,
+`loadLetterText`, `rummageCabinet`, `chooseAction`, `pickIdleAction`, `startSfx`, `simStep`,
+`drawHands`, `drawSlot`, `anaIntroText`.
 
 ### Time / calendar / animation
 
@@ -140,7 +140,7 @@ role").  Verified now, and the port side was on the wrong symbols:
     `[16]` and indexed `rndRng(0, 15)` in airandom.c to pick an action
     for the resident's activity level.  They used to be paired with
     `g_obala` / `g_obcla` / `g_obpha`, which are OBJECT ANIMATION
-    frame lists fed to `od_draw` -- and which this file ALSO pairs,
+    frame lists fed to `drawObject` -- and which this file ALSO pairs,
     correctly, with `object_alarm_animation` / `object_clock_animation`
     / `object_phone_animation` further down.  `g_obala` appeared twice
     with contradictory meanings.  Confirmed by address: g_obala is
@@ -149,9 +149,9 @@ role").  Verified now, and the port side was on the wrong symbols:
   * `triggered_event_list` is **g_trel**, not `pst_arr`.  g_trel is
     Ghidra 0x2b6da -- exactly the address globals.c cites for that
     name, in a comment that sits above pst_arr's declaration by
-    mistake.  g_trel is the event FIFO putEv appends to and everything
+    mistake.  g_trel is the event FIFO queueEvent appends to and everything
     tests as `g_trel[0] != ACTION_NONE`; pst_arr is a 10-short scratch
-    buffer the action handlers cache player STATES in (a_playc fills
+    buffer the action handlers cache player STATES in (useComputer fills
     it with STATE_HANDS_DOWN and friends), and it has no descriptive
     Ghidra name.
 
@@ -193,7 +193,7 @@ for.  `g_obfia[]` and `g_obdea[]` remain unsampled.
 | `psg_register_offset_table[]`      | `psg_rot[]`  |
 | `psg_output_volume` (working reg)  | `psg_cvol`   |
 
-### Sound effects (`sf_irqp`)
+### Sound effects (`startSfx`)
 
 | Ghidra                              | Port         |
 |-------------------------------------|--------------|
@@ -500,9 +500,9 @@ sampling more decompilations.  Priority modules to sample next:
 
 ### Batch 3 additions
 
-Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
-`fillTopR`, `od_draw`, `dg_wkPth`, `dg_mvAni`, `mq_parh`, `psg_wr`,
-`psg_mix`, `psg_cpE`, `psg_upEn`, `mowrit`.
+Derived from decompiling `renderFrame`, `updateBody`, `updateHead`, `drawSlot`,
+`fillPanel`, `drawObject`, `dogNextWaypt`, `moveDog`, `parseSongHeader`, `psgWrite`,
+`psgMixer`, `copyEnvelope`, `stepEnvelopes`, `aciaWrite`.
 
 ### Screen buffers / render targets
 
@@ -597,11 +597,11 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 ## Batch 3 conflicts / ambiguities noted
 
 - `MFDB_screen_ptr` (Ghidra) appears to be the port's `mf_scrp`, based
-  on `blkcp32` argument order in `sc_ren8` vs `renderf.c`. Existing
+  on `copyBlocks32` argument order in `renderFrame` vs `renderf.c`. Existing
   row `screen_mfdb -> mf_scrp` looks reversed: my read is
   `screen_mfdb -> g_srmfd` and `MFDB_screen_ptr -> mf_scrp`.
   Left existing row alone per task instructions.
-- `soundeffect_active_flag` (0x54010) is referenced by `sc_ren8` for
+- `soundeffect_active_flag` (0x54010) is referenced by `renderFrame` for
   the post-render play flag reset; port uses `g_sfacf` there.
   Existing row maps `soundeffect_playing_flag -> g_sfacf`, which
   looks like the wrong pairing (`playing_flag` is at 0x5a2ca and
@@ -622,7 +622,7 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
   seen but port shorts (`g_mtpre`, `mi_evi`, `mi_env`, `mi_evrl`,
   `mi_evrt`, `mi_evst`, `mi_evtt`, `mi_evcn`, `mi_lasT`, `mi_nOS`,
   `mi_nlp0`, `mi_nlpA`, `mi_seqE`) not confidently pairable from
-  name alone -- needs decompile of `mq_advs` / `mq_tick` internals.
+  name alone -- needs decompile of `seqAdvance` / `timerAIsr` internals.
 - Ghidra `poker_computer_hand_value_lo/hi`, `poker_card_deck_index`,
   `poker_pot_amount`, `poker_display_x_offset`, `poker_round_count`,
   `poker_card_back_mfdb`, `poker_draw_discard_flags` seen but port
@@ -630,8 +630,8 @@ Derived from decompiling `sc_ren8`, `sp_updb`, `sp_lchu`, `sp_draw`,
 
 ### Batch 4 additions
 
-Derived from decompiling `mq_advs`, `mq_pars`, `mq_expN`, `mq_pshl`,
-`pk_dpot`, `pk_wrMn`, `pk_bjwr`, plus targeted grep of the port
+Derived from decompiling `seqAdvance`, `parseEvents`, `expireNotes`, `pushLoop`,
+`dispPot`, `playWar`, `warRound`, plus targeted grep of the port
 against the Ghidra symbol dump.
 
 #### MIDI envelope tables and sequencer
@@ -656,10 +656,10 @@ against the Ghidra symbol dump.
 
 ## Batch 4 conflicts / ambiguities noted
 
-- Ghidra's `g_mnevi` / `g_mnevc` are used in `mq_advs`, `mq_pars`,
-  `mq_expN`, `mq_pshl` where the port uses `mi_evi` / `mi_evcn`,
+- Ghidra's `g_mnevi` / `g_mnevc` are used in `seqAdvance`, `parseEvents`,
+  `expireNotes`, `pushLoop` where the port uses `mi_evi` / `mi_evcn`,
   yet the port also has separately-named globals `g_mnevi` /
-  `g_mnevc` (used only in `mq_stop`). The existing map rows
+  `g_mnevc` (used only in `stopSequencer`). The existing map rows
   `midi_note_event_index -> g_mnevi` and
   `midi_note_event_count -> g_mnevc` may therefore be pointing at
   the wrong port short: the addresses referenced by the sequencer
@@ -668,15 +668,15 @@ against the Ghidra symbol dump.
   which port short is the "real" counterpart.
 - Similarly, `midi_event_duration` (Ghidra `g_medu`) is written
   from `aes_intO[7]` and used as "ticks until next event" in
-  `mq_advs`; the port assigns `mi_nlp0 = -1` and
+  `seqAdvance`; the port assigns `mi_nlp0 = -1` and
   `mi_nlp0 = (short)mi_nxTk - (short)g_mtcou` in the same place,
-  while the port's `g_medu` is only referenced by `mq_stop`.
+  while the port's `g_medu` is only referenced by `stopSequencer`.
   So `midi_event_duration -> mi_nlp0` looks like the correct
   pairing, but a duplicate row was not added.
 - `midi_tick_prescaler` (Ghidra) is set from `aes_intO[7]` in
-  `mq_advs`; the port assigns to `g_mtpre` there. Existing map
+  `seqAdvance`; the port assigns to `g_mtpre` there. Existing map
   row is `midi_tick_prescaler -> g_mtspb`, but `g_mtspb` is used
-  in `mq_pars` where Ghidra uses `midi_ticks_per_beat`. So the
+  in `parseEvents` where Ghidra uses `midi_ticks_per_beat`. So the
   correct pairs appear to be `midi_tick_prescaler -> g_mtpre`
   and `midi_ticks_per_beat -> g_mtspb`. Not touched.
 - `poker_blackjack_flag` (Ghidra 0x3d114) is a single BOOL; port
@@ -820,8 +820,8 @@ Real OOBs found and fixed in prior commits (all shape: port array
 declared smaller than ROM slot):
 
 - `pst_arr[4]` → `[10]` — action handlers wrote `pst_arr[4]`
-- `usr_buf[32]` → `[42]` — `cmd_upp` copies up to 38 chars
-- `g_pcdrp[26]` → `[52]` — `pk_rmch` shift loop writes 50 bytes past end
+- `usr_buf[32]` → `[42]` — `nextWord` copies up to 38 chars
+- `g_pcdrp[26]` → `[52]` — `popCard` shift loop writes 50 bytes past end
 - `g_ppdrp[26]` → `[52]` — same shift loop
 
 Verified in this pass (safe, ROM has trailing pad or `sizeof`-cap):
@@ -833,7 +833,7 @@ Verified in this pass (safe, ROM has trailing pad or `sizeof`-cap):
 - `pex_buf` shrunk 12000 → 11088 to match ROM `pex_lcp_file` slot
   (0x4d2da → 0x4fe2a).
 - `g_lsimg[168]`, `g_lsmas[168]`, `g_hsbuf[168]`, `g_hsmas[168]` —
-  `sp_lcpf` inner loop writes exactly 168 shorts; ROM 512/516 B pad
+  `expandFrame` inner loop writes exactly 168 shorts; ROM 512/516 B pad
 - `pex_name[8]` — template filename; only 8 B ever touched
 - `comp_tok[15]` — `letload.c` reads exactly 15 B
 - `bm32or[32]`, `bm32and[32]`, `rev_tab[256]` — all mask/index-bounded
@@ -867,9 +867,9 @@ already been renamed to it, so this table is the only place the bad
 name survives:
 
   * `midi_channel_volume` -> **mi_pgtab** is the default PROGRAM map,
-    not a volume table.  mq_sepc builds `g_meve[0] = (chan) | 0xc0`,
+    not a volume table.  sendProgChange builds `g_meve[0] = (chan) | 0xc0`,
     and 0xC0 is the MIDI Program Change status byte, so the following
-    `g_meve[1] = mi_pgmap[index]` is a program NUMBER.  mq_pacm
+    `g_meve[1] = mi_pgmap[index]` is a program NUMBER.  unpackChanMap
     confirms the shape: it loads two parallel 15-entry tables out of
     the song header, the channel map from bytes 0..14 and the program
     map from 15..29.  Volume never enters it.
@@ -962,15 +962,15 @@ dropping DRI libc and the AES library's own `gl_apid`) leaves
 | `g_atmod[16]` | action table, moderate activity                    |
 | `g_atrel[16]` | action table, relaxed activity                     |
 | `g_trel[10]`  | the triggered-event FIFO -- see above              |
-| `g_rphs[48]`  | Y offset from the floor baseline per HOUSE_POS; the companion to `g_rpxs`, and hs_posXY's `floor_y - g_rphs[i]` |
+| `g_rphs[48]`  | Y offset from the floor baseline per HOUSE_POS; the companion to `g_rpxs`, and posToXY's `floor_y - g_rphs[i]` |
 | `gr_hwchar`   | graf_handle's character cell width                 |
 | `gr_hhchar`   | ...cell height                                     |
 | `gr_hwbox`    | ...box width                                       |
-| `gr_hhbox`    | ...box height.  LCP_STX's aes_init has an empty frame because graf_handle writes all four straight to globals |
+| `gr_hhbox`    | ...box height.  LCP_STX's initAes has an empty frame because graf_handle writes all four straight to globals |
 | `psg_epp[3]`  | pointers to the three PSG_ENVELOPE structs         |
-| `psg_ovol`    | psg_upEn's clamped output volume                   |
+| `psg_ovol`    | stepEnvelopes's clamped output volume                   |
 | `psg_vrg[8]`  | PSG volume-register list `{8,0,9,0,10,0,-1,0}` -- registers 8/9/10 are the three channel volumes, -1 ends it |
-| `g_unus3`     | `= -1`, referenced by NOTHING.  Same class as `mi_sig` and `cmd_num`: a 1985 declaration that still costs its bytes |
+| `g_unus3`     | `= -1`, referenced by NOTHING.  Same class as `mi_sig` and `parseNumber`: a 1985 declaration that still costs its bytes |
 
 These are not gaps to be filled by guessing.  Ghidra either shows a
 placeholder (`PTR_ARRAY_xxx` / `SHORT_ARRAY_xxx`) at these addresses or

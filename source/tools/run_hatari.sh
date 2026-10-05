@@ -44,7 +44,7 @@ if [ ! -d "$GAME_DIR" ]; then
 fi
 
 cp -f "$PRG" "$GAME_DIR/LCP.PRG"
-# Fresh save so cs_mvIn path is exercised.
+# Fresh save so moveInScene path is exercised.
 rm -f "$GAME_DIR/LCP.SAV"
 
 pkill -x hatari 2>/dev/null; sleep 1

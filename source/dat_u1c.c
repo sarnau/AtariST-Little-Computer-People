@@ -12,7 +12,7 @@
 #include "enums.h"
 
 /* Secondary shirt colour (12-bit ST RGB) per CLOTHING_COLOR_ID;
-   pa_cloc loads it into palette slot 2 alongside g_clcop (below). */
+   pickClothes loads it into palette slot 2 alongside g_clcop (below). */
 short   g_clcos[16] = {
         0x060, 0x760, 0x606, 0x066,
         0x767, 0x007, 0x700, 0x030,
@@ -31,8 +31,8 @@ short   g_clcop[16] = {
         0x623, 0x036, 0x242, 0x442
 };
 
-/* skin_pal[8]: SKIN_COLOR_ID (0..7), ST 12-bit RGB.  Applied to palette slot 6 via lcp_upal and
-   swapped in during the closet-change sequence in a_opcbc. */
+/* skin_pal[8]: SKIN_COLOR_ID (0..7), ST 12-bit RGB.  Applied to palette slot 6 via setSkinColor and
+   swapped in during the closet-change sequence in changeClothes. */
 short   skin_pal[8] = {
         0x512, 0x742, 0x567, 0x762,
         0x745, 0x145, 0x160, 0x565

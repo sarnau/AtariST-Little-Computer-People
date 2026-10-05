@@ -41,7 +41,7 @@ char    sf_pri[26] = {
 
 /* The ten-byte header every SOUNDS.LCP and .SNG file starts with:
    0xCD, "Mstudio", 0xCD, 0x02 -- Activision's Music Studio signature.
-   Declared but never referenced: sf_sl and mq_inti skip the header by
+   Declared but never referenced: loadSounds and mq_inti skip the header by
    a fixed byte count rather than comparing it.  Eleven bytes with the
    terminator, which Alcyon pads to twelve. */
 char            mi_sig[12] = "\315Mstudio\315\002";
@@ -49,9 +49,9 @@ char            mi_sig[12] = "\315Mstudio\315\002";
 
 
 /* g_momap: the "maxPos" argument passed to
-   mq_inis at song start.  0 means "no explicit end-of-song
+   startSong at song start.  0 means "no explicit end-of-song
    offset -- let the sequencer walk the event stream to its natural
-   terminator" (in which case mq_setp stores -1 into
+   terminator" (in which case initSongState stores -1 into
    g_msmap).  A .SNG file may carry a real byte offset
    here to trigger clean loop-back or fade-out at a specific point. */
 long            g_momap  = 0;

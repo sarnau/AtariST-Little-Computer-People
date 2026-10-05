@@ -88,16 +88,16 @@ short   counter;
                 count = ani_cnt;
                 for (index = 0; index < counter + 1; index++) {
                         while (count == ani_cnt)
-                                sc_ren8();
+                                renderFrame();
                         count = ani_cnt;
 
                         subAniC++;
 
                         /* Clock pendulum: 4-frame animation. */
                         psi = (subAniC >> 2) & 3;
-                        od_draw(g_obcla[psi], 271, 92);
-                        gameSim1();
-                        cl_redrH();
+                        drawObject(g_obcla[psi], 271, 92);
+                        simStep();
+                        redrawHands();
 
                         /* Ctrl-P petting-hand animation cycle. */
                         if (g_ptdoa != NO) {
@@ -106,7 +106,7 @@ short   counter;
                                 if (g_ptanf > 10) {
                                         g_selaf[g_ptlss] =
                                                 SPRITE_HIDDEN;
-                                        sp_upds();
+                                        layoutSlots();
                                         g_ptdoa = NO;
                                 } else {
                                         if (g_ptanf != 0) {
@@ -118,7 +118,7 @@ short   counter;
                                            local, as in the original. */
                                         g_selaf[g_ptdsi[g_ptanf]] =
                                                 SPRITE_BEHIND_LCP;
-                                        sp_sprs(g_ptdsi[g_ptanf]);
+                                        activateSprite(g_ptdsi[g_ptanf]);
                                         g_sepex[g_seslm[g_ptdsi[g_ptanf]]] =
                                                 192;
                                         g_sepey[g_seslm[g_ptdsi[g_ptanf]]] =
@@ -128,7 +128,7 @@ short   counter;
                         }
 
                         /* Dog food bowl: current fill state + countdown. */
-                        od_draw(g_obdea[lcp_bwlS], DOG_BOWL_X, DOG_BOWL_Y);
+                        drawObject(g_obdea[lcp_bwlS], DOG_BOWL_X, DOG_BOWL_Y);
                         if (dg_bwlch < 0) {
                                 if (lcp_bwlS != BOWL_EMPTY)
                                         lcp_bwlS--;
@@ -143,66 +143,66 @@ short   counter;
 
                         /* Fireplace animation + auto-extinguish. */
                         if (fire_act != NO) {
-                                od_draw(g_obfia[subAniC & 3], FIREPLACE_X, FIREPLACE_Y);
+                                drawObject(g_obfia[subAniC & 3], FIREPLACE_X, FIREPLACE_Y);
                                 if (--fire_dur == 0)
                                         fire_ext = YES;
                         }
                         if (fire_ext != NO) {
                                 fire_ext = NO;
                                 fire_act = NO;
-                                od_draw(OBJ_FIRE_OFF, FIREPLACE_X, FIREPLACE_Y);
+                                drawObject(OBJ_FIRE_OFF, FIREPLACE_X, FIREPLACE_Y);
                         }
 
                         /* Alarm clock SFX + animation. */
                         if (alarm_p != NO) {
                                 if (g_alsts == NO) {
-                                        sf_sele(SFX_ALARM_CLOCK, 100000L);
+                                        sfxSelect(SFX_ALARM_CLOCK, 100000L);
                                         g_alsts = YES;
                                 } else if (g_sfplf == NO) {
-                                        sf_sele(SFX_ALARM_CLOCK, 100000L);
+                                        sfxSelect(SFX_ALARM_CLOCK, 100000L);
                                 }
-                                od_draw(g_obala[subAniC & 1],
+                                drawObject(g_obala[subAniC & 1],
                                         53, 102);
                         }
                         if (alarm_p == NO) {
                                 g_alsts = NO;
                                 if (g_sfplf != NO && g_sfpli == SFX_ALARM_CLOCK)
-                                        sf_so();
+                                        stopSfx();
                         }
 
                         /* Phone ring. */
                         if (ph_call != NO) {
                                 if (g_phrc == 0) {
-                                        sf_sele(SFX_PHONE_RING, 10000L);
+                                        sfxSelect(SFX_PHONE_RING, 10000L);
                                         g_phrc = 26;
                                 }
                                 g_phrc--;
                                 if (g_phrc > 10) {
-                                        od_draw(g_obpha[subAniC & 3], PHONE_X, PHONE_Y);
+                                        drawObject(g_obpha[subAniC & 3], PHONE_X, PHONE_Y);
                                 } else {
                                         if (g_sfplf != NO &&
                                             g_sfpli == SFX_PHONE_RING)
-                                                sf_so();
-                                        od_draw(OBJ_PHONE_2, PHONE_X, PHONE_Y);
+                                                stopSfx();
+                                        drawObject(OBJ_PHONE_2, PHONE_X, PHONE_Y);
                                 }
                         }
                         if (ph_hu != NO) {
-                                od_draw(OBJ_PHONE_2, PHONE_X, PHONE_Y);
+                                drawObject(OBJ_PHONE_2, PHONE_X, PHONE_Y);
                                 ph_hu = NO;
                                 if (g_sfplf != NO && g_sfpli == SFX_PHONE_RING)
-                                        sf_so();
+                                        stopSfx();
                                 g_phrc = 0;
                         }
 
-                        if (lcp_recP != NO) rp_anim();
-                        if (lcp_tv != NO)          td_nois();
+                        if (lcp_recP != NO) animRecPlayer();
+                        if (lcp_tv != NO)          tvNoise();
 
-                        sp_updb();
-                        sp_lcha();
-                        sp_lchu();
+                        updateBody();
+                        stepHead();
+                        updateHead();
 
                         if (g_srsdc > 0) {
-                                sc_sctd();
+                                scrollStrip();
                                 g_srsdc--;
                         } else {
                                 if (no_keyin == NO &&
@@ -220,20 +220,20 @@ short   counter;
                                                     key != KEY_CTRL_A_ALARM &&
                                                     key != KEY_CTRL_P_PATTING) {
                                                         if (tx_sctm == 0) {
-                                                                fillTopR(27);
+                                                                fillPanel(27);
                                                                 g_cdibp = 0;
                                                         }
                                                         tx_sctm = 160;
                                                 }
-                                                deal_kc(key);
+                                                handleKey(key);
                                         }
                                 } else if (g_inpmd != NO) {
                                         if ((key = getKey()) != -1)
-                                                deal_kc(key);
+                                                handleKey(key);
                                 }
                         }
 
-                        sc_ren8();
+                        renderFrame();
                 }
         }
 }

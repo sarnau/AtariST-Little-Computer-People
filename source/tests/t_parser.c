@@ -3,7 +3,7 @@
  *
  * Verifies that the parser correctly:
  *   1. Skips whitespace + punctuation on tokenisation.
- *   2. Uppercases lowercase input via lcp_upp.
+ *   2. Uppercases lowercase input via toUpper.
  *   3. Returns WORD_NONE for words not in the (empty) vocabulary and
  *      bumps g_aprio accordingly.
  *   4. Falls through to ACTION_NONE when the action table has only a
@@ -23,10 +23,10 @@
 #include "../include/types.h"
 #include "../include/enums.h"
 
-extern short    chk_encm();
+extern short    matchCommand();
 extern short    check_valid_word_input();
-extern char *   cmd_upp();
-extern short    lcp_upp();
+extern char *   nextWord();
+extern short    toUpper();
 extern short    g_aprio;
 extern unsigned char g_ewb[];
 
@@ -34,12 +34,12 @@ static int
 test_toupper(void)
 {
         int     fails = 0;
-        if (lcp_upp('a') != 'A') fails++;
-        if (lcp_upp('z') != 'Z') fails++;
-        if (lcp_upp('A') != 'A') fails++;
-        if (lcp_upp('Z') != 'Z') fails++;
-        if (lcp_upp('0') != '0') fails++;
-        if (lcp_upp(' ') != ' ') fails++;
+        if (toUpper('a') != 'A') fails++;
+        if (toUpper('z') != 'Z') fails++;
+        if (toUpper('A') != 'A') fails++;
+        if (toUpper('Z') != 'Z') fails++;
+        if (toUpper('0') != '0') fails++;
+        if (toUpper(' ') != ' ') fails++;
         return fails;
 }
 
@@ -50,13 +50,13 @@ test_tokenize(void)
         char *  next;
         int     fails = 0;
 
-        next = cmd_upp("play a game", buf);
+        next = nextWord("play a game", buf);
         if (strcmp(buf, "PLAY") != 0) { printf("  fail: got '%s'\n", buf); fails++; }
-        next = cmd_upp(next, buf);
+        next = nextWord(next, buf);
         if (strcmp(buf, "A") != 0)    { printf("  fail: got '%s'\n", buf); fails++; }
-        next = cmd_upp(next, buf);
+        next = nextWord(next, buf);
         if (strcmp(buf, "GAME") != 0) { printf("  fail: got '%s'\n", buf); fails++; }
-        next = cmd_upp(next, buf);
+        next = nextWord(next, buf);
         if (next != (char *) 0)       { printf("  fail: expected NULL\n"); fails++; }
         return fails;
 }
@@ -79,7 +79,7 @@ main(void)
            "please play a game" should resolve to ACTION_PLAY_A_GAME
            (16) via the "PLAY" + "GAME" combination in the parser's
            action-matching table. */
-        result = chk_encm("please play a game");
+        result = matchCommand("please play a game");
         p_fails = (result < 0);
         printf("check_entered_cmd : %s  (returned %d, negative = no match)\n",
                p_fails ? "FAIL" : "OK", result);
@@ -87,7 +87,7 @@ main(void)
                g_aprio);
 
         /* An all-unknown sentence.  On the ST this returns ACTION_NONE:
-           chk_encm walks g_ew2a until `table[0] == 0xff`, and Alcyon
+           matchCommand walks g_ew2a until `table[0] == 0xff`, and Alcyon
            narrows that 0xff to a signed char, so the comparison against
            the sentinel row's -1 succeeds.  Clang does not narrow the
            constant -- (char)-1 == 255 is false -- so the walk runs off
@@ -95,7 +95,7 @@ main(void)
            it in memory.  The behaviour is target-specific, so this is
            reported, not asserted. */
         {
-                short r2 = chk_encm("purple flurple");
+                short r2 = matchCommand("purple flurple");
                 printf("chk_encm(unknown) : returned %d "
                        "(ST returns %d; not asserted on the host -- the\n"
                        "                    0xff sentinel test relies on "

@@ -4,12 +4,12 @@
 #define TABLES_H
 
 extern short g_rpxs[];
-/* rev_tab is a plain (signed) short array, built at boot by initBRev
+/* rev_tab is a plain (signed) short array, built at boot by initMirror
    from rv_msk/rv_val -- it is BSS, not initialised data. */
 extern short rev_tab[];
 extern short rv_msk[];
 extern short rv_val[];
-extern void rv_bld();
+extern void buildMirrorTable();
 extern short g_atact[];
 extern short g_atmod[];
 extern short g_atrel[];

@@ -3,13 +3,13 @@
 
 Two Activision ST titles built with the same toolchain will share their
 DRI library, and may share a great deal more.  Diffing LCP_STX against
-THE MUSIC STUDIO (2026-09-06) established that cp_main is not LCP's
+THE MUSIC STUDIO (2026-09-06) established that checkCopyProt is not LCP's
 code at all: 7289 of cp_asm's 7499 bytes are byte-identical to Music
 Studio's AUDIO.PRG, which corroborates from an unrelated binary that
 the region is hand assembly rather than compiled C.  The same run found
-the MIDI sequencer descending from Music Studio's player -- mq_bust
-73.8% identical, mq_dise 44.2%, the lineage the shared .SNG format had
-only implied -- and ZERO in sf_irqp, which is what closed Music Studio
+the MIDI sequencer descending from Music Studio's player -- buildNoteMap
+73.8% identical, sendMidiEvent 44.2%, the lineage the shared .SNG format had
+only implied -- and ZERO in startSfx, which is what closed Music Studio
 as a source of evidence about g_sfDoB.
 
 That comparison was worth keeping, hence this.

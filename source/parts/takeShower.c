@@ -1,0 +1,64 @@
+/*
+ * parts/takeShower.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
+ */
+
+/* ACTION_TAKE_SHOWER (also nightRoutine and morningRoutine).  The resident walks
+   to the shower door -- giving up if interrupted there -- then, now
+   committed (g_actif), steps into the stall and showers for 20..25
+   rounds, each a random choice of washing or scrubbing left/right,
+   with the head on HEAD_ANIM_SHOWER.  Afterwards he steps down out of
+   the stall, walks back to the door and the head animation and
+   g_actif are reset. */
+void
+takeShower()
+{
+        /* walkToTarget()'s result is tested in place, with no local for it. */
+        short   count;
+
+        posToXY(POS_MID_SHOWER_DOOR,
+                              &g_wtx, &g_wty);
+        if (walkToTarget() != 0)
+                return;
+
+        posToXY(POS_MID_SHOWER_INSIDE,
+                              &g_wtx, &g_wty);
+        g_actif = YES;
+        walkToTarget();
+
+        lcp_face = FACING_RIGHT;
+        lcp_st = STATE_SHOWER_STAND;
+        lcp_x -= 8;
+        lcp_y -= 23;
+        g_hatas = 8;
+        waitHeadTurn();
+        g_hamod = HEAD_ANIM_SHOWER;
+
+        count = rndRng(20, 25);
+        while (count-- != 0) {          /* post-decrement test, on purpose */
+                /* The call is tested in place; the arm order is the
+                   original's and affects the compiled code. */
+                if (rndRng(0, 1) != 0) {
+                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
+                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
+                        lcp_st = STATE_SHR_WASH_L;   gameTick(2);
+                        lcp_st = STATE_SHR_WASH_R;  gameTick(2);
+                        lcp_st = STATE_SHOWER_STAND;       gameTick(4);
+                } else {
+                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_L;  gameTick(2);
+                        lcp_st = STATE_SHR_SCRUB_R; gameTick(2);
+                        lcp_st = STATE_SHOWER_STAND;       gameTick(4);
+                }
+        }
+
+        lcp_st = STATE_STAND_FACING_SCREEN;
+        lcp_y += 29;
+        gameTick(2);
+        posToXY(POS_MID_SHOWER_DOOR,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+        g_hamod = HEAD_ANIM_DISABLED;
+        g_actif = NO;
+}

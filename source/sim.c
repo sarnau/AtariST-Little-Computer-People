@@ -1,5 +1,5 @@
 /*
- * sim.c -- game-clock and needs simulation (gameSim1).
+ * sim.c -- game-clock and needs simulation (simStep).
  * Called every 8 animation frames (~1 game-second).
  */
 
@@ -17,9 +17,9 @@
    thirst, hunger, sickness and bathroom timers, may ring the phone
    (2% per minute between 08:00 and 21:59, outside the move-in), and
    steps t_min.  The hour rollover runs the mood cycle and t_hour; the
-   day rollover runs daily_rs and advances the date. */
+   day rollover runs resetDailyFlags and advances the date. */
 void
-gameSim1()
+simStep()
 {
         /* No locals on purpose: every counter steps in place and every
            call result is consumed where it is produced. */
@@ -38,7 +38,7 @@ gameSim1()
                 if (lcp.thirst_level < NEED_SEVERE)
                         lcp.thirst_level++;
                 else
-                        lcp_sick();
+                        fallSick();
         }
 
         /* Hunger tick */
@@ -48,7 +48,7 @@ gameSim1()
                 if (lcp.hunger_level < NEED_SEVERE)
                         lcp.hunger_level++;
                 else
-                        lcp_sick();
+                        fallSick();
         }
 
         /* Sickness progression / recovery */
@@ -56,7 +56,7 @@ gameSim1()
                 if (--lcp.sickness_countdown == 0) {
                         lcp.sickness_level += lcp.sickness_direction;
                         if (lcp.sickness_level == SICKNESS_HEALTHY)
-                                lcp_upal();
+                                setSkinColor();
                         else if (lcp.sickness_level > SICKNESS_CRITICAL)
                                 /* 1985 bug: `==` where `=` was meant, so
                                    the clamp never happens.  Kept on
@@ -85,7 +85,7 @@ gameSim1()
             ph_ans == NO &&
             introSeq == NO) {
                 ph_call = YES;
-                putEv(ACTION_EVENT_PHONE_CALL);
+                queueEvent(ACTION_EVENT_PHONE_CALL);
         }
 
         /* Clock advance: minute */
@@ -117,10 +117,10 @@ gameSim1()
                 return;
 
         t_hour = 0;
-        daily_rs();
+        resetDailyFlags();
 
         /* Calendar advance: day / month / year */
-        if (daysInMo(t_mon, t_year) == ++t_day) {
+        if (daysInMonth(t_mon, t_year) == ++t_day) {
                 t_day = 0;
                 if (++t_mon == 12) {
                         t_mon = 0;

@@ -17,14 +17,14 @@ volatile unsigned char  g_hgis   = 0;
 volatile unsigned char  g_hgiw    = 0;
 #endif
 
-/* mowrit: poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE
+/* aciaWrite: poll ACIA TDRE (bit 1) then write one byte.  On host, TDRE
    is preseeded to 1 so the poll returns immediately.  Hand-assembly
    (psg_asm.s). */
 
-/* psg_cpE -> parts/psg_cpE.c. */
+/* copyEnvelope -> parts/copyEnvelope.c. */
 
-/* psg_wr: YM2149 two-stage latch -- select the register, then write
+/* psgWrite: YM2149 two-stage latch -- select the register, then write
    the value.  Hand-assembly (psg_asm.s). */
 
-/* psg_mix: read-modify-write on YM2149 mixer register 7.
+/* psgMixer: read-modify-write on YM2149 mixer register 7.
    Hand-assembly (psg_asm.s). */

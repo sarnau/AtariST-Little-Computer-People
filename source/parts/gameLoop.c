@@ -7,11 +7,11 @@
 
 
 /* The last step of main, never returns.  If a saved game was loaded
-   (g_lcldd), the resident is placed at the study door and lcp_std
+   (g_lcldd), the resident is placed at the study door and studyVisit
    brings him back into the house without saving.  When the copy
    protection failed (cprot_r == 0) he only ever sleeps.  Otherwise
    the game speed is set and every frame is gameTick followed by
-   chk_actT, which picks and runs the next action. */
+   chooseAction, which picks and runs the next action. */
 void
 gameLoop()
 {
@@ -20,20 +20,20 @@ gameLoop()
         short   unused[25];
 
         if (g_lcldd != 0) {
-                hs_posXY(POS_TOP_STUDY_DOOR, &lcp_x, &lcp_y);
+                posToXY(POS_TOP_STUDY_DOOR, &lcp_x, &lcp_y);
                 lcp_y -= 3;
                 lcp_x -= 10;
-                lcp_std(NO, NO);
+                studyVisit(NO, NO);
         }
         /* The sleep loop is the fall-through of the guard, and every
            loop is `while (1)`: `for (;;)` compiles differently. */
         if (cprot_r == 0)
                 while (1)
-                        a_sleep(SLEEP_RANDOM);
+                        dozeOff(SLEEP_RANDOM);
 
         g_spdc = 5;
         while (1) {
                 gameTick(0);
-                chk_actT();
+                chooseAction();
         }
 }

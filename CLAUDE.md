@@ -135,7 +135,7 @@ source ships; ad-hoc debug scaffolding does not.
   where subsequent `Setscreen` calls invalidate VDI line-attribute
   state, and `vsl_color` silently falls back to pen 15 (dark brown).
   This causes the water tank to render brown instead of blue — see
-  the comment above `sc_sdtb` in `source/gfx_prim.c`.
+  the comment above `beginDraw` in `source/gfx_prim.c`.
 - There is ONE SHIPPED build configuration, and it must stay
   byte-identical.  Two defines exist for test builds only:
   `-DSKIP_MIDI=1` (skips the Timer-A install for frame-hash
@@ -159,9 +159,9 @@ source ships; ad-hoc debug scaffolding does not.
   (2000 VBLs); test_longrun_stable.sh drops it.
 
 - **`-DSKIP_COPYPROT=1` is what makes the game playable under an
-  emulator.**  It replaces main's `cprot_r = cp_main();` with a
-  non-zero constant, so cs_mvIn and gameLoop take their normal paths
-  instead of parking the resident in `while (1) a_sleep(-1);`.  It
+  emulator.**  It replaces main's `cprot_r = checkCopyProt();` with a
+  non-zero constant, so moveInScene and gameLoop take their normal paths
+  instead of parking the resident in `while (1) dozeOff(-1);`.  It
   skips the CALL, not the check, which also avoids the FDC wait that
   never terminates when the program was launched from a drive that is
   not the floppy.  With it the move-in cutscene runs, the resident
@@ -197,32 +197,32 @@ What it takes to keep clang and Alcyon reading the same source:
   declarations, implicit int, falling off the end of a non-void
   function, and pointer-to-long assignment are all legal Alcyon and
   hard errors in modern clang.  The port relies on the third
-  deliberately (pk_cace, chk_timA).
+  deliberately (pkrOpenRank, pickIdleAction).
 - **The lvalue cast has no clang spelling.**  `(char *) p += n;` is what
   emits `add.l d0,mem`, and clang cannot parse it at all, so its six
-  sites (main.c, sc_firw.c, sc_firsb.c) carry an `#ifdef HOST`
+  sites (main.c, paperRow.c, sc_firsb.c) carry an `#ifdef HOST`
   alternative beside the shipped line.
 - **main() is `lcp_main()` on the host** so the unit tests can supply
   their own; it now lives inside stx_u1.o and cannot be left out.
 
 Declaration fixes that fell out of it, all verified byte-neutral:
-`pk_dchd` was forward-declared `void` and defined `short`, `pk_show`
-had no declaration before its first call, `al_loal` was declared
-`void`, `fr_read`'s definition had no return type at all, and
-`erChr`/`stEnter` were declared nowhere.  stx_u1 gained alerts.h,
+`bjDealCard` was forward-declared `void` and defined `short`, `pkrShowdown`
+had no declaration before its first call, `loadFrameFile` was declared
+`void`, `readFile`'s definition had no return type at all, and
+`eraseChar`/`enterField` were declared nowhere.  stx_u1 gained alerts.h,
 assets.h and render.h; stx_u3 gained gfx_prim.h.
 
 **`make test` runs all ten unit tests and they pass** (2026-09-05).
 Two things to know before touching them:
 
-- **The host is little-endian and the loaders are not.**  sf_sl and
-  al_loal read their length fields with raw two-byte fr_reads, so 34
+- **The host is little-endian and the loaders are not.**  loadSounds and
+  loadFrameFile read their length fields with raw two-byte fr_reads, so 34
   arrives as 8704 and the file walk is lost after the first block.
   That is faithful ST code.  t_sounds.c and t_assets.c therefore write
   a HOST-ENDIAN copy of the asset -- same payloads, same order, only
   the length fields swapped -- so the loader's LOGIC is what is under
   test.  Do the same for any new test that drives a real asset.
-- **Not everything is checkable here.**  chk_encm walks g_ew2a until
+- **Not everything is checkable here.**  matchCommand walks g_ew2a until
   `table[0] == 0xff`, and Alcyon narrows that constant to a signed
   char so the sentinel matches; clang does not, so on the host the
   walk runs off the end of the table.  t_parser.c reports that case
@@ -231,7 +231,7 @@ Two things to know before touching them:
 `tests/reference/sprite_golden.pgm` was re-blessed on 2026-09-05: the
 old master came from the retired LCP_ORG revision, and the sprite path
 is now the byte-identical LCP_STX code.  A sprite test must call
-`initBRev()` -- rev_tab is BSS here and built at boot, where it used to
+`initMirror()` -- rev_tab is BSS here and built at boot, where it used to
 be a shipped table, and without it every mirrored frame renders blank.
 
 ## Key project layout
@@ -247,7 +247,7 @@ be a shipped table, and without it every mirrored frame renders blank.
   declaration is in `protos.h` (the 43 per-module extern headers were
   merged on 2026-10-05) -- except `rnd()`, which lives in `rnd.h` and is
   included only by stx_u1.c, stx_u2.c and games.c: the original's
-  sp_lcha calls rnd() undeclared (implicit int), and declaring it as
+  stepHead calls rnd() undeclared (implicit int), and declaring it as
   long there changes that function's code.  The general lesson: a
   declaration of a long- or pointer-returning function is NOT neutral --
   making one visible to a unit that lacked it can change its bytes.
@@ -290,8 +290,8 @@ to the repo's, plus the UNCRACKED `LCP.PRG` (123 352 bytes: text
 
 **Ghidra correspondence:** `LCP.rep` contains two programs; the larger
 one (`LCP.PRG.1.1`) IS LCP_STX loaded at BASE 0x10000.  Old port
-comments citing addresses like `mq_tick 0x1219a`, `gameTick 0x256a6`,
-`main 0x15546` or `st_titl 0x16de6` resolve as
+comments citing addresses like `timerAIsr 0x1219a`, `gameTick 0x256a6`,
+`main 0x15546` or `titleScreen 0x16de6` resolve as
 `addr - 0x10000 = LCP_STX text offset`.
 
 All comparison tools (verify_bytes.py, prg_diff.py, fn_diff.py,
@@ -301,7 +301,7 @@ stx_map.py) honour `LCP_REF=<path>`; the default is
 ## Recovering LCP_STX's C sources
 
 **The library boundaries (maintainer, 2026-09-02).**  In LCP_STX
-everything BEFORE mq_skip (0x12a) is runtime library -- alcyon2's
+everything BEFORE skipTextField (0x12a) is runtime library -- alcyon2's
 GEMSTART.O plus the trap bindings at 0x11a -- and everything from
 vswr_mode (0x1733a) on is library too: the VDI bindings, AES, stdio,
 string and math.  So the game's own code is 0x12a-0x1733a, 94 736 of
@@ -336,14 +336,14 @@ tools solve it:
     ranks the divergent port functions by length and similarity.
 
   A `bsr`'s TARGET inside a matched function is the most reliable
-  evidence of all: mq_advs's call pinned mq_pars at 0x338, sp_imfs's
-  pinned sp_iniM at 0x6612, and er_food's pinned a_opecc/a_opcfd.
+  evidence of all: seqAdvance's call pinned parseEvents at 0x338, initSlots's
+  pinned initMfdb at 0x6612, and foodDelivery's pinned openKitchenCab/openFrontDoor.
   Always prefer a harvested address over a window or neighbour guess.
 
 Structural rules of this build:
-- **sf_sl is a REAL SOUNDS.LCP block loader** (fr_read sizes, Malloc
+- **loadSounds is a REAL SOUNDS.LCP block loader** (readFile sizes, Malloc
   per block, store into mi_ntLp at 0x43f7a = Ghidra 0x53f7a - 0x10000,
-  er_nomem on failure).
+  outOfMemory on failure).
 - **GEMDOS binding lives at text 0x11a** (right after the alcyon2
   gemstart) and calls use MINIMAL argument shapes -- `Fclose(h)`
   pushes just the opcode+handle, no 3-arg padding.
@@ -361,7 +361,7 @@ Structural rules of this build:
 
   The game code is only ~7 objects, all huge:
 
-      0x0012a-0x01586   5.2 KB  mq_inti/mq_extm (MIDI init)
+      0x0012a-0x01586   5.2 KB  mq_inti/unhookTimerA (MIDI init)
       0x0230e-0x04004   7.4 KB  (no matches yet)
       0x0400c-0x073ce  13.3 KB  dog, actions, movement, calendar,
                                 renderx, alerts functions
@@ -371,7 +371,7 @@ Structural rules of this build:
       0x0dece-0x1481c  27.0 KB  render, sprites, delivery, aidle,
                                 asimple, ahouse, init, health,
                                 gfx_prim functions
-      0x14824-0x148e6   194 B   er_write (alerts)
+      0x14824-0x148e6   194 B   writeErrorAlert (alerts)
       0x148fe-0x172e8  10.7 KB  the sprite engine
 
   **Strategy consequence:** per-function regrouping between .c files
@@ -379,9 +379,9 @@ Structural rules of this build:
   of this partition.  The port instead builds ~7 "unity" translation
   units that #include the constituent .c files in STX order.  The
   moves already committed
-  (sp_spud/sp_flih -> alerts.c, initVdi/exitVdi -> games.c,
-  cl_redrH/cl_drwH/drwLine -> init.c) are all consistent with the
-  recovered partition -- e.g. er_write ends at 0x148e6 and sp_spud
+  (setDogSprite/flipSprite -> alerts.c, panelBegin/panelEnd -> games.c,
+  redrawHands/drawHands/drawLine -> init.c) are all consistent with the
+  recovered partition -- e.g. writeErrorAlert ends at 0x148e6 and setDogSprite
   starts at 0x148fe, 24 bytes apart.
 
   **The unity-unit mechanism is VALIDATED** (probe, 2026-09-01): a
@@ -393,31 +393,31 @@ Structural rules of this build:
   it (grepping the .s is misleading).
 
   **Membership must be per-FUNCTION, not per-file:** the port's
-  alerts.c is split across two STX objects -- er_nomem lands in the
-  0x400c-0x73ce cluster while er_write is in the 0x14824 one.  So
+  alerts.c is split across two STX objects -- outOfMemory lands in the
+  0x400c-0x73ce cluster while writeErrorAlert is in the 0x14824 one.  So
   the unity units cannot simply include whole port .c files
   wherever the port's own grouping disagrees; those files need
   splitting first (or per-function #ifdef gating as already done
-  for sp_spud/sp_flih).  Extending cluster membership beyond the 96
+  for setDogSprite/flipSprite).  Extending cluster membership beyond the 96
   byte-matched functions -- e.g. by collecting the `candidate
   orig=` addresses verify_bytes reports for divergent ones -- is
   the natural next evidence step before any restructuring.
 
   **Merging a straddler wholesale is a REGRESSION (measured
   2026-09-01).**  Adding sprites.c to unit 2 -- on the evidence that
-  sp_sprs and sp_ssco are bsr targets from inside that object --
+  activateSprite and carryBehind are bsr targets from inside that object --
   dropped the count 130 -> 120, because most of sprites.c actually
   lives in the 0x148fe sprite object and the merge turned its
   cross-object jsr calls into bsr.  Reverted.  The right move is
-  per-FUNCTION extraction through parts/: sp_sprs, sp_ssco, hideLcp
-  and showLcp now have shared bodies in parts/, included by stx_u2.c
+  per-FUNCTION extraction through parts/: activateSprite, carryBehind, hideResident
+  and showResident now have shared bodies in parts/, included by stx_u2.c
   at their STX addresses.  A
   unity unit also needs the constituent headers at its top (they
   emit no code, so the layout is unaffected) or the parts/ bodies
   compile with nothing in scope.
 
   **DONE: the LCP body/shape buffers are ARRAYS in STX, not
-  pointers** (sp_updb now matches).  The divergence was
+  pointers** (updateBody now matches).  The divergence was
       port:  muls.w #84,d0 ; ext.l d0 ; add.l body_shp,d0
       STX:   muls.w #84,d0 ;            add.l #184892,d0
   Probing settled it: `(char *)ptr + i * 84` and every cast variant
@@ -431,7 +431,7 @@ Structural rules of this build:
   body_ptr[120][168] and body_shp[98][84] as globals, sprglobs.h
   declares them with literal strides (sprglobs.h is included before
   sprites.h, so LCP_BODY_FRAME_SIZE is not yet in scope there),
-  al_locs loads straight into body_ptr, and sp_updb indexes
+  al_locs loads straight into body_ptr, and updateBody indexes
   body_ptr[frame] / body_shp[frame].  Same class as the
   g_obtmp->g_obtmt and
   od_* fixes -- expect more of these wherever the port carries a
@@ -446,24 +446,24 @@ Structural rules of this build:
   v_bar and v_pline go further: instead of copying points into ptsin
   they AIM the parameter block at the caller's array for the call and
   restore it afterwards (vdipb[2] = pxy; ... vdipb[2] = ptsin), the
-  same trick vdilib.c's vro_cpyfm already used.  vroCpyD is likewise
+  same trick vdilib.c's vro_cpyfm already used.  blitRect is likewise
   only a wrapper in STX -- it builds a pxy[8] on the stack and defers
   to the array-form vro_cpyfm rather than writing contrl itself.
   Also: stx_addrs resolves _vdi_go and _vdi_go2 to the SAME address
   (0x1772e), so STX has one trap dispatcher where the port carries
   two.
 
-  **The port's file split does not match STX's.**  a_gesff (afood.c)
-  sits at 0xebf8, BETWEEN two adoors.c functions -- a_clocd 0xeb54
-  and a_opecf 0xec22 -- which is why its call to a_opecf is a short
+  **The port's file split does not match STX's.**  goToFridge (afood.c)
+  sits at 0xebf8, BETWEEN two adoors.c functions -- closeBedCloset 0xeb54
+  and putInFridge 0xec22 -- which is why its call to putInFridge is a short
   bsr.  So the STX sources grouped these differently again; per-
   function parts/ placement, not file ordering, is what reproduces
   it.  `stx_addrs.py` plus a short-vs-word bsr is usually enough to
   pin where a function belongs.
 
-  **Clusters are LOWER bounds -- objects start earlier.**  lcp_lgt
-  (0xde80) and lcp_rgt (0xdf66) sit in the gap BEFORE the 0xdece
-  cluster, yet both reach lcp_wkD (0x147a0) and sp_ssco (0x1203a)
+  **Clusters are LOWER bounds -- objects start earlier.**  leaveGameTable
+  (0xde80) and rejoinTable (0xdf66) sit in the gap BEFORE the 0xdece
+  cluster, yet both reach walkToTarget (0x147a0) and carryBehind (0x1203a)
   with bsr, so they are part of that object: it begins before its
   cluster does.  Both moved from games.c into unit 2 via parts/ --
   games.c straddles the minigame object and this one.  Note that
@@ -475,16 +475,16 @@ Structural rules of this build:
   cluster boundaries and therefore need splitting; every other file
   already sits wholly inside one cluster:
 
-      alerts.c    3 clusters  er_nomem @0x400c | er_write @0x14824
-                              | sp_spud,sp_flih @0x148fe
-      games.c     2 clusters  minigame suite @0x73e8 | lcp_rgt @0xdece
-      gfx_prim.c  2 clusters  vst_h20 @0x73e8 | drwPixel @0xdece
-      init.c      2 clusters  mq_inti @0x12a | cl_drini,cl_redrH @0xdece
-      sprites.c   2 clusters  hideLcp,showLcp @0xdece | sp_updb @0x148fe
+      alerts.c    3 clusters  outOfMemory @0x400c | writeErrorAlert @0x14824
+                              | setDogSprite,flipSprite @0x148fe
+      games.c     2 clusters  minigame suite @0x73e8 | rejoinTable @0xdece
+      gfx_prim.c  2 clusters  textBig @0x73e8 | drawPixel @0xdece
+      init.c      2 clusters  mq_inti @0x12a | drawClock,redrawHands @0xdece
+      sprites.c   2 clusters  hideResident,showResident @0xdece | updateBody @0x148fe
 
   Concrete restructuring plan, in order:
    1. Split those five files along the listed boundaries (or gate
-      the minority functions per-configuration, as sp_spud already
+      the minority functions per-configuration, as setDogSprite already
       is), so every port .c belongs to exactly one STX cluster.
    2. Add unity units (stx_u*.c) that #include their cluster's .c
       files; alcyon_build.sh compiles the units instead of the
@@ -505,9 +505,9 @@ Structural rules of this build:
   infrastructure, not a source of matches by themselves: a partition
   fix only flips a function to MATCH when the call shape was its
   LAST divergence.  The earlier gains that looked like partition
-  wins (the ag_c* quartet, cl_drini) were exactly those cases.  The
+  wins (the ag_c* quartet, drawClock) were exactly those cases.  The
   remaining divergences inside stx_u1's files are ordinary logic and
-  literal differences -- e.g. execEv (0x5fae) is missing a call and
+  literal differences -- e.g. runEvent (0x5fae) is missing a call and
   has different branch structure -- so per-function recovery remains
   the way the count moves.  Build both configurations after any unit
   change: `tools/stx_units.txt` drives which files are skipped, and
@@ -526,7 +526,7 @@ Structural rules of this build:
   toolchain is codegen-equivalent to the one that built LCP_STX, so
   the campaign never needs to run the period compiler under Hatari.
 
-  **sf_sl is byte-recovered (2026-09-01).**  The SOUNDS.LCP block
+  **loadSounds is byte-recovered (2026-09-01).**  The SOUNDS.LCP block
   loader matches LCP_STX byte for byte at 0xdcc4.  The real
   1985 loader declares `fhandle, size, block, index` in that order,
   assigns the Malloc result straight into `mi_ntLp[index]` and reads
@@ -543,19 +543,19 @@ Structural rules of this build:
       y = (x = a / b) + '0';        ->  move.b d0,x / add / move.b d0,y
   The same holds for `s[6] = (rem = v % 100) / 10;`.  Confirmed by
   compiling both spellings (t1/t2/t4 probes) and comparing to the
-  binary.  This recovered pk_awp / pk_dppm / pk_dpot, whose STX
+  binary.  This recovered dispCompChips / dispPlyrChips / dispPot, whose STX
   versions also use `char str[10]` plus a `short rem` temp and carry
   no (char)/(int) casts at all.
 
   **Function ORDER inside an object matters** (and is measurable):
   a call is bsr.s only within +-128 bytes, so ordering shows up as
-  bsr.s-vs-bsr.w.  plEr's sole divergence was exactly that -- STX
-  puts it at 0x86e0, past the anagram helpers, ~4 KB from initVdi,
+  bsr.s-vs-bsr.w.  panelErase's sole divergence was exactly that -- STX
+  puts it at 0x86e0, past the anagram helpers, ~4 KB from panelBegin,
   where the port had it 40 bytes away.  Moving it fixed it.  Known games-object order from matched addresses:
-  mg_stp 0x759c < vst_h20 0x75dc < initVdi 0x764e < exitVdi 0x76d0
-  < wp_shwm 0x7c78 < ag_cwda 0x7e9c < ag_cswa < ag_cgpa < ag_csb
-  0x7f4a < ag_intr 0x7f84 < plEr 0x86e0 < pk_awp 0xad26 < pk_dppm
-  < pk_dpot < pk_pmsg 0xb0aa < pk_actd 0xb138.
+  mgSetup 0x759c < textBig 0x75dc < panelBegin 0x764e < panelEnd 0x76d0
+  < wpzMessage 0x7c78 < anaClrWord 0x7e9c < anaClrIntro < anaClrGuess < anaClrBottom
+  0x7f4a < anaIntroText 0x7f84 < panelErase 0x86e0 < dispCompChips 0xad26 < dispPlyrChips
+  < dispPot < cardMessage 0xb0aa < pushCard 0xb138.
 
   **verify_bytes extent fix (2026-09-01).**  A `static` function
   emits no symbol, so the old symbol-to-symbol extent swallowed it
@@ -563,7 +563,7 @@ Structural rules of this build:
   not its own.  Extents are now additionally bounded by the next
   `link a6` prologue that follows an rts/nop, which is the real
   function end.  That alone converted two standing false negatives
-  (exitVdi, wp_shwm) into matches, so counts before and after this
+  (panelEnd, wpzMessage) into matches, so counts before and after this
   change are not directly comparable.
 
   **Recurring source-shape rules.**  Each row is `wrong shape  vs
@@ -605,10 +605,10 @@ Structural rules of this build:
                                        away: over the call vs to the
                                        switch end)
       case ORDER in the source is recoverable from the jump table's
-        targets (STX's execEv writes BOOK, RECORD, FOOD, PHONE,
+        targets (STX's runEvent writes BOOK, RECORD, FOOD, PHONE,
         GET_DRESSED (now ACTION_NOD_OK), DOG_FOOD)
       statement ORDER of two initialisations is evidence too
-        (a_hello clears pick before prev_pick in STX)
+        (sayHello clears pick before prev_pick in STX)
       (Random() & 7) + 293 (no)   vs  (int)(Random() & 7) + 293
                                       (the cast makes the ADD word-
                                        sized: and.l then add.w, where
@@ -632,8 +632,8 @@ Structural rules of this build:
                                       RIGHTMOST variable, so the store
                                       widths give the declaration
                                       types away)
-      helper C function    (no)   vs  hand-assembly (psg_wr, psg_mix
-                                      and mowrit are frameless
+      helper C function    (no)   vs  hand-assembly (psgWrite, psgMixer
+                                      and aciaWrite are frameless
                                       absolute-long pokes in LCP_STX;
                                       source/psg_asm.s carries them)
       f(&d, &c, &b, &a)    (no)   vs  f(&a, &b, &c, &d)
@@ -641,27 +641,27 @@ Structural rules of this build:
                                       and mi_nxTk/mi_lpTk are LONG
                                       tick counters
       int field             (no)   vs  unsigned field (clr.w before
-                                      every load -- cpyScr's MFDB
+                                      every load -- copyScreen's MFDB
                                       extents; `(unsigned short) f`
                                       at the use site reproduces it)
       p->fd_addr = addr;   (no)   vs  the address latched, masked to
                                       its high half and stored as two
                                       words through a (short *) cast
-                                      (sp_iniM)
+                                      (initMfdb)
       } else {             (no)   vs  } else if (arg != 0) {
                                       (a redundant re-test of the
                                        argument already implied by the
-                                       else -- a_opcfd/a_opecc/a_opecd,
-                                       and er_food re-tests g_dvdog)
+                                       else -- openFrontDoor/openKitchenCab/openDresser,
+                                       and foodDelivery re-tests g_dvdog)
       one assignment       (no)   vs  an if/else whose two arms assign
-                                      the SAME value (stpScrB's size)
+                                      the SAME value (initHouseBuf's size)
       p = (T *)((char *)p    (no)   vs  (char *) p += n;
         + n)                          (Alcyon C 4.14 accepts a CAST
                                        AS AN LVALUE; the compound form
                                        emits add.l d0,mem where the
                                        assignment form emits
                                        add.l mem,d0 / move.l d0,mem --
-                                       sc_firw/sc_firs/sc_firb)
+                                       paperRow/stripeRow/blackRow)
       (long) row * 160     (no)   vs  row * 160  (muls.w + ext.l
                                       instead of a call to lmul)
       for (i=0; s[i]; i++) (no)   vs  while (dst[i++] = *src++ & 0xff)
@@ -677,8 +677,8 @@ Structural rules of this build:
       for(;;){...if/else}  (no)   vs  a label + two explicit `goto`s
                                       (a loop whose arms each branch
                                        straight back, with no shared
-                                       loop-back branch: fOpen,
-                                       fr_read)
+                                       loop-back branch: openFile,
+                                       readFile)
       void f()             (no)   vs  short f() returning the value
                                       the ORG version discards
       for (;;)             (no)   vs  while (1)  (the while form
@@ -704,27 +704,27 @@ Structural rules of this build:
                                       offset arithmetic inside the
                                       dereference makes the POINTER
                                       the index register and the
-                                      counter the base -- mq_pacm)
+                                      counter the base -- unpackChanMap)
       short locals for     (no)   vs  globals (aes_ini's graf_handle
-        out-parameters                metrics; vdi_init's work_in /
+        out-parameters                metrics; vdiInit's work_in /
                                       wk_out -- the frame collapses
                                       from -150 to -6)
       short *tab[3] = {r0, (no)   vs  short tab[3][8] and `tab[i][j]`
         r1, r2}                       (two ext.l and a trailing
-                                      `add.l #base` -- chk_timA)
+                                      `add.l #base` -- pickIdleAction)
       x = x - 1;           (no)   vs  x--; if (x <= 0)   (subq to
         if (x < 1)                    memory then an explicit tst)
       x = x - 1;           (no)   vs  if (--x == 0)      (the subq's
         if (x == 0)                   own flags, no tst at all)
       t = f(); if (t == v) (no)   vs  if (f() == ++v)    (the call
                                       result stays in d0 across the
-                                      addq to memory -- gameSim1)
-      C helper             (no)   vs  hand-assembly: blkcp32 is an
+                                      addq to memory -- simStep)
+      C helper             (no)   vs  hand-assembly: copyBlocks32 is an
                                       unrolled `dbf` loop of eight
                                       post-increment long moves
                                       (source/blkcp_a.s)
       two early returns    (no)   vs  one compound `if (a && b) {...}`
-                                      followed by `break` (deal_kc's
+                                      followed by `break` (handleKey's
                                       default arm -- the guards branch
                                       to the break, not the epilogue)
       arr[i] = v           (no)   vs  *(i + arr) = v  (naming the
@@ -734,9 +734,9 @@ Structural rules of this build:
       `return v;` in every (no)   vs  NO return at all in the arms:
         arm of a ladder               the ladder's jump to the
                                       function end leaves the last
-                                      compared value in d0 (chk_timA)
+                                      compared value in d0 (pickIdleAction)
       x = 4;               (no)   vs  x == 4;  -- a real 1985 typo in
-                                      gameSim1's sickness clamp; the
+                                      simStep's sickness clamp; the
                                       compiler emits the comparison
                                       and discards it, so the clamp
                                       never happens.  Preserved.
@@ -744,14 +744,14 @@ Structural rules of this build:
                                       the bare XBIOS call that STX
                                       routes seven call sites through
                                       (rndRng still inlines the trap)
-      moff only            (no)   vs  moff AND mon -- STX has the
+      hideMouse only            (no)   vs  hideMouse AND showMouse -- STX has the
                                       mouse-show counterpart right
                                       after it
       rev_tab as DATA      (no)   vs  built at run time by a 94-byte
                                       routine behind a 10-byte wrapper
                                       (STX 0x6804/0x680e -- not yet
                                       ported)
-      no resolution check  (no)   vs  vdi_init splits in two: the
+      no resolution check  (no)   vs  vdiInit splits in two: the
                                       opener checks wk_out[0] and hangs
                                       on a "[1][Must be in|low
                                       resolution.][REBOOT]" alert loop
@@ -763,7 +763,7 @@ Structural rules of this build:
                                       (movea.w idx,a0 / movea.l
                                       #base,a1 / tst.b (0,a0,a1.l));
                                       the explicit `!= '\0'` emits the
-                                      base+add form (ag_main)
+                                      base+add form (playAnagrams)
       c = *p; if (c==' ')  (no)   vs  while ((c = *p++) == ' ')
                                       (Alcyon saves the flags across
                                        the pointer increment:
@@ -771,10 +771,10 @@ Structural rules of this build:
                                        memory / move d0,ccr / branch)
       x = x + 1; if (x<N)  (no)   vs  if (x++ < N)  -- the same
                                       flag-save trick around a global
-                                      (ag_main's guess counter), so
+                                      (playAnagrams's guess counter), so
                                       BOTH arms see the increment
-      pk_dppm();           (no)   vs  pk_dppm;  -- a real 1985 typo in
-                                      pk_wrMn: the parentheses were
+      dispPlyrChips();           (no)   vs  dispPlyrChips;  -- a real 1985 typo in
+                                      playWar: the parentheses were
                                       left off, so Alcyon just emits
                                       move.l #_pk_dppm,d0 and drops
                                       it.  Preserved.
@@ -791,31 +791,31 @@ Structural rules of this build:
                                       to the label, and the two are
                                       distinguishable whenever the
                                       loop is longer than a short
-                                      branch (pk_wrMn)
+                                      branch (playWar)
       (long) x             (no)   vs  (long) x & 0xffffL  (the cast
                                       forces ext.l into d0 followed by
                                       and.l; without it Alcyon just
                                       sign-extends through an address
-                                      register -- sf_irqp)
+                                      register -- startSfx)
       short table row      (no)   vs  12-byte WORD_TO_ACTION: ten
                                       signed mask bytes, the action id
                                       at +10 and the priority at +11,
                                       with ew2pos/g_ew2b/bm_lo/g_ewb
-                                      all char (chk_encm)
-      concat22/rd_hz       (no)   vs  written out inline: sf_irqp
+                                      all char (matchCommand)
+      concat22/rd_hz       (no)   vs  written out inline: startSfx
         helpers                       builds the 32-bit duration from
                                       its two halves and keeps its own
                                       Super block, with an UNUSED
                                       short in the frame between the
                                       counter pointer and the value
       Giaccess(d, r)       (no)   vs  xbios(28, d, r) written out --
-                                      mq_dise's PSG writes skip the
+                                      sendMidiEvent's PSG writes skip the
                                       macro's (char) cast on the data
-                                      argument (sf_so still uses the
+                                      argument (stopSfx still uses the
                                       macro, so do NOT change it)
       x &= 0xf             both       -- but `x = x & 0xff` is a
                                       DIFFERENT shape (load/and/store
-                                      vs andi to memory); mq_dise uses
+                                      vs andi to memory); sendMidiEvent uses
                                       each in the same function
       a = 1; b = 1;        (no)   vs  b = a = 1  (moveq into d0, then
                                       both stores from the register)
@@ -826,13 +826,13 @@ Structural rules of this build:
                                       compare in memory and save the
                                       flags across the decrement,
                                       `<= 0` loads the old value into
-                                      d0 and tst's it (psg_upEn)
+                                      d0 and tst's it (stepEnvelopes)
       (char)((int) x / 10) (no)   vs  x / 10 + '0'  -- the (int) cast
         + '0'                         adds an ext.w the original has
                                       nowhere
-      short ikey (a local) (no)   vs  a GLOBAL (pk_bjMn's key variable
+      short ikey (a local) (no)   vs  a GLOBAL (playBlackjack's key variable
                                       is addressed absolutely)
-      CARD_NONE == -1      (no)   vs  255 -- but pk_rmch's empty-pile
+      CARD_NONE == -1      (no)   vs  255 -- but popCard's empty-pile
                                       return is a plain -1
       if (A || B || C) {}  (no)   vs  if (!A && !B && !C) goto <next>;
                                       followed by the body unnested --
@@ -843,7 +843,7 @@ Structural rules of this build:
         i++) body;
       dealer stands > 16   (no)   vs  >= 17 (the literal in the cmpi
                                       is 17, not 16)
-      p_sfgrt then p_sfspe (no)  vs  p_sfspe then p_sfgrt (a_hello's
+      sfxGreeting then sfxSpeech (no)  vs  sfxSpeech then sfxGreeting (sayHello's
                                       random arm -- the wrapper ids
                                       settle which is which)
       } else if (k == 1) { (no)   vs  goto next_round; } if (k == 1) {
@@ -871,10 +871,10 @@ Structural rules of this build:
 
   **Compare the `link #-N` frame size FIRST.**  It says exactly how
   many locals the function really has, before touching anything:
-  a_wandi needed an UNUSED local the port lacked, a_getd (now a_nodok) reuses one
-  variable as its loop counter, and a_tidyh/a_playp/a_wakum have
+  idleShrug needed an UNUSED local the port lacked, a_getd (now nodOk) reuses one
+  variable as its loop counter, and tidyHouse/stopRecord/morningRoutine have
   NONE because every call result is consumed in place.  Removing a
-  declaration without checking every use breaks the build (a_tidyh
+  declaration without checking every use breaks the build (tidyHouse
   used `result` twice).
 
   **An unbalanced conditional does not fail the build.**  cp68 does
@@ -885,25 +885,25 @@ Structural rules of this build:
 
   **Local offsets are assigned in DECLARATION order**, so the frame
   offsets in a fn_diff pin the declaration list exactly.  Declaration
-  ORDER is evidence too: the frame offsets pin it (a_driwa
+  ORDER is evidence too: the frame offsets pin it (washAtSink
   is rnd, counter, last_pick, pick in STX; the port had rnd, pick,
-  last_pick, counter).  And STX's a_driwa never initialises last_pick
+  last_pick, counter).  And STX's washAtSink never initialises last_pick
   -- the first comparison reads whatever the slot held.  Preserved as
   written; do not "fix" such things.
-  a_sitae alone needed six of these; expect several per function.
+  exercise alone needed six of these; expect several per function.
   **A parts/ file may hold several functions only if they are
   adjacent in LCP_STX.**  The four p_sf* wrappers are one file each,
   because their order (tvc, spe, hnd, grt) had to be discovered from
   the sound ids in their bodies.
 
   **STX inlines what the port factored into static helpers.**
-  mq_parh's switch case bodies ARE the mh_chac/mh_temp/mh_volu/
+  parseSongHeader's switch case bodies ARE the mh_chac/mh_temp/mh_volu/
   mh_scat/mh_proc code (the jump-table targets 0x1246/0x1264/0x129c/
-  0x12a4/0x132c all lie inside mq_parh) -- the port's own comments
+  0x12a4/0x132c all lie inside parseSongHeader) -- the port's own comments
   even carry those addresses, because its author read them there and
   factored them out.  Since the helpers are `static`, they emit no
   symbols and verify_bytes never reported them; the divergence only
-  showed up as mq_parh's shape.  Expect more of this: a port helper
+  showed up as parseSongHeader's shape.  Expect more of this: a port helper
   whose comment cites an address INSIDE another function's range is
   inlined in STX.
 
@@ -922,7 +922,7 @@ Structural rules of this build:
   2026-09-01).**  Converting all 147 `x = x + 1` for-loop
   increments to a gated STEP() macro across 31 files moved the
   count 120 -> 122; gating the ONE loop there was actual evidence
-  for (a_watat) reached the same 122 by itself.  The macro would
+  for (rummageCabinet) reached the same 122 by itself.  The macro would
   have committed ~145 loops to a shape confirmed in only about five
   functions -- precisely the speculative single-token editing that
   produced the 2026-07-19 incident.  Gate per site, when a fn_diff
@@ -933,7 +933,7 @@ DATA/LCP_STX.PRG -- 104 156 bytes on both sides, zero differing bytes
 modulo relocations.  All that remains is the data (+3008) and bss
 (+53884) layout; see "Byte-identity phase" below.**
 
-**cp_main is Activision's, not LCP's: 97.2% of it is byte-identical to
+**checkCopyProt is Activision's, not LCP's: 97.2% of it is byte-identical to
 THE MUSIC STUDIO** (found 2026-09-06).  Extract the Music Studio ST
 disk with the project's own `stx_extract.py` --
 `Retro/Atari ST/music_studio_activision_(usa)/*.stx` -- and hash 32-byte
@@ -958,10 +958,10 @@ per-FUNCTION rather than a vague total:
       _sf_irqp       0 /  456    NOTHING
 
 So LCP's **MIDI sequencer really does descend from Music Studio's
-player** -- mq_bust, the scale-table builder, is three-quarters
-identical and mq_dise, the MIDI-out dispatcher, nearly half -- which
+player** -- buildNoteMap, the scale-table builder, is three-quarters
+identical and sendMidiEvent, the MIDI-out dispatcher, nearly half -- which
 is the lineage the shared .SNG format only implied.  But the
-**sound-EFFECT engine does not**: sf_irqp shares ZERO of its 456
+**sound-EFFECT engine does not**: startSfx shares ZERO of its 456
 bytes, and the whole game-code span 0x400c-0x1733a shares nothing at
 all.  That is why Music Studio cannot settle the g_sfDoB size question
 -- the function that copies into that buffer is LCP's own code.
@@ -1003,7 +1003,7 @@ converter installed here will do it headlessly: `gw convert` dies with
 only.  Pinning an older bitarray would fix `gw`, but that is the
 maintainer's environment to change.
 
-cp_main (0x22c0-0x400b) is recovered as **hand-written assembly**
+checkCopyProt (0x22c0-0x400b) is recovered as **hand-written assembly**
 (`source/cp_asm.s`), not C -- the maintainer confirmed the whole
 region is assembly, and it proves out: the object is entirely
 self-contained, all 21 of its relocations pointing back inside
@@ -1016,8 +1016,8 @@ $ff860d to restore-seek-read the protected track into a 6560-byte
 buffer that lives INSIDE the text segment, then re-encrypts itself,
 clears flock and restores the registers.  Its long return value is
 assembled by six mutually recursive stubs that each add a constant --
-obfuscation, not arithmetic.  main stores it in cprot_r and cs_mvIn
-parks the resident in `while (1) a_sleep(-1);` if it is zero.
+obfuscation, not arithmetic.  main stores it in cprot_r and moveInScene
+parks the resident in `while (1) dozeOff(-1);` if it is zero.
 
 **Assemble cp_asm.s with `as68 -n`.**  as68 shortens branches on its
 own and ignores an explicit `.w`; the original picks bsr.w in places
@@ -1028,37 +1028,37 @@ size suffix.  Note also that `stx_check.sh`'s object list must mirror
 LCP.PRG about object order, every symbol extent comes out wrong and
 the sweep reports mass divergence that is not real.
 
-st_titl (0x6d7e) and cs_mvIn (0xe500) were written from scratch and
-both match.  st_titl brought three helpers the port never had:
-plErCol (0x871a -- plEr with an explicit fill colour, the four VDI
-attribute calls written out instead of initVdi/exitVdi), erChr
-(0x72e6 -- blank one 8x8 character cell) and stEnter (0x718e -- the
+titleScreen (0x6d7e) and moveInScene (0xe500) were written from scratch and
+both match.  titleScreen brought three helpers the port never had:
+eraseRectColor (0x871a -- panelErase with an explicit fill colour, the four VDI
+attribute calls written out instead of panelBegin/panelEnd), eraseChar
+(0x72e6 -- blank one 8x8 character cell) and enterField (0x718e -- the
 fixed-width numeric field reader, which skips every third column so
 the separators in MM/DD/YY and HH:MM cannot be typed over).
 
-**The minigame mains share one skeleton** (pk_main and pk_bjMn both
+**The minigame mains share one skeleton** (playPoker and playBlackjack both
 match it): a `goto round; next_round: gameTick(0x18); round:` label
-loop rather than a loop statement, the Mfree/moff cleanup written
+loop rather than a loop statement, the Mfree/hideMouse cleanup written
 INSIDE the first exit test with every other exit `goto`-ing into it,
-each key read as its loop's condition, and pk_inph's idle sentinel
+each key read as its loop's condition, and cardKeyInput's idle sentinel
 passed as 255 rather than 0.
 
-lcp_path's three static helpers (wkCyc, setHTgt, stairCyc) do NOT
+walkStep's three static helpers (wkCyc, setHTgt, stairCyc) do NOT
 exist in LCP_STX -- their bodies are written out at all sixteen call
 sites -- and every stair state machine WRAPS to its F0 frame instead
 of clamping at F3S.  Expect more of both.
 
 Functions DELETED because LCP_STX has no counterpart: al_loan and
-fLoad (lcp_crnd inlines the NAMES read, main inlines the .SCN path),
-mq_spgm (a duplicate of mq_sepc), concat22 and rd_hz (inlined into
-sf_irqp).
+fLoad (rollResident inlines the NAMES read, main inlines the .SCN path),
+mq_spgm (a duplicate of sendProgChange), concat22 and rd_hz (inlined into
+startSfx).
 
 A fifth unity unit exists now: **stx_u4.c** for the sound object that
-sits just ahead of the big 0xdece one -- sgPlay 0xd9ea < sf_irqp
-0xdafc < sf_sl 0xdcc4 < sf_sele 0xdd88 < sf_so 0xddd8.  The evidence
-is that sf_irqp reaches sf_so with a bsr while lt_sets (inside the
-0xdece object) reaches sf_sele with a jsr.  aletter.c joined stx_u2
-between td_line and lt_sets; lcp_flwp and getFlrY joined stx_u1 as
+sits just ahead of the big 0xdece one -- playSongFile 0xd9ea < startSfx
+0xdafc < loadSounds 0xdcc4 < sfxSelect 0xdd88 < stopSfx 0xddd8.  The evidence
+is that startSfx reaches stopSfx with a bsr while typeKeySound (inside the
+0xdece object) reaches sfxSelect with a jsr.  aletter.c joined stx_u2
+between drawTvPicture and typeKeySound; nextWaypoint and floorOfY joined stx_u1 as
 adjacent parts.
 
   Object membership is as much of the work as source shape.  A call
@@ -1068,14 +1068,14 @@ adjacent parts.
   the function into `parts/` and including it at the right point in
   the unity file (see the `parts/` list in stx_u1.c / stx_u2.c /
   stx_u3.c).  Several port files straddle two STX objects and had to be split
-  through parts/: render.c (fillTopR -> 0x400c, the rest 0xdece),
-  gfx_prim.c (cpyScr/stpScrB -> 0x400c, sc_sdtb/sc_sdtf/drwPixel ->
-  0xdece), walk.c (lcp_path/lcp_fstp -> 0x400c with getFlrY, lcp_wkD
-  -> 0xdece), init.c (cl_drini/cl_redrH/cl_drwH/drwLine -> 0xdece),
-  sprites.c (sp_updb/sp_drin/sp_lchu after gameTick), sprender.c
-  (sp_iniM -> 0x400c), renderx.c (strPr/prCh -> 0x148fe), save.c
-  (lcp_save closes the 0xdece object), sound.c (sfClick), tvanim.c
-  (tv_scrc), and agames.c joins the 0xdece object entirely.
+  through parts/: render.c (fillPanel -> 0x400c, the rest 0xdece),
+  gfx_prim.c (copyScreen/initHouseBuf -> 0x400c, beginDraw/endDraw/drawPixel ->
+  0xdece), walk.c (walkStep/playFootstep -> 0x400c with floorOfY, walkToTarget
+  -> 0xdece), init.c (drawClock/redrawHands/drawHands/drawLine -> 0xdece),
+  sprites.c (updateBody/deadHook/updateHead after gameTick), sprender.c
+  (initMfdb -> 0x400c), renderx.c (printString/printChar -> 0x148fe), save.c
+  (saveFile closes the 0xdece object), sound.c (sfxClick), tvanim.c
+  (tvClearAnim), and agames.c joins the 0xdece object entirely.
 
   **Extraction hazard:** a regex that stops at the first column-0 `}`
   can still sweep the NEXT function (or a following
@@ -1089,8 +1089,8 @@ adjacent parts.
   that are matched, translate them to STX addresses, and intersect
   with the call targets of each unclaimed STX slot; a 1.00 score with
   a plausible length is almost always right.  This pinned main 0x5546,
-  lc_load 0x5ac8, vdi_init 0x66fe, chk_timA 0x6210, gameSim1 0x133da,
-  rp_anim 0x13aec, sc_sctd 0x16d5a and a dozen more in one pass.
+  loadSavedGame 0x5ac8, vdiInit 0x66fe, pickIdleAction 0x6210, simStep 0x133da,
+  animRecPlayer 0x13aec, scrollStrip 0x16d5a and a dozen more in one pass.
   (stx_locate/stx_neighbor are much weaker -- stx_neighbor in
   particular reports the function AFTER a match, which is only right
   when the port and STX agree on what comes next, and it produced
@@ -1101,7 +1101,7 @@ adjacent parts.
   prologues gives the list of STX functions still unaccounted for,
   with exact addresses and lengths.  Disassembling a small slot is
   often enough to name it outright (a 20-byte slot that clears two
-  globals, a 36-byte slot that calls graf_mouse(257) = `mon`, a
+  globals, a 36-byte slot that calls graf_mouse(257) = `showMouse`, a
   10-byte slot that just calls the next function).
 
 ## GOAL ACHIEVED (2026-09-03): BYTE-IDENTICAL to LCP_STX.PRG
@@ -1153,7 +1153,7 @@ it after any change that touches a global.  What it should report:
 
 **scn_cmn was not real** (closed 2026-09-05).  Ghidra's own main
 settles it: the 30-byte dictionary read is
-`move.l #0x2c6ce,(SP) / move.l #0x1e,-(SP) / bsr fr_read`, and 0x2c6ce
+`move.l #0x2c6ce,(SP) / move.l #0x1e,-(SP) / bsr readFile`, and 0x2c6ce
 is link-time 0x1c6ce -- scn_dic.  The `@ 0x4cf7c` in the port's old
 comment was simply a wrong address: 0x3cf7c is two bytes INSIDE
 scn_buf and would run over mf_scrp, g_inpmd and g_ltscb, every one of
@@ -1169,8 +1169,8 @@ instruction for instruction.  Those were LCP_ORG-era NAMES still
 attached to LCP_STX functions.  When a Ghidra name contradicts the
 port, disassemble and compare bytes before concluding anything about
 which revision you are looking at.  (Renamed 2026-09-05: unScn ->
-scn_dec, fLoad -> al_loal, lcp_load -> lc_load, al_lost -> ldSpr,
-sp_reglp -> sp_regs.)
+decodeScn, fLoad -> loadFrameFile, lcp_load -> loadSavedGame, al_lost -> loadSprites,
+sp_reglp -> defineSprite.)
 
 **Syncing names to Ghidra: use `source/tools/sync_ghidra_names.sh`.**
 The old `apply_ghidra_renames.sh` needed `RenameLcpGlobals.java`,
@@ -1209,7 +1209,7 @@ POST.
 earned its keep: after correcting the action-table rows it showed
 g_trel with 18 xrefs (everything tests `g_trel[0]`) against 1 each for
 g_atact/g_atmod/g_atrel (indexed once apiece in airandom.c) and 1 each
-for g_obala/g_obcla/g_obpha (one od_draw call apiece) -- Ghidra's own
+for g_obala/g_obcla/g_obpha (one drawObject call apiece) -- Ghidra's own
 analysis agreeing with the corrected pairing.  The plugin also warns
 that a global "must start with g_"; that is ITS convention, not this
 project's, and does not apply.
@@ -1233,7 +1233,7 @@ are about keeping the report free of noise a real drift could hide in:
     unique.  Comments, string literals and K&R parameter lists are
     excluded from that name pool: prose supplies "controlled" and
     "controller" for `_control`, and `short index;` sitting at column 0
-    between sf_sl's header and its brace is a LOCAL -- harvesting it
+    between loadSounds's header and its brace is a LOCAL -- harvesting it
     made the libc symbol `_index` resolve to it and assert a name the
     repo never owned.
   * **It omits the ~98 library symbols.**  `___pname`, `__afreeb` and
@@ -1246,7 +1246,7 @@ are about keeping the report free of noise a real drift could hide in:
 The first run of the generated list immediately found four names the
 hand file had been hiding -- `body_sh`, `body_pt`, `evnt_ti` and
 `form_al`, all pushed by an earlier sync straight from lcp_sym.68k,
-the same class of error as `lcp_pat` for `lcp_path`.  It also found
+the same class of error as `lcp_pat` for `walkStep`.  It also found
 five addresses where Ghidra had NO label at all.  Both are fixed and
 **verify is now ok=693 mismatched=0 no_symbol=1**.
 
@@ -1287,8 +1287,8 @@ Three things to get right when building the rename list:
     actually puts the symbol.  DATA and TEXT are byte-identical, so
     their link addresses are the reference's already.
   * **lcp_sym.68k carries 8-char TRUNCATED linkage names.**  Pushing
-    those gives Ghidra `lcp_pat` for `lcp_path` and `aes_ini` for
-    `aes_init` -- an earlier sync did exactly that, and four survivors
+    those gives Ghidra `lcp_pat` for `walkStep` and `aes_ini` for
+    `initAes` -- an earlier sync did exactly that, and four survivors
     of it (`body_sh`, `body_pt`, `evnt_ti`, `form_al`) were still in
     the database until 2026-09-07.  Expand them against the
     declarations in `include/*.h` first, or let
@@ -1327,8 +1327,8 @@ source and the maintainer's call).  Three independent indications:
     `BOOL16` at 0x1c864, so it occupies 0x1c864-0x1c865 and 0x1c866 is
     the next free byte -- dense packing, which is what these `.comm`
     blocks do everywhere else.
-  * **The two sibling align-up sites use +512, not +511.**  stpScrB
-    0x65ae and fillTopR 0x6880 both `addl #512` then `andl #-512`, so
+  * **The two sibling align-up sites use +512, not +511.**  initHouseBuf
+    0x65ae and fillPanel 0x6880 both `addl #512` then `andl #-512`, so
     `+0x200` is this program's idiom; only the scrbufA site bakes the
     constant in, which is why it is the one that cannot be read
     directly.
@@ -1360,7 +1360,7 @@ the inference is only as good as the assumed shape.
 **A char array's declared size never reaches the codegen**, so only the
 gap to the next cell the reference uses can settle it: g_agscw is 10,
 g_ltscb 40, g_sfDoB 56.  The last one means the original really does
-overrun its Dosound buffer -- sf_irqp copies `size` bytes there
+overrun its Dosound buffer -- startSfx copies `size` bytes there
 straight from SOUNDS.LCP, which holds longer effects.  Reproduced as
 written; do not widen the buffer.  (But see "Is the 56 real?" under the
 Hatari chapter: that reading is an inference, not a measurement.)
@@ -1400,9 +1400,9 @@ worth internalising:
     "mi_lstk is simply bigger" and "mi_lstk is 200 and a dead ~488-byte
     global follows it" are both unforced.  Dead declarations are known
     in this source -- mi_sig is declared and referenced by nothing,
-    cmd_num is an uncalled static.
-  * **The size has NO behavioural consequence.**  mq_pshl guards
-    `mi_evcn < 49` and writes [mi_evcn] and [mi_evcn+1]; mq_popl reads
+    parseNumber is an uncalled static.
+  * **The size has NO behavioural consequence.**  pushLoop guards
+    `mi_evcn < 49` and writes [mi_evcn] and [mi_evcn+1]; popLoop reads
     [mi_evcn-2] and [mi_evcn-1].  mi_evcn starts at 9 and moves in
     steps of 2, so it is always odd: the last push is at 47 and writes
     [47] and [48].  Max index 48, so the highest byte touched is
@@ -1413,10 +1413,10 @@ worth internalising:
     whether a shipped overrun exists at all.
 
 Curiosity worth recording: the loop stack's empty sentinel is
-`mi_evcn == 9`, and mq_setp initialises mi_evcn to 9 -- so indices
+`mi_evcn == 9`, and initSongState initialises mi_evcn to 9 -- so indices
 0..8 (36 bytes) are dead at the FRONT too.  Only [9..48] is ever
 touched, a 160-byte window inside a 688-byte allocation.  (This said
-`mq_zero`, which does not exist; the reset is in mq_setp.)
+`mq_zero`, which does not exist; the reset is in initSongState.)
 
 An avenue that is CLOSED: declaration order cannot place a
 hypothetical dead global here.  The 1985 linker's `.comm` order is not
@@ -1432,7 +1432,7 @@ freeze the drift into the spec.
 
 **verify_bytes is not sufficient for this phase.**  It wildcards
 relocations AND PC-relative displacements, so a function can report
-MATCH while its internal branch targets differ (psg_upEn and ag_main
+MATCH while its internal branch targets differ (stepEnvelopes and playAnagrams
 both did), and it walks the port's SYMBOL table, so `static` helpers
 -- which Alcyon emits without a symbol -- were never compared at all
 (`source/tools/stx_unverified.py` prints those runs).  Two tools
@@ -1449,7 +1449,7 @@ carried this phase instead:
 Three layout levers, all now applied:
 
  1. **Object order** -- alcyon_link.sh names LCP_STX's explicitly for
-    the default build: midi_seq 0x12a, mq_tick 0x219a, psg_asm 0x2272,
+    the default build: midi_seq 0x12a, timerAIsr 0x219a, psg_asm 0x2272,
     cp_asm 0x22c0, stx_u1 0x400c, games 0x73e8, stx_u4 0xd9ea,
     stx_u2 0xde36, stx_u3 0x148fe, blkcp_a 0x17310, vdistx 0x1733a,
     then the library, with osbind.o right behind gemstart (the trap
@@ -1494,57 +1494,57 @@ Three layout levers, all now applied:
     vdilib.o/vdilib_a.o from the default LIST.
 
 **Statics recovered in this phase** (all byte-exact, all found with
-stx_txtdiff.py): pk_dbet 0x87a0, pk_evh 0x8804, pk_show 0x9a3a,
-pk_cace 0xa1bc, pk_blf 0xa24a, pk_cdrw 0xa27a, pk_ante 0xaf66,
-pk_chsc 0xd1b4, pk_bjr 0xd294, pk_cnbj 0xd608, pk_dchd 0xd67c,
-pk_dbhi 0xd78e, pk_sbet 0xd864, pk_bjwr 0xb784, cmd_num 0x17278.
+stx_txtdiff.py): pkrCallOrRaise 0x87a0, pkrEvalHand 0x8804, pkrShowdown 0x9a3a,
+pkrOpenRank 0xa1bc, pkrDecideBluff 0xa24a, pkrCompDraw 0xa27a, pkrAnte 0xaf66,
+bjScore 0xd1b4, bjPlayHand 0xd294, bjIsNatural 0xd608, bjDealCard 0xd67c,
+bjShowBet 0xd78e, bjSettle 0xd864, warRound 0xb784, parseNumber 0x17278.
 Recurring findings in this class: the counter is declared FIRST and
 the inner loops reuse it; one local often doubles as two things
-(pk_evh's j is the bubble-sort flag, its tmp is both the swap
+(pkrEvalHand's j is the bubble-sort flag, its tmp is both the swap
 temporary and the wheel flag); comparisons put the computer's side on
 the left; scan loops are written body-first with a break, not with a
 compound for condition; flag arrays are tested bare; and a helper
 often has NO explicit return on its success path, leaving the last
-compared value in d0 (pk_cace, the chk_timA pattern).  pk_tcm joins
+compared value in d0 (pkrOpenRank, the pickIdleAction pattern).  pk_tcm joins
 pk_bm and pk_rm as a char POINTER.
 
 A static defined AFTER its caller needs a file-scope forward
 declaration or Alcyon treats the call as an external and the linker
-resolves it to 0 -- and pk_main reaches pk_show with a bsr.s, so
-pk_show must sit immediately behind it.
+resolves it to 0 -- and playPoker reaches pkrShowdown with a bsr.s, so
+pkrShowdown must sit immediately behind it.
 
 Things that cost bytes the original does not have: a `static` Alcyon
 emits even when nothing calls it (midi_seq.c's five mh_* header
 handlers, games.c's gamePlWQ), and helpers whose LCP_STX version is
-smaller (gameCln takes no argument there and does not free).  Both
+smaller (gameCleanup takes no argument there and does not free).  Both
 classes are now gated.  The converse also happens: **LCP_STX emits
-statics nothing calls** -- cmd_num (0x17278) has no jsr or bsr
+statics nothing calls** -- parseNumber (0x17278) has no jsr or bsr
 anywhere in the image -- so an unreferenced helper in the 1985 source
 still costs its bytes.
 
 Two more findings from this phase: LCP_STX keeps mi_dwrm, mi_rlock,
 g_mtpre, g_msmsa and psg_ntAc in the TEXT segment immediately behind
-mq_tick (0x226a-0x2271), and the last two are real BYTES, not BOOL16
+timerAIsr (0x226a-0x2271), and the last two are real BYTES, not BOOL16
 words -- mq_tick.s defines all five itself now.
 
 **Duplicated bodies are real.**  LCP_STX carries the "stand and look"
 gesture twice -- 0x12c08 with `link #-10` (three locals it never
 references) and 0x12c54 with `link #-4` -- and the callers name them:
-a_lists/a_playp reach the first (li_loor), tt_on/tt_off the second
-(li_lool).  Beware the mirror-image trap: two functions with identical
+playRecord/stopRecord reach the first (recordStoop), tvOn/tvOff the second
+(tvStoop).  Beware the mirror-image trap: two functions with identical
 bodies make length+content pairing report a duplicate that is not one.
-0xe310 is sc_sdtf, NOT a second exitVdi, even though their bodies are
+0xe310 is endDraw, NOT a second panelEnd, even though their bodies are
 the same `Setscreen(g_srlgb, -1L, -1)`; verify_bytes had simply never
 compared it, because it skips functions under 48 bytes.
 
 Source shapes recovered late in this phase:
   - The four SFX wrappers are ordered tvc, spe, hnd, grt (ids in the
-    0xf91e SPEECH/3 and 0xf952 GREETING/2 bodies), and a_hello's
+    0xf91e SPEECH/3 and 0xf952 GREETING/2 bodies), and sayHello's
     random arm plays SPEECH on the non-zero roll, GREETING on zero.
   - gameTick's `if (g_sepex[g_lcieo] < 0) g_sepex[g_lcieo] = 0;` clamp
     is INSIDE the non-carrying arm -- the 0x1570e end-of-then jump
     (to 0x157bc, the epilogue, not to 0x1579a) is what says so.
-  - pk_main's round loop: three `else if` chains are separate `if`s
+  - playPoker's round loop: three `else if` chains are separate `if`s
     whose preceding arm closes with `goto next_round;`, and the
     trailing `goto next_round;` lives INSIDE the deepest block, which
     is why every end-of-if jump in the function targets the epilogue.
@@ -1586,16 +1586,16 @@ Roadmap:
       NESTED form `{ {..}, a, p }` with "mismatched curly braces", but
       takes the FLATTENED list -- which is how LCP_STX ships it.  And
       the port's host-side rows had action and priority the wrong way
-      round in 33 of 34 rows: chk_encm returns the byte at +10 and
+      round in 33 of 34 rows: matchCommand returns the byte at +10 and
       adds the byte at +11 to g_aprio, and LCP_STX's row 0 is (24,15).
     * **g_mstr's static content is 0..99 then 110..127 then zeros** --
       the row 100..109 is missing from the 1985 table.  Preserved;
-      mq_bust rewrites all 132 entries before anything reads them.
+      buildNoteMap rewrites all 132 entries before anything reads them.
     * BSS was two over-allocated arrays.  scrbufA and scrbufB are ONE
       aligned screen each (32512), not two -- the "alt screen at
       +0x8000" reading came from the `&scrbufA[0x8000]` bug.  dsb_stor
-      is 12832 bytes: fillTopR's largest caller is mg_stp's
-      fillTopR(0x4d) = 77 rows of 160, plus the 512 the align-up can
+      is 12832 bytes: fillPanel's largest caller is mgSetup's
+      fillPanel(0x4d) = 77 rows of 160, plus the 512 the align-up can
       shift (LCP_STX's gap there is 12836).
     * SPRITE_HW_SLOTS_ALLOC is 8 again.  The port had widened those
       arrays to 10 so a stray slot-9 write stayed in bounds regardless
@@ -1623,18 +1623,18 @@ Roadmap:
     main's OBJECTS walk is a literal `for (i = 0; i < 56; i++)`, so
     g_obtmt/g_obtaw/g_obtah are [56] -- and LCP_STX's gaps for all
     three agree (1120/112/112).  Conversely a loop bound can be a
-    generous limit rather than the size: sf_sl walks `index < 500` but
+    generous limit rather than the size: loadSounds walks `index < 500` but
     LCP_STX's mi_ntLp measures ~100 bytes, because the SOUNDS.LCP
     size-0 sentinel ends it after ~25 blocks.  And LCP_BODY_DEST_WORDS
-    is 256 even though sp_lcpf only ever writes 168 of them -- four
+    is 256 even though expandFrame only ever writes 168 of them -- four
     independent gaps (g_lsimg/g_lsmas/g_hsbuf/g_hsmas, 512 bytes each)
     say the original declared a round 256.
 
     **Screen buffers are 32512, not a round 32768.**  32000 plus the
     512 the align-up can shift.  All three align-up sites mask to 512,
     which is visible in the binary -- sprites.c 0x15110 pushes
-    scrbufA+0x1ff then `andi.l #-512,(sp)`; stpScrB 0x65ae and
-    fillTopR 0x6880 both `addl #512` then `andl #-512`.  The ST
+    scrbufA+0x1ff then `andi.l #-512,(sp)`; initHouseBuf 0x65ae and
+    fillPanel 0x6880 both `addl #512` then `andl #-512`.  The ST
     hardware only needs 256-byte alignment (which would make 32255
     enough), but this code does not use it.
 
@@ -1656,8 +1656,8 @@ Roadmap:
         point.
     So a pointer whose string is late in the pool was declared late in
     the source -- e.g. pex_name ("pex.lcp", not "PE0.LCP") sits between
-    ldSpr and main, and g_ltg's four sign-offs between a_lists and
-    a_writl.  Moving such a declaration moves BOTH its bytes and its
+    loadSprites and main, and g_ltg's four sign-offs between playRecord and
+    writeLetter.  Moving such a declaration moves BOTH its bytes and its
     string, so a neighbour sometimes has to move with it (g_ltcwt
     followed g_ltg).  The port carries this as per-object data files
     included at the right points: dat_u1.c/dat_u1b.c/dat_u1c.c/
@@ -1666,8 +1666,8 @@ Roadmap:
 
     **A switch jump table splits a data file.**  Alcyon emits the table
     into the .data of the object holding the function, so anything
-    declared after that function lands after the table: execEv's and
-    doAct's occupy 0xa20..0xaf3 and getKey's 0xba4..0xbe7, which is
+    declared after that function lands after the table: runEvent's and
+    runAction's occupy 0xa20..0xaf3 and getKey's 0xba4..0xbe7, which is
     why stx_u1's globals come in three pieces.  A table's targets all
     point inside one function, which is how to tell it from a string
     pointer array.
@@ -1698,7 +1698,7 @@ Roadmap:
         referenced by no code -- only by prose in comments -- and with
         them parked at the end the port carried 404 data relocations
         against 402.
-      * mq_parh has no default arm.  Its default slot pointed at a
+      * parseSongHeader has no default arm.  Its default slot pointed at a
         `bra` that the text (already byte-identical) still contains;
         writing `break;` after the MIDI_HDR_END arm's `return;` keeps
         that unreachable branch and sends the default straight to the
@@ -1712,30 +1712,30 @@ Roadmap:
     SEGMENT, and the same address for text and data targets, turned up
     nine bugs no byte comparison can see.
 
-      * dg_wkPth and lcp_flwp had their first comparison's operands
+      * dogNextWaypt and nextWaypoint had their first comparison's operands
         the wrong way round.  Alcyon evaluates the RIGHT operand
-        first, so `getFlrY(dog_y) != getFlrY(g_dty)` reaches dog_y in
+        first, so `floorOfY(dog_y) != floorOfY(g_dty)` reaches dog_y in
         the second relocation -- the port compared the same two values
         but loaded them in the other order.
       * gameTick's four sound guards test g_sfplf, the "an effect is
         playing" flag sfx_irq sets, not g_sfacf.
-      * mg_wkev reads the global lcp_watr, not lcp.water_level.
-      * MFDB_A is a `short[10]`, not an MFDB, and stpScrB clears its
+      * mgWaitKey reads the global lcp_watr, not lcp.water_level.
+      * MFDB_A is a `short[10]`, not an MFDB, and initHouseBuf clears its
         first two words -- the halves of fd_addr -- where the port set
-        fd_w/fd_h and passed the base four bytes below what cpyScr
+        fd_w/fd_h and passed the base four bytes below what copyScreen
         used.  (Alcyon rejects `((short *) &MFDB_A)[0] = 0` outright,
         "no code table for =", which is its own argument that the
         original declared an array.)
       * g_msmap and mi_seqE are one variable: the end-of-sequence
         pointer, with -1 for "no limit".
-      * mi_ndur is a SECOND duration cell -- mq_pars writes it and
-        only mq_qnne reads it, while mq_rdur's identical expression
+      * mi_ndur is a SECOND duration cell -- parseEvents writes it and
+        only queueNote reads it, while peekNoteDur's identical expression
         goes to mi_nlp0, which drives the tick counters.
       * g_mnhi / g_mnlo were named backwards (0x60 is the TOP of the
-        playable note range), and mq_dise's guard tests the low limit
+        playable note range), and sendMidiEvent's guard tests the low limit
         first.
-      * lcp_lgt and lcp_rgt write g_inpmd, not no_keyin.
-      * cl_redrH's second cl_drwH call reads the cached g_cmmin and
+      * leaveGameTable and rejoinTable write g_inpmd, not no_keyin.
+      * redrawHands's second drawHands call reads the cached g_cmmin and
         g_chhou back rather than t_min/t_hour.
 
     The last of these was last_hz / mi_lasT: ONE cell in the original,
@@ -1754,12 +1754,12 @@ Roadmap:
     verify_bytes and stx_txtdiff wildcard relocated longwords, so a
     function can match byte for byte while the ADDRESS it loads is
     wrong.  Two such bugs fell out of this pass:
-      - sc_ren8's alternate compositing buffer.  `&scrbufA[0x8000]`
+      - renderFrame's alternate compositing buffer.  `&scrbufA[0x8000]`
         does not mean what it looks like: Alcyon's int is 16-bit, so
         0x8000 is -32768 and c168 emitted `move.l #-32768+_scrbufA` --
         the alt screen base was a pointer into the TEXT segment.
         LCP_STX stores `scrbufA + 0x1FF`, the same aligned buffer
-        sp_iniM uses.
+        initMfdb uses.
       - mq_tick.s had g_msmsa and psg_ntAc swapped (LCP_STX: psg_ntAc
         0x2270, g_msmsa 0x2271), so seven relocations pointed one byte
         off.
@@ -1788,13 +1788,13 @@ test_longrun_stable.sh), and every `pkill -x hatari` escalates to
 hand.  The Hatari MCP server does not have the problem at all.
 
 What works: the build boots, draws the title screen, takes the
-guestbook name/date/time through stEnter, loads HOUSE.SCN and draws the
+guestbook name/date/time through enterField, loads HOUSE.SCN and draws the
 house, and runs for ten emulated minutes with the dog wandering all
 three floors and the clock advancing, with no frame corruption.
 
-**What does NOT work: the copy protection.**  Under Hatari `cp_main`
-always takes its failure path -- `cprot_r` reads 0, so `cs_mvIn` enters
-`while (1) a_sleep(-1);`, which re-runs `lcp_hwt()` every iteration:
+**What does NOT work: the copy protection.**  Under Hatari `checkCopyProt`
+always takes its failure path -- `cprot_r` reads 0, so `moveInScene` enters
+`while (1) dozeOff(-1);`, which re-runs `waitHeadTurn()` every iteration:
 **the resident stands and waves for ever and the game never starts.**
 `cpretv` (text 0x2604) is also 0, so it bails inside `cpseek`/`cprd`
 -- the restore-to-track-0 and seek-to-track-79 step -- before it ever
@@ -1816,7 +1816,7 @@ about ten emulated minutes with no corruption.  That configuration is
 NOT byte-identical, by construction; rebuild from clean before
 checking prg_diff again.
 
-Launching from a GEMDOS drive fails earlier and differently: cp_main
+Launching from a GEMDOS drive fails earlier and differently: checkCopyProt
 calls Dgetdrv() and derives the PSG drive-select from it, so on C: it
 selects no drive at all and spins in the FDC wait.  The game has to run
 from the drive holding the disk.
@@ -1846,10 +1846,10 @@ because the same route works for any wild-pointer crash here:
 
 That gave `contrl[0]=109`, a source MFDB of `g_obtmt + 0x118` (stride
 20, so object 14 -- perfectly valid) and a `pxy` of
-`0,0,15,0x8003 / 271,92,286,0x805F`.  Working back through od_draw,
+`0,0,15,0x8003 / 271,92,286,0x805F`.  Working back through drawObject,
 `sy2 = g_obtah[14] - 1`, so `g_obtah[14]` was `0x8004`.  `g_obtaw` was
 intact; `g_obtah` held **SOUNDS.LCP block 17's payload[56:], byte for
-byte** -- `sf_irqp`'s copy running off the end of `g_sfDoB[56]`.
+byte** -- `startSfx`'s copy running off the end of `g_sfDoB[56]`.
 
 SOUNDS.LCP has 23 effects; three exceed 56 bytes -- block 8
 (SFX_HEAD_NOD) and block 17 (SFX_TOILET_REFILL) at 148, block 19 at
@@ -1874,7 +1874,7 @@ What is not settled, and cannot be from the image:
 
   * 56+2+2 needs an unreferenced ~340-byte global at 0x3fe84.  That is
     NOT exotic in this source -- `mi_sig` (the ten-byte Music Studio
-    signature) is declared and referenced by nothing, and `cmd_num`
+    signature) is declared and referenced by nothing, and `parseNumber`
     (0x17278) is a static with no caller in the whole image.  There is
     a second unexplained hole of the same kind at `mi_lstk` (+488).
   * A 400-byte struct needs a 56-byte buffer, two write-only status
@@ -1895,8 +1895,8 @@ whose player LCP's sequencer descends from, and it IS on this machine
 under `Retro/Atari ST/music_studio_activision_(usa)`.  Extracting it
 and diffing its `AUDIO.PRG` against LCP_STX finds 10 063 shared bytes
 -- but they are the copy protection (97.2% of cp_asm), the MIDI
-sequencer's descent from the Music Studio player (mq_bust 73.8%,
-mq_dise 44.2%), and DRI library.  **sf_irqp shares ZERO of its 456
+sequencer's descent from the Music Studio player (buildNoteMap 73.8%,
+sendMidiEvent 44.2%), and DRI library.  **startSfx shares ZERO of its 456
 bytes**, and the whole 0x400c-0x1733a game span shares nothing.  The
 function that copies into g_sfDoB is LCP's own code, so Music Studio's
 layout says nothing about that buffer.  Its `STANDARD.SND` is an
@@ -1917,7 +1917,7 @@ evidence, not another sweep.
 
 Why the shipped build does not care: bss_remap puts `g_sfDoB` at
 0x3fe48 followed by `g_sfdos` (+56) and `g_sfdoc` (+58) -- both
-**write-only**, set by `sf_so()` and read nowhere in C or asm -- and
+**write-only**, set by `stopSfx()` and read nowhere in C or asm -- and
 then 342 bytes no symbol claims (next is `g_srlgb` at +400).  The
 overrun dies in that hole.  That is why 1985 shipped it.  A gated
 build skips bss_remap, and lo68 puts `g_obtah` -- the 56-entry object
@@ -1940,10 +1940,10 @@ why the script reported "didn't produce an AVI" while swallowing
 **Song actions hang when run from a GEMDOS (host-folder) drive**
 (observed 2026-10-05 through the Hatari MCP's run_program).  After
 PLAY PIANO the game froze: ani_cnt stopped, and the user stack showed
-fOpen -> form_alert -- the "cannot open" retry loop, invisible because
+openFile -> form_alert -- the "cannot open" retry loop, invisible because
 the alert draws to a screen the game is not showing.  Likely cause, NOT
-verified: a_plawr and a_lists pass sgPlay a pointer into the DTA's own
-d_fname, and sgPlay's Fsfirst(filename) overwrites that DTA before the
+verified: playOrgan and playRecord pass playSongFile a pointer into the DTA's own
+d_fname, and playSongFile's Fsfirst(filename) overwrites that DTA before the
 name is read; real TOS on a floppy copes, Hatari's GEMDOS emulation
 apparently does not.  Test song playback from a floppy image, not a
 mounted folder, before suspecting the port.
@@ -1955,8 +1955,8 @@ with separate `#ifdef`s instead.
 ## Every typed command tested (2026-09-06)
 
 The parser's whole reachable surface, driven through the Hatari MCP and
-checked against `g_aqueu`/`g_aliss`, which is where prsCmd appends the
-action chk_encm returned.
+checked against `g_aqueu`/`g_aliss`, which is where submitCommand appends the
+action matchCommand returned.
 
 **How the parser works, and how to enumerate it.**  Each recognised
 word ORs `bm_lo[g_ew2b[w]]` into `g_ewb[ew2pos[w]]`; each of g_ew2a's
@@ -1993,41 +1993,41 @@ produced a queue entry.
     greeting action is unreachable from the keyboard.
   * **Row 6, the `MESSY IS HOME` phrasing of ACTION_CLEAN_UP.**  It
     needs byte 4 bit 0x08, which only `IS` at vwd_tab index 84
-    supplies -- and index 84 is a DUPLICATE.  chk_vwd returns the
+    supplies -- and index 84 is a DUPLICATE.  lookupWord returns the
     first spelling match, index 26, whose bit is byte 1 0x02.  (The
     action itself is still reachable through row 5, `TIDY UP OUGHT`.)
 
-**vwd_tab has four dead entries.**  chk_vwd scans linearly and returns
+**vwd_tab has four dead entries.**  lookupWord scans linearly and returns
 the first match, so a repeated spelling makes every later copy
 unreachable: **START** (idx 35, shadowed by 20), **LIKE** (71, by 3)
 and **IS** (84, by 26).  And index 0, **PLEASE**, is dead for a
-different reason -- chk_encm tests `chk_vwd(...) == 0` as
+different reason -- matchCommand tests `lookupWord(...) == 0` as
 "unrecognised", so the word at index 0 can never contribute its bit
 and instead takes the +4 priority PENALTY that unknown words get.
 Saying please makes the request less likely to be obeyed.
 
 Method notes: a newline inside `type_text` acts as Return, so several
-commands go in one call; the queue holds 10 and prsCmd drops anything
+commands go in one call; the queue holds 10 and submitCommand drops anything
 further, so drain it under turbo (watch g_aliss) between batches.  A
 long batch can silently lose a keystroke -- two commands that failed
 in a batch of five both worked when retyped alone, so re-test a
 failure individually before believing it.
 
-## All ten deal_kc key commands work (2026-09-06)
+## All ten handleKey key commands work (2026-09-06)
 
 Driven through the Hatari MCP and verified by STATE, not by animation
 -- each one has a global that must move:
 
       Ctrl-A  0x01  alarm     alarm_p set, then cleared when consumed
-      Ctrl-B  0x02  book      putEv() entered
-      Ctrl-C  0x03  phone     putEv() entered
-      Ctrl-D  0x04  dog food  putEv() entered
-      Ctrl-F  0x06  food      putEv() entered
-      Ctrl-M  0x0D  Return    prsCmd -- proven all session (PLAY GAME,
+      Ctrl-B  0x02  book      queueEvent() entered
+      Ctrl-C  0x03  phone     queueEvent() entered
+      Ctrl-D  0x04  dog food  queueEvent() entered
+      Ctrl-F  0x06  food      queueEvent() entered
+      Ctrl-M  0x0D  Return    submitCommand -- proven all session (PLAY GAME,
                               CALL DOG, every minigame answer)
       Ctrl-P  0x10  pat LCP   g_ptdoa set then cleared (the RESIDENT,
                               not the dog -- see below)
-      Ctrl-R  0x12  record    putEv() entered
+      Ctrl-R  0x12  record    queueEvent() entered
       Ctrl-W  0x17  water     lcp_watr 4 -> 7 for three presses
       (8)           erase     g_cdibp 5 -> 4, g_cdinb[4] nulled --
                               works from the cursor-LEFT arrow and
@@ -2039,7 +2039,7 @@ getKey has `case 0x4b: return 8;`, and 0x4b IS the cursor-left
 scancode, reached because the arrow's ASCII byte is 0.  Backspace
 independently IS ASCII 8.  So the two keys are aliases and both erase
 a character; measured, the arrow takes g_cdibp 5 -> 4 and nulls
-g_cdinb[4].  (st_titl and stEnter spell the same code as a bare `8`.)
+g_cdinb[4].  (titleScreen and enterField spell the same code as a bare `8`.)
 
 The retracted claim came from a test run with turbo ON, where the
 arrow appeared to do nothing.  It was the tx_sctm confound below:
@@ -2060,7 +2060,7 @@ which is wrong).  The code says so three ways:
     FIXED (192,165), i.e. the player's hand reaching in, not the
     resident reaching for anything;
   * (192,165) is the phone: tick.c draws OBJ_PHONE_2 at (190,168),
-    and ev_ansPh draws od_med1 at the same spot.
+    and answerPhone draws od_med1 at the same spot.
 
 **Two renames followed, and only two** (2026-09-06):
 
@@ -2069,17 +2069,17 @@ which is wrong).  The code says so three ways:
 
 `POS_BTM_COUCH` is `g_rpxs[43] = 110`, i.e. **x = 220** on the BOTTOM
 floor.  That is the couch beside the phone, and three things say so:
-a_socwd sits there with `STATE_SIT_COUCH_UPRIGHT` and parks
-SPRITE_READING_1 at (221,172); ev_ansPh answers the phone there; and
+sitWithDog sits there with `STATE_SIT_COUCH_UPRIGHT` and parks
+SPRITE_READING_1 at (221,172); answerPhone answers the phone there; and
 the real dog bowl is `POS_BTM_DOG_BOWL` (33) at x = 16, over in the
-kitchen, used by a_feedd.  The old name had ONE user -- a_calld --
-and was almost certainly guessed from a_calld's own name, which makes
+kitchen, used by feedDog.  The old name had ONE user -- callDog --
+and was almost certainly guessed from callDog's own name, which makes
 it circular evidence.
 
 **The rest of the "dog" cluster was left alone, because it is not
-wrong.**  a_socwd genuinely drives `STATE_SIT_COUCH_PETTING_DOG`: the
-resident really does pet the dog on that couch.  So `a_calld`
-(crouches -- plausibly calling the dog over), `a_petd`,
+wrong.**  sitWithDog genuinely drives `STATE_SIT_COUCH_PETTING_DOG`: the
+resident really does pet the dog on that couch.  So `callDog`
+(crouches -- plausibly calling the dog over), `petDog`,
 `ACTION_CALL_DOG` and `ACTION_PET_DOG` all have real dog evidence and
 keep their names.  `POS_BTM_DOG_FOOD_STORE` (44) is referenced by
 NOTHING, so renaming it would swap one guess for another; left as is.
@@ -2092,10 +2092,10 @@ spec UNCHANGED at 416 rows, prg_diff stayed BYTE-IDENTICAL, and
 reloc_audit stayed clean.  Anything that DOES have a spec row needs
 the regenerate-and-review cycle before it can be renamed.
 
-For testing: pat_ok is set ONLY by a_calld, which no typed command
+For testing: pat_ok is set ONLY by callDog, which no typed command
 reaches -- neither ACTION_CALL_DOG (40) nor ACTION_PET_DOG (42)
 appears in g_ew2a, so both are autonomous-only.  The reachable route
-is a phone call (ev_ansPh calls a_calld), but the YES window is narrow
+is a phone call (answerPhone calls callDog), but the YES window is narrow
 and easy to sample past.  Force the guard instead:
 `w $<pat_ok> 0 1` (that write syntax is byte-at-a-time), then press
 the key and watch g_ptdoa.
@@ -2129,46 +2129,46 @@ Driven end to end through the Hatari MCP on the gated build.  **All
 five work**, and between them they exercise most of the statics the
 byte-identity phase recovered:
 
-  1. **Anagrams** (`ag_main`) -- puzzle rendered, a guess accepted and
+  1. **Anagrams** (`playAnagrams`) -- puzzle rendered, a guess accepted and
      rejected (-> "Guess #2"), F1 clue re-jumbled the letters and
      consumed itself (the header drops "F1 Clue").
-  2. **War** (`pk_wrMn`) -- 25/25 deal, round resolved to 24/26, next
+  2. **War** (`playWar`) -- 25/25 deal, round resolved to 24/26, next
      card dealt.
-  3. **Poker** (`pk_main`) -- ante, five-card deal, bet, draw, second
+  3. **Poker** (`playPoker`) -- ante, five-card deal, bet, draw, second
      betting round, the RESIDENT bet 14 of its own accord, call,
      raise, showdown, pot of 32 transferred (384 -> 416).  Covers
-     pk_dbet/pk_sbet, pk_evh, pk_cdrw/pk_ldCrd.
-  4. **Blackjack** (`pk_bjMn`) -- bet, deal, SPLIT offered on 6h/6d
-     (pk_chsc), double-down offered (pk_dbhi), hit to 19, stand,
+     pkrCallOrRaise/bjSettle, pkrEvalHand, pkrCompDraw/cardLoad.
+  4. **Blackjack** (`playBlackjack`) -- bet, deal, SPLIT offered on 6h/6d
+     (bjScore), double-down offered (bjShowBet), hit to 19, stand,
      settled 401/399.
-  5. **Word Puzzles** (`wp_main`) -- puzzle rendered, F1/F2 navigation
+  5. **Word Puzzles** (`playWordPuzzle`) -- puzzle rendered, F1/F2 navigation
      between puzzles, solve mode, two-word answer taken a word at a
-     time (wp_solv), return to selection.
+     time (wpzSolve), return to selection.
 
 Stability alongside it: **VBL 579 524, about 2.7 emulated hours**, 34x
 past the 16 983 crash point, no bus error and no corruption, with the
 house still compositing cleanly at the end.
 
 **How to reach the menu.**  Type `PLAY GAME` and press Return --
-ordinary characters accumulate in `g_cdinb` through `deal_kc`'s
-default arm and `KEY_CTRL_M` (Return) submits via `prsCmd()`.  The
+ordinary characters accumulate in `g_cdinb` through `handleKey`'s
+default arm and `KEY_CTRL_M` (Return) submits via `submitCommand()`.  The
 resident then fetches the game box from the filing cabinet, carries it
-down to the kitchen table and sits; the menu is `a_plaag`'s, keys
+down to the kitchen table and sits; the menu is `playGame`'s, keys
 '1'..'5'.  It is a long walk -- budget a few thousand frames -- and a
 need (thirst, bathroom, a delivery) can interrupt it through
-`lcp_lgt`, in which case the resident abandons the table and the
+`leaveGameTable`, in which case the resident abandons the table and the
 attempt has to be repeated.
 
 Two harness traps, both of which cost real time:
 
-  * **Keystrokes buffer and replay.**  `a_plaag` polls `getKey()` in a
+  * **Keystrokes buffer and replay.**  `playGame` polls `getKey()` in a
     loop, so digits pressed early sit in the IKBD buffer and relaunch
-    the game again and again -- measured at 7 entries to `ag_main` and
-    26 to `pk_wrMn` from a handful of presses.  Those counts look
+    the game again and again -- measured at 7 entries to `playAnagrams` and
+    26 to `playWar` from a handful of presses.  Those counts look
     exactly like a re-entrancy bug and are not one.  Screenshot to
     confirm the menu is actually up, then press the digit ONCE.
-  * **`breakpoint_hits` under-reports.**  Breakpoints on `pk_main`,
-    `pk_bjMn` and `wp_main` stayed armed (`list_breakpoints` confirms)
+  * **`breakpoint_hits` under-reports.**  Breakpoints on `playPoker`,
+    `playBlackjack` and `playWordPuzzle` stayed armed (`list_breakpoints` confirms)
     yet reported no hits while all three demonstrably ran.  Do not
     read a silent `breakpoint_hits` as "the code never executed" --
     corroborate with a screenshot, which is the stronger evidence
@@ -2181,7 +2181,7 @@ Kept as historical findings; none is an open port bug.
 - **"The dog is missing", introSeq/dg_init never clear (CLOSED
   2026-09-06).**  Not a separate bug and nothing to do with
   SKIP_TITLE, which is where it was wrongly pinned twice.  It was the
-  `g_sfDoB` overrun crash: `cs_mvIn` is a LONG cutscene -- doorbell,
+  `g_sfDoB` overrun crash: `moveInScene` is a LONG cutscene -- doorbell,
   kitchen cabinet, sink, dresser, bathroom, suitcase -- and only its
   last few statements release the dog (`dg_init = 0`) and clear
   `introSeq`.  The program died at VBL 16983, i.e. INSIDE the
@@ -2196,14 +2196,14 @@ Kept as historical findings; none is an open port bug.
   before hunting for the flag that never got set.
 
 - **test_longrun_stable.sh env-side failures (CLOSED 2026-07-21).**
-  Root cause was tv_boul / tv_patl calling v_pline with count=2 but
+  Root cause was tvBounce / tvPattern calling v_pline with count=2 but
   only initialising 1 point; fixed in 12e572f.  The 36000-VBL
   long-run has passed repeatedly since, with and without SKIP_MIDI.
 
 - **Stairs (CLOSED 2026-07-21).**  The TEST_STAIRS harness was a
   false negative -- it warped the LCP past the AI walk that
   establishes valid stair state.  Real play walks stairs correctly;
-  lcp_path/lcp_flwp byte-faithful.  Harness deleted.
+  walkStep/nextWaypoint byte-faithful.  Harness deleted.
 
 - **Real-time crash inside TOS VDI (CLOSED).**  The July report --
   wild PC in low RAM, TOS cleanup cascading into $fc9304 -- predates

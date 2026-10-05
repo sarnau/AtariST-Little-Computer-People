@@ -1,0 +1,147 @@
+/*
+ * The eat routine: takes one item of food from the cabinet, eats
+ * 10..20 bite/chew cycles at the table, and resets hunger at the end.
+ *
+ * Included by stx_u2.c; never compiled on its own.
+ */
+
+
+void
+eatFromCabinet()
+{
+        short   food_count;
+        short   inner;
+        short   eat_cycles;
+        short   saved_head_frame;
+
+        pst_arr[0] = STATE_EAT_BITE;
+        pst_arr[1] = STATE_EAT_CHEW;
+        g_actif = YES;
+
+        posToXY(POS_BTM_KITCHEN_CABINET,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        waitHeadTurn();
+
+        openKitchenCab(DOOR_OPEN);
+
+        food_count = (lcp.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        if (food_count == 0) {
+                gameTick(2);
+                return;
+        }
+
+        lcp_st = STATE_REACH_INTO_CABINET;
+        gameTick(3);
+        food_count--;
+        lcp.door_states_and_flags =
+                (food_count << DSF_FOOD_SHIFT) |
+                (lcp.door_states_and_flags & ~DSF_FOOD_MASK);
+        drawFoodCab();
+        lcp_st = STATE_STAND_FACING_SCREEN;
+        gameTick(2);
+
+        if (lcp.initiative_threshold < rndRng(0, 100))
+                openKitchenCab(DOOR_CLOSE);
+
+        carryBehind(SPRITE_FOOD_PACKAGE);
+        posToXY(POS_BTM_KITCHEN_CABINET,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+        posToXY(POS_BTM_KITCHEN_SINK,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+
+        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_TABLE_SETTING);
+        g_sepex[g_seslm[SPRITE_TABLE_SETTING]] = 103;
+        g_sepey[g_seslm[SPRITE_TABLE_SETTING]] = 180;
+
+        posToXY(POS_BTM_TABLE_RIGHT,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+        posToXY(POS_BTM_TABLE_LEFT,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+
+        g_hamod       = HEAD_ANIM_DISABLED;
+        lcp_st            = STATE_STAND_SIDE_VIEW;
+        lcp_face = FACING_RIGHT;
+        carryInFront(SPRITE_FOOD_PACKAGE);
+        g_hatas = 8;
+        waitHeadTurn();
+
+        lcp_st        = pst_arr[0];
+        lcp_y += 8;
+        lcp_x += 6;
+        saved_head_frame = g_hsfra;
+        eat_cycles       = rndRng(10, 20);
+        g_hatas = HEAD_ANIM_DISABLED;
+        g_hacur      = HEAD_ANIM_DISABLED;
+        gameTick(0);
+        g_lcyof = NO;
+        g_sepex[g_seslm[SPRITE_FOOD_PACKAGE]] += 3;
+        g_sepey[g_seslm[SPRITE_FOOD_PACKAGE]] -= 4;
+        gameTick(0);
+
+        while (eat_cycles-- > 0) {
+                lcp_st = pst_arr[1];
+                gameTick(2);
+                g_hsfra = 0;
+                gameTick(rndRng(1, 2));
+                g_hsfra = saved_head_frame;
+                lcp_st = pst_arr[0];
+                gameTick(0);
+
+                inner = rndRng(4, 8);
+                while (inner-- > 0) {
+                        if (g_trel[0] != ACTION_NONE)
+                                break;
+                        g_hsfra = saved_head_frame;
+                        gameTick(rndRng(1, 2));
+                        g_hsfra = 1;
+                        gameTick(0);
+                        g_hsfra = 2;
+                        gameTick(0);
+                }
+                g_hsfra = saved_head_frame;
+        }
+
+        g_lcyof = YES;
+        g_hatas   = 8;
+        g_hacur        = 8;
+        carryBehind(SPRITE_FOOD_PACKAGE);
+        lcp_y -= 8;
+        lcp_x -= 6;
+        lcp_st = STATE_STAND_SIDE_VIEW;
+        waitHeadTurn();
+        gameTick(0);
+
+        posToXY(POS_BTM_TABLE_RIGHT,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+        posToXY(POS_BTM_KITCHEN_SINK,
+                              &g_wtx, &g_wty);
+        walkToTarget();
+
+        g_selaf[SPRITE_TABLE_SETTING] = SPRITE_HIDDEN;
+        layoutSlots();
+        g_selaf[SPRITE_FOOD_PACKAGE]  = SPRITE_HIDDEN;
+        layoutSlots();
+        g_lcyof = NO;
+
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        waitHeadTurn();
+        gameTick(4);
+
+        lcp.hunger_level   = NEED_SATISFIED;
+        lcp.bathroom_timer = lcp.bathroom_timer_max;
+        startRecovery();
+        g_actif = NO;
+}

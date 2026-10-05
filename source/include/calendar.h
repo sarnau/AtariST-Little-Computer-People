@@ -5,7 +5,7 @@
 
 extern short days_pmo[];
 
-extern short daysInMo();
-extern void daily_rs();
+extern short daysInMonth();
+extern void resetDailyFlags();
 
 #endif /* CALENDAR_H */

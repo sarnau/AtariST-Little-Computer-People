@@ -21,14 +21,14 @@
 #include "sprload.h"
 #include "psgfreq.h"
 
-short           bj_key;         /* pk_bjMn's key variable (a global, not a local) */
-char            psg_ovol;       /* psg_upEn's clamped output volume */
-unsigned short  g_wkadj;        /* read once, in lcp_path's dead store */
+short           bj_key;         /* playBlackjack's key variable (a global, not a local) */
+char            psg_ovol;       /* stepEnvelopes's clamped output volume */
+unsigned short  g_wkadj;        /* read once, in walkStep's dead store */
 unsigned short  ani_cnt;    /* unsigned: the & 7 test zero-extends */
-short   t_sec;         /* game seconds 0..59; gameSim1 steps it every 8th frame */
+short   t_sec;         /* game seconds 0..59; simStep steps it every 8th frame */
 
-/* The game clock and calendar, set from the guestbook by st_titl and
-   advanced by gameSim1. */
+/* The game clock and calendar, set from the guestbook by titleScreen and
+   advanced by simStep. */
 short   t_min;          /* minute 0..59 */
 short   t_hour;         /* hour 0..23 */
 short   t_day;       /* day of the month, 0-based */
@@ -38,30 +38,30 @@ short   t_year;        /* year - 1900 */
 PLAYER  lcp;            /* the resident's record, saved to and loaded from "hyber" */
 BOOL16  introSeq;       /* YES while the move-in cutscene runs; holds off keys, phone and events */
 
-BOOL16  in_evrt;        /* YES while execEv runs a deferred event, so lcp_wkD is not interrupted */
+BOOL16  in_evrt;        /* YES while runEvent runs a deferred event, so walkToTarget is not interrupted */
 
-short   lastAct;        /* the action doAct last ran; the random picker avoids repeating it */
+short   lastAct;        /* the action runAction last ran; the random picker avoids repeating it */
 
 /* Left at 0 in BSS; the move-in cutscene sets them before gameLoop
    runs. */
 short   lcp_x;        /* resident's screen position in pixels */
 short   lcp_y;
-BOOL16  g_lcldd;      /* lc_load's result: 1 = a saved resident was read, 0 = new game */
+BOOL16  g_lcldd;      /* loadSavedGame's result: 1 = a saved resident was read, 0 = new game */
 long    cprot_r;      /* long: tested as a 32-bit value */
-short   g_spdc;       /* walk speed, 5 from gameLoop; read only in lcp_path's dead store */
+short   g_spdc;       /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
 
-BOOL16  alarm_p;        /* YES while the alarm clock rings (Ctrl-A, a_wakum); a_wakfa clears it */
+BOOL16  alarm_p;        /* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm clears it */
 short   lcp_watr;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
 
-/* Typed-command queue: prsCmd appends the action chk_encm found and
-   its priority, chk_actT consumes from the front. */
+/* Typed-command queue: submitCommand appends the action matchCommand found and
+   its priority, chooseAction consumes from the front. */
 short   g_aliss;        /* number of queued commands, 0..10 */
 short   g_aqueu[10];    /* queued action ids */
 short   g_apriq[10];    /* their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed */
-short   g_hsfra;        /* head sprite frame; sp_lcha derives it, actions override it to nod or talk */
-long    g_sfret;        /* game ticks until the current sound effect is stopped (sc_ren8); 0 = none */
-BOOL16  g_actif;        /* YES while the resident is busy in an activity, so lcp_wkD walks uninterrupted */
-/* Walk target in screen pixels for lcp_wkD / lcp_path; both 0 = arrived. */
+short   g_hsfra;        /* head sprite frame; stepHead derives it, actions override it to nod or talk */
+long    g_sfret;        /* game ticks until the current sound effect is stopped (renderFrame); 0 = none */
+BOOL16  g_actif;        /* YES while the resident is busy in an activity, so walkToTarget walks uninterrupted */
+/* Walk target in screen pixels for walkToTarget / walkStep; both 0 = arrived. */
 short   g_wtx;
 short   g_wty;
 /* A 10-short scratch buffer used by action handlers (bathroom, food,
@@ -71,9 +71,9 @@ short   g_wty;
 short   pst_arr[10];
 
 /* Open (YES) / closed (NO) state of the house's doors and cupboards,
-   unpacked from lcp.door_states_and_flags by lc_load and packed back
-   by lcp_std; main draws each one accordingly at boot. */
-short   lcp_frdO;       /* DSF_FRONT_DOOR, opened and closed by a_opcfd */
+   unpacked from lcp.door_states_and_flags by loadSavedGame and packed back
+   by studyVisit; main draws each one accordingly at boot. */
+short   lcp_frdO;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
 short   studyDrO;       /* DSF_STUDY_DOOR */
 short   lcp_clsO;       /* DSF_CLOSET_DOOR */
 short   lcp_cabO;       /* DSF_KITCHEN_CABINET */
@@ -90,20 +90,20 @@ short   dg_bwlch;       /* bowl change for tick.c: -1 one step emptier, +1 fulle
 short   g_sfplf;        /* YES while a sound effect is playing */
 short   g_sfpli;        /* id of the effect playing, tested to stop or chain it */
 char *  mi_sbuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
-/* Song file counts (.SNG / .ORG), set at boot by cntSong(). */
+/* Song file counts (.SNG / .ORG), set at boot by countSongs(). */
 short   sng_cnt;
 short   org_cnt;
-short   fire_dur;       /* frames until the lit fire burns out (a_lighf sets 2500..5000) */
+short   fire_dur;       /* frames until the lit fire burns out (lightFire sets 2500..5000) */
 BOOL16  fire_ext;       /* request for tick.c to put the fire out and redraw the grate */
 short   tx_sctm;        /* text-strip timer: > 0 frames until the typed line expires,
-                           < 0 a minigame owns the strip, 0 idle; picks sc_ren8's copy */
+                           < 0 a minigame owns the strip, 0 idle; picks renderFrame's copy */
 short   g_srsdc;        /* frames left of the text strip's scroll-up after Return */
 short   g_cdibp;        /* cursor position in g_cdinb, 0..38 */
 
 /* Letter subsystem storage.  g_ltlp[] is populated at runtime from
-   LETTER.TXT (see fl_ltpl).  360 slots: that is fl_ltpl's literal
+   LETTER.TXT (see loadLetterText).  360 slots: that is loadLetterText's literal
    `for (linecount = 0; linecount < 360; ...)`, it is the 4 sections x
-   96 pointers (section 3 uses 72) shape a_writl indexes, and
+   96 pointers (section 3 uses 72) shape writeLetter indexes, and
    LETTER.TXT decodes to 361 line segments. */
 char *  g_lttx;
 char *  g_ltlp[360];
@@ -112,7 +112,7 @@ char *  g_ltlp[360];
 char    g_ltscb[40];
 char    in_str[80];             /* a screen line */
 /* comp_tok[15]: the 15 most common byte values in the
-   compressed stream.  Populated at load-time by fr_reac
+   compressed stream.  Populated at load-time by unpackFile
    from the 15-byte header immediately following the size word. */
 /* scn_dic[15]: the 15-entry word dictionary at the head of a .SCN
    file, and the size/buffer main uses while decoding one.  All three
@@ -123,8 +123,8 @@ unsigned char   comp_tok[15];
 short           scn_siz;
 char *          scn_buf;
 
-/* The resident's body and head sprite images, saved by hideLcp while
-   it blanks them and put back by showLcp. */
+/* The resident's body and head sprite images, saved by hideResident while
+   it blanks them and put back by showResident. */
 short * sv_bodyP;
 short * sv_headP;
 
@@ -133,7 +133,7 @@ short * sv_headP;
 short   vdihnd;     /* virtual workstation handle from v_opnvwk, passed to every VDI call */
 short   vdi_hnd;    /* physical from graf_handle */
 /* graf_handle writes its four cell/box metrics into these globals,
-   not into locals of aes_init. */
+   not into locals of initAes. */
 short   gr_hwchar;
 short   gr_hhchar;
 short   gr_hwbox;
@@ -155,15 +155,15 @@ short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
 
-void *  g_dscp;     /* 512-aligned start of dsb_stor (fillTopR); the text strip is drawn there */
-char    g_mspha;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by mq_advs */
+void *  g_dscp;     /* 512-aligned start of dsb_stor (fillPanel); the text strip is drawn there */
+char    g_mspha;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by seqAdvance */
 unsigned char * mi_dbase;   /* the loaded song's event stream, just past its header */
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * mi_sqpos;       /* read position in the event stream, walked by mq_pars */
+unsigned char * mi_sqpos;       /* read position in the event stream, walked by parseEvents */
 long            mi_env;         /* address of the song's ADSR block, 8 bytes per channel */
 char            psg_cvol;     /* a byte: PSG volume for the note being parsed */
-/* mq_setp sets mi_evcn to 9, the loop stack's empty mark. */
+/* initSongState sets mi_evcn to 9, the loop stack's empty mark. */
 short           mi_evi;         /* number of shorts in use in mi_evq */
 short           mi_evcn;        /* loop-stack index into mi_lstk */
 
@@ -173,19 +173,19 @@ short           mi_evcn;        /* loop-stack index into mi_lstk */
    "int_out[7]" tempting -- but int_out is only 14 bytes, so declaring
    it that way collides with the next global. */
 short           mi_tpb;
-long            g_mtcou;        /* master Timer-A tick counter, counted up by mq_tick */
-short           g_mtdiv;        /* divider: mq_tick runs psg_upEn each time it wraps */
-/* mq_stap resets mi_nlp0 at song start. */
+long            g_mtcou;        /* master Timer-A tick counter, counted up by timerAIsr */
+short           g_mtdiv;        /* divider: timerAIsr runs stepEnvelopes each time it wraps */
+/* armSequencer resets mi_nlp0 at song start. */
 short           mi_nlp0;
 
-/* The duration mq_pars computes for the event it is about to queue.
-   A SECOND cell: mq_pars writes it and only mq_qnne reads it, while
-   mq_rdur's identical expression goes to mi_nlp0, which drives the
+/* The duration parseEvents computes for the event it is about to queue.
+   A SECOND cell: parseEvents writes it and only queueNote reads it, while
+   peekNoteDur's identical expression goes to mi_nlp0, which drives the
    tick counters. */
 short           mi_ndur;
 long            mi_nxTk;       /* long tick counters: g_mtcou value of the next event */
 long            mi_lpTk;       /* g_mtcou when queued notes were last expired */
-unsigned char   g_meve[4];     /* MIDI message being built for mq_dise */
+unsigned char   g_meve[4];     /* MIDI message being built for sendMidiEvent */
 
 /* The remaining sequencer/PSG working state below belongs to the
    Timer-A music engine. */
@@ -204,13 +204,13 @@ void            (*mi_svtv)();
    trigger, current note/channel, note-length params) is unpacked
    into a set of byte / short globals below, then handed to
    queue-note-event / send-note-off / send-program-change to reach
-   the mq_dise dispatcher.
+   the sendMidiEvent dispatcher.
 
    mi_ndt (in the initialized data below) is the duration lookup
    indexed by bits 0..4 of each note event's first byte. */
 
 unsigned char * mi_seqE;        /* end of the stream; -1 = no limit */
-unsigned char * mi_dptr;        /* loop-back address popped by mq_popl */
+unsigned char * mi_dptr;        /* loop-back address popped by popLoop */
 char            mi_evTf;        /* set once a note was decoded in this pass */
 char            mi_nnOn;        /* non-zero: queue the note (bit 4 of byte 0 clear) */
 char            mi_nnOf;        /* non-zero: the event is a note-off (bit 5 of byte 0) */
@@ -224,15 +224,15 @@ char            mi_nlpA;        /* accent bit: full velocity and full PSG volume
    notes. */
 short           mi_evq[60];
 
-/* Loop stack -- {return_addr, remaining_count} pairs.  mq_setp starts
-   the index at 9 (which also means "empty") and mq_pshl only pushes
+/* Loop stack -- {return_addr, remaining_count} pairs.  initSongState starts
+   the index at 9 (which also means "empty") and pushLoop only pushes
    while it is below 49, so entries 9..48 hold at most 20 nested loops;
    0..8 and 49 are never touched. */
 long            mi_lstk[50];
 
 /* ---- PSG envelope processor state -----------------------------------
    Bresenham-style integer ramp accumulator + delta, per channel.
-   Every psg_upEn tick, accum += delta; whenever accum > 360 (0x168),
+   Every stepEnvelopes tick, accum += delta; whenever accum > 360 (0x168),
    current_volume steps by ramp_direction and accum -= 360.  This
    fractional accumulation lets the 50 Hz envelope produce
    sub-tick-precision volume ramps without floating point.
@@ -241,14 +241,14 @@ long            mi_lstk[50];
    each, addressed by the low nibble of the ADSR bytes.
    psg_rot is the {0x88, 0x89, 0x8a} amp-register-with-write-bit
    for the 3 PSG channels; the assembly subtracts 0x80 back off
-   before the actual psg_wr call. */
+   before the actual psgWrite call. */
 short           psg_rdel[3];      /* ramp_delta   */
 short           psg_racc[3];      /* ramp_accum   */
 
 /* mi_noSt: 128-entry table tracking
    which MIDI notes are currently sounding and on which logical channel.
    Value 0 = note not sounding.  Non-zero = the mi_chmap[] index (low
-   nibble used) that owns the note, so mq_stop can emit a matching
+   nibble used) that owns the note, so stopSequencer can emit a matching
    note-off through the correct MIDI channel on shutdown. */
 unsigned char   mi_noSt[128];
 unsigned char   psg_chNt[3];           /* current MIDI note per PSG channel A/B/C */
@@ -264,13 +264,13 @@ long            g_sfHz2;        /* 200 Hz clock when the effect started; written
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from SOUNDS.LCP.
    25 slots: SOUNDS.LCP holds 23 blocks before the size-0 sentinel that
-   ends sf_sl's `index < 500` loop, and the original leaves room for 25
+   ends loadSounds's `index < 500` loop, and the original leaves room for 25
    pointers.  The 500 is a loop limit, not the size. */
 unsigned char * mi_ntLp[25];
 /* Working buffer for the currently-playing Dosound sequence, copied
    from mi_ntLp[g_sfcur] each time a new effect starts.  FIFTY-SIX
    bytes: that is the room the original leaves before the next cell it
-   uses.  sf_irqp copies `size` bytes here straight from SOUNDS.LCP, and
+   uses.  startSfx copies `size` bytes here straight from SOUNDS.LCP, and
    the file has longer effects -- blocks 8 (SFX_HEAD_NOD) and 17
    (SFX_TOILET_REFILL) are 148 bytes -- so ON THIS MODEL the original
    overruns the buffer by up to 92 bytes.  Reproduced as written, not
@@ -287,14 +287,14 @@ unsigned char * mi_ntLp[25];
    Where the overrun LANDS depends on the BSS layout:
 
      * Shipped build.  g_sfDoB is followed by g_sfdos (+56) and g_sfdoc
-       (+58) -- both WRITE-ONLY, set by sf_so() and read nowhere -- and
+       (+58) -- both WRITE-ONLY, set by stopSfx() and read nowhere -- and
        then 342 bytes that no symbol claims.  The overrun dies in that
        hole, which is why 1985 shipped it.
 
      * Gated test build.  The linker's own .comm packing applies, and it
        puts g_obtah -- the 56-entry object HEIGHT table -- at exactly
        +56.  The first head-nod or toilet refill overwrites it; the next
-       od_draw() passes g_obtah[i] - 1 to vro_cpyfm as a raster
+       drawObject() passes g_obtah[i] - 1 to vro_cpyfm as a raster
        coordinate, and TOS bus errors inside the VDI.
 
    So the buffer is padded to 400 IN TEST BUILDS ONLY, reproducing the
@@ -315,31 +315,31 @@ unsigned char * mi_ntLp[25];
 #ifdef LCP_SFDOB_PAD
 char            g_sfDoB[400];   /* Dosound buffer, padded (test builds) */
 #else
-char            g_sfDoB[56];    /* Dosound buffer handed to Dosound by sf_irqp */
+char            g_sfDoB[56];    /* Dosound buffer handed to Dosound by startSfx */
 #endif
 
-void *  g_srlgb;    /* logical screen saved by sc_sdtb, restored by sc_sdtf */
-void *  sv_lgb;     /* logical screen saved by initVdi, restored by exitVdi */
+void *  g_srlgb;    /* logical screen saved by beginDraw, restored by endDraw */
+void *  sv_lgb;     /* logical screen saved by panelBegin, restored by panelEnd */
 void *  g_srptr;    /* 512-aligned start of scrbufB: the house picture VDI draws into */
 /* dsb_stor: offscreen buffer where the letter-typing status strip
    composites, kept separate from the main house buffer.
-   fillTopR(27) writes rows 0..26 here so that the striped-white letter
-   background is ready for the typewriter animation; sc_ren8
-   blkcp32's the content into the compositor screen when the letter
+   fillPanel(27) writes rows 0..26 here so that the striped-white letter
+   background is ready for the typewriter animation; renderFrame
+   copyBlocks32's the content into the compositor screen when the letter
    overlay is active.
-   Sized from what fillTopR can actually write: its largest caller is
-   mg_stp's fillTopR(0x4d), 77 rows of 160 bytes = 12320, and the
+   Sized from what fillPanel can actually write: its largest caller is
+   mgSetup's fillPanel(0x4d), 77 rows of 160 bytes = 12320, and the
    align-up `(base + 512) & ~511` moves the start by at most 512 --
    so 12832 bytes, 6416 shorts.
-   fillTopR points g_dscp at the ALIGNED start at run time. */
+   fillPanel points g_dscp at the ALIGNED start at run time. */
 short   dsb_stor[6416];
 
 /* scr_scal -- always 1 (REZ_ST_MEDIUM).
-   Multiplier for the 320x200 low-res screen dimensions in sp_iniM,
+   Multiplier for the 320x200 low-res screen dimensions in initMfdb,
    kept even though the value is a constant. */
 short   scr_scal;
 
-/* vdi_init opens the workstation through these GLOBAL work arrays,
+/* vdiInit opens the workstation through these GLOBAL work arrays,
    not through locals. */
 short   work_in[11];
 short   wk_out[57];
@@ -349,22 +349,22 @@ short   wk_out[57];
    the visible physbase into a memory buffer instead of another
    off-screen bitmap.
 
-   A SHORT ARRAY, not an MFDB: stpScrB clears MFDB_A[0] and MFDB_A[1]
-   -- the two halves of fd_addr -- and cpyScr passes the array itself,
+   A SHORT ARRAY, not an MFDB: initHouseBuf clears MFDB_A[0] and MFDB_A[1]
+   -- the two halves of fd_addr -- and copyScreen passes the array itself,
    both at the same address. */
 short   MFDB_A[10];
 
 /* scrbufA / scrbufB -- BSS scratch for the two double-buffer
    compositing screens.
 
-   Every screen-pointer site (stpScrB, fillTopR, sp_iniM, sc_ren8's
+   Every screen-pointer site (initHouseBuf, fillPanel, initMfdb, renderFrame's
    alternate) aligns the base up to 512 bytes:
         aligned = (base + 0x200) & ~0x1FF
    (the sprite path writes it as base + 0x1FF, masked the same way).
 
    Each holds ONE aligned screen: scrbufA the sprite compositor (also
-   sc_ren8's alternate page-flip target -- there is no second screen
-   at +0x8000, see parts/sc_ren8.c), scrbufB the decompressed
+   renderFrame's alternate page-flip target -- there is no second screen
+   at +0x8000, see parts/renderFrame.c), scrbufB the decompressed
    house.scn background.
 
    Sized as screen + alignment slack, not as a round power of two.
@@ -375,14 +375,14 @@ short   MFDB_A[10];
 unsigned char   scrbufA[32512];
 unsigned char   scrbufB[32512];
 
-/* Sound-effect request from sf_sele, started by sc_ren8 via sf_irqp. */
+/* Sound-effect request from sfxSelect, started by renderFrame via startSfx. */
 BOOL16  g_sfacf;        /* YES: a request is pending */
 short   g_sfcur;        /* requested effect id (index into mi_ntLp / sf_pri) */
 short   g_sfdur;        /* requested duration in game ticks; -1 = the effect's own */
-short   g_sfdos;        /* set by sf_so, read nowhere */
-short   g_sfdoc;        /* set by sf_so, read nowhere */
+short   g_sfdos;        /* set by stopSfx, read nowhere */
+short   g_sfdoc;        /* set by stopSfx, read nowhere */
 
-/* Raw file buffers, filled at startup by ldObj / ldSpr.  OBJECTS
+/* Raw file buffers, filled at startup by loadObjects / loadSprites.  OBJECTS
    and SPRITES are each read into 14000 bytes. */
 unsigned char   obj_file[14000];
 unsigned char   spr_file[14000];
@@ -391,19 +391,19 @@ unsigned char   spr_file[14000];
    walk is a fixed `for (i = 0; i < 56; i++)`. */
 MFDB    g_obtmt[56];
 
-short   g_obtaw[56];        /* each object's width in pixels, for od_draw */
+short   g_obtaw[56];        /* each object's width in pixels, for drawObject */
 short   g_obtah[56];        /* each object's height in pixels */
 
-BOOL16  g_inpmd;        /* YES while lcp_lgt has the resident away from a minigame:
+BOOL16  g_inpmd;        /* YES while leaveGameTable has the resident away from a minigame:
                            only the Ctrl hot keys work, typing is ignored */
 char    g_cdinb[64];    /* the command line being typed, NUL-terminated, up to 38 chars */
-BOOL16  food_dlv;       /* set when Ctrl-F is refused because the cabinet is full; deal_kc only */
+BOOL16  food_dlv;       /* set when Ctrl-F is refused because the cabinet is full; handleKey only */
 short   g_ptanf;        /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
 
 union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
-long    last_vbc;       /* VBL count at sc_ren8's last frame, to pace it */
+long    last_vbc;       /* VBL count at renderFrame's last frame, to pace it */
 /* sv_phb: TOS's original Physbase, captured once at boot by
-   aes_init via Physbase().  Deliberately uninitialised: an explicit
+   initAes via Physbase().  Deliberately uninitialised: an explicit
    initialiser would move it from BSS into .data. */
 void *  sv_phb;
 
@@ -411,9 +411,9 @@ void *  sv_phb;
    physical screen descriptor.  Populated by the graphics init routine. */
 MFDB    g_srmfd;
 MFDB    mf_scrp;
-MFDB *  cur_mf;     /* sc_ren8's page-flip MFDB */
+MFDB *  cur_mf;     /* renderFrame's page-flip MFDB */
 
-/* Dog wander and eating state, run by sc_ren8. */
+/* Dog wander and eating state, run by renderFrame. */
 BOOL16  dg_vis;         /* YES during a minigame: wander targets limited to entries 3..8 */
 short   dg_idlcd;       /* frames to idle before picking the next target, 20..200 */
 BOOL16  dg_nrbwl;       /* set when the stair-landing target is picked; lets the dog eat at its bowl */
@@ -421,19 +421,19 @@ BOOL16  g_deact;        /* YES while the dog is eating */
 short   g_decou;        /* frames of eating left; the bowl drops a step at 60, 30, 4 and 0 */
 short   dg_ltgtI;       /* last wander target picked, never picked twice in a row */
 
-char *  cmd_inp;        /* the line prsCmd hands to chk_encm (always g_cdinb) */
-short   g_aprio;        /* priority chk_encm gives the typed command: mood, chance, unknown words */
+char *  cmd_inp;        /* the line submitCommand hands to matchCommand (always g_cdinb) */
+short   g_aprio;        /* priority matchCommand gives the typed command: mood, chance, unknown words */
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
 MFDB    g_semfi[SPRITE_HW_SLOTS];
 MFDB    g_semfm[SPRITE_HW_SLOTS];
 
 /* ---- NLP parser state ------------------------------------------------
-   g_ewb accumulates the bit masks of the recognised words; chk_encm
+   g_ewb accumulates the bit masks of the recognised words; matchCommand
    then matches it against the rule table. */
 
 char            g_ewb[10];
-/* 42 bytes: cmd_upp() walks input from g_cdinb (bounded < 38 chars)
+/* 42 bytes: nextWord() walks input from g_cdinb (bounded < 38 chars)
    and writes one byte per alphabetic char to usr_buf. */
 char            usr_buf[42];
 
@@ -453,16 +453,16 @@ char            g_aginb[12];    /* the Anagrams guess being typed, 10 chars + NU
 char            g_agscw[10];
 
 /* Mini-game shared state.
-   mg_tofl: set YES by mg_wkev when the 7200-frame (~15 min) idle
+   mg_tofl: set YES by mgWaitKey when the 7200-frame (~15 min) idle
             timeout fires; games check it to distinguish "user pressed
             F10" from "we auto-quit due to inactivity".
    sv_vqta: 10-short buffer holding the pre-mini-game VDI text
-            attributes so rst_vsth can restore them after temporarily
+            attributes so textNormal can restore them after temporarily
             switching to 20-pixel height for the title/answer render. */
 BOOL16          mg_tofl;
 short           sv_vqta[10];
 
-short           pk_round;       /* 0 at Poker start, 1 after pk_show; read nowhere */
+short           pk_round;       /* 0 at Poker start, 1 after pkrShowdown; read nowhere */
 BOOL16          pk_quit;        /* YES ends the card game (F10, timeout, or a side out of chips) */
 short           g_pcbet;        /* Blackjack: chips bet on the player's first hand */
 short           g_ppbet;        /* Blackjack: chips bet on the split hand */
@@ -470,11 +470,11 @@ short           g_pcmon;        /* the resident's chips (Poker/Blackjack, 400) o
 short           g_ppmon;        /* the player's chips or cards, likewise */
 short           g_ppppa;        /* chips in the pot */
 /* anagram_original_word: pointer into g_agwb dictionary (11-byte rows)
-   set by ag_ssw when a word is picked. */
+   set by anaPickWord when a word is picked. */
 char *          g_agorw;
 short           pk_phase;       /* Blackjack: 1 once the player has split */
 short           pk_dsc[52];     /* War: the shuffled deck dealt into the two draw piles */
-/* Computer's and player's draw piles, 52 shorts each: pk_rmch's
+/* Computer's and player's draw piles, 52 shorts each: popCard's
    unconditional
      for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
    shifts the whole pile. */
@@ -490,7 +490,7 @@ short           pk_cwc[52];             /* computer's war cards */
 short           g_pchc;
 
 /* Poker (5-card draw) working state.  Every field is per-hand: reset
-   at the start of each round in pk_ante / pk_evhs / pk_show.
+   at the start of each round in pkrAnte / pkrDealHands / pkrShowdown.
    pk_ch / pk_ph also serve as the War hands. */
 short           pk_ch[5];           /* computer_hand -- CARD_TYPE 0..51 */
 short           pk_ph[5];           /* player_hand */
@@ -498,7 +498,7 @@ short           pk_hrf[5];          /* hand_rank_flags   -- which cards
                                        form computer's pair/trip/etc */
 short           pk_hsf[5];          /* hand_suit_flags   -- sorted copy
                                        of computer hand (used as kicker
-                                       scratch by pk_show) */
+                                       scratch by pkrShowdown) */
 short           pk_phrf[5];         /* player_hand_rank_flags */
 short           pk_phsf[5];         /* player_hand_suit_flags */
 short           pk_chrk;     /* computer_hand_rank
@@ -570,7 +570,7 @@ short           wp_blk;
 MFDB            crd_mfdb[54];
 MFDB            mf_scb_c;       /* the 320x77 card-table area the cards are copied into */
 
-BOOL16  g_dvdog;        /* YES while er_dogf runs er_food for a dog-food delivery */
+BOOL16  g_dvdog;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
 BOOL16  ph_hu;          /* request for gameTick to hang the phone up and stop its ring */
 
 
@@ -593,8 +593,8 @@ BOOL16  ph_hu;          /* request for gameTick to hang the phone up and stop it
 
 
 /* PSG register offsets.  Amp registers 8/9/10 with
-   the PSG "write" bit (0x80) pre-set.  psg_upEn subtracts 0x80
-   before calling psg_wr to recover the raw register number. */
+   the PSG "write" bit (0x80) pre-set.  stepEnvelopes subtracts 0x80
+   before calling psgWrite to recover the raw register number. */
 unsigned char   psg_rot[3]  = { 0x88, 0x89, 0x8a };
 
 /* Three pointers at psg_env[0..2], one per PSG channel.  NOTHING in
@@ -642,7 +642,7 @@ BOOL16          g_moen     = YES;   /* send notes to MIDI OUT */
 
 BOOL16          psg_out              = YES;     /* play notes on the YM2149 PSG */
 
-/* MIDI channel count; mq_parh's channel-count case writes p[2]
+/* MIDI channel count; parseSongHeader's channel-count case writes p[2]
    here. */
 short           g_mkey                  = 1;
 
@@ -652,7 +652,7 @@ short           mi_temp              = 120;     /* song tempo in beats per minut
 short           g_mtspb     = 20;
 
 
-/* 22 entries, not 32: that is the room the original leaves.  mq_pars
+/* 22 entries, not 32: that is the room the original leaves.  parseEvents
    indexes it with a 5-bit field (`mi_ndt[*mi_sqpos & 0x1f]`), so 22..31
    would read past the end -- the .SNG data never produces them. */
 short           mi_ndt[22] = {
@@ -664,7 +664,7 @@ short           mi_ndt[22] = {
 
 /* 128 entries, the values the original ships: YM2149 tone periods,
    period = 2000000 / (16 * f) for MIDI note n.  Entries below index 23
-   are 0 -- flagged too-low by mq_dise. */
+   are 0 -- flagged too-low by sendMidiEvent. */
 short           psg_freq[128] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -698,7 +698,7 @@ char            mi_dvel   = 127;   /* velocity of an unaccented note, from the s
 char            psg_dvol      = 15;    /* PSG volume of an unaccented note, from the header velocity */
 
 /* The note range the sequencer will play, HIGH first in the data:
-   0x60 is the top of the range and 0x24 the bottom, and mq_dise
+   0x60 is the top of the range and 0x24 the bottom, and sendMidiEvent
    rejects a note above the first and below the second. */
 char            g_mnhi      = 0x60;    /* highest note played */
 
@@ -706,7 +706,7 @@ char           g_mnlo       = 0x24;    /* lowest note played */
 
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
-   0..131 (C-1..G9).  Populated by mq_bust at song
+   0..131 (C-1..G9).  Populated by buildNoteMap at song
    start; each note maps to either itself (identity) or a shifted note
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
 
@@ -714,16 +714,16 @@ char           g_mnlo       = 0x24;    /* lowest note played */
 /* ---- PSG channel state ---------------------------------------------- */
 
 /* Program last sent on each MIDI channel; -1 = none, so the first
-   mq_sepc always sends one. */
+   sendProgChange always sends one. */
 char            g_mcpro[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-/* Logical song channel -> physical MIDI channel (low nibble); mq_pacm
+/* Logical song channel -> physical MIDI channel (low nibble); unpackChanMap
    fills it from the song header. */
 unsigned char   mi_chmap[16] = { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* The static content is 0..99 then 110..127, with the last 14
    entries zero -- the row 100..109 is simply missing from the 1985
-   table.  Harmless: mq_bust rewrites all 132 entries (`g_mstr[i] = i`
+   table.  Harmless: buildNoteMap rewrites all 132 entries (`g_mstr[i] = i`
    for i < 0x84) before anything reads them. */
 unsigned char   g_mstr[132] = {
           0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,
@@ -738,7 +738,7 @@ unsigned char   g_mstr[132] = {
         118, 119, 120, 121, 122, 123, 124, 125, 126, 127
 };
 
-/* g_msmsa is a BYTE and lives in the text segment behind mq_tick --
+/* g_msmsa is a BYTE and lives in the text segment behind timerAIsr --
    see source/mq_tick.s. */
 /* g_msmk: 16-byte chord-mask lookup. */
 unsigned char   g_msmk[16] = {
@@ -757,8 +757,8 @@ unsigned char   mi_pgtab[16] = {
 };
 
 
-/* mi_slop and mi_varR are char: sgPlay writes them as bytes.
-   mi_slop is written by sgPlay and read by mq_pars. */
+/* mi_slop and mi_varR are char: playSongFile writes them as bytes.
+   mi_slop is written by playSongFile and read by parseEvents. */
 char            mi_slop         = 1;
 
 char    mi_varR                      = YES;    /* channel every note uses when mi_slop is NO */
@@ -768,7 +768,7 @@ char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer: MIDI program 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon
    emits a switch jump table into the .data of the object that holds
-   the function, and the original has mq_parh's and mq_dise's tables
+   the function, and the original has parseSongHeader's and sendMidiEvent's tables
    sitting between mi_pgmap and main_pal.  Data from separate objects
    cannot interleave, so the globals and the MIDI code are ONE object,
    and the split point is exactly here.
@@ -786,5 +786,5 @@ char *          mi_pgmap = (char *) mi_pgtab;   /* a byte pointer: MIDI program 
 
 /* No globals here for the 200 Hz clock or the VBL counter.  Both are
    ATARI ST SYSTEM VARIABLES in low memory -- _hz_200 at $04BA/$04BC
-   and _vbclock at $0462 -- and sf_irqp and sc_ren8 read them there
+   and _vbclock at $0462 -- and startSfx and renderFrame read them there
    directly, under Super. */

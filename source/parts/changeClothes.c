@@ -1,0 +1,142 @@
+/*
+ * parts/changeClothes.c -- included by stx_u2.c at its place in the object's function order;
+ * never compiled on its own.
+ */
+
+/* changeClothes: change in the bedroom closet.  The resident walks to the
+   dresser and opens a drawer (perhaps closing it again on a random
+   roll), walks to the closet, opens it and steps inside; the closet
+   sprites hide him while the door swings shut.  After 45..60 ticks
+   the palette changes -- new clothing colours for value 0, a new skin
+   colour otherwise -- unless introSeq is set, and he steps back out.
+   The closet is closed after him on a random roll, or always during
+   the intro.  Only the first walk can be preempted. */
+void
+changeClothes(value)
+short   value;
+{
+        short   saved_x;
+
+        posToXY(POS_MID_DRESSER,
+                              &g_wtx, &g_wty);
+        if (walkToTarget() != 0)
+                return;
+
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        waitHeadTurn();
+        openDresser(DOOR_OPEN);
+        if (lcp.initiative_threshold < rndRng(0, 100))
+                openDresser(DOOR_CLOSE);
+
+        posToXY(POS_MID_BEDROOM_CLOSET,
+                              &g_wtx, &g_wty);
+        g_actif = YES;
+        walkToTarget();
+        g_actif = NO;
+
+        lcp_face   = FACING_RIGHT;
+        lcp_st              = STATE_STAND_FACING_SCREEN;
+        g_hatas = HEAD_ANIM_HORIZONTAL_RANGE;
+        waitHeadTurn();
+
+        if (lcp_clsO == NO) {
+                lcp_face = FACING_LEFT;
+                lcp_st = STATE_BEND_AND_REACH;
+                gameTick(2);
+                drawObject(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+                gameTick(2);
+                drawObject(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+                sfxSelect(SFX_DOOR_OPEN, 6L);
+                gameTick(2);
+                drawObject(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+                gameTick(2);
+                lcp_clsO = YES;
+        }
+
+        /* Walk into the closet. */
+        lcp_face = FACING_RIGHT;
+        g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_CLOSET_WIDE_OPEN);
+        g_sepex[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 75;
+        g_sepey[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 87;
+
+        posToXY(POS_MID_BEDROOM_CLOSET,
+                              &g_wtx, &g_wty);
+        /* Written as -= so the update goes straight to memory. */
+        g_wty -= 3;
+        g_wtx -= 10;
+        g_actif = YES;
+        walkToTarget();
+        g_actif = NO;                   /* cleared before saving lcp_x, as in the original */
+        saved_x = lcp_x;
+
+        /* Close door behind: wide -> ajar -> lcp-inside. */
+        g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
+        layoutSlots();
+        g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_CLOSET_AJAR);
+        g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
+        g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
+        drawObject(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+        gameTick(1);
+
+        g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_HIDDEN;
+        layoutSlots();
+        g_selaf[SPRITE_CLOSET_LCP_INSIDE] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_CLOSET_LCP_INSIDE);
+        hideResident();
+        g_sepex[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 75;
+        g_sepey[g_seslm[SPRITE_CLOSET_LCP_INSIDE]] = 87;
+        drawObject(OBJ_DOOR_CLOSET_CLOSED, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+        sfxSelect(SFX_DOOR_CLOSE, 6L);
+        gameTick(1);
+
+        gameTick(rndRng(45, 60));
+        if (introSeq == NO) {
+                if (value == 0)
+                        pickClothes();
+                else
+                        pickSkin();
+        }
+
+        /* Open door back up + walk out. */
+        g_selaf[SPRITE_CLOSET_LCP_INSIDE] = SPRITE_HIDDEN;
+        layoutSlots();
+        g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_CLOSET_AJAR);
+        showResident();
+        g_sepex[g_seslm[SPRITE_CLOSET_AJAR]] = 75;
+        g_sepey[g_seslm[SPRITE_CLOSET_AJAR]] = 87;
+        drawObject(OBJ_DOOR_CLOSET_OPEN_1, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+        sfxSelect(SFX_DOOR_OPEN, 6L);
+        gameTick(1);
+
+        g_selaf[SPRITE_CLOSET_AJAR] = SPRITE_HIDDEN;
+        layoutSlots();
+        g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_IN_FRONT;
+        activateSprite(SPRITE_CLOSET_WIDE_OPEN);
+        g_sepex[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 75;
+        g_sepey[g_seslm[SPRITE_CLOSET_WIDE_OPEN]] = 87;
+        drawObject(OBJ_DOOR_CLOSET_OPEN_2, CLOSET_DOOR_X, CLOSET_DOOR_Y);
+        gameTick(1);
+        lcp_clsO = YES;
+
+        lcp_x = saved_x;
+        posToXY(POS_MID_BEDROOM_CLOSET,
+                              &g_wtx, &g_wty);
+        g_actif = YES;
+        walkToTarget();
+        g_actif = NO;
+
+        if (lcp_clsO != NO) {
+                g_selaf[SPRITE_CLOSET_WIDE_OPEN] = SPRITE_HIDDEN;
+                layoutSlots();
+                gameTick(0);
+        }
+
+        if (lcp.initiative_threshold < rndRng(0, 100) ||
+            introSeq != NO)
+                closeBedCloset();
+}

@@ -25,8 +25,8 @@ char *          wp_prm[9] = {
         "What's the fifth word?"
 };
 
-/* Word Puzzles: the six right-answer messages; wp_solv shows one at
-   random through wp_shwm. */
+/* Word Puzzles: the six right-answer messages; wpzSolve shows one at
+   random through wpzMessage. */
 char *          wp_succ[6] = {
         "You got it!!",
         "Good going. That's right!",

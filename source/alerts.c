@@ -13,11 +13,11 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* er_nomem and er_write live in parts/ and are included by the unity
+/* outOfMemory and writeErrorAlert live in parts/ and are included by the unity
    units (stx_u1.c, stx_u2.c) where the original's layout puts them. */
 
-/* sp_spud and sp_flih belong to the same object as er_write in the
-   original, so they are compiled here.  sp_spud's tail is deliberately
+/* setDogSprite and flipSprite belong to the same object as writeErrorAlert in the
+   original, so they are compiled here.  setDogSprite's tail is deliberately
    two successive if/else pairs (mask pair first, then image pair)
    rather than one combined if/else: that is how the original is
    written. */
@@ -39,7 +39,7 @@
    frame is first mirrored into g_dfimb/g_dfmab (15 lines, 2 words)
    and those buffers are used instead. */
 void
-sp_spud(g_seid, layer_p, flipH2)
+setDogSprite(g_seid, layer_p, flipH2)
 short   g_seid;
 short   layer_p;
 BOOL16  flipH2;
@@ -51,10 +51,10 @@ BOOL16  flipH2;
                 return;
 
         if (flipH2 != NO) {
-                sp_flih(g_sedim[g_seid],
+                flipSprite(g_sedim[g_seid],
                                        (unsigned short *) g_dfimb,
                                        15, 2);
-                sp_flih(g_sedms[g_seid],
+                flipSprite(g_sedms[g_seid],
                                        (unsigned short *) g_dfmab,
                                        15, 2);
         }
@@ -94,7 +94,7 @@ BOOL16  flipH2;
    byte at a time through rev_tab with the two bytes swapped.  Writes
    pixH * wdWidth * 4 words to dest. */
 void
-sp_flih(source, dest, pixH, wdWidth)
+flipSprite(source, dest, pixH, wdWidth)
 unsigned short *        source;
 unsigned short *        dest;
 short                   pixH;

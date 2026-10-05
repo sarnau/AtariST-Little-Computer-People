@@ -33,7 +33,7 @@ cd "$OUT"
 #     `move sr,dn` instructions (raise IPL to 7 on entry, lower to 5
 #     during sub-calls) that Alcyon C 4.14 can't emit, and ends with
 #     `rte`.  Installed directly by Xbtimer -- no C wrapper needed.
-# psg_asm.s: LCP_STX's hand-assembly psg_wr/psg_mix/mowrit.
+# psg_asm.s: LCP_STX's hand-assembly psgWrite/psgMixer/aciaWrite.
 if [ ! -f psg_asm.o ] || [ "$DK_TOOLS/psg_asm.s" -nt psg_asm.o ]; then
     cp -f "$DK_TOOLS/psg_asm.s" psg_asm.s
     "$ALCYON_BIN/as68" -l -u psg_asm.s > /dev/null 2>&1 || {
@@ -42,7 +42,7 @@ if [ ! -f psg_asm.o ] || [ "$DK_TOOLS/psg_asm.s" -nt psg_asm.o ]; then
     }
 fi
 
-# blkcp_a.s: LCP_STX's hand-assembly blkcp32 (0x17310).
+# blkcp_a.s: LCP_STX's hand-assembly copyBlocks32 (0x17310).
 if [ ! -f blkcp_a.o ] || [ "$DK_TOOLS/blkcp_a.s" -nt blkcp_a.o ]; then
     cp -f "$DK_TOOLS/blkcp_a.s" blkcp_a.s
     "$ALCYON_BIN/as68" -l -u blkcp_a.s > /dev/null 2>&1 || {
@@ -51,7 +51,7 @@ if [ ! -f blkcp_a.o ] || [ "$DK_TOOLS/blkcp_a.s" -nt blkcp_a.o ]; then
     }
 fi
 
-# cp_asm.s: LCP_STX's hand-assembly copy protection, cp_main
+# cp_asm.s: LCP_STX's hand-assembly copy protection, checkCopyProt
 # (0x22c0-0x400b).  Assembled with -n (no branch optimization) because
 # the original picks bsr.w in places where bsr.s would fit -- every
 # branch in the file carries its own explicit size.
@@ -75,7 +75,7 @@ if [ ! -f mq_tick.o ] || [ "$DK_TOOLS/mq_tick.s" -nt mq_tick.o ]; then
     rm -f mq_hlpr.o mq_hlpr.s          # stale from earlier port scheme
     cp -f "$DK_TOOLS/mq_tick.s" mq_tick.s
     "$ALCYON_BIN/as68" -l -u mq_tick.s > /dev/null 2>&1 || {
-        echo "FAILED: mq_tick assembly"
+        echo "FAILED: timerAIsr assembly"
         exit 1
     }
 fi
@@ -110,7 +110,7 @@ done
 rm -f lcp.68k LCP.PRG
 # LCP_STX object order.  The 1985 link laid the game objects down in
 # this order, and every function's address depends on it:
-#   0x0012a globals    0x0219a mq_tick   0x02272 psg_asm
+#   0x0012a globals    0x0219a timerAIsr   0x02272 psg_asm
 #           (globals.o carries midi_seq.c -- see globals.c)
 #   0x022c0 cp_asm     0x0400c stx_u1    0x073e8 games
 #   0x0d9ea stx_u4     0x0de36 stx_u2    0x148fe stx_u3

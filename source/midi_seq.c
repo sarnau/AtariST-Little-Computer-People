@@ -16,10 +16,10 @@
  *
  * File-format provenance: .SNG and .ORG files are direct exports from
  * Activision Music Studio 2.0 (published 1986, Ed Bogas / Audio Light).
- * sgPlay strips a leading 10-byte Music Studio signature
+ * playSongFile strips a leading 10-byte Music Studio signature
  * (`\xCD` + "Mstudio" + `\xCD\x02`) before handing the rest of the file
  * to us; the layout below is offsets *inside the stripped body*, i.e.
- * inside the buffer sgPlay allocates.
+ * inside the buffer playSongFile allocates.
  *
  * Stripped-body layout (relative to mi_dbase = start + 0x1FE):
  *
@@ -31,7 +31,7 @@
  *                                         defaults, each 8 bytes
  *   body + 0x1A4..0x1FD    90-byte channel + program-change map
  *                          (15 logical channels x 2 bytes each; parsed
- *                          by mq_pacm at p - 90)
+ *                          by unpackChanMap at p - 90)
  *   body + 0x1FE           MIDI event stream (this is mi_dbase)
  *
  * The order of the functions and parts/ includes in this file is the
@@ -47,17 +47,17 @@
 #include "psgfreq.h"
 
 
-/* mq_skip comes first in this object. */
-#include "parts/mq_skip.c"
+/* skipTextField comes first in this object. */
+#include "parts/skipTextField.c"
 
-/* mq_inis: song-lifecycle entry point.
+/* startSong: song-lifecycle entry point.
    If a song is playing: signal SEQ_PHASE_SONG_ENDING and return
    without starting the new one; caller spins until mi_play is false.
    Idle: position mi_dbase at buffer+0x1FE (event stream), parse header,
    reset programs, skip 0x00/0xFF padding, store playback bounds, kick. */
 
 void
-mq_inis(song, maxPos)
+startSong(song, maxPos)
 unsigned char * song;
 long            maxPos;
 {
@@ -67,19 +67,19 @@ long            maxPos;
                 return;
         }
 
-        mq_parh(mi_dbase = song + 0x1fe);
-        mq_resp();
-        mq_setp(mq_skip(mi_dbase), maxPos);
-        mq_stap();
+        parseSongHeader(mi_dbase = song + 0x1fe);
+        resetPrograms();
+        initSongState(skipTextField(mi_dbase), maxPos);
+        armSequencer();
         mi_play = YES;
 }
 
-/* mq_setp: stash read cursor + end-of-song marker; init per-song
+/* initSongState: stash read cursor + end-of-song marker; init per-song
    driver state; publish ticks-per-beat via mi_tpb.
    Envelope base = mi_dbase - 0x168 (360 bytes, ADSR block). */
 
 void
-mq_setp(curPos, maxPos)
+initSongState(curPos, maxPos)
 unsigned char * curPos;
 long            maxPos;
 {
@@ -100,12 +100,12 @@ long            maxPos;
         mi_tpb          = g_mtspb;
 }
 
-/* mq_stap: init timer counters + arm sequencer.
+/* armSequencer: init timer counters + arm sequencer.
    All 4 tick counters seeded 100 (~500 ms grace before first event).
    mi_dwrm=0 selects XBIOS Midiws path (not direct ACIA). */
 
 void
-mq_stap()
+armSequencer()
 {
         /* Chained assignments on purpose: separate statements
            compile differently. */
@@ -115,10 +115,10 @@ mq_stap()
 }
 
 
-/* mq_pshl: push loop marker {return_addr, count-1} on mi_lstk (cap 49). */
+/* pushLoop: push loop marker {return_addr, count-1} on mi_lstk (cap 49). */
 
 void
-mq_pshl(a, b)
+pushLoop(a, b)
 void *  a;
 short   b;
 {
@@ -130,11 +130,11 @@ short   b;
         }
 }
 
-/* mq_popl: pop/decrement top of loop stack.  Returns loop-start ptr
+/* popLoop: pop/decrement top of loop stack.  Returns loop-start ptr
    if count nonzero, else NULL (fall through end). */
 
 unsigned char *
-mq_popl()
+popLoop()
 {
         unsigned char * ret;
         long            cnt;
@@ -151,7 +151,7 @@ mq_popl()
                 return ret;
 }
 
-/* mq_pars: walk compact event stream at mi_sqpos.
+/* parseEvents: walk compact event stream at mi_sqpos.
    Byte forms:
      0x00        tick separator; returns 1, mi_nlp0 loaded
      0x01..0x7F  note event, 3 bytes:
@@ -166,7 +166,7 @@ mq_popl()
      0xFF        end of song, returns 0 */
 
 short
-mq_pars()
+parseEvents()
 {
         /* No locals at all: mi_sqpos is walked with ++ in place and
            the command bytes are dispatched through a switch, as in the
@@ -179,14 +179,14 @@ mq_pars()
         if (mi_sqpos >= mi_seqE)
                 return 0;
         mi_evTf = 0;
-        mq_rdur();
+        peekNoteDur();
         if (mi_sqpos >= mi_seqE)
                 return 0;
 
         while (*mi_sqpos != 0) {
                 if ((*mi_sqpos & 0x80) == 0) {
                         /* Note event: unpack bytes 0..2, advance one
-                           byte at a time, queue via mq_qnne.  byte1
+                           byte at a time, queue via queueNote.  byte1
                            bit 5 = accent (max vel + max PSG vol). */
                         mi_evTf = 1;
                         mi_nnOn = 16 - (*mi_sqpos & 0x10);
@@ -204,8 +204,8 @@ mq_pars()
                         }
                         mi_nmof = *mi_sqpos & 0xc0;
                         /* mi_ndur, not mi_nlp0: this duration goes to
-                           a second cell that only mq_qnne reads.
-                           mq_rdur computes the same expression into
+                           a second cell that only queueNote reads.
+                           peekNoteDur computes the same expression into
                            mi_nlp0, which the tick counters use. */
                         mi_ndur = (mi_ndt[*mi_sqpos & 0x1f] - 1) * g_mtspb;
                         mi_sqpos++;
@@ -225,7 +225,7 @@ mq_pars()
                         }
 
                         if (mi_nnOn != 0)
-                                mq_qnne();
+                                queueNote();
                 } else {
                         switch (*mi_sqpos++ & 0xff) {
                         case SEQ_BAR:
@@ -233,7 +233,7 @@ mq_pars()
                                    next event only if none was decoded
                                    this pass. */
                                 if (mi_evTf == 0) {
-                                        mq_rdur();
+                                        peekNoteDur();
                                         if (mi_sqpos >= mi_seqE)
                                                 return 0;
                                 }
@@ -241,17 +241,17 @@ mq_pars()
                         case SEQ_LOOP_START:
                                 /* Loop start: byte = count, push the
                                    return address. */
-                                mq_pshl(mi_sqpos + 1, *mi_sqpos);
+                                pushLoop(mi_sqpos + 1, *mi_sqpos);
                                 mi_sqpos++;
-                                mq_rdur();
+                                peekNoteDur();
                                 if (mi_sqpos >= mi_seqE)
                                         return 0;
                                 break;
                         case SEQ_LOOP_END:
                                 /* Loop end: pop, jump back if nonzero. */
-                                if ((mi_dptr = mq_popl()) != 0)
+                                if ((mi_dptr = popLoop()) != 0)
                                         mi_sqpos = mi_dptr;
-                                mq_rdur();
+                                peekNoteDur();
                                 if (mi_sqpos >= mi_seqE)
                                         return 0;
                                 break;
@@ -264,11 +264,11 @@ mq_pars()
         return 1;
 }
 
-/* mq_rdur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
+/* peekNoteDur: skip 0x00 pad at mi_sqpos; peek next event's dur-index nibble.
    High-bit-clear (note) -> mi_nlp0 = tick-count; else mi_nlp0 = 0. */
 
 void
-mq_rdur()
+peekNoteDur()
 {
         for (; *mi_sqpos == 0; mi_sqpos++) ;
         if ((*mi_sqpos & 0x80) == 0)
@@ -278,13 +278,13 @@ mq_rdur()
                 mi_nlp0 = 0;
 }
 
-/* mq_qnne: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
-   and dispatch Note-On via mq_dise.  Queue entry fires paired Note-Off
-   later via mq_expN + mq_snof. */
+/* queueNote: queue Note-On in mi_evq as {duration, note|sustain, phys_ch}
+   and dispatch Note-On via sendMidiEvent.  Queue entry fires paired Note-Off
+   later via expireNotes + sendNoteOff. */
 
 
 void
-mq_qnne()
+queueNote()
 {
         short   ch;
 
@@ -309,7 +309,7 @@ mq_qnne()
                 return;
 
         if (mi_slop != NO)
-                mq_sepc(mi_ccha);
+                sendProgChange(mi_ccha);
         else
                 mi_ccha = mi_varR;
 
@@ -324,15 +324,15 @@ mq_qnne()
         g_meve[0] = (ch & 0xf) | 0x90;
         g_meve[1] = mi_cnot;
         g_meve[2] = mi_vel;
-        mq_dise(g_meve, (short) 3, ch);
+        sendMidiEvent(g_meve, (short) 3, ch);
 }
 
-/* mq_snof: send MIDI Note-Off (vel=0) for a queued note.
+/* sendNoteOff: send MIDI Note-Off (vel=0) for a queued note.
    nptr[0]={note|flags}, nptr[1]=physical channel byte.
    Fires only if note in [g_mnlo, g_mnhi] and non-zero. */
 
 void
-mq_snof(nptr)
+sendNoteOff(nptr)
 short * nptr;
 {
         /* Called with &mi_evq[i] and walks the pointer forward.  The
@@ -350,16 +350,16 @@ short * nptr;
         nptr++;
         g_meve[0] = (nptr[0] & 0xf) + 0x90;
         g_meve[2] = 0;
-        mq_dise(g_meve, (short) 3, (short) nptr[0]);
+        sendMidiEvent(g_meve, (short) 3, (short) nptr[0]);
 }
 
-/* mq_sepc: dispatch Program Change (0xCn) for logical channel `index`.
+/* sendProgChange: dispatch Program Change (0xCn) for logical channel `index`.
    Fires only if cached program differs and MIDI output enabled.
    Current-program keyed by physical channel (mi_chmap & 0xf), so
    shared physical channels only get one PC per song load. */
 
 void
-mq_sepc(index)
+sendProgChange(index)
 char    index;
 {
         if (g_mcpro[mi_chmap[index] & 0xf] == mi_pgmap[index])
@@ -370,13 +370,13 @@ char    index;
         g_meve[0] = (mi_chmap[index] & 0xf) | 0xc0;
         g_meve[1] = mi_pgmap[index];
         g_mcpro[mi_chmap[index] & 0xf] = mi_pgmap[index];
-        mq_dise(g_meve, (short) 2, (short) 0);
+        sendMidiEvent(g_meve, (short) 2, (short) 0);
 }
 
-/* mq_dise: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
+/* sendMidiEvent: send one MIDI event to MIDI OUT (Midiws) + YM2149 PSG.
    Both paths gated by their enabled flags.
    MIDI OUT: octave-transpose note by (env_val - hi_nibble(midi_ch))
-     * -12 semitones, write via mowrit (mi_dwrm=1) or Midiws; restore
+     * -12 semitones, write via aciaWrite (mi_dwrm=1) or Midiws; restore
      note before PSG path.
    PSG path (Note-On 0x9n only):
      vel=0 -> Note-Off: find channel by note, ENV_RELEASE.
@@ -388,7 +388,7 @@ char    index;
    Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
 short
-mq_dise(midiEvP, midiEvS, midi_ch)
+sendMidiEvent(midiEvP, midiEvS, midi_ch)
 char *          midiEvP;
 char            midiEvS;
 char            midi_ch;
@@ -419,7 +419,7 @@ char            midi_ch;
                                 (((3 - ((midi_ch >> 4) & 0xf)) * 12) & 0xff);
                 if (mi_dwrm == 1) {
                         while (midiEvS) {
-                                mowrit(*midiEvP);
+                                aciaWrite(*midiEvP);
                                 midiEvP++;
                                 midiEvS--;
                         }
@@ -466,7 +466,7 @@ char            midi_ch;
                    block; the source address lands in a local first. */
                 env_ptr = (mi_ccha - 1) * 8 + mi_env;
                 envelope_phase = ENV_ATTACK;
-                psg_cpE(env_ptr,
+                copyEnvelope(env_ptr,
                         (unsigned char *) &psg_envelope[chosen] + 1,
                         8L);
 
@@ -486,8 +486,8 @@ char            midi_ch;
                    nibble and mixer_bits the register number. */
                 attack_hi = psg_freq[*midiEvP + oct_shift] / 60;
                 if (mi_dwrm == 1) {
-                        psg_wr(attack_hi, PSG_NOISE_PERIOD);
-                        psg_mix(mixer_bits, noise_mask | 0xc0);
+                        psgWrite(attack_hi, PSG_NOISE_PERIOD);
+                        psgMixer(mixer_bits, noise_mask | 0xc0);
                 } else {
                         /* The PSG writes go straight to the trap:
                            the Giaccess macro's (char) cast on the data
@@ -505,8 +505,8 @@ char            midi_ch;
                         noise_mask = (attack_hi >> 8) & 0xf;
                         attack_hi = attack_hi & 0xff;
                         if (mi_dwrm == 1) {
-                                psg_wr(attack_hi, mixer_bits);
-                                psg_wr(noise_mask, mixer_bits + 1);
+                                psgWrite(attack_hi, mixer_bits);
+                                psgWrite(noise_mask, mixer_bits + 1);
                         } else {
                                 xbios(XBIOS_GIACCESS, attack_hi, mixer_bits + PSG_WRITE);
                                 xbios(XBIOS_GIACCESS, noise_mask, mixer_bits + (PSG_WRITE | 1));
@@ -544,11 +544,11 @@ char            midi_ch;
         return 1;
 }
 
-/* mq_expN: subtract val from each queued event's remaining duration;
-   when <=0, mq_snof + mq_rmev. */
+/* expireNotes: subtract val from each queued event's remaining duration;
+   when <=0, sendNoteOff + removeQueued. */
 
 void
-mq_expN(val)
+expireNotes(val)
 short   val;
 {
         short   i;
@@ -556,33 +556,33 @@ short   val;
         for (i = 0; i < mi_evi; i += 3) {
                 mi_evq[i] -= val;
                 if (mi_evq[i] <= 0) {
-                        mq_snof(&mi_evq[i]);
-                        if (mq_rmev(i) != 0)
+                        sendNoteOff(&mi_evq[i]);
+                        if (removeQueued(i) != 0)
                                 i -= 3;
                 }
         }
 }
 
-/* mq_rmev must follow mq_expN directly. */
-#include "parts/mq_rmev.c"
+/* removeQueued must follow expireNotes directly. */
+#include "parts/removeQueued.c"
 
-/* mq_tick lives in mq_tick.s: it needs privileged SR moves and an rte,
+/* timerAIsr lives in mq_tick.s: it needs privileged SR moves and an rte,
    which Alcyon C cannot emit. */
 
-/* mq_advs: sequencer state-machine advance from mq_tick.
+/* seqAdvance: sequencer state-machine advance from timerAIsr.
    WAIT_NOTE_EXPIRE (0): expire queued notes, reload prescaler, -> PARSE.
-   PARSE_NEXT_EVENT (1): mq_pars() walks next batch; 0=end-of-song ->
+   PARSE_NEXT_EVENT (1): parseEvents() walks next batch; 0=end-of-song ->
      SONG_ENDING, else mi_nlp0 = ticks until next event.
    SONG_ENDING (2): expire remaining; when queue empty, kill PSG + flags. */
 
 void
-mq_advs()
+seqAdvance()
 {
         short   res;
 
         if (g_mspha == SEQ_PHASE_WAIT_NOTE_EXPIRE) {
                 res = g_mtcou - mi_lpTk;
-                mq_expN(res);
+                expireNotes(res);
                 mi_lpTk    = g_mtcou;
                 g_mtpre    = mi_tpb;
                 g_mspha    = SEQ_PHASE_PARSE_NEXT_EVENT;
@@ -594,7 +594,7 @@ mq_advs()
                 /* The parse sits in a loop that returns from both arms;
                    that shape is part of the original code. */
                 while (mi_nlp0 < 0) {
-                        if (mq_pars() != 0) {
+                        if (parseEvents() != 0) {
                                 mi_nxTk += mi_nlp0;
                                 mi_nlp0 = mi_nxTk - g_mtcou;
                                 if (mi_nlp0 > 0)
@@ -609,7 +609,7 @@ mq_advs()
                 }
         } else {
                 res = g_mtcou - mi_lpTk;
-                mq_expN(res);
+                expireNotes(res);
                 mi_lpTk    = g_mtcou;
                 g_mtpre    = mi_tpb;
                 mi_nxTk   += mi_tpb;
@@ -618,20 +618,20 @@ mq_advs()
                         psg_envelope[1].phase =
                         psg_envelope[2].phase = ENV_IDLE;
                         mi_play = psg_ntAc = g_msmsa = NO;
-                        psg_wr(0, PSG_VOL_A);
-                        psg_wr(0, PSG_VOL_B);
-                        psg_wr(0, PSG_VOL_C);
+                        psgWrite(0, PSG_VOL_A);
+                        psgWrite(0, PSG_VOL_B);
+                        psgWrite(0, PSG_VOL_C);
                 }
         }
 }
 
-/* mq_stop: stop sequencer.
+/* stopSequencer: stop sequencer.
    Drain pending events, send Note-Off for every mi_noSt[] flag,
    clear g_msmsa.  Nothing calls it, but the original contains it. */
 
 
 void
-mq_stop()
+stopSequencer()
 {
         short   note;
         short   hadPend;
@@ -645,7 +645,7 @@ mq_stop()
         while (mi_evi > 0) {
                 mi_nlp0 = g_mtcou - mi_nxTk;
                 if (mi_nlp0 > 0) {
-                        mq_expN(mi_nlp0);
+                        expireNotes(mi_nlp0);
                         mi_nxTk += mi_nlp0;
                 }
         }
@@ -657,7 +657,7 @@ mq_stop()
                                 ch = mi_chmap[ch];
                                 g_meve[0] = (ch & 0x0f) | 0x90;
                                 g_meve[1] = note;
-                                mq_dise(g_meve, 3, ch);
+                                sendMidiEvent(g_meve, 3, ch);
                         }
                 }
         }
@@ -665,31 +665,31 @@ mq_stop()
         g_msmsa = NO;
 }
 
-/* mq_intim sits between mq_stop and mq_extm. */
-#include "parts/mq_intim.c"
+/* hookTimerA sits between stopSequencer and unhookTimerA. */
+#include "parts/hookTimerA.c"
 
-/* mq_extm: tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
+/* unhookTimerA: tear down MFP Timer-A hook; Xbtimer(0,...) reinstalls
    saved ISR from mi_svtv.  Nothing calls it, but the original contains
    it. */
 
 void
-mq_extm()
+unhookTimerA()
 {
         Xbtimer(XB_TIMER_A, MFP_STOP, 0x1c, mi_svtv);
 }
 
 
-/* mq_resp and mq_parh come near the end of the object. */
-#include "parts/mq_resp.c"
-#include "parts/mq_parh.c"
+/* resetPrograms and parseSongHeader come near the end of the object. */
+#include "parts/resetPrograms.c"
+#include "parts/parseSongHeader.c"
 
-/* mq_pacm: unpack 30-byte channel/program map (90 bytes before mi_dbase).
+/* unpackChanMap: unpack 30-byte channel/program map (90 bytes before mi_dbase).
    Bytes 0..14 = MIDI channel for logical 1..15; bytes 15..29 = program.
    Values are 1-based on disk (0 = no-op sentinel); decrement on load.
    Logical channel 0 reserved for game SFX. */
 
 void
-mq_pacm(p)
+unpackChanMap(p)
 unsigned char * p;
 {
         short   i;
@@ -703,15 +703,15 @@ unsigned char * p;
 }
 
 
-/* Rebuild g_mstr, the note translation table mq_tick reads every note
-   through, from the key setting in a song's header (mq_parh passes the
+/* Rebuild g_mstr, the note translation table timerAIsr reads every note
+   through, from the key setting in a song's header (parseSongHeader passes the
    byte it also stores in g_mkey).  Starts from identity, marks five
    entries of the lowest octave 0xFF, and returns there for value 1.
    Otherwise, in every octave, each scale degree whose bit is CLEAR in
    g_msmk[value] (bit 0 = B ... bit 6 = C) is moved one semitone: up
    for values up to 8, down above 8 -- i.e. sharps or flats. */
 void
-mq_bust(value)
+buildNoteMap(value)
 short   value;
 {
         short           i;
@@ -760,19 +760,19 @@ short   value;
 }
 
 
-/* psg_cpE must sit right before psg_upEn. */
-#include "parts/psg_cpE.c"
+/* copyEnvelope must sit right before stepEnvelopes. */
+#include "parts/copyEnvelope.c"
 
-/* psg_upEn: PSG software ADSR envelope processor.  50 Hz from mq_tick.
+/* stepEnvelopes: PSG software ADSR envelope processor.  50 Hz from timerAIsr.
    3 channels through attack->decay->sustain->release->fadeout.
    Per phase: Bresenham accum, delta = (target-cur)*rate_table[t],
    accum += delta; while accum > 360, cur += dir; accum -= 360.
    phase_timer==0 with dur==0 -> immediate fall-through (gotos).
-   Clamp cur to max_volume; write PSG amp reg 8/9/10 via psg_wr.
+   Clamp cur to max_volume; write PSG amp reg 8/9/10 via psgWrite.
    The case fall-throughs are written as gotos, as in the original. */
 
 void
-psg_upEn()
+stepEnvelopes()
 {
         char    i;
 
@@ -945,6 +945,6 @@ do_fadeout:
                            psg_envelope[i].max_volume
                          ? psg_envelope[i].max_volume
                          : psg_envelope[i].current_volume;
-                psg_wr(psg_ovol, psg_rot[i] - PSG_WRITE);
+                psgWrite(psg_ovol, psg_rot[i] - PSG_WRITE);
         }
 }

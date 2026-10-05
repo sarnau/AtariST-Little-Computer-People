@@ -86,7 +86,7 @@ extern short scn_dic[];
 extern unsigned char comp_tok[];
 extern short scn_siz;
 extern char *scn_buf;
-extern void scn_dec();
+extern void decodeScn();
 extern short* sv_bodyP;
 extern short* sv_headP;
 extern short vdihnd;
@@ -207,14 +207,14 @@ extern char g_cdinb[];
 extern BOOL16 food_dlv;
 extern short g_ptanf;
 /* ONE cell shared by two subsystems.  The compositor reads and writes
-   it as a word -- sc_ren8's frame gate and sp_imfs's reset -- and the
+   it as a word -- renderFrame's frame gate and initSlots's reset -- and the
    sequencer as a byte, and on the 68000 a byte write to a word's
    address lands on its high half.  A union gives each subsystem its
    own access width with no cast.  (`*(char *) &last_hz` does NOT
    work: Alcyon then accesses it as a word, not a byte.) */
 union LASTHZ {
-        unsigned short  w;      /* sc_ren8, sp_imfs   */
-        char            b;      /* mq_pars, mq_qnne   */
+        unsigned short  w;      /* renderFrame, initSlots   */
+        char            b;      /* parseEvents, queueNote   */
 };
 extern union LASTHZ lasthz;
 #define last_hz  lasthz.w

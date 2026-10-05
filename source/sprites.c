@@ -28,30 +28,30 @@
 #include "sprites.h"
 #include "tables.h"
 
-/* sp_updb -> parts/sp_updb.c, included by stx_u3.c after gameTick. */
+/* updateBody -> parts/updateBody.c, included by stx_u3.c after gameTick. */
 
-/* sp_ssco -> parts/sp_ssco.c, included by stx_u2.c. */
+/* carryBehind -> parts/carryBehind.c, included by stx_u2.c. */
 
-/* sp_sprs -> parts/sp_sprs.c, included by stx_u2.c. */
+/* activateSprite -> parts/activateSprite.c, included by stx_u2.c. */
 
-/* lcp_hwt -> parts/lcp_hwt.c, included by stx_u3.c immediately
+/* waitHeadTurn -> parts/waitHeadTurn.c, included by stx_u3.c immediately
    before gameTick. */
 
-/* hideLcp -> parts/hideLcp.c, included by stx_u2.c. */
+/* hideResident -> parts/hideResident.c, included by stx_u2.c. */
 
-/* showLcp -> parts/showLcp.c, included by stx_u2.c. */
+/* showResident -> parts/showResident.c, included by stx_u2.c. */
 
-/* sp_ss02 -> parts/sp_ss02.c, included by stx_u2.c. */
+/* carryInFront -> parts/carryInFront.c, included by stx_u2.c. */
 
-/* sp_lcpf -> parts/sp_lcpf.c, included late in stx_u3.c. */
+/* expandFrame -> parts/expandFrame.c, included late in stx_u3.c. */
 
 
-/* sp_flih (mirror a sprite in place, preserving width) lives in
-   alerts.c, right after sp_spud. */
+/* flipSprite (mirror a sprite in place, preserving width) lives in
+   alerts.c, right after setDogSprite. */
 
 
 void
-sp_upds()
+layoutSlots()
 {
         short   spriteID;
         short   index;
@@ -157,39 +157,39 @@ sp_upds()
         }
 }
 
-/* sp_lchu -> parts/sp_lchu.c, included by stx_u3.c after gameTick. */
+/* updateHead -> parts/updateHead.c, included by stx_u3.c after gameTick. */
 
-/* sp_imfs: populate 8 per-slot MFDB pairs, wire compositor MFDB
-   (g_srmfd) at scrbufA-aligned, call sp_drin.  Zeroes last_hz so
-   the first sc_ren8 frame-gate sees 0->N delta and proceeds. */
+/* initSlots: populate 8 per-slot MFDB pairs, wire compositor MFDB
+   (g_srmfd) at scrbufA-aligned, call deadHook.  Zeroes last_hz so
+   the first renderFrame frame-gate sees 0->N delta and proceeds. */
 
 
 void
-sp_imfs()
+initSlots()
 {
         short   i;
 
         last_hz = 0;
         for (i = 0; i < SPRITE_HW_SLOTS; i++) {
-                sp_iniM(0L, &g_semfi[i],
+                initMfdb(0L, &g_semfi[i],
                                  (void *) g_seaim[i],
                                  g_seacw[i], g_seach[i]);
-                sp_iniM(0L, &g_semfm[i],
+                initMfdb(0L, &g_semfm[i],
                                  (void *) g_seams[i],
                                  g_seacw[i], g_seach[i]);
         }
         /* No temporary on purpose: the buffer base is aligned to 512
            bytes right in the argument, and both extents are 16-bit
            products. */
-        sp_iniM(0L, &g_srmfd,
+        initMfdb(0L, &g_srmfd,
                 (void *) (((long) scrbufA + 0x1FFL) & ~511L),
                 scr_scal * 320, scr_scal * 200);
-        sp_drin();
+        deadHook();
 }
 
-/* sp_drin -> parts/sp_drin.c, included by stx_u3.c after gameTick. */
+/* deadHook -> parts/deadHook.c, included by stx_u3.c after gameTick. */
 
-/* sp_lbbd: dilate a 21-row body frame into shape data.  The source is
+/* maskBody: dilate a 21-row body frame into shape data.  The source is
    168 bytes (4 shorts/row), packed per row as
        mask = src[3] | ((src[1] | src[0]) << 16) | src[2];
    Walk bits 30..1: each isolated ON bit smears into 3 (bit-1|bit|bit+1)
@@ -197,11 +197,11 @@ sp_imfs()
    row into its predecessor. */
 
 
-/* sp_lbal -> parts/sp_lbal.c, included late in stx_u3.c. */
+/* buildMasks -> parts/buildMasks.c, included late in stx_u3.c. */
 
 
-/* sp_lbbd -> parts/sp_lbbd.c, included late in stx_u3.c. */
+/* maskBody -> parts/maskBody.c, included late in stx_u3.c. */
 
 
-/* sp_lbhd -> parts/sp_lbhd.c, included late in stx_u3.c. */
+/* maskHead -> parts/maskHead.c, included late in stx_u3.c. */
 

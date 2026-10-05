@@ -39,81 +39,81 @@
 #include "dat_u1.c"
 
 
-#include "parts/cntSong.c"
-#include "parts/sp_genma.c"
-/* dg_mvAni is followed directly by walk.c's dg_wkPth. */
-#include "parts/dg_mvAni.c"
-#include "parts/dg_wkPth.c"
-/* walk.c straddles two objects: lcp_path and lcp_fstp live here
-   with getFlrY, while lcp_wkD and friends are in stx_u2.c. */
-#include "parts/lcp_path.c"
-#include "parts/lcp_fstp.c"
-#include "parts/lcp_flwp.c"
-#include "parts/getFlrY.c"
+#include "parts/countSongs.c"
+#include "parts/makeMask.c"
+/* moveDog is followed directly by walk.c's dogNextWaypt. */
+#include "parts/moveDog.c"
+#include "parts/dogNextWaypt.c"
+/* walk.c straddles two objects: walkStep and playFootstep live here
+   with floorOfY, while walkToTarget and friends are in stx_u2.c. */
+#include "parts/walkStep.c"
+#include "parts/playFootstep.c"
+#include "parts/nextWaypoint.c"
+#include "parts/floorOfY.c"
 /* assets.c straddles: the two asset loaders are in this object,
-   right after getFlrY.  They need the trap bindings. */
-#include "parts/ldObj.c"
-#include "parts/ldSpr.c"
-#include "parts/scn_dec.c"
-#include "parts/fr_reac.c"
+   right after floorOfY.  They need the trap bindings. */
+#include "parts/loadObjects.c"
+#include "parts/loadSprites.c"
+#include "parts/decodeScn.c"
+#include "parts/unpackFile.c"
 #include "sprload.h"
 #include "tables.h"
 #include "tick_tables.h"
 #include "dat_u1d.c"
 #include "parts/main.c"
 #include "dog.c"
-/* save.c straddles too: lc_load and sp_regs sit between dg_ipos and
+/* save.c straddles too: loadSavedGame and defineSprite sit between placeDog and
    gameLoop. */
-#include "parts/lc_load.c"
-#include "parts/sp_regs.c"
-/* main.c straddles: gameLoop is in this object, between sp_regs
-   and execEv. */
+#include "parts/loadSavedGame.c"
+#include "parts/defineSprite.c"
+/* main.c straddles: gameLoop is in this object, between defineSprite
+   and runEvent. */
 #include "parts/gameLoop.c"
-#include "parts/chk_actT.c"
+#include "parts/chooseAction.c"
 #include "ai.c"
 #include "actions.c"
-/* execEv's and doAct's switch jump tables land in the data segment
+/* runEvent's and runAction's switch jump tables land in the data segment
    right here, so the globals that follow them come after this point,
    not with the rest at the top. */
 #include "dat_u1b.c"
-/* chk_timA sits between doAct and hs_posXY. */
+/* pickIdleAction sits between runAction and posToXY. */
 #include "airandom.c"
 #include "movement.c"
-#include "parts/vroCpyD.c"
-/* letload.c straddles: fl_ltpl is in this object, just ahead of
-   cpyScr.  gfx_prim.c straddles too: cpyScr, stpScrB and sprites.c's
-   sp_iniM are in this object. */
-#include "parts/al_loal.c"
-#include "parts/fl_ltpl.c"
-#include "parts/cpyScr.c"
-#include "parts/stpScrB.c"
-#include "parts/sp_iniM.c"
-/* vdi_init is split in two: the opener, and the attribute/clear half
+#include "parts/blitRect.c"
+/* letload.c straddles: loadLetterText is in this object, just ahead of
+   copyScreen.  gfx_prim.c straddles too: copyScreen, initHouseBuf and sprites.c's
+   initMfdb are in this object. */
+#include "parts/loadFrameFile.c"
+#include "parts/loadLetterText.c"
+#include "parts/copyScreen.c"
+#include "parts/initHouseBuf.c"
+#include "parts/initMfdb.c"
+/* vdiInit is split in two: the opener, and the attribute/clear half
    it calls, which must follow it directly. */
-#include "parts/vdi_init.c"
-#include "parts/vdi_cls.c"
-#include "parts/aes_init.c"
-#include "parts/initBRev.c"
-#include "parts/rv_bld.c"
-/* fillTopR is in this object, not stx_u2's where render.c's other
+#include "parts/vdiInit.c"
+#include "parts/vdiClear.c"
+#include "parts/initAes.c"
+#include "parts/initMirror.c"
+#include "parts/buildMirrorTable.c"
+/* fillPanel is in this object, not stx_u2's where render.c's other
    functions live. */
-#include "parts/fillTopR.c"
+#include "parts/fillPanel.c"
 #include "parts/getKey.c"
 /* getKey's jump table lands in the data segment here, so the last
    globals of this unit are declared behind it. */
 #include "dat_u1c.c"
 /* The bare Random() wrapper, just past getKey. */
 #include "parts/rnd.c"
-#include "parts/lcp_crnd.c"
+#include "parts/rollResident.c"
 #include "calendar.c"
 #include "renderx.c"
-/* st_titl is a real interactive title screen. */
-#include "parts/st_titl.c"
-#include "parts/stEnter.c"
-#include "parts/erChr.c"
+/* titleScreen is a real interactive title screen. */
+#include "parts/titleScreen.c"
+#include "parts/enterField.c"
+#include "parts/eraseChar.c"
 /* save.c's file helpers come near the end of this object. */
-#include "parts/fOpen.c"
-#include "parts/fr_read.c"
-/* er_nomem closes the object. */
-#include "parts/er_nomem.c"
+#include "parts/openFile.c"
+#include "parts/readFile.c"
+/* outOfMemory closes the object. */
+#include "parts/outOfMemory.c"
 

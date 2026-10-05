@@ -43,7 +43,7 @@ AVI=/tmp/lcp_frame_hash.avi
 FRAMES=/tmp/lcp_frame_hash_frames
 
 VBLS=${VBLS:-2000}     # small default for fast CI; the v_gtext threshold
-                       # this used to dodge was resolved by the initBRev fix
+                       # this used to dodge was resolved by the initMirror fix
 FPS_SAMPLE=${FPS_SAMPLE:-1}
 FPS_MAX=${FPS_MAX:-40}
 
