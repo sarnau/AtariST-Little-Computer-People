@@ -249,7 +249,7 @@ next_puzzle:
                         wpzSolve();
                         if (mgTimedOut != NO)
                                 goto cleanup;
-                        gameTick(0x28);
+                        gameTick(40);
                         goto next_puzzle;
                 case KEY_F10:
                         goto cleanup;
@@ -551,7 +551,7 @@ anaPickWord()
         char    tmp;
         char *  wp;
 
-        anaAnswer = anaDict + rndRng(0, 0x95) * 11;        /* 0..149 */
+        anaAnswer = anaDict + rndRng(0, 149) * 11;        /* 0..149 */
         pos     = 0;
         for (wp = anaAnswer; *wp > ' ' && *wp != '.'; ) {
                 /* Index first: this makes Alcyon fold the base into the
@@ -567,7 +567,7 @@ anaPickWord()
 
         while (anaStrMatch(anaScrambled, anaAnswer) != 0) {
                 pos = 0;
-                while (rndRng(10, 0x14) > pos) {
+                while (rndRng(10, 20) > pos) {
                         ia  = rndRng(0, len - 1);
                         ib  = rndRng(0, len - 1);
                         tmp = anaScrambled[ib];
@@ -719,7 +719,7 @@ same_word:
                                         printString("You took too many clues!",
                                               5, 69, COLOR_black);
                                         anaShowWord(anaAnswer, COLOR_black);
-                                        gameTick(0x14);
+                                        gameTick(20);
                                         word_complete = YES;
                                 }
                                 if (word_complete != NO)
@@ -744,14 +744,14 @@ validate:
                         printString("YOU GOT IT!!!!!!",
                                              5, 69, COLOR_black);
                         anaShowWord(anaAnswer, COLOR_black);
-                        gameTick(0x1e);
+                        gameTick(30);
                         anaClrBottom();
                         goto new_word;
                 /* The guess counter steps in the condition itself,
                    so both arms see it incremented. */
                 } else if (anaGuessNum++ < 8) {
                         printString(anaWrongMsgs[rndRng(0, 2)], 5, 69, COLOR_black);
-                        gameTick(0x14);
+                        gameTick(20);
                         anaClrBottom();
                         goto same_word;
                 } else {
@@ -760,12 +760,12 @@ validate:
                    new word. */
                 printString("Sorry, too many guesses!",
                              5, 69, COLOR_black);
-                gameTick(0x14);
+                gameTick(20);
                 anaClrBottom();
                 printString("Here is the word.",
                              5, 69, COLOR_black);
                 anaShowWord(anaAnswer, COLOR_black);
-                gameTick(0x1e);
+                gameTick(30);
                 anaClrWord();
                 goto new_word;
                 }
@@ -1007,7 +1007,7 @@ playPoker()
            a label inside the first exit test. */
         goto round;
 next_round:
-        gameTick(0x18);
+        gameTick(24);
 round:
                 panelErase(70, 10, 219, 62);
                 pkrAnte();
@@ -1046,7 +1046,7 @@ cleanup:
                                 gameTick(0);
                         }
                 }
-                gameTick(0x10);
+                gameTick(16);
 
                 pkrNumDisc = 0;
                 cardMessage("Do you want any cards?");
@@ -1992,11 +1992,11 @@ pkrAnte()
                 return;
         } else if (plyrChips == 0) {
                 cardMessage("Sorry, you're all out!!!");
-                gameTick(0x1e);
+                gameTick(30);
                 cardQuit = YES;
         } else if (compChips == 0) {
                 cardMessage("I'm all out!!!");
-                gameTick(0x1e);
+                gameTick(30);
                 cardQuit = YES;
         } else {
                 panelErase(5, 63, 319, 75);
@@ -2138,7 +2138,7 @@ round:
                 if (compChips == 0) {
 out_of_cards:
                         cardMessage("I'm out of cards! You're too good!");
-                        gameTick(0x14);
+                        gameTick(20);
 cleanup:
                         textTimer  = 0;
                         keysBlocked = NO;
@@ -2149,7 +2149,7 @@ cleanup:
                 if (plyrChips == 0) {
 no_cards:
                         cardMessage("No cards, huh? Better luck next time.");
-                        gameTick(0x14);
+                        gameTick(20);
                         goto cleanup;
                 }
 
@@ -2414,7 +2414,7 @@ playBlackjack()
            at the top and is skipped on the first pass. */
         goto round;
 next_round:
-        gameTick(0x18);
+        gameTick(24);
 round:
                 panelErase(70, 10, 219, 62);
                 panelErase(31, 43, 57, 53);
@@ -2446,7 +2446,7 @@ cleanup:
                 panelErase(70, 10, 219, 62);
                 if (plyrChips == 0) {
                         cardMessage("Game's over. I win.");
-                        gameTick(0x14);
+                        gameTick(20);
                         goto cleanup;
                 }
                 plyrChips--;
@@ -2515,22 +2515,22 @@ cleanup:
                 if (br != 0 && hit != 0) {
                         cardMessage("You have BLACKJACK...but so do I !!");
                         cardDraw(compHand[0], 0, 0);
-                        gameTick(0x14);
+                        gameTick(20);
                         bjSettle(&bjBetMain, 1, 2);
                         if (cardQuit != NO) {
                                 cardMessage("Game's over. I win.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 goto cleanup;
                         }
                         goto next_round;
                 } else if (br != 0) {
                         cardMessage("You have BLACKJACK!!");
-                        gameTick(0x14);
+                        gameTick(20);
                         phase_snap = bjBetMain;
                         bjSettle(&bjBetMain, 1, 1);
                         if (cardQuit != NO) {
                                 cardMessage("I'm all out!!");
-                                gameTick(0x14);
+                                gameTick(20);
                                 goto cleanup;
                         }
                         goto next_round;
@@ -2538,13 +2538,13 @@ cleanup:
                         cardMessage("I have BLACKJACK!!");
                         gameTick(10);
                         cardDraw(compHand[0], 0, 0);
-                        gameTick(0x14);
+                        gameTick(20);
                         cardMessage("I win double the bet.");
-                        gameTick(0x14);
+                        gameTick(20);
                         bjSettle(&bjBetMain, 0, 1);
                         if (cardQuit != NO) {
                                 cardMessage("Game's over. I win.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 goto cleanup;
                         }
                         goto next_round;
@@ -2577,7 +2577,7 @@ cleanup:
                                 bjNatSplit = NO;
                                 if (bjIsNatural(plyrHand)) {
                                         cardMessage("You have BLACKJACK!!");
-                                        gameTick(0x14);
+                                        gameTick(20);
                                         bjSettle(&bjBetMain, 1, 1);
                                         if (cardQuit != NO) {
                                                 cardMessage("I'm all out!!");
@@ -2617,12 +2617,12 @@ cleanup:
                                         bjSettle(&bjBetSplit, 1, 1);
                                         if (cardQuit != NO) {
                                                 cardMessage("I'm all out!!");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 goto cleanup;
                                         }
                                         bjNatSplit = YES;
                                 }
-                                gameTick(0x14);
+                                gameTick(20);
                         }
                 }
 
@@ -2665,7 +2665,7 @@ cleanup:
                                 }
                                 if (cardQuit != NO) {
                                         cardMessage("Game's over. I win.");
-                                        gameTick(0x14);
+                                        gameTick(20);
                                         goto cleanup;
                                 }
                         }
@@ -2704,7 +2704,7 @@ cleanup:
                                         }
                                         if (cardQuit != NO) {
                                                 cardMessage("Games over. I win.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 goto cleanup;
                                         }
                                 }
@@ -2741,7 +2741,7 @@ cleanup:
                                         }
                                         if (cardQuit != NO) {
                                                 cardMessage("Game's over. I win.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 goto cleanup;
                                         }
                                 }
@@ -2803,7 +2803,7 @@ cleanup:
                                                       "Need a hit on your second hand?") == -1) {
                                         if (mgTimedOut != NO) goto cleanup;
                                         cardMessage("Your second hand is busted!!");
-                                        gameTick(0x14);
+                                        gameTick(20);
                                         bjBustSplit = YES;
                                         while (bjBetSplit--) {
                                                 compChips++;
@@ -2824,7 +2824,7 @@ cleanup:
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
                         cardMessage("Here is your first hand again.");
-                        gameTick(0x14);
+                        gameTick(20);
                         for (br = 0; br < 5; br++) {
                                 if (plyrHand[br] == CARD_NONE)
                                         break;
@@ -2836,7 +2836,7 @@ cleanup:
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
                         cardMessage("Here is your second hand.");
-                        gameTick(0x14);
+                        gameTick(20);
                         for (br = 0; br < 5; br++) {
                                 if (bjSplitHand[br] == CARD_NONE)
                                         break;
@@ -2848,7 +2848,7 @@ cleanup:
                 cardMessage("Now here's my down card.");
                 gameTick(10);
                 cardDraw(compHand[0], 0, 0);
-                gameTick(0x14);
+                gameTick(20);
 
                 for (br = 0; br < 3; br++) {
                         bjDealerScore = 0;
@@ -2865,7 +2865,7 @@ cleanup:
                                 bjDealerScore = res;
                         if (bjDealerScore >= 17) {
                                 cardMessage("I'll stand.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 break;
                         }
                         if (br == 0)
@@ -2888,12 +2888,12 @@ cleanup:
                                 bjDealerScore = rv;
                         else {
                                 cardMessage("I'll stand.");
-                                gameTick(0x14);
+                                gameTick(20);
                         }
                 }
                 if (round_ctr != 0) {
                         cardMessage("I've busted !!");
-                        gameTick(0x14);
+                        gameTick(20);
                 }
 
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
@@ -2906,15 +2906,15 @@ cleanup:
                                 bjPlyrScore = res;
                         if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                 cardMessage("You win.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 bjSettle(&bjBetMain, 1, 0);
                         } else if (bjDealerScore == bjPlyrScore) {
                                 cardMessage("It's a tie and nobody wins.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 bjSettle(&bjBetMain, 1, 2);
                         } else {
                                 cardMessage("I win.");
-                                gameTick(0x14);
+                                gameTick(20);
                                 bjSettle(&bjBetMain, 0, 0);
                         }
                         goto next_round;
@@ -2936,17 +2936,17 @@ cleanup:
                                         bjPlyrScore = res;
                                 if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                                 cardMessage("You win with your first hand.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetMain, 1, 0);
 
                                 } else if (bjDealerScore == bjPlyrScore) {
                                                 cardMessage("First hand ties, nobody wins.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetMain, 1, 2);
 
                                 } else {
                                                 cardMessage("Your first hand loses.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetMain, 0, 0);
 
                                 }
@@ -2968,17 +2968,17 @@ cleanup:
                                         bjPlyrScore = res;
                                 if (round_ctr != 0 || bjDealerScore < bjPlyrScore) {
                                                 cardMessage("You win with your second hand.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetSplit, 1, 0);
 
                                 } else if (bjDealerScore == bjPlyrScore) {
                                                 cardMessage("Second hand ties, nobody wins.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetSplit, 1, 2);
 
                                 } else {
                                                 cardMessage("Your second hand loses.");
-                                                gameTick(0x14);
+                                                gameTick(20);
                                                 bjSettle(&bjBetSplit, 0, 0);
 
                                 }
@@ -3065,7 +3065,7 @@ char *  prompt;
         else
                 cardMessage("Here's your card.");
         if (forced != NO) {
-                gameTick(0x10);
+                gameTick(16);
                 (*cnt_ptr)--;
                 bjDealCard(hand, 0);
                 score = 0;
@@ -3116,7 +3116,7 @@ char *  prompt;
                 }
                 if (*cnt_ptr == CARD_BJ_STOP) {
                         cardMessage("You cannot take any more cards.");
-                        gameTick(0xf);
+                        gameTick(15);
                         return 0;
                 }
         }

@@ -43,7 +43,7 @@ answerPhone()
         headTarget = HEAD_ANIM_DISABLED;
         headPose      = HEAD_ANIM_DISABLED;
 
-        ticks = rndRng(0x28, 0x32);
+        ticks = rndRng(40, 50);
         while (ticks-- != 0) {
                 switch (rndRng(0, 2)) {
                 case 0:

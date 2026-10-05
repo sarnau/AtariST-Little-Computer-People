@@ -84,7 +84,7 @@ renderFrame()
             dogEating == NO &&
             dogX < 0x14 && dogY > 0xa0) {
                 dogEating    = YES;
-                dogEatCount = rndRng(0x52, 100);
+                dogEatCount = rndRng(82, 100);
         }
 
         /* Idle countdown while waiting for a target. */

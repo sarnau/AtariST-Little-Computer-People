@@ -1,7 +1,5 @@
 /*
- * agames.c -- ACTION_PLAY_COMPUTER and ACTION_PLAY_A_GAME.
- * useComputer: type at computer 0x80..0x1FF ticks, rare "clear screen".
- * playGame: filing cabinet -> game menu (1..5) -> game main -> cleanup.
+ * agames.c -- playGame, the ACTION_PLAY_A_GAME handler.
  */
 
 #include "types.h"
@@ -15,20 +13,27 @@
 #include "sprites.h"
 
 
-/* useComputer lives in parts/useComputer.c, in the object right before tvClearAnim. */
-
-/* The menu waits on the textTimer timeout (300, reloaded with 250 once it
-   runs low); while idle the resident yawns (dozeOff(1)) between polls. */
-
+/* Play a card or word game with the player.  The resident walks to the
+   filing cabinet on the top floor, opens its drawer if it is shut, and
+   shows the game menu (1..5) in the text panel, with keysBlocked set so
+   gameTick leaves the keyboard to this loop.  The menu waits on
+   textTimer (300 ticks).  When fewer than 50 remain the first time, the
+   resident walks to the middle of the floor and naps in short spells
+   (up to eight dozeOff(1) rounds, still polling for a digit), then
+   returns to the cabinet with a fresh 250 ticks; if that runs out too,
+   he shrugs and gives up.  Once a game is picked he takes the game box
+   out of the cabinet, carries it down to the kitchen table, sits and
+   runs the chosen game's main, then carries the box back up and closes
+   the cabinet.  dogNoTopFlr keeps the dog off the top floor meanwhile. */
 
 void
 playGame()
 {
         short   spare0;
         short   keycode;
-        short   game_running;
+        short   waitedOnce;
         short   spare3, spare4, spare5, spare6;
-        short   selected_game;
+        short   napsLeft;
 
         dogNoTopFlr        = YES;
         dogIdleCount = 1;
@@ -71,16 +76,16 @@ playGame()
         printString("4. Blackjack  5. Word Puzzles",   5, 24, COLOR_red);
 
         keycode      = 0;
-        game_running = NO;
+        waitedOnce = NO;
 
         while (keycode < '1' || keycode > '5') {
         keycode = getKey();
         gameTick(0);
 
-        if (textTimer < 0x32 && game_running == NO) {
-                /* Menu timed out -- yawn and idle. */
+        if (textTimer < 50 && waitedOnce == NO) {
+                /* First timeout: nap in the middle of the floor, then retry. */
                 textTimer      = 250;
-                selected_game    = 8;
+                napsLeft    = 8;
                 walkXTarget    = resX;
                 walkYTarget    = floorWalkY[floorOfY(resY) - 1];
                 noPreempt = YES;
@@ -92,7 +97,7 @@ playGame()
                 headTarget = 8;
                 waitHeadTurn();
 
-                while (selected_game-- != 0) {
+                while (napsLeft-- != 0) {
                         dozeOff(1);
                         gameTick(rndRng(0, 2));
                         keycode = getKey();
@@ -111,10 +116,10 @@ playGame()
                 animState              = STATE_STAND_SIDE_VIEW;
                 headTarget = 8;
                 waitHeadTurn();
-                game_running = YES;
+                waitedOnce = YES;
         }
 
-        else if (textTimer == 0 && game_running != NO) {
+        else if (textTimer == 0 && waitedOnce != NO) {
                 idleShrug();
                 keysBlocked = NO;
                 dogNoTopFlr = NO;
