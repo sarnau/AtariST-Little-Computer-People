@@ -12,7 +12,7 @@ char *  filename;
         /* The create attribute goes through a third local and the
            retry is a goto loop, as in the original. */
         short   rval;
-        short   iVar1;
+        short   fhnd;
         short   attr;
 
         rval = access(filename, 4);
@@ -21,10 +21,10 @@ char *  filename;
 
 again:
         attr  = 0;
-        iVar1 = Fcreate(filename, attr);
-        if (iVar1 < 0) {
+        fhnd = Fcreate(filename, attr);
+        if (fhnd < 0) {
                 er_write();
                 goto again;
         }
-        Fclose(iVar1);
+        Fclose(fhnd);
 }

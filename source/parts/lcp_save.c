@@ -10,7 +10,7 @@ short   size;
 void *  addr;
 {
         short   filehandle;
-        long    lVar1;
+        long    written;
 
         crFile(filename);
 
@@ -22,10 +22,10 @@ void *  addr;
         }
 
         for (;;) {
-                lVar1 = Fwrite(filehandle, (long) size, addr);
+                written = Fwrite(filehandle, (long) size, addr);
                 /* The size cast stays on the left on purpose: swapping
                    the operands changes the compiled code. */
-                if ((long) size == lVar1)
+                if ((long) size == written)
                         break;
                 er_write();
         }

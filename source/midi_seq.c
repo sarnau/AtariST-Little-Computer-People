@@ -57,8 +57,8 @@
    reset programs, skip 0x00/0xFF padding, store playback bounds, kick. */
 
 void
-mq_inis(param_1, maxPos)
-unsigned char * param_1;
+mq_inis(song, maxPos)
+unsigned char * song;
 long            maxPos;
 {
 
@@ -67,7 +67,7 @@ long            maxPos;
                 return;
         }
 
-        mq_parh(mi_dbase = param_1 + 0x1fe);
+        mq_parh(mi_dbase = song + 0x1fe);
         mq_resp();
         mq_setp(mq_skip(mi_dbase), maxPos);
         mq_stap();
@@ -399,7 +399,7 @@ char            midi_ch;
         char            chosen;                 /* also the saved note */
         char            unused;                 /* unused, but it must stay */
         char            best;
-        char            cVar4;
+        char            oct_shift;
         unsigned char * saved_ptr;
         char            saved_size;
         long            env_ptr;
@@ -476,7 +476,7 @@ char            midi_ch;
                    the octave shift (2 - N) * 12 semitones. */
                 attack_hi = (psg_envelope[chosen].attack_start_vol >> 4) & 0xf;
                 psg_envelope[chosen].attack_start_vol &= 0xf;
-                cVar4 = (2 - ((psg_envelope[chosen].attack_duration >> 4) & 0xf)) * 12;
+                oct_shift = (2 - ((psg_envelope[chosen].attack_duration >> 4) & 0xf)) * 12;
                 psg_envelope[chosen].attack_duration &= 0xf;
                 mixer_bits = attack_hi << chosen;
                 noise_mask = ~(9 << chosen);
@@ -484,7 +484,7 @@ char            midi_ch;
                 /* The three scratch shorts are reused from here on:
                    attack_hi carries the period, noise_mask its high
                    nibble and mixer_bits the register number. */
-                attack_hi = psg_freq[*midiEvP + cVar4] / 60;
+                attack_hi = psg_freq[*midiEvP + oct_shift] / 60;
                 if (mi_dwrm == 1) {
                         psg_wr(attack_hi, PSG_NOISE_PERIOD);
                         psg_mix(mixer_bits, noise_mask | 0xc0);
@@ -500,8 +500,8 @@ char            midi_ch;
 
                 mixer_bits = chosen << 1;
 
-                if (*midiEvP + cVar4 > 22) {
-                        attack_hi  = psg_freq[*midiEvP + cVar4];
+                if (*midiEvP + oct_shift > 22) {
+                        attack_hi  = psg_freq[*midiEvP + oct_shift];
                         noise_mask = (attack_hi >> 8) & 0xf;
                         attack_hi = attack_hi & 0xff;
                         if (mi_dwrm == 1) {
