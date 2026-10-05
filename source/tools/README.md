@@ -15,7 +15,7 @@ another binary), `stx_extract.py` (files out of a Pasti .stx), `prg.py`
 (shared PRG reader).
 
 **Ghidra:** `sync_ghidra_names.sh`, `gen_ghidra_verify.py`, `ghidra/`,
-`ghidra_globals_map.md`; `renames.tsv` maps the 2026-10-05 renames.
+`../../docs/ghidra_globals_map.md`; `renames.tsv` maps the 2026-10-05 renames.
 
 **Music:** `sngdump.py`, `psgrender.py`, `render_psg_all.py`,
 `midicheck.py` -- decode and render the .SNG/.ORG songs.

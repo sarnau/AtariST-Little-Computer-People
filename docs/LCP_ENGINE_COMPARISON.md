@@ -43,7 +43,7 @@ LCP's sound engine lives in one object at `LCP text+0x12a … +0x219a` (the port
 `midi_seq.c`, compiled into `globals.o`). Music Studio has the same routines, in the same
 order, at `AUDIO text+0xd6c8 … +0xf844`, with three of them relocated into other modules.
 
-Full machine-readable table: [`shared_functions.tsv`](shared_functions.tsv).
+Full machine-readable table: [`shared_functions.tsv`](../music/shared_functions.tsv).
 
 | function (LCP name) | LCP text | size | AUDIO text | size | relation |
 |---|---|---|---|---|---|
@@ -143,7 +143,7 @@ descending byte ramp instead.
 ## 4. Shared song data
 
 Eleven of this disk's twenty-one demo songs ship inside LCP unchanged
-([`song_files.tsv`](song_files.tsv)):
+([`song_files.tsv`](../music/song_files.tsv)):
 
 | Music Studio | LCP `DATA/` | relation |
 |---|---|---|

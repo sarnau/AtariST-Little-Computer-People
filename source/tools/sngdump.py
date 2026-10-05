@@ -3,7 +3,7 @@
 sngdump.py -- decoder for Activision "The Music Studio" .SNG / .ORG / .SND files
 (Atari ST, 1985).
 
-The format is documented in ../SNG_FORMAT.md.  Everything implemented here is
+The format is documented in docs/SNG_FORMAT.md.  Everything implemented here is
 taken from the playback engine itself: AUDIO.PRG (Music Studio) and LCP_STX.PRG
 (Little Computer People), which share the same sequencer object code.
 

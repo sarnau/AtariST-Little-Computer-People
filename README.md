@@ -31,13 +31,13 @@ The reverse engineering analysis is organized into the following documents:
 
 | Document | Contents |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, memory layout, game loop, AI decision engine, action system, player interaction, house layout, copy protection |
-| [PEOPLE.md](PEOPLE.md) | LCP character movement, pathfinding, walk cycles, head animation, body sprite assembly, player states |
-| [DOG.md](DOG.md) | Dog AI, autonomous wandering, eating behavior, petting interaction, depth-sorted sprite rendering |
-| [GAMES.md](GAMES.md) | Five mini-games: Anagram, War, Poker, Blackjack, Word Puzzle — rules, AI, card deck management |
-| [SOUND.md](SOUND.md) | MIDI sequencer engine, PSG envelope processor, 23 sound effects, Music Studio .SNG/.ORG file format, song catalog |
-| [IMAGEFORMAT.md](IMAGEFORMAT.md) | Pixel format, color palette, compressed screen images (.SCN), sprite/object files, playing cards, character body sprites (PE*.LCP) |
-| [NAMEMAP.md](NAMEMAP.md) | The port's function and variable names mapped to the Ghidra names these documents use |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, memory layout, game loop, AI decision engine, action system, player interaction, house layout, copy protection |
+| [PEOPLE.md](docs/PEOPLE.md) | LCP character movement, pathfinding, walk cycles, head animation, body sprite assembly, player states |
+| [DOG.md](docs/DOG.md) | Dog AI, autonomous wandering, eating behavior, petting interaction, depth-sorted sprite rendering |
+| [GAMES.md](docs/GAMES.md) | Five mini-games: Anagram, War, Poker, Blackjack, Word Puzzle — rules, AI, card deck management |
+| [SOUND.md](docs/SOUND.md) | MIDI sequencer engine, PSG envelope processor, 23 sound effects, Music Studio .SNG/.ORG file format, song catalog |
+| [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) | Pixel format, color palette, compressed screen images (.SCN), sprite/object files, playing cards, character body sprites (PE*.LCP) |
+| [NAMEMAP.md](docs/NAMEMAP.md) | The port's function and variable names mapped to the Ghidra names these documents use |
 
 ## C Source Reconstruction
 
@@ -50,21 +50,21 @@ documents above; [docs/history.md](docs/history.md) records how it was recovered
 
 | File | Format | Description |
 |---|---|---|
-| `house.scn` | Nibble-dict compressed | House background (320×200), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `title.scn` | Nibble-dict compressed | Title screen, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `body.lcp` | Fixed-frame sprites | Body sprite sheet (98 frames × 16×21), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `PE2–PE6.lcp` | Fixed-frame sprites | Character appearance variants, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `objects` | Sequential bitmaps | 56 static object graphics, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `sprites` | Sequential + index table | 50 overlay sprite definitions, see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `cards` | Raw bitmap array | 53 playing cards (16×24), see [IMAGEFORMAT.md](IMAGEFORMAT.md) |
-| `sounds.lcp` | DoSound sequences | 23 YM2149 sound effects, see [SOUND.md](SOUND.md) |
-| `*.sng` | Music Studio format | 11 background music songs by Ed Bogas, see [SOUND.md](SOUND.md) |
-| `*.org` | Music Studio format | 5 classical/traditional pieces for piano, see [SOUND.md](SOUND.md) |
-| `words` | Nibble-compressed text | Anagram dictionary (150 words), see [GAMES.md](GAMES.md) |
-| `wordpz.txt` | Nibble-compressed text | Word puzzle templates, see [GAMES.md](GAMES.md) |
+| `house.scn` | Nibble-dict compressed | House background (320×200), see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `title.scn` | Nibble-dict compressed | Title screen, see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `body.lcp` | Fixed-frame sprites | Body sprite sheet (98 frames × 16×21), see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `PE2–PE6.lcp` | Fixed-frame sprites | Character appearance variants, see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `objects` | Sequential bitmaps | 56 static object graphics, see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `sprites` | Sequential + index table | 50 overlay sprite definitions, see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `cards` | Raw bitmap array | 53 playing cards (16×24), see [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) |
+| `sounds.lcp` | DoSound sequences | 23 YM2149 sound effects, see [SOUND.md](docs/SOUND.md) |
+| `*.sng` | Music Studio format | 11 background music songs by Ed Bogas, see [SOUND.md](docs/SOUND.md) |
+| `*.org` | Music Studio format | 5 classical/traditional pieces for piano, see [SOUND.md](docs/SOUND.md) |
+| `words` | Nibble-compressed text | Anagram dictionary (150 words), see [GAMES.md](docs/GAMES.md) |
+| `wordpz.txt` | Nibble-compressed text | Word puzzle templates, see [GAMES.md](docs/GAMES.md) |
 | `names` | Plain text | Character name pool (266 × 10 bytes) |
 | `letter.txt` | Nibble-compressed text | Letter writing templates |
-| `hyber` | Raw struct dump | Save file (128-byte LCP struct), see [ARCHITECTURE.md](ARCHITECTURE.md) |
+| `hyber` | Raw struct dump | Save file (128-byte LCP struct), see [ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 
 ## Reverse Engineering Status
 

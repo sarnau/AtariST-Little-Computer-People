@@ -2,7 +2,7 @@
 
 Little Computer People's sequencer is object-for-object the same engine that ships in
 Activision's *The Music Studio* (Atari ST, `AUDIO.PRG`, 1985-11-20); see
-[`../LCP_ENGINE_COMPARISON.md`](../LCP_ENGINE_COMPARISON.md). Eleven of that disk's
+[`../LCP_ENGINE_COMPARISON.md`](../../docs/LCP_ENGINE_COMPARISON.md). Eleven of that disk's
 twenty-one demo songs are byte-identical to files in this repo's `DATA/`.
 
 These are all twenty-one of them, decoded and exported exactly like LCP's own songs in
@@ -14,7 +14,7 @@ These are all twenty-one of them, decoded and exported exactly like LCP's own so
 | [`psg/`](psg/) | YM2149 register-write logs (the WAV renderings are gitignored) |
 | [`sng_report.txt`](sng_report.txt) | structure dump of all 21 files, plus `TESTSNG` and `STANDARD.SND` |
 
-The format and the two export paths are documented in [`../SNG_FORMAT.md`](../SNG_FORMAT.md)
+The format and the two export paths are documented in [`../SNG_FORMAT.md`](../../docs/SNG_FORMAT.md)
 and [`../README.md`](../README.md); the tools are in
 [`../../source/tools/`](../../source/tools/).
 

@@ -16,7 +16,7 @@
 # pushing all 694 would overwrite the descriptive names Ghidra's own
 # analysis carries for the globals the map has never covered
 # (defProgMap is `midi_channel_volume` there).  Confirming one of those is
-# research, not a mechanical push -- see ghidra_globals_map.md.  Add a row
+# research, not a mechanical push -- see docs/ghidra_globals_map.md.  Add a row
 # here only once the pairing is established.
 A	0x296dc	ctrl_cn
 A	0x29922	psgPeriod

@@ -385,15 +385,15 @@ actually plays gets its own named track (`02 Accordian`, `13 Bass`, …), becaus
 Music Studio voices routinely share one MIDI channel and would otherwise be merged.
 Channel, program, velocity and transposition all follow the MIDI OUT path of `mq_dise`.
 
-Little Computer People's own songs are converted in [`midi/`](midi/); see
-[`README.md`](README.md).  (This file was written against the Music Studio disk,
+Little Computer People's own songs are converted in [`midi/`](../music/midi/); see
+[`README.md`](../music/README.md).  (This file was written against the Music Studio disk,
 so "this disk" below means that disk -- the format is the same one LCP reads.)
 
 [`../source/tools/psgrender.py`](../source/tools/psgrender.py) is the other export: a tick-accurate
 re-implementation of the engine's **YM2149** path (`mq_tick`, `mq_advs`, `mq_qnne`,
 `mq_expN`, `mq_dise`, `psg_upE`), producing a register-write log and an audio rendering
 of it. The two paths transpose differently and the PSG has three voices rather than
-sixteen, so they are not the same performance — see [`README.md`](README.md).
+sixteen, so they are not the same performance — see [`README.md`](../music/README.md).
 
 Verification: all 21 `.SNG` files on this disk, plus `TESTSNG` (a header-less raw event
 stream) and `STANDARD.SND`, decode to the final byte with no warnings and no

@@ -1,6 +1,6 @@
 # Port names -> the Ghidra analysis names
 
-The top-level analysis documents (ARCHITECTURE.md, PEOPLE.md, DOG.md,
+The analysis documents in this folder (ARCHITECTURE.md, PEOPLE.md, DOG.md,
 GAMES.md, SOUND.md, IMAGEFORMAT.md) use the descriptive names of the
 first Ghidra analysis, such as `action_brush_teeth`.  This table maps the
 port's names to them.
