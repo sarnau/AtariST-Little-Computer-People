@@ -291,7 +291,7 @@
 #define POS_MID_BATHROOM_ENTRANCE       27
 /* 28 unused */
 #define POS_MID_COMPUTER_DESK           29
-#define POS_MID_PIANO                   30
+/* 30 unused: x 288, right of the computer desk; nothing walks there */
 /* 31 unused */
 #define POS_BTM_STAIR_LANDING           32
 #define POS_BTM_DOG_BOWL                33

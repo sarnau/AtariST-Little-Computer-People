@@ -14,14 +14,6 @@
 #ifndef OSBIND_H
 #define OSBIND_H
 
-/* XBIOS trap numbers -- properties of the ABI, not of any shim. */
-#define XBIOS_Setpalette        6
-#define XBIOS_Setscreen         5
-#define XBIOS_Logbase           3
-#define XBIOS_Physbase          2
-#define XBIOS_Random            17
-#define XBIOS_Giaccess          28
-
 #ifdef HOST
 
 #include <stdlib.h>             /* NULL */
@@ -93,11 +85,8 @@ extern long     xbios();
 #define Fgetdta()               gemdos(0x2F)
 #define Fsfirst(p, a)           (int) gemdos(0x4E, p, a)
 #define Fsnext()                (int) gemdos(0x4F)
-#define Cconin()                gemdos(0x01)
-#define Cconws(s)               gemdos(0x09, s)
 #define Cconis()                (int) gemdos(0x0B)
 #define Crawcin()               gemdos(0x07)
-#define Pterm(rc)               gemdos(0x4C, rc)
 #define Super(ssp)              gemdos(0x20, ssp)
 #define Dsetpath(p)             gemdos(0x3B, p)
 #define Giaccess(d, r)          xbios(28, (char) (d), (short) (r))
