@@ -24,10 +24,11 @@ char *  str;
                 /* The "unrecognised" sentinel tested here is 0, even
                    though lookupWord returns -1 when it runs off the table.
                    So the word at index 0 (PLEASE) never contributes its
-                   bit and takes the +4 penalty instead.  1985 behaviour,
-                   kept on purpose. */
+                   bit and adds 4 to the priority instead -- a bonus, as
+                   higher priorities are obeyed sooner.  Unknown words
+                   (-1) add nothing.  1985 behaviour, kept on purpose. */
                 if ((enteredWord = lookupWord(cmdWord)) == 0) {
-                        /* Unrecognised word -- +4 priority penalty. */
+                        /* PLEASE: +4 priority. */
                         cmdPriority += 4;
                 } else if (enteredWord > 0) {
                         /* Both index tables are char[], and there

@@ -1,5 +1,6 @@
-/* Wait to be patted.  Unless patAllowed is already set, the
-   resident first goes to the couch and crouches (callDog).  He then
+/* Wait to be patted by the player (the dog takes no part).  Unless
+   patAllowed is already set, the resident first goes to the armchair by
+   the phone and crouches (callDog).  He then
    waits 100..200 ticks (10 during the intro), or until a new action is
    queued, for the player's Ctrl-P; afterwards patAllowed is cleared and he
    stands up. */

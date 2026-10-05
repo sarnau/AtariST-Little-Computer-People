@@ -1,5 +1,6 @@
-/* Pick a random .sng file and start it playing.
-   Uses foodSupply as a modulo index (the 1985 code reused the field). */
+/* Pick a random .sng file and start it playing.  foodSupply is the
+   size of his record collection: the pick is among the first that many
+   .SNG files on the disk. */
 
 void
 playRecord()

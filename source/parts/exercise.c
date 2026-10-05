@@ -1,4 +1,4 @@
-/* Exercise.  The resident walks to the middle-floor couch
+/* Exercise.  The resident walks to the bedroom rug (POS_MID_COUCH)
    and, facing side-on, cycles through the four arm-exercise poses
    (centre, up, centre, wide) for 8..127 steps, three ticks on each
    outstretched pose and one on centre, stopping early when a new

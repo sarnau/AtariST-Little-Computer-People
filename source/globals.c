@@ -99,7 +99,9 @@ BOOL16  dresserOpen;       /* DSF_DRESSER */
 BOOL16  toiletDoorOpen;       /* DSF_TOILET_DOOR */
 BOOL16  filingCabOpen;       /* DSF_FILING_CABINET */
 short   bowlLevel;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
-short   foodSupply;       /* working copy of resident.foodSupply */
+/* The number of records he owns, despite the name; working copy of
+   resident.foodSupply. */
+short   foodSupply;
 
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    songPlaying;

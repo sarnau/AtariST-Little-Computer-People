@@ -1,5 +1,5 @@
 /* Answer the phone (ACTION_EVENT_PHONE_CALL).  callDog walks the
-   resident to the couch beside the phone; he picks up the receiver
+   resident to the armchair beside the phone; he picks up the receiver
    (phoneAnswered set, phoneRinging cleared, the ring stopped by tick's phoneHangUp
    handling) and talks for 40..50 rounds of one or two ticks, each a random head frame
    with one of the four chatter effects.  Then he hangs up, crouches,

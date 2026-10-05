@@ -1,8 +1,9 @@
-/* ACTION_SIT_ON_COUCH_WITH_DOG.  callDog walks the resident to the
-   couch beside the phone (uninterruptibly, noPreempt) and lets him be
-   patted; he sits upright, the SPRITE_READING_1 prop appears beside
-   him, and he pets the dog for 30..50 three-tick rounds unless a new
-   action is queued.  Then he sits up, the prop is hidden, he crouches
+/* ACTION_SIT_ON_COUCH_WITH_DOG -- despite the name, reading in the
+   red armchair by the phone; the dog takes no part.  callDog walks the
+   resident there (uninterruptibly, noPreempt) and lets him be patted;
+   he sits, holds up a book (the SPRITE_READING_1 prop, drawn over his
+   face) and reads for 30..50 three-tick rounds unless a new action is
+   queued.  Then he sits up, the prop is hidden, he crouches
    to stand, waits for a running Ctrl-P pat (patActive) to finish, and
    clears patAllowed so the player can no longer pat him. */
 void

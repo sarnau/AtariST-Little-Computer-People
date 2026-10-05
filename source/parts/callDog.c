@@ -1,8 +1,9 @@
-/* The resident walks to the couch beside the phone on the
-   ground floor, turns side-on and crouches down, then sets patAllowed so
-   the player's Ctrl-P "pat" is accepted.  Gives up without crouching
+/* Despite the name, nothing here involves the dog: the resident walks
+   to the red armchair beside the phone on the ground floor, turns
+   side-on and crouches down, then sets patAllowed so the player's
+   Ctrl-P pat is accepted.  Gives up without crouching
    if the walk is preempted by a new action.  Called for ACTION_CALL_DOG
-   and on the way into petting, the couch sit and answering the phone. */
+   and on the way into petDog, sitWithDog and answering the phone. */
 void
 callDog()
 {

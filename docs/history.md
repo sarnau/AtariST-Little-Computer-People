@@ -2034,6 +2034,12 @@ different reason -- matchCommand tests `lookupWord(...) == 0` as
 and instead takes the +4 priority PENALTY that unknown words get.
 Saying please makes the request less likely to be obeyed.
 
+**Correction (2026-10-05):** the opposite.  A request's priority must reach
+8 to be obeyed and is dropped below 4, so PLEASE's +4 makes it MORE likely
+to be obeyed; and words the vocabulary does not know add nothing at all --
+`lookupWord` returns -1 for them, and only 0 triggers the +4.  See
+docs/PEOPLE.md, "Typed requests".
+
 Method notes: a newline inside `type_text` acts as Return, so several
 commands go in one call; the queue holds 10 and submitCommand drops anything
 further, so drain it under turbo (watch queueCount) between batches.  A
@@ -2111,6 +2117,14 @@ resident really does pet the dog on that couch.  So `callDog`
 `ACTION_CALL_DOG` and `ACTION_PET_DOG` all have real dog evidence and
 keep their names.  `POS_BTM_DOG_FOOD_STORE` (44) is referenced by
 NOTHING, so renaming it would swap one guess for another; left as is.
+
+**Correction (2026-10-05):** it does not.  Run under Hatari, action 19 shows
+him in the red armchair by the phone holding up an open book --
+`SPRITE_READING_1`, drawn at (221, 172) over his face -- with the dog
+elsewhere in the house; nothing in sitWithDog, callDog or petDog reads or
+sets any dog variable, and the dog's target is only ever set by its own
+wander picker.  The "dog" names describe what the first analysis guessed.
+See docs/PEOPLE.md, "Misleading names".
 
 Renaming cost nothing here and that was checked, not assumed:
 POS_BTM_* are `#define`s, and neither patAllowed nor patActive has a row in

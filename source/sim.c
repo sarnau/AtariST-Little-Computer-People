@@ -79,7 +79,7 @@ simStep()
                 resident.bathroomNeed = YES;
         }
 
-        /* Random daytime phone call: 2% per second, 08:00-21:59 only */
+        /* Random daytime phone call: 2% per game minute, 08:00-21:59 only */
         if (t_hour > 7 && t_hour < 22 &&
             rndRng(0, 100) < 2 &&
             phoneAnswered == NO &&
