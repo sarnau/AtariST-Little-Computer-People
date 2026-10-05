@@ -23,27 +23,26 @@
    Skips when t_min hasn't advanced past cached clockMinute. */
 
 
-/* drawObject: blit background object at (x,y) through the game's own
-   vro_cpy binding. */
+/* drawObject: copy object frame obj (an OBJ_* id) from the OBJECTS
+   bitmaps onto the house picture at (x, y), replace mode, through the
+   game's own vro_cpyfm binding. */
 
 
 void
-drawObject(g_oiidx, x, y)
-short   g_oiidx;
+drawObject(obj, x, y)
+short   obj;
 short   x;
 short   y;
 {
-        blitRect(vdiHandle, 3,
-                /* Addresses the MFDB array itself (20 bytes per entry),
-                   not through a pointer variable. */
-                g_oiidx * 20 + (long) objMfdbs,
+        blitRect(vdiHandle, S_ONLY,
+                (long) &objMfdbs[obj],
                 (long) &houseMfdb,
                 0, 0,
-                objWidths[g_oiidx] - 1,
-                objHeights[g_oiidx] - 1,
+                objWidths[obj] - 1,
+                objHeights[obj] - 1,
                 x, y,
-                objWidths[g_oiidx] + x - 1,
-                objHeights[g_oiidx] + y - 1);
+                objWidths[obj] + x - 1,
+                objHeights[obj] + y - 1);
 }
 
 /* fillPanel: clear top text strip (rows 0..maxY-1).
