@@ -10,7 +10,7 @@
 *   - goes supervisor if it is not already, sets TOS's flock byte at
 *     $43e so the OS keeps its hands off the floppy,
 *   - decrypts 96 bytes of itself in place (cpenc) under a raised
-*     interrupt mask, keyed by the current drive number,
+*     interrupt mask, with a fixed key built by the cpsum chain,
 *   - selects the drive itself through YM2149 register 14 (I/O port A),
 *     bypassing the OS,
 *   - drives the 1772 FDC directly through $ff8604/$ff8606 and the DMA
@@ -25,8 +25,9 @@
 * not a computation.  main stores the result in copyProtResult and moveInScene
 * parks the resident asleep for ever if it is zero.
 *
-* The 96 encrypted bytes at cpenc are emitted verbatim: they are not
-* valid instructions on disk, only after the decrypt loop has run.
+* The 96 bytes at cpenc..cpencend are written here as the decrypted
+* instructions; the build encrypts them after assembling (see the note
+* at cpenc), so the object carries the original's encrypted bytes.
 *
 * alcyon_link.sh links this file only for the default (shipped)
 * build.  Branch optimisation must stay off when assembling it: every
@@ -118,22 +119,62 @@ cpok1:
 	btst	#0,d0
 	beq.s	cpnxt
 
-* 96 bytes of encrypted code -- decrypted in place by cpdec1 before it
-* is reached, and re-encrypted by cpenc1 afterwards.
+* The track check.  These 96 bytes are stored ENCRYPTED in the
+* binary: cpdec1 decrypts them in place before they are reached, and
+* cpenc1 re-encrypts them afterwards.  The source keeps them readable;
+* tools/cp_encrypt.py encrypts the assembled object (every word plus
+* $1567, the key cpsetp gets from the cpsum chain) so the shipped
+* bytes are the original's.  Keep cpenc..cpencend exactly 48 words:
+* that is the count cpsetp loads into d6.
+*
+* a0 points at the raw track just read.  Find a run of $a1 sync bytes
+* followed by an $fe ID address mark for track 79 ($4f), then step
+* back 18 bytes and count the $ff gap bytes between there and the
+* start of the buffer.  Fewer than 15 sets bit 0 of d3, 80 or more
+* sets bit 1; the disk passes once both have been seen (d3 == 3).
+* The scan's end test compares a2 with the LONG stored at 512(a0),
+* not with the address a0+512.
 cpenc:
-	.dc.b	$57,$ee,$39,$af,$31,$81,$cb,$4f
-	.dc.b	$17,$67,$7c,$c7,$21,$6d,$16,$08
-	.dc.b	$7c,$59,$31,$81,$21,$6d,$16,$08
-	.dc.b	$7d,$5f,$21,$6d,$16,$65,$7b,$b3
-	.dc.b	$31,$81,$d1,$a3,$15,$b6,$7b,$ab
-	.dc.b	$ab,$63,$15,$67,$15,$79,$31,$89
-	.dc.b	$cb,$2f,$7c,$71,$21,$6d,$16,$66
-	.dc.b	$7c,$5b,$67,$ee,$76,$57,$19,$ee
-	.dc.b	$15,$67,$15,$77,$80,$75,$19,$ee
-	.dc.b	$15,$67,$15,$a7,$80,$85,$15,$6a
-	.dc.b	$15,$69,$75,$6f,$67,$ee,$7f,$7b
-	.dc.b	$15,$6a,$15,$68,$21,$6a,$15,$6a
-
+	clr.l	d7
+	movea.l	a0,a2
+cpsync:
+	move.b	(a2)+,d6
+	cmpa.l	512(a0),a2
+	beq.s	cpnxt
+	cmpi.b	#$a1,d6
+	bne.s	cpsync
+cpsync2:
+	move.b	(a2)+,d6
+	cmpi.b	#$a1,d6
+	beq.s	cpsync2
+	cmpi.b	#$fe,d6
+	bne.s	cpnxt
+	move.b	(a2)+,d6
+	cmp.b	#$4f,d6
+	bne.s	cpnxt
+	suba.l	#18,a2
+cpgap:
+	move.b	-(a2),d6
+	cmpa.l	a0,a2
+	beq.s	cpgapn
+	cmpi.b	#$ff,d6
+	bne.s	cpgap
+	addq.l	#1,d7
+	bra.s	cpgap
+cpgapn:
+	subi.l	#16,d7
+	bmi.s	cpshort
+	subi.l	#64,d7
+	bmi.s	cpnxt
+	ori.b	#2,d3
+	bra.s	cpgaps
+cpshort:
+	addq.l	#1,d7
+	bpl.s	cpnxt
+	ori.b	#1,d3
+cpgaps:
+	cmpi.b	#3,d3
+cpencend:
 	beq.s	cpgood
 	move.l	cpretv,d7
 	dbf	d7,cpsec

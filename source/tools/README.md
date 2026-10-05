@@ -1,7 +1,7 @@
 # source/tools/
 
 **Build, verify, test** -- what `run_all.sh` drives:
-`alcyon_build.sh`, `alcyon_link.sh` (with `bss_remap.py` and the
+`alcyon_build.sh`, `alcyon_link.sh` (with `cp_encrypt.py`, `bss_remap.py` and the
 `stx_bss_layout.tsv` spec), `prg_diff.py`, `reloc_audit.py`,
 `stx_check.sh` (`verify_bytes.py`, `ppbalance.py`), the Hatari tests
 `test_keyboard.sh`, `test_actions.sh`, `test_saveload.sh`,

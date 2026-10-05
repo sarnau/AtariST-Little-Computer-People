@@ -54,11 +54,18 @@ fi
 # cp_asm.s: LCP_STX's hand-assembly copy protection, checkCopyProt
 # (0x22c0-0x400b).  Assembled with -n (no branch optimization) because
 # the original picks bsr.w in places where bsr.s would fit -- every
-# branch in the file carries its own explicit size.
+# branch in the file carries its own explicit size.  The track check
+# (cpenc..cpencend) is written decrypted in the source; cp_encrypt.py
+# encrypts it in the object, as the original ships it.
 if [ ! -f cp_asm.o ] || [ "$DK_TOOLS/cp_asm.s" -nt cp_asm.o ]; then
     cp -f "$DK_TOOLS/cp_asm.s" cp_asm.s
     "$ALCYON_BIN/as68" -l -u -n cp_asm.s > /dev/null 2>&1 || {
         echo "FAILED: cp_asm assembly"
+        exit 1
+    }
+    python3 "$DK_TOOLS/tools/cp_encrypt.py" cp_asm.o || {
+        echo "FAILED: cp_asm encryption"
+        rm -f cp_asm.o
         exit 1
     }
 fi

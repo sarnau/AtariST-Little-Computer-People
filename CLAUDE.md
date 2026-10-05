@@ -85,6 +85,11 @@ links with `UNDEFINED`).  Host tools are rebuilt by
 `source/tools/build_toolchain.sh` and are codegen-equivalent to the
 period compiler.  cp68 crashes on input paths over ~120 characters.
 `cp_asm.s` must be assembled with `as68 -n` (explicit branch sizes).
+Its track check (`cpenc`..`cpencend`, 48 words) is written decrypted;
+`alcyon_link.sh` runs `tools/cp_encrypt.py` on `cp_asm.o` right after
+assembling it, adding the key `$1567` to every word as the original
+ships them.  Keep the block exactly 48 words, and don't add relocated
+operands to it.
 
 ## Layout
 
