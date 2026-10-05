@@ -185,7 +185,7 @@ short   headRestDir[93] = {
         HEAD_DIR_FRONT_RIGHT   /* 92..92 */
 };
 
-/* posXHalf[48]: X half-pixel coordinate per HOUSE_POS.
+/* posXHalf[48]: X half-pixel coordinate per house position (POS_*).
    Table value gets left-shifted by 1 at the call site to yield the
    full-pixel X (see posToXY). */
 short   posXHalf[48] = {
@@ -200,7 +200,7 @@ short   posXHalf[48] = {
          67,  70, 106, 110, 123, 132, 147, 140
 };
 
-/* posYOffset[48]: Y offset from floor baseline per HOUSE_POS. */
+/* posYOffset[48]: Y offset from floor baseline per house position (POS_*). */
 short   posYOffset[48] = {
           9,  14,   9,  10,  11,  14,  12,  13,
          12,  12,  12,   6,  15,  10,  14,   3,

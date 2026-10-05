@@ -235,6 +235,7 @@
 #define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
 /* ---- House positions: the index posToXY looks up --------------------- */
+#define POS_PER_FLOOR                   16      /* top 0..15, middle 16..31, bottom 32..47 */
 #define POS_TOP_LIVING_ROOM              0
 #define POS_TOP_DANCE_FLOOR              1
 #define POS_TOP_ARMCHAIR                 2

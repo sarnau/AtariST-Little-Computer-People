@@ -138,7 +138,7 @@ long    bitClear32[32] = {
 };
 
 
-/* NINE HOUSE_POS entries the dog picks (via rndRng) as its next
+/* NINE house positions (POS_*) the dog picks (via rndRng) as its next
    wander target -- the picker's index is rndRng(base, 8), so 0..8. */
 short   dogRoamSpots[9] = {
         POS_TOP_LIVING_ROOM,       POS_TOP_GAME_CHAIR_RIGHT,
