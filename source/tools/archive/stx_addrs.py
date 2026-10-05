@@ -25,7 +25,7 @@ Usage:
 """
 import bisect, io, contextlib, importlib.util, os, re, struct, sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # tools/; this file is in tools/archive/
 ROOT = os.path.dirname(os.path.dirname(HERE))
 REF = os.environ.get('LCP_REF', os.path.join(ROOT, 'DATA', 'LCP_STX.PRG'))
 BUILD = os.path.join(ROOT, 'source', 'build', 'alcyon')

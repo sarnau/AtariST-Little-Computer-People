@@ -20,7 +20,7 @@ scripts with the new numbers.
 """
 import os, struct, sys
 
-BUILD = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+BUILD = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                           'build', 'alcyon')
 WANT  = set(sys.argv[1:])
 

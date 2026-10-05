@@ -19,7 +19,7 @@ Usage:
 """
 import glob, os, re, struct, sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/
 from verify_bytes import (read_prg, pattern, tokens, PORT, SYM68K, ORIG,
                           MIN_UNIQUE, BUILD)
 

@@ -29,7 +29,7 @@ Usage:
 import io, os, re, struct, subprocess, sys, tempfile, contextlib
 import importlib.util
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # this file is in tools/archive/
 REF = os.environ.get('LCP_REF', os.path.join(ROOT, 'DATA', 'LCP_STX.PRG'))
 OBJDUMP = os.environ.get('OBJDUMP', 'm68k-elf-objdump')
 
@@ -95,7 +95,7 @@ def merge(intervals):
 def matched_names():
     """{STX address: port name} for every byte-matched function."""
     spec = importlib.util.spec_from_file_location(
-        'vb', os.path.join(os.path.dirname(os.path.abspath(__file__)),
+        'vb', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                            'verify_bytes.py'))
     vb = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(vb)

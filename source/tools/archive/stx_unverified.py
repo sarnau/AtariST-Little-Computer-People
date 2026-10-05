@@ -13,7 +13,7 @@ Honours LCP_REF; defaults to DATA/LCP_STX.PRG.
 """
 import sys, os, io, contextlib, importlib.util
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # tools/; this file is in tools/archive/
 sys.path.insert(0, HERE)
 spec = importlib.util.spec_from_file_location('vb', os.path.join(HERE, 'verify_bytes.py'))
 vb = importlib.util.module_from_spec(spec)

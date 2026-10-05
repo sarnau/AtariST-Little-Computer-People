@@ -328,19 +328,19 @@ library regions already match, with ONE exception, now resolved:
 Locating a divergent function is its own problem: verify_bytes hunts
 with the first 24 bytes and gives up when the prologue differs.  Four
 tools solve it:
-  * `stx_addrs.py` reads callee addresses out of the relocated call
+  * `archive/stx_addrs.py` reads callee addresses out of the relocated call
     sites inside functions that already match (and inside the matching
     PREFIX of divergent ones).  Authoritative.
-  * `stx_locate.py` slides a 40-byte window over the port's bytes and
+  * `archive/stx_locate.py` slides a 40-byte window over the port's bytes and
     looks for a stretch that occurs exactly once in LCP_STX.  It
     located 36 further functions, but its start address assumes the
     code before the window is the same length in both revisions --
     treat it as a lead and expect to nudge the address.
-  * `stx_neighbor.py` infers a function's address from the matched
+  * `archive/stx_neighbor.py` infers a function's address from the matched
     function that precedes it: where a unity unit already reproduces
     LCP_STX's order, the next function starts where that match ends.
     It reports the matching prefix so a wrong guess is obvious.
-  * `stx_whatis.py` goes the other way -- given an STX address it
+  * `archive/stx_whatis.py` goes the other way -- given an STX address it
     ranks the divergent port functions by length and similarity.
 
   A `bsr`'s TARGET inside a matched function is the most reliable
@@ -357,7 +357,7 @@ Structural rules of this build:
   pushes just the opcode+handle, no 3-arg padding.
 - **bsr-vs-jsr call patterns differ throughout** because the STX
   build's SOURCE-FILE PARTITION is completely different from the
-  port's.  `source/tools/stx_objmap.py` recovers it wholesale: a
+  port's.  `source/tools/archive/stx_objmap.py` recovers it wholesale: a
   bsr from A to B proves everything in [A,B] is one object (as68
   only shortens same-object calls, and the linker lays each object
   down contiguously), so merging all bsr intervals bounds the
@@ -468,7 +468,7 @@ Structural rules of this build:
   and putInFridge 0xec22 -- which is why its call to putInFridge is a short
   bsr.  So the STX sources grouped these differently again; per-
   function parts/ placement, not file ordering, is what reproduces
-  it.  `stx_addrs.py` plus a short-vs-word bsr is usually enough to
+  it.  `archive/stx_addrs.py` plus a short-vs-word bsr is usually enough to
   pin where a function belongs.
 
   **Clusters are LOWER bounds -- objects start earlier.**  leaveGameTable
@@ -1452,7 +1452,7 @@ relocations AND PC-relative displacements, so a function can report
 MATCH while its internal branch targets differ (stepEnvelopes and playAnagrams
 both did), and it walks the port's SYMBOL table, so `static` helpers
 -- which Alcyon emits without a symbol -- were never compared at all
-(`source/tools/stx_unverified.py` prints those runs).  Two tools
+(`source/tools/archive/stx_unverified.py` prints those runs).  Two tools
 carried this phase instead:
   * `source/tools/stx_txtdiff.py` -- whole-text compare, relocations
     only wildcarded.  `[START] [COUNT]` to focus.
@@ -1625,7 +1625,7 @@ Roadmap:
     **A 2-D array's ROW STRIDE is written down in the text.**  Alcyon
     indexes `T a[N][M]` as `base + i * sizeof(T[M])` and emits that
     scale as a literal `muls.w #K,Dn` (or a shift for a power of two),
-    so `source/tools/stx_strides.py` reads every array's stride back
+    so `source/tools/archive/stx_strides.py` reads every array's stride back
     out of the disassembly.  Combined with the relocation gap it gives
     the OTHER dimension for free: N = gap / K.  It independently
     confirmed objMfdbs[56] (stride 20, gap 1120), wpzAnswers[5][12] (stride
