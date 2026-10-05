@@ -50,7 +50,7 @@ short   tvBar3X[8] = {   /* bar 3 X per step */ 305, 305, 305, 305, 305, 305, 30
 
 short   tvBar3Y[8] = {   /* bar 3 Y per step */ 106, 105, 104, 103, 102, 101, 100,  99 };
 
-short   tvBarColor[4] = {   /* colour index per bar (through colorPens) */ 10, 5, 7, 13 };
+short   tvBarColor[4] = {   /* colour per bar (through colorPens) */ COLOR_red, COLOR_green, COLOR_yellow, COLOR_blue };
 
 /* Days per month, January first; daysInMonth replaces February's 28 by
    29 in leap years. */

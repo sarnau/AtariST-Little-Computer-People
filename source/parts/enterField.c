@@ -20,7 +20,7 @@ short   color;
         short   i;
         short   ch;
 
-        eraseRectColor(x, y - 7, (len << 3) + x, y, 15);
+        eraseRectColor(x, y - 7, (len << 3) + x, y, COLOR_dk_brown);
         printString(tmpl, x, y, color);
         i = 0;
         while (1) {
