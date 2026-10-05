@@ -121,7 +121,30 @@ flowchart TD
 ### Sickness
 
 `sicknessLevel` runs `SICKNESS_HEALTHY` (0) to `SICKNESS_CRITICAL` (4) and
-moves one step every 60 minutes while worsening, every 5 while improving.
+moves one step every 60 minutes while worsening, every 5 while improving:
+
+```mermaid
+stateDiagram-v2
+    Healthy --> Mild: a need runs out at severe (fallSick)
+    Mild --> Moderate: 60 min, worsening
+    Moderate --> Severe: 60 min, worsening
+    Severe --> Critical: 60 min, worsening
+    Critical --> Beyond: 60 min, worsening (no clamp)
+    Beyond --> Beyond: 60 min, worsening
+    Moderate --> Mild: fallSick again
+    Severe --> Mild: fallSick again
+    Critical --> Mild: fallSick again
+    Beyond --> Mild: fallSick again
+    Beyond --> Critical: 5 min, improving
+    Critical --> Severe: 5 min, improving
+    Severe --> Moderate: 5 min, improving
+    Moderate --> Mild: 5 min, improving
+    Mild --> Healthy: 5 min, improving
+    Beyond: level 5, 6, ...
+```
+
+The direction turns to improving (`startRecovery`) once hunger and thirst are
+both satisfied; any further `fallSick` turns it back to worsening.
 
 - `fallSick` sets him to `SICKNESS_MILD`, worsening, and makes him one mood
   step sadder.  It does this every time a need runs out at severe -- even
@@ -140,9 +163,25 @@ free time asleep (see the idle picker).  Nothing in the game kills him.
 
 `happiness` is `MOOD_HAPPY` (0), `MOOD_CONTENT` (1) or `MOOD_SAD` (2).  Every
 game hour the current spell counts down; when it ends the mood moves one step
-in `happinessDirection` and turns around at either end, so it cycles
-happy -> content -> sad -> content -> happy, each spell lasting its
-`moodDuration`.  The cycle pauses while he is sick and sad.
+in `happinessDirection` and turns around at either end, each spell lasting its
+`moodDuration` (happy and content 6..24 hours, sad 6..12):
+
+```mermaid
+stateDiagram-v2
+    [*] --> Content: new resident
+    Content --> Sad: spell over, heading down
+    Sad --> Content: spell over (turns up)
+    Content --> Happy: spell over, heading up
+    Happy --> Content: spell over (turns down)
+    Happy --> Content: falls sick
+    Content --> Sad: falls sick
+    Content --> Happy: patted (Ctrl-P)
+    Sad --> Happy: patted (Ctrl-P)
+```
+
+The hourly countdown pauses while he is sick and sad.  Falling sick also
+points the cycle downwards; from `SICKNESS_MODERATE` on every sickness step
+forces him sad.
 
 Being patted (Ctrl-P) makes him happy at once and starts a fresh happy spell;
 falling sick makes him sadder.
@@ -379,11 +418,25 @@ new line.  Return hands it to
 The request then waits in a 10-entry queue (`queueActions`) and is looked at
 when his decision ladder reaches rung 10:
 
-- **priority 8 or more:** he does it.  Before playing a game or the organ he
-  nods in agreement.
-- **4 to 7:** not yet.  He does an idle activity instead, and the priority
-  rises by one -- so it is done after 1 to 4 more activities.
-- **below 4:** refused and dropped.
+```mermaid
+flowchart TD
+    typed["Return: matchCommand"] --> match{"a phraseTable<br/>row matches?"}
+    match -->|no| gone["ignored"]
+    match -->|yes| prio["priority = rnd 0..3<br/>+ mood bonus (happy 3, content 1, sad 0)<br/>+ row bonus + 4 per PLEASE"]
+    prio --> full{"queue has<br/>fewer than 10?"}
+    full -->|no| gone
+    full -->|yes| queue["queued"]
+    queue --> rung{"ladder reaches rung 10:<br/>priority of the first entry"}
+    rung -->|"8 or more"| obey["nods (game, organ)<br/>and does it"]
+    rung -->|"4 to 7"| wait["priority + 1;<br/>an idle activity instead"]
+    wait -->|"next decision"| rung
+    rung -->|"below 4"| drop["dropped<br/>(queueCount not lowered)"]
+    drop -.->|"an idle activity instead"| rung
+```
+
+- **priority 8 or more:** he does it.
+- **4 to 7:** not yet; done after 1 to 4 more activities.
+- **below 4:** refused.
 
 A happy resident is therefore much more obliging than a sad one.
 

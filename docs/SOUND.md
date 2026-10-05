@@ -141,6 +141,34 @@ each time it passes 360 -- integer interpolation without division.  The volume
 is capped at the note's maximum and written to registers 8..10 with
 `psgWrite`.
 
+Each `ENV_*` value names the stage the channel sets up next, so the ramp a
+phase actually runs is the one before it: in `ENV_DECAY` the attack ramp runs,
+in `ENV_SUSTAIN` the decay ramp, and so on.
+
+```mermaid
+stateDiagram-v2
+    ENV_IDLE --> ENV_ATTACK: note-on
+    ENV_IDLE --> ENV_FADEOUT: note-on below the PSG's range, silent
+    ENV_ATTACK --> ENV_DECAY: one step, set up the attack ramp
+    ENV_DECAY --> ENV_SUSTAIN: attack ramp done, set up the decay ramp
+    ENV_SUSTAIN --> ENV_RELEASE: decay ramp done, set up the sustain ramp
+    ENV_RELEASE --> ENV_FADEOUT: sustain ramp done, ramp down to 0
+    ENV_RELEASE --> ENV_IDLE: no release duration
+    ENV_FADEOUT --> ENV_IDLE: timer out or volume 0
+    ENV_ATTACK --> ENV_RELEASE: note-off
+    ENV_DECAY --> ENV_RELEASE: note-off
+    ENV_SUSTAIN --> ENV_RELEASE: note-off
+```
+
+- **Zero durations:** a stage whose duration is 0 sets its target volume at
+  once and falls through to the next stage in the same step.
+- **Note-off** sets `ENV_RELEASE` with its timer at 0, so the next step
+  skips straight to the ramp down to 0.
+- **Ramp lengths:** attack and decay last `envTimeTab[duration]` steps at
+  `envRateTab[duration]`; sustain lasts `envSusTab[duration]` at
+  `envRelTab[duration]`; the final ramp down starts from the current volume.
+- **End of song:** all three channels are set back to `ENV_IDLE`.
+
 ## Sound effects
 
 ### The effects

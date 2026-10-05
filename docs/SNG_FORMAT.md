@@ -147,8 +147,15 @@ with these ROM tables (`envRateTab`, `envTimeTab`, `envSusTab`, `envRelTab`, ind
 | sustain time `envSusTab` | 0 | 1 | 2 | 4 | 8 | 18 | 24 | 40 | 45 | 60 | 72 | 90 | 120 | 180 | 360 | 30000 |
 | sustain rate `envRelTab` | 0 | 360 | 180 | 90 | 45 | 20 | 15 | 9 | 8 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 
-Phases run attack → decay → sustain → release → fadeout; a duration of 0 makes the phase
-snap straight to its target and fall through. The final volume is clamped to
+Phases run in this order; a duration of 0 makes the phase snap straight to its target and
+fall through (the full state machine is in [SOUND.md](SOUND.md), "PSG envelopes"):
+
+```mermaid
+flowchart LR
+    attack --> decay --> sustain --> release["release (to 0)"] --> idle
+    noteoff["note-off"] -.-> release
+```
+ The final volume is clamped to
 `maxVolume`, which the note's velocity sets. Only three notes can sound at once — the
 YM2149 has three channels — and `sendMidiEvent` steals the voice furthest along its envelope.
 

@@ -58,6 +58,23 @@ picture for animations the game does not have.
 `renderFrame` ([`parts/renderFrame.c`](../source/parts/renderFrame.c)) makes one
 frame:
 
+```mermaid
+flowchart TD
+    call(["renderFrame"]) --> pace{"125 ms since the last frame<br/>and a new vertical blank?"}
+    pace -->|no| back(["return"])
+    pace -->|yes| dog["the dog: move, eat, pick a spot<br/>sound-effect timing"]
+    dog --> bg{"textTimer"}
+    bg -->|"0"| full["copy the whole house picture"]
+    bg -->|"above 0: typed line or letter"| top27["top 27 lines from the panel,<br/>the rest from the house"]
+    bg -->|"below 0: minigame"| top77["top 77 lines from the panel,<br/>the rest from the house"]
+    full --> sprites
+    top27 --> sprites
+    top77 --> sprites["promote and draw the 8 sprite slots"]
+    sprites --> flip["Vsync, Setscreen: show the frame"]
+    flip --> sfx["start a queued sound effect (startSfx)"]
+    sfx --> swap["switch to the other screen;<br/>frameCount + 1"]
+```
+
 1. **Pacing.**  It returns at once unless 25 ticks of TOS's 200 Hz clock
    (125 ms) have passed and a vertical blank has happened since the last
    frame: at most 8 frames a second, never two in one blank.

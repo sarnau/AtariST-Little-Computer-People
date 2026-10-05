@@ -16,14 +16,30 @@ time base and the resident see [PEOPLE.md](PEOPLE.md); how the dog is drawn
 
 The dog has no activities and no decision ladder.  Its whole life runs inside
 the compositor, `renderFrame` ([`parts/renderFrame.c`](../source/parts/renderFrame.c)),
-once per frame (8 frames a second):
+once per frame (8 frames a second).  `moveDog`
+([`parts/moveDog.c`](../source/parts/moveDog.c)) moves it one step towards its
+target; the rest is a small state machine:
 
-1. `moveDog` ([`parts/moveDog.c`](../source/parts/moveDog.c)) moves it one step
-   towards its current target, if it has one.
-2. If it is standing at its bowl and allowed to eat, it starts eating.
-3. While it has no target, its idle countdown runs down; at zero it picks a
-   new target.
-4. While it is eating, the eating animation runs and the bowl empties.
+```mermaid
+stateDiagram-v2
+    [*] --> Walking: placed, first target set
+    Walking --> Resting: target reached, lies down
+    Resting --> Resting: wait - 1 per frame
+    Resting --> Eating: at the bowl, allowed, bowl not empty
+    Resting --> Walking: wait over, new spot picked
+    Eating --> Eating: meal countdown - 1 per frame
+    Eating --> Resting: meal over
+```
+
+- **Picking a spot:** one of the nine wander spots, never the last one; spot 5
+  (beside the bowl) sets `dogMayEat`.  The next wait, `dogIdleCount`, is drawn
+  at the same time: 20..200 frames.
+- **At the bowl** means x below 20 and y above 160, on the kitchen floor.
+- **The meal** lasts 82..100 frames (`dogEatCount`); the bowl drops a level at
+  60, 30 and 4 and once more at the end, which also clears `dogMayEat`.
+
+The wait is drawn when the spot is picked, but only counts down once the dog
+has arrived; after a meal it continues from where it was.
 
 Because this runs from the frame loop, the dog keeps moving while the resident
 is busy, asleep, or playing a game with the player.
