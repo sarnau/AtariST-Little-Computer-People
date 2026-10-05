@@ -260,7 +260,8 @@
 #define HEAD_ANIM_VERTICAL_OVERRIDE     0x80
 
 /* ---- House positions: the index posToXY looks up --------------------- */
-#define POS_PER_FLOOR                   16      /* top 0..15, middle 16..31, bottom 32..47 */
+/* Positions per floor: top 0..15, middle 16..31, bottom 32..47. */
+#define POS_PER_FLOOR                   16
 #define POS_TOP_LIVING_ROOM              0
 #define POS_TOP_DANCE_FLOOR              1
 #define POS_TOP_ARMCHAIR                 2
@@ -376,7 +377,7 @@
 #define SPRITE_TYPING_2                 0x34
 #define SPRITE_TYPING_3                 0x35
 #define SPRITE_TYPING_4                 0x36
-#define SPRITE_COOKED_MEAL              0x37   /* carried stove -> cabinet after cooking */
+#define SPRITE_COOKED_MEAL              0x37    /* carried from the stove after cooking */
 
 /* ---- Object frames: indices into the OBJECTS table for drawObject() ------
    The fixed compile-time indices passed as the first argument to
@@ -532,18 +533,18 @@
 #define ST_SICK_GREEN                   0x453
 
 /* ---- MIDI sequencer phase ------------------------------------------- */
-#define SEQ_PHASE_IDLE                          0
-#define SEQ_PHASE_WAIT_NOTE_EXPIRE              0
-#define SEQ_PHASE_PARSE_NEXT_EVENT              1
-#define SEQ_PHASE_SONG_ENDING                   2
+#define SEQ_PHASE_IDLE                  0
+#define SEQ_PHASE_WAIT_NOTE_EXPIRE      0
+#define SEQ_PHASE_PARSE_NEXT_EVENT      1
+#define SEQ_PHASE_SONG_ENDING           2
 
 /* ---- Song header command bytes -------------------------------------- */
-#define MIDI_HDR_SET_KEY                        0x80    /* key signature -> songKey, buildNoteMap */
-#define MIDI_HDR_SET_TEMPO                      0x81
-#define MIDI_HDR_SET_VOLUME                     0x83
-#define MIDI_HDR_SET_VELOCITY                   0x84    /* default velocity -> defVelocity, defPsgVol */
-#define MIDI_HDR_PROGRAM_CHANGE                 0xC0
-#define MIDI_HDR_END                            0xFF
+#define MIDI_HDR_SET_KEY                0x80    /* key signature -> songKey, buildNoteMap */
+#define MIDI_HDR_SET_TEMPO              0x81
+#define MIDI_HDR_SET_VOLUME             0x83
+#define MIDI_HDR_SET_VELOCITY           0x84    /* default velocity -> defVelocity, defPsgVol */
+#define MIDI_HDR_PROGRAM_CHANGE         0xC0
+#define MIDI_HDR_END                    0xFF
 
 /* ---- Song body control bytes (parseEvents's switch) -------------------- */
 #define SEQ_BAR                                 0x82
@@ -758,8 +759,8 @@
 #define SICK_DELAY_IMPROVING            5
 
 /* ---- Keyboard scancodes / Ctrl combos --------------------------------
-   Ctrl+X arrives as X-'@' (Ctrl+A=1, Ctrl+B=2, ...).  The names carry both the key and what the
-   game does with it. */
+   Ctrl+X arrives as X-'@' (Ctrl+A=1, Ctrl+B=2, ...).  The names carry
+   both the key and what the game does with it. */
 /* KEY_NONE (-1) signals "nothing in the buffer". */
 #define KEY_NONE                        (-1)
 /* getKey maps the extended keys to its own small codes

@@ -96,10 +96,10 @@ unsigned char   bodyShapes[BODY_FRAMES][LCP_BODY_SHAPE_SIZE];
    BSS-resident so it survives to game end without heap traffic. */
 short   bodyImage[LCP_BODY_DEST_WORDS];    /* expandFrame dest: image plane pair */
 short   bodyMask[LCP_BODY_DEST_WORDS];    /* expandFrame dest: mask plane pair */
-/* defineSprite populates spriteBitmap/spriteMask above; activateSprite/carryBehind/carryInFront/
-   setDogSprite all read from the same arrays.  There is no separate "dog only" table -- the
-   original binary has one 60-entry sprite pointer table shared by
-   every registered sprite. */
+/* defineSprite populates spriteBitmap/spriteMask above; activateSprite,
+   carryBehind, carryInFront and setDogSprite all read from the same
+   arrays.  There is no separate "dog only" table -- the original has one
+   60-entry sprite pointer table shared by every registered sprite. */
 /* dogMirImage / dogMirMask: the dog's mirrored image and mask (240 bytes =
    15 rows * 2 word-width * 4 planes * 2 bytes/word), written by flipSprite
    when the dog needs a mirrored frame. */

@@ -16,13 +16,13 @@
 
 /* letterSignoffs[4]: the letter sign-off writeLetter picks at random.  These are
    real string pointers, emitted after "*.sng" in this unit's pool. */
-char *  letterSignoffs[4]        = {
+char *  letterSignoffs[4] = {
         "Sincerely,", "Cordially,", "Yours Truly,", "Love,"
 };
 
 /* typingSprites[4]: sprite IDs used to hide previously-typed
    characters as the buffer position advances (SPRITE_TYPING_1..4). */
-short   typingSprites[4]      = {
+short   typingSprites[4] = {
         SPRITE_TYPING_1, SPRITE_TYPING_2,
         SPRITE_TYPING_3, SPRITE_TYPING_4
 };

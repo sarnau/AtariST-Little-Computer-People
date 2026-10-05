@@ -1,10 +1,3 @@
-/*
- * main()'s last step: the endless game loop.
- */
-
-#include <osbind.h>              /* Cconws, Cconin, Pterm, Xbtimer, ... */
-
-
 /* The last step of main, never returns.  If a saved game was loaded
    (loadedSave), the resident is placed at the study door and studyVisit
    brings him back into the house without saving.  When the copy

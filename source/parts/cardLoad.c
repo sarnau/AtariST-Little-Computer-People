@@ -28,12 +28,6 @@
  * face-down card.
  */
 
-#include "types.h"
-#include "structs.h"
-#include "enums.h"
-#include <osbind.h>
-#include "protos.h"
-#include "globals.h"
 
 
 /* Loads the CARDS file into cardImages in the layout described above,

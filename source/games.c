@@ -634,7 +634,9 @@ char *          anaPrompts[10] = {
         "Guess #9?          "
 };
 
-short           anaExtraGuess          = 0;    /* anagram: set when a clue pushed the guess count to 9, allowing one more guess (cleared per round) */
+/* Anagram: set when a clue pushed the guess count to 9, allowing one more
+   guess (cleared per round). */
+short           anaExtraGuess = 0;
 
 /* Anagram wrong-guess messages; playAnagrams picks one of the three with
    rndRng(0, 2).  The last two slots are NULL. */
@@ -647,13 +649,16 @@ char *          anaWrongMsgs[5] = {
 /* Card display positions -- 5 slots per row.  Row A = computer
    (y=11 top strip), Row B = player (y=37 middle strip).  X columns
    are spaced 28 pixels apart (15-px card + 13-px gutter). */
-short           cardXComp[5]         = { 70, 98, 126, 154, 182 };
+short           cardXComp[5] = { 70, 98, 126, 154, 182 };
 
-short           cardYComp[5]         = { 11, 11, 11, 11, 11 };    /* row A (computer) y per card slot */
+/* row A (computer) y per card slot. */
+short           cardYComp[5] = { 11, 11, 11, 11, 11 };
 
-short           cardXPlyr[5]         = { 70, 98, 126, 154, 182 };    /* row B (player) x per card slot */
+/* row B (player) x per card slot. */
+short           cardXPlyr[5] = { 70, 98, 126, 154, 182 };
 
-short           cardYPlyr[5]         = { 37, 37, 37, 37, 37 };    /* row B (player) y per card slot; all four read by cardDraw */
+/* row B (player) y per card slot; all four read by cardDraw. */
+short           cardYPlyr[5] = { 37, 37, 37, 37, 37 };
 
 /* The Anagrams minigame.  Loads the "words" file into a 10000-byte
    Malloc buffer (freed on F10), then loops: anaPickWord picks and scrambles
@@ -1040,7 +1045,7 @@ rank_from_hc_bp:
 /* The resident's raise announcement: playPoker writes his raise
    (pkrRaiseAmt, two digits, a leading zero blanked) over the underscores
    at [11] and [12] before showing it. */
-char *          pkrMsgRaise     = "I'll raise __.";
+char *          pkrMsgRaise = "I'll raise __.";
 
 /* Editable poker prompts, patched in place before each is shown.  The
    underscores are the digit slots the original ships -- pkrCallOrRaise and
@@ -1048,7 +1053,7 @@ char *          pkrMsgRaise     = "I'll raise __.";
    pkrMsgTake (and the trailing "." becomes "s." for a plural draw).
    They are POINTERS, not arrays, so every patch loads the pointer
    first; declaring them as arrays changes the compiled code. */
-char *          pkrMsgBet     = "I'll bet __.";
+char *          pkrMsgBet = "I'll bet __.";
 
 /* The Poker minigame (five-card draw against the resident).  Allocates
    and loads the card images into cardImages, gives both sides 400 chips,
@@ -1647,7 +1652,7 @@ pkrDecideBluff()
 
 /* The resident's draw announcement: pkrCompDraw writes the count into
    [10] and makes the ending "card." or "cards." from [16]. */
-char *          pkrMsgTake    = "I'll take _ cards.";
+char *          pkrMsgTake = "I'll take _ cards.";
 
 /* The resident's draw.  Rates his hand with pkrEvalHand, marks the cards
    to throw in pkrSelected (the cards that are not part of the scoring

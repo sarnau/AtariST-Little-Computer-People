@@ -10,7 +10,7 @@
  *
  */
 
-BOOL16  organPlaying          = NO;
+BOOL16  organPlaying = NO;
 
 /* Three-letter abbreviations, so the calendar and the letter date
    line read "Sep 4, 1985". */
@@ -20,14 +20,17 @@ char *  monthNames[12] = {
         "Sep", "Oct", "Nov", "Dec"
 };
 
-BOOL16          mouseHidden = 1;   /* YES while the mouse is hidden; hideMouse/showMouse only call graf_mouse on a change.  Starts YES, so the first hideMouse is a no-op until showMouse has shown it */
+/* YES while the mouse is hidden; hideMouse/showMouse only call graf_mouse
+   on a change.  Starts YES, so the first hideMouse is a no-op until
+   showMouse has shown it. */
+BOOL16          mouseHidden = 1;
 
 /* Lit-stove flame frames: cookMeal draws one of the first three at
    random.  The last three are never read and are not stove frames (a
    closet-door frame and two fireplace frames) -- leftovers in the
    original's data, kept because the table's size sets the layout. */
-short   stoveFrames[6]    = { OBJ_STOVE_ON_1, OBJ_STOVE_ON_2, OBJ_STOVE_ON_3,
-                              OBJ_DOOR_CLOSET_OPEN_2, OBJ_FIRE_OFF, OBJ_FIRE_1 };
+short   stoveFrames[6] = { OBJ_STOVE_ON_1, OBJ_STOVE_ON_2, OBJ_STOVE_ON_3,
+                           OBJ_DOOR_CLOSET_OPEN_2, OBJ_FIRE_OFF, OBJ_FIRE_1 };
 
 /* TV pattern animation.
    Four vertical scanlines drawn inside the TV screen -- each is a
@@ -60,9 +63,9 @@ short daysPerMonth[12] = {
 /* The "last-drawn" clock hand positions (minute 5, hour 6).  t_min/t_hour
    start at 0 (BSS), so the first redrawHands call sees a mismatch
    and paints the initial 0:00 hands over the pre-drawn 5:06 default. */
-short   clockMinute                         = 5;
+short   clockMinute = 5;
 
-short   clockHour                         = 6;   /* hour the clock's hour hand was last drawn for */
+short   clockHour = 6;   /* hour the clock's hour hand was last drawn for */
 
 /* Circle-position table for the minute hand.  Indexed by the current
    minute/5 mod 12 giving one of 12 positions on a small circle around
@@ -81,9 +84,11 @@ short   hourHandXY[15] = {
 /* Starts at -1: the first frame of animRecPlayer (record-player needle
    sweep) skips the draw when needlePos is < 0, then decrements to -3,
    then wraps to 13. */
-short   needlePos                         = -1;
+short   needlePos = -1;
 
-short   vuLeds          = 0;   /* record player VU LEDs currently lit, one bit per LED (vuLedMasks); animRecPlayer toggles them */
+/* Record player VU LEDs currently lit, one bit per LED (vuLedMasks);
+   animRecPlayer toggles them. */
+short   vuLeds = 0;
 
 /* Bit-mask toggles for the VU-meter LEDs, high bit first. */
 unsigned short  vuLedMasks[8] = {

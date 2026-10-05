@@ -17,7 +17,7 @@
    background (black), slot 14 white, etc.  pickClothes overwrites slots
    1 and 2 from the primary/secondary clothing tables; slot 6 is
    overwritten by setSkinColor for the sickness skin. */
-short   mainPalette[16]           = {
+short   mainPalette[16] = {
         0x000, 0x442, 0x265, 0x754,
         0x310, 0x040, 0x754, 0x760,
         0x247, 0x631, 0x700, 0x333,
@@ -38,12 +38,14 @@ short   mainPalette[16]           = {
    Launching via COMMAND.PRG leaves the workstation in a state that
    collapses vsl_color's colour arg into pen 15 (dark brown 0x410)
    regardless of index -- see the beginDraw comment. */
-short   colorPens[16]            = {
+short   colorPens[16] = {
         0,  2,  3,  6,  4,  7,  5,  8,
         9, 10, 11, 14, 12, 15, 13,  1
 };
 
-short   keysBlocked          = NO;   /* YES while an activity owns the keyboard (letter writing, minigames): gameTick stops reading keys */
+/* YES while an activity owns the keyboard (letter writing, minigames):
+   gameTick stops reading keys. */
+short   keysBlocked = NO;
 
 /* ---- Hardware sprite double-buffer (SPRITE_HW_SLOTS) -------------------
    Two parallel state sets per hardware slot: `pe` = pending (what game
@@ -58,41 +60,53 @@ short   keysBlocked          = NO;   /* YES while an activity owns the keyboard 
    original, so the declaration order matters. */
 /* Explicitly initialized, so it lands in DATA (all zeros) rather than
    as a .comm -- that is where the original has it. */
-short   pendReady[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
+short   pendReady[SPRITE_HW_SLOTS_ALLOC] = { 0 };   /* per-slot "pending" flag */
 
-short   headPose                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose now: bits 0..2 angle, 3..4 tilt (HEAD_POSE); HEAD_ANIM_DISABLED stops the head animation */
+/* Head pose now: bits 0..2 angle, 3..4 tilt (HEAD_POSE);
+   HEAD_ANIM_DISABLED stops the head animation. */
+short   headPose = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
 
-short   headTarget                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose the head animation is turning towards, same encoding */
+/* Head pose the head animation is turning towards, same encoding. */
+short   headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
 
-short   headMode                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* bit-fields) */
+/* Head animation mode (HEAD_ANIM_* bit-fields). */
+short   headMode = HEAD_ANIM_DISABLED;
 
 /* Two bytes of -1 that nothing references, between headMode and
    nextAction.  Dead 1985 data that Alcyon still allocates; it must stay
    for the layout. */
-short   spareWord                         = -1;
+short   spareWord = -1;
 
-short   nextAction                  = ACTION_NONE;   /* action chooseAction chose for runAction to run; ACTION_NONE = none */
+/* action chooseAction chose for runAction to run; ACTION_NONE = none. */
+short   nextAction = ACTION_NONE;
 
-short   recordPlaying              = 0;   /* YES while a record is playing (animates the player); saved in resident.record_playing */
+/* YES while a record is playing (animates the player); saved in
+   resident.record_playing. */
+short   recordPlaying = 0;
 
-short   tvRunning                       = 0;   /* YES while the TV is on (tvNoise draws the picture); saved in resident.tv_on */
+/* YES while the TV is on (tvNoise draws the picture); saved in
+   resident.tv_on. */
+short   tvRunning = 0;
 
-BOOL16  phoneRinging  = NO;   /* phone is ringing: set by simStep or Ctrl-C, cleared when answered */
+/* Phone is ringing: set by simStep or Ctrl-C, cleared when answered. */
+BOOL16  phoneRinging = NO;
 
-BOOL16  fireBurning                = NO;   /* fireplace is burning: animated each tick until fireTimeLeft runs out */
+/* Fireplace is burning: animated each tick until fireTimeLeft runs out. */
+BOOL16  fireBurning = NO;
 
-BOOL16  phoneAnswered     = NO;   /* resident is on the phone (answerPhone); blocks new calls */
+/* resident is on the phone (answerPhone); blocks new calls. */
+BOOL16  phoneAnswered = NO;
 
 /* Once-a-day flags for chooseAction's scheduled lunch, dinner, wake-up and
    bedtime actions: set when the action fires at its hour, cleared at
    midnight by resetDailyFlags. */
-BOOL16  lunchDone      = NO;
+BOOL16  lunchDone = NO;
 
-BOOL16  dinnerDone     = NO;   /* dinner already triggered today */
+BOOL16  dinnerDone = NO;   /* dinner already triggered today */
 
-BOOL16  wakeupDone  = NO;   /* wake-up already triggered today */
+BOOL16  wakeupDone = NO;   /* wake-up already triggered today */
 
-BOOL16  bedtimeDone         = NO;   /* bedtime already triggered today */
+BOOL16  bedtimeDone = NO;   /* bedtime already triggered today */
 
 /* ---- Body / carry frame tables (index = PLAYER_STATE) ------------------ */
 /* bodyIndex: maps animState -> body-frame index into body.lcp /
@@ -114,7 +128,7 @@ short   bodyIndex[93] = {
 
 /* carryFrames: alternate arms-up frames used while carrying an object in
    walking states 0..24. */
-short   carryFrames[25]      = {
+short   carryFrames[25] = {
         55, 56, 57, 58, 55, 56, 57, 58, 43, 63, 64, 65, 66, 59, 60, 61, 62,
         13, 14, 15, 16, 17, 18, 19, 18
 };
@@ -227,28 +241,29 @@ short   bodyYOffset[109] = {
 /* Staircase waypoints.  The two values that follow in memory (124,
    137) are the separate globals xLanding and yLanding, not part of
    this table. */
-short   stairWaypts[6]    = { 170, 185, 133, 124, 182, 72 };
+short   stairWaypts[6] = { 170, 185, 133, 124, 182, 72 };
 
 /* Middle-floor staircase-2 landing coordinates (top-of-flight X and Y).
    The middle-floor branch of nextWaypoint uses these to
    route through the between-floor landing instead of the raw
    stairWaypts entries. */
-short   xLanding           = 124;
+short   xLanding = 124;
 
-short   yLanding        = 137;   /* landing Y; xLanding (above) is the landing X */
+short   yLanding = 137;   /* landing Y; xLanding (above) is the landing X */
 
-short   floorWalkY[3]        = { 198, 135, 71 };   /* walking-line Y per floor, indexed floorOfY() - 1: bottom, middle, top */
+/* Walking-line Y per floor, indexed floorOfY() - 1: bottom, middle, top. */
+short   floorWalkY[3] = { 198, 135, 71 };
 
 /* On-stairs flag (short, YES/NO).  YES while
    the path stepper is inside a stair-traversal path; drives the
    stair-specific sprite-state sequence 9..24 and the wood-stairs SFX
    selection. */
-short   onStairs              = 0;
+short   onStairs = 0;
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).
    floorBottomY[0] = bottom floor, [1] = middle floor, [2] = top. */
-short   floorBottomY[3]        = { 202, 140, 77 };
+short   floorBottomY[3] = { 202, 140, 77 };
 
 /* spriteFileId: file-record index -> SPRITE_* slot to store its pointers in. */
 short   spriteFileId[50] = {

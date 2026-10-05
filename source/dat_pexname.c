@@ -17,4 +17,4 @@
    the declaration here does not disturb their order -- but the string
    body moves with it, into the pool between loadSprites's "sprites" and
    main's "data". */
-char *  pexName                     = "pex.lcp";
+char *  pexName = "pex.lcp";

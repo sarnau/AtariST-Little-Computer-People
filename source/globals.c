@@ -36,33 +36,49 @@ short   t_mon;         /* month 0..11 */
 short   t_year;        /* year - 1900 */
 
 PLAYER  resident;            /* the resident's record, saved to and loaded from "hyber" */
-BOOL16  movingIn;       /* YES while the move-in cutscene runs; holds off keys, phone and events */
+/* YES while the move-in cutscene runs; holds off keys, phone and events. */
+BOOL16  movingIn;
 
-BOOL16  inEvent;        /* YES while runEvent runs a deferred event, so walkToTarget is not interrupted */
+/* YES while runEvent runs a deferred event, so walkToTarget is not
+   interrupted. */
+BOOL16  inEvent;
 
-short   lastAction;        /* the action runAction last ran; the random picker avoids repeating it */
+/* The action runAction last ran; the random picker avoids repeating it. */
+short   lastAction;
 
 /* Left at 0 in BSS; the move-in cutscene sets them before gameLoop
    runs. */
 short   resX;        /* resident's screen position in pixels */
 short   resY;
-BOOL16  loadedSave;      /* loadSavedGame's result: 1 = a saved resident was read, 0 = new game */
+/* loadSavedGame's result: 1 = a saved resident was read, 0 = new game. */
+BOOL16  loadedSave;
 long    copyProtResult;      /* long: tested as a 32-bit value */
-short   walkSpeed;       /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
+short   walkSpeed;   /* walk speed, 5 from gameLoop; read only in walkStep's dead store */
 
-BOOL16  alarmRinging;        /* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm clears it */
+/* YES while the alarm clock rings (Ctrl-A, morningRoutine); wakeFromAlarm
+   clears it. */
+BOOL16  alarmRinging;
 BOOL16  alarmSounding;       /* the alarm's ring sound has started (gameTick) */
 short   ringCountdown;       /* gameTick's phone-ring countdown */
-short   waterLevel;       /* water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking drains */
+/* Water tank level, 0 (empty) .. WATER_MAX; Ctrl-W refills, drinking
+   drains. */
+short   waterLevel;
 
 /* Typed-command queue: submitCommand appends the action matchCommand found and
    its priority, chooseAction consumes from the front. */
 short   queueCount;        /* number of queued commands, 0..10 */
 short   queueActions[10];    /* queued action ids */
-short   queuePriority[10];    /* their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed */
-short   headFrame;        /* head sprite frame; stepHead derives it, actions override it to nod or talk */
-long    sfxTicksLeft;        /* game ticks until the current sound effect is stopped (renderFrame); 0 = none */
-BOOL16  noPreempt;        /* YES while the resident is busy in an activity, so walkToTarget walks uninterrupted */
+/* Their priorities: < 4 dropped, 4..7 aged by one per round, >= 8 obeyed. */
+short   queuePriority[10];
+/* Head sprite frame; stepHead derives it, actions override it to nod or
+   talk. */
+short   headFrame;
+/* Game ticks until the current sound effect is stopped (renderFrame); 0 =
+   none. */
+long    sfxTicksLeft;
+/* YES while the resident is busy in an activity, so walkToTarget walks
+   uninterrupted. */
+BOOL16  noPreempt;
 /* Walk target in screen pixels for walkToTarget / walkStep; both 0 = arrived. */
 short   walkXTarget;
 short   walkYTarget;
@@ -87,17 +103,19 @@ short   foodSupply;       /* working copy of resident.food_supply */
 
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    songPlaying;
-short   bowlChange;       /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
+short   bowlChange;   /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
 short   sfxPlaying;        /* YES while a sound effect is playing */
 short   sfxCurId;        /* id of the effect playing, tested to stop or chain it */
 char *  songBuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
 /* Song file counts (.SNG / .ORG), set at boot by countSongs(). */
 short   songCount;
 short   organCount;
-short   fireTimeLeft;       /* frames until the lit fire burns out (lightFire sets 2500..5000) */
+/* Frames until the lit fire burns out (lightFire sets 2500..5000). */
+short   fireTimeLeft;
 BOOL16  fireDouse;       /* request for tick.c to put the fire out and redraw the grate */
-short   textTimer;        /* text-strip timer: > 0 frames until the typed line expires,
-                           < 0 a minigame owns the strip, 0 idle; picks renderFrame's copy */
+/* Text-strip timer: > 0 frames until the typed line expires, < 0 a
+   minigame owns the strip, 0 idle; picks renderFrame's copy. */
+short   textTimer;
 short   stripScroll;        /* frames left of the text strip's scroll-up after Return */
 short   typedCursor;        /* cursor position in typedLine, 0..38 */
 
@@ -131,7 +149,8 @@ short * savedHeadImg;
 
 /* VDI init happens in graphics setup; on the host we default to a
    sentinel handle that the VDI stubs ignore. */
-short   vdiHandle;     /* virtual workstation handle from v_opnvwk, passed to every VDI call */
+/* Virtual workstation handle from v_opnvwk, passed to every VDI call. */
+short   vdiHandle;
 short   physHandle;    /* physical from graf_handle */
 /* graf_handle writes its four cell/box metrics into these globals,
    not into locals of initAes. */
@@ -156,13 +175,15 @@ short   ptsin[128];
 short   intout[128];
 short   ptsout[128];
 
-void *  stripBuf;     /* 512-aligned start of stripStore (fillPanel); the text strip is drawn there */
+/* 512-aligned start of stripStore (fillPanel); the text strip is drawn
+   there. */
+void *  stripBuf;
 char    seqPhase;   /* a byte: the sequencer's SEQ_PHASE_* state, stepped by seqAdvance */
 unsigned char * songEvents;   /* the loaded song's event stream, just past its header */
 
 /* ---- MIDI sequencer state ------------------------------------------- */
-unsigned char * songPos;       /* read position in the event stream, walked by parseEvents */
-long            songAdsr;         /* address of the song's ADSR block, 8 bytes per channel */
+unsigned char * songPos;   /* read position in the event stream, walked by parseEvents */
+long            songAdsr;   /* address of the song's ADSR block, 8 bytes per channel */
 char            noteVolume;     /* a byte: PSG volume for the note being parsed */
 /* initSongState sets loopTop to 9, the loop stack's empty mark. */
 short           queueLen;         /* number of shorts in use in noteQueue */
@@ -174,8 +195,9 @@ short           loopTop;        /* loop-stack index into loopStack */
    "int_out[7]" tempting -- but int_out is only 14 bytes, so declaring
    it that way collides with the next global. */
 short           beatTicks;
-long            timerTicks;        /* master Timer-A tick counter, counted up by timerAIsr */
-short           envDivider;        /* divider: timerAIsr runs stepEnvelopes each time it wraps */
+long            timerTicks;   /* master Timer-A tick counter, counted up by timerAIsr */
+/* Divider: timerAIsr runs stepEnvelopes each time it wraps. */
+short           envDivider;
 /* armSequencer resets ticksToNext at song start. */
 short           ticksToNext;
 
@@ -184,7 +206,7 @@ short           ticksToNext;
    peekNoteDur's identical expression goes to ticksToNext, which drives the
    tick counters. */
 short           noteDur;
-long            nextEvTick;       /* long tick counters: timerTicks value of the next event */
+long            nextEvTick;   /* long tick counters: timerTicks value of the next event */
 long            lastExpTick;       /* timerTicks when queued notes were last expired */
 unsigned char   midiMsg[4];     /* MIDI message being built for sendMidiEvent */
 
@@ -214,7 +236,7 @@ unsigned char * songEndPtr;        /* end of the stream; -1 = no limit */
 unsigned char * loopTarget;        /* loop-back address popped by popLoop */
 char            noteDecoded;        /* set once a note was decoded in this pass */
 char            noteToQueue;        /* non-zero: queue the note (bit 4 of byte 0 clear) */
-char            noteIsOff;        /* non-zero: the event is a note-off (bit 5 of byte 0) */
+char            noteIsOff;   /* non-zero: the event is a note-off (bit 5 of byte 0) */
 char            noteChan;        /* logical channel, low nibble of byte 0 */
 char            noteNum;        /* note to play: noteMap-mapped, or literal (+-1) */
 char            noteMode;        /* note-mode bits of byte 1: absolute, or one up/down */
@@ -256,10 +278,13 @@ unsigned char   psgChanNote[3];           /* current MIDI note per PSG channel A
 PSG_ENVELOPE    psgEnvelope[3];
 
 /* ---- SFX / Dosound state -------------------------------------------- */
-char            sfxCurPrio;        /* sfxPriority priority of the playing effect, for preemption */
-short           sfxDurHi;        /* effect duration from its last 4 bytes, high word (200 Hz) */
+/* sfxPriority priority of the playing effect, for preemption. */
+char            sfxCurPrio;
+/* Effect duration from its last 4 bytes, high word (200 Hz). */
+short           sfxDurHi;
 short           sfxDurLo;        /* ... and low word */
-long            sfxStartHz;        /* 200 Hz clock when the effect started; written, never read */
+/* 200 Hz clock when the effect started; written, never read. */
+long            sfxStartHz;
 /* Per-SFX Dosound sequence pointers.  Each entry points to a 2-byte
    size header followed by a Dosound register-command stream ending in
    a 4-byte terminator.  Populated at startup from SOUNDS.LCP.
@@ -394,11 +419,14 @@ MFDB    objMfdbs[56];
 short   objWidths[56];        /* each object's width in pixels, for drawObject */
 short   objHeights[56];        /* each object's height in pixels */
 
-BOOL16  typingOff;        /* YES while leaveGameTable has the resident away from a minigame:
-                           only the Ctrl hot keys work, typing is ignored */
-char    typedLine[64];    /* the command line being typed, NUL-terminated, up to 38 chars */
-BOOL16  pantryFull;       /* set when Ctrl-F is refused because the cabinet is full; handleKey only */
-short   patFrame;        /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
+/* YES while leaveGameTable has the resident away from a minigame: only
+   the Ctrl hot keys work, typing is ignored. */
+BOOL16  typingOff;
+/* The command line being typed, NUL-terminated, up to 38 chars. */
+char    typedLine[64];
+/* Set when Ctrl-F is refused because the cabinet is full; handleKey only. */
+BOOL16  pantryFull;
+short   patFrame;   /* frame of the Ctrl-P patting-hand animation, stepped by tick.c */
 
 union LASTHZ    lasthz;    /* last_hz / mi_lasT -- see globals.h */
 long    lastFrameVbl;       /* VBL count at renderFrame's last frame, to pace it */
@@ -414,15 +442,21 @@ MFDB    houseMfdb;
 MFDB *  flipMfdb;     /* renderFrame's page-flip MFDB */
 
 /* Dog wander and eating state, run by renderFrame. */
-BOOL16  dogNoTopFlr;         /* YES during a minigame: wander targets limited to entries 3..8 */
+BOOL16  dogNoTopFlr;   /* YES during a minigame: wander targets limited to entries 3..8 */
 short   dogIdleCount;       /* frames to idle before picking the next target, 20..200 */
-BOOL16  dogMayEat;       /* set when the stair-landing target is picked; lets the dog eat at its bowl */
+/* Set when the stair-landing target is picked; lets the dog eat at its
+   bowl. */
+BOOL16  dogMayEat;
 BOOL16  dogEating;        /* YES while the dog is eating */
-short   dogEatCount;        /* frames of eating left; the bowl drops a step at 60, 30, 4 and 0 */
+/* Frames of eating left; the bowl drops a step at 60, 30, 4 and 0. */
+short   dogEatCount;
 short   dogLastPick;       /* last wander target picked, never picked twice in a row */
 
-char *  parsedLine;        /* the line submitCommand hands to matchCommand (always typedLine) */
-short   cmdPriority;        /* priority matchCommand gives the typed command: mood, chance, unknown words */
+/* The line submitCommand hands to matchCommand (always typedLine). */
+char *  parsedLine;
+/* Priority matchCommand gives the typed command: mood, chance, unknown
+   words. */
+short   cmdPriority;
 
 /* Per-slot MFDB arrays for the masked-blit sprite pipeline. */
 MFDB    slotImgMfdb[SPRITE_HW_SLOTS];
@@ -438,12 +472,13 @@ char            phraseBits[10];
 char            cmdWord[42];
 
 /* ---- Mini-game storage ----------------------------------------------- */
-char *          anaDict;         /* Malloc'd "words" dictionary for Anagrams, 11-byte rows */
+char *          anaDict;   /* Malloc'd "words" dictionary for Anagrams, 11-byte rows */
 char *          wpzText;         /* Malloc'd Word Puzzles text */
 short *         cardImages;        /* Malloc'd card images for War, Poker and Blackjack */
 
 short           wpzIndex;         /* current Word Puzzle, 0..32, wrapping on F1/F2 */
-short           anaNumClues;        /* Anagrams clues taken for this word; written, never read */
+/* Anagrams clues taken for this word; written, never read. */
+short           anaNumClues;
 short           anaGuessNum;        /* Anagrams guess number, 1..9 */
 short           anaClueUsed;        /* 1 once F1 has given a clue for this guess */
 short           anaWordLen;        /* length of the Anagrams word */
@@ -463,17 +498,19 @@ BOOL16          mgTimedOut;
 short           savedTextAttr[10];
 
 short           pkrRound;       /* 0 at Poker start, 1 after pkrShowdown; read nowhere */
-BOOL16          cardQuit;        /* YES ends the card game (F10, timeout, or a side out of chips) */
+/* YES ends the card game (F10, timeout, or a side out of chips). */
+BOOL16          cardQuit;
 short           bjBetMain;        /* Blackjack: chips bet on the player's first hand */
 short           bjBetSplit;        /* Blackjack: chips bet on the split hand */
-short           compChips;        /* the resident's chips (Poker/Blackjack, 400) or cards (War, 26) */
+/* The resident's chips (Poker/Blackjack, 400) or cards (War, 26). */
+short           compChips;
 short           plyrChips;        /* the player's chips or cards, likewise */
 short           potChips;        /* chips in the pot */
 /* anaAnswer: pointer into anaDict dictionary (11-byte rows)
    set by anaPickWord when a word is picked. */
 char *          anaAnswer;
 short           bjDidSplit;       /* Blackjack: 1 once the player has split */
-short           warDeck[52];     /* War: the shuffled deck dealt into the two draw piles */
+short           warDeck[52];   /* War: the shuffled deck dealt into the two draw piles */
 /* Computer's and player's draw piles, 52 shorts each: popCard's
    unconditional
      for (i = 0; i < 51; i = i + 1) pile[i] = pile[i + 1];
@@ -563,10 +600,12 @@ short           wpzBlanks;
 /* 54-entry MFDB table covering 52 card faces + 1 back + 1 highlight
    overlay.  All share cardImages as their bitmap backing. */
 MFDB            cardMfdb[54];
-MFDB            cardTableMfdb;       /* the 320x77 card-table area the cards are copied into */
+/* The 320x77 card-table area the cards are copied into. */
+MFDB            cardTableMfdb;
 
-BOOL16  isDogDelivery;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
-BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and stop its ring */
+/* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery. */
+BOOL16  isDogDelivery;
+BOOL16  phoneHangUp;   /* request for gameTick to hang the phone up and stop its ring */
 
 /* ==== initialized data ================================================
    EVERY initialized global in the program, in the original's DATA
@@ -583,7 +622,7 @@ BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and s
 /* PSG register offsets.  Amp registers 8/9/10 with
    the PSG "write" bit (0x80) pre-set.  stepEnvelopes subtracts 0x80
    before calling psgWrite to recover the raw register number. */
-unsigned char   ampRegs[3]  = { 0x88, 0x89, 0x8a };
+unsigned char   ampRegs[3] = { 0x88, 0x89, 0x8a };
 
 /* Three pointers at psgEnvelope[0..2], one per PSG channel.  NOTHING in
    the program references this table, but the original carries it in
@@ -620,18 +659,19 @@ short           envRelTab[16] = {
              8,    6,    5,    4,    3,    2,    1,    0
 };
 
-BOOL16          midiOutOn     = YES;   /* send notes to MIDI OUT */
+BOOL16          midiOutOn = YES;   /* send notes to MIDI OUT */
 
-BOOL16          psgOutOn              = YES;     /* play notes on the YM2149 PSG */
+BOOL16          psgOutOn = YES;   /* play notes on the YM2149 PSG */
 
 /* MIDI channel count; parseSongHeader's channel-count case writes p[2]
    here. */
-short           songKey                  = 1;
+short           songKey = 1;
 
-short           songTempo              = 120;     /* song tempo in beats per minute, from the song header */
+/* song tempo in beats per minute, from the song header. */
+short           songTempo = 120;
 
 /* Ticks per beat at the default tempo songTempo = 120. */
-short           ticksPerBeat     = 20;
+short           ticksPerBeat = 20;
 
 /* 22 entries, not 32: that is the room the original leaves.  parseEvents
    indexes it with a 5-bit field (`durTable[*songPos & 0x1f]`), so 22..31
@@ -669,20 +709,22 @@ short           psgPeriod[128] = {
      noteVel   = 127 -- max MIDI velocity
      defVelocity  = 127
      defPsgVol = 15  -- max PSG volume */
-char            noteVel           = 127; /* a byte: velocity of the note being parsed */
+char            noteVel = 127;   /* a byte: velocity of the note being parsed */
 
 /* These two are char (byte compares/stores; Alcyon word-aligns them,
    hence the 2-byte spacing). */
-char            defVelocity   = 127;   /* velocity of an unaccented note, from the song header */
+/* Velocity of an unaccented note, from the song header. */
+char            defVelocity = 127;
 
-char            defPsgVol      = 15;    /* PSG volume of an unaccented note, from the header velocity */
+/* PSG volume of an unaccented note, from the header velocity. */
+char            defPsgVol = 15;
 
 /* The note range the sequencer will play, HIGH first in the data:
    0x60 is the top of the range and 0x24 the bottom, and sendMidiEvent
    rejects a note above the first and below the second. */
-char            noteHigh      = 0x60;    /* highest note played */
+char            noteHigh = 0x60;   /* highest note played */
 
-char           noteLow       = 0x24;    /* lowest note played */
+char           noteLow = 0x24;   /* lowest note played */
 
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
    0..131 (C-1..G9).  Populated by buildNoteMap at song
@@ -693,7 +735,10 @@ char           noteLow       = 0x24;    /* lowest note played */
 
 /* Program last sent on each MIDI channel; -1 = none, so the first
    sendProgChange always sends one. */
-char            sentProgram[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+char            sentProgram[16] = {
+        -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1
+};
 
 /* Logical song channel -> physical MIDI channel (low nibble); unpackChanMap
    fills it from the song header. */
@@ -733,11 +778,12 @@ unsigned char   defProgMap[16] = {
 
 /* useSongChan and fixedChan are char: playSongFile writes them as bytes.
    useSongChan is written by playSongFile and read by parseEvents. */
-char            useSongChan         = 1;
+char            useSongChan = 1;
 
-char    fixedChan                      = YES;    /* channel every note uses when useSongChan is NO */
+char    fixedChan = YES;   /* channel every note uses when useSongChan is NO */
 
-char *          progMap = (char *) defProgMap;   /* a byte pointer: MIDI program per logical channel */
+/* a byte pointer: MIDI program per logical channel. */
+char *          progMap = (char *) defProgMap;
 
 /* ---- the MIDI object ------------------------------------------------
    midi_seq.c is compiled AS PART OF THIS FILE, right here.  Alcyon

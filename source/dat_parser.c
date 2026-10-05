@@ -14,21 +14,21 @@
    +1 or -1 moves the head one direction toward the target the short
    way round, 0 means it is there, and HEAD_TURN_NONE marks the
    half-turn, which has no short way. */
-short   headTurnStep[15]   = {
+short   headTurnStep[15] = {
          1,  1,  1, HEAD_TURN_NONE, -1, -1, -1,  0,
          1,  1,  1, HEAD_TURN_NONE, -1, -1, -1
 };
 
 /* First frame of each tilt row, indexed by the tilt bits of headPose. */
-short   headTiltFrame[3]       = { HEAD_ROW_LEVEL, HEAD_ROW_LOWER, HEAD_ROW_LOWEST };
+short   headTiltFrame[3] = { HEAD_ROW_LEVEL, HEAD_ROW_LOWER, HEAD_ROW_LOWEST };
 
 /* Head-animation delay countdown. */
-short   headDelay                         = 1;
+short   headDelay = 1;
 
 /* First head frame of each mood's block in pexFrames, indexed by
    resident.happiness (MOOD_HAPPY, MOOD_CONTENT, MOOD_SAD): the file
    stores content, sad, happy. */
-short   moodHeadBase[3]  = { 2 * HEAD_FRAMES_PER_MOOD, 0, HEAD_FRAMES_PER_MOOD };
+short   moodHeadBase[3] = { 2 * HEAD_FRAMES_PER_MOOD, 0, HEAD_FRAMES_PER_MOOD };
 
 /* WORD_ID -> byte index into phraseBits.  ONE HUNDRED AND SIXTY-ONE
    bytes: the table closes with a -1 and Alcyon pads the odd length
@@ -217,4 +217,4 @@ char            bitMask8[8] = {
 
 /* Mood -> base priority for parsed commands: HAPPY (0) gives
    priority 3 (accepts more), SAD (2) gives 0 (rejects most). */
-short           moodPriority[3]        = { 3, 1, 0 };
+short           moodPriority[3] = { 3, 1, 0 };

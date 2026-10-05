@@ -48,4 +48,4 @@ char            studioSig[12] = "\315Mstudio\315\002";
    terminator" (in which case initSongState stores -1 into
    songEndPtr).  A .SNG file may carry a real byte offset
    here to trigger clean loop-back or fade-out at a specific point. */
-long            songMaxPos  = 0;
+long            songMaxPos = 0;
