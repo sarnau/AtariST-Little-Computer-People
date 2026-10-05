@@ -38,7 +38,7 @@ extern void studyVisit();
      each frame is a 16x21 image, 21 rows of 4 bitplane words (168
      bytes).  BODY.LCP holds BODY_FRAMES (98) frames, a PEx.LCP
      HEAD_FRAMES (66).  The masks are not in the files: buildMasks
-     generates them at boot.  PEx is chosen by character_sprite_id
+     generates them at boot.  PEx is chosen by characterSpriteId
      (2..6).
    NAMES: fixed 10-byte records; rollResident seeks to a random one.
    .SCN: a nibble stream with a 15-word dictionary in bytes 2..31 of a

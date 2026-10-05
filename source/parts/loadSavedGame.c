@@ -22,18 +22,18 @@ loadSavedGame()
                 readFile(fhnd, 0x80L, &resident);
                 Fclose(fhnd);
 
-                waterLevel = resident.water_level;
-                frontDoorOpen = resident.door_states_and_flags & DSF_FRONT_DOOR;
-                dresserOpen = (resident.door_states_and_flags & DSF_DRESSER) >> 4;
-                kitchenCabOpen = (resident.door_states_and_flags & DSF_KITCHEN_CABINET) >> 3;
-                bedClosetOpen = (resident.door_states_and_flags & DSF_CLOSET_DOOR) >> 2;
-                studyDoorOpen = (resident.door_states_and_flags & DSF_STUDY_DOOR) >> 1;
-                toiletDoorOpen = (resident.door_states_and_flags & DSF_TOILET_DOOR) >> 5;
-                filingCabOpen = (resident.door_states_and_flags & DSF_FILING_CABINET) >> 6;
-                bowlLevel = (resident.door_states_and_flags & DSF_DOG_BOWL_MASK) >> 7;
-                foodSupply = resident.food_supply;
-                recordPlaying = resident.record_playing;
-                tvRunning = resident.tv_on;
+                waterLevel = resident.waterLevel;
+                frontDoorOpen = resident.doorStatesAndFlags & DSF_FRONT_DOOR;
+                dresserOpen = (resident.doorStatesAndFlags & DSF_DRESSER) >> 4;
+                kitchenCabOpen = (resident.doorStatesAndFlags & DSF_KITCHEN_CABINET) >> 3;
+                bedClosetOpen = (resident.doorStatesAndFlags & DSF_CLOSET_DOOR) >> 2;
+                studyDoorOpen = (resident.doorStatesAndFlags & DSF_STUDY_DOOR) >> 1;
+                toiletDoorOpen = (resident.doorStatesAndFlags & DSF_TOILET_DOOR) >> 5;
+                filingCabOpen = (resident.doorStatesAndFlags & DSF_FILING_CABINET) >> 6;
+                bowlLevel = (resident.doorStatesAndFlags & DSF_DOG_BOWL_MASK) >> 7;
+                foodSupply = resident.foodSupply;
+                recordPlaying = resident.recordPlaying;
+                tvRunning = resident.tvOn;
 
                 setSkinColor();
         }

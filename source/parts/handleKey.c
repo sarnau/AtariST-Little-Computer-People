@@ -25,9 +25,9 @@ short   keycode;
 
         case KEY_CTRL_F_FOOD:
                 if (pantryFull != NO &&
-                    ((resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) < FOOD_PACKS_MAX)
+                    ((resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) < FOOD_PACKS_MAX)
                         pantryFull = NO;
-                if (((resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX) {
+                if (((resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX) {
                         pantryFull = YES;
                         return;
                 }
@@ -40,9 +40,9 @@ short   keycode;
                         patFrame = 0;
                         patActive = YES;
                         resident.happiness = MOOD_HAPPY;
-                        resident.happiness_direction = DIR_WORSENING;
-                        resident.happiness_duration_active =
-                                resident.mood_duration[MOOD_HAPPY];
+                        resident.happinessDirection = DIR_WORSENING;
+                        resident.happinessDurationActive =
+                                resident.moodDuration[MOOD_HAPPY];
                 }
                 return;
 

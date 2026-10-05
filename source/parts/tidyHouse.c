@@ -2,7 +2,7 @@
    resident walks to the top-floor filing cabinet, turns to the screen
    and rummages in it with rummageCabinet, which opens it if it is shut.  He
    closes it again (closeFilingCab) when a 0..100 roll beats his
-   initiative_threshold, and always during the cutscene (movingIn).
+   initiativeThreshold, and always during the cutscene (movingIn).
    Interrupted on the way, he simply gives up. */
 void
 tidyHouse()
@@ -21,7 +21,7 @@ tidyHouse()
 
         /* Both call results are used in place; adding a local here
            would change the compiled code. */
-        if (resident.initiative_threshold < rndRng(0, 100) ||
+        if (resident.initiativeThreshold < rndRng(0, 100) ||
             movingIn != NO)
                 closeFilingCab();
 }

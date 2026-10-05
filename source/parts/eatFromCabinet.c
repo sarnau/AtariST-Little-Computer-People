@@ -26,7 +26,7 @@ eatFromCabinet()
 
         openKitchenCab(DOOR_OPEN);
 
-        foodCount = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        foodCount = (resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         if (foodCount == 0) {
                 gameTick(2);
                 return;
@@ -35,14 +35,14 @@ eatFromCabinet()
         animState = STATE_REACH_INTO_CABINET;
         gameTick(3);
         foodCount--;
-        resident.door_states_and_flags =
+        resident.doorStatesAndFlags =
                 (foodCount << DSF_FOOD_SHIFT) |
-                (resident.door_states_and_flags & ~DSF_FOOD_MASK);
+                (resident.doorStatesAndFlags & ~DSF_FOOD_MASK);
         drawFoodCab();
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(2);
 
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openKitchenCab(DOOR_CLOSE);
 
         carryBehind(SPRITE_FOOD_PACKAGE);
@@ -131,8 +131,8 @@ eatFromCabinet()
         waitHeadTurn();
         gameTick(4);
 
-        resident.hunger_level   = NEED_SATISFIED;
-        resident.bathroom_timer = resident.bathroom_timer_max;
+        resident.hungerLevel   = NEED_SATISFIED;
+        resident.bathroomTimer = resident.bathroomTimerMax;
         startRecovery();
         noPreempt = NO;
 }

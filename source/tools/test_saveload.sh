@@ -22,7 +22,7 @@
 # So this checks the values.  The synthesised save carries distinctive
 # numbers and the test reads them back out of `lcp` in memory.  Note
 # that main is `loadedSave = loadSavedGame(); titleScreen();`, and with SKIP_TITLE
-# titleScreen overwrites owner_name and the date, so the fields asserted
+# titleScreen overwrites ownerName and the date, so the fields asserted
 # here are deliberately ones titleScreen never touches.
 #
 # Env: KEEP_LOG=1, HATARI=, TOS_IMG=, GAME_DIR= as in hatari_probe.sh.
@@ -67,21 +67,21 @@ import struct, os
 p = bytearray(128)
 def s(off, val): struct.pack_into('>h', p, off, val)
 s($OFF_CLOTHING, $WANT_CLOTHING)
-s(0x02, 3)     # skin_color
-s(0x04, 22)    # bedtime_hour
-s(0x06, 6)     # wake_hour
-s(0x08, 12)    # lunch_hour
-s(0x0a, 18)    # dinner_hour
-s(0x0c, 1)     # personality_type
-s(0x0e, 4)     # activity_level
+s(0x02, 3)     # skinColor
+s(0x04, 22)    # bedtimeHour
+s(0x06, 6)     # wakeHour
+s(0x08, 12)    # lunchHour
+s(0x0a, 18)    # dinnerHour
+s(0x0c, 1)     # personalityType
+s(0x0e, 4)     # activityLevel
 s(0x28, 1)     # happiness
 s(0x2a, 12); s(0x2c, 12); s(0x2e, 8); s(0x30, 12); s(0x32, -1)
-s(0x3c, 50)    # initiative_threshold
+s(0x3c, 50)    # initiativeThreshold
 s(0x40, 60); s(0x42, 60)      # thirst timers
 s(0x46, 90); s(0x48, 90)      # hunger timers
 s(0x4c, 30); s(0x4e, 30)      # bathroom timers
 s($OFF_FOOD, $WANT_FOOD)
-s(0x58, 0x0800)               # door_states_and_flags: food full, shut
+s(0x58, 0x0800)               # doorStatesAndFlags: food full, shut
 s($OFF_SPRITE, $WANT_SPRITE)
 s($OFF_WATER, $WANT_WATER)
 p[0x5e:0x76] = b'SAVETEST' + b'\0' * 16
@@ -125,10 +125,10 @@ v=$(probe_word "$(probe_addr _loadedS)")
 [ "$v" = "1" ] && ok "path B  loadedSave = 1" || bad "path B" "loadedSave = $v, expected 1"
 
 # The point of the test: the file's numbers must be IN the struct.
-for spec in "$OFF_WATER:$WANT_WATER:water_level" \
-            "$OFF_FOOD:$WANT_FOOD:food_supply" \
-            "$OFF_SPRITE:$WANT_SPRITE:character_sprite_id" \
-            "$OFF_CLOTHING:$WANT_CLOTHING:clothing_color"; do
+for spec in "$OFF_WATER:$WANT_WATER:waterLevel" \
+            "$OFF_FOOD:$WANT_FOOD:foodSupply" \
+            "$OFF_SPRITE:$WANT_SPRITE:characterSpriteId" \
+            "$OFF_CLOTHING:$WANT_CLOTHING:clothingColor"; do
     IFS=: read -r off want name <<< "$spec"
     printf '%-34s ' "lcp.$name == $want"
     got=$(field "$off")

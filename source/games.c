@@ -112,14 +112,14 @@ mgWaitKey()
                         wakeFromAlarm();
                         rejoinTable();
                 }
-                if (resident.bathroom_need != NO) {
+                if (resident.bathroomNeed != NO) {
                         leaveGameTable();
                         useToilet();
                         rejoinTable();
                 }
                 /* The GLOBAL tank level, not the saved copy in the
                    resident struct. */
-                if (resident.thirst_level > NEED_SATISFIED && waterLevel != 0) {
+                if (resident.thirstLevel > NEED_SATISFIED && waterLevel != 0) {
                         leaveGameTable();
                         drinkWater();
                         rejoinTable();

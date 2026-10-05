@@ -2,7 +2,7 @@
    door, opens it if shut, steps outside (the sitting-dog sprite waits
    on the porch, the resident is hidden) for `value` ticks, comes back
    in and the dog sprite is removed.  If a random roll beats
-   resident.initiative_threshold he walks back and shuts the door again.
+   resident.initiativeThreshold he walks back and shuts the door again.
    noPreempt keeps the inner walks from being preempted. */
 void
 checkFrontDoor(value)
@@ -42,7 +42,7 @@ short   value;
         spriteLayer[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
         layoutSlots();
 
-        if (resident.initiative_threshold < rndRng(0, 100)) {
+        if (resident.initiativeThreshold < rndRng(0, 100)) {
                 noPreempt = YES;
                 posToXY(POS_BTM_FRONT_DOOR, &walkXTarget, &walkYTarget);
                 walkToTarget();

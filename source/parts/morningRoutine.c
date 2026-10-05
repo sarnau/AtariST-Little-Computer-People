@@ -10,7 +10,7 @@ morningRoutine()
         noPreempt = YES;
         alarmRinging = YES;
         gameTick(rndRng(40, 100));
-        if (resident.is_sleeping == YES)
+        if (resident.isSleeping == YES)
                 getInOutOfBed();
 
         noPreempt = YES; wakeFromAlarm();

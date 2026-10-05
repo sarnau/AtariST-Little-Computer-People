@@ -81,7 +81,7 @@ else bad "Ctrl-W" "waterLevel $before -> $after, expected $((before + 3))"; fi
 
 # ---- Ctrl-F is CONDITIONAL, so make its condition true ---------------
 # handleKey returns without queuing when the food cupboard reads full:
-#   if (((lcp.door_states_and_flags >> 9) & 7) == 4) { pantryFull = YES; return; }
+#   if (((lcp.doorStatesAndFlags >> 9) & 7) == 4) { pantryFull = YES; return; }
 # Whether that holds depends on the save that happens to be on the
 # drive, so this asserted nothing stable until the field was forced.
 # Clear bits 9..11 and the delivery path is the one under test.

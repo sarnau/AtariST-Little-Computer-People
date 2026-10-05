@@ -42,8 +42,8 @@ drinkWater()
                 washAtSink(3);
         }
 
-        resident.thirst_level = NEED_SATISFIED;
-        resident.thirst_timer = resident.thirst_timer_max;
+        resident.thirstLevel = NEED_SATISFIED;
+        resident.thirstTimer = resident.thirstTimerMax;
         startRecovery();
         spriteLayer[SPRITE_GLASS] = SPRITE_HIDDEN;
         layoutSlots();

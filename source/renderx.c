@@ -22,7 +22,7 @@
 
 /* pickClothes: loads one of the CLOTHING_COLORS shirt colour pairs into
    palette slots 1 and 2 -- a random one half the time, otherwise the
-   resident's own resident.clothing_color. */
+   resident's own resident.clothingColor. */
 
 void
 pickClothes()
@@ -31,7 +31,7 @@ pickClothes()
 
         index = rndRng(0, 2 * CLOTHING_COLORS - 1);
         if (index > CLOTHING_COLORS - 1)
-                index = resident.clothing_color;
+                index = resident.clothingColor;
 
         mainPalette[1] = shirtPrimary[index];
         mainPalette[2] = shirtSecondary[index];
@@ -39,7 +39,7 @@ pickClothes()
 }
 
 /* pickSkin: the same for the SKIN_COLORS skin tones and
-   resident.skin_color. */
+   resident.skinColor. */
 
 void
 pickSkin()
@@ -48,7 +48,7 @@ pickSkin()
 
         index = rndRng(0, 2 * SKIN_COLORS - 1);
         if (index > SKIN_COLORS - 1)
-                index = resident.skin_color;
+                index = resident.skinColor;
 
         mainPalette[1] = skinColors[index];
         mainPalette[2] = skinColors[index];

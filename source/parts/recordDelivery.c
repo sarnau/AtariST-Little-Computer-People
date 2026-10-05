@@ -27,7 +27,7 @@ recordDelivery()
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_VINYL_CARRY);

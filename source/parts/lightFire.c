@@ -2,7 +2,7 @@
    burning.  The resident opens the front door, steps outside (the
    sitting-dog sprite waits on the porch) for 40 ticks, returns carrying
    firewood, perhaps shuts the door (random roll against
-   resident.initiative_threshold), and walks to the fireplace, where he
+   resident.initiativeThreshold), and walks to the fireplace, where he
    bends, stokes and fidgets for ten ticks.  Then fireBurning is set and
    fireTimeLeft is 2500..5000 ticks, which the tick loop counts down. */
 void
@@ -49,7 +49,7 @@ lightFire()
         spriteLayer[SPRITE_DOG_SIT] = SPRITE_HIDDEN;
         layoutSlots();
 
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         posToXY(POS_BTM_FIREPLACE_LOGS, &walkXTarget, &walkYTarget);

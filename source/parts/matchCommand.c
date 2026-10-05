@@ -52,7 +52,7 @@ char *  str;
                         if ((phraseTable[row].table[i] & phraseBits[i]) !=
                             phraseTable[row].table[i])
                                 goto next;
-                cmdPriority += phraseTable[row].priority_offset;
+                cmdPriority += phraseTable[row].priorityOffset;
                 return phraseTable[row].action;
 next:
                 row++;

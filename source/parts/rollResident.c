@@ -10,58 +10,58 @@ rollResident()
         short   tmp;
         short   fhnd;
 
-        resident.character_sprite_id = rndRng(2, 6);
+        resident.characterSpriteId = rndRng(2, 6);
 
         tmp  = rndRng(0, 265) * 10;
         fhnd = openFile("names", RMODE_RD);
         Fseek((long) tmp, fhnd, 0);
-        readFile(fhnd, 10L, resident.character_name);
+        readFile(fhnd, 10L, resident.characterName);
         Fclose(fhnd);
         for (tmp = 0; tmp < 10; tmp++)
-                if (resident.character_name[tmp] < 'A')
-                        resident.character_name[tmp] = 0;
+                if (resident.characterName[tmp] < 'A')
+                        resident.characterName[tmp] = 0;
 
-        resident.water_level = WATER_START;
-        waterLevel = resident.water_level;
-        resident.clothing_color = rndRng(0, 15);
-        resident.skin_color = rndRng(0, 7);
-        resident.bedtime_hour = rndRng(22, 24);
-        if (resident.bedtime_hour >= 24)
-                resident.bedtime_hour -= 24;
-        resident.wake_hour = resident.bedtime_hour + 6;
-        if (resident.wake_hour >= 24)
-                resident.wake_hour -= 24;
-        resident.lunch_hour = rndRng(11, 13);
-        resident.dinner_hour = rndRng(17, 19);
-        resident.personality_type = rndRng(0, 3);
-        resident.activity_level = rndRng(0, 7);
+        resident.waterLevel = WATER_START;
+        waterLevel = resident.waterLevel;
+        resident.clothingColor = rndRng(0, 15);
+        resident.skinColor = rndRng(0, 7);
+        resident.bedtimeHour = rndRng(22, 24);
+        if (resident.bedtimeHour >= 24)
+                resident.bedtimeHour -= 24;
+        resident.wakeHour = resident.bedtimeHour + 6;
+        if (resident.wakeHour >= 24)
+                resident.wakeHour -= 24;
+        resident.lunchHour = rndRng(11, 13);
+        resident.dinnerHour = rndRng(17, 19);
+        resident.personalityType = rndRng(0, 3);
+        resident.activityLevel = rndRng(0, 7);
         resident.happiness = MOOD_CONTENT;
-        resident.mood_duration[MOOD_HAPPY] = rndRng(6, 24);
-        resident.mood_duration[MOOD_CONTENT] = rndRng(6, 24);
-        resident.mood_duration[MOOD_SAD] = rndRng(6, 12);
-        resident.happiness_duration_active = resident.mood_duration[MOOD_CONTENT];
-        resident.happiness_direction = DIR_IMPROVING;
-        resident.sickness_level = SICKNESS_HEALTHY;
-        resident.sickness_countdown = 0;
-        resident.sickness_direction = DIR_STABLE;
-        resident.is_sleeping = NO;
-        resident.initiative_threshold = rndRng(20, 80);
-        resident.thirst_level = NEED_SATISFIED;
-        resident.thirst_timer_max = rndRng(45, 75);
-        resident.thirst_timer = resident.thirst_timer_max;
-        resident.hunger_level = NEED_SATISFIED;
-        resident.hunger_timer_max = rndRng(75, 120);
-        resident.hunger_timer = resident.hunger_timer_max;
-        resident.bathroom_need = NO;
-        resident.bathroom_timer_max = rndRng(20, 40);
-        resident.bathroom_timer = resident.bathroom_timer_max;
+        resident.moodDuration[MOOD_HAPPY] = rndRng(6, 24);
+        resident.moodDuration[MOOD_CONTENT] = rndRng(6, 24);
+        resident.moodDuration[MOOD_SAD] = rndRng(6, 12);
+        resident.happinessDurationActive = resident.moodDuration[MOOD_CONTENT];
+        resident.happinessDirection = DIR_IMPROVING;
+        resident.sicknessLevel = SICKNESS_HEALTHY;
+        resident.sicknessCountdown = 0;
+        resident.sicknessDirection = DIR_STABLE;
+        resident.isSleeping = NO;
+        resident.initiativeThreshold = rndRng(20, 80);
+        resident.thirstLevel = NEED_SATISFIED;
+        resident.thirstTimerMax = rndRng(45, 75);
+        resident.thirstTimer = resident.thirstTimerMax;
+        resident.hungerLevel = NEED_SATISFIED;
+        resident.hungerTimerMax = rndRng(75, 120);
+        resident.hungerTimer = resident.hungerTimerMax;
+        resident.bathroomNeed = NO;
+        resident.bathroomTimerMax = rndRng(20, 40);
+        resident.bathroomTimer = resident.bathroomTimerMax;
         /* The shadow globals are copied FROM the struct fields, not
            assigned the same literal. */
-        resident.record_playing = NO;
-        recordPlaying = resident.record_playing;
-        resident.tv_on = NO;
-        tvRunning = resident.tv_on;
-        resident.food_supply = 4;
-        foodSupply = resident.food_supply;
-        resident.door_states_and_flags = FOOD_PACKS_MAX << DSF_FOOD_SHIFT;
+        resident.recordPlaying = NO;
+        recordPlaying = resident.recordPlaying;
+        resident.tvOn = NO;
+        tvRunning = resident.tvOn;
+        resident.foodSupply = 4;
+        foodSupply = resident.foodSupply;
+        resident.doorStatesAndFlags = FOOD_PACKS_MAX << DSF_FOOD_SHIFT;
 }

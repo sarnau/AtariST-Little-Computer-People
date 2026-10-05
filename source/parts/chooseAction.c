@@ -26,7 +26,7 @@ chooseAction()
                 return;
         }
         /* P3: bathroom */
-        if (resident.bathroom_need != NO) {
+        if (resident.bathroomNeed != NO) {
                 nextAction = ACTION_USE_TOILET;
                 runAction();
                 return;
@@ -34,7 +34,7 @@ chooseAction()
 
         /* Sickness bias: 66% skip healthy, 0% sick. */
         /* Tested this way round on purpose: it matches the original. */
-        if (resident.sickness_level > SICKNESS_HEALTHY)
+        if (resident.sicknessLevel > SICKNESS_HEALTHY)
                 sicknessSkipProbability = 0;
         else
                 sicknessSkipProbability = 66;
@@ -42,28 +42,28 @@ chooseAction()
            conjunctions that re-tests the sickness level in the second
            arm.  Redundant, but kept on purpose: it is the original's
            shape. */
-        if (resident.thirst_level > NEED_SATISFIED) {
+        if (resident.thirstLevel > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sicknessSkipProbability &&
-                    ((resident.sickness_level != SICKNESS_HEALTHY &&
+                    ((resident.sicknessLevel != SICKNESS_HEALTHY &&
                       waterLevel != 0) ||
-                     resident.sickness_level == SICKNESS_HEALTHY)) {
+                     resident.sicknessLevel == SICKNESS_HEALTHY)) {
                         nextAction = ACTION_DRINK;
                         runAction();
                         return;
                 }
         }
 
-        foodSlots = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        foodSlots = (resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
 
         /* P5: hunger.  Same disjunctive shape; note that the lastAction
            gate applies ONLY to the healthy arm -- it is not
            `(healthy || food) && lastAction != KITCHEN`. */
-        if (resident.hunger_level > NEED_SATISFIED) {
+        if (resident.hungerLevel > NEED_SATISFIED) {
                 if (rndRng(1, 100) > sicknessSkipProbability &&
-                    ((resident.sickness_level != SICKNESS_HEALTHY &&
+                    ((resident.sicknessLevel != SICKNESS_HEALTHY &&
                       foodSlots != 0) ||
                      (lastAction != ACTION_KITCHEN_CABINET &&
-                      resident.sickness_level == SICKNESS_HEALTHY))) {
+                      resident.sicknessLevel == SICKNESS_HEALTHY))) {
                         nextAction = ACTION_KITCHEN_CABINET;
                         runAction();
                         lastAction = ACTION_KITCHEN_CABINET;
@@ -72,25 +72,25 @@ chooseAction()
         }
 
         /* P6-P9: once-per-day scheduled events */
-        if (!lunchDone && resident.lunch_hour == t_hour) {
+        if (!lunchDone && resident.lunchHour == t_hour) {
                 nextAction = ACTION_EAT_MEAL;
                 runAction();
                 lunchDone = YES;
                 return;
         }
-        if (!dinnerDone && resident.dinner_hour == t_hour) {
+        if (!dinnerDone && resident.dinnerHour == t_hour) {
                 nextAction = ACTION_EAT_MEAL;
                 runAction();
                 dinnerDone = YES;
                 return;
         }
-        if (!wakeupDone && resident.wake_hour == t_hour) {
+        if (!wakeupDone && resident.wakeHour == t_hour) {
                 nextAction = ACTION_WAKE_UP_MORNING;
                 runAction();
                 wakeupDone = YES;
                 return;
         }
-        if (!bedtimeDone && resident.bedtime_hour == t_hour) {
+        if (!bedtimeDone && resident.bedtimeHour == t_hour) {
                 nextAction = ACTION_GO_TO_BED_NIGHT;
                 runAction();
                 bedtimeDone = YES;

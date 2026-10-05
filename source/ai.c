@@ -21,7 +21,7 @@ short   event;
 {
         inEvent = YES;
 
-        if (resident.is_sleeping != NO)
+        if (resident.isSleeping != NO)
                 getInOutOfBed();
 
         /* The arms are in the original's source order (BOOK_DELIVERY
@@ -35,7 +35,7 @@ short   event;
                 recordDelivery();
                 break;
         case ACTION_EVENT_FOOD_DELIVERY:
-                if (((resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
+                if (((resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD) == FOOD_PACKS_MAX)
                         break;
                 foodDelivery();
                 break;

@@ -59,12 +59,12 @@ char ** argv;
                 fprintf(stderr, "lc_load returned 0 (file missing?)\n");
                 return 2;
         }
-        printf("owner   = %.24s\n", resident.owner_name);
-        printf("resident= %.10s\n", resident.character_name);
+        printf("owner   = %.24s\n", resident.ownerName);
+        printf("resident= %.10s\n", resident.characterName);
         printf("schedule (raw shorts, expect ST big-endian):\n");
         printf("  bedtime=%d wake=%d lunch=%d dinner=%d\n",
-               resident.bedtime_hour, resident.wake_hour,
-               resident.lunch_hour, resident.dinner_hour);
+               resident.bedtimeHour, resident.wakeHour,
+               resident.lunchHour, resident.dinnerHour);
 
         saveFile("hyber_roundtrip", 128, &resident);
 

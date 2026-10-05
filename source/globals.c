@@ -89,7 +89,7 @@ short   walkYTarget;
 short   scratchArr[10];
 
 /* Open (YES) / closed (NO) state of the house's doors and cupboards,
-   unpacked from resident.door_states_and_flags by loadSavedGame and packed back
+   unpacked from resident.doorStatesAndFlags by loadSavedGame and packed back
    by studyVisit; main draws each one accordingly at boot. */
 short   frontDoorOpen;       /* DSF_FRONT_DOOR, opened and closed by openFrontDoor */
 short   studyDoorOpen;       /* DSF_STUDY_DOOR */
@@ -99,7 +99,7 @@ short   dresserOpen;       /* DSF_DRESSER */
 short   toiletDoorOpen;       /* DSF_TOILET_DOOR */
 short   filingCabOpen;       /* DSF_FILING_CABINET */
 short   bowlLevel;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
-short   foodSupply;       /* working copy of resident.food_supply */
+short   foodSupply;       /* working copy of resident.foodSupply */
 
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    songPlaying;
@@ -256,7 +256,7 @@ long            loopStack[50];
 /* ---- PSG envelope processor state -----------------------------------
    Bresenham-style integer ramp accumulator + delta, per channel.
    Every stepEnvelopes tick, accum += delta; whenever accum > 360 (0x168),
-   current_volume steps by ramp_direction and accum -= 360.  This
+   currentVolume steps by rampDirection and accum -= 360.  This
    fractional accumulation lets the 50 Hz envelope produce
    sub-tick-precision volume ramps without floating point.
 
@@ -631,21 +631,21 @@ unsigned char   ampRegs[3] = { 0x88, 0x89, 0x8a };
 PSG_ENVELOPE *  envPtrs[3] = { &psgEnvelope[0], &psgEnvelope[1],
                                &psgEnvelope[2] };
 
-/* Envelope rate table.  32-byte table indexed by phase_timer
+/* Envelope rate table.  32-byte table indexed by phaseTimer
    (already loaded from an ADSR duration byte). */
 short           envRateTab[16] = {
              0,  360,  180,  120,   85,   72,   60,   45,
             30,   20,   15,   12,   10,    8,    6,    4
 };
 
-/* Envelope time table.  Reload value for phase_timer
+/* Envelope time table.  Reload value for phaseTimer
    when transitioning between ADSR phases. */
 short           envTimeTab[16] = {
              0,    1,    2,    3,    4,    5,    6,    8,
             12,   18,   24,   30,   36,   45,   60,   90
 };
 
-/* Envelope sustain table.  Reload for phase_timer
+/* Envelope sustain table.  Reload for phaseTimer
    during the sustain->release transition. */
 short           envSusTab[16] = {
              0,    1,    2,    4,    8,   18,   24,   40,

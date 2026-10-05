@@ -1,7 +1,7 @@
 /* Book delivery (ACTION_EVENT_BOOK_DELIVERY).  The resident walks to
    the front door uninterruptibly, opens it, bends down to pick up the
    parcel, and closes the door again when a 0..100 roll beats his
-   initiative_threshold.  He then carries the book (SPRITE_BOOK) up to
+   initiativeThreshold.  He then carries the book (SPRITE_BOOK) up to
    the bathroom entrance on the middle floor, the carried sprite is
    dropped (isCarrying cleared) and he reaches in to put it away. */
 void
@@ -26,7 +26,7 @@ bookDelivery()
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         carryBehind(SPRITE_BOOK);

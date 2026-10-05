@@ -59,19 +59,19 @@ char ** argv;
 
         /* Zero the PLAYER, then set known starting values. */
         memset(&resident, 0, sizeof(resident));
-        resident.thirst_timer_max = 30;   /* thirst rises every 30 min */
-        resident.thirst_timer = 30;
-        resident.hunger_timer_max = 45;   /* hunger rises every 45 min */
-        resident.hunger_timer = 45;
-        resident.bathroom_timer_max = 120;
-        resident.bathroom_timer = 120;
+        resident.thirstTimerMax = 30;   /* thirst rises every 30 min */
+        resident.thirstTimer = 30;
+        resident.hungerTimerMax = 45;   /* hunger rises every 45 min */
+        resident.hungerTimer = 45;
+        resident.bathroomTimerMax = 120;
+        resident.bathroomTimer = 120;
         resident.happiness = MOOD_CONTENT;
-        resident.mood_duration[MOOD_HAPPY] = 6;
-        resident.mood_duration[MOOD_CONTENT] = 4;
-        resident.mood_duration[MOOD_SAD] = 6;
-        resident.happiness_duration_active = 6;
-        resident.happiness_direction = DIR_WORSENING;
-        resident.sickness_level = SICKNESS_HEALTHY;
+        resident.moodDuration[MOOD_HAPPY] = 6;
+        resident.moodDuration[MOOD_CONTENT] = 4;
+        resident.moodDuration[MOOD_SAD] = 6;
+        resident.happinessDurationActive = 6;
+        resident.happinessDirection = DIR_WORSENING;
+        resident.sicknessLevel = SICKNESS_HEALTHY;
 
         /* Sim entry conditions. */
         frameCount = 0;    /* (counter & 7) == 0 -> tick */
@@ -99,34 +99,34 @@ char ** argv;
         /* Calendar should have rolled over exactly one day. */
         CHECK(t_day == 2, "t_day did not advance to 2");
 
-        /* thirst_timer counts down each minute; after 24*60=1440 minutes
-           with thirst_timer_max=30 it wraps 48 times.  Each wrap raises
-           thirst_level (capped at 3 then triggers fallSick).
+        /* thirstTimer counts down each minute; after 24*60=1440 minutes
+           with thirstTimerMax=30 it wraps 48 times.  Each wrap raises
+           thirstLevel (capped at 3 then triggers fallSick).
            Timer at end: 1440 % 30 == 0 so it resets to 30.            */
-        CHECK(resident.thirst_timer == 30, "thirst_timer end value wrong");
-        CHECK(resident.thirst_level >= NEED_SEVERE,  "thirst_level should max out");
+        CHECK(resident.thirstTimer == 30, "thirstTimer end value wrong");
+        CHECK(resident.thirstLevel >= NEED_SEVERE,  "thirstLevel should max out");
 
-        /* hunger_timer: 1440 minutes with hunger_timer_max=45 = 32 wraps.
+        /* hungerTimer: 1440 minutes with hungerTimerMax=45 = 32 wraps.
            At level 3 further wraps invoke fallSick which
            leaves level unchanged.                                     */
-        CHECK(resident.hunger_timer == 45, "hunger_timer end value wrong");
-        CHECK(resident.hunger_level >= NEED_SEVERE,  "hunger_level should max out");
+        CHECK(resident.hungerTimer == 45, "hungerTimer end value wrong");
+        CHECK(resident.hungerLevel >= NEED_SEVERE,  "hungerLevel should max out");
 
-        /* bathroom_timer: 1440 min, bathroom_timer_max=120 -> wraps 12 times.
-           On first wrap bathroom_timer is set to 9999 and bathroom_need
+        /* bathroomTimer: 1440 min, bathroomTimerMax=120 -> wraps 12 times.
+           On first wrap bathroomTimer is set to 9999 and bathroomNeed
            to YES, and stays that way.                                 */
-        CHECK(resident.bathroom_need == YES, "bathroom_need should be YES");
+        CHECK(resident.bathroomNeed == YES, "bathroomNeed should be YES");
 
         /* Second run: 1 full game-hour from 07:00 with no need
            mutation, verifying pure clock advance.                     */
         memset(&resident, 0, sizeof(resident));
-        resident.thirst_timer = 9999;
-        resident.thirst_timer_max = 9999;
-        resident.hunger_timer = 9999;
-        resident.hunger_timer_max = 9999;
-        resident.bathroom_timer = 9999;
-        resident.bathroom_timer_max = 9999;
-        resident.happiness_duration_active = 9999;
+        resident.thirstTimer = 9999;
+        resident.thirstTimerMax = 9999;
+        resident.hungerTimer = 9999;
+        resident.hungerTimerMax = 9999;
+        resident.bathroomTimer = 9999;
+        resident.bathroomTimerMax = 9999;
+        resident.happinessDurationActive = 9999;
         frameCount = 0;
         t_sec = 0;
         t_min = 0;
@@ -140,10 +140,10 @@ char ** argv;
         /* Sub-minute drive (30 seconds): only t_sec
            should advance; nothing else.                               */
         memset(&resident, 0, sizeof(resident));
-        resident.thirst_timer = resident.thirst_timer_max = 9999;
-        resident.hunger_timer = resident.hunger_timer_max = 9999;
-        resident.bathroom_timer = resident.bathroom_timer_max = 9999;
-        resident.happiness_duration_active = 9999;
+        resident.thirstTimer = resident.thirstTimerMax = 9999;
+        resident.hungerTimer = resident.hungerTimerMax = 9999;
+        resident.bathroomTimer = resident.bathroomTimerMax = 9999;
+        resident.happinessDurationActive = 9999;
         frameCount = 0;
         t_sec = 0;
         t_min = 0;

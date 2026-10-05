@@ -44,13 +44,13 @@ titleScreen()
 
            NOT part of the shipped configuration: the default build
            must stay byte-identical to the original. */
-        resident.owner_name[0] = 'P';
-        resident.owner_name[1] = 'L';
-        resident.owner_name[2] = 'A';
-        resident.owner_name[3] = 'Y';
-        resident.owner_name[4] = 'E';
-        resident.owner_name[5] = 'R';
-        resident.owner_name[6] = 0;
+        resident.ownerName[0] = 'P';
+        resident.ownerName[1] = 'L';
+        resident.ownerName[2] = 'A';
+        resident.ownerName[3] = 'Y';
+        resident.ownerName[4] = 'E';
+        resident.ownerName[5] = 'R';
+        resident.ownerName[6] = 0;
         t_mon = 8;           /* September; titleScreen stores month - 1 */
         t_day = 3;           /* the 4th;   likewise day - 1         */
         t_year = 26;
@@ -75,14 +75,14 @@ titleScreen()
                 ch = toUpper(ch);
                 if (ch < ' ')
                         continue;
-                resident.owner_name[n] = ch;
+                resident.ownerName[n] = ch;
                 eraseChar((n << 3) + 128, 110, 15);
                 printChar(ch, (n << 3) + 128, 110, colour);
                 n++;
                 if (n == 18)
                         break;
         }
-        resident.owner_name[n] = 0;
+        resident.ownerName[n] = 0;
         for (j = n; j < 18; j++)
                 eraseChar((j << 3) + 128, 110, 15);
 

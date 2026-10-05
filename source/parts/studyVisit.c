@@ -26,11 +26,11 @@ BOOL16  dosndPtr;
 
         /* Phase 2: repack door state and write HYBER. */
         if (doSave != NO) {
-                resident.water_level = waterLevel;
+                resident.waterLevel = waterLevel;
                 /* Mask in place, then OR the bits back -- lowest shift
                    first, front door last; this order is the original's. */
-                resident.door_states_and_flags &= DSF_PRESERVE_UPPER_MASK;
-                resident.door_states_and_flags |=
+                resident.doorStatesAndFlags &= DSF_PRESERVE_UPPER_MASK;
+                resident.doorStatesAndFlags |=
                         (studyDoorOpen     << 1) |
                         (bedClosetOpen    << 2) |
                         (kitchenCabOpen        << 3) |
@@ -39,9 +39,9 @@ BOOL16  dosndPtr;
                         (filingCabOpen << 6) |
                         (bowlLevel     << 7) |
                         frontDoorOpen;
-                resident.record_playing = recordPlaying;
-                resident.tv_on          = tvRunning;
-                resident.food_supply    = foodSupply;
+                resident.recordPlaying = recordPlaying;
+                resident.tvOn          = tvRunning;
+                resident.foodSupply    = foodSupply;
                 saveFile("hyber", 0x80, &resident);
         }
 

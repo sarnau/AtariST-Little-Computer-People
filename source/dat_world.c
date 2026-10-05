@@ -81,11 +81,11 @@ short   spareWord = -1;
 short   nextAction = ACTION_NONE;
 
 /* YES while a record is playing (animates the player); saved in
-   resident.record_playing. */
+   resident.recordPlaying. */
 short   recordPlaying = 0;
 
 /* YES while the TV is on (tvNoise draws the picture); saved in
-   resident.tv_on. */
+   resident.tvOn. */
 short   tvRunning = 0;
 
 /* Phone is ringing: set by simStep or Ctrl-C, cleared when answered. */

@@ -21,7 +21,7 @@ short   value;
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openDresser(DOOR_OPEN);
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openDresser(DOOR_CLOSE);
 
         posToXY(POS_MID_BEDROOM_CLOSET, &walkXTarget, &walkYTarget);
@@ -127,7 +127,7 @@ short   value;
                 gameTick(0);
         }
 
-        if (resident.initiative_threshold < rndRng(0, 100) ||
+        if (resident.initiativeThreshold < rndRng(0, 100) ||
             movingIn != NO)
                 closeBedCloset();
 }

@@ -1,10 +1,10 @@
 /* Food delivery.  The resident walks to the front door, opens it and
    picks up the package (SPRITE_FOOD_PACKAGE, carried), closing the
-   door when a 0..100 roll beats his initiative_threshold.  For dog
+   door when a 0..100 roll beats his initiativeThreshold.  For dog
    food (isDogDelivery) he fills the bowl if it is empty (feedDog) or else
    takes the package to the fridge (goToFridge).  Otherwise he stocks the
    kitchen cabinet: one reach per pack until the food-count field in
-   resident.door_states_and_flags reaches FOOD_PACKS_MAX, redrawing the
+   resident.doorStatesAndFlags reaches FOOD_PACKS_MAX, redrawing the
    cabinet's food markers (drawFoodCab) each time. */
 void
 foodDelivery()
@@ -30,7 +30,7 @@ foodDelivery()
         animState = STATE_STAND_FACING_SCREEN;
         gameTick(0);
 
-        if (resident.initiative_threshold < rndRng(0, 100))
+        if (resident.initiativeThreshold < rndRng(0, 100))
                 openFrontDoor(DOOR_CLOSE);
 
         if (isDogDelivery != NO) {
@@ -63,13 +63,13 @@ foodDelivery()
                 if (isDogDelivery == NO) {
                         while (1) {
                                 foodCount =
-                                        (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+                                        (resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
                                 foodCount++;
                                 if (foodCount > FOOD_PACKS_MAX)
                                         break;
                                 foodCount = foodCount << DSF_FOOD_SHIFT;
-                                resident.door_states_and_flags &= ~DSF_FOOD_MASK;
-                                resident.door_states_and_flags |= foodCount;
+                                resident.doorStatesAndFlags &= ~DSF_FOOD_MASK;
+                                resident.doorStatesAndFlags |= foodCount;
                                 animState = STATE_REACH_INTO_CABINET;
                                 gameTick(3);
                                 drawFoodCab();
@@ -78,7 +78,7 @@ foodDelivery()
                         }
                 }
 
-                if (resident.initiative_threshold < rndRng(0, 100))
+                if (resident.initiativeThreshold < rndRng(0, 100))
                         openKitchenCab(DOOR_CLOSE);
                 noPreempt = NO;
         }

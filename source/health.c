@@ -15,10 +15,10 @@
 void
 fallSick()
 {
-        resident.sickness_level      = SICKNESS_MILD;
-        resident.sickness_countdown  = SICK_DELAY_WORSENING;
-        resident.sickness_direction  = DIR_WORSENING;
-        resident.happiness_direction = DIR_WORSENING;
+        resident.sicknessLevel      = SICKNESS_MILD;
+        resident.sicknessCountdown  = SICK_DELAY_WORSENING;
+        resident.sicknessDirection  = DIR_WORSENING;
+        resident.happinessDirection = DIR_WORSENING;
         if (resident.happiness < MOOD_SAD)
                 /* One mood step sadder (HAPPY -> CONTENT -> SAD).  Written
                    `+= 1` on purpose: `x = x + 1` compiles differently. */
@@ -34,10 +34,10 @@ fallSick()
 void
 startRecovery()
 {
-        if (resident.hunger_level == NEED_SATISFIED &&
-            resident.thirst_level == NEED_SATISFIED) {
-                resident.sickness_direction = DIR_IMPROVING;
-                resident.sickness_countdown = SICK_DELAY_IMPROVING;
+        if (resident.hungerLevel == NEED_SATISFIED &&
+            resident.thirstLevel == NEED_SATISFIED) {
+                resident.sicknessDirection = DIR_IMPROVING;
+                resident.sicknessCountdown = SICK_DELAY_IMPROVING;
         }
 }
 
@@ -46,7 +46,7 @@ startRecovery()
 void
 setSkinColor()
 {
-        if (resident.sickness_level == SICKNESS_HEALTHY)
+        if (resident.sicknessLevel == SICKNESS_HEALTHY)
                 mainPalette[6] = ST_PEACH;
         else
                 mainPalette[6] = ST_SICK_GREEN;

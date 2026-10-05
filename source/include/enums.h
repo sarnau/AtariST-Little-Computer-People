@@ -8,7 +8,7 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-/* ---- Need levels: resident.thirst_level / resident.hunger_level ----------------
+/* ---- Need levels: resident.thirstLevel / resident.hungerLevel ----------------
    A need timer that runs out at NEED_SEVERE makes the resident sick
    instead of raising the level further. */
 #define NEED_SATISFIED          0
@@ -16,8 +16,8 @@
 #define NEED_MODERATE           2
 #define NEED_SEVERE             3
 
-/* ---- Sickness: resident.sickness_level, and the direction it moves in --------
-   (sickness_direction / happiness_direction add one of DIR_* per step). */
+/* ---- Sickness: resident.sicknessLevel, and the direction it moves in --------
+   (sicknessDirection / happinessDirection add one of DIR_* per step). */
 #define SICKNESS_HEALTHY        0
 #define SICKNESS_MILD           1
 #define SICKNESS_MODERATE       2
@@ -730,7 +730,7 @@
 #define MFP_STOP                        0       /* Xbtimer control: stopped */
 #define MFP_DIV64                       5       /* Xbtimer control: /64 delay */
 
-/* ---- Door / furniture state bitfield in resident.door_states_and_flags ---- */
+/* ---- Door / furniture state bitfield in resident.doorStatesAndFlags ---- */
 #define DSF_FRONT_DOOR                  0x001
 #define DSF_STUDY_DOOR                  0x002
 #define DSF_CLOSET_DOOR                 0x004
@@ -750,10 +750,10 @@
 /* ---- Other resident status values ------------------------------------------ */
 #define WATER_START                     7       /* new resident's tank */
 #define WATER_MAX                       10      /* waterLevel, a full tank */
-/* bathroom_timer once the need has fired: effectively off until eating
-   (eatFromCabinet) reloads it from bathroom_timer_max. */
+/* bathroomTimer once the need has fired: effectively off until eating
+   (eatFromCabinet) reloads it from bathroomTimerMax. */
 #define BATHROOM_TIMER_OFF              9999
-/* sickness_countdown reloads, in simStep steps: sickness worsens one
+/* sicknessCountdown reloads, in simStep steps: sickness worsens one
    level every 60 and, once recovering, improves one every 5. */
 #define SICK_DELAY_WORSENING            60
 #define SICK_DELAY_IMPROVING            5
@@ -800,7 +800,7 @@
 #define KEY_CTRL_W_WATER                0x17
 
 /* ---- Activity tiers -- pickIdleAction's table_pick --------------------------
-   scheduleTiers maps (time of day, resident.activity_level) to the first three;
+   scheduleTiers maps (time of day, resident.activityLevel) to the first three;
    each picks one of the action tables activeActions / moderateActions / relaxedActions.
    Sunday turns ACTIVE into RELAXED and Saturday into MODERATE.  SLEEP
    (18+ hours awake, or sick) has no table: bed or nothing. */

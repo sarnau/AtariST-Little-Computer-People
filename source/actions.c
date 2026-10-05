@@ -22,7 +22,7 @@ runAction()
         lastAction = nextAction;
         nextAction = ACTION_NONE;
 
-        if (resident.is_sleeping != NO)
+        if (resident.isSleeping != NO)
                 getInOutOfBed();
 
         switch (actionNumber) {

@@ -301,11 +301,11 @@ walkStep()
 
         /* Sickness slows the walk: two ticks per step and delayed
            footstep sound.  Healthy: one tick with immediate sound. */
-        if (resident.sickness_level != SICKNESS_HEALTHY) {
+        if (resident.sicknessLevel != SICKNESS_HEALTHY) {
                 gameTick(0);
                 playFootstep();
         }
         gameTick(0);
-        if (resident.sickness_level == SICKNESS_HEALTHY)
+        if (resident.sicknessLevel == SICKNESS_HEALTHY)
                 playFootstep();
 }

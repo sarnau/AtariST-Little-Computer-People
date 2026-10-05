@@ -2,8 +2,7 @@
  * structs.h -- game struct layouts.
  *
  * Field order and sizes must match the original binary layout; the
- * 128-byte HYBER save file loads directly into the LCP struct via
- * memcpy().
+ * 128-byte HYBER save file loads directly into the PLAYER struct.
  */
 
 #ifndef STRUCTS_H
@@ -13,103 +12,91 @@
 #ifdef HOST
 #include "hostgem.h"
 #else
-#ifdef HOST
-#include "hostgem.h"
-#else
 #include <vdibind.h>    /* MFDB */
-#endif
-#endif
-#ifdef HOST
-#include "hostgem.h"
-#else
-#ifdef HOST
-#include "hostgem.h"
-#else
 #include <ostruct.h>    /* _DTA */
-#endif
 #endif
 
 /* PLAYER (LCP) -- 128-byte persistent character state; also the
    layout of the HYBER save file. */
 typedef struct {
         /* Appearance                                       0x00 */
-        short   clothing_color;
-        short   skin_color;
+        short   clothingColor;
+        short   skinColor;
 
         /* Daily schedule                                   0x04 */
-        short   bedtime_hour;
-        short   wake_hour;
-        short   lunch_hour;
-        short   dinner_hour;
+        short   bedtimeHour;
+        short   wakeHour;
+        short   lunchHour;
+        short   dinnerHour;
 
         /* Personality                                      0x0C */
-        short   personality_type;
-        short   activity_level;
+        short   personalityType;
+        short   activityLevel;
 
         /* Reserved (24 bytes, no code references)          0x10 */
-        char    _reserved_10[24];
+        char    reserved10[24];
 
         /* Happiness                                        0x28 */
         short   happiness;
-        short   mood_duration[3];   /* length of a spell in each mood,
-                                       indexed by MOOD_*; the active one is
-                                       reloaded from here on every change */
-        short   happiness_duration_active;
-        short   happiness_direction;
+        /* Length of a spell in each mood, indexed by MOOD_*; the active
+           one is reloaded from here on every change. */
+        short   moodDuration[3];
+        short   happinessDurationActive;
+        short   happinessDirection;
 
         /* Sickness                                         0x34 */
-        short   sickness_level;
-        short   sickness_countdown;
-        short   sickness_direction;
+        short   sicknessLevel;
+        short   sicknessCountdown;
+        short   sicknessDirection;
 
         /* Sleep                                            0x3A */
-        short   is_sleeping;
+        short   isSleeping;
 
         /* Initiative                                       0x3C */
-        short   initiative_threshold;
+        short   initiativeThreshold;
 
         /* Thirst                                           0x3E */
-        short   thirst_level;
-        short   thirst_timer_max;
-        short   thirst_timer;
+        short   thirstLevel;
+        short   thirstTimerMax;
+        short   thirstTimer;
 
         /* Hunger                                           0x44 */
-        short   hunger_level;
-        short   hunger_timer_max;
-        short   hunger_timer;
+        short   hungerLevel;
+        short   hungerTimerMax;
+        short   hungerTimer;
 
         /* Bathroom                                         0x4A */
-        short   bathroom_need;
-        short   bathroom_timer_max;
-        short   bathroom_timer;
+        short   bathroomNeed;
+        short   bathroomTimerMax;
+        short   bathroomTimer;
 
         /* Reserved                                         0x50 */
-        short   _reserved_50;
+        short   reserved50;
 
         /* Items / state                                    0x52 */
-        short   food_supply;
-        short   record_playing;
-        short   tv_on;
-        short   door_states_and_flags;
+        short   foodSupply;
+        short   recordPlaying;
+        short   tvOn;
+        short   doorStatesAndFlags;
 
         /* Character ID                                     0x5A */
-        short   character_sprite_id;
-        short   water_level;
+        short   characterSpriteId;
+        short   waterLevel;
 
         /* Names                                            0x5E */
-        char    owner_name[24];
-        char    character_name[10];
+        char    ownerName[24];
+        char    characterName[10];
 } PLAYER;
 
 /* PSG_ENVELOPE -- ADSR envelope state for one YM2149 PSG channel.
    14-byte runtime layout (the code indexes the array with a stride
    of 14).  The 8-byte
    on-disk ADSR parameter block from Activision Music Studio 2.0's
-   .SNG / .ORG files maps onto offsets 1..8 (attack_start_vol
-   through release_duration), so copyEnvelope can memcpy directly into
+   .SNG / .ORG files maps onto offsets 1..8 (attackStartVol
+   through releaseDuration), so copyEnvelope can memcpy directly into
    the runtime struct from an 8-byte source buffer without touching
-   the phase / ramp_direction / phase_timer / current_volume /
-   max_volume fields that live outside the on-disk window.
+   the phase / rampDirection / phaseTimer / currentVolume /
+   maxVolume fields that live outside the on-disk window.
 
    Field offsets are hand-controlled with explicit byte padding
    because Alcyon C 4.14 doesn't guarantee any specific alignment
@@ -117,18 +104,18 @@ typedef struct {
    means there is no padding between offset 9 and offset 10). */
 typedef struct {
         char            phase;                  /* off 0  ENV_ATTACK..    */
-        unsigned char   attack_start_vol;       /* off 1  volume 0..15    */
-        unsigned char   attack_duration;        /* off 2  attack ticks    */
-        unsigned char   attack_target_vol;      /* off 3  peak volume     */
-        unsigned char   decay_duration;         /* off 4                  */
-        unsigned char   decay_target_vol;       /* off 5                  */
-        unsigned char   sustain_duration;       /* off 6                  */
-        unsigned char   sustain_target_vol;     /* off 7                  */
-        unsigned char   release_duration;       /* off 8                  */
-        unsigned char   max_volume;             /* off 9  vel-derived cap */
-        short           phase_timer;            /* off 10 ticks until step*/
-        unsigned char   current_volume;         /* off 12 live PSG volume */
-        char            ramp_direction;         /* off 13 +1 or -1        */
+        unsigned char   attackStartVol;         /* off 1  volume 0..15    */
+        unsigned char   attackDuration;         /* off 2  attack ticks    */
+        unsigned char   attackTargetVol;        /* off 3  peak volume     */
+        unsigned char   decayDuration;          /* off 4                  */
+        unsigned char   decayTargetVol;         /* off 5                  */
+        unsigned char   sustainDuration;        /* off 6                  */
+        unsigned char   sustainTargetVol;       /* off 7                  */
+        unsigned char   releaseDuration;        /* off 8                  */
+        unsigned char   maxVolume;              /* off 9  vel-derived cap */
+        short           phaseTimer;             /* off 10 ticks until step*/
+        unsigned char   currentVolume;          /* off 12 live PSG volume */
+        char            rampDirection;          /* off 13 +1 or -1        */
 } PSG_ENVELOPE;
 
 /* WORD_TO_ACTION -- one entry in the parser's command-matching table.
@@ -139,20 +126,10 @@ typedef struct {
 typedef struct {
         char            table[10];
         char            action;         /* +10 */
-        char            priority_offset;/* +11 */
+        char            priorityOffset; /* +11 */
 } WORD_TO_ACTION;
 
 /* MFDB is defined in <vdibind.h> (included above) -- do not redeclare. */
-
-/* RECT16 -- 4-corner rectangle used for VDI polylines.
-   Laid out so a `short *` can be passed to v_pline() and it walks the
-   four coordinates in x1,y1,x2,y2 order (matching the GEM VDI ABI). */
-typedef struct {
-        short   x1;
-        short   y1;
-        short   x2;
-        short   y2;
-} RECT16;
 
 /* _DTA is defined in <ostruct.h> (included above) -- do not redeclare.
    Callers use _DTA * directly (44 bytes). */

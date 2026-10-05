@@ -32,51 +32,51 @@ simStep()
         t_sec = 0;
 
         /* Thirst tick */
-        resident.thirst_timer--;
-        if (resident.thirst_timer <= 0) {
-                resident.thirst_timer = resident.thirst_timer_max;
-                if (resident.thirst_level < NEED_SEVERE)
-                        resident.thirst_level++;
+        resident.thirstTimer--;
+        if (resident.thirstTimer <= 0) {
+                resident.thirstTimer = resident.thirstTimerMax;
+                if (resident.thirstLevel < NEED_SEVERE)
+                        resident.thirstLevel++;
                 else
                         fallSick();
         }
 
         /* Hunger tick */
-        resident.hunger_timer--;
-        if (resident.hunger_timer <= 0) {
-                resident.hunger_timer = resident.hunger_timer_max;
-                if (resident.hunger_level < NEED_SEVERE)
-                        resident.hunger_level++;
+        resident.hungerTimer--;
+        if (resident.hungerTimer <= 0) {
+                resident.hungerTimer = resident.hungerTimerMax;
+                if (resident.hungerLevel < NEED_SEVERE)
+                        resident.hungerLevel++;
                 else
                         fallSick();
         }
 
         /* Sickness progression / recovery */
-        if (resident.sickness_level > SICKNESS_HEALTHY) {
-                if (--resident.sickness_countdown == 0) {
-                        resident.sickness_level += resident.sickness_direction;
-                        if (resident.sickness_level == SICKNESS_HEALTHY)
+        if (resident.sicknessLevel > SICKNESS_HEALTHY) {
+                if (--resident.sicknessCountdown == 0) {
+                        resident.sicknessLevel += resident.sicknessDirection;
+                        if (resident.sicknessLevel == SICKNESS_HEALTHY)
                                 setSkinColor();
-                        else if (resident.sickness_level > SICKNESS_CRITICAL)
+                        else if (resident.sicknessLevel > SICKNESS_CRITICAL)
                                 /* 1985 bug: `==` where `=` was meant, so
                                    the clamp never happens.  Kept on
                                    purpose: it is part of the original
                                    code. */
-                                resident.sickness_level == SICKNESS_CRITICAL;
-                        if (resident.sickness_level >= SICKNESS_MODERATE)
+                                resident.sicknessLevel == SICKNESS_CRITICAL;
+                        if (resident.sicknessLevel >= SICKNESS_MODERATE)
                                 resident.happiness = MOOD_SAD;
-                        if (resident.sickness_direction == DIR_IMPROVING)
-                                resident.sickness_countdown = SICK_DELAY_IMPROVING;
+                        if (resident.sicknessDirection == DIR_IMPROVING)
+                                resident.sicknessCountdown = SICK_DELAY_IMPROVING;
                         else
-                                resident.sickness_countdown = SICK_DELAY_WORSENING;
+                                resident.sicknessCountdown = SICK_DELAY_WORSENING;
                 }
         }
 
         /* Bathroom tick */
-        resident.bathroom_timer--;
-        if (resident.bathroom_timer <= 0) {
-                resident.bathroom_timer = BATHROOM_TIMER_OFF;
-                resident.bathroom_need = YES;
+        resident.bathroomTimer--;
+        if (resident.bathroomTimer <= 0) {
+                resident.bathroomTimer = BATHROOM_TIMER_OFF;
+                resident.bathroomNeed = YES;
         }
 
         /* Random daytime phone call: 2% per second, 08:00-21:59 only */
@@ -95,19 +95,19 @@ simStep()
         t_min = 0;
 
         /* Happiness mood cycle -- suppressed while sick unless sad. */
-        if (resident.sickness_level == SICKNESS_HEALTHY ||
+        if (resident.sicknessLevel == SICKNESS_HEALTHY ||
             resident.happiness != MOOD_SAD) {
-                if (--resident.happiness_duration_active == 0) {
-                        resident.happiness += resident.happiness_direction;
+                if (--resident.happinessDurationActive == 0) {
+                        resident.happiness += resident.happinessDirection;
                         if (resident.happiness <= MOOD_HAPPY) {
                                 resident.happiness = MOOD_HAPPY;
-                                resident.happiness_direction = DIR_WORSENING;
+                                resident.happinessDirection = DIR_WORSENING;
                         } else if (resident.happiness >= MOOD_SAD) {
                                 resident.happiness = MOOD_SAD;
-                                resident.happiness_direction = DIR_IMPROVING;
+                                resident.happinessDirection = DIR_IMPROVING;
                         }
-                        resident.happiness_duration_active =
-                                resident.mood_duration[resident.happiness];
+                        resident.happinessDurationActive =
+                                resident.moodDuration[resident.happiness];
                 }
         }
 

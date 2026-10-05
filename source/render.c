@@ -39,7 +39,7 @@ short   y;
 /* -- Kitchen food-cabinet overlay -- */
 
 /* drawFoodCab: paint food-count markers in 4 cabinet slots.
-   Count = bits 9..11 of door_states_and_flags (0..4 packs). No-op if closed.
+   Count = bits 9..11 of doorStatesAndFlags (0..4 packs). No-op if closed.
      1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151) */
 
 void
@@ -50,7 +50,7 @@ drawFoodCab()
         if (kitchenCabOpen == NO)
                 return;
 
-        cabinetContent = (resident.door_states_and_flags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
+        cabinetContent = (resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         drawObject(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
 
         if (cabinetContent >= 1) drawObject(OBJ_CABINET_ITEM, 50, 159);

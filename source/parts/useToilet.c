@@ -8,8 +8,8 @@
    sprite phases while he is hidden (SFX_DOOR_CLOSE).  After 45..60
    ticks the toilet flushes (SFX_TOILET_FLUSH), the door opens again,
    he reappears and walks back out, and leaves it open unless a
-   0..100 roll beats his initiative_threshold or the cutscene runs, in
-   which case closeToiletDoor shuts it.  Clears resident.bathroom_need and resets
+   0..100 roll beats his initiativeThreshold or the cutscene runs, in
+   which case closeToiletDoor shuts it.  Clears resident.bathroomNeed and resets
    the bathroom timer. */
 void
 useToilet()
@@ -110,11 +110,11 @@ useToilet()
                 gameTick(0);
         }
 
-        if (resident.initiative_threshold < rndRng(0, 100) ||
+        if (resident.initiativeThreshold < rndRng(0, 100) ||
             movingIn != NO)
                 closeToiletDoor();
 
-        resident.bathroom_need = NO;
-        resident.bathroom_timer = BATHROOM_TIMER_OFF;
+        resident.bathroomNeed = NO;
+        resident.bathroomTimer = BATHROOM_TIMER_OFF;
         noPreempt = NO;
 }

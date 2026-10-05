@@ -39,7 +39,7 @@ writeLetter()
         waitHeadTurn();
 
         rummageCabinet();
-        if (rndRng(0, 100) > resident.initiative_threshold)
+        if (rndRng(0, 100) > resident.initiativeThreshold)
                 closeFilingCab();
 
         posToXY(POS_TOP_STUDY_DOOR, &walkXTarget, &walkYTarget);
@@ -105,7 +105,7 @@ writeLetter()
         typeString(inputLine, -12);
         typeChar('\r');
 
-        sprintf(inputLine, "Dear %s,", resident.owner_name);
+        sprintf(inputLine, "Dear %s,", resident.ownerName);
         typeString(inputLine, 0);
         typeChar('\r');
 
@@ -127,7 +127,7 @@ writeLetter()
                 templateIndex = sectionId * LETTER_SECTION_LINES;
                 if (sectionId == 3)
                         templateIndex += rndRng(0, 5) * LETTER_BLOCK_LINES;
-                else if (resident.sickness_level > SICKNESS_HEALTHY)
+                else if (resident.sicknessLevel > SICKNESS_HEALTHY)
                         templateIndex += rndRng(0, 1) * LETTER_HALF_LINES +
                                           LETTER_SICK_BLOCK * LETTER_BLOCK_LINES;
                 else
@@ -169,7 +169,7 @@ writeLetter()
         typeString(letterSignoffs[rndRng(0, 3)], -8);
         typeChar('\r');
 
-        sprintf(inputLine, "%s", resident.character_name);
+        sprintf(inputLine, "%s", resident.characterName);
         typeString(inputLine, -10);
         gameTick(60);
 

@@ -81,7 +81,7 @@ char ** argv;
         loadFrameFile("body.lcp", (unsigned char *) bodyFrames);
         if (loadedSave == 0)
                 rollResident();
-        pexName[2] = resident.character_sprite_id + '0';
+        pexName[2] = resident.characterSpriteId + '0';
         loadFrameFile(pexName, (unsigned char *) pexFrames);
 
         buildMasks();

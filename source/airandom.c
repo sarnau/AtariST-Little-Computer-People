@@ -31,17 +31,17 @@ pickIdleAction()
         short   actionIndex;
         short   day;
 
-        tablePick = t_hour - resident.wake_hour;
+        tablePick = t_hour - resident.wakeHour;
         if (tablePick < 0)
                 tablePick += 24;
 
-        if (tablePick >= 18 || resident.sickness_level >= SICKNESS_MODERATE) {
+        if (tablePick >= 18 || resident.sicknessLevel >= SICKNESS_MODERATE) {
                 tablePick = TIER_SLEEP;
         } else {
                 /* scheduleTiers must stay a real 2-D array: a table of row
                    pointers compiles to different code. */
                 tablePick = (tablePick / 2) % 3;
-                tablePick = scheduleTiers[tablePick][resident.activity_level];
+                tablePick = scheduleTiers[tablePick][resident.activityLevel];
 
                 day = calcWeekday();
                 if (tablePick == TIER_ACTIVE && day == WEEKDAY_SUNDAY)
@@ -70,7 +70,7 @@ retry:
                         goto retry;
         } else {
                 /* Sleep bucket -- either bed or nothing. */
-                if (resident.is_sleeping == NO)
+                if (resident.isSleeping == NO)
                         return ACTION_GET_IN_OUT_OF_BED;
                 else
                         return ACTION_NONE;

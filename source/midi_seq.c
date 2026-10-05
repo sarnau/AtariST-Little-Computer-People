@@ -380,7 +380,7 @@ char    index;
      vel>0 -> Note-On: alloc silent channel, else voice-steal by
        highest phase; guard [noteHigh, noteLow]; copy 8 ADSR bytes from
        songAdsr + (noteChan-1)*8; take a (2 - N)*12 octave offset from
-       attack_duration's high nibble N; write PSG tone/mixer/noise; if freq<0x17 use
+       attackDuration's high nibble N; write PSG tone/mixer/noise; if freq<0x17 use
        ENV_FADEOUT instead of ENV_ATTACK; set psgActive.
    Returns 1 on success, 0 on non-Note-On or Note-Off miss. */
 
@@ -467,14 +467,14 @@ char            midiCh;
                         (unsigned char *) &psgEnvelope[chosen] + 1,
                         8L);
 
-                /* Split the packed nibbles: attack_start_vol keeps its low
+                /* Split the packed nibbles: attackStartVol keeps its low
                    4 bits (start volume), high 4 bits stash the mixer flags;
-                   attack_duration keeps its low 4 bits, high 4 bits encode
+                   attackDuration keeps its low 4 bits, high 4 bits encode
                    the octave shift (2 - N) * 12 semitones. */
-                attackHi = (psgEnvelope[chosen].attack_start_vol >> 4) & 0xf;
-                psgEnvelope[chosen].attack_start_vol &= 0xf;
-                octShift = (2 - ((psgEnvelope[chosen].attack_duration >> 4) & 0xf)) * 12;
-                psgEnvelope[chosen].attack_duration &= 0xf;
+                attackHi = (psgEnvelope[chosen].attackStartVol >> 4) & 0xf;
+                psgEnvelope[chosen].attackStartVol &= 0xf;
+                octShift = (2 - ((psgEnvelope[chosen].attackDuration >> 4) & 0xf)) * 12;
+                psgEnvelope[chosen].attackDuration &= 0xf;
                 mixerBits = attackHi << chosen;
                 noiseMask = ~(9 << chosen);
 
@@ -514,9 +514,9 @@ char            midiCh;
 
                 psgChanNote[chosen] = *midiEvP;
                 if (envelopePhase == ENV_FADEOUT)
-                        psgEnvelope[chosen].current_volume = 0;
-                psgEnvelope[chosen].max_volume = noteVolume;
-                psgActive = psgEnvelope[chosen].phase_timer = 1;
+                        psgEnvelope[chosen].currentVolume = 0;
+                psgEnvelope[chosen].maxVolume = noteVolume;
+                psgActive = psgEnvelope[chosen].phaseTimer = 1;
                 psgEnvelope[chosen].phase = envelopePhase;
 
                 }       /* range guard */
@@ -532,7 +532,7 @@ char            midiCh;
                 chosen--;
                 psgChanNote[chosen] = 0;
                 psgEnvelope[chosen].phase = ENV_RELEASE;
-                psgEnvelope[chosen].phase_timer = 0;
+                psgEnvelope[chosen].phaseTimer = 0;
 
                 }
                 return 1;
@@ -760,8 +760,8 @@ short   value;
    3 channels through attack->decay->sustain->release->fadeout.
    Per phase: Bresenham accum, delta = (target-cur)*envRateTab[t],
    accum += delta; while accum > 360, cur += dir; accum -= 360.
-   phase_timer==0 with dur==0 -> immediate fall-through (gotos).
-   Clamp cur to max_volume; write PSG amp reg 8/9/10 via psgWrite.
+   phaseTimer==0 with dur==0 -> immediate fall-through (gotos).
+   Clamp cur to maxVolume; write PSG amp reg 8/9/10 via psgWrite.
    The case fall-throughs are written as gotos, as in the original. */
 
 void
@@ -775,140 +775,140 @@ stepEnvelopes()
 
                 switch (psgEnvelope[i].phase) {
                 case ENV_ATTACK:
-                        psgEnvelope[(short) i].current_volume =
-                                                 psgEnvelope[(short) i].attack_start_vol;
+                        psgEnvelope[(short) i].currentVolume =
+                                                 psgEnvelope[(short) i].attackStartVol;
                         psgEnvelope[(short) i].phase = ENV_DECAY;
-                        if (!psgEnvelope[i].attack_duration) {
-                                psgEnvelope[(short) i].current_volume =
-                                                                 psgEnvelope[(short) i].attack_target_vol;
-                                psgEnvelope[(short) i].phase_timer = 0;
+                        if (!psgEnvelope[i].attackDuration) {
+                                psgEnvelope[(short) i].currentVolume =
+                                                                 psgEnvelope[(short) i].attackTargetVol;
+                                psgEnvelope[(short) i].phaseTimer = 0;
                                 goto do_decay;
                         }
-                        psgEnvelope[(short) i].phase_timer =
-                                                 (short) psgEnvelope[(short) i].attack_duration;
-                        if (psgEnvelope[i].attack_start_vol >
-                            psgEnvelope[i].attack_target_vol) {
+                        psgEnvelope[(short) i].phaseTimer =
+                                                 (short) psgEnvelope[(short) i].attackDuration;
+                        if (psgEnvelope[i].attackStartVol >
+                            psgEnvelope[i].attackTargetVol) {
                                 rampDelta[(short) i] =
-                                                          (short) psgEnvelope[(short) i].attack_start_vol -
-                                                          (short) psgEnvelope[(short) i].attack_target_vol;
-                                psgEnvelope[(short) i].ramp_direction = -1;
+                                                          (short) psgEnvelope[(short) i].attackStartVol -
+                                                          (short) psgEnvelope[(short) i].attackTargetVol;
+                                psgEnvelope[(short) i].rampDirection = -1;
                         } else {
-                                psgEnvelope[(short) i].ramp_direction = 1;
+                                psgEnvelope[(short) i].rampDirection = 1;
                                 rampDelta[(short) i] =
-                                                          (short) psgEnvelope[(short) i].attack_target_vol -
-                                                          (short) psgEnvelope[(short) i].attack_start_vol;
+                                                          (short) psgEnvelope[(short) i].attackTargetVol -
+                                                          (short) psgEnvelope[(short) i].attackStartVol;
                         }
                         rampDelta[(short) i] = rampDelta[(short) i] *
-                                             envRateTab[psgEnvelope[(short) i].phase_timer];
-                        psgEnvelope[(short) i].phase_timer =
-                                             envTimeTab[psgEnvelope[(short) i].phase_timer];
+                                             envRateTab[psgEnvelope[(short) i].phaseTimer];
+                        psgEnvelope[(short) i].phaseTimer =
+                                             envTimeTab[psgEnvelope[(short) i].phaseTimer];
                         rampAccum[(short) i] = 0;
                         break;
 
                 case ENV_DECAY:
 do_decay:
-                        if (psgEnvelope[i].phase_timer-- > 0) {
+                        if (psgEnvelope[i].phaseTimer-- > 0) {
                                 rampAccum[i] += rampDelta[i];
                                 while (rampAccum[i] > 0x168) {
-                                        psgEnvelope[i].current_volume +=
-                                                psgEnvelope[i].ramp_direction;
+                                        psgEnvelope[i].currentVolume +=
+                                                psgEnvelope[i].rampDirection;
                                         rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (!psgEnvelope[i].decay_duration) {
-                                        psgEnvelope[(short) i].current_volume =
-                                                                          psgEnvelope[(short) i].decay_target_vol;
-                                        psgEnvelope[(short) i].phase_timer = 0;
+                                if (!psgEnvelope[i].decayDuration) {
+                                        psgEnvelope[(short) i].currentVolume =
+                                                                          psgEnvelope[(short) i].decayTargetVol;
+                                        psgEnvelope[(short) i].phaseTimer = 0;
                                         goto do_sustain;
                                 }
                                 psgEnvelope[(short) i].phase = ENV_SUSTAIN;
-                                psgEnvelope[(short) i].phase_timer =
-                                                                 (short) psgEnvelope[(short) i].decay_duration;
-                                if (psgEnvelope[i].attack_target_vol >
-                                    psgEnvelope[i].decay_target_vol) {
+                                psgEnvelope[(short) i].phaseTimer =
+                                                                 (short) psgEnvelope[(short) i].decayDuration;
+                                if (psgEnvelope[i].attackTargetVol >
+                                    psgEnvelope[i].decayTargetVol) {
                                         rampDelta[(short) i] =
-                                                                  (short) psgEnvelope[(short) i].attack_target_vol -
-                                                                  (short) psgEnvelope[(short) i].decay_target_vol;
-                                        psgEnvelope[(short) i].ramp_direction = -1;
+                                                                  (short) psgEnvelope[(short) i].attackTargetVol -
+                                                                  (short) psgEnvelope[(short) i].decayTargetVol;
+                                        psgEnvelope[(short) i].rampDirection = -1;
                                 } else {
-                                        psgEnvelope[(short) i].ramp_direction = 1;
+                                        psgEnvelope[(short) i].rampDirection = 1;
                                         rampDelta[(short) i] =
-                                                                  (short) psgEnvelope[(short) i].decay_target_vol -
-                                                                  (short) psgEnvelope[(short) i].attack_target_vol;
+                                                                  (short) psgEnvelope[(short) i].decayTargetVol -
+                                                                  (short) psgEnvelope[(short) i].attackTargetVol;
                                 }
                                 rampDelta[(short) i] = rampDelta[(short) i] *
-                                                                          envRateTab[psgEnvelope[(short) i].phase_timer];
-                                psgEnvelope[(short) i].phase_timer =
-                                                                          envTimeTab[psgEnvelope[(short) i].phase_timer];
+                                                                          envRateTab[psgEnvelope[(short) i].phaseTimer];
+                                psgEnvelope[(short) i].phaseTimer =
+                                                                          envTimeTab[psgEnvelope[(short) i].phaseTimer];
                                 rampAccum[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_SUSTAIN:
 do_sustain:
-                        if (psgEnvelope[i].phase_timer-- > 0) {
+                        if (psgEnvelope[i].phaseTimer-- > 0) {
                                 rampAccum[i] += rampDelta[i];
                                 while (rampAccum[i] > 0x168) {
-                                        psgEnvelope[i].current_volume +=
-                                                psgEnvelope[i].ramp_direction;
+                                        psgEnvelope[i].currentVolume +=
+                                                psgEnvelope[i].rampDirection;
                                         rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (!psgEnvelope[i].sustain_duration) {
-                                        psgEnvelope[(short) i].current_volume =
-                                                                          psgEnvelope[(short) i].sustain_target_vol;
-                                        psgEnvelope[(short) i].phase_timer = 0;
+                                if (!psgEnvelope[i].sustainDuration) {
+                                        psgEnvelope[(short) i].currentVolume =
+                                                                          psgEnvelope[(short) i].sustainTargetVol;
+                                        psgEnvelope[(short) i].phaseTimer = 0;
                                         goto do_release;
                                 }
                                 psgEnvelope[(short) i].phase = ENV_RELEASE;
-                                psgEnvelope[(short) i].phase_timer =
-                                                                 envSusTab[(short) psgEnvelope[(short) i].sustain_duration];
-                                if (psgEnvelope[i].decay_target_vol >
-                                    psgEnvelope[i].sustain_target_vol) {
+                                psgEnvelope[(short) i].phaseTimer =
+                                                                 envSusTab[(short) psgEnvelope[(short) i].sustainDuration];
+                                if (psgEnvelope[i].decayTargetVol >
+                                    psgEnvelope[i].sustainTargetVol) {
                                         rampDelta[(short) i] =
-                                                                  (short) psgEnvelope[(short) i].decay_target_vol -
-                                                                  (short) psgEnvelope[(short) i].sustain_target_vol;
-                                        psgEnvelope[(short) i].ramp_direction = -1;
+                                                                  (short) psgEnvelope[(short) i].decayTargetVol -
+                                                                  (short) psgEnvelope[(short) i].sustainTargetVol;
+                                        psgEnvelope[(short) i].rampDirection = -1;
                                 } else {
-                                        psgEnvelope[(short) i].ramp_direction = 1;
+                                        psgEnvelope[(short) i].rampDirection = 1;
                                         rampDelta[(short) i] =
-                                                                  (short) psgEnvelope[(short) i].sustain_target_vol -
-                                                                  (short) psgEnvelope[(short) i].decay_target_vol;
+                                                                  (short) psgEnvelope[(short) i].sustainTargetVol -
+                                                                  (short) psgEnvelope[(short) i].decayTargetVol;
                                 }
                                 rampDelta[(short) i] = rampDelta[(short) i] *
-                                                                          envRelTab[(short) psgEnvelope[(short) i].sustain_duration];
+                                                                          envRelTab[(short) psgEnvelope[(short) i].sustainDuration];
                                 rampAccum[(short) i] = 0;
                                 break;
                         }
 
                 case ENV_RELEASE:
 do_release:
-                        if (psgEnvelope[i].phase_timer-- > 0) {
+                        if (psgEnvelope[i].phaseTimer-- > 0) {
                                 rampAccum[i] += rampDelta[i];
                                 while (rampAccum[i] > 0x168) {
-                                        psgEnvelope[i].current_volume +=
-                                                psgEnvelope[i].ramp_direction;
+                                        psgEnvelope[i].currentVolume +=
+                                                psgEnvelope[i].rampDirection;
                                         rampAccum[i] -= 0x168;
                                 }
                                 break;
                         } else {
-                                if (psgEnvelope[i].release_duration) {
+                                if (psgEnvelope[i].releaseDuration) {
                                         psgEnvelope[(short) i].phase = ENV_FADEOUT;
-                                        psgEnvelope[(short) i].phase_timer =
-                                                         (short) psgEnvelope[(short) i].release_duration;
+                                        psgEnvelope[(short) i].phaseTimer =
+                                                         (short) psgEnvelope[(short) i].releaseDuration;
                                         rampDelta[(short) i] =
-                                                  (short) psgEnvelope[(short) i].current_volume;
-                                        psgEnvelope[(short) i].ramp_direction = -1;
+                                                  (short) psgEnvelope[(short) i].currentVolume;
+                                        psgEnvelope[(short) i].rampDirection = -1;
                                         rampDelta[(short) i] = rampDelta[(short) i] *
-                                                  envRateTab[psgEnvelope[(short) i].phase_timer];
-                                        psgEnvelope[(short) i].phase_timer =
-                                                  envTimeTab[psgEnvelope[(short) i].phase_timer];
+                                                  envRateTab[psgEnvelope[(short) i].phaseTimer];
+                                        psgEnvelope[(short) i].phaseTimer =
+                                                  envTimeTab[psgEnvelope[(short) i].phaseTimer];
                                         rampAccum[(short) i] = 0;
                                         break;
                                 } else {
-                                        psgEnvelope[(short) i].phase_timer = 0;
+                                        psgEnvelope[(short) i].phaseTimer = 0;
                                         goto do_fadeout;
                                 }
                         }
@@ -916,16 +916,16 @@ do_release:
 
                 case ENV_FADEOUT:
 do_fadeout:
-                        if (psgEnvelope[i].phase_timer-- > 0 &&
-                            psgEnvelope[i].current_volume) {
+                        if (psgEnvelope[i].phaseTimer-- > 0 &&
+                            psgEnvelope[i].currentVolume) {
                                 rampAccum[i] += rampDelta[i];
                                 while (rampAccum[i] > 0x168) {
-                                        psgEnvelope[i].current_volume +=
-                                                psgEnvelope[i].ramp_direction;
+                                        psgEnvelope[i].currentVolume +=
+                                                psgEnvelope[i].rampDirection;
                                         rampAccum[i] -= 0x168;
                                 }
                         } else {
-                                psgEnvelope[i].current_volume =
+                                psgEnvelope[i].currentVolume =
                                         psgEnvelope[i].phase = ENV_IDLE;
                         }
                         break;
@@ -934,10 +934,10 @@ do_fadeout:
                 /* The clamped volume goes through a global, not a
                    local, and the pick is a ternary (one store); both
                    are part of the original code. */
-                envOutVol = psgEnvelope[i].current_volume >
-                           psgEnvelope[i].max_volume
-                         ? psgEnvelope[i].max_volume
-                         : psgEnvelope[i].current_volume;
+                envOutVol = psgEnvelope[i].currentVolume >
+                           psgEnvelope[i].maxVolume
+                         ? psgEnvelope[i].maxVolume
+                         : psgEnvelope[i].currentVolume;
                 psgWrite(envOutVol, ampRegs[i] - PSG_WRITE);
         }
 }
