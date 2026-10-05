@@ -10,6 +10,8 @@
  *
  */
 
+/* YES once callDog has the resident crouched by the phone, waiting to
+   be patted: only then does Ctrl-P pat him.  answerPhone clears it. */
 BOOL16  patAllowed = NO;
 
 /* YES while a Ctrl-P pat (hand animation) is running; gameTick clears it

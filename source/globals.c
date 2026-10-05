@@ -130,13 +130,12 @@ char *  letterLines[LETTER_LINES];
 /* FORTY bytes, not 64: that is the room the original leaves for it. */
 char    letterWord[40];
 char    inputLine[80];             /* a screen line */
-/* nibbleBytes[15]: the 15 most common byte values in the
-   compressed stream.  Populated at load-time by unpackFile
-   from the 15-byte header immediately following the size word. */
-/* scnDict[15]: the 15-entry word dictionary at the head of a .SCN
-   file, and the size/buffer main uses while decoding one.  All three
-   are globals because the .SCN file handling is written out in main
-   and only the nibble decoder is a function. */
+/* The two nibble-packed formats.  scnDict is the 15-entry word
+   dictionary at the head of a .SCN file; nibbleBytes the 15 most common
+   bytes from the header of LETTER.TXT, WORDS and WORDPZ.TXT, filled by
+   unpackFile.  scnSize and scnBuffer are the size and buffer main uses
+   while decoding a .SCN file -- globals, because that file handling is
+   written out in main and only the nibble decoder is a function. */
 short           scnDict[15];
 unsigned char   nibbleBytes[15];
 short           scnSize;
@@ -435,8 +434,9 @@ long    lastFrameVbl;       /* VBL count at renderFrame's last frame, to pace it
    initialiser would move it from BSS into .data. */
 void *  tosPhysbase;
 
-/* frameMfdb / houseMfdb: the compositing target and the current
-   physical screen descriptor.  Populated by the graphics init routine. */
+/* frameMfdb: the screen renderFrame composites into.  houseMfdb: the
+   off-screen house picture (houseBuf, set up by initHouseBuf) that
+   drawObject paints furniture into and renderFrame copies from. */
 MFDB    frameMfdb;
 MFDB    houseMfdb;
 MFDB *  flipMfdb;     /* renderFrame's page-flip MFDB */
@@ -465,7 +465,6 @@ MFDB    slotMaskMfdb[SPRITE_HW_SLOTS];
 /* ---- NLP parser state ------------------------------------------------
    phraseBits accumulates the bit masks of the recognised words; matchCommand
    then matches it against the rule table. */
-
 char            phraseBits[10];
 /* 42 bytes: nextWord() walks input from typedLine (bounded < 38 chars)
    and writes one byte per alphabetic char to cmdWord. */

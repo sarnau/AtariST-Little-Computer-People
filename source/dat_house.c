@@ -10,6 +10,8 @@
  *
  */
 
+/* YES while playOrgan plays; animRecPlayer then leaves the record
+   player's VU lights alone, though the needle keeps sweeping. */
 BOOL16  organPlaying = NO;
 
 /* Three-letter abbreviations, so the calendar and the letter date
