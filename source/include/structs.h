@@ -50,7 +50,7 @@ typedef struct {
         short   sicknessDirection;
 
         /* Sleep                                            0x3A */
-        short   isSleeping;
+        BOOL16  isSleeping;
 
         /* Initiative                                       0x3C */
         short   initiativeThreshold;
@@ -66,7 +66,7 @@ typedef struct {
         short   hungerTimer;
 
         /* Bathroom                                         0x4A */
-        short   bathroomNeed;
+        BOOL16  bathroomNeed;
         short   bathroomTimerMax;
         short   bathroomTimer;
 
@@ -75,8 +75,8 @@ typedef struct {
 
         /* Items / state                                    0x52 */
         short   foodSupply;
-        short   recordPlaying;
-        short   tvOn;
+        BOOL16  recordPlaying;
+        BOOL16  tvOn;
         short   doorStatesAndFlags;
 
         /* Character ID                                     0x5A */
