@@ -32,7 +32,7 @@ playGame()
            stack frame. */
         short   unused1;
         short   keycode;
-        short   waitedOnce;
+        BOOL16  waitedOnce;
         short   unused2, unused3, unused4, unused5;
         short   napsLeft;
 

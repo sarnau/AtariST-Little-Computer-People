@@ -162,7 +162,7 @@ char ** argv;
         resY = 100;
         animState = STATE_WALK_FRAME_0;
         resFacing = FACING_RIGHT;
-        isCarrying = 0;
+        isCarrying = NO;
         debugHideLcp = 0;
         pendReady[3] = 0;
 

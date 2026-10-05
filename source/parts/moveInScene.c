@@ -9,7 +9,7 @@ moveInScene()
 {
         short   unused;         /* never referenced, but must stay */
 
-        dogHidden = 1;
+        dogHidden = YES;
         movingIn = 1;
         hideResident();
         gameTick(240);
@@ -115,7 +115,7 @@ moveInScene()
         headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_SUITCASE] = 0;
         layoutSlots();
-        isCarrying = 0;
+        isCarrying = NO;
         waitHeadTurn();
         openDresser(DOOR_OPEN);
 
@@ -127,9 +127,9 @@ moveInScene()
         dogYTarget += dogYStartNudge;
         dogXWaypt = dogXTarget;
         dogYWaypt = dogYTarget;
-        dogOnStairs = 0;
+        dogOnStairs = NO;
         dogIdleCount = 20;
-        dogHidden = 0;
+        dogHidden = NO;
         setDogSprite(SPRITE_DOG_LAY_DOWN, -1, 1);
 
         changeClothes(0);

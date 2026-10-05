@@ -45,7 +45,7 @@ short   colorPens[16] = {
 
 /* YES while an activity owns the keyboard (letter writing, minigames):
    gameTick stops reading keys. */
-short   keysBlocked = NO;
+BOOL16  keysBlocked = NO;
 
 /* ---- Hardware sprite double-buffer (SPRITE_HW_SLOTS) -------------------
    Two parallel state sets per hardware slot: `pe` = pending (what game
@@ -258,7 +258,7 @@ short   floorWalkY[3] = { 198, 135, 71 };
    the path stepper is inside a stair-traversal path; drives the
    stair-specific sprite-state sequence 9..24 and the wood-stairs SFX
    selection. */
-short   onStairs = 0;
+BOOL16  onStairs = NO;
 
 /* ---- Floor geometry ---------------------------------------------------- */
 /* Bottom Y of each floor (used by pathfinding to detect floor boundary).

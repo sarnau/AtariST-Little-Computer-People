@@ -137,7 +137,7 @@ char ** argv;
         memset(&resident, 0, sizeof(resident));
         resX = 100;
         resY = 100;
-        isCarrying = 0;
+        isCarrying = NO;
         debugHideLcp = 0;
         pendReady[3] = 0;
 

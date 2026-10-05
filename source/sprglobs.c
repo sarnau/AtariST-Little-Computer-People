@@ -17,7 +17,7 @@ short   resFacing;
 /* YES while the LCP is holding a bookshelf item / grocery / game box;
    enables the alternate arms-up carry body-frame table (carryFrames) for
    walking states 0..24. */
-short   isCarrying;
+BOOL16  isCarrying;
 /* Set by sprite selection to remember
    which sprite slot the carried-item overlay came from so the
    depth-compositor can flip it in front/behind on stairs.  -1 =
@@ -27,7 +27,7 @@ short   carriedSprite;
    body/head sprite pointers to NULL so the character disappears
    (used by moveInScene while the LCP is off-screen, and by the study
    door-close cutscene). */
-short   lcpHidden;
+BOOL16  lcpHidden;
 /* Diagnostic-only: while YES, the body and head sprite updates
    (updateBody / updateHead) force the sprite Y to 300 (below the
    visible area) so a developer can look at the empty room. */
@@ -57,11 +57,11 @@ short   dogSpriteId;
 /* YES while the dog is traversing a
    flight; steers moveDog through the stair-jump table
    instead of the flat-floor step logic. */
-short   dogOnStairs;
+BOOL16  dogOnStairs;
 /* dogHidden: when non-zero setDogSprite skips writing sprite slots
    0/7 (used to hide the dog while off-screen).  Starts at 0 (BSS),
    so the dog is visible from frame one. */
-short   dogHidden;
+BOOL16  dogHidden;
 short * pendImage[SPRITE_HW_SLOTS_ALLOC]; /* image bitmap for next draw */
 short * pendMask[SPRITE_HW_SLOTS_ALLOC]; /* 1-bit AND mask for next draw */
 short   pendX[SPRITE_HW_SLOTS_ALLOC]; /* X for next draw */

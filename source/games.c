@@ -706,7 +706,7 @@ new_word:
            only a solved or abandoned word goes back to new_word. */
 same_word:
         anaExtraGuess = 0;
-        anaClueUsed = 0;
+        anaClueUsed = NO;
         printString("F1 Clue, F10 Quit", 183, 8, COLOR_blue);
         anaDrawPrompt(anaGuessNum);
         for (index = 0; index < 10; index++)
@@ -749,7 +749,7 @@ same_word:
                                 Mfree(anaDict);
                                 return;
                         }
-                        if (keyPressed == KEY_F1 && anaClueUsed == 0) {
+                        if (keyPressed == KEY_F1 && anaClueUsed == NO) {
                                 /* A goto, not `continue`: the original
                                    jumps to a label sitting ON the else
                                    arm's statement, one test ahead of the
@@ -765,7 +765,7 @@ same_word:
                                 anaDrawPrompt(anaGuessNum);
                                 if (anaGuessNum == 9)
                                         anaExtraGuess = 1;
-                                anaClueUsed = 1;
+                                anaClueUsed = YES;
                                 panelErase(182, 0, 319, 9);
                                 printString("         F10 Quit", 183, 8,
                                       COLOR_blue);
@@ -1666,7 +1666,7 @@ pkrCompDraw()
         /* Five locals, counter first; the order must stay. */
         short   i;
         short   numDraw;             /* cards to throw away and redraw */
-        short   taken;               /* YES while the drawn card is already out */
+        BOOL16  taken;               /* YES while the drawn card is already out */
         short   card;
         short   n;                   /* scan index over the hands and discards */
 
@@ -1898,7 +1898,7 @@ pkrDealHands()
         short   i;
         short   c;
         short   j;
-        short   dup;
+        BOOL16  dup;
 
         for (i = 0; i < 5; i++) {
                 compHand[i] = CARD_NONE;
@@ -2510,7 +2510,7 @@ round:
                 panelErase(31, 43, 57, 53);
                 bjBetMain = 0;
                 bjBetSplit = 0;
-                bjDidSplit = 0;
+                bjDidSplit = NO;
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1  Bet",  KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F10 Quit", KEYMENU_X, KEYMENU_LINE3, COLOR_red);
@@ -2641,7 +2641,7 @@ cleanup:
                 }
                 /* Neither had a natural.  Split, double-down,
                    hit/stand, dealer -- the meat of the game. */
-                bjDidSplit = 0;
+                bjDidSplit = NO;
                 if ((short) plyrHand[0] % CARDS_PER_SUIT ==
                     (short) plyrHand[1] % CARDS_PER_SUIT) {
                         cardMessage("Do you wish to split?");
@@ -2655,7 +2655,7 @@ cleanup:
                         }
                         if (mgTimedOut != NO) goto cleanup;
                         if (bjKey == PK_IN_ARG_A) {
-                                bjDidSplit = 1;
+                                bjDidSplit = YES;
                                 bjSplitHand[0] = plyrHand[1];
                                 plyrHand[1] = CARD_NONE;
                                 cardMessage("Here is your first hand.");
@@ -2717,7 +2717,7 @@ cleanup:
                 }
 
                 /* Double-down / hit-loop phase. */
-                if (bjDidSplit != 0 && bjNatMain != NO && bjNatSplit != NO) {
+                if (bjDidSplit != NO && bjNatMain != NO && bjNatSplit != NO) {
                         goto next_round;
                 }
                 bjDblMain = NO;
@@ -2727,7 +2727,7 @@ cleanup:
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
                 printString("F1 Double",    KEYMENU_X, KEYMENU_LINE1, COLOR_red);
                 printString("F3 No double", KEYMENU_X, KEYMENU_LINE2, COLOR_red);
-                if (bjDidSplit == 0) {
+                if (bjDidSplit == NO) {
                         if (plyrChips < bjBetMain) bjKey = 2;
                         else {
                                 cardMessage("Do you wish to double-down?");
@@ -2762,7 +2762,7 @@ cleanup:
                         /* Redundant re-test of bjDidSplit, already
                            implied by the else.  Kept on purpose: it
                            is part of the original code. */
-                } else if (bjDidSplit != 0) {
+                } else if (bjDidSplit != NO) {
                         if (bjNatMain == NO) {
                                 if (plyrChips < bjBetMain) bjKey = 2;
                                 else {
@@ -2839,7 +2839,7 @@ cleanup:
                 }
 
                 /* Hit/stand rounds. */
-                if (bjDidSplit == 0) {
+                if (bjDidSplit == NO) {
                         if (bjPlayHand(plyrHand, 1, "Do you want a hit?") == -1) {
                                 if (mgTimedOut != NO)
                                         goto cleanup;
@@ -2907,10 +2907,10 @@ cleanup:
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
 
                 /* Dealer turn + settle. */
-                if (bjDidSplit != 0 && (bjBustMain != NO || bjNatMain != NO) &&
+                if (bjDidSplit != NO && (bjBustMain != NO || bjNatMain != NO) &&
                     (bjBustSplit != NO || bjNatSplit != NO))
                         goto next_round;
-                if (bjDidSplit != 0 && bjBustMain == NO && bjNatMain == NO) {
+                if (bjDidSplit != NO && bjBustMain == NO && bjNatMain == NO) {
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
                         cardMessage("Here is your first hand again.");
@@ -2921,7 +2921,7 @@ cleanup:
                                 cardDraw(plyrHand[br], br, 1);
                         }
                         bjShowBet(1);
-                } else if (bjDidSplit != 0 &&
+                } else if (bjDidSplit != NO &&
                            bjBustSplit == NO && bjNatSplit == NO) {
                         for (br = 0; br < 5; br++)
                                 cardDraw(CARD_HIGHLIGHT, br, 1);
@@ -2987,7 +2987,7 @@ cleanup:
                 }
 
                 panelErase(KEYMENU_X, KEYMENU_TOP, KEYMENU_RIGHT, KEYMENU_BOTTOM);
-                if (bjDidSplit == 0) {
+                if (bjDidSplit == NO) {
                         res = bjScore(plyrHand, 0);
                         rv  = bjScore(plyrHand, 1);
                         if (rv <= 21)
@@ -3088,7 +3088,7 @@ short   aceMode;
 {
         /* Counter first; the scan terminates inside the loop body. */
         short   i;
-        short   aceHigh;
+        BOOL16  aceHigh;
         short   score;
 
         aceHigh = NO;
@@ -3132,7 +3132,7 @@ char *  prompt;
         short   unused2;
         short   score;
         short * cntPtr;
-        short   forced;
+        BOOL16  forced;
 
         if (hand == plyrHand)  cntPtr = &bjHitsMain;
         if (hand == bjSplitHand) cntPtr = &bjHitsSplit;

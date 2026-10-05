@@ -104,7 +104,7 @@ short   foodSupply;       /* working copy of resident.foodSupply */
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    songPlaying;
 short   bowlChange;   /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
-short   sfxPlaying;        /* YES while a sound effect is playing */
+BOOL16  sfxPlaying;        /* YES while a sound effect is playing */
 short   sfxCurId;        /* id of the effect playing, tested to stop or chain it */
 char *  songBuf;        /* Malloc'd copy of the loaded .SNG/.ORG file; NULL when none */
 /* Song file counts (.SNG / .ORG), set at boot by countSongs(). */
@@ -480,7 +480,7 @@ short           wpzIndex;         /* current Word Puzzle, 0..32, wrapping on F1/
 /* Anagrams clues taken for this word; written, never read. */
 short           anaNumClues;
 short           anaGuessNum;        /* Anagrams guess number, 1..9 */
-short           anaClueUsed;        /* 1 once F1 has given a clue for this guess */
+BOOL16          anaClueUsed;        /* YES once F1 has given a clue for this guess */
 short           anaWordLen;        /* length of the Anagrams word */
 char            anaInput[12];    /* the Anagrams guess being typed, 10 chars + NUL */
 /* TEN bytes, the room the original leaves for it: the scrambled word
@@ -509,7 +509,7 @@ short           potChips;        /* chips in the pot */
 /* anaAnswer: pointer into anaDict dictionary (11-byte rows)
    set by anaPickWord when a word is picked. */
 char *          anaAnswer;
-short           bjDidSplit;       /* Blackjack: 1 once the player has split */
+BOOL16          bjDidSplit;       /* Blackjack: YES once the player has split */
 short           warDeck[52];   /* War: the shuffled deck dealt into the two draw piles */
 /* Computer's and player's draw piles, 52 shorts each: popCard's
    unconditional
