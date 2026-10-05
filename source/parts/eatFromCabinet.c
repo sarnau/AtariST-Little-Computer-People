@@ -24,7 +24,7 @@ eatFromCabinet()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         openKitchenCab(DOOR_OPEN);
@@ -72,7 +72,7 @@ eatFromCabinet()
         animState            = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
         carryInFront(SPRITE_FOOD_PACKAGE);
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState        = scratchArr[0];
@@ -112,8 +112,8 @@ eatFromCabinet()
         }
 
         isCarrying = YES;
-        headTarget   = 8;
-        headPose        = 8;
+        headTarget   = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headPose        = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         carryBehind(SPRITE_FOOD_PACKAGE);
         resY -= 8;
         resX -= 6;
@@ -136,7 +136,7 @@ eatFromCabinet()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(4);
 

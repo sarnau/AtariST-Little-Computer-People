@@ -23,7 +23,7 @@ answerPhone()
         noPreempt = NO;
 
         headMode         = HEAD_ANIM_DISABLED;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         resY += 6;
@@ -80,8 +80,8 @@ answerPhone()
 
         patAllowed = NO;
         resY -= 2;
-        headTarget = 8;
-        headPose      = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headPose      = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         animState = STATE_STAND_SIDE_VIEW;
         waitHeadTurn();
         gameTick(0);

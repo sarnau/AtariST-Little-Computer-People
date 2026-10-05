@@ -191,6 +191,25 @@
 #define HEAD_ROW_LEVEL                  7       /* first frame of each tilt row */
 #define HEAD_ROW_LOWER                  (HEAD_ROW_LEVEL + HEAD_TURN_FRAMES)
 #define HEAD_ROW_LOWEST                 (HEAD_ROW_LOWER + HEAD_TURN_FRAMES)
+/* A head pose (headPose, headTarget, headLastWalk) packs a turn
+   direction in bits 0..2 and a tilt row in bits 3..4. */
+#define HEAD_DIR_FRONT                  0       /* face seen from the front */
+#define HEAD_DIR_FRONT_RIGHT            1
+#define HEAD_DIR_RIGHT                  2       /* right profile */
+#define HEAD_DIR_BACK_RIGHT             3
+#define HEAD_DIR_BACK                   4       /* back of the head */
+#define HEAD_DIR_BACK_LEFT              5       /* 5..7: 3..1 mirrored */
+#define HEAD_DIR_LEFT                   6
+#define HEAD_DIR_FRONT_LEFT             7
+#define HEAD_DIRS                       8
+#define HEAD_DIR_MASK                   7
+#define HEAD_TILT_LEVEL                 0
+#define HEAD_TILT_LOWER                 1
+#define HEAD_TILT_LOWEST                2
+#define HEAD_TILT_SHIFT                 3
+#define HEAD_TILT_MASK                  0x18
+#define HEAD_POSE(dir, tilt)            ((tilt) << HEAD_TILT_SHIFT | (dir))
+
 /* headTurnStep's marker for "no direct step from this direction to the
    target"; stepHead then steps toward the state's rest direction. */
 #define HEAD_TURN_NONE                  99

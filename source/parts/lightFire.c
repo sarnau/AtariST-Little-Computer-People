@@ -26,7 +26,7 @@ lightFire()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
         noPreempt = YES;
@@ -68,7 +68,7 @@ lightFire()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_FIREWOOD] = SPRITE_HIDDEN;
         layoutSlots();
         isCarrying = NO;

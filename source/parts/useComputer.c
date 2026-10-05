@@ -29,7 +29,7 @@ useComputer()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         headMode = HEAD_ANIM_COMPUTER;
 
@@ -72,12 +72,12 @@ useComputer()
                 if ((Random() & 0x7f) < 3 && typed != 0) {
                         headMode         = HEAD_ANIM_DISABLED;
                         animState              = scratchArr[2];
-                        headTarget = 10;
+                        headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                         resFacing   = FACING_RIGHT;
                         waitHeadTurn();
                         tvClearAnim();
                         gameTick(5);
-                        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+                        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
                         waitHeadTurn();
                         headMode = HEAD_ANIM_COMPUTER;
                 }

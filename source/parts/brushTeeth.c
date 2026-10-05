@@ -20,7 +20,7 @@ brushTeeth()
         headMode = HEAD_ANIM_DISABLED;
         resFacing = FACING_RIGHT;
         animState = STATE_BRUSH_TEETH;
-        headTarget = 10;
+        headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
         resY -= 2;
         waitHeadTurn();
 

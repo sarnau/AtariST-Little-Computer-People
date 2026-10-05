@@ -20,7 +20,7 @@ short   value;
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         if (frontDoorOpen == NO)
                 openFrontDoor(DOOR_OPEN);
@@ -57,7 +57,7 @@ short   value;
                 walkToTarget();
                 resFacing   = FACING_RIGHT;
                 animState              = STATE_STAND_FACING_SCREEN;
-                headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+                headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 openFrontDoor(DOOR_CLOSE);
         }

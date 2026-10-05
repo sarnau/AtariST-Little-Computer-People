@@ -45,7 +45,7 @@ playGame()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         if (filingCabOpen == NO) {
@@ -65,7 +65,7 @@ playGame()
         }
 
         animState              = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(5);
         fillPanel(0x1b);
@@ -94,7 +94,7 @@ playGame()
 
                 resFacing   = FACING_RIGHT;
                 animState              = STATE_STAND_SIDE_VIEW;
-                headTarget = 8;
+                headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                 waitHeadTurn();
 
                 while (napsLeft-- != 0) {
@@ -114,7 +114,7 @@ playGame()
                 noPreempt = NO;
 
                 animState              = STATE_STAND_SIDE_VIEW;
-                headTarget = 8;
+                headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 waitedOnce = YES;
         }
@@ -131,7 +131,7 @@ playGame()
         textTimer      = 0;
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         rummageCabinet();
@@ -161,7 +161,7 @@ playGame()
         animState            = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
         carryInFront(SPRITE_GAME_BOX);
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState = STATE_EAT_BITE;
@@ -209,7 +209,7 @@ playGame()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_GAME_BOX] = SPRITE_HIDDEN;
         layoutSlots();
         isCarrying = NO;

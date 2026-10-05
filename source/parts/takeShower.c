@@ -30,7 +30,7 @@ takeShower()
         animState = STATE_SHOWER_STAND;
         resX -= 8;
         resY -= 23;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         headMode = HEAD_ANIM_SHOWER;
 

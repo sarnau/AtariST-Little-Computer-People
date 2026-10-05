@@ -17,7 +17,7 @@ bookDelivery()
            than shared through a helper, as in the original. */
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
@@ -43,7 +43,7 @@ bookDelivery()
         isCarrying = NO;
         resFacing     = FACING_RIGHT;
         animState                = STATE_STAND_FACING_SCREEN;
-        headTarget   = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget   = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState = STATE_REACH_INTO_CABINET;

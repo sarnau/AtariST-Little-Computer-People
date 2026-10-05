@@ -46,7 +46,7 @@ playOrgan()
         headMode = HEAD_ANIM_DISABLED;
         resFacing = FACING_RIGHT;
         animState = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(4);
 
@@ -95,7 +95,7 @@ playOrgan()
         }
 
         headMode = HEAD_ANIM_DISABLED;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         animState = scratchArr[0];
         waitHeadTurn();
         gameTick(8);

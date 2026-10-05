@@ -40,7 +40,7 @@ writeLetter()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_FACING_SCREEN;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         rummageCabinet();
@@ -78,7 +78,7 @@ writeLetter()
 
         animState              = STATE_STAND_SIDE_VIEW;
         resFacing   = FACING_RIGHT;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         resX += 5;

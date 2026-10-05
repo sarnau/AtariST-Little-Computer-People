@@ -63,10 +63,10 @@ stepHead()
                     (headMode & HEAD_MODE_H_RANGE) >= 8)
                         random_seed = -random_seed;
 
-                random_seed = (headRestDir[animState] + random_seed) & 7;
+                random_seed = (headRestDir[animState] + random_seed) & HEAD_DIR_MASK;
                 if (resFacing == FACING_LEFT)
-                        random_seed = (8 - random_seed) & 7;
-                headTarget = (headTarget & 0x18) | random_seed;
+                        random_seed = (HEAD_DIRS - random_seed) & HEAD_DIR_MASK;
+                headTarget = (headTarget & HEAD_TILT_MASK) | random_seed;
         } else {
                 /* Vertical picker. */
                 /* Embedded: the store's own flags drive the test. */
@@ -82,39 +82,39 @@ stepHead()
                                         (movement_mask & 1);
                 else
                         movement_mask = 7 - (headMode >> 5);
-                headTarget = (headTarget & 7) | (movement_mask << 3);
+                headTarget = (headTarget & HEAD_DIR_MASK) | (movement_mask << HEAD_TILT_SHIFT);
         }
 
 apply_current:
         if (headTarget >= 0) {
-                curTilt = headPose & 0x18;
-                tgtTilt = headTarget & 0x18;
+                curTilt = headPose & HEAD_TILT_MASK;
+                tgtTilt = headTarget & HEAD_TILT_MASK;
                 if ((current_pos = tgtTilt - curTilt) > 0)
                         headPose += 8;
                 else if (current_pos < 0)
                         headPose -= 8;
 
-                curDir = headPose & 7;
-                tgtDir = headTarget & 7;
+                curDir = headPose & HEAD_DIR_MASK;
+                tgtDir = headTarget & HEAD_DIR_MASK;
                 target_frame = headTurnStep[(tgtDir - curDir) + 7];
                 if (target_frame == HEAD_TURN_NONE) {
-                        faceDir = (headRestDir[animState] + (resFacing << 2)) & 7;
+                        faceDir = (headRestDir[animState] + (resFacing << 2)) & HEAD_DIR_MASK;
                         target_frame = headTurnStep[(faceDir - curDir) + 7];
                 }
                 if (target_frame == HEAD_TURN_NONE)
                         target_frame = -1;
 
-                headPose = (headPose & 0x18) +
-                          ((headPose + target_frame) & 7);
+                headPose = (headPose & HEAD_TILT_MASK) +
+                          ((headPose + target_frame) & HEAD_DIR_MASK);
         }
 
         if (headPose >= 0 && headPose < 0x80) {
-                headFrame = headTiltFrame[(headPose & 0x18) >> 3];
-                if ((anim_mode = headPose & 7) <= 4) {
+                headFrame = headTiltFrame[(headPose & HEAD_TILT_MASK) >> HEAD_TILT_SHIFT];
+                if ((anim_mode = headPose & HEAD_DIR_MASK) <= HEAD_DIR_BACK) {
                         headFrame += anim_mode;
                         headMirror = NO;
                 } else {
-                        headFrame += 8 - anim_mode;
+                        headFrame += HEAD_DIRS - anim_mode;
                         headMirror = YES;
                 }
         }

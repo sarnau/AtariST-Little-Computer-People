@@ -19,28 +19,28 @@ nodOk()
            Do not add a separate one. */
 
         entry_current = headPose;
-        h = headPose & 7;
+        h = headPose & HEAD_DIR_MASK;
 
-        if (h == 0 || h == 1 || h == 7)
-                headTarget = 8;
-        else if (h == 2)                        /* HEAD_ANIM_SHOWER value */
-                headTarget = 9;
-        else if (h == 6)
-                headTarget = HEAD_ANIM_HORIZONTAL_RANGE |
-                                         7 /* HEAD_MODE_H_AMPLITUDE mask */;
-        else if (h == 3 || h == 4)
-                headTarget = 10;
-        else if (h == 5)
-                headTarget = HEAD_ANIM_HORIZONTAL_RANGE |
-                                         HEAD_ANIM_SHOWER;
+        /* First turn toward a nearby front-ish pose, tilted lower. */
+        if (h == HEAD_DIR_FRONT || h == HEAD_DIR_FRONT_RIGHT ||
+            h == HEAD_DIR_FRONT_LEFT)
+                headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        else if (h == HEAD_DIR_RIGHT)
+                headTarget = HEAD_POSE(HEAD_DIR_FRONT_RIGHT, HEAD_TILT_LOWER);
+        else if (h == HEAD_DIR_LEFT)
+                headTarget = HEAD_POSE(HEAD_DIR_FRONT_LEFT, HEAD_TILT_LOWER);
+        else if (h == HEAD_DIR_BACK_RIGHT || h == HEAD_DIR_BACK)
+                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
+        else if (h == HEAD_DIR_BACK_LEFT)
+                headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
 
         headMode = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
         for (h = 0; h < 4; h++) {
-                headTarget = headPose & 7;
+                headTarget = headPose & HEAD_DIR_MASK;
                 waitHeadTurn();
-                headTarget = headPose | 0x10;
+                headTarget = headPose | HEAD_TILT_LOWEST << HEAD_TILT_SHIFT;
                 waitHeadTurn();
         }
 

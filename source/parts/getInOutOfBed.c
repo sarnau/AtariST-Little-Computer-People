@@ -24,7 +24,7 @@ getInOutOfBed()
                         return;
                 resFacing   = FACING_RIGHT;
                 animState              = STATE_STAND_IDLE;
-                headTarget = 10;
+                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 resident.is_sleeping = YES;
                 resX -= 10;
@@ -42,7 +42,7 @@ getInOutOfBed()
                 animState = scratchArr[0]; gameTick(2);
                 resident.is_sleeping = NO;
                 animState              = STATE_STAND_IDLE;
-                headTarget = 10;
+                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                 waitHeadTurn();
                 gameTick(2);
         }

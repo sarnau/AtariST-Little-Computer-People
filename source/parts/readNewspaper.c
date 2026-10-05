@@ -28,7 +28,7 @@ readNewspaper()
         headMode         = HEAD_ANIM_READING;
         resFacing   = FACING_LEFT;
         animState              = STATE_SIT_IN_ARMCHAIR;
-        headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+        headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
         waitHeadTurn();
         /* The limit is set before the coordinate steps, and
            `resX += 0` is a no-op the original wrote.  Both kept on

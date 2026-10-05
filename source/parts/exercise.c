@@ -32,7 +32,7 @@ exercise()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         /* The mask is folded into the assignment (computed once) and

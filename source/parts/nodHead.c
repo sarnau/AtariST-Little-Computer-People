@@ -16,7 +16,7 @@ nodHead()
         scratchArr[2]  = STATE_WALK_FRAME_5;
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headMode         = HEAD_ANIM_DISABLED;
         waitHeadTurn();
 
@@ -31,8 +31,8 @@ nodHead()
         headFrame = scratchArr[2];
         gameTick(2);
 
-        headTarget = 8;
-        headPose      = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
+        headPose      = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         headFrame      = saved_frame;
         gameTick(0);
 }

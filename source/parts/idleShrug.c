@@ -17,7 +17,7 @@ idleShrug()
         scratchArr[1]  = STATE_IDLE_SHRUG_HOLD;
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState = scratchArr[0]; gameTick(2);

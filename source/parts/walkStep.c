@@ -65,7 +65,7 @@ walkStep()
                                 animState = STATE_WALK_FRAME_0;
                         resX++;
                         if (headLastWalk != 10) {
-                                headTarget = 10;
+                                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                                 headLastWalk = headTarget;
                         }
                 } else if (resX > xWaypoint) {
@@ -75,8 +75,8 @@ walkStep()
                         else if (++animState > STATE_WALK_FRAME_7_STEP)
                                 animState = STATE_WALK_FRAME_0;
                         resX--;
-                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                        if (headLastWalk != HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER)) {
+                                headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
                                 headLastWalk = headTarget;
                         }
                 } else {
@@ -116,8 +116,8 @@ walkStep()
                                 resFacing = FACING_LEFT;
                                 resX -= 6;
                                 resY -= 2;
-                                if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                        headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                if (headLastWalk != HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER)) {
+                                        headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                         } else if (resY == 100) {
@@ -128,7 +128,7 @@ walkStep()
                                 resX += 3;
                                 resY -= 2;
                                 if (headLastWalk != 10) {
-                                        headTarget = 10;
+                                        headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                         } else if (resY > 161 ||
@@ -153,8 +153,8 @@ walkStep()
                                         if (animState == STATE_STR_TOP_F3S)
                                                 footstepDue = YES;
                                 }
-                                if (headLastWalk != HEAD_ANIM_HORIZONTAL_RANGE) {
-                                        headTarget = HEAD_ANIM_HORIZONTAL_RANGE;
+                                if (headLastWalk != HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER)) {
+                                        headTarget = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                         } else {
@@ -174,7 +174,7 @@ walkStep()
                                         if (animState == STATE_STR_CLIMB_F3S)
                                                 footstepDue = YES;
                                         if (headLastWalk != 10) {
-                                                headTarget = 10;
+                                                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                                                 headLastWalk = headTarget;
                                         }
                                 } else if (resY < 161) {
@@ -192,8 +192,8 @@ walkStep()
                                                 animState = STATE_STR_CLIMB_F0;
                                         if (animState == STATE_STR_CLIMB_F3S)
                                                 footstepDue = YES;
-                                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                        if (headLastWalk != HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER)) {
+                                                headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
                                                 headLastWalk = headTarget;
                                         }
                                 }
@@ -209,7 +209,7 @@ walkStep()
                                 resY += 4;
                                 resX += 6;
                                 if (headLastWalk != 8) {
-                                        headTarget = 8;
+                                        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                                 if (isCarrying != NO)
@@ -220,7 +220,7 @@ walkStep()
                                 resY += 2;
                                 resX -= 2;
                                 if (headLastWalk != 8) {
-                                        headTarget = 8;
+                                        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                                 if (isCarrying != NO)
@@ -245,7 +245,7 @@ walkStep()
                                                 footstepDue = YES;
                                 }
                                 if (headLastWalk != 8) {
-                                        headTarget = 8;
+                                        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
                                         headLastWalk = headTarget;
                                 }
                         } else {
@@ -267,8 +267,8 @@ walkStep()
                                                 animState = STATE_STR_DESC_F0;
                                         else if (++animState > STATE_STR_DESC_F3S)
                                                 animState = STATE_STR_DESC_F0;
-                                        if (headLastWalk != (HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER)) {
-                                                headTarget = HEAD_ANIM_HORIZONTAL_RANGE | HEAD_ANIM_SHOWER;
+                                        if (headLastWalk != HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER)) {
+                                                headTarget = HEAD_POSE(HEAD_DIR_LEFT, HEAD_TILT_LOWER);
                                                 headLastWalk = headTarget;
                                         }
                                         if (animState == STATE_STR_DESC_F1)
@@ -292,7 +292,7 @@ walkStep()
                                         else if (++animState > STATE_STR_DESC_F3S)
                                                 animState = STATE_STR_DESC_F0;
                                         if (headLastWalk != 10) {
-                                                headTarget = 10;
+                                                headTarget = HEAD_POSE(HEAD_DIR_RIGHT, HEAD_TILT_LOWER);
                                                 headLastWalk = headTarget;
                                         }
                                         if (animState == STATE_STR_DESC_F1)

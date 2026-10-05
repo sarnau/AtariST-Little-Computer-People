@@ -28,7 +28,7 @@ sitWithDog()
         resY += 3;
         animState = STATE_SIT_COUCH_UPRIGHT;
         resY += 6;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(3);
 
@@ -54,7 +54,7 @@ sitWithDog()
         animState = STATE_SIT_COUCH_UPRIGHT;
         spriteLayer[SPRITE_READING_1] = SPRITE_HIDDEN;
         layoutSlots();
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         gameTick(3);
 

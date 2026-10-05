@@ -31,7 +31,7 @@ danceToMusic()
 
         resFacing   = FACING_RIGHT;
         animState              = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         /* i is never initialised -- the first iteration reads

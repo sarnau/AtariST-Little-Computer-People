@@ -43,7 +43,7 @@ moveInScene()
         walkXTarget -= 50;
         walkToTarget();
         animState  = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         spriteLayer[SPRITE_DOG_SIT] = 0;
         layoutSlots();
@@ -59,7 +59,7 @@ moveInScene()
         walkToTarget();
         resFacing = FACING_RIGHT;
         animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = 12;
+        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openKitchenCab(DOOR_OPEN);
         gameTick(16);
@@ -71,7 +71,7 @@ moveInScene()
         goToFridge();
         tvOn();
         animState  = STATE_STAND_SIDE_VIEW;
-        headTarget = 8;
+        headTarget = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
         nodOk();
         enterStudy(0);
@@ -81,7 +81,7 @@ moveInScene()
         walkToTarget();
         resFacing = FACING_RIGHT;
         animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = 12;
+        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         changeClothes(0);
         useToilet();
@@ -97,7 +97,7 @@ moveInScene()
         walkToFrontDoor();
         resFacing = FACING_RIGHT;
         animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = 12;
+        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         waitHeadTurn();
         openFrontDoor(DOOR_OPEN);
 
@@ -116,7 +116,7 @@ moveInScene()
         walkToTarget();
         resFacing = FACING_RIGHT;
         animState   = STATE_STAND_FACING_SCREEN;
-        headTarget  = 12;
+        headTarget  = HEAD_POSE(HEAD_DIR_BACK, HEAD_TILT_LOWER);
         spriteLayer[SPRITE_SUITCASE] = 0;
         layoutSlots();
         isCarrying = 0;

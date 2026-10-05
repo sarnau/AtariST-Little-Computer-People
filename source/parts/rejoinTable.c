@@ -40,7 +40,7 @@ rejoinTable()
 
         animState   = STATE_STAND_SIDE_VIEW;
         resFacing = FACING_RIGHT;
-        headTarget  = 8;
+        headTarget  = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);
         waitHeadTurn();
 
         animState = STATE_EAT_BITE;

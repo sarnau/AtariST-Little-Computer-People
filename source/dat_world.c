@@ -64,9 +64,9 @@ short   keysBlocked          = NO;   /* YES while an activity owns the keyboard 
    as a .comm -- that is where the original has it. */
 short   pendReady[SPRITE_HW_SLOTS_ALLOC] = { 0 }; /* per-slot "pending" flag */
 
-short   headPose                         = 8;    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
+short   headPose                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose now: bits 0..2 angle, 3..4 tilt (see sprhead.c); HEAD_ANIM_DISABLED stops the head animation */
 
-short   headTarget                         = 8;    /* head pose the head animation is turning towards, same encoding */
+short   headTarget                         = HEAD_POSE(HEAD_DIR_FRONT, HEAD_TILT_LOWER);    /* head pose the head animation is turning towards, same encoding */
 
 short   headMode                         = HEAD_ANIM_DISABLED;   /* head animation mode (HEAD_ANIM_* / sprhead.c bit-fields) */
 
@@ -159,18 +159,30 @@ short   headYOffset[93] = {
 /* Neutral head-facing angle per PLAYER_STATE (used by head_animate to
    pick the "resting" horizontal direction the head drifts toward). */
 short   headRestDir[93] = {
-         2,  2,  2,  2,  2,  2,  2,  2,
-         2,  2,  2,  2,  2,  4,  4,  4,
-         4,  2,  2,  2,  2,  0,  0,  0,
-         0,  3,  4,  4,  4,  4,  4,  4,
-         4,  4,  0,  0,  0,  0,  4,  4,
-         4,  4,  4,  0,  0,  0,  2,  2,
-         2,  2,  2,  0,  0,  0,  0,  0,
-         0,  0,  0,  0,  0,  4,  4,  4,
-         2,  2,  2,  2,  2,  1,  4,  0,
-         0,  0,  0,  4,  4,  4,  0,  0,
-         0,  0,  0,  0,  0,  0,  0,  0,
-         0,  0,  4,  3,  1
+        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /*  0.. 3 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /*  4.. 7 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /*  8..11 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_BACK,   /* 12..15 */
+        HEAD_DIR_BACK,         HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /* 16..19 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 20..23 */
+        HEAD_DIR_FRONT,        HEAD_DIR_BACK_RIGHT,   HEAD_DIR_BACK,         HEAD_DIR_BACK,   /* 24..27 */
+        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_BACK,   /* 28..31 */
+        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 32..35 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_BACK,         HEAD_DIR_BACK,   /* 36..39 */
+        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_FRONT,   /* 40..43 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /* 44..47 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_FRONT,   /* 48..51 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 52..55 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 56..59 */
+        HEAD_DIR_FRONT,        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_BACK,   /* 60..63 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,        HEAD_DIR_RIGHT,   /* 64..67 */
+        HEAD_DIR_RIGHT,        HEAD_DIR_FRONT_RIGHT,  HEAD_DIR_BACK,         HEAD_DIR_FRONT,   /* 68..71 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_BACK,   /* 72..75 */
+        HEAD_DIR_BACK,         HEAD_DIR_BACK,         HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 76..79 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 80..83 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,   /* 84..87 */
+        HEAD_DIR_FRONT,        HEAD_DIR_FRONT,        HEAD_DIR_BACK,         HEAD_DIR_BACK_RIGHT,   /* 88..91 */
+        HEAD_DIR_FRONT_RIGHT   /* 92..92 */
 };
 
 /* posXHalf[48]: X half-pixel coordinate per HOUSE_POS.
