@@ -1,7 +1,5 @@
 /*
  * Must sit directly before putInFridge, which it calls.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 
 /* goToFridge: walk to fridge, then trampoline into putInFridge. */

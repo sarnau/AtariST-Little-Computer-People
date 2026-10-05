@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* defineSprite: store per-sprite
    pointers and dimensions at slot spriteID, then auto-generate the
    1-bit mask into maskPtr. */

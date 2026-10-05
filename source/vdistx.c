@@ -20,7 +20,6 @@
  * This is the port's only VDI binding module.
  */
 
-
 #include "types.h"
 #include "globals.h"
 #include "vdiown.h"

@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* Returns KEY_NONE (-1) when the buffer is empty.  When the ASCII byte
    is 0, the scancode (bits 16..23) selects cursor-left or F1..F10.
    The dead `break` after each `return` is part of the original code

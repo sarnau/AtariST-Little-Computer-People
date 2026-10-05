@@ -1,8 +1,3 @@
-/*
- * parts/petDog.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* petDog: wait to be patted.  Unless patAllowed is already set, the
    resident first goes to the couch and crouches (callDog).  He then
    waits 100..200 ticks (10 during the intro), or until a new action is

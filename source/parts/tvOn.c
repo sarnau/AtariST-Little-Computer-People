@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* Turns the TV on: if it is off, the resident walks to the TV in the
    top-floor living room, does the look gesture (tvStoop), sets tvRunning
    so the tick draws the flickering picture, and plays the TV sound

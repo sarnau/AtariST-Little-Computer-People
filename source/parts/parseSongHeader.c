@@ -1,6 +1,3 @@
-/*
- * parts/parseSongHeader.c -- included by midi_seq.c; never compiled on its own.
- */
 /* parseSongHeader: walk header from songEvents to first 0xFF.
    Commands: 0x80/0x81/0x83/0x84 (config), 0xC0 (program change),
    0x01..0x7F (note-stride skip, 3 bytes).  Also parses the 90-byte

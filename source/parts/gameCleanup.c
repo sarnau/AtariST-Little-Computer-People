@@ -1,7 +1,5 @@
 /*
  * Must sit between mgSetup and textBig.
- *
- * Included by games.c; never compiled on its own.
  */
 
 /* Shared cleanup at exit from any game.  Takes no argument and does

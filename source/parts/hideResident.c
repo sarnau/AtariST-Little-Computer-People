@@ -1,7 +1,5 @@
 /*
  * Stash the body/head image pointers, NULL them and raise lcpHidden.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 
 void

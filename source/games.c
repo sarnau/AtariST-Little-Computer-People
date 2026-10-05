@@ -62,7 +62,6 @@ char *          wpzWrongMsgs[6] = {
         "Not quite."
 };
 
-
 /* These statics are defined after their first caller.  A static
    called before its definition needs a forward declaration, or Alcyon
    treats the call as external and the linker resolves it to 0; the
@@ -83,13 +82,8 @@ static void  pkrAddChips();
 static short pkrPlyrBet();
 static void  pkrCompDraw();
 
-
 /* gamePlWQ does not exist in the original; Alcyon emits a static even
    when nothing calls it, so it must not be defined here. */
-
-
-/* leaveGameTable and rejoinTable live in parts/ and are included by stx_u2.c,
-   not here: they belong to that object. */
 
 /* mgWaitKey: wait for a key while processing urgent game events.
    The minigames' key reader: it first drains stale keys, then, while
@@ -151,10 +145,9 @@ mgWaitKey()
         return key;
 }
 
-/* rndRng lives in parts/; it belongs here, right after mgWaitKey, in
-   the minigame object, so the minigames reach it with a short call. */
+/* rndRng belongs here, right after mgWaitKey, in the minigame object,
+   so the minigames reach it with a short call. */
 #include "parts/rndRng.c"
-
 
 /* anaStrMatch: character-by-character equality test for two C strings.
    Keeps walking both strings after a mismatch and reports at the end. */
@@ -190,7 +183,6 @@ char *  b;
 #include "parts/textNormal.c"
 #include "parts/panelBegin.c"
 #include "parts/panelEnd.c"
-
 
 /* playWordPuzzle: WORD PUZZLE main loop.
    Loads wordpz.txt into a 2000-byte buffer, indexes 66 line pointers
@@ -565,7 +557,7 @@ short   text_color;
         textNormal();
 }
 
-/* anaDrawPrompt lives in parts/; it must sit here, after anaShowWord. */
+/* anaDrawPrompt must sit here, after anaShowWord. */
 
 #include "parts/anaDrawPrompt.c"
 
@@ -856,7 +848,6 @@ validate:
 #include "parts/panelErase.c"
 #include "parts/eraseRectColor.c"
 
-
 /* pkrCallOrRaise: computer call/raise decision.  Returns 'c' or 'r'.
    On raise: pkrRaiseAmt = money/10 clamped [1,20]. */
 
@@ -1039,7 +1030,6 @@ rank_from_hc_bp:
         if (hc + bp != 1) return;
         *hand_rank = HAND_ONE_PAIR;
 }
-
 
 /* playPoker: 5-card draw poker main loop.
    Init: Malloc, load cards, mgSetup, money=400 each.
@@ -2163,7 +2153,6 @@ short   val;
 }
 
 static void     pkrShowdown();
-
 
 /* playWar: WAR mini-game main loop.
    Init: Malloc, load cards, mgSetup, 400-swap shuffle, split 26/26.
@@ -3398,5 +3387,4 @@ short   mode;
                 }
         }
 }
-
 

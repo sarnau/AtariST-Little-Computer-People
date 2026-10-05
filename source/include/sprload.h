@@ -7,7 +7,6 @@
 extern short spriteFileId[];
 extern unsigned char genMaskBuf[];
 
-
 extern void makeMask();
 extern void defineSprite();
 

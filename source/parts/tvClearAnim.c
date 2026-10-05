@@ -1,7 +1,5 @@
 /*
  * Must sit right after useComputer.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 
 

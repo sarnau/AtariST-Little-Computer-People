@@ -1,6 +1,3 @@
-/*
- * parts/calcWeekday.c -- included by stx_u2.c; never compiled on its own.
- */
 /* The original references `daysInMonth(t_mon, t_year)` inside the month
    loop instead of `daysInMonth(i, t_year)` -- a bug in the 1985 source,
    kept on purpose. */

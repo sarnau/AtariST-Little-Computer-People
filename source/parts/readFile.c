@@ -1,6 +1,3 @@
-/*
- * parts/readFile.c -- included by stx_u1.c; never compiled on its own.
- */
 /* Fread with retries: read `count' bytes from fhnd into buffer and
    return Fread's result.  A failed read is retried twice after a
    one-second wait; after that a "Bad file read" alert with a single

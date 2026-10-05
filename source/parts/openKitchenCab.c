@@ -1,8 +1,3 @@
-/*
- * parts/openKitchenCab.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* openKitchenCab: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the kitchen
    cabinet while the resident stands at it, updating kitchenCabOpen.  Both
    directions reach in and step the door through its ajar frame with

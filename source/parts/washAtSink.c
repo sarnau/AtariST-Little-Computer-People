@@ -1,7 +1,5 @@
 /*
- * parts/washAtSink.c -- the resident stands at the kitchen sink with the
- * water running.
- * Included by stx_u2.c; never compiled on its own.
+ * The resident stands at the kitchen sink with the water running.
  */
 
 void

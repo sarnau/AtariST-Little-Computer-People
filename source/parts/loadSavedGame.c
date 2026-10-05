@@ -1,7 +1,5 @@
 /*
  * Sits ahead of gameLoop.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 /* Restore a saved game: if the file "hyber" opens, its 128-byte image
    is read straight into the resident record and the water level, every

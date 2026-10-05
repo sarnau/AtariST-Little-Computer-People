@@ -1,6 +1,5 @@
 /*
- * parts/wakeFromAlarm.c -- walk to the bedroom and clear the alarm flag.
- * Included by stx_u2.c; never compiled on its own.
+ * Walk to the bedroom and clear the alarm flag.
  */
 
 void

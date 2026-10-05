@@ -1,8 +1,3 @@
-/*
- * parts/cookMeal.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* cookMeal: cook and eat a meal.  The resident walks to the kitchen
    cabinet, takes out the cooking pot and carries it to the stove,
    where the pot sits on the hob while random flame frames flicker

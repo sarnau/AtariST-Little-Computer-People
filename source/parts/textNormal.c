@@ -1,6 +1,6 @@
 /*
- * parts/textNormal.c -- included by games.c; never compiled on its own.
- * Restores the VDI text height from savedTextAttr[7] (the cell height).
+ * Restores the VDI text height from savedTextAttr[7] (the cell
+ * height).
  */
 void
 textNormal()

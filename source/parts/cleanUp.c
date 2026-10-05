@@ -1,7 +1,3 @@
-/*
- * parts/cleanUp.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* cleanUp: tidy up.  Visits each door the house tracks as open --
    filing cabinet, study door, toilet, bedroom closet, dresser, kitchen
    cabinet, front door -- walks to it and closes it, clearing its

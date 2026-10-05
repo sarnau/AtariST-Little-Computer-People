@@ -1,8 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
-
 /* useComputer: use the computer.  The resident walks to the computer
    desk and sits; then for 0x80..0x1ff steps he alternates hands-down
    (with a key click, sfxClick) and hands-up poses with random pauses,

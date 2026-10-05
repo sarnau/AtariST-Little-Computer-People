@@ -1,8 +1,3 @@
-/*
- * parts/v_bar.c -- included by vdistx.c at its place in the binding
- * module's order; never compiled on its own.
- */
-
 /* VDI filled rectangle (GDP bar) on workstation handle; pxy holds the
    two corners x1,y1,x2,y2. */
 void

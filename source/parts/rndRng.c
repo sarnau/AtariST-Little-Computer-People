@@ -1,7 +1,3 @@
-/*
- * parts/rndRng.c -- included by games.c, right after mgWaitKey; never
- * compiled on its own.
- */
 /* Returns a random number from low to high inclusive: the XBIOS
    Random() value is masked to 15 bits and reduced modulo the range. */
 short

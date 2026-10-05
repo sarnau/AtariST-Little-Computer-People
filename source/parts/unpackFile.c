@@ -1,7 +1,5 @@
 /*
  * Sits ahead of main.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 /* Decompress LETTER.TXT into out_buf for the letter writer.
    File layout: a short holding the uncompressed size + 0x11 header

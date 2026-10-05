@@ -1,9 +1,7 @@
 /*
- * parts/vdiClear.c -- the second half of vdiInit: reset the fill
- * attributes, hide the mouse and bar the whole screen.  It must
- * directly follow parts/vdiInit.c so vdiInit's call to it stays a
- * short branch.
- * Included by stx_u1.c; never compiled on its own.
+ * the second half of vdiInit: reset the fill attributes, hide the
+ * mouse and bar the whole screen. It must directly follow
+ * parts/vdiInit.c so vdiInit's call to it stays a short branch.
  */
 void
 vdiClear()

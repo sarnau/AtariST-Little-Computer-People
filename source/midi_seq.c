@@ -46,7 +46,6 @@
 #include "protos.h"
 #include "psgfreq.h"
 
-
 /* skipTextField comes first in this object. */
 #include "parts/skipTextField.c"
 
@@ -113,7 +112,6 @@ armSequencer()
         lastExpTick = nextEvTick = ticksToNext = seqCountdown = envDivider = 100;
         seqPhase = songActive = YES;
 }
-
 
 /* pushLoop: push loop marker {return_addr, count-1} on loopStack (cap 49). */
 
@@ -281,7 +279,6 @@ peekNoteDur()
 /* queueNote: queue Note-On in noteQueue as {duration, note|sustain, phys_ch}
    and dispatch Note-On via sendMidiEvent.  Queue entry fires paired Note-Off
    later via expireNotes + sendNoteOff. */
-
 
 void
 queueNote()
@@ -629,7 +626,6 @@ seqAdvance()
    Drain pending events, send Note-Off for every noteOwner[] flag,
    clear songActive.  Nothing calls it, but the original contains it. */
 
-
 void
 stopSequencer()
 {
@@ -678,7 +674,6 @@ unhookTimerA()
         Xbtimer(XB_TIMER_A, MFP_STOP, 0x1c, oldTimerAVec);
 }
 
-
 /* resetPrograms and parseSongHeader come near the end of the object. */
 #include "parts/resetPrograms.c"
 #include "parts/parseSongHeader.c"
@@ -701,7 +696,6 @@ unsigned char * p;
                 progMap[i] = *(p + i + 14) - 1;
         }
 }
-
 
 /* Rebuild noteMap, the note translation table timerAIsr reads every note
    through, from the key setting in a song's header (parseSongHeader passes the
@@ -758,7 +752,6 @@ short   value;
                         noteMap[i] += note_shift;
         }
 }
-
 
 /* copyEnvelope must sit right before stepEnvelopes. */
 #include "parts/copyEnvelope.c"

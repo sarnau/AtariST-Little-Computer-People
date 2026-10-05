@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* Types one character of the letter at the desk.  ch below ' ' is a
    carriage return: a few typing frames, then the line buffer position
    typedCursor is reset and stripScroll = 4 makes gameTick scroll the paper strip

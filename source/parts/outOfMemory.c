@@ -1,7 +1,5 @@
 /*
  * Fatal out-of-memory alert; never returns.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 
 void

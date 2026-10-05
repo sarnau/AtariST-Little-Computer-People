@@ -1,7 +1,5 @@
 /*
  * Draws "Guess #N?" for the current anagram attempt.
- *
- * Included by games.c; never compiled on its own.
  */
 
 void

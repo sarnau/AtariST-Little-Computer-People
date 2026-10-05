@@ -1,7 +1,3 @@
-/*
- * parts/hookTimerA.c -- included by midi_seq.c, between stopSequencer and
- * unhookTimerA; never compiled on its own.
- */
 /* Install timerAIsr as the MFP Timer-A interrupt (prescaler /64, data
    0x28), saving the old vector first.  The sequencer is driven
    entirely by this interrupt: without it playOrgan's wait for songPlaying

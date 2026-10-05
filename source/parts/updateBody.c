@@ -1,5 +1,4 @@
 /*
- * parts/updateBody.c -- included by stx_u3.c; never compiled on its own.
  * Must follow gameTick.
  */
 /* Select the body pose for animState -> slot 3.  When carrying an

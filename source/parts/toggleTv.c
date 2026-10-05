@@ -1,6 +1,5 @@
 /*
- * parts/toggleTv.c -- switch the TV on or off.
- * Included by stx_u2.c; never compiled on its own.
+ * Switch the TV on or off.
  */
 
 /* ACTION_TOGGLE_TV: switch the TV off if tvRunning says it is on,

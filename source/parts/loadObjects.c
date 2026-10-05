@@ -1,6 +1,3 @@
-/*
- * parts/loadObjects.c -- included by stx_u1.c; never compiled on its own.
- */
 /* Read the 14000-byte OBJECTS file into objFileBuf[]. */
 
 void

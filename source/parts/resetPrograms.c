@@ -1,6 +1,3 @@
-/*
- * parts/resetPrograms.c -- included by midi_seq.c; never compiled on its own.
- */
 /* resetPrograms: pre-flight the 16 MIDI channels.  For each physical channel
    0..15, find the first logical channel referencing it, mark its
    program as unset (-1), dispatch a Program Change. */

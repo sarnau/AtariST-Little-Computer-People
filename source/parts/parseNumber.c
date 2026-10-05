@@ -1,7 +1,3 @@
-/*
- * Included by stx_u3.c; never compiled on its own.
- */
-
 /* Decimal string -> number, with an optional leading '-'.  NOTHING
    calls this, but Alcyon emits a static even when nothing references
    it, so the 1985 parser source still carried the helper and it must

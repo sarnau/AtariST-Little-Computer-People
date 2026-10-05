@@ -1,7 +1,3 @@
-/*
- * parts/leaveGameTable.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* leaveGameTable: leave the game table for an interrupt event (alarm,
    bathroom, thirst, delivery).  Walks the resident to the kitchen
    sink area, tucks away the game-box + table-setting sprites, and

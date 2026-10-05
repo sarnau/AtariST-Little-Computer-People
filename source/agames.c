@@ -12,7 +12,6 @@
 #include "sprglobs.h"
 #include "sprites.h"
 
-
 /* Play a card or word game with the player.  The resident walks to the
    filing cabinet on the top floor, opens its drawer if it is shut, and
    shows the game menu (1..5) in the text panel, with keysBlocked set so

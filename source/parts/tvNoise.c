@@ -1,6 +1,3 @@
-/*
- * parts/tvNoise.c -- included by stx_u2.c; never compiled on its own.
- */
 /* tvNoise: random-colour antenna each frame while TV on.
    Mask (& COLOR_dk_brown = 0xf) clamps to 16-entry palette. */
 

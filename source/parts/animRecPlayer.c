@@ -1,7 +1,5 @@
 /*
  * Sits between drawPixel and toggleTv.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 /* animRecPlayer: sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
    If music playing and not browsing records, roll random VU LED (0..6)

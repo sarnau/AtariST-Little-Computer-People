@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* dogNextWaypt: dog waypoint math.  Same shape as nextWaypoint but uses
    dogX/y and applies -3 X on middle-floor landing + -8 X on stair
    crest. */

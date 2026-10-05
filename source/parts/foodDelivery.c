@@ -1,9 +1,3 @@
-/*
- * parts/foodDelivery.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
-
 /* Food delivery.  The resident walks to the front door, opens it and
    picks up the package (SPRITE_FOOD_PACKAGE, carried), closing the
    door when a 0..100 roll beats his initiative_threshold.  For dog

@@ -1,7 +1,3 @@
-/*
- * parts/panelBegin.c -- included by games.c, right after textNormal; never
- * compiled on its own.
- */
 /* Prepare for VDI drawing on the minigame/letter panel: remember the
    current logical screen in panelLogbase, make the panel buffer stripBuf the
    logical screen, and set replace mode and a solid fill in game colour

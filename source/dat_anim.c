@@ -8,16 +8,11 @@
  * declarations below therefore decides the data layout and must not
  * change.  See CLAUDE.md, "DATA and BSS layout".
  *
- * Not compiled standalone -- included by stx_u3.
  */
-
 
 BOOL16  patAllowed                 = NO;
 
-
 BOOL16  patActive              = NO;   /* YES while a Ctrl-P pat (hand animation) is running; gameTick clears it when the cycle ends */
-
-
 
 /* Event queue: up to ten ACTION_* events filled by queueEvent and drained
    from the front by nextEvent; ACTION_NONE marks an empty slot, so
@@ -27,12 +22,10 @@ short   eventQueue[10] = {
         ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE, ACTION_NONE
 };
 
-
 /* Sprite layer flags: entries 0,1 = SPRITE_IN_FRONT (1),
    rest = SPRITE_HIDDEN (0).  These are the two dog slot flags (slots
    0 and 7 in the hardware layout, per layoutSlots). */
 short   spriteLayer[SPRITE_SLOTS] = { 1, 1 };
-
 
 /* Which hardware slot each logical
    sprite is currently mapped to.  Entries 0..1 pin the LCP body/head
@@ -59,8 +52,6 @@ short   spriteSlot[SPRITE_SLOTS] = {
                      HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE, HW_SLOT_NONE,
                      HW_SLOT_NONE, HW_SLOT_NONE
 };
-
-
 
 /* bitSet32[i] = 1<<i, bitClear32[i] = ~(1<<i).  The original ships both
    tables as initialized data rather than building them at run time. */
@@ -99,8 +90,6 @@ long    bitSet32[32] = {
         0x80000000L
 };
 
-
-
 /* bitClear32[i] = ~(1<<i), used by maskHead to clear one bit of a mask. */
 long    bitClear32[32] = {
         0xfffffffeL,
@@ -137,7 +126,6 @@ long    bitClear32[32] = {
         0x7fffffffL
 };
 
-
 /* NINE house positions (POS_*) the dog picks (via rndRng) as its next
    wander target -- the picker's index is rndRng(base, 8), so 0..8. */
 short   dogRoamSpots[9] = {
@@ -148,20 +136,16 @@ short   dogRoamSpots[9] = {
         POS_BTM_SCREEN_EDGE
 };
 
-
 /* Used by the cutscene
    at startup to seed the dog's first wander target -- the dog walks
    in from the bottom-screen edge. */
 short   dogStartPos        = POS_BTM_SCREEN_EDGE;
 
-
 short   dogYNudge[9]      = { 3, 9, 2, 10, 6, 0, 0, 11, 3 };   /* Y nudge added to the dog's target, per dogRoamSpots entry (see dogXNudge) */
-
 
 /* Y micro-nudge applied
    to the initial dog target position. */
 short   dogYStartNudge            = 3;
-
 
 /* Per-destination pixel nudges applied after posToXY returns the
    anchor for the destination.  dogYNudge is nine like dogRoamSpots, but
@@ -169,13 +153,10 @@ short   dogYStartNudge            = 3;
    Only 0..8 are ever indexed; the two extra zeros keep the layout. */
 short   dogXNudge[11]     = { 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0 };
 
-
 /* Dog eating frames, chosen by the eating countdown dogEatCount % 3. */
 short   dogEatFrames[3]   = {
         SPRITE_DOG_EATING_1, SPRITE_DOG_EATING_2, SPRITE_DOG_EATING_3
 };
-
-
 
 /* Animation frame tables consumed by gameTick.  Every
    value is an object_tab_mfdb index; gameTick indexes these by a
@@ -183,20 +164,15 @@ short   dogEatFrames[3]   = {
 short   clockFrames[4]     = { OBJ_CLOCK_1, OBJ_CLOCK_2,
                            OBJ_CLOCK_1, OBJ_CLOCK_3 };
 
-
 short   alarmFrames[2]     = { OBJ_ALARM_1, OBJ_ALARM_2 };   /* ringing alarm clock, two frames */
-
 
 /* Ringing phone frames. */
 short   phoneFrames[4]     = { OBJ_PHONE_2, OBJ_PHONE_1,
                            OBJ_PHONE_2, OBJ_PHONE_3 };
 
-
 /* Fireplace flame frames while fireBurning. */
 short   fireFrames[4]     = { OBJ_FIRE_1, OBJ_FIRE_2,
                            OBJ_FIRE_3, OBJ_FIRE_4 };
-
-
 
 /* Ctrl-P petting-hand sprite frames: ping-pong over hands 1..6 and back
    down to 2.  PAT_FRAMES entries; the animation's final frame, hand 1,
@@ -209,12 +185,9 @@ short   patSprites[PAT_FRAMES]    = {
         SPRITE_PET_HAND_2
 };
 
-
-
 /* Frame-state globals for the petting animation (patFrame, the frame
    counter, lives in globals.c).  patLastSprite is the last sprite drawn. */
 short   patLastSprite                         = SPRITE_PET_HAND_1;
-
 
 /* Dog bowl object per bowlLevel (BOWL_EMPTY, BOWL_HALF, BOWL_FULL). */
 short   bowlFrames[3]     = { OBJ_DOG_FOOD_BOWL_3,

@@ -85,7 +85,6 @@ short   filingCabOpen;       /* DSF_FILING_CABINET */
 short   bowlLevel;       /* dog bowl fill, BOWL_EMPTY..BOWL_FULL */
 short   foodSupply;       /* working copy of resident.food_supply */
 
-
 /* A byte flag, not BOOL16: every use tests it as a byte. */
 char    songPlaying;
 short   bowlChange;       /* bowl change for tick.c: -1 one step emptier, +1 fuller, 0 none */
@@ -255,7 +254,6 @@ short           rampAccum[3];      /* ramp_accum   */
 unsigned char   noteOwner[128];
 unsigned char   psgChanNote[3];           /* current MIDI note per PSG channel A/B/C */
 PSG_ENVELOPE    psgEnvelope[3];
-
 
 /* ---- SFX / Dosound state -------------------------------------------- */
 char            sfxCurPrio;        /* sfxPriority priority of the playing effect, for preemption */
@@ -575,7 +573,6 @@ MFDB            cardTableMfdb;       /* the 320x77 card-table area the cards are
 BOOL16  isDogDelivery;        /* YES while dogFoodDelivery runs foodDelivery for a dog-food delivery */
 BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and stop its ring */
 
-
 /* (gameTick animation tables + frame-state globals live
    in tick_tables.c -- Alcyon C168's symbol-table overflows if they
    are added here.) */
@@ -593,7 +590,6 @@ BOOL16  phoneHangUp;          /* request for gameTick to hang the phone up and s
    BSS layout").  DO NOT reorder by hand.
    ==================================================================== */
 
-
 /* PSG register offsets.  Amp registers 8/9/10 with
    the PSG "write" bit (0x80) pre-set.  stepEnvelopes subtracts 0x80
    before calling psgWrite to recover the raw register number. */
@@ -606,14 +602,12 @@ unsigned char   ampRegs[3]  = { 0x88, 0x89, 0x8a };
 PSG_ENVELOPE *  envPtrs[3] = { &psgEnvelope[0], &psgEnvelope[1],
                                &psgEnvelope[2] };
 
-
 /* Envelope rate table.  32-byte table indexed by phase_timer
    (already loaded from an ADSR duration byte). */
 short           envRateTab[16] = {
              0,  360,  180,  120,   85,   72,   60,   45,
             30,   20,   15,   12,   10,    8,    6,    4
 };
-
 
 /* Envelope time table.  Reload value for phase_timer
    when transitioning between ADSR phases. */
@@ -622,14 +616,12 @@ short           envTimeTab[16] = {
             12,   18,   24,   30,   36,   45,   60,   90
 };
 
-
 /* Envelope sustain table.  Reload for phase_timer
    during the sustain->release transition. */
 short           envSusTab[16] = {
              0,    1,    2,    4,    8,   18,   24,   40,
             45,   60,   72,   90,  120,  180,  360, 30000
 };
-
 
 /* Envelope release table.  Applied to ramp_delta
    during the sustain->release transition. */
@@ -638,9 +630,7 @@ short           envRelTab[16] = {
              8,    6,    5,    4,    3,    2,    1,    0
 };
 
-
 BOOL16          midiOutOn     = YES;   /* send notes to MIDI OUT */
-
 
 BOOL16          psgOutOn              = YES;     /* play notes on the YM2149 PSG */
 
@@ -653,7 +643,6 @@ short           songTempo              = 120;     /* song tempo in beats per min
 /* Ticks per beat at the default tempo songTempo = 120. */
 short           ticksPerBeat     = 20;
 
-
 /* 22 entries, not 32: that is the room the original leaves.  parseEvents
    indexes it with a 5-bit field (`durTable[*songPos & 0x1f]`), so 22..31
    would read past the end -- the .SNG data never produces them. */
@@ -662,7 +651,6 @@ short           durTable[22] = {
            9,   12,   16,   18,   24,   32,   36,   48,
           64,   72,   96,  128,  144,    0
 };
-
 
 /* 128 entries, the values the original ships: YM2149 tone periods,
    period = 2000000 / (16 * f) for MIDI note n.  Entries below index 23
@@ -706,12 +694,10 @@ char            noteHigh      = 0x60;    /* highest note played */
 
 char           noteLow       = 0x24;    /* lowest note played */
 
-
 /* 132-entry (0x84) note transpose lookup.  Indexed by MIDI note number
    0..131 (C-1..G9).  Populated by buildNoteMap at song
    start; each note maps to either itself (identity) or a shifted note
    under a chord mask, or 0xFF to skip (chromatic non-diatonic tones). */
-
 
 /* ---- PSG channel state ---------------------------------------------- */
 
@@ -748,7 +734,6 @@ unsigned char   keyScaleMask[16] = {
         0x00, 0xFE, 0xEE, 0xEC, 0xCC, 0xC8, 0x88, 0x00
 };
 
-
 /* The default program map, sixteen bytes of INITIALIZED data right
    behind keyScaleMask; progMap points here.  Named defProgMap rather than
    mi_pgmapb because Alcyon truncates a linkage name to eight
@@ -757,7 +742,6 @@ unsigned char   defProgMap[16] = {
         0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
         0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x11
 };
-
 
 /* useSongChan and fixedChan are char: playSongFile writes them as bytes.
    useSongChan is written by playSongFile and read by parseEvents. */
@@ -780,11 +764,6 @@ char *          progMap = (char *) defProgMap;   /* a byte pointer: MIDI program
    object.
    ---------------------------------------------------------------- */
 #include "midi_seq.c"
-
-
-
-
-
 
 /* No globals here for the 200 Hz clock or the VBL counter.  Both are
    ATARI ST SYSTEM VARIABLES in low memory -- _hz_200 at $04BA/$04BC

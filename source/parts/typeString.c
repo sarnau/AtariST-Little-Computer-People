@@ -1,7 +1,3 @@
-/*
- * parts/typeString.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* Types the string str through typeChar, word by word, wrapping to a
    new line before any word that would pass column 40.  val is an
    indent: a negative value types -val spaces first, and a positive one

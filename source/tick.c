@@ -11,8 +11,6 @@
 #include "sprites.h"
 #include "tick_tables.h"
 
-
-
 /* Advance the game by counter + 1 animation ticks.  In carrying mode
    (isCarrying) the carried sprite is first repositioned relative to the
    resident; then each tick waits for the compositor, steps the house

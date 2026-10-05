@@ -1,8 +1,3 @@
-/*
- * parts/openFrontDoor.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* openFrontDoor: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) the front door
    while the resident stands at it.  Opening reaches out, draws the
    door ajar then wide with the door-open sound and sets frontDoorOpen;

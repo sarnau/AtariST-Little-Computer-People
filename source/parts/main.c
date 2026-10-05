@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* No `_stksize` is defined: alcyon2's GEMSTART.O, which this program
    links, has the stack size built in, and defining it would add four
    dead bytes at the head of the data segment.

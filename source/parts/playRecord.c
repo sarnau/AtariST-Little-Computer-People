@@ -1,6 +1,3 @@
-/*
- * parts/playRecord.c -- included by stx_u2.c; never compiled on its own.
- */
 /* playRecord: pick a random .sng file and start it playing.
    Uses foodSupply as a modulo index (the 1985 code reused the field). */
 

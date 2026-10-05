@@ -1,7 +1,5 @@
 /*
  * The last function of the stx_u2 object.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 void
 saveFile(filename, size, addr)

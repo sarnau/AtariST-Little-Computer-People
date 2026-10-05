@@ -1,7 +1,5 @@
 /*
  * Must sit between vdiClear and initMirror.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 
 #ifdef HOST

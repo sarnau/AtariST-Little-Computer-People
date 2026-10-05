@@ -6,7 +6,6 @@
 #include "globals.h"
 #include "protos.h"
 
-
 /* startSfx builds the 32-bit duration from its two halves and keeps
    its own Super block inline, rather than calling helpers. */
 void

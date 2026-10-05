@@ -8,11 +8,7 @@
  * declarations below is the data layout and must not change.  See
  * CLAUDE.md, "DATA and BSS layout".
  *
- * Not compiled standalone -- included by stx_u1.
  */
-
-
-
 
 /* mainPalette[16]: Atari ST 12-bit RGB palette (4 bits per channel).
    Entries 0..15 map to the 16 screen colours in low-res mode.

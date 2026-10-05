@@ -8,7 +8,6 @@
  *     playSongFile < startSfx < loadSounds < sfxSelect < stopSfx
  */
 
-
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ body below needs them in scope. */
 #include "types.h"
@@ -19,7 +18,6 @@
 #include "globals.h"
 
 #include "dat_sound.c"
-
 
 #include "parts/playSongFile.c"    /* first of the object */
 #include "sfx_irq.c"         /* startSfx */

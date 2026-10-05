@@ -1,7 +1,5 @@
 /*
  * Must sit right after playDoorbell.
- *
- * Included by stx_u3.c; never compiled on its own.
  */
 /* Queues an outside event (a delivery, a phone call, the dog food key
    commands) for the resident: event is an ACTION_EVENT_* id, appended

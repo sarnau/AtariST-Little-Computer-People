@@ -1,5 +1,4 @@
 /*
- * parts/blitRect.c -- included by stx_u1.c; never compiled on its own.
  * It sits with the game code, not with the VDI bindings it wraps.
  */
 /* vro_cpyfm with the coordinates as separate arguments. */

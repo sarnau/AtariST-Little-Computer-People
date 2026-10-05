@@ -1,7 +1,5 @@
 /*
  * Must sit right before stepEnvelopes, near sendMidiEvent, which calls it.
- *
- * Included by midi_seq.c; never compiled on its own.
  */
 /* 8-byte memcpy from a .SNG ADSR block into a PSG_ENVELOPE struct. */
 void

@@ -1,5 +1,4 @@
 /*
- * parts/nextWaypoint.c -- included by stx_u1.c; never compiled on its own.
  * It must sit directly before floorOfY so the call to it stays short.
  */
 /* nextWaypoint: pick next waypoint.  Same-floor -> straight to walkXTarget/y;

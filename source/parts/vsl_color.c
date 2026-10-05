@@ -1,8 +1,3 @@
-/*
- * parts/vsl_color.c -- included by vdistx.c at its place in the VDI
- * binding module; never compiled on its own.
- */
-
 /* VDI: sets the polyline colour index on workstation handle and
    returns the index the VDI actually selected. */
 void

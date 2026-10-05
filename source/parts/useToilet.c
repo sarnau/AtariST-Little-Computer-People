@@ -1,7 +1,5 @@
 /*
  * Must sit directly before closeToiletDoor.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 
 /* ACTION_USE_TOILET (also from games.c and moveInScene).  The resident

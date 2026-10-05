@@ -1,8 +1,7 @@
 /*
- * parts/renderFrame.c -- the per-frame compositor: throttles itself to the
- * 200 Hz and VBL clocks, runs the dog AI and SFX chaining, copies the
- * background, draws the sprites and flips the screen.  Included by
- * stx_u3.c, ahead of waitHeadTurn; never compiled on its own.
+ * the per-frame compositor: throttles itself to the 200 Hz and VBL
+ * clocks, runs the dog AI and SFX chaining, copies the background,
+ * draws the sprites and flips the screen.
  *
  * Each call:
  *   1. returns early unless 25 ticks of the 200 Hz clock (~125 ms) have

@@ -1,7 +1,3 @@
-/*
- * parts/feedDog.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* feedDog: fill the dog's bowl.  With value 0 the resident first
    fetches a food package from the fridge (door opens, he reaches in);
    with value non-zero the caller (a food delivery) has already put the

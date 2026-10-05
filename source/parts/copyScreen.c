@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* copyScreen: vro_cpyfm the physbase screen into pdesMFDB.
    Source screenMfdb.fd_addr=NULL is VDI "device screen" -- reads visible
    video RAM.  Mode ALL_WHITE (=0) irrelevant on ST with fd_addr=NULL. */

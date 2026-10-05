@@ -1,6 +1,6 @@
 /*
- * parts/moffmon.c -- included by stx_u2.c; never compiled on its own.
- * hideMouse and showMouse sit together, in this order, in the original.
+ * hideMouse and showMouse sit together, in this order, in the
+ * original.
  */
 
 /* Idempotent AES mouse hide: mouseHidden guards against a repeated M_OFF. */

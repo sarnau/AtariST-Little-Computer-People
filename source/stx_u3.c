@@ -7,7 +7,6 @@
  * change.
  */
 
-
 /* printChar needs obdefs.h (MD_TRANS/MD_REPLACE). */
 #include "obdefs1.h"
 #include "sprglobs.h"
@@ -23,7 +22,6 @@
 #include "vocab.h"
 
 #include "dat_anim.c"
-
 
 #include "alerts.c"
 #include "sprites.c"

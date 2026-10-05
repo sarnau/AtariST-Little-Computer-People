@@ -14,9 +14,6 @@
  *
  * All positioning is anchored to the resident's feet (resX, resY);
  * per-frame Y offsets come from bodyYOffset[].
- *
- * Most of the functions live in parts/ and are included by the unity
- * units at their places in the binary.
  */
 
 #include "types.h"
@@ -28,27 +25,8 @@
 #include "sprites.h"
 #include "tables.h"
 
-/* updateBody -> parts/updateBody.c, included by stx_u3.c after gameTick. */
-
-/* carryBehind -> parts/carryBehind.c, included by stx_u2.c. */
-
-/* activateSprite -> parts/activateSprite.c, included by stx_u2.c. */
-
-/* waitHeadTurn -> parts/waitHeadTurn.c, included by stx_u3.c immediately
-   before gameTick. */
-
-/* hideResident -> parts/hideResident.c, included by stx_u2.c. */
-
-/* showResident -> parts/showResident.c, included by stx_u2.c. */
-
-/* carryInFront -> parts/carryInFront.c, included by stx_u2.c. */
-
-/* expandFrame -> parts/expandFrame.c, included late in stx_u3.c. */
-
-
 /* flipSprite (mirror a sprite in place, preserving width) lives in
    alerts.c, right after setDogSprite. */
-
 
 void
 layoutSlots()
@@ -157,12 +135,9 @@ layoutSlots()
         }
 }
 
-/* updateHead -> parts/updateHead.c, included by stx_u3.c after gameTick. */
-
 /* initSlots: populate 8 per-slot MFDB pairs, wire compositor MFDB
    (frameMfdb) at altScreen-aligned, call deadHook.  Zeroes last_hz so
    the first renderFrame frame-gate sees 0->N delta and proceeds. */
-
 
 void
 initSlots()
@@ -187,21 +162,10 @@ initSlots()
         deadHook();
 }
 
-/* deadHook -> parts/deadHook.c, included by stx_u3.c after gameTick. */
-
 /* maskBody: dilate a 21-row body frame into shape data.  The source is
    168 bytes (4 shorts/row), packed per row as
        mask = src[3] | ((src[1] | src[0]) << 16) | src[2];
    Walk bits 30..1: each isolated ON bit smears into 3 (bit-1|bit|bit+1)
    -- 3-px silhouette dilation.  Second pass: vertical dilation, OR each
    row into its predecessor. */
-
-
-/* buildMasks -> parts/buildMasks.c, included late in stx_u3.c. */
-
-
-/* maskBody -> parts/maskBody.c, included late in stx_u3.c. */
-
-
-/* maskHead -> parts/maskHead.c, included late in stx_u3.c. */
 

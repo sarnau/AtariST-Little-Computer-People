@@ -2,8 +2,6 @@
  * Stop a currently-playing record so the resident can start
  * writing/typing: walks to the dance floor, drains the MIDI buffer and
  * frees it.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 
 void

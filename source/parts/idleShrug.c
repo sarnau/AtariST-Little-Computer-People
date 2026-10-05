@@ -1,7 +1,3 @@
-/*
- * parts/idleShrug.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* ACTION_WANDER_IDLY (also agames.c and the move-in cutscene).
    Despite the name nobody walks: the resident turns side-on, waits
    for his head to settle, and shrugs -- the start pose for 2 ticks,

@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* openDresser: open (DOOR_OPEN, 0) or close (DOOR_CLOSE) a dresser drawer
    while the resident stands at it, updating dresserOpen.  He bends and
    reaches while the drawer is drawn half then fully open or shut.

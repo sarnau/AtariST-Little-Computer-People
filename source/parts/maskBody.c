@@ -1,6 +1,3 @@
-/*
- * parts/maskBody.c -- included by stx_u3.c; never compiled on its own.
- */
 /* maskBody: build a body frame's mask.  Each 32-bit row is widened by
    one pixel on either side of every run of set pixels, then merged
    vertically with its neighbouring row. */

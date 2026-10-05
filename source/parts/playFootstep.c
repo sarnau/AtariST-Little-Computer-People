@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* playFootstep: pick footstep SFX (carpet/wood/stairs) by floor + X.
    footstepDue is set by walkStep on foot-plant frames. */
 

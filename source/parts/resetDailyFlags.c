@@ -1,7 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
-
 /* Clear the four once-a-day triggers so lunch, dinner, wake-up and
    bedtime can fire again; called when the clock passes midnight. */
 void

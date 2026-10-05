@@ -1,7 +1,3 @@
-/*
- * parts/rollResident.c -- included by stx_u1.c, after rnd; never compiled
- * on its own.
- */
 /* Roll a new resident: appearance, schedule, personality and needs,
    plus a random name. */
 

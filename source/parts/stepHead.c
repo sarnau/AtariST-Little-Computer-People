@@ -1,7 +1,3 @@
-/*
- * Included by stx_u3.c; never compiled on its own.
- */
-
 /* Head-animation mode bits (sprhead.c's own defines, repeated here so
    the unity unit can compile this body). */
 #undef  HEAD_MODE_H_AMPLITUDE

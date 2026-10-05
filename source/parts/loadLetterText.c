@@ -1,5 +1,4 @@
 /*
- * parts/loadLetterText.c -- included by stx_u1.c; never compiled on its own.
  * Loads letter.txt and builds the line-pointer table letterLines.
  */
 void

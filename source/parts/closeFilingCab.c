@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* closeFilingCab: close the filing cabinet.  Assumes the resident is already
    standing at it: he bends, reaches and picks up, the drawer is drawn
    half then fully shut, and filingCabOpen is cleared.  Plays no sound. */

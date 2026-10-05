@@ -1,6 +1,3 @@
-/*
- * parts/walkStep.c -- included by stx_u1.c; never compiled on its own.
- */
 /* walkStep: one 8Hz step along current waypoint.
    Waypoint reached -> done or pick next.  Not on stairs -> flat walk
    toward waypoint (X first, then Y).  On stairs -> stair-phase by Y

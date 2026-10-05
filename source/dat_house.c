@@ -8,7 +8,6 @@
  * this file's #include and the order of the declarations below set
  * the data layout; do not reorder them.
  *
- * Not compiled standalone -- included by stx_u2.c.
  */
 
 BOOL16  organPlaying          = NO;

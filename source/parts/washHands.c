@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* ACTION_WASH_HANDS.  The resident walks to the bathroom sink (giving
    up if interrupted), turns to the screen and starts SFX_WATER_RUNNING,
    then plays 4..127 one-tick hand-washing poses picked at random --

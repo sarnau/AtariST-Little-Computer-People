@@ -1,8 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
-
 /* Draws and changes the water tank level waterLevel, one horizontal
    line per unit at x 146..159 counting up from y 174.  val 0 redraws
    the whole tank (blue up to the level, light grey above it, at boot);

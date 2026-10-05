@@ -13,7 +13,6 @@
  * tools/stx_units.txt while building this file.
  */
 
-
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
 #include "types.h"
@@ -38,7 +37,6 @@
 #include "vdiown.h"
 
 #include "dat_house.c"
-
 
 #include "parts/moffmon.c"     /* hideMouse, showMouse */
 #include "parts/leaveGameTable.c"

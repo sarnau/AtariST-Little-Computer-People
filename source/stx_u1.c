@@ -15,7 +15,6 @@
  * tools/stx_units.txt while building this file.
  */
 
-
 /* Headers first: they emit no code, so the object layout is
    unaffected, but the parts/ bodies below need them in scope. */
 #include "types.h"
@@ -37,7 +36,6 @@
 #include "sprites.h"
 
 #include "dat_world.c"
-
 
 #include "parts/countSongs.c"
 #include "parts/makeMask.c"

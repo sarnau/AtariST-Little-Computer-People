@@ -37,6 +37,3 @@ short   *yOut;
         *yOut = floor_y_pos - posYOffset[index];
 }
 
-/* floorOfY -> parts/floorOfY.c. */
-
-/* calcWeekday -> parts/calcWeekday.c. */

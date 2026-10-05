@@ -1,7 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
-
 /* Sets up the off-screen picture buffer at boot: housePtr becomes
    houseBuf rounded up to a 512-byte boundary, houseMfdb describes it as a
    320x200 (scaled by screenScale) bitmap, screenMfdb's NULL address names the

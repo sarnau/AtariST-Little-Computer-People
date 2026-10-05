@@ -1,7 +1,4 @@
-/*
- * parts/toUpper.c -- included by stx_u3.c; never compiled on its own.
- */
-/* toupper for the command parser: lower-case ASCII letters become
+/* Toupper for the command parser: lower-case ASCII letters become
    upper case, every other value comes back unchanged. */
 short
 toUpper(ch)

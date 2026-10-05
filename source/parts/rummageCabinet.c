@@ -1,7 +1,3 @@
-/*
- * parts/rummageCabinet.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* rummageCabinet: rummage in the filing cabinet.  The resident bends down,
    opens the drawer if it is shut (filingCabOpen, drawn in two frames), then
    holds the reaching pose (the state is named STOKE_FIREPLACE, but here

@@ -1,8 +1,3 @@
-/*
- * parts/takeShower.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* ACTION_TAKE_SHOWER (also nightRoutine and morningRoutine).  The resident walks
    to the shower door -- giving up if interrupted there -- then, now
    committed (noPreempt), steps into the stall and showers for 20..25

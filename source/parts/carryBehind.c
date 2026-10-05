@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* carryBehind: activate sprite as carried object in behind-LCP layer.
    The per-frame X/Y update happens in gameTick's carrying path. */
 

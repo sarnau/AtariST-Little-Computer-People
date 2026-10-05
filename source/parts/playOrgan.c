@@ -1,8 +1,3 @@
-/*
- * parts/playOrgan.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* playOrgan: play the organ (ACTION_PLAY_ORGAN).  Any record playing is
    stopped first (stopRecord).  The resident walks to the organ on the top
    floor (POS_TOP_ORGAN), a prop sprite is shown on the instrument, and a

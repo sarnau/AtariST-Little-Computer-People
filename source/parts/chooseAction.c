@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* chooseAction: 9-priority AI ladder.
    1. Event queue -> runEvent
    2. Alarm -> WAKE_FROM_ALARM   3. Bathroom -> USE_TOILET

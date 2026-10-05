@@ -73,5 +73,3 @@ stopSfx()
         sfxPlaying    = NO;
 }
 
-
-/* playSongFile lives in parts/playSongFile.c. */

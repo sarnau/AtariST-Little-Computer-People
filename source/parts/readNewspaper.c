@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* readNewspaper: read the newspaper.  The TV is switched on first (tvOn),
    then the resident walks to the armchair, sits, and reads for up to
    200 ticks -- holding the paper and turning a page about one tick in

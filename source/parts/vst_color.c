@@ -1,7 +1,6 @@
 /*
  * Its position in vdistx.c's include list is the binding module's
  * layout and must not change.
- * Included by vdistx.c; never compiled on its own.
  */
 
 void

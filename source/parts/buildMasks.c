@@ -1,7 +1,5 @@
 /*
  * buildMasks is followed directly by maskBody and then maskHead.
- *
- * Included by stx_u3.c; never compiled on its own.
  */
 void
 buildMasks()

@@ -1,6 +1,5 @@
 /*
- * parts/brushTeeth.c -- the resident brushes his teeth at the bathroom sink.
- * Included by stx_u2.c; never compiled on its own.
+ * the resident brushes his teeth at the bathroom sink.
  */
 
 void

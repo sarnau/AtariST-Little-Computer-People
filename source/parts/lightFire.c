@@ -1,8 +1,3 @@
-/*
- * parts/lightFire.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* lightFire: light the fireplace; does nothing if a fire is already
    burning.  The resident opens the front door, steps outside (the
    sitting-dog sprite waits on the porch) for 40 ticks, returns carrying

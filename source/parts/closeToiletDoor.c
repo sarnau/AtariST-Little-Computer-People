@@ -1,7 +1,3 @@
-/*
- * parts/closeToiletDoor.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* closeToiletDoor: close the toilet door.  Assumes the resident is already
    at it: he faces the screen, reaches, the door is redrawn ajar then
    shut with the door-close sound, and toiletDoorOpen is cleared.  Used by

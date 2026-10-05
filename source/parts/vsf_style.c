@@ -1,8 +1,3 @@
-/*
- * parts/vsf_style.c -- included by vdistx.c, whose include order is the
- * binding module's function order; never compiled on its own.
- */
-
 /* VDI: sets the fill style index (pattern or hatch number) on
    workstation handle and returns the style the VDI selected. */
 void

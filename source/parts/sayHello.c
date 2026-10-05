@@ -1,6 +1,5 @@
 /*
- * parts/sayHello.c -- the resident waves and talks at the screen.
- * Included by stx_u2.c; never compiled on its own.
+ * the resident waves and talks at the screen.
  */
 
 void

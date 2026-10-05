@@ -19,5 +19,4 @@ extern short posYOffset[];
 extern long bitSet32[];
 extern long bitClear32[];
 
-
 #endif /* TABLES_H */

@@ -1,8 +1,3 @@
-/*
- * parts/enterField.c -- included by stx_u1.c, between titleScreen and eraseChar;
- * never compiled on its own.
- */
-
 /* enterField: read a fixed-width numeric field on the title screen.
    `tmpl` is both the prompt drawn into the field and the character
    restored by backspace, so every third column (the separator in

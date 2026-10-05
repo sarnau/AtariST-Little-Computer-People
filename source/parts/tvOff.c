@@ -1,8 +1,3 @@
-/*
- * parts/tvOff.c -- included by stx_u2.c immediately after tvOn;
- * never compiled on its own.
- */
-
 /* Turns the TV off: if it is on, the resident walks to the TV in the
    top-floor living room, does the look gesture (tvStoop), clears tvRunning
    and blanks the picture.  Returns -1 if the walk was interrupted, 0

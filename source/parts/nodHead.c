@@ -1,7 +1,3 @@
-/*
- * parts/nodHead.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* nodHead: nod the head.  The resident turns side-on, his head is
    settled at position 8, then head animation is suspended (headPose =
    headTarget = -1) so three head frames can be forced through headFrame in

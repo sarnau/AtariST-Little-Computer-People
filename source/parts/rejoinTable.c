@@ -1,8 +1,3 @@
-/*
- * parts/rejoinTable.c -- included by stx_u2.c near the head of the object;
- * never compiled on its own.
- */
-
 /* Reverse of leaveGameTable: walk back to the table and restore the seated
    STATE_EAT_BITE pose with the +8y/+6x offset the minigame overlays
    expect. */

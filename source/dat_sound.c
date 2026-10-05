@@ -10,9 +10,7 @@
  * the object that references it.  See CLAUDE.md, "DATA and BSS
  * layout".
  *
- * Not compiled standalone -- included by stx_u4.
  */
-
 
 /* The first item of this object's data, and nothing in the program
    references it -- so its meaning rests on the
@@ -21,7 +19,6 @@
    entry followed by a zero byte.  Kept verbatim; do not "simplify" it
    to a short[4], which would lay the bytes down as 00 08 00 09 ...  */
 char            psgVolRegs[8] = { 8, 0, 9, 0, 10, 0, -1, 0 };
-
 
 /* sfxPriority: SOUND_EFFECT_ID -> priority, one byte per entry.  Lower
    value = higher priority (a new effect preempts the current one when
@@ -38,15 +35,12 @@ char    sfxPriority[26] = {
           0,   0
 };
 
-
 /* The ten-byte header every SOUNDS.LCP and .SNG file starts with:
    0xCD, "Mstudio", 0xCD, 0x02 -- Activision's Music Studio signature.
    Declared but never referenced: loadSounds and mq_inti skip the header by
    a fixed byte count rather than comparing it.  Eleven bytes with the
    terminator, which Alcyon pads to twelve. */
 char            studioSig[12] = "\315Mstudio\315\002";
-
-
 
 /* songMaxPos: the "maxPos" argument passed to
    startSong at song start.  0 means "no explicit end-of-song

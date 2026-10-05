@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* checkFrontDoor: check the front door.  The resident walks to the front
    door, opens it if shut, steps outside (the sitting-dog sprite waits
    on the porch, the resident is hidden) for `value` ticks, comes back

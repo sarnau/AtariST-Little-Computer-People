@@ -1,8 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
-
 /* Answer the phone (ACTION_EVENT_PHONE_CALL).  callDog walks the
    resident to the couch beside the phone; he picks up the receiver
    (phoneAnswered set, phoneRinging cleared, the ring stopped by tick's phoneHangUp

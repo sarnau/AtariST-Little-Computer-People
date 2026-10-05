@@ -1,8 +1,3 @@
-/*
- * parts/eraseRectColor.c -- included by games.c immediately after panelErase; never
- * compiled on its own.
- */
-
 /* panelErase with an explicit fill colour.  Unlike panelErase it does not go
    through panelBegin/panelEnd -- the four attribute calls are written out
    here. */

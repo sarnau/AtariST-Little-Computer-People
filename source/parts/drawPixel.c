@@ -1,7 +1,3 @@
-/*
- * parts/drawPixel.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
 /* Plots one pixel as a degenerate two-point polyline (start == end),
    since the VDI bindings used here have no single-pixel call. */
 

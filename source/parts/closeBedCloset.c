@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* closeBedCloset: close the bedroom closet.  Assumes the resident is already
    standing at it: he turns to face the screen, reaches, the door is
    redrawn ajar then shut with the door-close sound, and bedClosetOpen is

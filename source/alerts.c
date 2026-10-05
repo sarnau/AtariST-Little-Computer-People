@@ -13,9 +13,6 @@
 #include <stdio.h>              /* fprintf */
 #endif
 
-/* outOfMemory and writeErrorAlert live in parts/ and are included by the unity
-   units (stx_u1.c, stx_u2.c) where the original's layout puts them. */
-
 /* setDogSprite and flipSprite belong to the same object as writeErrorAlert in the
    original, so they are compiled here.  setDogSprite's tail is deliberately
    two successive if/else pairs (mask pair first, then image pair)

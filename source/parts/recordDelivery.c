@@ -1,6 +1,6 @@
 /*
- * parts/recordDelivery.c -- included by stx_u2.c; never compiled on its own.
- * A record delivery: fetch it from the front step and take it upstairs.
+ * A record delivery: fetch it from the front step and take it
+ * upstairs.
  */
 
 void

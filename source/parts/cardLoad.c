@@ -1,7 +1,5 @@
 /*
  * Must sit right before dispCompChips; playPoker and playWar call it.
- *
- * Included by games.c; never compiled on its own.
  */
 
 /*

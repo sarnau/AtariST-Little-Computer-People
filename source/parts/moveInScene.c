@@ -1,7 +1,3 @@
-/*
- * parts/moveInScene.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* moveInScene: the new-resident move-in cutscene.  The screen is empty
    while the delivery van pulls up (two playDoorbell door-bell blasts), the
    front door opens, the dog is placed on the step, then the resident

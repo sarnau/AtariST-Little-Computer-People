@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* Draws the picture on the TV set in the living room: five short
    vertical lines in the given colour.  tvNoise calls it every tick
    with a random colour while the TV is on, and tvOff blanks it in

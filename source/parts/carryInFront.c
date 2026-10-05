@@ -1,7 +1,3 @@
-/*
- * parts/carryInFront.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* Same as carryBehind but in the in-front-of-LCP layer. */
 
 void

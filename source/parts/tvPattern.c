@@ -1,6 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
 /* Like the other TV routines it carries a 10-short point buffer, of
    which v_pline only uses the first two points.  The declaration order
    of the locals fixes the original's stack frame; keep it. */

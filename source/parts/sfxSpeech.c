@@ -1,5 +1,5 @@
 /*
- * parts/sfxSpeech.c -- one-line SFX wrapper.  The four wrappers are
+ * One-line SFX wrapper.  The four wrappers are
  * included in the original's order (tvc, spe, hnd, grt).
  */
 

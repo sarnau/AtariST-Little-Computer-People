@@ -1,6 +1,3 @@
-/*
- * Included by stx_u3.c; never compiled on its own.
- */
 /* Look one uppercased word up in the vocabulary.  vocabulary is scanned
    from the front and the index of the FIRST exact match is returned,
    so a spelling listed twice can only ever yield its earlier entry;

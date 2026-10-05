@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* Start drawing on the back screen: remembers the current logical
    screen in drawLogbase, makes housePtr the logical screen for the VDI, and
    resets the fill attributes (replace mode, solid colour-0 fill).

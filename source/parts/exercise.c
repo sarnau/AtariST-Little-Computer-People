@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* exercise: exercise.  The resident walks to the middle-floor couch
    and, facing side-on, cycles through the four arm-exercise poses
    (centre, up, centre, wide) for 8..127 steps, three ticks on each

@@ -55,6 +55,3 @@ short   event;
         inEvent = NO;
 }
 
-/* chooseAction -> parts/chooseAction.c. */
-
-/* submitCommand -> parts/submitCommand.c. */

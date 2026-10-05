@@ -29,8 +29,6 @@ placeDog()
         setDogSprite(0, 1, NO);
 }
 
-/* moveDog -> parts/moveDog.c. */
-
 /* setDogSprite (with flipSprite) lives in alerts.c, which shares its object:
    it pushes the dog frame into hardware slots 0 (behind) or 7
    (in-front) depending on layerPosition, mirroring horizontally via

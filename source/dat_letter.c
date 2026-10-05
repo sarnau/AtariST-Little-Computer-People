@@ -10,7 +10,6 @@
  * its only user.  typingSprites follows letterSignoffs in the original's data, and
  * .data definitions come out in source order, so typingSprites has to be
  * declared after this point too.  Do not reorder.
- * Never compiled standalone.
  */
 
 #include "types.h"

@@ -3,7 +3,6 @@
 #ifndef SPRITES_H
 #define SPRITES_H
 
-
 /* Expanded-sprite buffer size in SHORTS (image or mask, one plane
    set) that expandFrame writes into bodyImage / bodyMask / headImage /
    headMask.  Both call sites pass width=2, height=21 and expandFrame

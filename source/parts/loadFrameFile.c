@@ -1,6 +1,3 @@
-/*
- * parts/loadFrameFile.c -- included by stx_u1.c; never compiled on its own.
- */
 /* loadFrameFile: load BODY.LCP / PE2..6.LCP into caller buffer.
    Header: {count:BE16, total_bytes:BE16, payload}.  Returns frame count. */
 

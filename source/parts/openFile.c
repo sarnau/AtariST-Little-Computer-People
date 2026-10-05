@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* rwmode: 0=read, 1=write, 2=both.  Three tries with a 1s sleep, then
    Retry alert loop. */
 short

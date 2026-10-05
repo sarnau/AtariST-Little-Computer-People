@@ -12,7 +12,6 @@
 /* walkToTarget: pump walkStep() until arrival.
    Returns 0 on arrival, -1 on preemption when idle. */
 
-
 short
 walkToTarget()
 {
@@ -44,11 +43,3 @@ walkToTarget()
         return result;
 }
 
-/* nextWaypoint -> parts/nextWaypoint.c. */
-
-/* dogNextWaypt -> parts/dogNextWaypt.c. */
-
-/* playFootstep -> parts/playFootstep.c. */
-
-
-/* walkStep -> parts/walkStep.c. */

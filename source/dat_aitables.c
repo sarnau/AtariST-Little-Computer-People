@@ -7,7 +7,7 @@
  * string literals and switch tables its code emits.  See CLAUDE.md,
  * "DATA and BSS layout".
  *
- * Not compiled standalone -- included by stx_u1.
+ *
  *
  * SECOND of three parts.  stx_u1's data is NOT all-globals-then-code:
  * runEvent's and runAction's switch jump tables sit between pexName and

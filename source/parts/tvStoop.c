@@ -1,6 +1,5 @@
 /*
  * Same gesture as recordStoop; the 1985 source carries two copies.
- * Included by stx_u2.c; never compiled on its own.
  */
 
 void

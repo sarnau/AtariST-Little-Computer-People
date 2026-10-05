@@ -1,7 +1,5 @@
 /*
  * stripeRow then blackRow, adjacent as in the original.
- *
- * Included by stx_u3.c; never compiled on its own.
  */
 /* stripeRow: paint row with 0x0033 (2 planes) -- light-cyan status stripe. */
 

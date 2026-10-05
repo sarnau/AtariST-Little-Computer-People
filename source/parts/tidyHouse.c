@@ -1,8 +1,3 @@
-/*
- * parts/tidyHouse.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* ACTION_TIDY_HOUSE (also run during the move-in cutscene).  The
    resident walks to the top-floor filing cabinet, turns to the screen
    and rummages in it with rummageCabinet, which opens it if it is shut.  He

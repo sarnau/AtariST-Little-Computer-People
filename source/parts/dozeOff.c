@@ -1,8 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
-
 /* The resident dozes off.  With SLEEP_RANDOM (ACTION_SLEEP, moveInScene,
    and gameLoop's endless loop when the copy protection fails) he first
    walks to the centre line of the floor he is on and turns side-on,

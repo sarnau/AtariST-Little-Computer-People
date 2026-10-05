@@ -1,6 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
 /* Make sure the save file `filename' exists before saveFile writes
    it: if access() finds it nothing happens, otherwise it is created
    empty and closed.  A failed Fcreate shows writeErrorAlert's alert (e.g. a

@@ -1,7 +1,5 @@
 /*
  * The first function of the stx_u1 object.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 /* countSongs: enumerate *.SNG and *.ORG, count into songCount / organCount. */
 

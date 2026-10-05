@@ -1,7 +1,3 @@
-/*
- * parts/getInOutOfBed.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* getInOutOfBed: get into or out of bed, toggling resident.is_sleeping.  Awake:
    the resident walks to the bed and, unless preempted, undresses,
    gets in and lies down, stepping left as each pose plays.  Asleep:

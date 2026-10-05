@@ -1,7 +1,3 @@
-/*
- * parts/activateSprite.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* Generic sprite activator (save.c, pet animations).
    Recomputes the 8-slot layout and copies the definition into the
    active slot, bypassing the pending double-buffer. */

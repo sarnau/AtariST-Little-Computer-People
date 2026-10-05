@@ -4,8 +4,6 @@
  * Its place in games.c, after the anagram helpers and far from
  * panelBegin, matters: closer, the panelBegin call would compile to a
  * shorter branch than the original's.
- *
- * Included by games.c; never compiled on its own.
  */
 
 void

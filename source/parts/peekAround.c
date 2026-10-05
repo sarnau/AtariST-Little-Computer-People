@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* peekAround: a quick glance.  The head is settled at position 8, head
    animation is suspended so frame 2 can be forced through headFrame
    for 6 ticks, then the saved frame and position 8 are restored.

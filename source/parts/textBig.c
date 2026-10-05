@@ -1,7 +1,6 @@
 /*
- * parts/textBig.c -- included by games.c; never compiled on its own.
- * Saves the VDI text attributes to savedTextAttr and sets a 20-pixel text
- * height.
+ * Saves the VDI text attributes to savedTextAttr and sets a 20-pixel
+ * text height.
  */
 void
 textBig()

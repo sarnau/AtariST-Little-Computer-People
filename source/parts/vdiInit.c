@@ -1,9 +1,8 @@
 /*
- * parts/vdiInit.c -- the first half of vdiInit: opens the virtual
- * workstation through the global work arrays, refuses anything but low
- * resolution, and then calls the attribute/clear half
- * (parts/vdiClear.c), which must directly follow it.
- * Included by stx_u1.c; never compiled on its own.
+ * the first half of vdiInit: opens the virtual workstation through the
+ * global work arrays, refuses anything but low resolution, and then
+ * calls the attribute/clear half (parts/vdiClear.c), which must
+ * directly follow it.
  */
 void
 vdiInit()

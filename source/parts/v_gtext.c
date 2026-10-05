@@ -1,8 +1,3 @@
-/*
- * parts/v_gtext.c -- included by vdistx.c at its place in the binding
- * module's order; never compiled on its own.
- */
-
 /* VDI graphic text: draws str at (x,y) on workstation handle.  The
    characters are copied into intin one per word and contrl[3] is set
    to the string length. */

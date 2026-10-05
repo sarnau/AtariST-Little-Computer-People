@@ -1,8 +1,3 @@
-/*
- * parts/changeClothes.c -- included by stx_u2.c at its place in the object's function order;
- * never compiled on its own.
- */
-
 /* changeClothes: change in the bedroom closet.  The resident walks to the
    dresser and opens a drawer (perhaps closing it again on a random
    roll), walks to the closet, opens it and steps inside; the closet

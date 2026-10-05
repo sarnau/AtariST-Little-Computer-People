@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* ACTION_SIT_ON_COUCH_WITH_DOG.  callDog walks the resident to the
    couch beside the phone (uninterruptibly, noPreempt) and lets him be
    patted; he sits upright, the SPRITE_READING_1 prop appears beside

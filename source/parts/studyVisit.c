@@ -1,8 +1,3 @@
-/*
- * parts/studyVisit.c -- included by stx_u2.c right after enterStudy, which
- * must stay close enough for a short call; never compiled on its own.
- */
-
 /* Study-door save flow: close door, optionally write HYBER, reopen,
    walk resident back to door, close.  Food-count nibble (bits 9..11)
    is preserved via the FE00 mask so the 3-bit delivery counter survives. */

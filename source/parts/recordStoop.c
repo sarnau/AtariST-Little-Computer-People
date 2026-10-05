@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* The resident turns to face the screen, waits for its head to swing
    round (waitHeadTurn), bends down for a moment and straightens up again --
    a "stand and look" gesture.  playRecord and stopRecord use this copy; tvOn

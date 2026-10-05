@@ -77,7 +77,6 @@ extern long     gemdos();
 extern long     bios();
 extern long     xbios();
 
-
 /* These mirror the older Alcyon distribution's OSBIND.H (alcyon2,
    1985-05-30), whose macros pass ONLY the real arguments -- no 0L
    padding, no casts (except the documented int casts on
@@ -112,7 +111,6 @@ extern long     xbios();
 #define Vsync()                 xbios(37)
 #define Setexc(v, h)            bios(5, v, h)
 #define Xbtimer(t, c, d, v)     xbios(31, t, c, d, v)
-
 
 #endif  /* HOST */
 

@@ -1,6 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
 /* The leap-year check reads the global t_year, not the `year`
    parameter.  Kept as in the original. */
 short

@@ -1,7 +1,3 @@
-/*
- * parts/callDog.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* callDog: the resident walks to the couch beside the phone on the
    ground floor, turns side-on and crouches down, then sets patAllowed so
    the player's Ctrl-P "pat" is accepted.  Gives up without crouching

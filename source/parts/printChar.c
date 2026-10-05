@@ -1,6 +1,6 @@
 /*
- * parts/printChar.c -- included by stx_u3.c; never compiled on its own.
- * Draws one character into the stripBuf screen; must follow printString.
+ * Draws one character into the stripBuf screen; must follow
+ * printString.
  */
 
 void

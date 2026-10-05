@@ -1,7 +1,5 @@
 /*
  * Must sit right after ensureFile.
- *
- * Included by stx_u2.c; never compiled on its own.
  */
 /* Single-shot RETRY alert; caller is expected to retry the file op. */
 void

@@ -1,6 +1,6 @@
 /*
- * parts/printString.c -- included by stx_u3.c; never compiled on its own.
- * Draws a string character by character through printChar, 8 pixels apart.
+ * Draws a string character by character through printChar, 8 pixels
+ * apart.
  */
 
 void

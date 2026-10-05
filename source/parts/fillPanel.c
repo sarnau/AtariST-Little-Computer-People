@@ -1,7 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
-
 /* Paint the top panel of the drawing buffer: stripBuf is set to
    stripStore rounded up to a 512-byte boundary (panelBegin later makes it
    the logical screen), then rows 0..max_y-2 are filled -- with the

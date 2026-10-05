@@ -1,7 +1,3 @@
-/*
- * parts/putInFridge.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* putInFridge: put something back in the fridge.  Assumes the resident
    is already at it: he faces the screen, the fridge door is opened
    with the door sound, he reaches in, pauses, and the door is drawn

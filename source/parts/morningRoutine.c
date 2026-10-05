@@ -1,6 +1,5 @@
 /*
- * parts/morningRoutine.c -- the morning routine after the alarm.
- * Included by stx_u2.c; never compiled on its own.
+ * the morning routine after the alarm.
  */
 
 void

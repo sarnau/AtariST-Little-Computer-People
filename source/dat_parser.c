@@ -8,10 +8,7 @@
  * declarations below therefore decides the data layout and must not
  * change.  See CLAUDE.md, "DATA and BSS layout".
  *
- * Not compiled standalone -- included by stx_u3.
  */
-
-
 
 /* One step of head turning, indexed by (target - current direction) + 7:
    +1 or -1 moves the head one direction toward the target the short
@@ -22,23 +19,16 @@ short   headTurnStep[15]   = {
          1,  1,  1, HEAD_TURN_NONE, -1, -1, -1
 };
 
-
-
 /* First frame of each tilt row, indexed by the tilt bits of headPose. */
 short   headTiltFrame[3]       = { HEAD_ROW_LEVEL, HEAD_ROW_LOWER, HEAD_ROW_LOWEST };
 
-
 /* Head-animation delay countdown. */
 short   headDelay                         = 1;
-
-
 
 /* First head frame of each mood's block in pexFrames, indexed by
    resident.happiness (MOOD_HAPPY, MOOD_CONTENT, MOOD_SAD): the file
    stores content, sad, happy. */
 short   moodHeadBase[3]  = { 2 * HEAD_FRAMES_PER_MOOD, 0, HEAD_FRAMES_PER_MOOD };
-
-
 
 /* WORD_ID -> byte index into phraseBits.  ONE HUNDRED AND SIXTY-ONE
    bytes: the table closes with a -1 and Alcyon pads the odd length
@@ -63,8 +53,6 @@ char  wordByte[161] = {
    -1
 };
 
-
-
 /* wordBit: 160-byte WORD_ID -> bit number within that byte.  It has
    no head sentinel. */
 char  wordBit[160] = {
@@ -85,8 +73,6 @@ char  wordBit[160] = {
       0,   1,   2,   2,   2,   2,   3,   3,   4,   4,
       4,   4,   4,   4,   4,   1,   1,   1,   1,   1
 };
-
-
 
 /* ---- Vocabulary (160 words) ---- */
 char * vocabulary[161] = {
@@ -133,10 +119,6 @@ char * vocabulary[161] = {
 
     (char *) 0    /* sentinel */
 };
-
-
-
-
 
 /* Alcyon C 4.14 rejects the NESTED form `{ {..}, a, p }` with
    "mismatched curly braces", but takes the flattened list, which
@@ -228,12 +210,10 @@ WORD_TO_ACTION phraseTable[34] = {
     EW2A_END, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   0,  0
 };
 
-
 /* Bit masks for bit numbers 0..7.  Eight entries, not nine. */
 char            bitMask8[8] = {
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 };
-
 
 /* Mood -> base priority for parsed commands: HAPPY (0) gives
    priority 3 (accepts more), SAD (2) gives 0 (rejects most). */

@@ -1,7 +1,3 @@
-/*
- * parts/showResident.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* showResident: restore the pointers hideResident() stashed. */
 
 void

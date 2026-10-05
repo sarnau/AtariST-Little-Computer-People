@@ -1,8 +1,3 @@
-/*
- * parts/vswr_mode.c -- included by vdistx.c at its place in the binding
- * module's order; never compiled on its own.
- */
-
 /* VDI: sets the writing mode (replace, transparent, XOR, reverse
    transparent) on workstation handle and returns the mode selected. */
 void

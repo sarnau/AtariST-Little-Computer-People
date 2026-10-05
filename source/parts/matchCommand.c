@@ -1,5 +1,4 @@
 /*
- * parts/matchCommand.c -- included by stx_u3.c; never compiled on its own.
  * Matches a typed command against the phraseTable action table.
  */
 short

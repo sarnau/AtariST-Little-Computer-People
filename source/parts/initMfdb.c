@@ -2,8 +2,6 @@
  * Fill an MFDB for a 4-plane buffer.  The address is stored as two
  * words through a (short *) cast, high half first, as the original
  * does.
- *
- * Included by stx_u1.c; never compiled on its own.
  */
 
 void

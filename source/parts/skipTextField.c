@@ -1,6 +1,3 @@
-/*
- * parts/skipTextField.c -- included by midi_seq.c; never compiled on its own.
- */
 /* Steps over a zero-terminated text field in song data and returns a
    pointer to its terminating 0x00, so startSong can hand the start of
    the event stream to initSongState.  An empty field (a 0x00 followed by the

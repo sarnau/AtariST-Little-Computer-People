@@ -1,6 +1,3 @@
-/*
- * Included by stx_u3.c; never compiled on its own.
- */
 /* submitCommand: called from handleKey on Enter.  Runs matchCommand() on typedLine;
    valid ACTION_ID with queue room is appended at cmdPriority priority. */
 

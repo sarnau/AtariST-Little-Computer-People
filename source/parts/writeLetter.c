@@ -1,7 +1,3 @@
-/*
- * parts/writeLetter.c -- included by stx_u2.c; never compiled on its own.
- */
-
 /* ACTION_WRITE_LETTER: the resident types a letter to the player.
    He stops a playing record (stopRecord), fetches paper from the filing
    cabinet, goes through the study door and sits at the typewriter.

@@ -1,6 +1,4 @@
 /*
- * parts/drawSlot.c -- included by stx_u3.c; never compiled on its own.
- *
  * Only the position is latched in locals; the extents are subscripted
  * at every use.  That is the original's shape -- keep it.
  */

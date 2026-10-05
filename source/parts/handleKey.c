@@ -1,8 +1,6 @@
 /*
  * Dispatches a typed key: the Ctrl delivery/call/water/alarm/pat
  * commands, Return, erase, and plain characters into the command line.
- *
- * Included by stx_u3.c; never compiled on its own.
  */
 
 void

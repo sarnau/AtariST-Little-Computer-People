@@ -7,7 +7,7 @@
  * source even when the variable itself is a pointer sitting back in
  * the globals region.  Here the pool runs countSongs's "*.sng"/"*.org",
  * loadObjects's "objects", loadSprites's "sprites", this string, then main's
- * "data"/"house.scn"/"body.lcp".  Never compiled standalone.
+ * "data"/"house.scn"/"body.lcp".
  */
 
 #include "types.h"

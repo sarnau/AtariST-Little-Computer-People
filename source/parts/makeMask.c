@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* makeMask: build a sprite mask from its colour image.  For each
    16-pixel word group (4 interleaved bitplane words), OR the planes
    -- any non-colour-0 pixel becomes an opaque mask bit -- then

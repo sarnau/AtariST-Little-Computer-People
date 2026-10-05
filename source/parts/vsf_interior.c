@@ -1,7 +1,5 @@
 /*
  * Position in vdistx.c is the binding module's original order.
- *
- * Included by vdistx.c; never compiled on its own.
  */
 
 void

@@ -1,6 +1,3 @@
-/*
- * parts/scrollStrip.c -- included by stx_u3.c; never compiled on its own.
- */
 /* scrollStrip: scroll the letter's text strip up by two scan lines when the
    typewriter wraps.  Each of 13 two-line (320-byte) blocks is copied
    onto the block above it, then lines 24 and 25 are refilled with the

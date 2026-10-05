@@ -1,8 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
-
 /* Draw both hands of the wall clock, centred at (278,85), in `color'.
    The minute hand is picked by minute/5 from minuteHandXY, the hour hand by
    hour%12 from hourHandXY; each table holds the x offset at [i] and the

@@ -1,8 +1,3 @@
-/*
- * parts/vsf_color.c -- included by vdistx.c at its position in the
- * binding module; never compiled on its own.
- */
-
 /* VDI: sets the fill colour index on workstation handle and returns
    the index the VDI actually selected. */
 void

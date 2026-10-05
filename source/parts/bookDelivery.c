@@ -1,7 +1,3 @@
-/*
- * Included by stx_u2.c; never compiled on its own.
- */
-
 /* Book delivery (ACTION_EVENT_BOOK_DELIVERY).  The resident walks to
    the front door uninterruptibly, opens it, bends down to pick up the
    parcel, and closes the door again when a 0..100 roll beats his

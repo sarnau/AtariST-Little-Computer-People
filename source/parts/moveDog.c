@@ -1,6 +1,3 @@
-/*
- * Included by stx_u1.c; never compiled on its own.
- */
 /* moveDog: 8 Hz movement + walk-cycle advance.  If the dog
    has no target the routine is a no-op.  Handles flat walking (X/Y
    equal steps to waypoint) and stair navigation (staircase_waypoint_

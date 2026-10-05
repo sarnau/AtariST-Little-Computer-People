@@ -20,9 +20,6 @@
 #include "protos.h"
 #include "globals.h"
 
-/* tvClearAnim lives in parts/tvClearAnim.c, included by stx_u2.c right after
-   useComputer. */
-
 /* A dot bouncing inside the TV rectangle in random colours: v_pline
    draws a two-point line whose ends coincide.  The order of the local
    declarations is part of the original code; keep it. */
@@ -67,4 +64,3 @@ tvBounce()
         }
 }
 
-/* tvPattern lives in parts/tvPattern.c, included by stx_u2.c. */

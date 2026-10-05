@@ -1,5 +1,4 @@
 /*
- * parts/gameLoop.c -- included by stx_u1.c; never compiled on its own.
  * main()'s last step: the endless game loop.
  */
 
