@@ -1,10 +1,14 @@
-* vdistx_a.s -- the tail of Activision's VDI binding module: the two
-* raw contrl writers plus the SINGLE trap-#2 dispatcher.
+******************************************************************************
 *
-* Defining _gsx1 here keeps VDIBIND's own gsx1 member (and its private
-* pblock) out of the link, so `vdipb` in globals.c is the one
-* parameter block and vdi_go/vdi_go2 map onto this one dispatcher.
-
+* vdistx_a.s -- the tail of Activision's VDI binding module: the two
+* raw contrl writers and the single trap #2 dispatcher.
+*
+* The C half is vdistx.c.  Defining _gsx1 here keeps VDIBIND's own gsx1
+* (and its private parameter block) out of the link, so vdipb in
+* globals.c is the one parameter block, and vdiown.h maps vdi_go and
+* vdi_go2 onto this one dispatcher.
+*
+******************************************************************************
 
 	.globl	_wr_src
 	.globl	_wr_dst

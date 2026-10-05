@@ -1,27 +1,47 @@
 ******************************************************************************
 *
-* mq_tick.s -- MFP Timer-A interrupt handler for the MIDI sequencer and
-*              the PSG envelopes.
+* mq_tick.s -- the MFP Timer-A interrupt: the clock for the MIDI
+*              sequencer and the PSG software envelopes.
 *
-* Cannot be written in Alcyon C: it uses `move sr,dn` and `move dn,sr`
-* (privileged 68000 instructions) to raise the IPL to 7 on entry, lower
-* it to 5 during the long seqAdvance / stepEnvelopes sub-calls (so higher-
-* priority interrupts -- VBL, RS-232 -- can still preempt them), then
-* restore it on exit.  Ends with `rte`, not `rts`.
+* hookTimerA installs it with Xbtimer(timer A, prescaler /64, data $28):
+* 2.4576 MHz / 64 / 40 = 960 interrupts a second.  Each one
+*   - counts timerTicks,
+*   - every fourth tick (envDivider) runs stepEnvelopes -- 240 Hz -- if
+*     a song is playing or a PSG note is still sounding,
+*   - while a song is playing, counts seqCountdown down and runs
+*     seqAdvance when it reaches zero or below.  On a tick where the
+*     envelope divider wraps the sequencer is not looked at; the count
+*     has gone negative by the next tick, which then runs it.
 *
-* Installed by hookTimerA via
-*     xbios(31, 0, 5, 0x28, (long) timerAIsr);
+* Interrupt levels: the CPU enters at IPL 6, the MFP's level; the
+* handler raises that to 7 at once, and drops to IPL 5 for the two long
+* calls.  Before each it clears Timer A's in-service bit
+* (bit 5 of the MFP's ISRA; the MFP runs in software end-of-interrupt
+* mode), so the other MFP interrupts -- keyboard/MIDI ACIA, the other
+* timers, RS-232, all at level 6 -- can be serviced meanwhile.  VBL
+* (level 4) and HBL stay blocked until the rte.
 *
-* Symbols (Alcyon truncates linkage names to 8 characters):
-*     timerTicks    long     master tick counter
-*     songActive    byte     MIDI sequencer active
-*     psgActive   byte     PSG notes active
-*     seqCountdown    word     MIDI tick prescaler
-*     envDivider    word     tick divider (stepEnvelopes runs when it wraps)
-*     envBusy   word     re-entrancy lock
-*     seqBusy    word     MIDI direct-write mode
-*     stepEnvelopes            advance the PSG envelopes
-*     seqAdvance             advance the MIDI sequencer
+* Each long call has a busy flag so a slow step is never re-entered:
+* envBusy for stepEnvelopes (it also holds off the sequencer), seqBusy
+* for seqAdvance.  seqBusy doubles as "running inside the interrupt" for
+* sendMidiEvent, which then pokes the ACIA and PSG directly (aciaWrite,
+* psgWrite) instead of going through the XBIOS.
+*
+* Hand assembly because C cannot express it: `move dn,sr` to change the
+* interrupt level, `rte` to return.
+*
+* Symbols (linkage names keep 8 characters):
+*     timerTicks     long   tick counter, reset when a song starts
+*     envDivider     word   ticks until the next stepEnvelopes, reloaded
+*                           with 4
+*     seqCountdown   word   ticks until the next seqAdvance, reloaded by
+*                           the sequencer
+*     envBusy        word   stepEnvelopes running
+*     seqBusy        word   seqAdvance running
+*     songActive     byte   a song is playing
+*     psgActive      byte   a PSG note's envelope is still running
+*     stepEnvelopes         the PSG envelope step (midi_seq.c)
+*     seqAdvance            the MIDI sequencer step (midi_seq.c)
 *
 ******************************************************************************
 
@@ -36,75 +56,72 @@
 	.globl	_seqAdva
 	.globl	_stepEnv
 
-* timerAIsr: the Timer-A interrupt routine.  Counts timerTicks, steps the
-* PSG envelopes every 4th tick (via envDivider) when the sequencer or a PSG
-* note is active, and steps the MIDI sequencer each time seqCountdown runs
-* out.  Each sub-call is guarded so it is never re-entered.
+* timerAIsr: see the header.
 _timerAI:
-	ori.w	#$0700,sr		* mask all interrupts (IPL=7)
+	ori.w	#$0700,sr		* IPL 7 while the counters change
 	addq.l	#1,_timerTi		* ++timerTicks
 
 	tst.b	_songAct		* test songActive (a BYTE here)
 	bne.s	L_seqA			* sequencer active
 	tst.b	_psgActi		* test psgActive (a BYTE here)
-	beq	L_ack			* psg idle -> just ack
+	beq	L_ack			* nothing to do -> ack
 	subq.w	#1,_envDivi		* --envDivider
-	bne	L_ack			* not yet -> ack
-	bra.s	L_psg			* fall to PSG call
+	bne	L_ack			* not the fourth tick
+	bra.s	L_psg			* step the envelopes
 
 L_seqA:
 	subq.w	#1,_seqCoun		* --seqCountdown
 	subq.w	#1,_envDivi		* --envDivider
-	bne.s	L_seq			* divider still ticking
+	bne.s	L_seq			* not the fourth tick: sequencer
 
 * -----------------------------------------------------------------------
-* Sub-call 1: stepEnvelopes (called every 4 ticks when envDivider wraps)
+* stepEnvelopes, every fourth tick
 * -----------------------------------------------------------------------
 
 L_psg:
 	move.w	#4,_envDivi		* reset divider
-	cmpi.w	#1,_envBusy		* re-entered?
+	cmpi.w	#1,_envBusy		* still running from an earlier tick?
 	beq	L_ack			* yes -> skip
 	addq.w	#1,_envBusy		* ++envBusy
-	bclr.b	#5,$fffffa0f		* ack MFP ISRA before long call
+	bclr.b	#5,$fffffa0f		* end Timer A in service (ISRA bit 5)
 	movem.l	d0-d7/a0-a6,-(sp)	* save every reg
-	move.w	sr,d0			* save current SR
-	andi.w	#$f8ff,d0		* clear IPL bits
-	ori.w	#$0500,d0		* set IPL = 5
-	move.w	d0,sr			* install
+	move.w	sr,d0
+	andi.w	#$f8ff,d0		* clear the IPL bits
+	ori.w	#$0500,d0		* IPL 5: level 6 (the MFP) may interrupt
+	move.w	d0,sr
 	jsr	_stepEnv		* advance PSG envelopes
 	movem.l	(sp)+,d0-d7/a0-a6	* restore regs
 	subq.w	#1,_envBusy		* --envBusy
 	bra	L_ack
 
 * -----------------------------------------------------------------------
-* Sub-call 2: seqAdvance (called when seqCountdown reaches 0 while active)
+* seqAdvance, once seqCountdown is zero or below
 * -----------------------------------------------------------------------
 
 L_seq:
 	tst.w	_seqCoun		* test seqCountdown
-	beq.s	L_seq2			* 0 -> advance
-	bpl	L_ack			* positive -> not yet
+	beq.s	L_seq2			* zero -> step
+	bpl	L_ack			* positive -> not yet; negative -> step
 
 L_seq2:
-	cmpi.w	#1,_seqBusy		* seqBusy >= 1 ?
+	cmpi.w	#1,_seqBusy		* sequencer still running?
 	bge	L_ack			* yes -> skip
-	cmpi.w	#1,_envBusy		* re-entered ?
+	cmpi.w	#1,_envBusy		* envelopes running?
 	beq	L_ack			* yes -> skip
 	addq.w	#1,_seqBusy		* ++seqBusy
-	bclr.b	#5,$fffffa0f		* ack MFP ISRA
-	movem.l	d0-d7/a0-a6,-(sp)	* save
-	move.w	sr,d0			* save SR
-	andi.w	#$f8ff,d0		* clear IPL
-	ori.w	#$0500,d0		* set IPL = 5
-	move.w	d0,sr			* install
+	bclr.b	#5,$fffffa0f		* end Timer A in service (ISRA bit 5)
+	movem.l	d0-d7/a0-a6,-(sp)	* save every reg
+	move.w	sr,d0
+	andi.w	#$f8ff,d0		* clear the IPL bits
+	ori.w	#$0500,d0		* IPL 5: level 6 (the MFP) may interrupt
+	move.w	d0,sr
 	jsr	_seqAdva		* advance MIDI sequencer
 	movem.l	(sp)+,d0-d7/a0-a6	* restore
 	subq.w	#1,_seqBusy		* --seqBusy
 
 L_ack:
-	bclr.b	#5,$fffffa0f		* final ISRA ack
-	rte				* return from exception
+	bclr.b	#5,$fffffa0f		* end Timer A in service
+	rte				* back, with the interrupted SR
 
 * -----------------------------------------------------------------------
 * The original keeps these five in the TEXT segment, immediately behind
@@ -115,7 +132,8 @@ L_ack:
 * -----------------------------------------------------------------------
 
 * seqBusy: non-zero while seqAdvance is running; a tick that finds it set
-* skips the sequencer step.
+* skips the sequencer step, and sendMidiEvent writes to the hardware
+* directly while it is set.
 _seqBusy:	.ds.w	1
 * envBusy: non-zero while stepEnvelopes is running; blocks both sub-calls.
 _envBusy:	.ds.w	1

@@ -257,7 +257,7 @@ long            loopStack[50];
    Bresenham-style integer ramp accumulator + delta, per channel.
    Every stepEnvelopes tick, accum += delta; whenever accum > 360 (0x168),
    currentVolume steps by rampDirection and accum -= 360.  This
-   fractional accumulation lets the 50 Hz envelope produce
+   fractional accumulation lets the 240 Hz envelope produce
    sub-tick-precision volume ramps without floating point.
 
    All 4 envelope tables (rate/time/sustain/release) are 16 shorts

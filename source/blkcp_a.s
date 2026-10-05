@@ -5,8 +5,8 @@
 * An unrolled loop Alcyon C cannot emit: eight post-increment long
 * moves per iteration, driven by `dbf` on the count.  It still carries
 * the C calling frame, so the arguments sit at the usual offsets
-* (src 8, dst 12, count 16).
-
+* (src 8, dst 12, count 16), and even its six bytes of locals, which
+* nothing uses.
 *
 ******************************************************************************
 

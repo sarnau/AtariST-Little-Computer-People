@@ -756,7 +756,8 @@ short   value;
 /* copyEnvelope must sit right before stepEnvelopes. */
 #include "parts/copyEnvelope.c"
 
-/* stepEnvelopes: PSG software ADSR envelope processor.  50 Hz from timerAIsr.
+/* stepEnvelopes: PSG software ADSR envelope processor, run by timerAIsr
+   every fourth Timer-A tick (240 Hz).
    3 channels through attack->decay->sustain->release->fadeout.
    Per phase: Bresenham accum, delta = (target-cur)*envRateTab[t],
    accum += delta; while accum > 360, cur += dir; accum -= 360.

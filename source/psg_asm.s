@@ -7,6 +7,13 @@
 * and read their arguments straight off the stack.  c168 cannot emit
 * such frameless pokes, so they live here.
 *
+* The sequencer and envelope code use them, mostly from inside the
+* Timer-A interrupt, to reach the chips directly instead of through the
+* XBIOS (Giaccess, Midiws); sendMidiEvent picks them when seqBusy is
+* set.  $ff8800 selects a YM2149 register and reads it
+* back, $ff8802 writes it; $fffc04/$fffc06 are the MIDI ACIA's status
+* and data registers.
+*
 ******************************************************************************
 
 	.globl	_psgWrit
@@ -23,7 +30,8 @@ _psgWrit:
 	move.b	5(sp),$ffff8802
 	rts
 
-* psgMixer(or_mask, and_mask): read-modify-write PSG register 7.
+* psgMixer(or_mask, and_mask): read-modify-write PSG register 7, the
+* mixer (tone and noise enables, port directions).
 * d0 is saved, so the arguments move up by 4.
 _psgMixe:
 	move.l	d0,-(sp)
@@ -35,7 +43,8 @@ _psgMixe:
 	move.l	(sp)+,d0
 	rts
 
-* aciaWrite(byte): spin until the MIDI ACIA can accept a byte, then send.
+* aciaWrite(byte): spin until the MIDI ACIA's transmit register is empty
+* (status bit 1), then send the byte.
 _aciaWri:
 	move.l	d0,-(sp)
 mow1:
