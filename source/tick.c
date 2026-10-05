@@ -93,7 +93,7 @@ short   counter;
 
                         /* Clock pendulum: 4-frame animation. */
                         psi = (tickCount >> 2) & 3;
-                        drawObject(clockFrames[psi], 271, 92);
+                        drawObject(clockFrames[psi], CLOCK_X, CLOCK_Y);
                         simStep();
                         redrawHands();
 
@@ -162,7 +162,7 @@ short   counter;
                                         sfxSelect(SFX_ALARM_CLOCK, 100000L);
                                 }
                                 drawObject(alarmFrames[tickCount & 1],
-                                        53, 102);
+                                        ALARM_X, ALARM_Y);
                         }
                         if (alarmRinging == NO) {
                                 alarmSounding = NO;

@@ -190,16 +190,16 @@ char ** argv;
         if (filingCabOpen != NO)
                 drawObject(OBJ_FILING_CAB_OPEN_2, FILING_CAB_X, FILING_CAB_Y);
         else
-                drawObject(OBJ_FILING_CABINET_CLOSED, FILING_CAB_X, FILING_CAB_Y);
+                drawObject(OBJ_FILING_CAB_CLOSED, FILING_CAB_X, FILING_CAB_Y);
 
         /* Dog bowl: three explicit state tests with literal frame
            ids, not an index into bowlFrames. */
         if (bowlLevel == BOWL_EMPTY)
-                drawObject(OBJ_DOG_FOOD_BOWL_3, DOG_BOWL_X, DOG_BOWL_Y);
+                drawObject(OBJ_DOG_BOWL_EMPTY, DOG_BOWL_X, DOG_BOWL_Y);
         if (bowlLevel == BOWL_HALF)
-                drawObject(OBJ_DOG_FOOD_BOWL_2, DOG_BOWL_X, DOG_BOWL_Y);
+                drawObject(OBJ_DOG_BOWL_HALF, DOG_BOWL_X, DOG_BOWL_Y);
         if (bowlLevel == BOWL_FULL)
-                drawObject(OBJ_DOG_FOOD_BOWL_1, DOG_BOWL_X, DOG_BOWL_Y);
+                drawObject(OBJ_DOG_BOWL_FULL, DOG_BOWL_X, DOG_BOWL_Y);
 
         drawFoodCab();
         resetDailyFlags();

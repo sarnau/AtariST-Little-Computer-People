@@ -44,7 +44,12 @@ house that changes is painted into that picture rather than drawn each frame:
 At start-up `main` paints every door and cabinet in its saved state.  Once
 painted, an object stays until something paints over it.
 
-All 56 objects, under their `OBJ_*` names (drawn opaque, colour 0 included):
+All 56 objects, under their `OBJ_*` names (drawn opaque, colour 0 included).
+Ten are never drawn: five frames of the bathroom sink (`OBJ_BATH_SINK_1..5`),
+the bathroom's medicine cabinet opening (`OBJ_MEDICINE_*`), a patch of its
+mirror and the typewriter on the writing desk.  Their first frames match
+`HOUSE.SCN` at the spots `enums.h` gives, so they were cut from the same
+picture for animations the game does not have.
 
 ![The 56 objects](images/objects.png)
 

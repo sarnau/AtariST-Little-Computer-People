@@ -11,7 +11,7 @@ closeFilingCab()
         drawObject(OBJ_FILING_CAB_OPEN_1, FILING_CAB_X, FILING_CAB_Y);
         gameTick(1);
         animState = STATE_BEND_DOWN;
-        drawObject(OBJ_FILING_CABINET_CLOSED, FILING_CAB_X, FILING_CAB_Y);
+        drawObject(OBJ_FILING_CAB_CLOSED, FILING_CAB_X, FILING_CAB_Y);
         gameTick(1);
         filingCabOpen = NO;
         animState = STATE_STAND_FACING_SCREEN;

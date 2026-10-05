@@ -40,7 +40,8 @@ short   y;
 
 /* Paint food-count markers in 4 cabinet slots.
    Count = bits 9..11 of doorStatesAndFlags (0..4 packs). No-op if closed.
-     1 -> (50,159)  2 -> (58,159)  3 -> (50,151)  4 -> (58,151) */
+   The markers fill the open cabinet's shelves bottom row first, left
+   before right. */
 
 void
 drawFoodCab()
@@ -53,8 +54,12 @@ drawFoodCab()
         cabinetContent = (resident.doorStatesAndFlags >> DSF_FOOD_SHIFT) & DSF_FOOD_FIELD;
         drawObject(OBJ_CABINET_OPEN_2, KITCHEN_CAB_X, KITCHEN_CAB_Y);
 
-        if (cabinetContent >= 1) drawObject(OBJ_CABINET_ITEM, 50, 159);
-        if (cabinetContent >= 2) drawObject(OBJ_CABINET_ITEM, 58, 159);
-        if (cabinetContent >= 3) drawObject(OBJ_CABINET_ITEM, 50, 151);
-        if (cabinetContent >= 4) drawObject(OBJ_CABINET_ITEM, 58, 151);
+        if (cabinetContent >= 1) drawObject(OBJ_CABINET_ITEM,
+                        KITCHEN_CAB_X + 4, KITCHEN_CAB_Y + 19);
+        if (cabinetContent >= 2) drawObject(OBJ_CABINET_ITEM,
+                        KITCHEN_CAB_X + 12, KITCHEN_CAB_Y + 19);
+        if (cabinetContent >= 3) drawObject(OBJ_CABINET_ITEM,
+                        KITCHEN_CAB_X + 4, KITCHEN_CAB_Y + 11);
+        if (cabinetContent >= 4) drawObject(OBJ_CABINET_ITEM,
+                        KITCHEN_CAB_X + 12, KITCHEN_CAB_Y + 11);
 }

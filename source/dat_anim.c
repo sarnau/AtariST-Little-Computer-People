@@ -195,6 +195,6 @@ short   patSprites[PAT_FRAMES] = {
 short   patLastSprite = SPRITE_PET_HAND_1;
 
 /* Dog bowl object per bowlLevel (BOWL_EMPTY, BOWL_HALF, BOWL_FULL). */
-short   bowlFrames[3] = { OBJ_DOG_FOOD_BOWL_3,
-                          OBJ_DOG_FOOD_BOWL_2,
-                          OBJ_DOG_FOOD_BOWL_1 };
+short   bowlFrames[3] = { OBJ_DOG_BOWL_EMPTY,
+                          OBJ_DOG_BOWL_HALF,
+                          OBJ_DOG_BOWL_FULL };

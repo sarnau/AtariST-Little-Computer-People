@@ -382,19 +382,21 @@
 #define SPRITE_COOKED_MEAL      0x37    /* carried from the stove after cooking */
 
 /* ---- Object frames: indices into the OBJECTS table for drawObject() ------
-   The fixed compile-time indices passed as the first argument to
-   drawObject().  cp68's 22-char macro-name limit forces the short OBJ_
-   prefix. */
-#define OBJ_FILING_CABINET_CLOSED       0
+   Each frame is drawn opaque at its piece's spot (the furniture positions
+   below).  Frames marked unused are never drawn; the spot given is where
+   HOUSE.SCN already shows them -- the bathroom sink, the medicine cabinet
+   and a patch of its mirror, and the typewriter (drawn as
+   SPRITE_TYPEWRITER while he writes). */
+#define OBJ_FILING_CAB_CLOSED           0
 #define OBJ_FILING_CAB_OPEN_1           1
 #define OBJ_FILING_CAB_OPEN_2           2
 #define OBJ_ALARM_1                     3
 #define OBJ_ALARM_2                     4
-#define OBJ_STOVE_1                     5
-#define OBJ_STOVE_2                     6
-#define OBJ_STOVE_3                     7
-#define OBJ_STOVE_4                     8
-#define OBJ_STOVE_5                     9
+#define OBJ_BATH_SINK_1                 5    /* unused; at (167, 108) */
+#define OBJ_BATH_SINK_2                 6    /* unused */
+#define OBJ_BATH_SINK_3                 7    /* unused */
+#define OBJ_BATH_SINK_4                 8    /* unused */
+#define OBJ_BATH_SINK_5                 9    /* unused */
 #define OBJ_DRESSER_CLOSED              10
 #define OBJ_DRESSER_OPEN_1              11
 #define OBJ_DRESSER_OPEN_2              12
@@ -424,9 +426,9 @@
 #define OBJ_DOOR_FRONT_CLOSED           36
 #define OBJ_DOOR_FRONT_OPEN_1           37
 #define OBJ_DOOR_FRONT_OPEN_2           38
-#define OBJ_MEDICINE_CLOSED             39
-#define OBJ_MEDICINE_OPEN_1             40
-#define OBJ_MEDICINE_OPEN_2             41
+#define OBJ_MEDICINE_CLOSED             39   /* unused; at (169, 85) */
+#define OBJ_MEDICINE_OPEN_1             40   /* unused */
+#define OBJ_MEDICINE_OPEN_2             41   /* unused */
 #define OBJ_STOVE_OFF                   42
 #define OBJ_STOVE_ON_1                  43
 #define OBJ_STOVE_ON_2                  44
@@ -434,13 +436,13 @@
 #define OBJ_DOOR_STUDY_CLOSED           46
 #define OBJ_DOOR_STUDY_OPEN_1           47
 #define OBJ_DOOR_STUDY_OPEN_2           48
-#define OBJ_DOG_FOOD_BOWL_1             49
-#define OBJ_DOG_FOOD_BOWL_2             50
-#define OBJ_DOG_FOOD_BOWL_3             51
-#define OBJ_PHONE_CALL                  52
-#define OBJ_CABINET_ITEM                53   /* food-pip in open kitchen cabinet */
-#define OBJ_WHITE_BLUE                  54
-#define OBJ_TYPEWRITER                  55
+#define OBJ_DOG_BOWL_FULL               49
+#define OBJ_DOG_BOWL_HALF               50
+#define OBJ_DOG_BOWL_EMPTY              51
+#define OBJ_PHONE_OFF_HOOK              52
+#define OBJ_CABINET_ITEM                53   /* a food marker in the open kitchen cabinet */
+#define OBJ_MIRROR_GLASS                54   /* unused; at (169, 88) */
+#define OBJ_TYPEWRITER                  55   /* unused; at (208, 44) */
 
 /* ---- Minigame key menu -----------------------------------------------
    The card games list their function-key choices in a panel on the
@@ -496,6 +498,10 @@
 #define STOVE_Y         172
 #define STUDY_DOOR_X    178
 #define STUDY_DOOR_Y    23
+#define CLOCK_X         271     /* the pendulum clock, computer corner */
+#define CLOCK_Y         92
+#define ALARM_X         53      /* the alarm clock, bedroom */
+#define ALARM_Y         102
 #define TOILET_DOOR_X   187
 #define TOILET_DOOR_Y   87
 

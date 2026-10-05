@@ -2,7 +2,8 @@
 """spritesheet.py -- render DATA/SPRITES and DATA/OBJECTS as labelled sheets.
 
 Each graphic is drawn with the game's start-up palette (mainPalette in
-dat_world.c) under its id and its name from include/enums.h:
+dat_world.c) under its id and its name from include/enums.h, marked
+"(unused)" where the define's comment says so:
 
   sprites  the 50 graphics in SPRITES, under the id spriteFileId assigns
            and their SPRITE_* name.  Colour 0 is transparent (makeMask
@@ -62,8 +63,8 @@ def palette():
 def names(prefix):
     out = {}
     enums = open(os.path.join(SRC, 'include', 'enums.h')).read()
-    for name, val in re.findall(r'#define\s+(' + prefix + r'\w+)\s+(0x[0-9a-fA-F]+|\d+)\b', enums):
-        out.setdefault(int(val, 0), []).append(name)
+    for name, val, rest in re.findall(r'#define\s+(' + prefix + r'\w+)\s+(0x[0-9a-fA-F]+|\d+)\b(.*)', enums):
+        out.setdefault(int(val, 0), []).append(name + (' (unused)' if 'unused' in rest else ''))
     return out
 
 
@@ -92,7 +93,7 @@ def read_records(path, count, pal, transparent):
 
 def render(entries, label_of, out):
     """entries: list of (id, w, h, image), sorted by id."""
-    cell_w = max(max(img.width for _, _, _, img in entries) * SCALE + 2 * PAD, 230)
+    cell_w = max(max(img.width for _, _, _, img in entries) * SCALE + 2 * PAD, 250)
     cell_h = max(img.height for _, _, _, img in entries) * SCALE + 2 * PAD + LABEL_H
     rows = (len(entries) + COLS - 1) // COLS
     sheet = Image.new('RGB', (COLS * cell_w, rows * cell_h), (236, 236, 236))

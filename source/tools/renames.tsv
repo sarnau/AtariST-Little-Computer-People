@@ -687,3 +687,14 @@ SPRITE_DOOR_ANIM_1	SPRITE_WC_DOOR_1	the toilet (WC) door, frame 1: closed, ajar,
 SPRITE_DOOR_ANIM_2	SPRITE_WC_DOOR_2	the toilet (WC) door, frame 2: closed, ajar, wide open
 SPRITE_DOOR_ANIM_3	SPRITE_WC_DOOR_3	the toilet (WC) door, frame 3: closed, ajar, wide open
 SPRITE_FRONT_DOOR_OPEN	SPRITE_FRONT_DOOR_3	the front door wide open; frames 1 and 2 (closed, ajar) are now named too
+OBJ_FILING_CABINET_CLOSED	OBJ_FILING_CAB_CLOSED	matches its OBJ_FILING_CAB_OPEN_1..2 frames
+OBJ_STOVE_1	OBJ_BATH_SINK_1	the bathroom sink, frame 1 (unused); the stove is OBJ_STOVE_OFF/ON_1..3
+OBJ_STOVE_2	OBJ_BATH_SINK_2	the bathroom sink, frame 2 (unused)
+OBJ_STOVE_3	OBJ_BATH_SINK_3	the bathroom sink, frame 3 (unused)
+OBJ_STOVE_4	OBJ_BATH_SINK_4	the bathroom sink, frame 4 (unused)
+OBJ_STOVE_5	OBJ_BATH_SINK_5	the bathroom sink, frame 5 (unused)
+OBJ_DOG_FOOD_BOWL_1	OBJ_DOG_BOWL_FULL	drawn for BOWL_FULL
+OBJ_DOG_FOOD_BOWL_2	OBJ_DOG_BOWL_HALF	drawn for BOWL_HALF
+OBJ_DOG_FOOD_BOWL_3	OBJ_DOG_BOWL_EMPTY	drawn for BOWL_EMPTY
+OBJ_PHONE_CALL	OBJ_PHONE_OFF_HOOK	the phone with the handset lifted, while he talks
+OBJ_WHITE_BLUE	OBJ_MIRROR_GLASS	a patch of the bathroom mirror (unused)

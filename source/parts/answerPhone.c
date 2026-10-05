@@ -29,7 +29,7 @@ answerPhone()
         phoneRinging = NO;
         phoneHangUp = YES;
         gameTick(0);
-        drawObject(OBJ_PHONE_CALL, PHONE_X, PHONE_Y);
+        drawObject(OBJ_PHONE_OFF_HOOK, PHONE_X, PHONE_Y);
 
         animState = STATE_PHONE_TALKING;
         gameTick(1);
