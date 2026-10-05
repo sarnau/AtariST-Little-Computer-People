@@ -393,7 +393,7 @@ himself from the tier tables; "request" that a typed line can ask for it.
 | 26 | `PLAY_ORGAN` | `playOrgan` | plays a random `.ORG` piece on the organ upstairs | idle, request |
 | 27 | `OPEN_UPSTAIRS_CLOSET` | `enterStudy(1)` | goes into the study and saves the game | idle, request |
 | 28-32 | `EVENT_*` | -- | outside events, run through `runEvent`; `runAction` ignores them | events |
-| 33 | `GET_SNACK_FROM_FRIDGE` | `goToFridge` | puts something into the fridge | -- (dog food, move-in) |
+| 33 | `PUT_IN_FRIDGE` | `goToFridge` | puts something into the fridge | -- (dog food, move-in) |
 | 34 | `OPEN_BEDROOM_CLOSET` | `changeClothes(0)` | changes his clothes in the bedroom closet | request, routines |
 | 35 | `NOD_OK` | `nodOk` | nods in agreement | -- (requests, move-in) |
 | 36 | `CLEAN_UP` | `cleanUp` | closes every door and cabinet left open | idle, request |

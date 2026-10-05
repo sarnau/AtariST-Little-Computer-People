@@ -13,7 +13,7 @@ a_drink	drinkWater	ACTION_DRINK: fetches the glass, draws water from the tank, d
 a_driwa	washAtSink	carries sprite `value` to the kitchen sink and washes it with the water running
 a_eatm	cookMeal	ACTION_EAT_MEAL: cooks on the stove, then eats via a_kitcc
 a_feedd	feedDog	ACTION_FEED_DOG: fills the dog bowl from a food package
-a_gesff	goToFridge	ACTION_GET_SNACK_FROM_FRIDGE: walks to the fridge, then a_opecf
+a_gesff	goToFridge	ACTION_PUT_IN_FRIDGE: walks to the fridge, then a_opecf
 a_gioob	getInOutOfBed	ACTION_GET_IN_OUT_OF_BED: toggles lcp.is_sleeping with the bed poses
 a_gotbn	nightRoutine	ACTION_GO_TO_BED_NIGHT: shower, change, eat, brush teeth, bed
 a_hello	sayHello	ACTION_HELLO: waves and talks at the screen
@@ -675,3 +675,11 @@ petDog	waitForPat	renamed: the player pats the resident, not the dog
 sitWithDog	readInArmchair	renamed: he reads a book; the dog takes no part
 foodSupply	recordCount	renamed: it counts records (playRecord, recordDelivery)
 idleShrug	shrug	renamed with ACTION_WANDER_IDLY -> ACTION_SHRUG: he never walks
+SPRITE_STUDY_DOOR_FRAME	SPRITE_TOOTHBRUSH	the toothbrush (only brushTeeth uses it)
+ACTION_GET_SNACK_FROM_FRIDGE	ACTION_PUT_IN_FRIDGE	goToFridge puts a package into the fridge
+POS_TOP_GAME_TABLE	POS_TOP_ARMCHAIR_RIGHT	beside the blue armchair; there is no game table upstairs
+POS_TOP_GAME_CHAIR_LEFT	POS_TOP_ARMCHAIR_FAR_RIGHT	right of the blue armchair
+POS_TOP_GAME_CHAIR_RIGHT	POS_TOP_ARMCHAIR_BACK	behind the blue armchair (a dog wander spot)
+POS_TOP_GAME_WALK_IN	POS_TOP_CABINET_RIGHT	right of the filing cabinet
+POS_TOP_GAME_WALK_OUT	POS_TOP_RIGHT_WALL	by the top floor's right wall
+POS_BTM_DOG_FOOD_STORE	POS_BTM_LAMP	by the living-room lamp

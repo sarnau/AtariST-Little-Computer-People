@@ -54,7 +54,7 @@ runAction()
         case ACTION_EAT_MEAL:                 cookMeal();                  break;
         case ACTION_PLAY_ORGAN:               playOrgan();          break;
         case ACTION_OPEN_UPSTAIRS_CLOSET:     enterStudy(1); break;
-        case ACTION_GET_SNACK_FROM_FRIDGE:    goToFridge();     break;
+        case ACTION_PUT_IN_FRIDGE:    goToFridge();     break;
         case ACTION_OPEN_BEDROOM_CLOSET:      changeClothes(); break;
         case ACTION_NOD_OK:              nodOk();               break;
         case ACTION_CLEAN_UP:                 cleanUp();                  break;

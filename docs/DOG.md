@@ -50,7 +50,7 @@ at the same time: 20..200 frames, 2.5 to 25 seconds after it arrives.
 | # | Spot | Where | Nudge |
 |---|---|---|---|
 | 0 | `POS_TOP_LIVING_ROOM` | top floor, in front of the TV | y +3 |
-| 1 | `POS_TOP_GAME_CHAIR_RIGHT` | top floor, beside the blue armchair | y +9 |
+| 1 | `POS_TOP_ARMCHAIR_BACK` | top floor, beside the blue armchair | y +9 |
 | 2 | `POS_TOP_DESK_FRONT` | top floor, in front of the writing desk | y +2 |
 | 3 | `POS_MID_BEDROOM_WALK` | bedroom, by the alarm clock | y +10 |
 | 4 | `POS_MID_COMPUTER_DESK` | the computer corner | x +10, y +6 |

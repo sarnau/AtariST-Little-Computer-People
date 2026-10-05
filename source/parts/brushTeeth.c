@@ -19,25 +19,25 @@ brushTeeth()
         resY -= 2;
         waitHeadTurn();
 
-        spriteLayer[SPRITE_STUDY_DOOR_FRAME] = SPRITE_BEHIND_LCP;
-        activateSprite(SPRITE_STUDY_DOOR_FRAME);
+        spriteLayer[SPRITE_TOOTHBRUSH] = SPRITE_BEHIND_LCP;
+        activateSprite(SPRITE_TOOTHBRUSH);
         xLeft = resX + 8;
         xRight = resX + 12;
-        pendX[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = xLeft;
-        pendY[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = resY - 24;
+        pendX[spriteSlot[SPRITE_TOOTHBRUSH]] = xLeft;
+        pendY[spriteSlot[SPRITE_TOOTHBRUSH]] = resY - 24;
 
         /* The loop is driven by a post-decrement, so the body sees the
            already-decremented value.  Keep this shape: it is the
            original's. */
         while (brushCycles--) {
                 if (brushCycles & 1)
-                        pendX[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = xLeft;
+                        pendX[spriteSlot[SPRITE_TOOTHBRUSH]] = xLeft;
                 else
-                        pendX[spriteSlot[SPRITE_STUDY_DOOR_FRAME]] = xRight;
+                        pendX[spriteSlot[SPRITE_TOOTHBRUSH]] = xRight;
                 gameTick(0);
         }
 
-        spriteLayer[SPRITE_STUDY_DOOR_FRAME] = SPRITE_HIDDEN;
+        spriteLayer[SPRITE_TOOTHBRUSH] = SPRITE_HIDDEN;
         layoutSlots();
         resFacing = FACING_RIGHT;
         animState = STATE_STAND_FACING_SCREEN;
