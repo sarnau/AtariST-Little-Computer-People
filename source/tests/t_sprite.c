@@ -149,7 +149,7 @@ char ** argv;
         memcpy(bodyFrames, body_buf,
                (size_t) ((payload_bytes < 120L * 168L)
                          ? payload_bytes : 120L * 168L));
-        memset(bodyShapes, 0, 98 * 84);   /* the whole array */
+        memset(bodyShapes, 0, BODY_FRAMES * 84);   /* the whole array */
 
         /* mirrorTable is BSS in LCP_STX -- initMirror builds the
            bit-reversal LUT at boot (it used to be a shipped

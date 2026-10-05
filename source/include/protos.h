@@ -20,6 +20,8 @@ extern void hookTimerA();
 extern void countSongs();
 extern void initMirror();
 extern void moveInScene();
+/* titleScreen's two helpers: declared here because titleScreen reaches
+   them before their definitions in the unity unit. */
 extern void enterField();
 extern void eraseChar();
 extern short openFile();
@@ -28,6 +30,20 @@ extern short readFile();         /* returns the Fread result */
 extern void saveFile();
 extern short loadSavedGame();
 extern void studyVisit();
+/* Asset loaders.  File formats:
+   OBJECTS, SPRITES: records of {h: BE16, w: BE16, then ceil(w/16)*4*2*h
+     pixel bytes} -- 4 bitplanes interleaved per row, MSB first.  The
+     loaders stop at the buffer end, at height 0 or after 64 records.
+   BODY.LCP, PE2..PE6.LCP: {count: BE16, total_bytes: BE16, frames};
+     each frame is a 16x21 image, 21 rows of 4 bitplane words (168
+     bytes).  BODY.LCP holds BODY_FRAMES (98) frames, a PEx.LCP
+     HEAD_FRAMES (66).  The masks are not in the files: buildMasks
+     generates them at boot.  PEx is chosen by character_sprite_id
+     (2..6).
+   NAMES: fixed 10-byte records; rollResident seeks to a random one.
+   .SCN: a nibble stream with a 15-word dictionary in bytes 2..31 of a
+     32-byte header; nibble 0xF escapes to four more nibbles forming a
+     literal word.  The payload starts at byte 32. */
 extern void loadObjects();
 extern void loadSprites();
 extern short loadFrameFile();
@@ -213,6 +229,8 @@ extern void queueNote();
 extern short parseEvents();
 extern void stopSequencer();
 extern void unhookTimerA();
+/* timerAIsr lives in mq_tick.s (the Timer-A interrupt routine); it is
+   declared so hookTimerA can pass its address to Xbtimer. */
 extern void timerAIsr();
 extern void aciaWrite();
 extern void copyEnvelope();

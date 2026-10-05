@@ -188,6 +188,12 @@
    tilts the head further down. */
 #define HEAD_FRAMES_PER_MOOD            22
 #define HEAD_TURN_FRAMES                5
+#define HEAD_FRAMES                     (3 * HEAD_FRAMES_PER_MOOD)  /* 66, a PEx.LCP */
+/* BODY.LCP holds BODY_FRAMES body frames (the highest any table uses is
+   97); bodyFrames is declared with BODY_FRAME_SLOTS, the original's
+   size, which the BSS layout depends on. */
+#define BODY_FRAMES                     98
+#define BODY_FRAME_SLOTS                120
 #define HEAD_ROW_LEVEL                  7       /* first frame of each tilt row */
 #define HEAD_ROW_LOWER                  (HEAD_ROW_LEVEL + HEAD_TURN_FRAMES)
 #define HEAD_ROW_LOWEST                 (HEAD_ROW_LOWER + HEAD_TURN_FRAMES)
