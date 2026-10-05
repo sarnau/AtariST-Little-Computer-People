@@ -830,7 +830,7 @@
 #define ACTION_DANCE                     8
 #define ACTION_YAWN_AND_STRETCH          9
 #define ACTION_PACE_NERVOUSLY           10
-#define ACTION_WANDER_IDLY              11
+#define ACTION_SHRUG              11
 #define ACTION_SLEEP                    12
 #define ACTION_DRINK                    13
 #define ACTION_NOD_HEAD                 14

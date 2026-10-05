@@ -128,3 +128,4 @@ F	0x207ac	waitForPat
 F	0x2081e	crouchForPat
 F	0x20b98	readInArmchair
 A	0x4b780	recordCount
+F	0x226ae	shrug

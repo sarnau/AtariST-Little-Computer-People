@@ -119,7 +119,7 @@ playGame()
         }
 
         else if (textTimer == 0 && waitedOnce != NO) {
-                idleShrug();
+                shrug();
                 keysBlocked = NO;
                 dogNoTopFlr = NO;
                 return;

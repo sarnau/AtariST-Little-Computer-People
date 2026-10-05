@@ -83,7 +83,7 @@ extern void yawnAndStretch();
 extern void nodHead();
 extern void waitForPat();
 extern void crouchForPat();
-extern void idleShrug();
+extern void shrug();
 extern void peekAround();
 extern void paceNervously();
 extern void toggleTv();

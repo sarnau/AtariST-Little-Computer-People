@@ -375,7 +375,7 @@ himself from the tier tables; "request" that a typed line can ask for it.
 | 8 | `DANCE` | `danceToMusic` | dances by the record player while music plays, starting a record if none is on | idle, request |
 | 9 | `YAWN_AND_STRETCH` | `yawnAndStretch` | yawns and stretches | never |
 | 10 | `PACE_NERVOUSLY` | `paceNervously` | paces on the spot | idle |
-| 11 | `WANDER_IDLY` | `idleShrug` | shrugs on the spot | -- (games, move-in) |
+| 11 | `SHRUG` | `shrug` | shrugs on the spot | -- (games, move-in) |
 | 12 | `SLEEP` | `dozeOff` | walks to the middle of the floor and dozes off, snoring, for 7..15 rounds | idle |
 | 13 | `DRINK` | `drinkWater` | takes a glass from the kitchen to the water cooler and drinks | need, request |
 | 14 | `NOD_HEAD` | `nodHead` | nods | request |
@@ -425,7 +425,8 @@ guessed: the armchair activities were "call the dog", "pet the dog" and "sit
 on the couch with the dog", the record collection was a food supply, and
 several desk positions were fireplace spots.  They were renamed on 2026-10-05
 (`callDog` -> `crouchForPat`, `petDog` -> `waitForPat`, `sitWithDog` ->
-`readInArmchair`, `foodSupply` -> `recordCount`, and the `ACTION_*`, `STATE_*`,
+`readInArmchair`, `foodSupply` -> `recordCount`, `ACTION_WANDER_IDLY` ->
+`ACTION_SHRUG`, and the `ACTION_*`, `STATE_*`,
 `SPRITE_*` and `POS_*` names with them); older notes and the Ghidra analysis
 documents may still use the old ones.  `source/tools/renames.tsv` maps every
 old name to the current one.

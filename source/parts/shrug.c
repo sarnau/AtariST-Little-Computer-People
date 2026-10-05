@@ -1,9 +1,9 @@
-/* ACTION_WANDER_IDLY (also agames.c and the move-in cutscene).
-   Despite the name nobody walks: the resident turns side-on, waits
-   for his head to settle, and shrugs -- the start pose for 2 ticks,
-   held for 5, released -- then stands side-on again. */
+/* ACTION_SHRUG (also agames.c and the move-in cutscene).  The
+   resident turns side-on, waits for his head to settle, and shrugs --
+   the start pose for 2 ticks, held for 5, released -- then stands
+   side-on again. */
 void
-idleShrug()
+shrug()
 {
         /* Unused, but it must stay: removing it changes the compiled
            code. */

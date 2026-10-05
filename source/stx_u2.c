@@ -98,7 +98,7 @@
 #include "parts/updateWaterTank.c"
 #include "parts/washAtSink.c"
 #include "parts/paceNervously.c"
-#include "parts/idleShrug.c"
+#include "parts/shrug.c"
 #include "parts/dozeOff.c"
 #include "parts/danceToMusic.c"
 #include "parts/yawnAndStretch.c"

@@ -37,7 +37,7 @@ runAction()
         case ACTION_DANCE:                    danceToMusic();                     break;
         case ACTION_YAWN_AND_STRETCH:         yawnAndStretch();          break;
         case ACTION_PACE_NERVOUSLY:           paceNervously();            break;
-        case ACTION_WANDER_IDLY:              idleShrug();               break;
+        case ACTION_SHRUG:              shrug();               break;
         case ACTION_SLEEP:                    dozeOff(SLEEP_RANDOM);                   break;
         case ACTION_DRINK:                    drinkWater();                     break;
         case ACTION_NOD_HEAD:                 nodHead();                  break;

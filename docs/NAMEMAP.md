@@ -58,7 +58,7 @@ searching Ghidra for it will not find anything.
 | wakeFromAlarm | action_wake_from_alarm                           |
 | morningRoutine | action_wake_up_morning                           |
 | rummageCabinet | action_walk_to_and_turn                          |
-| idleShrug | action_wander_idly                               |
+| shrug | action_wander_idly                               |
 | washHands | action_wash_hands                                |
 | writeLetter | action_write_letter                              |
 | yawnAndStretch | action_yawn_and_stretch                          |

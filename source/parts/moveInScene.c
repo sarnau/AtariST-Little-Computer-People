@@ -87,7 +87,7 @@ moveInScene()
         goToFridge();
         useComputer();
         tidyHouse();
-        idleShrug();
+        shrug();
         tvOff();
         checkFrontDoor(100);
         walkToFrontDoor();

@@ -46,7 +46,7 @@ a_toggt	toggleTv	ACTION_TOGGLE_TV: tvOff if lcp_tv, else tvOn
 a_uset	useToilet	ACTION_USE_TOILET: toilet door, flush, resets bathroom need
 a_wakfa	wakeFromAlarm	ACTION_WAKE_FROM_ALARM: walks to the bedroom and clears alarm_p
 a_wakum	morningRoutine	ACTION_WAKE_UP_MORNING: alarm, out of bed, shower, teeth, dress, cook
-a_wandi	idleShrug	ACTION_WANDER_IDLY: despite the name, turns side-on and shrugs
+a_wandi	shrug	ACTION_SHRUG: turns side-on and shrugs
 a_washh	washHands	ACTION_WASH_HANDS: hand-washing poses at the bathroom sink
 a_watat	rummageCabinet	rummages in the filing cabinet, opening it if shut
 a_writl	writeLetter	ACTION_WRITE_LETTER: types a letter to the player from LETTER.TXT
@@ -674,3 +674,4 @@ callDog	crouchForPat	renamed: the dog takes no part (see docs/PEOPLE.md)
 petDog	waitForPat	renamed: the player pats the resident, not the dog
 sitWithDog	readInArmchair	renamed: he reads a book; the dog takes no part
 foodSupply	recordCount	renamed: it counts records (playRecord, recordDelivery)
+idleShrug	shrug	renamed with ACTION_WANDER_IDLY -> ACTION_SHRUG: he never walks
