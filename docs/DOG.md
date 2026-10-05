@@ -90,7 +90,9 @@ Picking spot 5, beside the bowl, gives the dog permission to eat
 (10 to 12 seconds), cycling the three eating frames.  The bowl goes down one
 level at frames 60, 30 and 4 of the countdown and once more when it finishes,
 so a single meal always empties even a full bowl.  The permission is used up
-by the meal; arriving at the bowl itself (spot 6) does not grant it.
+by the meal; arriving at the bowl itself (spot 6) does not grant it.  If the
+bowl was empty, though, the permission is kept until a meal happens, so the
+dog may later eat at spot 6 too (see [BUGS.md](BUGS.md)).
 
 The bowl has three states, `BOWL_EMPTY`, `BOWL_HALF` and `BOWL_FULL`
 (`bowlLevel`).  `gameTick` ([`tick.c`](../source/tick.c)) draws it beside the

@@ -27,11 +27,11 @@ Screen resolution: 320×200 pixels, 16 colors, Atari ST low resolution.
 ## 1. Anagram Game
 
 **Entry point:** `playAnagrams()` (0x181AE)
-**Data file:** `words` — 150 words × 11 bytes each (compressed)
+**Data file:** `words` — 213 words × 11 bytes each (compressed), of which only the first 150 are used
 
 ### Concept
 
-The computer selects a random word from a 150-word dictionary, scrambles its letters,
+The computer selects a random word from the first 150 words of its dictionary, scrambles its letters,
 and challenges the player to unscramble it. The player has eight guesses and can
 request letter clues, one per guess, each of which uses up a guess.
 

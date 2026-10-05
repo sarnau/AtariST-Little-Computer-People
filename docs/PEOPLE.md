@@ -406,7 +406,7 @@ It disappears 20 seconds after the last key, and the next key then starts a
 new line.  Return hands it to
 `matchCommand` ([`parts/matchCommand.c`](../source/parts/matchCommand.c)):
 
-1. Every word is looked up in the 161-word `vocabulary`
+1. Every word is looked up in the 160-word `vocabulary`
    ([`dat_parser.c`](../source/dat_parser.c)).  A known word sets one bit in a
    10-byte mask; words the game does not know are ignored.
 2. The 33 rows of `phraseTable` are tried in order.  A row matches when the

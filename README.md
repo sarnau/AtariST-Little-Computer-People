@@ -38,6 +38,7 @@ The reverse engineering analysis is organized into the following documents:
 | [SOUND.md](docs/SOUND.md) | MIDI sequencer engine, PSG envelope processor, 23 sound effects, Music Studio .SNG/.ORG file format, song catalog |
 | [RENDERING.md](docs/RENDERING.md) | How the screen is drawn: compositor, sprite slots, the resident's and the dog's sprites, colours |
 | [IMAGEFORMAT.md](docs/IMAGEFORMAT.md) | Pixel format, color palette, compressed screen images (.SCN), sprite/object files, playing cards, character body sprites (PE*.LCP) |
+| [BUGS.md](docs/BUGS.md) | Every known bug in the 1985 game, kept on purpose by the byte-identical port |
 | [NAMEMAP.md](docs/NAMEMAP.md) | The port's function and variable names mapped to the Ghidra names these documents use |
 
 ## C Source Reconstruction

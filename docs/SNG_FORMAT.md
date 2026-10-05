@@ -185,7 +185,9 @@ Byte 1 of `0x80` and `0x84` is `0x01` in every file on this disk and is ignored 
 player.
 
 Velocity → PSG volume cap: `<0x17`→5, `<0x27`→7, `<0x37`→9, `<0x57`→11, `<0x67`→13,
-else 15.
+and 15 was meant for the rest -- but that last test compares a signed byte with -128 and
+never fires, so velocities `0x67..0x7F` keep the previous song's cap (start-up value 15;
+see [BUGS.md](BUGS.md)).
 
 `WALTZ.SNG` header: `00 | 80 01 09 | 83 05 | 81 6D | 84 01 7F | 00`
 → key 9 (F major), volume 5, tempo 109, velocity 127.

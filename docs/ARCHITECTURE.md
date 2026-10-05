@@ -16,6 +16,7 @@ This document is the overview.  The details are in:
 | [SOUND.md](SOUND.md) | the MIDI sequencer, PSG envelopes, sound effects, the song files |
 | [RENDERING.md](RENDERING.md) | how the screen is drawn: the house picture, the compositor, sprites, the resident's and the dog's sprites, colours |
 | [IMAGEFORMAT.md](IMAGEFORMAT.md) | the picture, sprite, object and card file formats |
+| [BUGS.md](BUGS.md) | every known bug in the 1985 game |
 | [NAMEMAP.md](NAMEMAP.md) | the port's names next to the Ghidra names older notes use |
 
 All of it is read from the C port in [`source/`](../source/README.md), which
