@@ -163,22 +163,34 @@ ticks, so `chooseAction` runs once per finished activity.
 `chooseAction` ([`parts/chooseAction.c`](../source/parts/chooseAction.c))
 takes the first rung that applies:
 
-1. **An outside event is waiting** (`eventQueue`): run it through `runEvent`
-   ([`ai.c`](../source/ai.c)) -- a delivery, a phone call.
-2. **The alarm is ringing**: `wakeFromAlarm` -- walk to the alarm clock and
-   switch it off.
-3. **He needs the toilet**: `useToilet`.
-4. **Thirsty** (any level above satisfied): drink.  A healthy resident only
-   does so one time in three (a roll over 66 out of 100); a sick one always,
-   provided the tank has water.
-5. **Hungry**: eat from the cabinet, with the same one-in-three chance when
-   healthy -- and never twice in a row -- and always when sick, provided
-   there is food.
-6. **Lunch hour**, 7. **dinner hour**: `cookMeal`, once a day each.
-8. **Wake-up hour**: `morningRoutine`, once a day.
-9. **Bedtime hour**: `nightRoutine`, once a day.
-10. **A typed request is waiting**: see "Typed requests".
-11. **Otherwise** an idle activity from `pickIdleAction`.
+```mermaid
+flowchart TD
+    start(["chooseAction"]) --> ev{"outside event waiting?<br/>(eventQueue)"}
+    ev -->|yes| runEvent["runEvent: a delivery, a phone call"]
+    ev -->|no| alarm{"alarm ringing?"}
+    alarm -->|yes| wake["wakeFromAlarm: walk to the<br/>alarm clock, switch it off"]
+    alarm -->|no| wc{"needs the toilet?"}
+    wc -->|yes| toilet["useToilet"]
+    wc -->|no| thirst{"thirsty?"}
+    thirst -->|"yes, and healthy: 1 in 3<br/>sick: always, if the tank has water"| drink["drink"]
+    thirst -->|"no, or roll failed"| hunger{"hungry?"}
+    hunger -->|"yes, and healthy: 1 in 3, not twice running<br/>sick: always, if there is food"| eat["eat from the cabinet"]
+    hunger -->|"no, or roll failed"| lunch{"lunch hour,<br/>not yet today?"}
+    lunch -->|yes| cook1["cookMeal"]
+    lunch -->|no| dinner{"dinner hour,<br/>not yet today?"}
+    dinner -->|yes| cook2["cookMeal"]
+    dinner -->|no| wakeup{"wake-up hour,<br/>not yet today?"}
+    wakeup -->|yes| morning["morningRoutine"]
+    wakeup -->|no| bedtime{"bedtime hour,<br/>not yet today?"}
+    bedtime -->|yes| night["nightRoutine"]
+    bedtime -->|no| req{"typed request waiting,<br/>priority 8 or more?"}
+    req -->|yes| request["the requested activity"]
+    req -->|"no (see Typed requests)"| idle["an idle activity<br/>from pickIdleAction"]
+```
+
+Thirst and hunger roll 1..100 against 66 when he is healthy, so a healthy
+resident acts on them one time in three; a sick one always does, as long as
+there is water or food.
 
 The once-a-day flags are cleared at midnight (`resetDailyFlags`).  An
 activity is started through `runAction` ([`actions.c`](../source/actions.c)),
