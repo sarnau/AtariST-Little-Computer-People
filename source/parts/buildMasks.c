@@ -1,6 +1,4 @@
-/*
- * buildMasks is followed directly by maskBody and then maskHead.
- */
+/* buildMasks is followed directly by maskBody and then maskHead. */
 void
 buildMasks()
 {

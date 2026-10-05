@@ -1,9 +1,6 @@
-/*
- * Fill an MFDB for a 4-plane buffer.  The address is stored as two
- * words through a (short *) cast, high half first, as the original
- * does.
- */
-
+/* Fill an MFDB for a 4-plane buffer.  The address is stored as two
+   words through a (short *) cast, high half first, as the original
+   does. */
 void
 initMfdb(unused, mfdb, addr, width, height)
 long    unused;

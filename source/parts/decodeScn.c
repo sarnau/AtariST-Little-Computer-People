@@ -1,8 +1,6 @@
-/*
- * the.SCN nibble decoder. Each nibble indexes the 15-entry scnDict
- * dictionary; nibble 0xf escapes to a literal 16-bit value in the next
- * four nibbles. The file handling around it is written out in main.
- */
+/* The .SCN nibble decoder. Each nibble indexes the 15-entry scnDict
+   dictionary; nibble 0xf escapes to a literal 16-bit value in the next
+   four nibbles. The file handling around it is written out in main. */
 void
 decodeScn(src, out, count)
 char *  src;

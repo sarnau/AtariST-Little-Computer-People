@@ -1,8 +1,5 @@
-/*
- * Draws one character into the stripBuf screen; must follow
- * printString.
- */
-
+/* Draws one character into the stripBuf screen; must follow
+   printString. */
 void
 printChar(ch, x, y, color)
 short   ch;

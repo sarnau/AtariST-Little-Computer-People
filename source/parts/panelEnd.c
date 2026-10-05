@@ -1,6 +1,4 @@
-/*
- * Restores the screen base saved before a minigame.
- */
+/* Restores the screen base saved before a minigame. */
 void
 panelEnd()
 {

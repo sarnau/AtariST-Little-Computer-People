@@ -1,7 +1,4 @@
-/*
- * Same gesture as recordStoop; the 1985 source carries two copies.
- */
-
+/* Same gesture as recordStoop; the 1985 source carries two copies. */
 void
 tvStoop()
 {

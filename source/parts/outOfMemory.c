@@ -1,7 +1,4 @@
-/*
- * Fatal out-of-memory alert; never returns.
- */
-
+/* Fatal out-of-memory alert; never returns. */
 void
 outOfMemory()
 {

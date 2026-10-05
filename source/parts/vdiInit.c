@@ -1,9 +1,7 @@
-/*
- * the first half of vdiInit: opens the virtual workstation through the
- * global work arrays, refuses anything but low resolution, and then
- * calls the attribute/clear half (parts/vdiClear.c), which must
- * directly follow it.
- */
+/* The first half of vdiInit: opens the virtual workstation through the
+   global work arrays, refuses anything but low resolution, and then
+   calls the attribute/clear half (parts/vdiClear.c), which must
+   directly follow it. */
 void
 vdiInit()
 {

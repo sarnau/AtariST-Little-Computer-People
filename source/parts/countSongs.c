@@ -1,9 +1,4 @@
-/*
- * The first function of the stx_u1 object.
- */
 /* Enumerate *.SNG and *.ORG, count into songCount / organCount. */
-
-
 void
 countSongs()
 {

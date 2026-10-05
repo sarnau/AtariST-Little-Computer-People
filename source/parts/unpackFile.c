@@ -1,6 +1,3 @@
-/*
- * Sits ahead of main.
- */
 /* Decompress LETTER.TXT into outBuf for the letter writer.
    File layout: a short holding the uncompressed size + 0x11 header
    bytes, then the 15 most common bytes, then a nibble stream where

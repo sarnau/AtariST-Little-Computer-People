@@ -1,26 +1,24 @@
-/*
- * the per-frame compositor: throttles itself to the 200 Hz and VBL
- * clocks, runs the dog AI and SFX chaining, copies the background,
- * draws the sprites and flips the screen.
- *
- * Each call:
- *   1. returns early unless 25 ticks of the 200 Hz clock (~125 ms) have
- *      passed AND at least one VBL has crossed, so it never renders
- *      twice in one frame;
- *   2. moves the dog and runs its wander AI (idle countdown, food-bowl
- *      sequence, random pick among nine waypoints);
- *   3. times out long sound effects (doorbell -> echo, flush -> refill)
- *      and advances the dog's eating animation;
- *   4. copies the background from the house buffer, by textTimer's sign:
- *      < 0 only the letter strip, 0 the whole screen, > 0 split between
- *      the letter scroll region and the game area;
- *   5. promotes pending sprites in the 8 slots and draws the active ones;
- *   6. waits for vsync and flips the page with Setscreen;
- *   7. plays any queued effect through startSfx;
- *   8. toggles the compositing target between the physical screen and
- *      the alternate buffer;
- *   9. bumps frameCount.
- */
+/* The per-frame compositor: throttles itself to the 200 Hz and VBL
+   clocks, runs the dog AI and SFX chaining, copies the background,
+   draws the sprites and flips the screen.
+
+   Each call:
+     1. returns early unless 25 ticks of the 200 Hz clock (~125 ms) have
+        passed AND at least one VBL has crossed, so it never renders
+        twice in one frame;
+     2. moves the dog and runs its wander AI (idle countdown, food-bowl
+        sequence, random pick among nine waypoints);
+     3. times out long sound effects (doorbell -> echo, flush -> refill)
+        and advances the dog's eating animation;
+     4. copies the background from the house buffer, by textTimer's sign:
+        < 0 only the letter strip, 0 the whole screen, > 0 split between
+        the letter scroll region and the game area;
+     5. promotes pending sprites in the 8 slots and draws the active ones;
+     6. waits for vsync and flips the page with Setscreen;
+     7. plays any queued effect through startSfx;
+     8. toggles the compositing target between the physical screen and
+        the alternate buffer;
+     9. bumps frameCount. */
 void
 renderFrame()
 {

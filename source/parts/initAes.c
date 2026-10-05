@@ -1,7 +1,3 @@
-/*
- * Must sit between vdiClear and initMirror.
- */
-
 #ifdef HOST
 
 #include "hostgem.h"
@@ -17,7 +13,9 @@
    load the game palette mainPalette, and remember TOS's own physical
    screen base in tosPhysbase so the compositor can tell it apart from its
    buffers.  It does NOT open the virtual workstation -- that is
-   vdiInit's job. */
+   vdiInit's job.
+
+   Must sit between vdiClear and initMirror. */
 void
 initAes()
 {

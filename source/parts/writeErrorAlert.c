@@ -1,7 +1,6 @@
-/*
- * Must sit right after ensureFile.
- */
-/* Single-shot RETRY alert; caller is expected to retry the file op. */
+/* Single-shot RETRY alert; caller is expected to retry the file op.
+
+   Must sit right after ensureFile. */
 void
 writeErrorAlert()
 {

@@ -1,6 +1,4 @@
-/*
- * Loads letter.txt and builds the line-pointer table letterLines.
- */
+/* Loads letter.txt and builds the line-pointer table letterLines. */
 void
 loadLetterText()
 {

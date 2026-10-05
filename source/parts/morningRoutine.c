@@ -1,7 +1,4 @@
-/*
- * the morning routine after the alarm.
- */
-
+/* The morning routine after the alarm. */
 void
 morningRoutine()
 {

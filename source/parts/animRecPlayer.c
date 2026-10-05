@@ -1,12 +1,8 @@
-/*
- * Sits between drawPixel and toggleTv.
- */
 /* Sweep needle x=70..83 at y=42, 1px/frame, wrap at 0.
    If music playing and not browsing records, roll random VU LED (0..6)
    at y=47 and toggle lit/unlit (red if new mask overlaps vuLeds, else black).
    needlePos/vuLeds are 1985 shared-storage: also record-player state
    when no letter is being written. */
-
 void
 animRecPlayer()
 {

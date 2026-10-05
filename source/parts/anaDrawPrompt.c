@@ -1,7 +1,4 @@
-/*
- * Draws "Guess #N?" for the current anagram attempt.
- */
-
+/* Draws "Guess #N?" for the current anagram attempt. */
 void
 anaDrawPrompt(guess)
 short   guess;

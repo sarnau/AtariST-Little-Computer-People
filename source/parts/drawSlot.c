@@ -1,7 +1,5 @@
-/*
- * Only the position is latched in locals; the extents are subscripted
- * at every use.  That is the original's shape -- keep it.
- */
+/* Only the position is latched in locals; the extents are subscripted
+   at every use.  That is the original's shape -- keep it. */
 void
 drawSlot(index)
 short   index;

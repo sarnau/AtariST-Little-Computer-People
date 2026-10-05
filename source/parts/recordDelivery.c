@@ -1,8 +1,5 @@
-/*
- * A record delivery: fetch it from the front step and take it
- * upstairs.
- */
-
+/* A record delivery: fetch it from the front step and take it
+   upstairs. */
 void
 recordDelivery()
 {

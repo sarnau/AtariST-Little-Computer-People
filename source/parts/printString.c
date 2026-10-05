@@ -1,8 +1,5 @@
-/*
- * Draws a string character by character through printChar, 8 pixels
- * apart.
- */
-
+/* Draws a string character by character through printChar, 8 pixels
+   apart. */
 void
 printString(str, x, y, color)
 char *  str;

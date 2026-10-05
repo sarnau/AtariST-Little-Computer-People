@@ -1,7 +1,5 @@
-/*
- * Position in vdistx.c is the binding module's original order.
- */
-
+/* VDI: sets the fill interior style (hollow, solid, pattern, hatch) on
+   workstation handle and returns the style the VDI selected. */
 void
 vsf_interior(handle, style)
 short   handle;

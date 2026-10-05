@@ -1,6 +1,3 @@
-/*
- * It sits with the game code, not with the VDI bindings it wraps.
- */
 /* vro_cpyfm with the coordinates as separate arguments. */
 void
 blitRect(handle, mode, src, dst, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2)

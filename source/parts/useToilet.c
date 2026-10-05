@@ -1,7 +1,3 @@
-/*
- * Must sit directly before closeToiletDoor.
- */
-
 /* ACTION_USE_TOILET (also from games.c and moveInScene).  The resident
    walks to the bathroom toilet door, opens it if it is shut
    (SFX_DOOR_OPEN), steps in and the door closes behind him in three
@@ -10,7 +6,9 @@
    he reappears and walks back out, and leaves it open unless a
    0..100 roll beats his initiativeThreshold or the cutscene runs, in
    which case closeToiletDoor shuts it.  Clears resident.bathroomNeed and resets
-   the bathroom timer. */
+   the bathroom timer.
+
+   Must sit directly before closeToiletDoor. */
 void
 useToilet()
 {

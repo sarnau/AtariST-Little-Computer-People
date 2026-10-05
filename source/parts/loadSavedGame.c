@@ -1,6 +1,3 @@
-/*
- * Sits ahead of gameLoop.
- */
 /* Restore a saved game: if the file "hyber" opens, its 128-byte image
    is read straight into the resident record and the water level, every
    door/cabinet open flag, the dog-bowl state, food supply, record

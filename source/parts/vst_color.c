@@ -1,8 +1,5 @@
-/*
- * Its position in vdistx.c's include list is the binding module's
- * layout and must not change.
- */
-
+/* VDI: sets the text colour index on workstation handle and returns
+   the index the VDI actually selected. */
 void
 vst_color(handle, index)
 short   handle;

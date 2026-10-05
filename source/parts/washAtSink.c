@@ -1,7 +1,4 @@
-/*
- * The resident stands at the kitchen sink with the water running.
- */
-
+/* The resident stands at the kitchen sink with the water running. */
 void
 washAtSink(value)
 short   value;

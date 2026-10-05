@@ -1,11 +1,10 @@
-/*
- * Must sit right after playDoorbell.
- */
 /* Queues an outside event (a delivery, a phone call, the dog food key
    commands) for the resident: event is an ACTION_EVENT_* id, appended
    at the first free slot of the 10-entry queue eventQueue, which nextEvent
    empties from the front.  Ignored during the move-in cutscene and
-   when the queue is already full. */
+   when the queue is already full.
+
+   Must sit right after playDoorbell. */
 void
 queueEvent(event)
 short   event;

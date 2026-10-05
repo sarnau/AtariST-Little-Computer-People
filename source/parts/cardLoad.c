@@ -1,8 +1,4 @@
 /*
- * Must sit right before dispCompChips; playPoker and playWar call it.
- */
-
-/*
  * CARDS graphics file loader.
  *
  * The CARDS file on the 1985 disk holds 53 16x24 pixel card bitmaps
@@ -28,12 +24,12 @@
  * face-down card.
  */
 
-
-
 /* Loads the CARDS file into cardImages in the layout described above,
    builds the selection-highlight card at slot 53 itself, and points the
    54 card MFDBs and the card-table MFDB cardTableMfdb (the 320x77 area at
-   stripBuf) at their bitmaps.  Called by the card games before play. */
+   stripBuf) at their bitmaps.  Called by the card games before play.
+
+   Must sit right before dispCompChips; playPoker and playWar call it. */
 void
 cardLoad()
 {

@@ -1,11 +1,8 @@
-/*
- * panelErase: clear a rectangle via VDI v_bar.
- *
- * Its place in games.c, after the anagram helpers and far from
- * panelBegin, matters: closer, the panelBegin call would compile to a
- * shorter branch than the original's.
- */
+/* Clear a rectangle via VDI v_bar.
 
+   Its place in games.c, after the anagram helpers and far from
+   panelBegin, matters: closer, the panelBegin call would compile to a
+   shorter branch than the original's. */
 void
 panelErase(x1, y1, x2, y2)
 short   x1;

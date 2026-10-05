@@ -1,7 +1,4 @@
-/*
- * the resident brushes his teeth at the bathroom sink.
- */
-
+/* The resident brushes his teeth at the bathroom sink. */
 void
 brushTeeth()
 {

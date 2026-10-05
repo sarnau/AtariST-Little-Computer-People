@@ -1,7 +1,5 @@
-/*
- * Redraws the clock hands when the minute changes: erase in white,
- * draw in grey.
- */
+/* Redraws the clock hands when the minute changes: erase in white,
+   draw in grey. */
 void
 redrawHands()
 {

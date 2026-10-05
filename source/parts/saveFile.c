@@ -1,6 +1,7 @@
-/*
- * The last function of the stx_u2 object.
- */
+/* Writes size bytes from addr to filename (the HYBER save file),
+   creating it first if needed (ensureFile).  A failed open or write
+   shows the RETRY-only alert (writeErrorAlert) and tries again, until
+   it succeeds. */
 void
 saveFile(filename, size, addr)
 char *  filename;

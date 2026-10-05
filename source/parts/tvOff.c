@@ -3,7 +3,6 @@
    and blanks the picture.  Returns -1 if the walk was interrupted, 0
    when done; returns no value when the TV was already off. */
 short
-
 tvOff()
 {
         if (tvRunning == NO)

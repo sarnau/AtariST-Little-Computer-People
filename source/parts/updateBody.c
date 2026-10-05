@@ -1,10 +1,8 @@
-/*
- * Must follow gameTick.
- */
 /* Select the body pose for animState -> slot 3.  When carrying an
    object during walk states (< 25), uses arms-up frames from carryFrames.
-   X = resX - 4 (right) or resX - 14 (left); Y = resY + bodyYOffset[st] - 21. */
+   X = resX - 4 (right) or resX - 14 (left); Y = resY + bodyYOffset[st] - 21.
 
+   Must follow gameTick. */
 void
 updateBody()
 {

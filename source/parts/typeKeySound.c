@@ -1,7 +1,6 @@
-/*
- * Must sit immediately before sfxClick.
- */
-/* Typewriter key click while a letter is being typed. */
+/* Typewriter key click while a letter is being typed.
+
+   Must sit immediately before sfxClick. */
 void
 typeKeySound()
 {

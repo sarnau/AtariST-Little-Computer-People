@@ -1,9 +1,5 @@
-/*
- * The eat routine: takes one item of food from the cabinet, eats
- * 10..20 bite/chew cycles at the table, and resets hunger at the end.
- */
-
-
+/* The eat routine: takes one item of food from the cabinet, eats
+   10..20 bite/chew cycles at the table, and resets hunger at the end. */
 void
 eatFromCabinet()
 {

@@ -1,8 +1,6 @@
-/*
- * the second half of vdiInit: reset the fill attributes, hide the
- * mouse and bar the whole screen. It must directly follow
- * parts/vdiInit.c so vdiInit's call to it stays a short branch.
- */
+/* The second half of vdiInit: reset the fill attributes, hide the
+   mouse and bar the whole screen. It must directly follow
+   parts/vdiInit.c so vdiInit's call to it stays a short branch. */
 void
 vdiClear()
 {

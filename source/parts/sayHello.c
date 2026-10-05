@@ -1,7 +1,4 @@
-/*
- * the resident waves and talks at the screen.
- */
-
+/* The resident waves and talks at the screen. */
 void
 sayHello()
 {

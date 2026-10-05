@@ -4,7 +4,6 @@
    (sfxTvClick).  Returns -1 if the walk was interrupted, 0 when done;
    returns no value when the TV was already on. */
 short
-
 tvOn()
 {
         if (tvRunning != NO)

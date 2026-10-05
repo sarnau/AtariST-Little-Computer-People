@@ -1,7 +1,4 @@
-/*
- * Stash the body/head image pointers, NULL them and raise lcpHidden.
- */
-
+/* Stash the body/head image pointers, NULL them and raise lcpHidden. */
 void
 hideResident()
 {

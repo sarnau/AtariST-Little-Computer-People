@@ -1,9 +1,6 @@
-/*
- * Must sit directly before putInFridge, which it calls.
- */
+/* Walk to fridge, then trampoline into putInFridge.
 
-/* Walk to fridge, then trampoline into putInFridge. */
-
+   Must sit directly before putInFridge, which it calls. */
 void
 goToFridge()
 {

@@ -1,12 +1,9 @@
-/*
- * Must sit right after useComputer.
- */
-
-
 /* Clears the small screen at (293,99)-(308,106) to colour 0, waits a
    tick, then plays one of its two random animations -- pattern lines
    (tvPattern) or a bouncing dot (tvBounce).  Used for the rare "clear the
-   screen" gesture while the resident plays on the computer (useComputer). */
+   screen" gesture while the resident plays on the computer (useComputer).
+
+   Must sit right after useComputer. */
 void
 tvClearAnim()
 {

@@ -1,7 +1,4 @@
-/*
- * Walk to the bedroom and clear the alarm flag.
- */
-
+/* Walk to the bedroom and clear the alarm flag. */
 void
 wakeFromAlarm()
 {

@@ -1,7 +1,5 @@
-/*
- * Restores the VDI text height from savedTextAttr[7] (the cell
- * height).
- */
+/* Restores the VDI text height from savedTextAttr[7] (the cell
+   height). */
 void
 textNormal()
 {

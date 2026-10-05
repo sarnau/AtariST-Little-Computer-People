@@ -1,6 +1,4 @@
-/*
- * Matches a typed command against the phraseTable action table.
- */
+/* Matches a typed command against the phraseTable action table. */
 short
 matchCommand(str)
 char *  str;
