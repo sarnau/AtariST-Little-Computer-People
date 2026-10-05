@@ -1937,6 +1937,17 @@ scored STABLE; the default is now 30 000.  And this Hatari wants
 why the script reported "didn't produce an AVI" while swallowing
 `--auto`.
 
+**Song actions hang when run from a GEMDOS (host-folder) drive**
+(observed 2026-10-05 through the Hatari MCP's run_program).  After
+PLAY PIANO the game froze: ani_cnt stopped, and the user stack showed
+fOpen -> form_alert -- the "cannot open" retry loop, invisible because
+the alert draws to a screen the game is not showing.  Likely cause, NOT
+verified: a_plawr and a_lists pass sgPlay a pointer into the DTA's own
+d_fname, and sgPlay's Fsfirst(filename) overwrites that DTA before the
+name is read; real TOS on a floppy copes, Hatari's GEMDOS emulation
+apparently does not.  Test song playback from a floppy image, not a
+mounted folder, before suspecting the port.
+
 **cp68 has no `defined()`.**  `#if defined(A) || defined(B)` does not
 fail the build loudly, it just makes the file MISS; collect the gates
 with separate `#ifdef`s instead.
