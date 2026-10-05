@@ -19,12 +19,13 @@ updateBody()
 
         /* Row strides are 168 (bodyFrames) and 84 (bodyShapes).  bodyFrames
            and bodyShapes are real arrays and the index is not cast to
-           long, so the multiply stays 16-bit (no long-multiply call). */
+           long, so the multiply stays 16-bit (no long-multiply call).
+           resFacing doubles as the mirror flag: FACING_LEFT is 1. */
         expandFrame((short *) bodyFrames[frame],
                 (short *) bodyShapes[frame],
                 (short *) bodyImage,
                 (short *) bodyMask,
-                2, 21, resFacing, 1);
+                2, 21, resFacing, YES);
 
         if (resFacing == FACING_RIGHT)
                 drawnX[HW_SLOT_LCP_BODY] = resX - 4;

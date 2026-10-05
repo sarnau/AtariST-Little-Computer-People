@@ -117,7 +117,7 @@ short   headMask[LCP_BODY_DEST_WORDS];        /* expandFrame dest: head mask */
 /* Set by stepHead to select
    the horizontal-flip path in expandFrame when the head faces
    the opposite direction from the body. */
-short   headMirror;
+BOOL16  headMirror;
 /* The loaded PEx.LCP frame table and the dilated head silhouettes are
    ARRAYS, not pointers, exactly like bodyFrames and bodyShapes. */
 unsigned char   pexFrames[HEAD_FRAMES][LCP_BODY_FRAME_SIZE];

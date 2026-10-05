@@ -17,7 +17,7 @@ updateHead()
         expandFrame((short *) pexFrames[headIndex],
                 (short *) headShapes[headIndex],
                 headImage, headMask,
-                2, 21, headMirror, 0);
+                2, 21, headMirror, NO);
 
         if (headMirror == NO)
                 drawnX[HW_SLOT_LCP_HEAD] = resX + headXOffset[animState] - 4;

@@ -17,8 +17,8 @@ short * destImg;
 short * destMask;
 short   width;
 short   height;
-short   mirror;
-short   lowPlanes;
+BOOL16  mirror;
+BOOL16  lowPlanes;
 {
         /* w, planeB and x must stay register variables, declared in this
            order; only mirMask, y and planeA live on the stack. */
@@ -29,10 +29,10 @@ short   lowPlanes;
         short           y;
         short           planeA;
 
-        if (mirror == 0) {
+        if (mirror == NO) {
                 for (y = 0; y < height; y++) {
                         for (x = 0; x < width; x++) {
-                                if (lowPlanes != 0) {
+                                if (lowPlanes != NO) {
                                         *destImg++ = *srcImg++;
                                         *destImg++ = *srcImg++;
                                         *destImg++ = 0;
@@ -66,7 +66,7 @@ short   lowPlanes;
                         planeB <<= 8;
                         planeB |= mirrorTable[(w >> 8) & 0xff];
 
-                        if (lowPlanes != 0) {
+                        if (lowPlanes != NO) {
                                 *destImg++ = planeA;
                                 *destImg++ = planeB;
                                 *destImg++ = 0;

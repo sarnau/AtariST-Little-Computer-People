@@ -114,7 +114,7 @@ extern short stairWaypts[];
 extern short tickCount;
 extern short headImage[];
 extern short headMask[];
-extern short headMirror;
+extern BOOL16 headMirror;
 extern unsigned char pexFrames[][LCP_BODY_FRAME_SIZE];
 extern unsigned char headShapes[][LCP_BODY_SHAPE_SIZE];
 extern short headDelay;
